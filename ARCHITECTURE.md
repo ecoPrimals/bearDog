@@ -2,9 +2,9 @@
 
 # BearDog Architecture
 
-**Last Updated**: April 15, 2026
+**Last Updated**: April 16, 2026
 **Status**: Production Ready
-**Crates**: 29 | **Tests**: 14,787+ | **Coverage**: 90.51% | **MSRV**: 1.93.0
+**Crates**: 29 | **Tests**: 14,786+ | **Coverage**: 90.51% | **MSRV**: 1.93.0
 
 ---
 
@@ -158,7 +158,7 @@ HsmKeyProvider (beardog-traits::hsm)
 HsmProviderRegistry → discover() → select(PreferHardware | RequireHardware | SoftwareOnly)
 ```
 
-The canonical `HsmKeyProvider` trait is object-safe and async. It supersedes 5 legacy trait hierarchies (`CryptoProvider`, `HsmProviderTrait`, `HsmCapabilities`, unified `HsmProvider`, canonical `HsmProvider`) which carry migration doc sections and will be removed in v0.10.0.
+The canonical `HsmKeyProvider` trait uses native `async fn` (RPITIT). Runtime selection for finite backend sets uses **enum dispatch** (`HsmKeyProviderBackend` and related enums) instead of `dyn Trait`, preserving monomorphization and avoiding async-trait-style indirection. It supersedes 5 legacy trait hierarchies (`CryptoProvider`, `HsmProviderTrait`, `HsmCapabilities`, unified `HsmProvider`, canonical `HsmProvider`) which carry migration doc sections and will be removed in v0.10.0.
 
 ### Domain-Specific Traits
 
@@ -179,6 +179,10 @@ What are you implementing?
 ---
 
 ## Key Architectural Patterns
+
+### Enum dispatch (finite implementors)
+
+Traits with a small, closed set of implementations (handlers, transports, crypto/HSM backends) dispatch through **enum wrapper types** rather than `Box<dyn Trait>`. Each variant holds a concrete type; `async` methods use native `async fn` in traits without the `async-trait` crate. This keeps call sites monomorphized and aligns with the Wave 53 stadial parity gate (no `#[async_trait]` in the tree).
 
 ### 1. Zero-Knowledge Bootstrap
 
@@ -246,4 +250,4 @@ Key material derived from family seed. Family A never shares keys with Family B.
 
 ---
 
-**Last Updated**: April 14, 2026
+**Last Updated**: April 16, 2026

@@ -4,7 +4,6 @@ use super::types::{
     KeyManagementCapability, KeyMetadata, KeySpec, KmsCapabilities, KmsError, KmsHealthStatus,
 };
 use crate::canonical::types::ids::KeyId;
-use async_trait::async_trait;
 use std::sync::Arc;
 
 /// Software HSM provider using `SecureSoftwareHsm`
@@ -55,7 +54,6 @@ impl SoftwareHsmProvider {
 }
 
 // Production implementation delegating to SecureSoftwareHsm
-#[async_trait]
 impl KeyManagementCapability for SoftwareHsmProvider {
     async fn encrypt(&self, plaintext: &[u8], key_id: &KeyId) -> Result<Vec<u8>, KmsError> {
         self.inner.encrypt(plaintext, key_id).await

@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: April 15, 2026
+**Updated**: April 16, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -22,7 +22,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 1000 lines of code (production)
-- 14,787+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
+- 14,786+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
 - 90.51% line coverage (llvm-cov workspace) — target 90% met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - `#[serial]` minimized — 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent
@@ -44,6 +44,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - Hardcoding eliminated — capability-based discovery throughout
 - `deny.toml` hardened — C deps banned, duplicate versions denied
 - `CommandRunner` trait for mocking external commands (`adb`) in tests
+- **Stadial parity gate (Wave 53)** — Complete: all `#[async_trait]` removed in favor of native `async fn` in traits; `async-trait` dependency removed from every `Cargo.toml`; finite-implementor `dyn Trait` sites replaced with enum dispatch for monomorphized async routing; 14,786+ tests, Clippy and rustdoc `-D warnings` clean
 
 ### Platform Coverage
 
@@ -58,6 +59,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### Stadial Parity Gate — DONE (Wave 53)
+
+Native async traits (RPITIT) across the workspace, zero `async-trait` in manifests, enum-backed dispatch for closed backend sets, quality gates unchanged (14,786+ tests; Clippy and rustdoc `-D warnings`).
 
 ### Test Coverage to 90% — DONE (Wave 20)
 
@@ -118,4 +123,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: April 13, 2026
+**Last Updated**: April 16, 2026

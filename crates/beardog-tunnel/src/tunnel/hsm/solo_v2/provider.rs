@@ -19,6 +19,8 @@ use super::ctap2_protocol::{
     parse_make_credential_response,
 };
 #[cfg(feature = "ctap2")]
+use super::hid_transport::Ctap2TransportBackend;
+#[cfg(feature = "ctap2")]
 use super::transport::Ctap2Transport;
 
 /// Solo V2 USB Security Key HSM Provider
@@ -46,7 +48,7 @@ pub struct SoloV2Provider {
     key_handles: Arc<RwLock<std::collections::HashMap<String, SoloV2KeyHandle>>>,
     /// CTAP2 HID transport (set via [`Self::with_ctap2_transport`] or [`Self::with_hid_device_path`])
     #[cfg(feature = "ctap2")]
-    ctap_transport: Option<Arc<Mutex<dyn Ctap2Transport>>>,
+    ctap_transport: Option<Arc<Mutex<Ctap2TransportBackend>>>,
 }
 
 impl SoloV2Provider {
@@ -94,7 +96,7 @@ impl SoloV2Provider {
     pub fn with_ctap2_transport(
         device_info: SoloV2DeviceInfo,
         config: SoloV2Config,
-        transport: Arc<Mutex<dyn Ctap2Transport>>,
+        transport: Arc<Mutex<Ctap2TransportBackend>>,
     ) -> Result<Self, BearDogError> {
         let mut s = Self::new(device_info, config)?;
         s.ctap_transport = Some(transport);
@@ -113,7 +115,11 @@ impl SoloV2Provider {
         hid_path: &str,
     ) -> Result<Self, BearDogError> {
         let hid = super::hid_transport::HidCtap2Transport::open(hid_path).await?;
-        Self::with_ctap2_transport(device_info, config, Arc::new(Mutex::new(hid)))
+        Self::with_ctap2_transport(
+            device_info,
+            config,
+            Arc::new(Mutex::new(Ctap2TransportBackend::Hid(hid))),
+        )
     }
 
     /// Discover all connected Solo V2 devices

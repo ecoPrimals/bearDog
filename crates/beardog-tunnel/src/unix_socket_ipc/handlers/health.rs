@@ -8,7 +8,6 @@
 use super::MethodHandler;
 use super::utils::{IdentityHints, get_primal_name_with};
 use crate::btsp_provider::BeardogBtspProvider;
-use async_trait::async_trait;
 use chrono::Utc;
 use std::sync::Arc;
 use tracing::info;
@@ -68,7 +67,6 @@ impl HealthHandler {
     }
 }
 
-#[async_trait]
 impl MethodHandler for HealthHandler {
     fn methods(&self) -> Vec<&'static str> {
         vec![

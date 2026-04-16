@@ -13,7 +13,6 @@ use aes_gcm::{
     Aes256Gcm, Key, Nonce,
     aead::{Aead, AeadCore, KeyInit, OsRng},
 };
-use async_trait::async_trait;
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use hkdf::Hkdf;
 use parking_lot::RwLock;
@@ -133,7 +132,6 @@ impl SecureSoftwareHsm {
     }
 }
 
-#[async_trait]
 impl KeyManagementCapability for SecureSoftwareHsm {
     async fn encrypt(&self, plaintext: &[u8], key_id: &KeyId) -> Result<Vec<u8>, KmsError> {
         let key_material = self.get_key(key_id).await?;

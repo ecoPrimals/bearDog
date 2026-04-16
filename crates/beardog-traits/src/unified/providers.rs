@@ -194,8 +194,7 @@ pub trait CryptoProvider: BearDogProvider {
 ///
 /// This trait requires the full `BearDogProvider + SecurityProvider + CryptoProvider`
 /// hierarchy, making it impractical for dynamic dispatch.  New code should use
-/// [`crate::hsm::HsmKeyProvider`] which is object-safe and supports
-/// `Arc<dyn HsmKeyProvider>` through `HsmProviderRegistry`.
+/// [`crate::hsm::HsmKeyProvider`] (RPITIT + enum dispatch in `beardog-tunnel`).
 /// This trait will be removed in a future release.
 pub trait HsmProvider: BearDogProvider + SecurityProvider + CryptoProvider {
     /// Serialized health, tamper, and utilization snapshot for dashboards.

@@ -37,7 +37,6 @@
 
 use crate::btsp_provider::BeardogBtspProvider;
 use crate::unix_socket_ipc::handlers::MethodHandler;
-use async_trait::async_trait;
 use base64::engine::Engine;
 use chacha20poly1305::{
     ChaCha20Poly1305, Nonce,
@@ -52,7 +51,6 @@ use tracing::info;
 /// Handles generic encryption/decryption operations using ChaCha20-Poly1305.
 pub struct EncryptionHandler;
 
-#[async_trait]
 impl MethodHandler for EncryptionHandler {
     fn methods(&self) -> Vec<&'static str> {
         vec!["encryption.encrypt", "encryption.decrypt"]

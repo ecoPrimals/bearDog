@@ -18,7 +18,9 @@
 //! - ✅ Platform-agnostic (universal trait)
 //! - ✅ No hardcoding (XDG Base Directory + runtime discovery)
 
-use super::{PlatformListener, PlatformSocket, PlatformStream, SocketEndpoint};
+use super::{
+    PlatformListener, PlatformListenerBackend, PlatformSocket, PlatformStream, SocketEndpoint,
+};
 use beardog_types::constants::domains::network::ipc_discovery as ipc_layout;
 use std::pin::Pin;
 use std::task::{Context, Poll};
@@ -68,11 +70,10 @@ pub struct UnixPlatformListener {
     path: String,
 }
 
-#[async_trait::async_trait]
 impl PlatformListener for UnixPlatformListener {
     async fn accept(&mut self) -> std::io::Result<Box<dyn PlatformStream>> {
         let (stream, _addr) = self.listener.accept().await?;
-        Ok(Box::new(UnixPlatformStream(stream)))
+        Ok(Box::new(UnixPlatformStream(stream)) as Box<dyn PlatformStream>)
     }
 
     fn local_addr(&self) -> std::io::Result<String> {
@@ -180,7 +181,7 @@ impl PlatformSocket for UnixSocket {
         Self::create_endpoint_inner(primal_name, &UnixListenHints::from_env())
     }
 
-    fn bind(endpoint: &SocketEndpoint) -> std::io::Result<Box<dyn PlatformListener>> {
+    fn bind(endpoint: &SocketEndpoint) -> std::io::Result<Box<PlatformListenerBackend>> {
         match endpoint {
             SocketEndpoint::Filesystem(path) => {
                 // Clean up stale socket file if it exists
@@ -199,10 +200,12 @@ impl PlatformSocket for UnixSocket {
                     path.display()
                 );
 
-                Ok(Box::new(UnixPlatformListener {
-                    listener,
-                    path: path_str,
-                }))
+                Ok(Box::new(PlatformListenerBackend::Unix(
+                    UnixPlatformListener {
+                        listener,
+                        path: path_str,
+                    },
+                )))
             }
             SocketEndpoint::Abstract(_) => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,

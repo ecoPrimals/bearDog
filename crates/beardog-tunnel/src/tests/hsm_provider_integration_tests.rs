@@ -16,8 +16,9 @@
 #![allow(unused_variables)] // Some variables used conditionally
 
 use crate::tunnel::hsm::GenerateKeyRequest;
+use crate::tunnel::hsm::HsmProviderBackend;
 use crate::tunnel::hsm::manager::HsmManager;
-use crate::tunnel::hsm::manager::implementation::{DefaultHsmManager, HsmProvider};
+use crate::tunnel::hsm::manager::implementation::DefaultHsmManager;
 use crate::tunnel::hsm::software_hsm::SoftwareHsm;
 use crate::tunnel::hsm::types::key::KeyType;
 use crate::tunnel::hsm::types::tier::HsmTier;
@@ -34,6 +35,7 @@ async fn create_test_software_hsm() -> Result<Arc<SoftwareHsm>, BearDogError> {
 #[cfg(test)]
 mod hsm_provider_integration {
     use super::*;
+    use crate::tunnel::hsm::manager::HsmProvider;
 
     #[tokio::test]
     async fn test_software_hsm_provider_registration_and_use() {
@@ -44,8 +46,17 @@ mod hsm_provider_integration {
 
         let mut manager = HsmManager::new();
 
+        let registered = create_test_software_hsm()
+            .await
+            .expect("second HSM for registration");
         // Register provider with tier-based API
-        let result = manager.register_hsm_provider(HsmTier::Software, software_hsm.clone());
+        let result = manager.register_hsm_provider(
+            HsmTier::Software,
+            Arc::new(HsmProviderBackend::RustSoftware(
+                Arc::try_unwrap(registered)
+                    .unwrap_or_else(|_| panic!("unique Arc for registration")),
+            )),
+        );
         assert!(result.is_ok(), "HSM provider registration should succeed");
 
         // Verify we can use the provider directly
@@ -145,15 +156,12 @@ mod hsm_provider_integration {
         // Test DefaultHsmManager provider management
         let software_hsm = create_test_software_hsm().await.unwrap();
 
-        // Note: DefaultHsmManager uses Box<dyn HsmProvider>, not Arc
-        // Since we can't move out of Arc easily, we create a new HSM for this test
+        // `DefaultHsmManager` stores `Box<HsmProviderBackend>`; unwrap a dedicated `Arc` for it.
         let software_hsm_for_manager = create_test_software_hsm().await.unwrap();
-        let boxed_provider: Box<dyn HsmProvider> = Box::new(
-            Arc::try_unwrap(software_hsm_for_manager).unwrap_or_else(|_arc| {
-                // If we can't unwrap, skip this test - it's a limitation of the API
-                panic!("Cannot unwrap Arc for Box conversion - test limitation")
-            }),
-        );
+        let boxed_provider: Box<HsmProviderBackend> = Box::new(HsmProviderBackend::RustSoftware(
+            Arc::try_unwrap(software_hsm_for_manager)
+                .unwrap_or_else(|_| panic!("unique Arc for DefaultHsmManager test")),
+        ));
 
         let mut manager = DefaultHsmManager::new();
         manager
@@ -209,7 +217,13 @@ mod hsm_provider_integration {
         for (i, handle) in handles.into_iter().enumerate() {
             let (index, hsm) = handle.await.expect("Task should complete");
             assert_eq!(i, index, "Tasks should complete in order spawned");
-            let result = manager.register_hsm_provider(HsmTier::Software, hsm);
+            let result = manager.register_hsm_provider(
+                HsmTier::Software,
+                Arc::new(HsmProviderBackend::RustSoftware(
+                    Arc::try_unwrap(hsm)
+                        .unwrap_or_else(|_| panic!("unique Arc for concurrent registration test")),
+                )),
+            );
             assert!(result.is_ok(), "Concurrent registration should succeed");
         }
     }
@@ -323,14 +337,22 @@ mod hsm_provider_integration {
         // Test registering multiple tiers concurrently
         let mut manager = HsmManager::new();
 
-        let software_hsm = create_test_software_hsm().await.unwrap();
+        let sw = create_test_software_hsm().await.unwrap();
+        let cloud = create_test_software_hsm().await.unwrap();
 
-        // Cast to trait object for registration
-        let hsm_trait: Arc<dyn HsmProvider> = software_hsm;
-
-        // Register same HSM at different tiers (simulating fallback)
-        let r1 = manager.register_hsm_provider(HsmTier::Software, Arc::clone(&hsm_trait));
-        let r2 = manager.register_hsm_provider(HsmTier::Cloud, hsm_trait);
+        // Register two software HSM instances at different tiers (simulating fallback)
+        let r1 = manager.register_hsm_provider(
+            HsmTier::Software,
+            Arc::new(HsmProviderBackend::RustSoftware(
+                Arc::try_unwrap(sw).unwrap_or_else(|_| panic!("unique Arc")),
+            )),
+        );
+        let r2 = manager.register_hsm_provider(
+            HsmTier::Cloud,
+            Arc::new(HsmProviderBackend::RustSoftware(
+                Arc::try_unwrap(cloud).unwrap_or_else(|_| panic!("unique Arc")),
+            )),
+        );
 
         assert!(r1.is_ok(), "Software tier registration should succeed");
         assert!(r2.is_ok(), "Cloud tier registration should succeed");

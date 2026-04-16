@@ -39,7 +39,6 @@
 use super::MethodHandler;
 use super::utils::get_primal_name;
 use crate::btsp_provider::BeardogBtspProvider;
-use async_trait::async_trait;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64_STD;
 use beardog_types::primal_identity::PrimalIdentity;
@@ -198,7 +197,6 @@ impl RelayHandler {
     }
 }
 
-#[async_trait]
 impl MethodHandler for RelayHandler {
     fn methods(&self) -> Vec<&'static str> {
         vec!["relay.authorize"]

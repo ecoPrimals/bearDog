@@ -139,11 +139,12 @@ pub mod storage;
 /// Software HSM type definitions
 pub mod types;
 
+pub use self::memory::DefaultMemoryProtector;
 pub use types::{
-    AuditLogger, CryptoProvider, DefaultEncryptionKey, DefaultMemoryProtector, EncryptionKey,
-    EncryptionKeyTrait, FileStorageBackend, InMemoryStorageBackend, MemoryProtector,
+    AuditLogger, AuditLoggerBackend, CryptoProvider, DefaultEncryptionKey, EncryptionKey,
+    EncryptionKeyBackend, FileStorageBackend, InMemoryStorageBackend, MemoryProtector,
     MemoryProtectorTrait, MemoryStorageBackend, ProtectedMemory, SoftwareHealthMonitor,
-    SoftwareKey, SoftwareKeyStore, StorageBackend, StorageBackendTrait,
+    SoftwareHsmStorageKind, SoftwareKey, SoftwareKeyStore, StorageBackend,
 };
 
 #[cfg(test)]

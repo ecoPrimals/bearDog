@@ -12,7 +12,6 @@
 use super::utils::{IdentityHints, get_primal_name_with};
 use super::{HandlerRegistry, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
-use async_trait::async_trait;
 use beardog_types::primal_identity::PrimalIdentity;
 use std::sync::Arc;
 use tracing::info;
@@ -43,7 +42,6 @@ pub struct CapabilitiesHandler {
     registry: Arc<HandlerRegistry>,
 }
 
-#[async_trait]
 impl MethodHandler for CapabilitiesHandler {
     fn methods(&self) -> Vec<&'static str> {
         vec![

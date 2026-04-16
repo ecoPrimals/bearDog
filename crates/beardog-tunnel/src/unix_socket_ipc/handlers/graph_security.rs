@@ -20,7 +20,6 @@
 
 use super::MethodHandler;
 use crate::btsp_provider::BeardogBtspProvider;
-use async_trait::async_trait;
 use serde_json::Value;
 use std::sync::Arc;
 use tracing::{debug, info};
@@ -31,7 +30,6 @@ use crate::graph_security::{self, Graph, GraphModification, GraphTemplate};
 /// Handler for graph security JSON-RPC methods
 pub struct GraphSecurityHandler;
 
-#[async_trait]
 impl MethodHandler for GraphSecurityHandler {
     fn methods(&self) -> Vec<&'static str> {
         vec![

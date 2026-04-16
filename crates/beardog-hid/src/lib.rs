@@ -95,12 +95,14 @@
 
 #![warn(clippy::all)]
 
+mod hid_device_backend;
 pub mod linux;
 pub mod types;
 
 #[cfg(test)]
 mod linux_tests;
 
+pub use hid_device_backend::HidDeviceBackend;
 pub use types::{HidDevice, HidDeviceInfo, ProductId, VendorId};
 
 /// Discover all HID devices on the system
@@ -190,11 +192,11 @@ pub async fn discover() -> Result<Vec<HidDeviceInfo>, beardog_errors::BearDogErr
 ///     Ok(())
 /// }
 /// ```
-pub async fn open_device(path: &str) -> Result<Box<dyn HidDevice>, beardog_errors::BearDogError> {
+pub async fn open_device(path: &str) -> Result<HidDeviceBackend, beardog_errors::BearDogError> {
     #[cfg(target_os = "linux")]
     {
         let device = linux::LinuxHidDevice::open(path).await?;
-        Ok(Box::new(device))
+        Ok(HidDeviceBackend::Linux(device))
     }
 
     #[cfg(not(target_os = "linux"))]

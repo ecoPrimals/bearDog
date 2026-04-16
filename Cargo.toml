@@ -150,7 +150,6 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 
 # Async runtime
-async-trait = "0.1"
 futures = "0.3"
 
 # Cryptography (100% Pure Rust!)
@@ -293,7 +292,6 @@ tokio = { workspace = true, features = ["test-util"] }
 proptest = { workspace = true }
 criterion = { workspace = true }
 rand = { workspace = true }
-async-trait = { workspace = true }
 serde_json = { workspace = true }
 hex = { workspace = true }
 chrono = { workspace = true }

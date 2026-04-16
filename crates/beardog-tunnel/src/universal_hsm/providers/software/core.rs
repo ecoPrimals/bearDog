@@ -3,7 +3,8 @@
 //! Software HSM provider core implementation
 
 use super::config::SoftwareHsmConfig;
-use crate::universal_hsm::traits::{ProviderInfo, ProviderHealth, ProviderType, Platform, UniversalHsmProvider};
+use crate::tunnel::hsm::types::{HsmCapability, KeyType};
+use crate::universal_hsm::traits::{ProviderInfo, ProviderType, UniversalHsmProvider};
 use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -23,42 +24,48 @@ impl SoftwareHsmProvider {
             initialized: Arc::new(RwLock::new(false)),
         }
     }
+
+    /// Provider id from configuration (not part of [`UniversalHsmProvider`], but used by callers/tests).
+    pub fn provider_id(&self) -> &str {
+        &self.config.provider_id
+    }
 }
 
-#[async_trait::async_trait]
 impl UniversalHsmProvider for SoftwareHsmProvider {
     fn get_provider_info(&self) -> ProviderInfo {
         ProviderInfo {
-            provider_id: self.config.provider_id.clone(),
-            name: "Software HSM".to_string(),
-            version: "1.0.0".to_string(),
-            description: "Pure Rust software HSM implementation".to_string(),
-            vendor: "BearDog".to_string(),
+            name: self.config.provider_id.clone(),
             provider_type: ProviderType::Software,
-            platforms: vec![Platform::Universal],
+            version: "1.0.0".to_string(),
+            capabilities_verified: true,
         }
     }
 
-    async fn check_health(&self) -> Result<ProviderHealth, BearDogError> {
-        Ok(ProviderHealth {
-            is_healthy: true,
-            error_message: None,
-            last_check: chrono::Utc::now(),
-            response_time_ms: Some(0.1),
-            capabilities_verified: true,
-        })
+    fn generate_key(&self, _key_type: KeyType) -> Result<Vec<u8>, BearDogError> {
+        Err(BearDogError::unsupported_operation(
+            "SoftwareHsmProvider::generate_key is not wired in this build",
+        ))
     }
 
-    async fn initialize(&self) -> Result<(), BearDogError> {
-        let mut initialized = self.initialized.write().await;
-        *initialized = true;
-        Ok(())
+    fn sign(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        Err(BearDogError::unsupported_operation(
+            "SoftwareHsmProvider::sign is not wired in this build",
+        ))
     }
 
-    async fn shutdown(&self) -> Result<(), BearDogError> {
-        let mut initialized = self.initialized.write().await;
-        *initialized = false;
-        Ok(())
+    fn verify(
+        &self,
+        _key_id: &str,
+        _data: &[u8],
+        _signature: &[u8],
+    ) -> Result<bool, BearDogError> {
+        Err(BearDogError::unsupported_operation(
+            "SoftwareHsmProvider::verify is not wired in this build",
+        ))
+    }
+
+    fn get_capabilities(&self) -> Vec<HsmCapability> {
+        Vec::new()
     }
 }
 
@@ -66,20 +73,20 @@ impl UniversalHsmProvider for SoftwareHsmProvider {
 mod tests {
     use super::*;
 
-    #[tokio::test]
-    async fn test_software_provider_creation() {
+    #[test]
+    fn test_software_provider_creation() {
         let config = SoftwareHsmConfig::default();
         let provider = SoftwareHsmProvider::new(config);
-        
-        assert_eq!(provider.get_provider_info().provider_id, "software-hsm");
+
+        assert_eq!(provider.provider_id(), "software-hsm");
     }
 
-    #[tokio::test]
-    async fn test_provider_health_check() {
+    #[test]
+    fn test_provider_info() {
         let config = SoftwareHsmConfig::default();
         let provider = SoftwareHsmProvider::new(config);
-        
-        let health = provider.check_health().await?;
-        assert!(health.is_healthy);
+        let info = provider.get_provider_info();
+        assert_eq!(info.provider_type, ProviderType::Software);
+        assert!(info.capabilities_verified);
     }
 }

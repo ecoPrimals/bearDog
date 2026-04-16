@@ -2,8 +2,6 @@
 
 //! Kubernetes [`ServiceDiscoveryCapability`] implementation.
 
-use async_trait::async_trait;
-
 use crate::canonical::capabilities::ServiceCapabilityType;
 use crate::canonical::types::ids::{RegistrationId, ServiceInstanceId};
 
@@ -156,7 +154,6 @@ impl KubernetesDiscovery {
 }
 
 // Implement ServiceDiscoveryCapability trait for Kubernetes
-#[async_trait]
 impl ServiceDiscoveryCapability for KubernetesDiscovery {
     async fn discover_by_capability(
         &self,

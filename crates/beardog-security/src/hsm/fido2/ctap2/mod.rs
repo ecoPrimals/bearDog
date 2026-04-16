@@ -44,8 +44,8 @@ use tracing::info;
 ///
 /// Returns [`BearDogError`] on channel init failure, CTAP2 command failure, or CBOR parse errors.
 #[cfg(feature = "fido2")]
-pub async fn ctap2_get_info(
-    device: &mut Box<dyn beardog_hid::HidDevice>,
+pub async fn ctap2_get_info<D: beardog_hid::HidDevice + ?Sized>(
+    device: &mut D,
 ) -> Result<Ctap2DeviceInfo, BearDogError> {
     info!("🔍 Querying device capabilities (CTAP2 GetInfo)...");
 

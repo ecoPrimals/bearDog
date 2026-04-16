@@ -2,205 +2,29 @@
 
 //! Integration tests: `HsmManager`, mock providers, and multi-tier selection behavior.
 
-use crate::tunnel::hsm::manager::{HealthStatus, HsmManager, HsmProvider, KeyInfo, ProviderInfo};
+use crate::tunnel::hsm::HsmProviderBackend;
+use crate::tunnel::hsm::hsm_provider_mocks::{MockCloudHsm, MockHardwareHsm, MockSoftwareHsm};
+use crate::tunnel::hsm::manager::HsmProvider;
+use crate::tunnel::hsm::manager::{HealthStatus, HsmManager, KeyInfo, ProviderInfo};
 use crate::tunnel::hsm::{
     GenerateKeyRequest,
     types::{HsmKey, HsmTier},
 };
-use async_trait::async_trait;
 use beardog_errors::BearDogError;
 use std::sync::Arc;
-
-/// Mock Hardware HSM Provider for testing
-#[derive(Debug, Clone)]
-struct MockHardwareHsm {
-    available: bool,
-    fail_operations: bool,
-}
-
-impl MockHardwareHsm {
-    fn new(available: bool) -> Self {
-        Self {
-            available,
-            fail_operations: false,
-        }
-    }
-
-    fn with_failures() -> Self {
-        Self {
-            available: true,
-            fail_operations: true,
-        }
-    }
-}
-
-#[async_trait]
-impl HsmProvider for MockHardwareHsm {
-    async fn get_info(&self) -> Result<ProviderInfo, BearDogError> {
-        Ok(ProviderInfo {
-            id: "mock-hardware".to_string(),
-            name: "Mock Hardware HSM".to_string(),
-            security_level: 5,
-        })
-    }
-
-    async fn generate_key(&self, _request: GenerateKeyRequest) -> Result<HsmKey, BearDogError> {
-        if self.fail_operations {
-            return Err(BearDogError::unavailable(
-                "Hardware HSM unavailable".to_string(),
-            ));
-        }
-        Err(BearDogError::not_implemented(
-            "Mock generate_key for testing",
-        ))
-    }
-
-    async fn sign(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        if self.fail_operations {
-            return Err(BearDogError::unavailable(
-                "Hardware HSM unavailable".to_string(),
-            ));
-        }
-        Ok(vec![1, 2, 3, 4]) // Mock signature
-    }
-
-    async fn verify(
-        &self,
-        _key_id: &str,
-        _data: &[u8],
-        _signature: &[u8],
-    ) -> Result<bool, BearDogError> {
-        Ok(!self.fail_operations)
-    }
-
-    async fn encrypt(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        if self.fail_operations {
-            return Err(BearDogError::unavailable(
-                "Hardware HSM unavailable".to_string(),
-            ));
-        }
-        Ok(_data.to_vec())
-    }
-
-    async fn decrypt(&self, _key_id: &str, _ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        if self.fail_operations {
-            return Err(BearDogError::unavailable(
-                "Hardware HSM unavailable".to_string(),
-            ));
-        }
-        Ok(_ciphertext.to_vec())
-    }
-
-    async fn import_key(&self, _key_data: &[u8], _key_id: &str) -> Result<HsmKey, BearDogError> {
-        Err(BearDogError::not_implemented("Mock import_key for testing"))
-    }
-
-    async fn delete_key(&self, _key_id: &str) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    async fn get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError> {
-        Ok(KeyInfo {
-            key_id: key_id.to_string(),
-            key_type: "hardware".to_string(),
-            is_hardware_backed: true,
-        })
-    }
-
-    async fn health_check(&self) -> Result<HealthStatus, BearDogError> {
-        Ok(HealthStatus {
-            is_healthy: self.available && !self.fail_operations,
-            error_message: if self.available && !self.fail_operations {
-                None
-            } else {
-                Some("Hardware HSM not available".to_string())
-            },
-        })
-    }
-
-    fn is_available(&self) -> bool {
-        self.available
-    }
-}
-
-/// Mock Software HSM Provider for testing
-#[derive(Debug, Clone)]
-struct MockSoftwareHsm;
-
-#[async_trait]
-impl HsmProvider for MockSoftwareHsm {
-    async fn get_info(&self) -> Result<ProviderInfo, BearDogError> {
-        Ok(ProviderInfo {
-            id: "mock-software".to_string(),
-            name: "Mock Software HSM".to_string(),
-            security_level: 3,
-        })
-    }
-
-    async fn generate_key(&self, _request: GenerateKeyRequest) -> Result<HsmKey, BearDogError> {
-        Err(BearDogError::not_implemented(
-            "Mock generate_key for testing",
-        ))
-    }
-
-    async fn sign(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Ok(vec![5, 6, 7, 8]) // Mock signature
-    }
-
-    async fn verify(
-        &self,
-        _key_id: &str,
-        _data: &[u8],
-        _signature: &[u8],
-    ) -> Result<bool, BearDogError> {
-        Ok(true)
-    }
-
-    async fn encrypt(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Ok(_data.to_vec())
-    }
-
-    async fn decrypt(&self, _key_id: &str, _ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Ok(_ciphertext.to_vec())
-    }
-
-    async fn import_key(&self, _key_data: &[u8], _key_id: &str) -> Result<HsmKey, BearDogError> {
-        Err(BearDogError::not_implemented("Mock import_key for testing"))
-    }
-
-    async fn delete_key(&self, _key_id: &str) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    async fn get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError> {
-        Ok(KeyInfo {
-            key_id: key_id.to_string(),
-            key_type: "software".to_string(),
-            is_hardware_backed: false,
-        })
-    }
-
-    async fn health_check(&self) -> Result<HealthStatus, BearDogError> {
-        Ok(HealthStatus {
-            is_healthy: true,
-            error_message: None,
-        })
-    }
-
-    fn is_available(&self) -> bool {
-        true // Software HSM is always available
-    }
-}
 
 #[tokio::test]
 async fn test_hsm_manager_registers_multiple_providers() -> Result<(), Box<dyn std::error::Error>> {
     let mut manager = HsmManager::new();
 
-    let hardware_hsm = Arc::new(MockHardwareHsm::new(true));
-    let software_hsm = Arc::new(MockSoftwareHsm);
-
-    manager.register_hsm_provider(HsmTier::Hardware, hardware_hsm)?;
-    manager.register_hsm_provider(HsmTier::Software, software_hsm)?;
+    manager.register_hsm_provider(
+        HsmTier::Hardware,
+        Arc::new(HsmProviderBackend::MockHardware(MockHardwareHsm::new(true))),
+    )?;
+    manager.register_hsm_provider(
+        HsmTier::Software,
+        Arc::new(HsmProviderBackend::MockSoftware(MockSoftwareHsm)),
+    )?;
 
     Ok(())
 }
@@ -320,122 +144,6 @@ async fn test_key_info_retrieval() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Mock Cloud HSM Provider for testing
-#[derive(Debug, Clone)]
-struct MockCloudHsm {
-    available: bool,
-    fail_operations: bool,
-}
-
-impl MockCloudHsm {
-    fn new(available: bool) -> Self {
-        Self {
-            available,
-            fail_operations: false,
-        }
-    }
-
-    #[expect(
-        dead_code,
-        reason = "reserved for failure-injection scenarios in extended tests"
-    )]
-    fn with_failures() -> Self {
-        Self {
-            available: true,
-            fail_operations: true,
-        }
-    }
-}
-
-#[async_trait]
-impl HsmProvider for MockCloudHsm {
-    async fn get_info(&self) -> Result<ProviderInfo, BearDogError> {
-        Ok(ProviderInfo {
-            id: "mock-cloud".to_string(),
-            name: "Mock Cloud HSM".to_string(),
-            security_level: 4,
-        })
-    }
-
-    async fn generate_key(&self, _request: GenerateKeyRequest) -> Result<HsmKey, BearDogError> {
-        if self.fail_operations {
-            return Err(BearDogError::unavailable(
-                "Cloud HSM unavailable".to_string(),
-            ));
-        }
-        Err(BearDogError::not_implemented(
-            "Mock generate_key for testing",
-        ))
-    }
-
-    async fn sign(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        if self.fail_operations {
-            return Err(BearDogError::unavailable(
-                "Cloud HSM unavailable".to_string(),
-            ));
-        }
-        Ok(vec![9, 10, 11, 12]) // Mock cloud signature
-    }
-
-    async fn verify(
-        &self,
-        _key_id: &str,
-        _data: &[u8],
-        _signature: &[u8],
-    ) -> Result<bool, BearDogError> {
-        Ok(!self.fail_operations)
-    }
-
-    async fn encrypt(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        if self.fail_operations {
-            return Err(BearDogError::unavailable(
-                "Cloud HSM unavailable".to_string(),
-            ));
-        }
-        Ok(_data.to_vec())
-    }
-
-    async fn decrypt(&self, _key_id: &str, _ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        if self.fail_operations {
-            return Err(BearDogError::unavailable(
-                "Cloud HSM unavailable".to_string(),
-            ));
-        }
-        Ok(_ciphertext.to_vec())
-    }
-
-    async fn import_key(&self, _key_data: &[u8], _key_id: &str) -> Result<HsmKey, BearDogError> {
-        Err(BearDogError::not_implemented("Mock import_key for testing"))
-    }
-
-    async fn delete_key(&self, _key_id: &str) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    async fn get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError> {
-        Ok(KeyInfo {
-            key_id: key_id.to_string(),
-            key_type: "cloud".to_string(),
-            is_hardware_backed: true,
-        })
-    }
-
-    async fn health_check(&self) -> Result<HealthStatus, BearDogError> {
-        Ok(HealthStatus {
-            is_healthy: self.available && !self.fail_operations,
-            error_message: if self.available && !self.fail_operations {
-                None
-            } else {
-                Some("Cloud HSM not available".to_string())
-            },
-        })
-    }
-
-    fn is_available(&self) -> bool {
-        self.available
-    }
-}
-
 #[tokio::test]
 async fn test_provider_selection_with_multiple_providers() -> Result<(), Box<dyn std::error::Error>>
 {
@@ -445,9 +153,18 @@ async fn test_provider_selection_with_multiple_providers() -> Result<(), Box<dyn
     let cloud_hsm = Arc::new(MockCloudHsm::new(true));
     let software_hsm = Arc::new(MockSoftwareHsm);
 
-    manager.register_hsm_provider(HsmTier::Hardware, hardware_hsm.clone())?;
-    manager.register_hsm_provider(HsmTier::Cloud, cloud_hsm.clone())?;
-    manager.register_hsm_provider(HsmTier::Software, software_hsm.clone())?;
+    manager.register_hsm_provider(
+        HsmTier::Hardware,
+        Arc::new(HsmProviderBackend::MockHardware((*hardware_hsm).clone())),
+    )?;
+    manager.register_hsm_provider(
+        HsmTier::Cloud,
+        Arc::new(HsmProviderBackend::MockCloud((*cloud_hsm).clone())),
+    )?;
+    manager.register_hsm_provider(
+        HsmTier::Software,
+        Arc::new(HsmProviderBackend::MockSoftware(MockSoftwareHsm)),
+    )?;
 
     let hw_health = hardware_hsm.health_check().await?;
     let cloud_health = cloud_hsm.health_check().await?;
@@ -655,13 +372,22 @@ async fn test_provider_selection_all_providers_registered() -> Result<(), Box<dy
     let cloud_hsm = Arc::new(MockCloudHsm::new(true));
     let software_hsm = Arc::new(MockSoftwareHsm);
 
-    manager.register_hsm_provider(HsmTier::Hardware, hardware_hsm.clone())?;
-    manager.register_hsm_provider(HsmTier::Cloud, cloud_hsm.clone())?;
-    manager.register_hsm_provider(HsmTier::Software, software_hsm.clone())?;
+    manager.register_hsm_provider(
+        HsmTier::Hardware,
+        Arc::new(HsmProviderBackend::MockHardware((*hardware_hsm).clone())),
+    )?;
+    manager.register_hsm_provider(
+        HsmTier::Cloud,
+        Arc::new(HsmProviderBackend::MockCloud((*cloud_hsm).clone())),
+    )?;
+    manager.register_hsm_provider(
+        HsmTier::Software,
+        Arc::new(HsmProviderBackend::MockSoftware(MockSoftwareHsm)),
+    )?;
 
-    let hw_sig = hardware_hsm.sign("test", b"data").await?;
-    let cloud_sig = cloud_hsm.sign("test", b"data").await?;
-    let sw_sig = software_hsm.sign("test", b"data").await?;
+    let hw_sig: Vec<u8> = hardware_hsm.sign("test", b"data").await?;
+    let cloud_sig: Vec<u8> = cloud_hsm.sign("test", b"data").await?;
+    let sw_sig: Vec<u8> = software_hsm.sign("test", b"data").await?;
 
     assert!(!hw_sig.is_empty(), "Hardware signature should be valid");
     assert!(!cloud_sig.is_empty(), "Cloud signature should be valid");

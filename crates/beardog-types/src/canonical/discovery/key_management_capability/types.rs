@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::canonical::types::ids::KeyId;
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
+use std::future::Future;
 
 /// Key Management Capability - Vendor-Agnostic Interface
 ///
@@ -31,7 +31,6 @@ use std::fmt;
 /// - Implement rate limiting
 /// - Log all operations for audit
 /// - Support both symmetric and asymmetric keys
-#[async_trait]
 pub trait KeyManagementCapability: Send + Sync + fmt::Debug {
     /// Encrypt plaintext data using specified key
     ///
@@ -50,7 +49,11 @@ pub trait KeyManagementCapability: Send + Sync + fmt::Debug {
     /// - Uses authenticated encryption (AEAD)
     /// - Key never leaves the HSM/KMS
     /// - Operation is audited
-    async fn encrypt(&self, plaintext: &[u8], key_id: &KeyId) -> Result<Vec<u8>, KmsError>;
+    fn encrypt(
+        &self,
+        plaintext: &[u8],
+        key_id: &KeyId,
+    ) -> impl Future<Output = Result<Vec<u8>, KmsError>> + Send;
 
     /// Decrypt ciphertext using specified key
     ///
@@ -69,7 +72,11 @@ pub trait KeyManagementCapability: Send + Sync + fmt::Debug {
     /// - Validates authentication tag
     /// - Key never leaves the HSM/KMS
     /// - Operation is audited
-    async fn decrypt(&self, ciphertext: &[u8], key_id: &KeyId) -> Result<Vec<u8>, KmsError>;
+    fn decrypt(
+        &self,
+        ciphertext: &[u8],
+        key_id: &KeyId,
+    ) -> impl Future<Output = Result<Vec<u8>, KmsError>> + Send;
 
     /// Generate a new cryptographic key
     ///
@@ -87,7 +94,7 @@ pub trait KeyManagementCapability: Send + Sync + fmt::Debug {
     /// - Key material never exposed
     /// - Stored securely in HSM/KMS
     /// - Supports rotation policies
-    async fn generate_key(&self, spec: KeySpec) -> Result<KeyId, KmsError>;
+    fn generate_key(&self, spec: KeySpec) -> impl Future<Output = Result<KeyId, KmsError>> + Send;
 
     /// Sign data using specified key
     ///
@@ -100,7 +107,11 @@ pub trait KeyManagementCapability: Send + Sync + fmt::Debug {
     ///
     /// * `Ok(Vec<u8>)` - Digital signature
     /// * `Err(KmsError)` - If signing fails
-    async fn sign(&self, data: &[u8], key_id: &KeyId) -> Result<Vec<u8>, KmsError>;
+    fn sign(
+        &self,
+        data: &[u8],
+        key_id: &KeyId,
+    ) -> impl Future<Output = Result<Vec<u8>, KmsError>> + Send;
 
     /// Verify signature using specified key
     ///
@@ -115,8 +126,12 @@ pub trait KeyManagementCapability: Send + Sync + fmt::Debug {
     /// * `Ok(true)` - Signature is valid
     /// * `Ok(false)` - Signature is invalid
     /// * `Err(KmsError)` - If verification fails
-    async fn verify(&self, data: &[u8], signature: &[u8], key_id: &KeyId)
-    -> Result<bool, KmsError>;
+    fn verify(
+        &self,
+        data: &[u8],
+        signature: &[u8],
+        key_id: &KeyId,
+    ) -> impl Future<Output = Result<bool, KmsError>> + Send;
 
     /// Generate random bytes using HSM/KMS RNG
     ///
@@ -133,7 +148,10 @@ pub trait KeyManagementCapability: Send + Sync + fmt::Debug {
     ///
     /// - Uses hardware RNG if available
     /// - FIPS 140-2 compliant
-    async fn generate_random(&self, num_bytes: usize) -> Result<Vec<u8>, KmsError>;
+    fn generate_random(
+        &self,
+        num_bytes: usize,
+    ) -> impl Future<Output = Result<Vec<u8>, KmsError>> + Send;
 
     /// Get public key for asymmetric key pair
     ///
@@ -145,7 +163,10 @@ pub trait KeyManagementCapability: Send + Sync + fmt::Debug {
     ///
     /// * `Ok(Vec<u8>)` - Public key bytes (format depends on algorithm)
     /// * `Err(KmsError)` - If retrieval fails
-    async fn get_public_key(&self, key_id: &KeyId) -> Result<Vec<u8>, KmsError>;
+    fn get_public_key(
+        &self,
+        key_id: &KeyId,
+    ) -> impl Future<Output = Result<Vec<u8>, KmsError>> + Send;
 
     /// Delete/destroy a key
     ///
@@ -163,7 +184,7 @@ pub trait KeyManagementCapability: Send + Sync + fmt::Debug {
     /// - Irreversible operation
     /// - Subject to retention policies
     /// - Fully audited
-    async fn delete_key(&self, key_id: &KeyId) -> Result<(), KmsError>;
+    fn delete_key(&self, key_id: &KeyId) -> impl Future<Output = Result<(), KmsError>> + Send;
 
     /// List available keys
     ///
@@ -171,7 +192,7 @@ pub trait KeyManagementCapability: Send + Sync + fmt::Debug {
     ///
     /// * `Ok(Vec<KeyMetadata>)` - List of keys with metadata
     /// * `Err(KmsError)` - If listing fails
-    async fn list_keys(&self) -> Result<Vec<KeyMetadata>, KmsError>;
+    fn list_keys(&self) -> impl Future<Output = Result<Vec<KeyMetadata>, KmsError>> + Send;
 
     /// Rotate a key (generate new version)
     ///
@@ -188,7 +209,7 @@ pub trait KeyManagementCapability: Send + Sync + fmt::Debug {
     ///
     /// - Old version may be retained for decryption
     /// - New version used for encryption going forward
-    async fn rotate_key(&self, key_id: &KeyId) -> Result<KeyId, KmsError>;
+    fn rotate_key(&self, key_id: &KeyId) -> impl Future<Output = Result<KeyId, KmsError>> + Send;
 
     /// Check health of KMS provider
     ///
@@ -196,7 +217,7 @@ pub trait KeyManagementCapability: Send + Sync + fmt::Debug {
     ///
     /// * `Ok(KmsHealthStatus)` - Health information
     /// * `Err(KmsError)` - If health check fails
-    async fn health_check(&self) -> Result<KmsHealthStatus, KmsError>;
+    fn health_check(&self) -> impl Future<Output = Result<KmsHealthStatus, KmsError>> + Send;
 
     /// Get provider name
     ///

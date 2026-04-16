@@ -9,7 +9,7 @@ use super::*;
 use crate::tunnel::hsm::SoftwareHsmConfig;
 use crate::tunnel::hsm::manager::HsmManager;
 use crate::tunnel::hsm::software_hsm::RustSoftwareHsm;
-use crate::tunnel::hsm::{KeyMaterial, KeyType};
+use crate::tunnel::hsm::{HsmProviderBackend, KeyMaterial, KeyType};
 use beardog_genetics::ecosystem_evolution::EcosystemGeneticEngine;
 use std::sync::Arc;
 
@@ -21,7 +21,7 @@ async fn create_test_hsm() -> Arc<HsmManager> {
         .expect("Software HSM creation failed");
     hsm.register_hsm_provider(
         crate::tunnel::hsm::types::HsmTier::Software,
-        Arc::new(software_hsm),
+        Arc::new(HsmProviderBackend::RustSoftware(software_hsm)),
     )
     .expect("Provider registration failed");
     Arc::new(hsm)

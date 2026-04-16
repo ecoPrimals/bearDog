@@ -22,7 +22,6 @@ sha2 = { workspace = true }
 sha3 = { workspace = true }
 toml = { workspace = true }
 ahash = "0.8"
-async-trait = { workspace = true }
 rand = { workspace = true }
 urlencoding = "2.1"
 hickory-resolver = "0.24"

@@ -8,9 +8,10 @@
 //! - [`InMemoryBondPersistence`] — default; bonds lost on restart.
 //! - [`CapabilityDiscoveryBondPersistence`] — discovers a `bonding.ledger`
 //!   capable provider (NestGate/loamSpine) at runtime and delegates via JSON-RPC.
-//! - Any custom `BondPersistence` impl via [`super::IonicBondHandler::with_persistence`].
+//! - [`BondPersistenceBackend`] — enum dispatch over the built-in implementations.
 
-use async_trait::async_trait;
+use std::future::Future;
+
 use beardog_ipc::OrchestratorRegistryClient;
 use beardog_types::ionic_bond::IonicBond;
 use serde_json::json;
@@ -25,16 +26,84 @@ use tracing::{debug, warn};
 /// `IonicBondHandler` calls these methods on seal/revoke/list to persist
 /// bond state. The in-memory implementation is the default; production
 /// NUCLEUS deployments should discover a `bonding.ledger.*` provider.
-#[async_trait]
 pub trait BondPersistence: Send + Sync {
     /// Persist or overwrite a bond record (e.g. after seal).
-    async fn store(&self, bond: &IonicBond) -> Result<(), String>;
+    fn store(&self, bond: &IonicBond) -> impl Future<Output = Result<(), String>> + Send;
     /// Load a single bond by id, if present.
-    async fn retrieve(&self, bond_id: &str) -> Result<Option<IonicBond>, String>;
+    fn retrieve(
+        &self,
+        bond_id: &str,
+    ) -> impl Future<Output = Result<Option<IonicBond>, String>> + Send;
     /// Enumerate all stored bonds.
-    async fn list(&self) -> Result<Vec<IonicBond>, String>;
+    fn list(&self) -> impl Future<Output = Result<Vec<IonicBond>, String>> + Send;
     /// Delete a bond record (e.g. after revoke).
-    async fn remove(&self, bond_id: &str) -> Result<bool, String>;
+    fn remove(&self, bond_id: &str) -> impl Future<Output = Result<bool, String>> + Send;
+}
+
+/// Enum dispatch for [`BondPersistence`].
+pub enum BondPersistenceBackend {
+    /// Ephemeral in-process store (lost on restart).
+    InMemory(InMemoryBondPersistence),
+    /// Delegates to a `bonding.ledger` provider discovered at runtime.
+    CapabilityDiscovery(CapabilityDiscoveryBondPersistence),
+}
+
+async fn bond_backend_store(
+    backend: &BondPersistenceBackend,
+    bond: &IonicBond,
+) -> Result<(), String> {
+    match backend {
+        BondPersistenceBackend::InMemory(p) => p.store(bond).await,
+        BondPersistenceBackend::CapabilityDiscovery(p) => p.store(bond).await,
+    }
+}
+
+async fn bond_backend_retrieve(
+    backend: &BondPersistenceBackend,
+    bond_id: &str,
+) -> Result<Option<IonicBond>, String> {
+    match backend {
+        BondPersistenceBackend::InMemory(p) => p.retrieve(bond_id).await,
+        BondPersistenceBackend::CapabilityDiscovery(p) => p.retrieve(bond_id).await,
+    }
+}
+
+async fn bond_backend_list(backend: &BondPersistenceBackend) -> Result<Vec<IonicBond>, String> {
+    match backend {
+        BondPersistenceBackend::InMemory(p) => p.list().await,
+        BondPersistenceBackend::CapabilityDiscovery(p) => p.list().await,
+    }
+}
+
+async fn bond_backend_remove(
+    backend: &BondPersistenceBackend,
+    bond_id: &str,
+) -> Result<bool, String> {
+    match backend {
+        BondPersistenceBackend::InMemory(p) => p.remove(bond_id).await,
+        BondPersistenceBackend::CapabilityDiscovery(p) => p.remove(bond_id).await,
+    }
+}
+
+impl BondPersistence for BondPersistenceBackend {
+    fn store(&self, bond: &IonicBond) -> impl Future<Output = Result<(), String>> + Send {
+        bond_backend_store(self, bond)
+    }
+
+    fn retrieve(
+        &self,
+        bond_id: &str,
+    ) -> impl Future<Output = Result<Option<IonicBond>, String>> + Send {
+        bond_backend_retrieve(self, bond_id)
+    }
+
+    fn list(&self) -> impl Future<Output = Result<Vec<IonicBond>, String>> + Send {
+        bond_backend_list(self)
+    }
+
+    fn remove(&self, bond_id: &str) -> impl Future<Output = Result<bool, String>> + Send {
+        bond_backend_remove(self, bond_id)
+    }
 }
 
 /// In-memory bond persistence (process-scoped, non-durable).
@@ -43,26 +112,47 @@ pub struct InMemoryBondPersistence {
     bonds: RwLock<HashMap<String, IonicBond>>,
 }
 
-#[async_trait]
+async fn inmemory_store(this: &InMemoryBondPersistence, bond: &IonicBond) -> Result<(), String> {
+    this.bonds
+        .write()
+        .await
+        .insert(bond.bond_id.clone(), bond.clone());
+    Ok(())
+}
+
+async fn inmemory_retrieve(
+    this: &InMemoryBondPersistence,
+    bond_id: &str,
+) -> Result<Option<IonicBond>, String> {
+    Ok(this.bonds.read().await.get(bond_id).cloned())
+}
+
+async fn inmemory_list(this: &InMemoryBondPersistence) -> Result<Vec<IonicBond>, String> {
+    Ok(this.bonds.read().await.values().cloned().collect())
+}
+
+async fn inmemory_remove(this: &InMemoryBondPersistence, bond_id: &str) -> Result<bool, String> {
+    Ok(this.bonds.write().await.remove(bond_id).is_some())
+}
+
 impl BondPersistence for InMemoryBondPersistence {
-    async fn store(&self, bond: &IonicBond) -> Result<(), String> {
-        self.bonds
-            .write()
-            .await
-            .insert(bond.bond_id.clone(), bond.clone());
-        Ok(())
+    fn store(&self, bond: &IonicBond) -> impl Future<Output = Result<(), String>> + Send {
+        inmemory_store(self, bond)
     }
 
-    async fn retrieve(&self, bond_id: &str) -> Result<Option<IonicBond>, String> {
-        Ok(self.bonds.read().await.get(bond_id).cloned())
+    fn retrieve(
+        &self,
+        bond_id: &str,
+    ) -> impl Future<Output = Result<Option<IonicBond>, String>> + Send {
+        inmemory_retrieve(self, bond_id)
     }
 
-    async fn list(&self) -> Result<Vec<IonicBond>, String> {
-        Ok(self.bonds.read().await.values().cloned().collect())
+    fn list(&self) -> impl Future<Output = Result<Vec<IonicBond>, String>> + Send {
+        inmemory_list(self)
     }
 
-    async fn remove(&self, bond_id: &str) -> Result<bool, String> {
-        Ok(self.bonds.write().await.remove(bond_id).is_some())
+    fn remove(&self, bond_id: &str) -> impl Future<Output = Result<bool, String>> + Send {
+        inmemory_remove(self, bond_id)
     }
 }
 
@@ -169,116 +259,144 @@ impl CapabilityDiscoveryBondPersistence {
     }
 }
 
-#[async_trait]
+async fn capability_store(
+    this: &CapabilityDiscoveryBondPersistence,
+    bond: &IonicBond,
+) -> Result<(), String> {
+    let Some(endpoint) = this.resolve_endpoint().await else {
+        return this.fallback.store(bond).await;
+    };
+
+    let bond_json = serde_json::to_value(bond).map_err(|e| format!("serialize bond: {e}"))?;
+
+    match this
+        .rpc_call(
+            &endpoint,
+            "bonding.ledger.store",
+            json!({ "bond": bond_json }),
+        )
+        .await
+    {
+        Ok(_) => {
+            this.fallback.store(bond).await?;
+            Ok(())
+        }
+        Err(e) => {
+            warn!(error = %e, "Ledger store failed — persisting in-memory only");
+            this.fallback.store(bond).await
+        }
+    }
+}
+
+async fn capability_retrieve(
+    this: &CapabilityDiscoveryBondPersistence,
+    bond_id: &str,
+) -> Result<Option<IonicBond>, String> {
+    let Some(endpoint) = this.resolve_endpoint().await else {
+        return this.fallback.retrieve(bond_id).await;
+    };
+
+    match this
+        .rpc_call(
+            &endpoint,
+            "bonding.ledger.retrieve",
+            json!({ "bond_id": bond_id }),
+        )
+        .await
+    {
+        Ok(result) => {
+            if result.is_null() {
+                return this.fallback.retrieve(bond_id).await;
+            }
+            let bond: IonicBond =
+                serde_json::from_value(result).map_err(|e| format!("deserialize bond: {e}"))?;
+            Ok(Some(bond))
+        }
+        Err(e) => {
+            warn!(error = %e, "Ledger retrieve failed — checking in-memory");
+            this.fallback.retrieve(bond_id).await
+        }
+    }
+}
+
+async fn capability_list(
+    this: &CapabilityDiscoveryBondPersistence,
+) -> Result<Vec<IonicBond>, String> {
+    let Some(endpoint) = this.resolve_endpoint().await else {
+        return this.fallback.list().await;
+    };
+
+    match this
+        .rpc_call(&endpoint, "bonding.ledger.list", json!({}))
+        .await
+    {
+        Ok(result) => {
+            let remote_bonds: Vec<IonicBond> = serde_json::from_value(result).unwrap_or_default();
+            let local_bonds = this.fallback.list().await?;
+
+            let mut merged: HashMap<String, IonicBond> = remote_bonds
+                .into_iter()
+                .map(|b| (b.bond_id.clone(), b))
+                .collect();
+            for b in local_bonds {
+                merged.entry(b.bond_id.clone()).or_insert(b);
+            }
+            Ok(merged.into_values().collect())
+        }
+        Err(e) => {
+            warn!(error = %e, "Ledger list failed — returning in-memory only");
+            this.fallback.list().await
+        }
+    }
+}
+
+async fn capability_remove(
+    this: &CapabilityDiscoveryBondPersistence,
+    bond_id: &str,
+) -> Result<bool, String> {
+    let local_removed = this.fallback.remove(bond_id).await?;
+
+    let Some(endpoint) = this.resolve_endpoint().await else {
+        return Ok(local_removed);
+    };
+
+    match this
+        .rpc_call(
+            &endpoint,
+            "bonding.ledger.remove",
+            json!({ "bond_id": bond_id }),
+        )
+        .await
+    {
+        Ok(result) => {
+            let remote_removed = result.as_bool().unwrap_or(false);
+            Ok(local_removed || remote_removed)
+        }
+        Err(e) => {
+            warn!(error = %e, "Ledger remove failed — local removal only");
+            Ok(local_removed)
+        }
+    }
+}
+
 impl BondPersistence for CapabilityDiscoveryBondPersistence {
-    async fn store(&self, bond: &IonicBond) -> Result<(), String> {
-        let Some(endpoint) = self.resolve_endpoint().await else {
-            return self.fallback.store(bond).await;
-        };
-
-        let bond_json = serde_json::to_value(bond).map_err(|e| format!("serialize bond: {e}"))?;
-
-        match self
-            .rpc_call(
-                &endpoint,
-                "bonding.ledger.store",
-                json!({ "bond": bond_json }),
-            )
-            .await
-        {
-            Ok(_) => {
-                self.fallback.store(bond).await?;
-                Ok(())
-            }
-            Err(e) => {
-                warn!(error = %e, "Ledger store failed — persisting in-memory only");
-                self.fallback.store(bond).await
-            }
-        }
+    fn store(&self, bond: &IonicBond) -> impl Future<Output = Result<(), String>> + Send {
+        capability_store(self, bond)
     }
 
-    async fn retrieve(&self, bond_id: &str) -> Result<Option<IonicBond>, String> {
-        let Some(endpoint) = self.resolve_endpoint().await else {
-            return self.fallback.retrieve(bond_id).await;
-        };
-
-        match self
-            .rpc_call(
-                &endpoint,
-                "bonding.ledger.retrieve",
-                json!({ "bond_id": bond_id }),
-            )
-            .await
-        {
-            Ok(result) => {
-                if result.is_null() {
-                    return self.fallback.retrieve(bond_id).await;
-                }
-                let bond: IonicBond =
-                    serde_json::from_value(result).map_err(|e| format!("deserialize bond: {e}"))?;
-                Ok(Some(bond))
-            }
-            Err(e) => {
-                warn!(error = %e, "Ledger retrieve failed — checking in-memory");
-                self.fallback.retrieve(bond_id).await
-            }
-        }
+    fn retrieve(
+        &self,
+        bond_id: &str,
+    ) -> impl Future<Output = Result<Option<IonicBond>, String>> + Send {
+        capability_retrieve(self, bond_id)
     }
 
-    async fn list(&self) -> Result<Vec<IonicBond>, String> {
-        let Some(endpoint) = self.resolve_endpoint().await else {
-            return self.fallback.list().await;
-        };
-
-        match self
-            .rpc_call(&endpoint, "bonding.ledger.list", json!({}))
-            .await
-        {
-            Ok(result) => {
-                let remote_bonds: Vec<IonicBond> =
-                    serde_json::from_value(result).unwrap_or_default();
-                let local_bonds = self.fallback.list().await?;
-
-                let mut merged: HashMap<String, IonicBond> = remote_bonds
-                    .into_iter()
-                    .map(|b| (b.bond_id.clone(), b))
-                    .collect();
-                for b in local_bonds {
-                    merged.entry(b.bond_id.clone()).or_insert(b);
-                }
-                Ok(merged.into_values().collect())
-            }
-            Err(e) => {
-                warn!(error = %e, "Ledger list failed — returning in-memory only");
-                self.fallback.list().await
-            }
-        }
+    fn list(&self) -> impl Future<Output = Result<Vec<IonicBond>, String>> + Send {
+        capability_list(self)
     }
 
-    async fn remove(&self, bond_id: &str) -> Result<bool, String> {
-        let local_removed = self.fallback.remove(bond_id).await?;
-
-        let Some(endpoint) = self.resolve_endpoint().await else {
-            return Ok(local_removed);
-        };
-
-        match self
-            .rpc_call(
-                &endpoint,
-                "bonding.ledger.remove",
-                json!({ "bond_id": bond_id }),
-            )
-            .await
-        {
-            Ok(result) => {
-                let remote_removed = result.as_bool().unwrap_or(false);
-                Ok(local_removed || remote_removed)
-            }
-            Err(e) => {
-                warn!(error = %e, "Ledger remove failed — local removal only");
-                Ok(local_removed)
-            }
-        }
+    fn remove(&self, bond_id: &str) -> impl Future<Output = Result<bool, String>> + Send {
+        capability_remove(self, bond_id)
     }
 }
 

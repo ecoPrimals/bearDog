@@ -41,6 +41,7 @@
 
 use super::types::{HidDevice, HidDeviceInfo, ProductId, VendorId};
 use beardog_errors::BearDogError;
+use std::fmt;
 use std::path::PathBuf;
 use tokio::fs::{File, OpenOptions, read_dir, read_to_string};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -55,6 +56,14 @@ pub struct LinuxHidDevice {
 
     /// Device metadata
     info: HidDeviceInfo,
+}
+
+impl fmt::Debug for LinuxHidDevice {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("LinuxHidDevice")
+            .field("info", &self.info)
+            .finish_non_exhaustive()
+    }
 }
 
 impl LinuxHidDevice {
@@ -166,7 +175,6 @@ impl LinuxHidDevice {
     }
 }
 
-#[async_trait::async_trait]
 impl HidDevice for LinuxHidDevice {
     /// Write HID report to device (Pure Rust)
     async fn write(&mut self, report: &[u8]) -> Result<usize, BearDogError> {

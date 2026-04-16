@@ -11,7 +11,6 @@ use tracing::info;
 /// Implementation of `PrimalDiscoveryService` trait using `EcosystemListener`
 ///
 /// Modern async/await patterns with proper error handling via `?` operator
-#[async_trait::async_trait]
 impl PrimalDiscoveryService for EcosystemDiscoveryAdapter {
     async fn discover_by_capability(
         &self,
@@ -54,7 +53,7 @@ impl PrimalDiscoveryService for EcosystemDiscoveryAdapter {
         if proto == "http" || proto == "https" {
             return Err(BearDogError::network(format!(
                 "IPC-first cross-primal messaging requires unix:// or ipc:// (or socket-directory peer key); \
-                 refused HTTP endpoint for service {}",
+                     refused HTTP endpoint for service {}",
                 service.service_id
             )));
         }

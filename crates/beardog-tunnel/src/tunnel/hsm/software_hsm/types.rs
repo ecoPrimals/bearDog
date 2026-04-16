@@ -9,7 +9,7 @@ pub use beardog_types::hsm::CryptoProvider; // Canonical trait
 pub use beardog_types::hsm::InMemoryStorageBackend;
 
 // Use proper KeyStoreConfig from beardog-types
-use crate::tunnel::hsm::software_hsm::{KeyMetadata, MemoryConfig};
+use crate::tunnel::hsm::software_hsm::KeyMetadata;
 use crate::tunnel::hsm::types::{
     HsmHealthStatus, KeyStorageType, KeyType, MemoryProtectionLevel, PerformanceMetrics,
 };
@@ -18,15 +18,16 @@ use beardog_types::hsm::KeyStoreConfig;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::future::Future;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::debug;
 
 pub use super::audit::types::{AuditLogEntry, AuditLogFilter, OperationResult};
 
-/// Storage backend variants for the Software HSM
+/// Storage backend variants for the Software HSM (configuration / serde)
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub enum StorageBackend {
+pub enum SoftwareHsmStorageKind {
     /// In-memory storage (ephemeral)
     InMemory,
     /// File-based storage
@@ -41,39 +42,279 @@ pub enum StorageBackend {
     },
 }
 
-/// Trait for storage backend implementations
-#[async_trait::async_trait]
-pub trait StorageBackendTrait: Send + Sync {
-    /// Initialize the storage backend
-    async fn initialize(&self) -> Result<(), BearDogError>;
-
-    /// Store encrypted key data
-    async fn store(&self, key_id: &str, key_data: &[u8]) -> Result<(), BearDogError>;
-
-    /// Retrieve encrypted key data
-    async fn retrieve(&self, key_id: &str) -> Result<Vec<u8>, BearDogError>;
-
-    /// Delete a key
-    async fn delete(&self, key_id: &str) -> Result<(), BearDogError>;
-
-    /// List all key IDs
-    async fn list_keys(&self) -> Result<Vec<String>, BearDogError>;
-
-    /// Create a backup of all keys
-    async fn backup(&self) -> Result<Vec<u8>, BearDogError>;
-
-    /// Restore from backup
-    async fn restore(&self, backup_data: &[u8]) -> Result<(), BearDogError>;
+/// File-based storage backend
+pub struct FileStorageBackend {
+    /// Storage path (directory containing `*.key` files)
+    pub path: String,
 }
 
-/// Trait for encryption key operations
-#[async_trait::async_trait]
-pub trait EncryptionKeyTrait: Send + Sync {
-    /// Encrypt data
-    async fn encrypt(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>;
+impl FileStorageBackend {
+    /// # Errors
+    ///
+    /// Returns an error if filesystem access fails.
+    /// Create new file storage backend
+    pub async fn new(config: &KeyStoreConfig) -> Result<Self, BearDogError> {
+        let path = config.path.to_string_lossy().to_string();
+        Ok(Self { path })
+    }
+}
 
-    /// Decrypt data
-    async fn decrypt(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, BearDogError>;
+/// In-memory storage backend
+pub struct MemoryStorageBackend {
+    /// In-memory key storage
+    pub storage: Arc<RwLock<HashMap<String, Vec<u8>>>>,
+}
+
+impl MemoryStorageBackend {
+    /// # Errors
+    ///
+    /// Returns an error if encryption fails.
+    /// Create new memory storage backend
+    pub async fn new() -> Result<Self, BearDogError> {
+        Ok(Self {
+            storage: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+        })
+    }
+}
+
+/// Active storage backend implementation (replaces `Arc<dyn StorageBackendTrait>`).
+pub enum StorageBackend {
+    /// File-backed keys on disk
+    File(FileStorageBackend),
+    /// Ephemeral marker backend from `beardog-types`
+    InMemory(InMemoryStorageBackend),
+    /// In-process map backend
+    Memory(MemoryStorageBackend),
+}
+
+impl StorageBackend {
+    /// Initialize the storage backend
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the storage location cannot be created or accessed.
+    pub fn initialize(&self) -> impl Future<Output = Result<(), BearDogError>> + Send + '_ {
+        let slf = self;
+        async move {
+            match slf {
+                Self::File(b) => {
+                    std::fs::create_dir_all(&b.path)
+                        .map_err(|e| BearDogError::io_error(&e.to_string()))?;
+                    Ok(())
+                }
+                Self::InMemory(_b) => Ok(()),
+                Self::Memory(_b) => Ok(()),
+            }
+        }
+    }
+
+    /// Store encrypted key data
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key cannot be written to storage.
+    pub fn store(
+        &self,
+        key_id: &str,
+        key_data: &[u8],
+    ) -> impl Future<Output = Result<(), BearDogError>> + Send + '_ {
+        let key_id = key_id.to_string();
+        let key_data = key_data.to_vec();
+        let slf = self;
+        async move {
+            match slf {
+                Self::File(b) => {
+                    let file_path = format!("{}/{}.key", b.path, key_id);
+                    std::fs::write(&file_path, key_data)
+                        .map_err(|e| BearDogError::io_error(&e.to_string()))?;
+                    Ok(())
+                }
+                Self::InMemory(_b) => Ok(()),
+                Self::Memory(b) => {
+                    let mut storage = b.storage.write().await;
+                    storage.insert(key_id, key_data);
+                    Ok(())
+                }
+            }
+        }
+    }
+
+    /// Retrieve encrypted key data
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key is missing or cannot be read.
+    pub fn retrieve(
+        &self,
+        key_id: &str,
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let key_id = key_id.to_string();
+        let slf = self;
+        async move {
+            match slf {
+                Self::File(b) => {
+                    let file_path = format!("{}/{}.key", b.path, key_id);
+                    std::fs::read(&file_path)
+                        .map_err(|e| BearDogError::not_found(format!("Key not found: {e}")))
+                }
+                Self::InMemory(_b) => Err(BearDogError::not_found(
+                    "Key not found in ephemeral storage".to_string(),
+                )),
+                Self::Memory(b) => {
+                    let storage = b.storage.read().await;
+                    storage
+                        .get(&key_id)
+                        .cloned()
+                        .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))
+                }
+            }
+        }
+    }
+
+    /// Delete a key
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key file cannot be removed.
+    pub fn delete(
+        &self,
+        key_id: &str,
+    ) -> impl Future<Output = Result<(), BearDogError>> + Send + '_ {
+        let key_id = key_id.to_string();
+        let slf = self;
+        async move {
+            match slf {
+                Self::File(b) => {
+                    let file_path = format!("{}/{}.key", b.path, key_id);
+                    std::fs::remove_file(&file_path)
+                        .map_err(|e| BearDogError::io_error(&e.to_string()))?;
+                    Ok(())
+                }
+                Self::InMemory(_b) => Ok(()),
+                Self::Memory(b) => {
+                    let mut storage = b.storage.write().await;
+                    storage.remove(&key_id);
+                    Ok(())
+                }
+            }
+        }
+    }
+
+    /// List all key IDs
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the storage directory cannot be read.
+    pub fn list_keys(&self) -> impl Future<Output = Result<Vec<String>, BearDogError>> + Send + '_ {
+        let slf = self;
+        async move {
+            match slf {
+                Self::File(b) => {
+                    let entries = std::fs::read_dir(&b.path)
+                        .map_err(|e| BearDogError::io_error(&e.to_string()))?;
+                    let mut keys = Vec::new();
+                    for entry in entries.flatten() {
+                        if let Some(name) = entry.file_name().to_str() {
+                            let path = std::path::Path::new(name);
+                            if path
+                                .extension()
+                                .is_some_and(|ext| ext.eq_ignore_ascii_case("key"))
+                                && let Some(stem) = path.file_stem().and_then(|s| s.to_str())
+                            {
+                                keys.push(stem.to_string());
+                            }
+                        }
+                    }
+                    Ok(keys)
+                }
+                Self::InMemory(_b) => Ok(vec![]),
+                Self::Memory(b) => {
+                    let storage = b.storage.read().await;
+                    Ok(storage.keys().cloned().collect())
+                }
+            }
+        }
+    }
+
+    /// Create a backup of all keys
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if keys cannot be read or serialized.
+    pub fn backup(&self) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let slf = self;
+        async move {
+            match slf {
+                Self::File(b) => {
+                    let path = b.path.clone();
+                    let entries = std::fs::read_dir(&path)
+                        .map_err(|e| BearDogError::io_error(&e.to_string()))?;
+                    let mut keys = Vec::new();
+                    for entry in entries.flatten() {
+                        if let Some(name) = entry.file_name().to_str() {
+                            let p = std::path::Path::new(name);
+                            if p.extension()
+                                .is_some_and(|ext| ext.eq_ignore_ascii_case("key"))
+                                && let Some(stem) = p.file_stem().and_then(|s| s.to_str())
+                            {
+                                keys.push(stem.to_string());
+                            }
+                        }
+                    }
+                    let mut backup_data = HashMap::new();
+                    for key_id in keys {
+                        let file_path = format!("{path}/{key_id}.key");
+                        let data = std::fs::read(&file_path)
+                            .map_err(|e| BearDogError::not_found(format!("Key not found: {e}")))?;
+                        backup_data.insert(key_id, data);
+                    }
+                    postcard::to_allocvec(&backup_data)
+                        .map_err(|e| BearDogError::internal(e.to_string()))
+                }
+                Self::InMemory(_b) => Ok(vec![]),
+                Self::Memory(b) => {
+                    let storage = b.storage.read().await;
+                    postcard::to_allocvec(&*storage)
+                        .map_err(|e| BearDogError::internal(e.to_string()))
+                }
+            }
+        }
+    }
+
+    /// Restore from backup
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the backup payload is invalid or cannot be written.
+    pub fn restore(
+        &self,
+        backup_data: &[u8],
+    ) -> impl Future<Output = Result<(), BearDogError>> + Send + '_ {
+        let backup_data = backup_data.to_vec();
+        let slf = self;
+        async move {
+            match slf {
+                Self::File(b) => {
+                    let backup: HashMap<String, Vec<u8>> = postcard::from_bytes(&backup_data)
+                        .map_err(|e| BearDogError::internal(e.to_string()))?;
+                    for (key_id, data) in backup {
+                        let file_path = format!("{}/{}.key", b.path, key_id);
+                        std::fs::write(&file_path, data)
+                            .map_err(|e| BearDogError::io_error(&e.to_string()))?;
+                    }
+                    Ok(())
+                }
+                Self::InMemory(_b) => Ok(()),
+                Self::Memory(b) => {
+                    let restored: HashMap<String, Vec<u8>> = postcard::from_bytes(&backup_data)
+                        .map_err(|e| BearDogError::internal(e.to_string()))?;
+                    let mut storage = b.storage.write().await;
+                    *storage = restored;
+                    Ok(())
+                }
+            }
+        }
+    }
 }
 
 /// Memory protection configuration
@@ -102,7 +343,7 @@ pub struct EncryptionKey {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SoftwareHsmConfig {
     /// Storage backend configuration
-    pub storage: StorageBackend,
+    pub storage: SoftwareHsmStorageKind,
     /// Memory protection level
     pub memory_protection: MemoryProtectionLevel,
     /// Key storage type
@@ -206,46 +447,90 @@ impl ProtectedMemory {
 }
 
 /// Trait for memory protection operations
-#[async_trait::async_trait]
 pub trait MemoryProtectorTrait: Send + Sync {
     /// Initialize memory protection
-    async fn initialize(&self) -> Result<(), BearDogError>;
+    fn initialize(&self) -> impl Future<Output = Result<(), BearDogError>> + Send;
 
     /// Protect key material in memory
-    async fn protect_key_material(
+    fn protect_key_material(
         &self,
         key_material: &[u8],
-    ) -> Result<ProtectedMemory, BearDogError>;
+    ) -> impl Future<Output = Result<ProtectedMemory, BearDogError>> + Send;
 
     /// Unprotect key material
-    async fn unprotect_key_material(
+    fn unprotect_key_material(
         &self,
         protected: &ProtectedMemory,
-    ) -> Result<Vec<u8>, BearDogError>;
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send;
 
     /// Securely zeroize key material
-    async fn zeroize_key_material(&self, key_material: &mut [u8]) -> Result<(), BearDogError>;
+    fn zeroize_key_material(
+        &self,
+        key_material: &mut [u8],
+    ) -> impl Future<Output = Result<(), BearDogError>> + Send;
 }
 
 /// Trait for audit logging
-#[async_trait::async_trait]
 pub trait AuditLogger: Send + Sync {
     /// Log an operation
-    async fn log_operation(&self, operation: &AuditLogEntry) -> Result<(), BearDogError>;
+    fn log_operation(
+        &self,
+        operation: &AuditLogEntry,
+    ) -> impl Future<Output = Result<(), BearDogError>> + Send;
 
     /// Get audit log entries with filter
-    async fn get_audit_log(
+    fn get_audit_log(
         &self,
         filter: &AuditLogFilter,
-    ) -> Result<Vec<AuditLogEntry>, BearDogError>;
+    ) -> impl Future<Output = Result<Vec<AuditLogEntry>, BearDogError>> + Send;
+}
+
+/// Audit logger dispatch (replaces `Arc<dyn AuditLogger>`).
+pub enum AuditLoggerBackend {
+    /// Default persistent audit logger
+    Default(super::audit::logger::DefaultAuditLogger),
+}
+
+impl AuditLogger for AuditLoggerBackend {
+    fn log_operation(
+        &self,
+        operation: &AuditLogEntry,
+    ) -> impl Future<Output = Result<(), BearDogError>> + Send {
+        let op = operation.clone();
+        let slf = self;
+        async move {
+            match slf {
+                Self::Default(l) => AuditLogger::log_operation(l, &op).await,
+            }
+        }
+    }
+
+    fn get_audit_log(
+        &self,
+        filter: &AuditLogFilter,
+    ) -> impl Future<Output = Result<Vec<AuditLogEntry>, BearDogError>> + Send {
+        let filter = filter.clone();
+        let slf = self;
+        async move {
+            match slf {
+                Self::Default(l) => AuditLogger::get_audit_log(l, &filter).await,
+            }
+        }
+    }
+}
+
+/// Encryption key backend (replaces `Arc<dyn EncryptionKeyTrait>`).
+pub enum EncryptionKeyBackend {
+    /// Default AES-256-GCM software key
+    Default(DefaultEncryptionKey),
 }
 
 /// Software key store
 pub struct SoftwareKeyStore {
     /// Storage backend
-    pub storage_backend: Arc<dyn StorageBackendTrait>,
+    pub storage_backend: Arc<StorageBackend>,
     /// Encryption key
-    pub encryption_key: Arc<dyn EncryptionKeyTrait>,
+    pub encryption_key: Arc<EncryptionKeyBackend>,
     /// Key cache (LRU cache)
     pub key_cache: Arc<RwLock<HashMap<String, SoftwareKey>>>,
 }
@@ -259,8 +544,10 @@ impl SoftwareKeyStore {
         _config: &crate::tunnel::hsm::software_hsm::KeyStoreConfig,
     ) -> Result<Self, BearDogError> {
         Ok(Self {
-            storage_backend: Arc::new(InMemoryStorageBackend),
-            encryption_key: Arc::new(DefaultEncryptionKey::default()),
+            storage_backend: Arc::new(StorageBackend::InMemory(InMemoryStorageBackend)),
+            encryption_key: Arc::new(EncryptionKeyBackend::Default(
+                DefaultEncryptionKey::default(),
+            )),
             key_cache: Arc::new(RwLock::new(HashMap::new())),
         })
     }
@@ -367,207 +654,8 @@ impl SoftwareHealthMonitor {
     }
 }
 
-/// Default memory protector implementation
-pub struct DefaultMemoryProtector {
-    /// Memory configuration
-    pub config: MemoryConfig,
-}
-
-/// Default audit logger implementation
-pub struct DefaultAuditLogger {
-    /// Persistent audit storage
-    pub storage: Arc<super::audit::PersistentAuditStorage>,
-}
-
-/// File-based storage backend
-pub struct FileStorageBackend {
-    /// Storage path
-    path: String,
-}
-
-impl FileStorageBackend {
-    /// # Errors
-    ///
-    /// Returns an error if filesystem access fails.
-    /// Create new file storage backend
-    pub async fn new(config: &KeyStoreConfig) -> Result<Self, BearDogError> {
-        // Use the path from the new canonical KeyStoreConfig
-        let path = config.path.to_string_lossy().to_string();
-        Ok(Self { path })
-    }
-}
-
-#[async_trait::async_trait]
-impl StorageBackendTrait for FileStorageBackend {
-    async fn initialize(&self) -> Result<(), BearDogError> {
-        // Create directory if it doesn't exist
-        std::fs::create_dir_all(&self.path).map_err(|e| BearDogError::io_error(&e.to_string()))?;
-        Ok(())
-    }
-
-    async fn store(&self, key_id: &str, encrypted_key: &[u8]) -> Result<(), BearDogError> {
-        let file_path = format!("{}/{}.key", self.path, key_id);
-        std::fs::write(&file_path, encrypted_key)
-            .map_err(|e| BearDogError::io_error(&e.to_string()))?;
-        Ok(())
-    }
-
-    async fn retrieve(&self, key_id: &str) -> Result<Vec<u8>, BearDogError> {
-        let file_path = format!("{}/{}.key", self.path, key_id);
-        std::fs::read(&file_path)
-            .map_err(|e| BearDogError::not_found(format!("Key not found: {e}")))
-    }
-
-    async fn delete(&self, key_id: &str) -> Result<(), BearDogError> {
-        let file_path = format!("{}/{}.key", self.path, key_id);
-        std::fs::remove_file(&file_path).map_err(|e| BearDogError::io_error(&e.to_string()))?;
-        Ok(())
-    }
-
-    async fn list_keys(&self) -> Result<Vec<String>, BearDogError> {
-        let entries =
-            std::fs::read_dir(&self.path).map_err(|e| BearDogError::io_error(&e.to_string()))?;
-
-        let mut keys = Vec::new();
-        for entry in entries.flatten() {
-            if let Some(name) = entry.file_name().to_str() {
-                let path = std::path::Path::new(name);
-                if path
-                    .extension()
-                    .is_some_and(|ext| ext.eq_ignore_ascii_case("key"))
-                    && let Some(stem) = path.file_stem().and_then(|s| s.to_str())
-                {
-                    keys.push(stem.to_string());
-                }
-            }
-        }
-        Ok(keys)
-    }
-
-    async fn backup(&self) -> Result<Vec<u8>, BearDogError> {
-        let keys = self.list_keys().await?;
-        let mut backup_data = HashMap::new();
-
-        for key_id in keys {
-            let data = self.retrieve(&key_id).await?;
-            backup_data.insert(key_id, data);
-        }
-
-        postcard::to_allocvec(&backup_data).map_err(|e| BearDogError::internal(e.to_string()))
-    }
-
-    async fn restore(&self, backup_data: &[u8]) -> Result<(), BearDogError> {
-        let backup: HashMap<String, Vec<u8>> =
-            postcard::from_bytes(backup_data).map_err(|e| BearDogError::internal(e.to_string()))?;
-
-        for (key_id, data) in backup {
-            self.store(&key_id, &data).await?;
-        }
-        Ok(())
-    }
-}
-
-/// [`beardog_types::hsm::InMemoryStorageBackend`] is a zero-sized marker; this trait
-/// implementation intentionally does not retain keys: `store` is a no-op and `retrieve`
-/// always reports not-found, matching the type’s ephemeral semantics used where persistence
-/// is out of scope.
-#[async_trait::async_trait]
-impl StorageBackendTrait for beardog_types::hsm::InMemoryStorageBackend {
-    async fn initialize(&self) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    async fn store(&self, _key_id: &str, _encrypted_key: &[u8]) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    async fn retrieve(&self, _key_id: &str) -> Result<Vec<u8>, BearDogError> {
-        Err(BearDogError::not_found(
-            "Key not found in ephemeral storage".to_string(),
-        ))
-    }
-
-    async fn delete(&self, _key_id: &str) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    async fn list_keys(&self) -> Result<Vec<String>, BearDogError> {
-        Ok(vec![])
-    }
-
-    async fn backup(&self) -> Result<Vec<u8>, BearDogError> {
-        Ok(vec![])
-    }
-
-    async fn restore(&self, _data: &[u8]) -> Result<(), BearDogError> {
-        Ok(())
-    }
-}
-
-/// In-memory storage backend
-pub struct MemoryStorageBackend {
-    /// In-memory key storage
-    pub storage: Arc<RwLock<HashMap<String, Vec<u8>>>>,
-}
-
-impl MemoryStorageBackend {
-    /// # Errors
-    ///
-    /// Returns an error if encryption fails.
-    /// Create new memory storage backend
-    pub async fn new() -> Result<Self, BearDogError> {
-        Ok(Self {
-            storage: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-        })
-    }
-}
-
-#[async_trait::async_trait]
-impl StorageBackendTrait for MemoryStorageBackend {
-    async fn initialize(&self) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    async fn store(&self, key_id: &str, encrypted_key: &[u8]) -> Result<(), BearDogError> {
-        let mut storage = self.storage.write().await;
-        storage.insert(key_id.to_string(), encrypted_key.to_vec());
-        Ok(())
-    }
-
-    async fn retrieve(&self, key_id: &str) -> Result<Vec<u8>, BearDogError> {
-        let storage = self.storage.read().await;
-        storage
-            .get(key_id)
-            .cloned()
-            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))
-    }
-
-    async fn delete(&self, key_id: &str) -> Result<(), BearDogError> {
-        let mut storage = self.storage.write().await;
-        storage.remove(key_id);
-        Ok(())
-    }
-
-    async fn list_keys(&self) -> Result<Vec<String>, BearDogError> {
-        let storage = self.storage.read().await;
-        Ok(storage.keys().cloned().collect())
-    }
-
-    async fn backup(&self) -> Result<Vec<u8>, BearDogError> {
-        let storage = self.storage.read().await;
-        postcard::to_allocvec(&*storage).map_err(|e| BearDogError::internal(e.to_string()))
-    }
-
-    async fn restore(&self, backup_data: &[u8]) -> Result<(), BearDogError> {
-        let restored: HashMap<String, Vec<u8>> =
-            postcard::from_bytes(backup_data).map_err(|e| BearDogError::internal(e.to_string()))?;
-        let mut storage = self.storage.write().await;
-        *storage = restored;
-        Ok(())
-    }
-}
-
 /// Default encryption key implementation using AES-256-GCM
+#[derive(Clone, Copy)]
 pub struct DefaultEncryptionKey {
     /// Root key for encryption
     root_key: [u8; 32],
@@ -580,11 +668,73 @@ impl DefaultEncryptionKey {
     /// Create new default encryption key
     pub async fn create(
         _config: &SoftwareHsmConfig,
-    ) -> Result<Arc<dyn EncryptionKeyTrait>, BearDogError> {
-        // In production, derive from HSM root key or secure key derivation
+    ) -> Result<Arc<EncryptionKeyBackend>, BearDogError> {
         let root_key = *b"BearDog_RootKey_256bit_Secure!!!"; // 32 bytes
+        Ok(Arc::new(EncryptionKeyBackend::Default(Self { root_key })))
+    }
 
-        Ok(Arc::new(Self { root_key }))
+    /// Encrypt data (AES-256-GCM).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if encryption or random nonce generation fails.
+    pub fn encrypt(
+        &self,
+        plaintext: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let plaintext = plaintext.to_vec();
+        let root_key = self.root_key;
+        async move {
+            use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce, aead::Aead};
+            use rand::RngCore;
+
+            let key = Key::<Aes256Gcm>::from_slice(&root_key);
+            let cipher = Aes256Gcm::new(key);
+
+            let mut nonce_bytes = [0u8; 12];
+            rand::rng().fill_bytes(&mut nonce_bytes);
+            let nonce = Nonce::from_slice(&nonce_bytes);
+
+            let ciphertext = cipher.encrypt(nonce, plaintext.as_slice()).map_err(|e| {
+                BearDogError::crypto_error(format!("AES-256-GCM encryption failed: {e}"))
+            })?;
+
+            let mut result = nonce_bytes.to_vec();
+            result.extend_from_slice(&ciphertext);
+            Ok(result)
+        }
+    }
+
+    /// Decrypt data (AES-256-GCM).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the ciphertext is malformed or authentication fails.
+    pub fn decrypt(
+        &self,
+        ciphertext: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let ciphertext = ciphertext.to_vec();
+        let root_key = self.root_key;
+        async move {
+            use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce, aead::Aead};
+
+            if ciphertext.len() < 12 {
+                return Err(BearDogError::crypto_error(
+                    "Ciphertext too short to contain nonce",
+                ));
+            }
+
+            let (nonce_bytes, encrypted_data) = ciphertext.split_at(12);
+            let nonce = Nonce::from_slice(nonce_bytes);
+
+            let key = Key::<Aes256Gcm>::from_slice(&root_key);
+            let cipher = Aes256Gcm::new(key);
+
+            cipher.decrypt(nonce, encrypted_data).map_err(|e| {
+                BearDogError::crypto_error(format!("AES-256-GCM decryption failed: {e}"))
+            })
+        }
     }
 }
 
@@ -596,47 +746,41 @@ impl Default for DefaultEncryptionKey {
     }
 }
 
-#[async_trait::async_trait]
-impl EncryptionKeyTrait for DefaultEncryptionKey {
-    async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce, aead::Aead};
-        use rand::RngCore;
-
-        let key = Key::<Aes256Gcm>::from_slice(&self.root_key);
-        let cipher = Aes256Gcm::new(key);
-
-        let mut nonce_bytes = [0u8; 12];
-        rand::rng().fill_bytes(&mut nonce_bytes);
-        let nonce = Nonce::from_slice(&nonce_bytes);
-
-        let ciphertext = cipher.encrypt(nonce, plaintext).map_err(|e| {
-            BearDogError::crypto_error(format!("AES-256-GCM encryption failed: {e}"))
-        })?;
-
-        // Prepend nonce to ciphertext
-        let mut result = nonce_bytes.to_vec();
-        result.extend_from_slice(&ciphertext);
-        Ok(result)
+impl EncryptionKeyBackend {
+    /// Encrypt data
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if encryption fails.
+    pub fn encrypt(
+        &self,
+        data: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let slf = self;
+        let data = data.to_vec();
+        async move {
+            match slf {
+                Self::Default(k) => k.encrypt(&data).await,
+            }
+        }
     }
 
-    async fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce, aead::Aead};
-
-        if ciphertext.len() < 12 {
-            return Err(BearDogError::crypto_error(
-                "Ciphertext too short to contain nonce",
-            ));
+    /// Decrypt data
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if decryption fails.
+    pub fn decrypt(
+        &self,
+        ciphertext: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let slf = self;
+        let ciphertext = ciphertext.to_vec();
+        async move {
+            match slf {
+                Self::Default(k) => k.decrypt(&ciphertext).await,
+            }
         }
-
-        let (nonce_bytes, encrypted_data) = ciphertext.split_at(12);
-        let nonce = Nonce::from_slice(nonce_bytes);
-
-        let key = Key::<Aes256Gcm>::from_slice(&self.root_key);
-        let cipher = Aes256Gcm::new(key);
-
-        cipher
-            .decrypt(nonce, encrypted_data)
-            .map_err(|e| BearDogError::crypto_error(format!("AES-256-GCM decryption failed: {e}")))
     }
 }
 
@@ -671,7 +815,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_memory_storage_backend() -> Result<(), Box<dyn std::error::Error>> {
-        let backend = MemoryStorageBackend::new().await?;
+        let backend = StorageBackend::Memory(MemoryStorageBackend::new().await?);
 
         backend.initialize().await?;
 
@@ -696,14 +840,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_memory_storage_backup_restore() -> Result<(), Box<dyn std::error::Error>> {
-        let backend = MemoryStorageBackend::new().await?;
+        let backend = StorageBackend::Memory(MemoryStorageBackend::new().await?);
 
         backend.store("key1", &[1, 2, 3]).await?;
         backend.store("key2", &[4, 5, 6]).await?;
 
         let backup = backend.backup().await?;
 
-        let backend2 = MemoryStorageBackend::new().await?;
+        let backend2 = StorageBackend::Memory(MemoryStorageBackend::new().await?);
         backend2.restore(&backup).await?;
 
         let key1 = backend2.retrieve("key1").await?;
@@ -717,7 +861,7 @@ mod tests {
     #[tokio::test]
     async fn test_default_encryption_key() -> Result<(), Box<dyn std::error::Error>> {
         let config = SoftwareHsmConfig {
-            storage: StorageBackend::InMemory,
+            storage: SoftwareHsmStorageKind::InMemory,
             memory_protection: MemoryProtectionLevel::Medium,
             key_storage: KeyStorageType::Encrypted,
             audit_logging: true,
@@ -741,7 +885,7 @@ mod tests {
     async fn test_default_encryption_key_invalid_ciphertext()
     -> Result<(), Box<dyn std::error::Error>> {
         let config = SoftwareHsmConfig {
-            storage: StorageBackend::InMemory,
+            storage: SoftwareHsmStorageKind::InMemory,
             memory_protection: MemoryProtectionLevel::Medium,
             key_storage: KeyStorageType::Encrypted,
             audit_logging: true,
@@ -770,21 +914,21 @@ mod tests {
 
     #[test]
     fn test_storage_backend_clone() -> Result<(), Box<dyn std::error::Error>> {
-        let backend1 = StorageBackend::InMemory;
+        let backend1 = SoftwareHsmStorageKind::InMemory;
         let backend2 = backend1.clone();
 
         match backend2 {
-            StorageBackend::InMemory => {}
+            SoftwareHsmStorageKind::InMemory => {}
             _ => panic!("Expected InMemory variant"),
         }
 
-        let backend3 = StorageBackend::File {
+        let backend3 = SoftwareHsmStorageKind::File {
             path: "/tmp/keys".to_string(),
         };
         let backend4 = backend3.clone();
 
         match backend4 {
-            StorageBackend::File { path } => assert_eq!(path, "/tmp/keys"),
+            SoftwareHsmStorageKind::File { path } => assert_eq!(path, "/tmp/keys"),
             _ => panic!("Expected File variant"),
         }
         Ok(())

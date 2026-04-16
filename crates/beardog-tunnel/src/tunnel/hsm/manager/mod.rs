@@ -37,10 +37,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+use crate::tunnel::hsm::HsmKeyProviderBackend;
 use crate::tunnel::hsm::providers::HsmProviderRegistry;
 use crate::tunnel::hsm::types::key::HsmKey;
 use crate::tunnel::hsm::types::tier::HsmTier;
-use beardog_traits::hsm::HsmKeyProvider;
 use beardog_types::hsm::SelectionPreference;
 
 pub use capability::DefaultHsmCapabilityDetector;
@@ -145,7 +145,7 @@ impl HsmAutoInitConfig {
 /// * [`HsmProvider`] - HSM provider trait
 pub struct HsmProviderSelection {
     /// Selected HSM provider instance
-    pub provider: Arc<dyn HsmProvider>,
+    pub provider: Arc<crate::tunnel::hsm::HsmProviderBackend>,
 
     /// Identifier of the selected provider
     pub provider_id: String,
@@ -221,7 +221,7 @@ pub struct HsmProviderSelection {
 /// * [`HsmTier`] - Security tiers
 /// * [`HsmManagerConfig`] - Configuration options
 pub struct HsmManager {
-    hsm_providers: HashMap<String, Arc<dyn HsmProvider>>,
+    hsm_providers: HashMap<String, Arc<crate::tunnel::hsm::HsmProviderBackend>>,
     canonical_registry: HsmProviderRegistry,
     _config: HsmManagerConfig,
     _health_monitor: Arc<DefaultHsmHealthMonitor>,
@@ -378,7 +378,12 @@ impl HsmManager {
                     BearDogError::initialization(format!("Failed to initialize software HSM: {e}"))
                 })?;
 
-                manager.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))?;
+                manager.register_hsm_provider(
+                    HsmTier::Software,
+                    Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+                        software_hsm,
+                    )),
+                )?;
                 info!("✅ Software HSM initialized successfully");
             }
             "hardware" => {
@@ -392,7 +397,12 @@ impl HsmManager {
                         "Failed to initialize fallback software HSM: {e}"
                     ))
                 })?;
-                manager.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))?;
+                manager.register_hsm_provider(
+                    HsmTier::Software,
+                    Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+                        software_hsm,
+                    )),
+                )?;
             }
             "android_strongbox" => {
                 // Android StrongBox initialization (future implementation)
@@ -405,7 +415,12 @@ impl HsmManager {
                         "Failed to initialize fallback software HSM: {e}"
                     ))
                 })?;
-                manager.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))?;
+                manager.register_hsm_provider(
+                    HsmTier::Software,
+                    Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+                        software_hsm,
+                    )),
+                )?;
             }
             "ios_secure_enclave" => {
                 // iOS Secure Enclave initialization (future implementation)
@@ -418,7 +433,12 @@ impl HsmManager {
                         "Failed to initialize fallback software HSM: {e}"
                     ))
                 })?;
-                manager.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))?;
+                manager.register_hsm_provider(
+                    HsmTier::Software,
+                    Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+                        software_hsm,
+                    )),
+                )?;
             }
             _ => {
                 let error_msg = format!(
@@ -491,7 +511,7 @@ impl HsmManager {
     pub fn register_hsm_provider(
         &mut self,
         tier: HsmTier,
-        provider: Arc<dyn HsmProvider>,
+        provider: Arc<crate::tunnel::hsm::HsmProviderBackend>,
     ) -> Result<(), BearDogError> {
         let tier_key = format!("{tier:?}");
         self.hsm_providers.insert(tier_key, provider);
@@ -660,14 +680,14 @@ impl HsmManager {
 
     // ── canonical HsmKeyProvider access ─────────────────────────────────
 
-    /// Select the best canonical [`HsmKeyProvider`] according to `preference`.
+    /// Select the best canonical `HsmKeyProvider` according to `preference`.
     ///
     /// # Errors
     /// Returns an error if no matching provider is available.
     pub fn select_canonical_provider(
         &self,
         preference: SelectionPreference,
-    ) -> Result<Arc<dyn HsmKeyProvider>, BearDogError> {
+    ) -> Result<Arc<HsmKeyProviderBackend>, BearDogError> {
         self.canonical_registry.select(preference)
     }
 
@@ -675,7 +695,7 @@ impl HsmManager {
     ///
     /// # Errors
     /// Returns an error if no provider is available.
-    pub fn canonical_provider(&self) -> Result<Arc<dyn HsmKeyProvider>, BearDogError> {
+    pub fn canonical_provider(&self) -> Result<Arc<HsmKeyProviderBackend>, BearDogError> {
         self.canonical_registry
             .select(SelectionPreference::PreferHardware)
     }

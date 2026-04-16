@@ -34,7 +34,9 @@
 //! - ✅ Platform-agnostic (universal trait)
 //! - ✅ No hardcoding (primal name from runtime)
 
-use super::{PlatformListener, PlatformSocket, PlatformStream, SocketEndpoint};
+use super::{
+    PlatformListener, PlatformListenerBackend, PlatformSocket, PlatformStream, SocketEndpoint,
+};
 use beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional;
 use std::pin::Pin;
 use std::task::{Context, Poll};
@@ -84,11 +86,10 @@ pub struct AndroidPlatformListener {
     name: String,
 }
 
-#[async_trait::async_trait]
 impl PlatformListener for AndroidPlatformListener {
     async fn accept(&mut self) -> std::io::Result<Box<dyn PlatformStream>> {
         let (stream, _addr) = self.listener.accept().await?;
-        Ok(Box::new(AndroidPlatformStream(stream)))
+        Ok(Box::new(AndroidPlatformStream(stream)) as Box<dyn PlatformStream>)
     }
 
     fn local_addr(&self) -> std::io::Result<String> {
@@ -116,7 +117,7 @@ impl PlatformSocket for AndroidSocket {
         Ok(SocketEndpoint::Abstract(abstract_name))
     }
 
-    fn bind(endpoint: &SocketEndpoint) -> std::io::Result<Box<dyn PlatformListener>> {
+    fn bind(endpoint: &SocketEndpoint) -> std::io::Result<Box<PlatformListenerBackend>> {
         match endpoint {
             SocketEndpoint::Abstract(name) => {
                 debug!("Binding abstract socket: {}", name);
@@ -128,10 +129,12 @@ impl PlatformSocket for AndroidSocket {
 
                 info!("✅ Abstract socket bound: {} (Android-optimized)", name);
 
-                Ok(Box::new(AndroidPlatformListener {
-                    listener,
-                    name: name.clone(),
-                }))
+                Ok(Box::new(PlatformListenerBackend::Android(
+                    AndroidPlatformListener {
+                        listener,
+                        name: name.clone(),
+                    },
+                )))
             }
             SocketEndpoint::Filesystem(_) => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,

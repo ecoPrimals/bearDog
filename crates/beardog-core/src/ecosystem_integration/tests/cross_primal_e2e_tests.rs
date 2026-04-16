@@ -111,7 +111,6 @@ impl MockPrimalEcosystem {
     }
 }
 
-#[async_trait::async_trait]
 impl PrimalDiscoveryService for MockPrimalEcosystem {
     async fn discover_by_capability(
         &self,
@@ -137,10 +136,11 @@ impl PrimalDiscoveryService for MockPrimalEcosystem {
         service: &UniversalServiceDescriptor,
         _payload: serde_json::Value,
     ) -> Result<serde_json::Value, BearDogError> {
+        let sid = service.service_id.clone();
         // Simulate successful request with proper SecurePrimalResponse format
         Ok(serde_json::json!({
             "ciphertext": vec![1u8, 2, 3, 4],
-            "responder_id": service.service_id,
+            "responder_id": sid,
             "capability_used": serde_json::json!({"Network": {"functions": []}}),
             "processing_time_ms": 10,
         }))

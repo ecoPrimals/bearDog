@@ -3,13 +3,11 @@
 use super::*;
 use crate::primal_self_knowledge::{PrimalIdentity, PrimalIdentityEnvInputs};
 use beardog_types::canonical::discovery::PerformanceProfile;
-
 #[derive(Debug)]
 struct MockDiscoveryService {
     mock_primals: Vec<UniversalServiceDescriptor>,
 }
 
-#[async_trait::async_trait]
 impl PrimalDiscoveryService for MockDiscoveryService {
     async fn discover_by_capability(
         &self,
@@ -131,7 +129,6 @@ async fn send_to_network_primal_deserialize_error_is_reported() {
     #[derive(Debug)]
     struct BadJsonNetwork(MockDiscoveryService);
 
-    #[async_trait::async_trait]
     impl PrimalDiscoveryService for BadJsonNetwork {
         async fn discover_by_capability(
             &self,
@@ -172,7 +169,6 @@ async fn send_to_network_primal_round_trip_updates_metrics() {
     #[derive(Debug)]
     struct RoundTrip(Arc<MockDiscoveryService>);
 
-    #[async_trait::async_trait]
     impl PrimalDiscoveryService for RoundTrip {
         async fn discover_by_capability(
             &self,
@@ -233,7 +229,6 @@ async fn establish_secure_session_errors_when_peer_key_missing() {
     #[derive(Debug)]
     struct NoKey(Arc<MockDiscoveryService>);
 
-    #[async_trait::async_trait]
     impl PrimalDiscoveryService for NoKey {
         async fn discover_by_capability(
             &self,
@@ -270,7 +265,6 @@ async fn establish_secure_session_errors_on_invalid_peer_key_hex() {
     #[derive(Debug)]
     struct BadHex(Arc<MockDiscoveryService>);
 
-    #[async_trait::async_trait]
     impl PrimalDiscoveryService for BadHex {
         async fn discover_by_capability(
             &self,
@@ -309,7 +303,6 @@ async fn establish_secure_session_errors_when_peer_key_wrong_length() {
     #[derive(Debug)]
     struct ShortKey(Arc<MockDiscoveryService>);
 
-    #[async_trait::async_trait]
     impl PrimalDiscoveryService for ShortKey {
         async fn discover_by_capability(
             &self,
@@ -351,7 +344,6 @@ async fn establish_secure_session_succeeds_with_valid_peer_public_key() {
         hex: String,
     }
 
-    #[async_trait::async_trait]
     impl PrimalDiscoveryService for GoodKey {
         async fn discover_by_capability(
             &self,
@@ -365,8 +357,9 @@ async fn establish_secure_session_succeeds_with_valid_peer_public_key() {
             _service: &UniversalServiceDescriptor,
             _payload: serde_json::Value,
         ) -> Result<serde_json::Value, BearDogError> {
+            let hex = self.hex.clone();
             Ok(serde_json::json!({
-                "peer_public_key": self.hex.clone(),
+                "peer_public_key": hex,
             }))
         }
     }
@@ -417,7 +410,6 @@ async fn send_to_compute_and_storage_primals_happy_path() {
     #[derive(Debug)]
     struct Multi(Arc<MockDiscoveryService>);
 
-    #[async_trait::async_trait]
     impl PrimalDiscoveryService for Multi {
         async fn discover_by_capability(
             &self,

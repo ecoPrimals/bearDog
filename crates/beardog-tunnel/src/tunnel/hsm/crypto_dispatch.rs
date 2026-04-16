@@ -26,6 +26,7 @@
 
 use crate::tunnel::hsm::types::KeyType;
 use beardog_errors::BearDogError;
+use std::future::Future;
 // ✅ SECURITY FIX: Using real crypto providers with actual encryption (100% Pure Rust!)
 use crate::tunnel::hsm::software_hsm::crypto_providers::RustCryptoProvider;
 // RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust, ARM-ready!)
@@ -78,49 +79,81 @@ impl CryptoProviderDispatch {
 /// Implement `CryptoProvider` trait with zero-cost enum dispatch
 ///
 /// **100% Pure Rust!** - All C dependencies removed
-#[async_trait::async_trait]
 impl CryptoProvider<KeyType> for CryptoProviderDispatch {
     async fn initialize(&self) -> Result<(), BearDogError> {
-        let Self::RustCrypto(p) = self;
-        p.initialize().await
+        match self {
+            Self::RustCrypto(p) => p.initialize().await,
+        }
     }
 
-    async fn generate_key_material(&self, key_type: &KeyType) -> Result<Vec<u8>, BearDogError> {
-        let Self::RustCrypto(p) = self;
-        p.generate_key_material(key_type).await
+    fn generate_key_material(
+        &self,
+        key_type: &KeyType,
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let key_type = key_type.clone();
+        let slf = self.clone();
+        async move {
+            let Self::RustCrypto(p) = slf;
+            p.generate_key_material(&key_type).await
+        }
     }
 
-    async fn encrypt(
+    fn encrypt(
         &self,
         key_material: &[u8],
         plaintext: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        let Self::RustCrypto(p) = self;
-        p.encrypt(key_material, plaintext).await
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let key_material = key_material.to_vec();
+        let plaintext = plaintext.to_vec();
+        let slf = self.clone();
+        async move {
+            let Self::RustCrypto(p) = slf;
+            p.encrypt(&key_material, &plaintext).await
+        }
     }
 
-    async fn decrypt(
+    fn decrypt(
         &self,
         key_material: &[u8],
         ciphertext: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        let Self::RustCrypto(p) = self;
-        p.decrypt(key_material, ciphertext).await
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let key_material = key_material.to_vec();
+        let ciphertext = ciphertext.to_vec();
+        let slf = self.clone();
+        async move {
+            let Self::RustCrypto(p) = slf;
+            p.decrypt(&key_material, &ciphertext).await
+        }
     }
 
-    async fn sign(&self, key_material: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        let Self::RustCrypto(p) = self;
-        p.sign(key_material, data).await
-    }
-
-    async fn verify(
+    fn sign(
         &self,
-        public_key: &[u8],
+        key_material: &[u8],
+        data: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let key_material = key_material.to_vec();
+        let data = data.to_vec();
+        let slf = self.clone();
+        async move {
+            let Self::RustCrypto(p) = slf;
+            p.sign(&key_material, &data).await
+        }
+    }
+
+    fn verify(
+        &self,
+        key_material: &[u8],
         data: &[u8],
         signature: &[u8],
-    ) -> Result<bool, BearDogError> {
-        let Self::RustCrypto(p) = self;
-        p.verify(public_key, data, signature).await
+    ) -> impl Future<Output = Result<bool, BearDogError>> + Send + '_ {
+        let key_material = key_material.to_vec();
+        let data = data.to_vec();
+        let signature = signature.to_vec();
+        let slf = self.clone();
+        async move {
+            let Self::RustCrypto(p) = slf;
+            p.verify(&key_material, &data, &signature).await
+        }
     }
 }
 

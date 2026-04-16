@@ -11,7 +11,6 @@
 
 use super::MethodHandler;
 use crate::btsp_provider::BeardogBtspProvider;
-use async_trait::async_trait;
 use beardog_types::ionic_bond::{IonicBond, IonicBondProposeParams};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -23,7 +22,8 @@ mod lifecycle;
 pub mod persistence;
 
 pub use persistence::{
-    BondPersistence, CapabilityDiscoveryBondPersistence, InMemoryBondPersistence,
+    BondPersistence, BondPersistenceBackend, CapabilityDiscoveryBondPersistence,
+    InMemoryBondPersistence,
 };
 
 /// In-memory ionic bond state manager.
@@ -39,7 +39,7 @@ pub use persistence::{
 pub struct IonicBondHandler {
     proposals: Arc<RwLock<HashMap<String, PendingProposal>>>,
     bonds: Arc<RwLock<HashMap<String, IonicBond>>>,
-    persistence: Arc<dyn BondPersistence>,
+    persistence: Arc<BondPersistenceBackend>,
 }
 
 struct PendingProposal {
@@ -65,13 +65,15 @@ impl IonicBondHandler {
         Self {
             proposals: Arc::new(RwLock::new(HashMap::new())),
             bonds: Arc::new(RwLock::new(HashMap::new())),
-            persistence: Arc::new(InMemoryBondPersistence::default()),
+            persistence: Arc::new(BondPersistenceBackend::InMemory(
+                InMemoryBondPersistence::default(),
+            )),
         }
     }
 
     /// Create a handler using the given durable bond store (e.g. ledger-backed).
     #[must_use]
-    pub fn with_persistence(persistence: Arc<dyn BondPersistence>) -> Self {
+    pub fn with_persistence(persistence: Arc<BondPersistenceBackend>) -> Self {
         Self {
             proposals: Arc::new(RwLock::new(HashMap::new())),
             bonds: Arc::new(RwLock::new(HashMap::new())),
@@ -80,7 +82,6 @@ impl IonicBondHandler {
     }
 }
 
-#[async_trait]
 impl MethodHandler for IonicBondHandler {
     fn methods(&self) -> Vec<&'static str> {
         vec![

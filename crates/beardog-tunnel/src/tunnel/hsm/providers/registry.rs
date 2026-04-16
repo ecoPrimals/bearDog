@@ -233,10 +233,10 @@ use std::sync::Arc;
 
 /// Runtime registry of `HsmKeyProvider` backends.
 ///
-/// Holds `Arc<dyn HsmKeyProvider>` instances and selects the best one
+/// Holds [`crate::tunnel::hsm::HsmKeyProviderBackend`] instances and selects the best one
 /// according to [`SelectionPreference`].
 pub struct HsmProviderRegistry {
-    providers: Vec<Arc<dyn HsmKeyProvider>>,
+    providers: Vec<Arc<crate::tunnel::hsm::HsmKeyProviderBackend>>,
 }
 
 impl HsmProviderRegistry {
@@ -257,7 +257,7 @@ impl HsmProviderRegistry {
 
         let sw = crate::tunnel::hsm::software_hsm::create_default_software_hsm()
             .await
-            .map(|hsm| Arc::new(hsm) as Arc<dyn HsmKeyProvider>);
+            .map(|hsm| Arc::new(crate::tunnel::hsm::HsmKeyProviderBackend::Software(hsm)));
 
         if let Ok(provider) = sw {
             info!("HSM registry: registered software-rustcrypto provider");
@@ -272,7 +272,9 @@ impl HsmProviderRegistry {
             {
                 if beardog_traits::hsm::HsmKeyProvider::is_available(&sb) {
                     info!("HSM registry: registered android-strongbox provider");
-                    registry.providers.push(Arc::new(sb));
+                    registry.providers.push(Arc::new(
+                        crate::tunnel::hsm::HsmKeyProviderBackend::AndroidStrongBox(sb),
+                    ));
                 }
             }
         }
@@ -281,7 +283,7 @@ impl HsmProviderRegistry {
     }
 
     /// Manually register a provider.
-    pub fn register(&mut self, provider: Arc<dyn HsmKeyProvider>) {
+    pub fn register(&mut self, provider: Arc<crate::tunnel::hsm::HsmKeyProviderBackend>) {
         info!(
             "HSM registry: manually registered provider '{}'",
             provider.provider_id()
@@ -299,7 +301,7 @@ impl HsmProviderRegistry {
     pub fn select(
         &self,
         preference: SelectionPreference,
-    ) -> Result<Arc<dyn HsmKeyProvider>, BearDogError> {
+    ) -> Result<Arc<crate::tunnel::hsm::HsmKeyProviderBackend>, BearDogError> {
         let available: Vec<_> = self
             .providers
             .iter()
@@ -344,7 +346,9 @@ impl HsmProviderRegistry {
     ///
     /// Returns an error if the provider cannot be registered.
     /// Convenience: always returns the software fallback.
-    pub fn software_fallback(&self) -> Result<Arc<dyn HsmKeyProvider>, BearDogError> {
+    pub fn software_fallback(
+        &self,
+    ) -> Result<Arc<crate::tunnel::hsm::HsmKeyProviderBackend>, BearDogError> {
         self.select(SelectionPreference::SoftwareOnly)
     }
 
@@ -361,7 +365,7 @@ impl HsmProviderRegistry {
     }
 
     /// Iterate over registered providers.
-    pub fn iter(&self) -> impl Iterator<Item = &Arc<dyn HsmKeyProvider>> {
+    pub fn iter(&self) -> impl Iterator<Item = &Arc<crate::tunnel::hsm::HsmKeyProviderBackend>> {
         self.providers.iter()
     }
 }
@@ -526,126 +530,6 @@ mod tests {
         HsmCapabilitySet, HsmProviderType as CanonicalType, KeyGenParams, KeyHandle,
     };
 
-    struct FakeHwProvider;
-
-    #[async_trait::async_trait]
-    impl HsmKeyProvider for FakeHwProvider {
-        fn provider_id(&self) -> &'static str {
-            "fake-hw"
-        }
-        fn provider_type(&self) -> CanonicalType {
-            CanonicalType::AndroidStrongBox
-        }
-        fn is_available(&self) -> bool {
-            true
-        }
-        fn capabilities(&self) -> HsmCapabilitySet {
-            HsmCapabilitySet::default()
-        }
-        async fn generate_key(
-            &self,
-            p: &KeyGenParams,
-        ) -> Result<KeyHandle, beardog_errors::BearDogError> {
-            Ok(KeyHandle {
-                key_id: "hw-key".into(),
-                algorithm: p.algorithm,
-                hardware_backed: true,
-                created_at_ms: 0,
-            })
-        }
-        async fn delete_key(&self, _: &str) -> Result<(), beardog_errors::BearDogError> {
-            Ok(())
-        }
-        async fn key_exists(&self, _: &str) -> Result<bool, beardog_errors::BearDogError> {
-            Ok(true)
-        }
-        async fn encrypt(
-            &self,
-            _: &str,
-            d: &[u8],
-        ) -> Result<Vec<u8>, beardog_errors::BearDogError> {
-            Ok(d.to_vec())
-        }
-        async fn decrypt(
-            &self,
-            _: &str,
-            d: &[u8],
-        ) -> Result<Vec<u8>, beardog_errors::BearDogError> {
-            Ok(d.to_vec())
-        }
-        async fn sign(&self, _: &str, d: &[u8]) -> Result<Vec<u8>, beardog_errors::BearDogError> {
-            Ok(d.to_vec())
-        }
-        async fn verify(
-            &self,
-            _: &str,
-            _: &[u8],
-            _: &[u8],
-        ) -> Result<bool, beardog_errors::BearDogError> {
-            Ok(true)
-        }
-    }
-
-    struct FakeSwProvider;
-
-    #[async_trait::async_trait]
-    impl HsmKeyProvider for FakeSwProvider {
-        fn provider_id(&self) -> &'static str {
-            "fake-sw"
-        }
-        fn provider_type(&self) -> CanonicalType {
-            CanonicalType::Software
-        }
-        fn is_available(&self) -> bool {
-            true
-        }
-        fn capabilities(&self) -> HsmCapabilitySet {
-            HsmCapabilitySet::default()
-        }
-        async fn generate_key(
-            &self,
-            p: &KeyGenParams,
-        ) -> Result<KeyHandle, beardog_errors::BearDogError> {
-            Ok(KeyHandle {
-                key_id: "sw-key".into(),
-                algorithm: p.algorithm,
-                hardware_backed: false,
-                created_at_ms: 0,
-            })
-        }
-        async fn delete_key(&self, _: &str) -> Result<(), beardog_errors::BearDogError> {
-            Ok(())
-        }
-        async fn key_exists(&self, _: &str) -> Result<bool, beardog_errors::BearDogError> {
-            Ok(true)
-        }
-        async fn encrypt(
-            &self,
-            _: &str,
-            d: &[u8],
-        ) -> Result<Vec<u8>, beardog_errors::BearDogError> {
-            Ok(d.to_vec())
-        }
-        async fn decrypt(
-            &self,
-            _: &str,
-            d: &[u8],
-        ) -> Result<Vec<u8>, beardog_errors::BearDogError> {
-            Ok(d.to_vec())
-        }
-        async fn sign(&self, _: &str, d: &[u8]) -> Result<Vec<u8>, beardog_errors::BearDogError> {
-            Ok(d.to_vec())
-        }
-        async fn verify(
-            &self,
-            _: &str,
-            _: &[u8],
-            _: &[u8],
-        ) -> Result<bool, beardog_errors::BearDogError> {
-            Ok(true)
-        }
-    }
-
     #[test]
     fn canonical_registry_empty_select_fails() {
         let reg = HsmProviderRegistry::new();
@@ -656,8 +540,16 @@ mod tests {
     #[test]
     fn canonical_registry_prefer_hardware_picks_hw() {
         let mut reg = HsmProviderRegistry::new();
-        reg.register(Arc::new(FakeSwProvider));
-        reg.register(Arc::new(FakeHwProvider));
+        reg.register(Arc::new(
+            crate::tunnel::hsm::HsmKeyProviderBackend::StubSoftware(
+                crate::tunnel::hsm::hsm_key_provider_backend::tests::FakeSwProvider,
+            ),
+        ));
+        reg.register(Arc::new(
+            crate::tunnel::hsm::HsmKeyProviderBackend::StubHardware(
+                crate::tunnel::hsm::hsm_key_provider_backend::tests::FakeHwProvider,
+            ),
+        ));
 
         let p = reg.select(SelectionPreference::PreferHardware).unwrap();
         assert_eq!(p.provider_type(), CanonicalType::AndroidStrongBox);
@@ -666,7 +558,11 @@ mod tests {
     #[test]
     fn canonical_registry_prefer_hardware_falls_back_to_sw() {
         let mut reg = HsmProviderRegistry::new();
-        reg.register(Arc::new(FakeSwProvider));
+        reg.register(Arc::new(
+            crate::tunnel::hsm::HsmKeyProviderBackend::StubSoftware(
+                crate::tunnel::hsm::hsm_key_provider_backend::tests::FakeSwProvider,
+            ),
+        ));
 
         let p = reg.select(SelectionPreference::PreferHardware).unwrap();
         assert_eq!(p.provider_type(), CanonicalType::Software);
@@ -675,7 +571,11 @@ mod tests {
     #[test]
     fn canonical_registry_require_hardware_fails_without_hw() {
         let mut reg = HsmProviderRegistry::new();
-        reg.register(Arc::new(FakeSwProvider));
+        reg.register(Arc::new(
+            crate::tunnel::hsm::HsmKeyProviderBackend::StubSoftware(
+                crate::tunnel::hsm::hsm_key_provider_backend::tests::FakeSwProvider,
+            ),
+        ));
 
         assert!(reg.select(SelectionPreference::RequireHardware).is_err());
     }
@@ -683,8 +583,16 @@ mod tests {
     #[test]
     fn canonical_registry_software_only() {
         let mut reg = HsmProviderRegistry::new();
-        reg.register(Arc::new(FakeSwProvider));
-        reg.register(Arc::new(FakeHwProvider));
+        reg.register(Arc::new(
+            crate::tunnel::hsm::HsmKeyProviderBackend::StubSoftware(
+                crate::tunnel::hsm::hsm_key_provider_backend::tests::FakeSwProvider,
+            ),
+        ));
+        reg.register(Arc::new(
+            crate::tunnel::hsm::HsmKeyProviderBackend::StubHardware(
+                crate::tunnel::hsm::hsm_key_provider_backend::tests::FakeHwProvider,
+            ),
+        ));
 
         let p = reg.select(SelectionPreference::SoftwareOnly).unwrap();
         assert_eq!(p.provider_type(), CanonicalType::Software);
@@ -693,8 +601,16 @@ mod tests {
     #[test]
     fn canonical_registry_software_fallback() {
         let mut reg = HsmProviderRegistry::new();
-        reg.register(Arc::new(FakeSwProvider));
-        reg.register(Arc::new(FakeHwProvider));
+        reg.register(Arc::new(
+            crate::tunnel::hsm::HsmKeyProviderBackend::StubSoftware(
+                crate::tunnel::hsm::hsm_key_provider_backend::tests::FakeSwProvider,
+            ),
+        ));
+        reg.register(Arc::new(
+            crate::tunnel::hsm::HsmKeyProviderBackend::StubHardware(
+                crate::tunnel::hsm::hsm_key_provider_backend::tests::FakeHwProvider,
+            ),
+        ));
 
         let p = reg.software_fallback().unwrap();
         assert_eq!(p.provider_id(), "fake-sw");
@@ -703,8 +619,16 @@ mod tests {
     #[test]
     fn canonical_registry_len_and_iter() {
         let mut reg = HsmProviderRegistry::new();
-        reg.register(Arc::new(FakeSwProvider));
-        reg.register(Arc::new(FakeHwProvider));
+        reg.register(Arc::new(
+            crate::tunnel::hsm::HsmKeyProviderBackend::StubSoftware(
+                crate::tunnel::hsm::hsm_key_provider_backend::tests::FakeSwProvider,
+            ),
+        ));
+        reg.register(Arc::new(
+            crate::tunnel::hsm::HsmKeyProviderBackend::StubHardware(
+                crate::tunnel::hsm::hsm_key_provider_backend::tests::FakeHwProvider,
+            ),
+        ));
         assert_eq!(reg.len(), 2);
 
         let ids: Vec<_> = reg.iter().map(|p| p.provider_id()).collect();

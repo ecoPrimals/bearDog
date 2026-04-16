@@ -5,6 +5,7 @@
 //! Tests for HSM provider selection, tier management, and fallback behavior.
 //! Updated November 21, 2025 to match `UnifiedHsmProvider` API.
 
+use crate::tunnel::hsm::HsmProviderBackend;
 use crate::tunnel::hsm::software_hsm::RustSoftwareHsm;
 use crate::tunnel::hsm::types::SoftwareHsmConfig;
 use crate::tunnel::hsm::unified_provider::UnifiedHsmProvider;
@@ -34,7 +35,10 @@ async fn test_software_hsm_registration() -> Result<(), BearDogError> {
     let config = SoftwareHsmConfig::default();
     let software_hsm = RustSoftwareHsm::new(config).await?;
 
-    unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
+    unified.register_provider(
+        "software".to_string(),
+        Arc::new(HsmProviderBackend::RustSoftware(software_hsm)),
+    )?;
 
     // Software provider should be available
     assert!(
@@ -53,7 +57,10 @@ async fn test_default_provider_set_on_first_registration() -> Result<(), BearDog
     let config = SoftwareHsmConfig::default();
     let software_hsm = RustSoftwareHsm::new(config).await?;
 
-    unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
+    unified.register_provider(
+        "software".to_string(),
+        Arc::new(HsmProviderBackend::RustSoftware(software_hsm)),
+    )?;
 
     // Should be able to get default provider
     let result = unified.get_default_provider();
@@ -70,7 +77,10 @@ async fn test_get_provider_by_id() -> Result<(), BearDogError> {
     let config = SoftwareHsmConfig::default();
     let software_hsm = RustSoftwareHsm::new(config).await?;
 
-    unified.register_provider("software-hsm".to_string(), Arc::new(software_hsm))?;
+    unified.register_provider(
+        "software-hsm".to_string(),
+        Arc::new(HsmProviderBackend::RustSoftware(software_hsm)),
+    )?;
 
     // Should be able to get provider by ID
     let provider = unified.get_provider("software-hsm");
@@ -115,8 +125,14 @@ async fn test_multiple_provider_registration() -> Result<(), BearDogError> {
     let config2 = SoftwareHsmConfig::default();
     let software_hsm2 = RustSoftwareHsm::new(config2).await?;
 
-    unified.register_provider("software-1".to_string(), Arc::new(software_hsm1))?;
-    unified.register_provider("software-2".to_string(), Arc::new(software_hsm2))?;
+    unified.register_provider(
+        "software-1".to_string(),
+        Arc::new(HsmProviderBackend::RustSoftware(software_hsm1)),
+    )?;
+    unified.register_provider(
+        "software-2".to_string(),
+        Arc::new(HsmProviderBackend::RustSoftware(software_hsm2)),
+    )?;
 
     // Should have both providers registered
     let providers = unified.list_providers();
@@ -133,7 +149,10 @@ async fn test_unregister_provider() -> Result<(), BearDogError> {
     let config = SoftwareHsmConfig::default();
     let software_hsm = RustSoftwareHsm::new(config).await?;
 
-    unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
+    unified.register_provider(
+        "software".to_string(),
+        Arc::new(HsmProviderBackend::RustSoftware(software_hsm)),
+    )?;
     assert_eq!(unified.list_providers().len(), 1);
 
     unified.unregister_provider("software")?;
@@ -157,8 +176,14 @@ async fn test_set_default_provider() -> Result<(), BearDogError> {
     let config2 = SoftwareHsmConfig::default();
     let software_hsm2 = RustSoftwareHsm::new(config2).await?;
 
-    unified.register_provider("software-1".to_string(), Arc::new(software_hsm1))?;
-    unified.register_provider("software-2".to_string(), Arc::new(software_hsm2))?;
+    unified.register_provider(
+        "software-1".to_string(),
+        Arc::new(HsmProviderBackend::RustSoftware(software_hsm1)),
+    )?;
+    unified.register_provider(
+        "software-2".to_string(),
+        Arc::new(HsmProviderBackend::RustSoftware(software_hsm2)),
+    )?;
 
     // Explicitly set software-2 as default
     unified.set_default_provider("software-2".to_string())?;
@@ -203,8 +228,14 @@ async fn test_list_providers() -> Result<(), BearDogError> {
     let config2 = SoftwareHsmConfig::default();
     let software_hsm2 = RustSoftwareHsm::new(config2).await?;
 
-    unified.register_provider("provider-1".to_string(), Arc::new(software_hsm1))?;
-    unified.register_provider("provider-2".to_string(), Arc::new(software_hsm2))?;
+    unified.register_provider(
+        "provider-1".to_string(),
+        Arc::new(HsmProviderBackend::RustSoftware(software_hsm1)),
+    )?;
+    unified.register_provider(
+        "provider-2".to_string(),
+        Arc::new(HsmProviderBackend::RustSoftware(software_hsm2)),
+    )?;
 
     // Should list all registered providers
     let providers = unified.list_providers();

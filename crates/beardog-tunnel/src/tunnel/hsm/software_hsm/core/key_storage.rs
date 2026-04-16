@@ -8,7 +8,7 @@ use super::RustSoftwareHsm;
 use crate::tunnel::hsm::GenerateKeyRequest;
 use crate::tunnel::hsm::types::{HsmKey, KeyHealthStatus, KeyMaterial, KeyMetadata};
 use beardog_errors::BearDogError;
-use beardog_types::hsm::HsmAlgorithm;
+use beardog_types::hsm::{CryptoProvider, HsmAlgorithm};
 use bytes::Bytes;
 use chrono::Utc;
 use tracing::info;
@@ -153,6 +153,10 @@ impl RustSoftwareHsm {
     }
 
     /// Map an [`HsmAlgorithm`] to the internal [`KeyType`] used by the legacy key store.
+    #[expect(
+        dead_code,
+        reason = "reserved for key-type mapping when wiring algorithm metadata"
+    )]
     pub(super) fn algorithm_to_key_type(algorithm: HsmAlgorithm) -> KeyType {
         match algorithm {
             HsmAlgorithm::Aes256Gcm | HsmAlgorithm::HmacSha256 => KeyType::Aes,

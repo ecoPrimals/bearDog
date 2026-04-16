@@ -2,10 +2,10 @@
 
 //! Service discovery trait, descriptors, errors, and shared types.
 
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
+use std::future::Future;
 
 use crate::canonical::capabilities::ServiceCapabilityType;
 use crate::canonical::types::ids::{RegistrationId, ServiceInstanceId};
@@ -34,7 +34,6 @@ use crate::canonical::types::ids::{RegistrationId, ServiceInstanceId};
 /// - Support health checking of discovered services
 /// - Return services in priority order (healthiest first)
 /// - Support both capability-based and name-based queries (legacy)
-#[async_trait]
 pub trait ServiceDiscoveryCapability: Send + Sync + fmt::Debug {
     /// Discover services by capability type
     ///
@@ -56,7 +55,7 @@ pub trait ServiceDiscoveryCapability: Send + Sync + fmt::Debug {
     /// # use beardog_types::canonical::discovery::service_discovery_capability::*;
     /// # use beardog_types::canonical::capabilities::ServiceCapabilityType;
     /// # use std::sync::Arc;
-    /// # async fn example(discovery: Arc<dyn ServiceDiscoveryCapability>) -> Result<(), DiscoveryError> {
+    /// # async fn example(discovery: Arc<ServiceDiscoveryBackend>) -> Result<(), DiscoveryError> {
     /// // Find all service mesh providers
     /// let mesh_services = discovery.discover_by_capability(
     ///     ServiceCapabilityType::ServiceMesh
@@ -68,10 +67,10 @@ pub trait ServiceDiscoveryCapability: Send + Sync + fmt::Debug {
     /// # Ok(())
     /// # }
     /// ```
-    async fn discover_by_capability(
+    fn discover_by_capability(
         &self,
         capability: ServiceCapabilityType,
-    ) -> Result<Vec<ServiceDescriptor>, DiscoveryError>;
+    ) -> impl Future<Output = Result<Vec<ServiceDescriptor>, DiscoveryError>> + Send;
 
     /// Discover services by name (legacy support)
     ///
@@ -86,10 +85,10 @@ pub trait ServiceDiscoveryCapability: Send + Sync + fmt::Debug {
     ///
     /// * `Ok(Vec<ServiceDescriptor>)` - Matching services
     /// * `Err(DiscoveryError)` - If discovery fails
-    async fn discover_by_name(
+    fn discover_by_name(
         &self,
         service_name: &str,
-    ) -> Result<Vec<ServiceDescriptor>, DiscoveryError>;
+    ) -> impl Future<Output = Result<Vec<ServiceDescriptor>, DiscoveryError>> + Send;
 
     /// Register this service instance with the discovery system
     ///
@@ -109,10 +108,10 @@ pub trait ServiceDiscoveryCapability: Send + Sync + fmt::Debug {
     /// - Registration may be ephemeral (requires periodic renewal)
     /// - Implementations should handle registration expiry
     /// - Call `unregister_service` on shutdown for clean deregistration
-    async fn register_service(
+    fn register_service(
         &self,
         descriptor: ServiceDescriptor,
-    ) -> Result<RegistrationId, DiscoveryError>;
+    ) -> impl Future<Output = Result<RegistrationId, DiscoveryError>> + Send;
 
     /// Unregister a previously registered service
     ///
@@ -126,10 +125,10 @@ pub trait ServiceDiscoveryCapability: Send + Sync + fmt::Debug {
     ///
     /// * `Ok(())` - Successfully unregistered
     /// * `Err(DiscoveryError)` - If unregistration fails (may be non-fatal)
-    async fn unregister_service(
+    fn unregister_service(
         &self,
         registration_id: &RegistrationId,
-    ) -> Result<(), DiscoveryError>;
+    ) -> impl Future<Output = Result<(), DiscoveryError>> + Send;
 
     /// Renew service registration (heartbeat)
     ///
@@ -143,10 +142,10 @@ pub trait ServiceDiscoveryCapability: Send + Sync + fmt::Debug {
     ///
     /// * `Ok(())` - Registration renewed
     /// * `Err(DiscoveryError)` - If renewal fails (may need re-registration)
-    async fn renew_registration(
+    fn renew_registration(
         &self,
         registration_id: &RegistrationId,
-    ) -> Result<(), DiscoveryError>;
+    ) -> impl Future<Output = Result<(), DiscoveryError>> + Send;
 
     /// Check health of the discovery service itself
     ///
@@ -156,7 +155,9 @@ pub trait ServiceDiscoveryCapability: Send + Sync + fmt::Debug {
     ///
     /// * `Ok(DiscoveryHealthStatus)` - Health information
     /// * `Err(DiscoveryError)` - If health check fails
-    async fn health_check(&self) -> Result<DiscoveryHealthStatus, DiscoveryError>;
+    fn health_check(
+        &self,
+    ) -> impl Future<Output = Result<DiscoveryHealthStatus, DiscoveryError>> + Send;
 
     /// Get the provider name for this discovery implementation
     ///

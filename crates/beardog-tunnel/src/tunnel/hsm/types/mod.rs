@@ -21,8 +21,9 @@ pub use algorithm::Algorithm;
 pub use android::{
     AndroidAttestationService, AndroidDeviceCapabilities, AndroidHealthMonitor, AndroidHsmConfig,
     AndroidKeyParams, AndroidKeyPurpose, AndroidKeystore, AndroidKeystoreConfig,
-    AttestationTransport, HealthMetricsTransport, KeystoreTransport, StubAttestationTransport,
-    StubHealthMetricsTransport, StubKeystoreTransport,
+    AttestationTransport, AttestationTransportBackend, HealthMetricsTransport,
+    HealthMetricsTransportBackend, KeystoreTransport, KeystoreTransportBackend,
+    StubAttestationTransport, StubHealthMetricsTransport, StubKeystoreTransport,
 };
 
 #[cfg(target_os = "android")]

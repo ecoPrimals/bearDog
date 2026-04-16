@@ -4,8 +4,10 @@
 
 //! # `BearDog` Traits - Unified Trait System
 //!
-//! Unified trait system for the `BearDog` ecosystem, providing consistent interfaces
-//! across all components with strong memory safety and strong type safety.
+//! Unified trait system for the `BearDog` ecosystem.
+//!
+//! Provides consistent interfaces across all components with strong memory
+//! safety and strong type safety.
 //!
 //! ## Features
 //!
@@ -48,7 +50,7 @@
 
 #![warn(rust_2018_idioms)]
 
-/// Canonical, object-safe HSM provider trait and registry types.
+/// HSM provider trait and registry types.
 pub mod hsm;
 
 /// Modern unified trait system (primary)

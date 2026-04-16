@@ -64,7 +64,7 @@ pub enum IpcMessage {
 /// IPC request handler trait
 ///
 /// Implement this to handle capability requests in a primal-specific way
-#[async_trait::async_trait]
+#[allow(async_fn_in_trait)]
 pub trait IpcHandler: Send + Sync {
     /// Handle a capability request
     async fn handle_capability_request(
@@ -87,16 +87,196 @@ pub trait IpcHandler: Send + Sync {
     ) -> Result<(), BearDogError>;
 }
 
+// --- Test fixtures and enum dispatch (replaces `Arc<dyn IpcHandler>`) ---
+
+/// Cooperative IPC handler used by unit tests
+#[derive(Clone, Copy, Debug)]
+pub struct IpcTestHandler;
+
+/// Registration always fails (for error-path tests)
+#[derive(Clone, Copy, Debug)]
+pub struct IpcFailingRegisterHandler;
+
+/// Event handling always fails (for error-path tests)
+#[derive(Clone, Copy, Debug)]
+pub struct IpcFailingEventHandler;
+
+/// Capability requests always fail (for error-path tests)
+#[derive(Clone, Copy, Debug)]
+pub struct IpcFailingCapabilityHandler;
+
+/// Enum over all [`IpcHandler`] implementations used in-tree
+#[derive(Clone, Copy, Debug)]
+pub enum IpcHandlerBackend {
+    /// Default successful test handler
+    Test(IpcTestHandler),
+    /// Registration always fails (for error-path tests)
+    FailingRegister(IpcFailingRegisterHandler),
+    /// Event handling always fails (for error-path tests)
+    FailingEvent(IpcFailingEventHandler),
+    /// Capability requests always fail (for error-path tests)
+    FailingCapability(IpcFailingCapabilityHandler),
+}
+
+impl IpcHandler for IpcHandlerBackend {
+    async fn handle_capability_request(
+        &self,
+        request: CapabilityRequest,
+    ) -> Result<CapabilityResponse, BearDogError> {
+        match *self {
+            Self::Test(h) => IpcHandler::handle_capability_request(&h, request).await,
+            Self::FailingRegister(h) => IpcHandler::handle_capability_request(&h, request).await,
+            Self::FailingEvent(h) => IpcHandler::handle_capability_request(&h, request).await,
+            Self::FailingCapability(h) => IpcHandler::handle_capability_request(&h, request).await,
+        }
+    }
+
+    async fn handle_register(
+        &self,
+        primal_id: String,
+        capabilities: Vec<String>,
+    ) -> Result<(), BearDogError> {
+        match *self {
+            Self::Test(h) => IpcHandler::handle_register(&h, primal_id, capabilities).await,
+            Self::FailingRegister(h) => {
+                IpcHandler::handle_register(&h, primal_id, capabilities).await
+            }
+            Self::FailingEvent(h) => IpcHandler::handle_register(&h, primal_id, capabilities).await,
+            Self::FailingCapability(h) => {
+                IpcHandler::handle_register(&h, primal_id, capabilities).await
+            }
+        }
+    }
+
+    async fn handle_event(
+        &self,
+        event_type: String,
+        data: serde_json::Value,
+    ) -> Result<(), BearDogError> {
+        match *self {
+            Self::Test(h) => IpcHandler::handle_event(&h, event_type, data).await,
+            Self::FailingRegister(h) => IpcHandler::handle_event(&h, event_type, data).await,
+            Self::FailingEvent(h) => IpcHandler::handle_event(&h, event_type, data).await,
+            Self::FailingCapability(h) => IpcHandler::handle_event(&h, event_type, data).await,
+        }
+    }
+}
+
+impl IpcHandler for IpcTestHandler {
+    async fn handle_capability_request(
+        &self,
+        request: CapabilityRequest,
+    ) -> Result<CapabilityResponse, BearDogError> {
+        Ok(CapabilityResponse {
+            request_id: request.request_id,
+            status: beardog_core::capabilities::ResponseStatus::Success,
+            data: Some(serde_json::json!({"message": "test"})),
+            error: None,
+        })
+    }
+
+    async fn handle_register(
+        &self,
+        _primal_id: String,
+        _capabilities: Vec<String>,
+    ) -> Result<(), BearDogError> {
+        Ok(())
+    }
+
+    async fn handle_event(
+        &self,
+        _event_type: String,
+        _data: serde_json::Value,
+    ) -> Result<(), BearDogError> {
+        Ok(())
+    }
+}
+
+impl IpcHandler for IpcFailingRegisterHandler {
+    async fn handle_capability_request(
+        &self,
+        _request: CapabilityRequest,
+    ) -> Result<CapabilityResponse, BearDogError> {
+        unreachable!()
+    }
+
+    async fn handle_register(
+        &self,
+        _primal_id: String,
+        _capabilities: Vec<String>,
+    ) -> Result<(), BearDogError> {
+        Err(BearDogError::business("register failed".to_string()))
+    }
+
+    async fn handle_event(
+        &self,
+        _event_type: String,
+        _data: serde_json::Value,
+    ) -> Result<(), BearDogError> {
+        Ok(())
+    }
+}
+
+impl IpcHandler for IpcFailingEventHandler {
+    async fn handle_capability_request(
+        &self,
+        _request: CapabilityRequest,
+    ) -> Result<CapabilityResponse, BearDogError> {
+        unreachable!()
+    }
+
+    async fn handle_register(
+        &self,
+        _primal_id: String,
+        _capabilities: Vec<String>,
+    ) -> Result<(), BearDogError> {
+        Ok(())
+    }
+
+    async fn handle_event(
+        &self,
+        _event_type: String,
+        _data: serde_json::Value,
+    ) -> Result<(), BearDogError> {
+        Err(BearDogError::business("event failed".to_string()))
+    }
+}
+
+impl IpcHandler for IpcFailingCapabilityHandler {
+    async fn handle_capability_request(
+        &self,
+        _request: CapabilityRequest,
+    ) -> Result<CapabilityResponse, BearDogError> {
+        Err(BearDogError::business("capability failed".to_string()))
+    }
+
+    async fn handle_register(
+        &self,
+        _primal_id: String,
+        _capabilities: Vec<String>,
+    ) -> Result<(), BearDogError> {
+        Ok(())
+    }
+
+    async fn handle_event(
+        &self,
+        _event_type: String,
+        _data: serde_json::Value,
+    ) -> Result<(), BearDogError> {
+        Ok(())
+    }
+}
+
 /// Generic Unix socket IPC server
 pub struct IpcServer {
     socket_path: PathBuf,
-    handler: Arc<dyn IpcHandler>,
+    handler: Arc<IpcHandlerBackend>,
     active_connections: Arc<RwLock<Vec<String>>>,
 }
 
 impl IpcServer {
     /// Create a new IPC server
-    pub fn new(socket_path: PathBuf, handler: Arc<dyn IpcHandler>) -> Self {
+    pub fn new(socket_path: PathBuf, handler: Arc<IpcHandlerBackend>) -> Self {
         Self {
             socket_path,
             handler,
@@ -147,7 +327,7 @@ impl IpcServer {
     /// Handle a single connection
     async fn handle_connection(
         stream: UnixStream,
-        handler: Arc<dyn IpcHandler>,
+        handler: Arc<IpcHandlerBackend>,
         active_connections: Arc<RwLock<Vec<String>>>,
     ) -> Result<(), BearDogError> {
         let (reader, mut writer) = stream.into_split();
@@ -211,7 +391,7 @@ impl IpcServer {
     /// Handle a single message
     async fn handle_message(
         message: IpcMessage,
-        handler: &Arc<dyn IpcHandler>,
+        handler: &Arc<IpcHandlerBackend>,
         active_connections: &Arc<RwLock<Vec<String>>>,
     ) -> Option<IpcMessage> {
         match message {

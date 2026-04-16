@@ -51,9 +51,9 @@
 //! # async fn example() -> Result<(), DiscoveryError> {
 //! // Try K8s first, fall back to DNS
 //! let discovery = if let Ok(k8s) = KubernetesDiscovery::try_create().await {
-//!     Arc::new(k8s) as Arc<dyn ServiceDiscoveryCapability>
+//!     Arc::new(ServiceDiscoveryBackend::Kubernetes(k8s))
 //! } else {
-//!     Arc::new(DnsHttpDiscovery::new()) as Arc<dyn ServiceDiscoveryCapability>
+//!     Arc::new(ServiceDiscoveryBackend::DnsHttp(DnsHttpDiscovery::new()))
 //! };
 //! # Ok(())
 //! # }
@@ -64,6 +64,7 @@ pub mod kubernetes;
 pub mod providers;
 
 mod factory;
+pub mod service_discovery_backend;
 
 pub use core::{
     DiscoveryCapabilities, DiscoveryError, DiscoveryHealthStatus, ServiceDescriptor,
@@ -72,6 +73,7 @@ pub use core::{
 pub use factory::create_service_discovery;
 pub use kubernetes::KubernetesDiscovery;
 pub use providers::{ConsulDiscovery, DnsHttpDiscovery, EtcdDiscovery};
+pub use service_discovery_backend::ServiceDiscoveryBackend;
 
 #[cfg(test)]
 mod tests;

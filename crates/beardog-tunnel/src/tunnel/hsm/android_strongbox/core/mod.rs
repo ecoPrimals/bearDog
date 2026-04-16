@@ -24,6 +24,7 @@ use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
 /// Android StrongBox HSM implementation
+#[derive(Clone)]
 pub struct AndroidStrongBoxHsm {
     pub(super) config: AndroidHsmConfig,
     pub(super) keystore: Arc<AndroidKeystore>,

@@ -288,7 +288,7 @@ impl PlatformStream for PrefixedStream {}
 /// - Custom `BroadcastChannel` listener (WASM)
 ///
 /// **Philosophy**: "1 unified codebase" - same API works everywhere!
-#[async_trait::async_trait]
+#[allow(async_fn_in_trait)]
 pub trait PlatformListener: Send + Sync {
     /// Accept incoming connection
     ///
@@ -314,6 +314,30 @@ pub trait PlatformListener: Send + Sync {
     fn local_addr(&self) -> std::io::Result<String>;
 }
 
+/// Concrete platform listeners (replaces `Box<dyn PlatformListener>`).
+pub enum PlatformListenerBackend {
+    /// Filesystem Unix domain socket listener (Linux, BSD, …).
+    Unix(unix::UnixPlatformListener),
+    /// Android abstract namespace listener.
+    Android(android::AndroidPlatformListener),
+}
+
+impl PlatformListener for PlatformListenerBackend {
+    async fn accept(&mut self) -> std::io::Result<Box<dyn PlatformStream>> {
+        match self {
+            Self::Unix(l) => PlatformListener::accept(l).await,
+            Self::Android(l) => PlatformListener::accept(l).await,
+        }
+    }
+
+    fn local_addr(&self) -> std::io::Result<String> {
+        match self {
+            Self::Unix(l) => l.local_addr(),
+            Self::Android(l) => l.local_addr(),
+        }
+    }
+}
+
 /// Platform-specific socket operations
 ///
 /// **Modern Idiomatic Rust Evolution**: Now returns generic `PlatformListener`
@@ -337,7 +361,7 @@ pub trait PlatformSocket {
 
     /// Bind listener to endpoint (EVOLVED: Now universal!)
     ///
-    /// **Modern Idiomatic Rust**: Returns `Box<dyn PlatformListener>` which works
+    /// **Modern Idiomatic Rust**: Returns [`PlatformListenerBackend`] which works
     /// across all platforms. Callers don't need to know about platform specifics!
     ///
     /// # Arguments
@@ -360,7 +384,7 @@ pub trait PlatformSocket {
     /// # Errors
     ///
     /// Returns an error if the listener cannot be bound to the endpoint.
-    fn bind(endpoint: &SocketEndpoint) -> std::io::Result<Box<dyn PlatformListener>>;
+    fn bind(endpoint: &SocketEndpoint) -> std::io::Result<Box<PlatformListenerBackend>>;
 }
 
 /// Select platform implementation at compile time

@@ -31,7 +31,9 @@ async fn stub_roundtrip_sign_verify_list() {
 
 #[tokio::test]
 async fn stub_health_uses_deterministic_metrics() {
-    let m = AndroidHealthMonitor::with_transport(Arc::new(StubHealthMetricsTransport::default()));
+    let m = AndroidHealthMonitor::with_transport(Arc::new(HealthMetricsTransportBackend::Stub(
+        StubHealthMetricsTransport::default(),
+    )));
     let s = m.get_health_status().await.expect("health");
     assert!(s.is_healthy);
     assert_eq!(s.performance_metrics.operations_per_second, 42.0);

@@ -10,144 +10,19 @@
 //! - Failover and error handling
 
 use super::*;
+use crate::tunnel::hsm::HsmProviderBackend;
+use crate::tunnel::hsm::hsm_provider_mocks::MockHsmProvider;
 use crate::tunnel::hsm::{GenerateKeyRequest, KeyType};
-use async_trait::async_trait;
 
-// Mock HSM Provider for testing
-struct MockHsmProvider {
-    available: bool,
-    fail_generate: bool,
-    fail_delete: bool,
-}
-
-impl MockHsmProvider {
-    fn new() -> Self {
-        Self {
-            available: true,
-            fail_generate: false,
-            fail_delete: false,
-        }
-    }
-
-    fn unavailable() -> Self {
-        Self {
-            available: false,
-            fail_generate: false,
-            fail_delete: false,
-        }
-    }
-
-    fn failing_generate() -> Self {
-        Self {
-            available: true,
-            fail_generate: true,
-            fail_delete: false,
-        }
-    }
-
-    fn failing_delete() -> Self {
-        Self {
-            available: true,
-            fail_generate: false,
-            fail_delete: true,
-        }
-    }
-}
-
-#[async_trait]
-impl HsmProvider for MockHsmProvider {
-    async fn get_info(&self) -> Result<ProviderInfo, BearDogError> {
-        Ok(ProviderInfo {
-            id: "mock".to_string(),
-            name: "Mock HSM".to_string(),
-            security_level: 3,
-        })
-    }
-
-    async fn generate_key(&self, request: GenerateKeyRequest) -> Result<HsmKey, BearDogError> {
-        use crate::tunnel::hsm::{KeyHealthStatus, KeyMaterial, KeyMetadata};
-        use chrono::Utc;
-
-        if self.fail_generate {
-            return Err(BearDogError::system(
-                "Mock generate_key failure".to_string(),
-            ));
-        }
-
-        Ok(HsmKey {
-            id: request.key_id.clone(),
-            hsm_type: "MockHSM".to_string(),
-            key_type: request.key_type.clone(),
-            metadata: KeyMetadata::new(request.key_id, request.key_type),
-            key_material: KeyMaterial::Encrypted {
-                encrypted_data: vec![1, 2, 3, 4],
-                encryption_algorithm: "AES-256-GCM".to_string(),
-                kdf_params: None,
-            },
-            hsm_tier: "Software".to_string(),
-            health_status: KeyHealthStatus::Healthy,
-            attestation: None,
-            created_at: Utc::now(),
-        })
-    }
-
-    async fn sign(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Ok(vec![])
-    }
-
-    async fn verify(
-        &self,
-        _key_id: &str,
-        _data: &[u8],
-        _signature: &[u8],
-    ) -> Result<bool, BearDogError> {
-        Ok(true)
-    }
-
-    async fn encrypt(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Ok(vec![])
-    }
-
-    async fn decrypt(&self, _key_id: &str, _ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Ok(vec![])
-    }
-
-    async fn import_key(&self, _key_data: &[u8], _key_id: &str) -> Result<HsmKey, BearDogError> {
-        Err(BearDogError::not_implemented("Mock import_key"))
-    }
-
-    async fn delete_key(&self, _key_id: &str) -> Result<(), BearDogError> {
-        if self.fail_delete {
-            return Err(BearDogError::system("Mock delete_key failure".to_string()));
-        }
-        Ok(())
-    }
-
-    async fn get_key_info(&self, _key_id: &str) -> Result<KeyInfo, BearDogError> {
-        Ok(KeyInfo {
-            key_id: "test".to_string(),
-            key_type: "AES".to_string(),
-            is_hardware_backed: false,
-        })
-    }
-
-    async fn health_check(&self) -> Result<HealthStatus, BearDogError> {
-        Ok(HealthStatus {
-            is_healthy: true,
-            error_message: None,
-        })
-    }
-
-    fn is_available(&self) -> bool {
-        self.available
-    }
+fn mock_arc(m: MockHsmProvider) -> Arc<HsmProviderBackend> {
+    Arc::new(HsmProviderBackend::Mock(m))
 }
 
 #[tokio::test]
 async fn test_generate_key_success() {
     let mut manager = HsmManager::new();
     manager
-        .register_hsm_provider(HsmTier::Software, Arc::new(MockHsmProvider::new()))
+        .register_hsm_provider(HsmTier::Software, mock_arc(MockHsmProvider::new()))
         .unwrap();
 
     let key = manager
@@ -178,7 +53,7 @@ async fn test_generate_key_no_providers() {
 async fn test_generate_key_provider_unavailable() {
     let mut manager = HsmManager::new();
     manager
-        .register_hsm_provider(HsmTier::Software, Arc::new(MockHsmProvider::unavailable()))
+        .register_hsm_provider(HsmTier::Software, mock_arc(MockHsmProvider::unavailable()))
         .unwrap();
 
     let result = manager.generate_key("test_key", &KeyType::Aes).await;
@@ -198,7 +73,7 @@ async fn test_generate_key_provider_failure() {
     manager
         .register_hsm_provider(
             HsmTier::Software,
-            Arc::new(MockHsmProvider::failing_generate()),
+            mock_arc(MockHsmProvider::failing_generate()),
         )
         .unwrap();
 
@@ -217,7 +92,7 @@ async fn test_generate_key_provider_failure() {
 async fn test_delete_key_success() {
     let mut manager = HsmManager::new();
     manager
-        .register_hsm_provider(HsmTier::Software, Arc::new(MockHsmProvider::new()))
+        .register_hsm_provider(HsmTier::Software, mock_arc(MockHsmProvider::new()))
         .unwrap();
 
     let result = manager.delete_key("test_key_123").await;
@@ -244,7 +119,7 @@ async fn test_delete_key_no_providers() {
 async fn test_delete_key_provider_unavailable() {
     let mut manager = HsmManager::new();
     manager
-        .register_hsm_provider(HsmTier::Software, Arc::new(MockHsmProvider::unavailable()))
+        .register_hsm_provider(HsmTier::Software, mock_arc(MockHsmProvider::unavailable()))
         .unwrap();
 
     let result = manager.delete_key("test_key").await;
@@ -264,7 +139,7 @@ async fn test_delete_key_provider_failure() {
     manager
         .register_hsm_provider(
             HsmTier::Software,
-            Arc::new(MockHsmProvider::failing_delete()),
+            mock_arc(MockHsmProvider::failing_delete()),
         )
         .unwrap();
 
@@ -283,7 +158,7 @@ async fn test_delete_key_provider_failure() {
 async fn test_generate_and_delete_key_lifecycle() {
     let mut manager = HsmManager::new();
     manager
-        .register_hsm_provider(HsmTier::Software, Arc::new(MockHsmProvider::new()))
+        .register_hsm_provider(HsmTier::Software, mock_arc(MockHsmProvider::new()))
         .unwrap();
 
     // Generate key
@@ -302,7 +177,7 @@ async fn test_generate_and_delete_key_lifecycle() {
 async fn test_generate_key_different_types() {
     let mut manager = HsmManager::new();
     manager
-        .register_hsm_provider(HsmTier::Software, Arc::new(MockHsmProvider::new()))
+        .register_hsm_provider(HsmTier::Software, mock_arc(MockHsmProvider::new()))
         .unwrap();
 
     // Test different key types

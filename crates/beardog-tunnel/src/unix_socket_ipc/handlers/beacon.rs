@@ -438,7 +438,6 @@ pub async fn handle_beacon_add_known(
 
 use super::MethodHandler;
 use crate::btsp_provider::BeardogBtspProvider;
-use async_trait::async_trait;
 
 /// `BeaconHandler` wraps `BeaconManager` for `HandlerRegistry` integration
 ///
@@ -471,7 +470,6 @@ impl Default for BeaconHandler {
     }
 }
 
-#[async_trait]
 impl MethodHandler for BeaconHandler {
     fn methods(&self) -> Vec<&'static str> {
         vec![

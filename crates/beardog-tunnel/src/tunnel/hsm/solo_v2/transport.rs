@@ -3,18 +3,23 @@
 //! CTAP2 transport port (hexagonal architecture).
 //!
 //! Implementations live in `hid_transport` (hardware) or test mocks.
+//! [`Ctap2TransportBackend`](super::hid_transport::Ctap2TransportBackend) lives in `hid_transport`
+//! to avoid a `transport` ↔ `hid_transport` module cycle.
 
-use async_trait::async_trait;
+use std::future::Future;
+
 use beardog_errors::BearDogError;
 
 /// Thin port for CTAP2 device communication.
 /// The ONLY part that needs real hardware to exercise end-to-end.
-#[async_trait]
 pub trait Ctap2Transport: Send + Sync {
     /// Send a framed CTAP2 HID message and receive the raw CTAP2 response.
     ///
     /// The `command` buffer is the inner CTAP message: `[CTAP command byte][CBOR payload]`
     /// as produced by [`super::ctap2_protocol`] builders. The transport is responsible for
     /// CTAPHID framing, channel setup, and reassembly.
-    async fn send_receive(&mut self, command: &[u8]) -> Result<Vec<u8>, BearDogError>;
+    fn send_receive(
+        &mut self,
+        command: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send;
 }

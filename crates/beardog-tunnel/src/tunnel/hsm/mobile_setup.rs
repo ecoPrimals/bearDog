@@ -4,7 +4,7 @@
 //!
 //! This module provides setup and initialization for mobile HSMs (Android `StrongBox`, iOS Secure Enclave).
 
-use super::{manager::HsmManager, software_hsm::RustSoftwareHsm};
+use super::{HsmProviderBackend, manager::HsmManager, software_hsm::RustSoftwareHsm};
 
 #[cfg(target_os = "android")]
 use super::android_strongbox::AndroidStrongBoxHsm;
@@ -83,7 +83,10 @@ pub async fn initialize_mobile_hsm_manager(
             // NOTE: Simplified to unit variant - implementation details managed separately
             let software_tier = HsmTier::Software;
 
-            hsm_manager.register_hsm_provider(software_tier, Arc::new(software_hsm))?;
+            hsm_manager.register_hsm_provider(
+                software_tier,
+                Arc::new(HsmProviderBackend::RustSoftware(software_hsm)),
+            )?;
         }
         Err(e) => {
             return Err(BearDogError::initialization(format!(

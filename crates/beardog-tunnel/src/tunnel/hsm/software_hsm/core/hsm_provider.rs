@@ -6,6 +6,7 @@ use super::super::super::types::KeyType;
 use super::super::types::{AuditLogEntry, AuditLogger, ProtectedMemory, SoftwareKey};
 use super::RustSoftwareHsm;
 use crate::tunnel::hsm::GenerateKeyRequest;
+use crate::tunnel::hsm::crypto::provider::UniversalCryptoProvider;
 use crate::tunnel::hsm::crypto::{
     CryptoRequirements, DecryptionOptions, EncryptedData, EncryptionOptions, Signature,
     SigningOptions, VerificationOptions,
@@ -18,7 +19,6 @@ use bytes::Bytes;
 use chrono::Utc;
 use tracing::{debug, info};
 
-#[async_trait::async_trait]
 impl HsmProvider for RustSoftwareHsm {
     fn is_available(&self) -> bool {
         true
@@ -39,6 +39,8 @@ impl HsmProvider for RustSoftwareHsm {
     }
 
     async fn import_key(&self, key_data: &[u8], key_id: &str) -> Result<HsmKey, BearDogError> {
+        let key_data = key_data.to_vec();
+        let key_id = key_id.to_string();
         info!("📥 Importing key: {}", key_id);
 
         let key_type = match key_data.len() {
@@ -53,12 +55,12 @@ impl HsmProvider for RustSoftwareHsm {
             key_data.len()
         );
 
-        let protected_bytes = self.memory_protector.protect(key_data).await?;
+        let protected_bytes = self.memory_protector.protect(&key_data).await?;
         let buf = Bytes::from(protected_bytes);
         let encrypted_blob = buf.to_vec();
         let protected_material = ProtectedMemory::from_bytes(buf, true);
 
-        let id = key_id.to_string();
+        let id = key_id.clone();
         let key_metadata = KeyMetadata::new(id.clone(), key_type.clone());
 
         let software_key = SoftwareKey {
@@ -97,10 +99,12 @@ impl HsmProvider for RustSoftwareHsm {
     }
 
     async fn encrypt(&self, key_id: &str, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        let key_id = key_id.to_string();
+        let plaintext = plaintext.to_vec();
         debug!("🔒 Encrypting data with software key: {}", key_id);
 
         let key_store = self.key_store.read().await;
-        let key = key_store.get_key(key_id).await?;
+        let key = key_store.get_key(&key_id).await?;
 
         let requirements = CryptoRequirements::from_key_metadata(&key.metadata);
 
@@ -121,7 +125,7 @@ impl HsmProvider for RustSoftwareHsm {
             .encrypt_symmetric(
                 algorithm,
                 &key_material,
-                plaintext,
+                &plaintext,
                 &EncryptionOptions::default(),
             )
             .await?;
@@ -142,10 +146,12 @@ impl HsmProvider for RustSoftwareHsm {
     }
 
     async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        let key_id = key_id.to_string();
+        let ciphertext = ciphertext.to_vec();
         debug!("🔓 Decrypting data with software key: {}", key_id);
 
         let key_store = self.key_store.read().await;
-        let key = key_store.get_key(key_id).await?;
+        let key = key_store.get_key(&key_id).await?;
 
         let requirements = CryptoRequirements::from_key_metadata(&key.metadata);
 
@@ -166,7 +172,7 @@ impl HsmProvider for RustSoftwareHsm {
             let (nonce_bytes, ct_bytes) = ciphertext.split_at(12);
             (Some(nonce_bytes.to_vec()), ct_bytes.to_vec())
         } else {
-            (None, ciphertext.to_vec())
+            (None, ciphertext.clone())
         };
 
         let encrypted_data = EncryptedData {
@@ -195,10 +201,12 @@ impl HsmProvider for RustSoftwareHsm {
     }
 
     async fn sign(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        let key_id = key_id.to_string();
+        let data = data.to_vec();
         debug!("✍️ Signing data with software key: {}", key_id);
 
         let key_store = self.key_store.read().await;
-        let key = key_store.get_key(key_id).await?;
+        let key = key_store.get_key(&key_id).await?;
 
         let requirements = CryptoRequirements::from_key_metadata(&key.metadata);
 
@@ -216,7 +224,7 @@ impl HsmProvider for RustSoftwareHsm {
             .map_err(|e| BearDogError::crypto_error(&e))?;
 
         let signature = provider
-            .sign(algorithm, &key_material, data, &SigningOptions::default())
+            .sign(algorithm, &key_material, &data, &SigningOptions::default())
             .await?;
 
         self.memory_protector.zeroize(&mut key_material).await?;
@@ -234,10 +242,13 @@ impl HsmProvider for RustSoftwareHsm {
         data: &[u8],
         signature: &[u8],
     ) -> Result<bool, BearDogError> {
+        let key_id = key_id.to_string();
+        let data = data.to_vec();
+        let signature = signature.to_vec();
         debug!("🔍 Verifying signature with software key: {}", key_id);
 
         let key_store = self.key_store.read().await;
-        let key = key_store.get_key(key_id).await?;
+        let key = key_store.get_key(&key_id).await?;
 
         let requirements = CryptoRequirements::from_key_metadata(&key.metadata);
 
@@ -256,14 +267,14 @@ impl HsmProvider for RustSoftwareHsm {
 
         let sig = Signature {
             algorithm: algorithm.to_string(),
-            signature: signature.to_vec(),
+            signature: signature.clone(),
         };
 
         let is_valid = provider
             .verify(
                 algorithm,
                 &key_material,
-                data,
+                &data,
                 &sig,
                 &VerificationOptions::default(),
             )
@@ -280,13 +291,14 @@ impl HsmProvider for RustSoftwareHsm {
     }
 
     async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
+        let key_id = key_id.to_string();
         info!("🗑️ Deleting software key: {}", key_id);
 
         let mut key_store = self.key_store.write().await;
-        key_store.delete_key(key_id).await?;
+        key_store.delete_key(&key_id).await?;
 
         self.audit_logger
-            .log_operation(&AuditLogEntry::success("delete_key", key_id))
+            .log_operation(&AuditLogEntry::success("delete_key", &key_id))
             .await?;
 
         info!("✅ Key deleted successfully: {}", key_id);
@@ -297,11 +309,12 @@ impl HsmProvider for RustSoftwareHsm {
         &self,
         key_id: &str,
     ) -> Result<crate::tunnel::hsm::manager::implementation::KeyInfo, BearDogError> {
+        let key_id = key_id.to_string();
         let key_store = self.key_store.read().await;
-        let key = key_store.get_key(key_id).await?;
+        let key = key_store.get_key(&key_id).await?;
 
         Ok(crate::tunnel::hsm::manager::implementation::KeyInfo {
-            key_id: key_id.to_string(),
+            key_id: key_id.clone(),
             key_type: format!("{:?}", key.key_type),
             is_hardware_backed: false,
         })

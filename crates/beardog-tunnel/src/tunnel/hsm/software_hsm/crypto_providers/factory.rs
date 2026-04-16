@@ -8,10 +8,9 @@ use super::genetic_crypto::GeneticCryptoProvider;
 // OpenSslCryptoProvider removed - evolved to 100% Pure Rust
 // RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust, no C deps!)
 use super::rust_crypto::RustCryptoProvider;
-use crate::tunnel::hsm::types::KeyType;
+use crate::tunnel::hsm::CryptoProviderBackend;
 use crate::tunnel::hsm::types::config::CryptoBackend;
 use crate::tunnel::hsm::types::tier::KeyStorageType;
-use beardog_types::hsm::CryptoProvider; // Import KeyType for generic trait
 
 /// Create Crypto Provider operation.
 ///
@@ -19,29 +18,29 @@ use beardog_types::hsm::CryptoProvider; // Import KeyType for generic trait
 /// Returns an error if the crypto provider cannot be created.
 pub async fn create_crypto_provider(
     backend: &CryptoBackend,
-) -> Result<Arc<dyn CryptoProvider<KeyType>>, BearDogError> {
+) -> Result<Arc<CryptoProviderBackend>, BearDogError> {
     match backend {
-        CryptoBackend::GeneticCrypto => {
-            let provider = GeneticCryptoProvider::new()?;
-            Ok(Arc::new(provider))
-        }
-        CryptoBackend::RustCrypto => {
-            let provider = RustCryptoProvider::new().await?;
-            Ok(Arc::new(provider))
-        }
+        CryptoBackend::GeneticCrypto => Ok(Arc::new(CryptoProviderBackend::Genetic(
+            GeneticCryptoProvider::new()?,
+        ))),
+        CryptoBackend::RustCrypto => Ok(Arc::new(CryptoProviderBackend::RustCrypto(
+            RustCryptoProvider::new().await?,
+        ))),
         CryptoBackend::Ring => {
             // Ring evolved to RustCrypto (100% Pure Rust, no C dependencies!)
             tracing::warn!(
                 "Ring backend deprecated - evolved to RustCrypto (100% Pure Rust, ARM-ready!)"
             );
-            let provider = RustCryptoProvider::new().await?;
-            Ok(Arc::new(provider))
+            Ok(Arc::new(CryptoProviderBackend::RustCrypto(
+                RustCryptoProvider::new().await?,
+            )))
         }
         CryptoBackend::OpenSsl => {
             // OpenSSL evolved to RustCrypto (100% Pure Rust sovereignty)
             tracing::warn!("OpenSSL backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)");
-            let provider = RustCryptoProvider::new().await?;
-            Ok(Arc::new(provider))
+            Ok(Arc::new(CryptoProviderBackend::RustCrypto(
+                RustCryptoProvider::new().await?,
+            )))
         }
     }
 }
@@ -182,6 +181,7 @@ pub fn get_crypto_backend_by_name(name: &str) -> Option<CryptoBackend> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use beardog_types::hsm::CryptoProvider;
 
     #[tokio::test]
     async fn test_create_rust_crypto_provider() -> Result<(), BearDogError> {

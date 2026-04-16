@@ -182,8 +182,9 @@ pub struct AndroidDeviceCapabilities {
 #[cfg(target_os = "android")]
 pub use super::android_transports::AndroidJniHealthMetricsTransport;
 pub use super::android_transports::{
-    AttestationTransport, HealthMetricsTransport, KeystoreTransport, StubAttestationTransport,
-    StubHealthMetricsTransport, StubKeystoreTransport,
+    AttestationTransport, AttestationTransportBackend, HealthMetricsTransport,
+    HealthMetricsTransportBackend, KeystoreTransport, KeystoreTransportBackend,
+    StubAttestationTransport, StubHealthMetricsTransport, StubKeystoreTransport,
 };
 
 // --- Android keystore (logic + delegation) -------------------------------------------------------
@@ -195,7 +196,7 @@ pub struct AndroidKeystore {
     pub config: AndroidHsmConfig,
     /// Device capabilities
     pub capabilities: AndroidDeviceCapabilities,
-    transport: Arc<dyn KeystoreTransport>,
+    transport: Arc<KeystoreTransportBackend>,
 }
 
 impl AndroidKeystore {
@@ -205,7 +206,7 @@ impl AndroidKeystore {
     /// Returns an error if initialization fails
     pub fn new(
         config: AndroidHsmConfig,
-        transport: Arc<dyn KeystoreTransport>,
+        transport: Arc<KeystoreTransportBackend>,
     ) -> Result<Self, BearDogError> {
         let capabilities = AndroidDeviceCapabilities {
             strongbox_available: true,
@@ -227,7 +228,12 @@ impl AndroidKeystore {
     ///
     /// Returns the same errors as [`Self::new`].
     pub fn with_stub_transport(config: AndroidHsmConfig) -> Result<Self, BearDogError> {
-        Self::new(config, Arc::new(StubKeystoreTransport::default()))
+        Self::new(
+            config,
+            Arc::new(KeystoreTransportBackend::Stub(
+                StubKeystoreTransport::default(),
+            )),
+        )
     }
 
     fn validate_key_id(key_id: &str) -> Result<(), BearDogError> {
@@ -462,14 +468,14 @@ pub struct AndroidAttestationService {
     pub enabled: bool,
     /// Attestation level
     pub attestation_level: AttestationLevel,
-    transport: Arc<dyn AttestationTransport>,
+    transport: Arc<AttestationTransportBackend>,
 }
 
 impl AndroidAttestationService {
     /// Create new attestation service with a transport (JNI on device).
     pub fn new(
         attestation_level: AttestationLevel,
-        transport: Arc<dyn AttestationTransport>,
+        transport: Arc<AttestationTransportBackend>,
     ) -> Self {
         Self {
             enabled: true,
@@ -480,7 +486,10 @@ impl AndroidAttestationService {
 
     /// Convenience for tests: stub transport.
     pub fn with_stub_transport(attestation_level: AttestationLevel) -> Self {
-        Self::new(attestation_level, Arc::new(StubAttestationTransport))
+        Self::new(
+            attestation_level,
+            Arc::new(AttestationTransportBackend::Stub(StubAttestationTransport)),
+        )
     }
 
     /// Initialize the attestation service
@@ -511,7 +520,7 @@ impl AndroidAttestationService {
 pub struct AndroidHealthMonitor {
     /// Health check interval (seconds)
     pub check_interval_seconds: u64,
-    metrics_transport: Arc<dyn HealthMetricsTransport>,
+    metrics_transport: Arc<HealthMetricsTransportBackend>,
 }
 
 impl AndroidHealthMonitor {
@@ -519,16 +528,20 @@ impl AndroidHealthMonitor {
     pub fn new() -> Self {
         #[cfg(target_os = "android")]
         {
-            Self::with_transport(Arc::new(AndroidJniHealthMetricsTransport::new()))
+            Self::with_transport(Arc::new(HealthMetricsTransportBackend::AndroidJni(
+                AndroidJniHealthMetricsTransport::new(),
+            )))
         }
         #[cfg(not(target_os = "android"))]
         {
-            Self::with_transport(Arc::new(StubHealthMetricsTransport::default()))
+            Self::with_transport(Arc::new(HealthMetricsTransportBackend::Stub(
+                StubHealthMetricsTransport::default(),
+            )))
         }
     }
 
     /// Full control (e.g. inject stub in tests on Android).
-    pub fn with_transport(metrics_transport: Arc<dyn HealthMetricsTransport>) -> Self {
+    pub fn with_transport(metrics_transport: Arc<HealthMetricsTransportBackend>) -> Self {
         Self {
             check_interval_seconds: 60,
             metrics_transport,

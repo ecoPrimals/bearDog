@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: April 15, 2026
+**Last Updated**: April 16, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,787+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,786+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
@@ -89,6 +89,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 53 — Stadial Parity Gate (April 16, 2026)
+
+- **`#[async_trait]` eliminated** — Migrated roughly 49 trait attributes across 22+ traits to native `async fn` (RPITIT). Zero `#[async_trait]` in any `.rs` file.
+- **`async-trait` removed from all manifests** — Dependency dropped from 17 `Cargo.toml` files (7 core crates, 9 showcase, workspace root).
+- **Ring lockfile** — Already clean from prior wave; unchanged.
+- **Enum dispatch types** — Finite-implementor `dyn Trait` dispatch replaced with enum dispatch for zero-cost monomorphized calls. Types include: `MethodHandlerKind`, `BondPersistenceBackend`, `HsmKeyProviderBackend`, `HsmProviderBackend`, `UniversalCryptoBackend`, `CryptoProviderBackend`, `KeyManagementBackend`, `ServiceDiscoveryBackend`, `KeystoreTransportBackend`, `AttestationTransportBackend`, `HealthMetricsTransportBackend`, `IpcHandlerBackend`, `PlatformListenerBackend`, `StorageBackend`, `EncryptionKeyBackend`, `AuditLoggerBackend`, `Ctap2TransportBackend`, `HidDeviceBackend`.
+- **Quality** — 14,786+ tests passing (0 failures); `cargo clippy` and `cargo doc` clean with `-D warnings` on workspace crates.
 
 ### Wave 52 — Deep Debt & syn Elimination (April 15, 2026)
 - Removed unused `async-trait` from 5 crates (reducing `syn` compilation surface)

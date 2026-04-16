@@ -5,7 +5,6 @@
 use crate::constants::domains::network::addresses::LOCALHOST_IPV4;
 use crate::constants::domains::network::config::LOCALHOST_NAME;
 use crate::constants::localhost::LOCALHOST_V4;
-use async_trait::async_trait;
 use beardog_config::domains::network_ports::DEFAULT_API_PORT_STR;
 use std::collections::HashMap;
 
@@ -147,7 +146,6 @@ impl Default for DnsHttpDiscovery {
 }
 
 // Real DNS/HTTP Discovery implementation
-#[async_trait]
 impl ServiceDiscoveryCapability for DnsHttpDiscovery {
     async fn discover_by_capability(
         &self,

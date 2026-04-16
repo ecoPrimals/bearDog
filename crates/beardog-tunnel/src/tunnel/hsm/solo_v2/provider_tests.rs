@@ -148,81 +148,12 @@ async fn solo_v2_generate_key_without_ctap2_returns_not_implemented() {
 mod ctap2_mock_tests {
     use super::*;
     use crate::tunnel::hsm::solo_v2::ctap2_protocol::{
-        CTAP2_GET_ASSERTION, CTAP2_MAKE_CREDENTIAL, CTAP2_OK, parse_get_assertion_response,
+        CTAP2_GET_ASSERTION, CTAP2_MAKE_CREDENTIAL, parse_get_assertion_response,
         parse_make_credential_response,
     };
-    use crate::tunnel::hsm::solo_v2::transport::Ctap2Transport;
-    use async_trait::async_trait;
-    use ciborium::Value as CborValue;
+    use crate::tunnel::hsm::solo_v2::hid_transport::{Ctap2TransportBackend, MockCtap2Transport};
     use std::sync::Arc;
     use tokio::sync::Mutex;
-
-    struct MockCtap2Transport {
-        make_cred_response: Vec<u8>,
-        get_assertion_response: Vec<u8>,
-    }
-
-    impl MockCtap2Transport {
-        fn with_success_responses() -> Self {
-            let mut auth_data = vec![0u8; 32];
-            auth_data.push(0x41);
-            auth_data.extend([0u8; 4]);
-            auth_data.extend([0u8; 16]);
-            auth_data.push(0);
-            auth_data.push(4);
-            auth_data.extend_from_slice(&[1, 2, 3, 4]);
-            auth_data.extend_from_slice(&[0xa1, 0x01, 0x18, 0x2b]);
-
-            let mc = CborValue::Map(vec![
-                (
-                    CborValue::Integer(1.into()),
-                    CborValue::Text("packed".to_string()),
-                ),
-                (CborValue::Integer(2.into()), CborValue::Bytes(auth_data)),
-                (CborValue::Integer(3.into()), CborValue::Map(vec![])),
-            ]);
-            let mut mc_body = Vec::new();
-            ciborium::into_writer(&mc, &mut mc_body).unwrap();
-            let mut make_cred = vec![CTAP2_OK];
-            make_cred.extend(mc_body);
-
-            let ga = CborValue::Map(vec![
-                (
-                    CborValue::Integer(2.into()),
-                    CborValue::Bytes(vec![0xcc; 37]),
-                ),
-                (
-                    CborValue::Integer(3.into()),
-                    CborValue::Bytes(vec![0xdd; 64]),
-                ),
-            ]);
-            let mut ga_body = Vec::new();
-            ciborium::into_writer(&ga, &mut ga_body).unwrap();
-            let mut get_assert = vec![CTAP2_OK];
-            get_assert.extend(ga_body);
-
-            Self {
-                make_cred_response: make_cred,
-                get_assertion_response: get_assert,
-            }
-        }
-    }
-
-    #[async_trait]
-    impl Ctap2Transport for MockCtap2Transport {
-        async fn send_receive(
-            &mut self,
-            command: &[u8],
-        ) -> Result<Vec<u8>, beardog_errors::BearDogError> {
-            match command.first() {
-                Some(&x) if x == CTAP2_MAKE_CREDENTIAL => Ok(self.make_cred_response.clone()),
-                Some(&x) if x == CTAP2_GET_ASSERTION => Ok(self.get_assertion_response.clone()),
-                _ => Err(BearDogError::system(
-                    "mock: unknown CTAP command".to_string(),
-                )),
-            }
-        }
-    }
 
     fn sample_device() -> SoloV2DeviceInfo {
         SoloV2DeviceInfo {
@@ -270,7 +201,9 @@ mod ctap2_mock_tests {
 
     #[tokio::test]
     async fn provider_generate_key_with_mock_transport_succeeds() {
-        let transport = Arc::new(Mutex::new(MockCtap2Transport::with_success_responses()));
+        let transport = Arc::new(Mutex::new(Ctap2TransportBackend::Mock(
+            MockCtap2Transport::with_success_responses(),
+        )));
         let provider = SoloV2Provider::with_ctap2_transport(
             sample_device(),
             SoloV2Config::default(),
@@ -289,7 +222,9 @@ mod ctap2_mock_tests {
 
     #[tokio::test]
     async fn provider_sign_with_mock_transport_succeeds() {
-        let transport = Arc::new(Mutex::new(MockCtap2Transport::with_success_responses()));
+        let transport = Arc::new(Mutex::new(Ctap2TransportBackend::Mock(
+            MockCtap2Transport::with_success_responses(),
+        )));
         let provider = SoloV2Provider::with_ctap2_transport(
             sample_device(),
             SoloV2Config::default(),

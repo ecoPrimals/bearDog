@@ -21,7 +21,6 @@ mod tunnel;
 
 use super::MethodHandler;
 use crate::btsp_provider::BeardogBtspProvider;
-use async_trait::async_trait;
 use std::sync::Arc;
 
 /// Handler for BTSP Unified methods
@@ -52,7 +51,6 @@ pub struct BtspHandler {
     session_store: crate::btsp_handshake::BtspSessionStore,
 }
 
-#[async_trait]
 impl MethodHandler for BtspHandler {
     fn methods(&self) -> Vec<&'static str> {
         vec![

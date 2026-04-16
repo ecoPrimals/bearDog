@@ -113,18 +113,3 @@ impl AuditLogFilter {
         true
     }
 }
-
-/// Audit logger trait
-#[async_trait::async_trait]
-pub trait AuditLogger: Send + Sync {
-    /// Record an audit log entry
-    async fn log_operation(
-        &self,
-        operation: &AuditLogEntry,
-    ) -> Result<(), beardog_errors::BearDogError>;
-    /// Retrieve audit log entries matching the given filter
-    async fn get_audit_log(
-        &self,
-        filter: &AuditLogFilter,
-    ) -> Result<Vec<AuditLogEntry>, beardog_errors::BearDogError>;
-}

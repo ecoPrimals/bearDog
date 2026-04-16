@@ -4,10 +4,12 @@
 //!
 //! CTAPHID framing follows FIDO Client to Authenticator Protocol (HID).
 
+use std::future::Future;
+
+use super::ctap2_protocol::{CTAP2_GET_ASSERTION, CTAP2_MAKE_CREDENTIAL, CTAP2_OK};
 use super::transport::Ctap2Transport;
-use async_trait::async_trait;
 use beardog_errors::BearDogError;
-use beardog_hid::HidDevice;
+use beardog_hid::{HidDevice, HidDeviceBackend};
 use rand::RngCore;
 use tracing::{debug, warn};
 
@@ -27,7 +29,7 @@ enum CtapHidCommand {
 
 /// HID-backed CTAP2 transport using `beardog-hid` (pure Rust).
 pub struct HidCtap2Transport {
-    device: Box<dyn HidDevice>,
+    device: HidDeviceBackend,
     channel_id: Option<u32>,
 }
 
@@ -55,16 +57,25 @@ impl HidCtap2Transport {
     }
 }
 
-#[async_trait]
+async fn hid_send_receive(
+    transport: &mut HidCtap2Transport,
+    command: &[u8],
+) -> Result<Vec<u8>, BearDogError> {
+    let cid = transport.ensure_channel().await?;
+    send_ctaphid_message(&mut transport.device, cid, command).await?;
+    read_ctaphid_ctap_response(&mut transport.device, cid).await
+}
+
 impl Ctap2Transport for HidCtap2Transport {
-    async fn send_receive(&mut self, command: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        let cid = self.ensure_channel().await?;
-        send_ctaphid_message(&mut self.device, cid, command).await?;
-        read_ctaphid_ctap_response(&mut self.device, cid).await
+    fn send_receive(
+        &mut self,
+        command: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
+        hid_send_receive(self, command)
     }
 }
 
-async fn ctaphid_init(device: &mut Box<dyn HidDevice>) -> Result<u32, BearDogError> {
+async fn ctaphid_init<D: HidDevice + ?Sized>(device: &mut D) -> Result<u32, BearDogError> {
     let mut nonce = [0u8; 8];
     rand::rng().fill_bytes(&mut nonce);
 
@@ -110,8 +121,8 @@ async fn ctaphid_init(device: &mut Box<dyn HidDevice>) -> Result<u32, BearDogErr
     Ok(cid)
 }
 
-async fn send_ctaphid_message(
-    device: &mut Box<dyn HidDevice>,
+async fn send_ctaphid_message<D: HidDevice + ?Sized>(
+    device: &mut D,
     cid: u32,
     message: &[u8],
 ) -> Result<(), BearDogError> {
@@ -171,8 +182,8 @@ async fn send_ctaphid_message(
 /// Read a full CTAP2 payload (`[status][CBOR...]`) from `CTAPHID_MSG` response packets.
 ///
 /// First packet: `[CID][0x83][BCNTH][BCNTL][payload ≤57]`. Continuation: `[CID][SEQ][payload ≤59]`.
-async fn read_ctaphid_ctap_response(
-    device: &mut Box<dyn HidDevice>,
+async fn read_ctaphid_ctap_response<D: HidDevice + ?Sized>(
+    device: &mut D,
     expected_cid: u32,
 ) -> Result<Vec<u8>, BearDogError> {
     let mut assembled: Vec<u8> = Vec::new();
@@ -270,4 +281,113 @@ async fn read_ctaphid_ctap_response(
     Err(BearDogError::system(
         "CTAPHID timeout — no complete CTAP response".to_string(),
     ))
+}
+
+// --- Enum dispatch + test mock --------------------------------------------------------------------
+
+/// Test-only mock CTAP2 transport (deterministic CBOR payloads for provider tests).
+#[cfg(test)]
+pub struct MockCtap2Transport {
+    make_cred_response: Vec<u8>,
+    get_assertion_response: Vec<u8>,
+}
+
+#[cfg(test)]
+impl MockCtap2Transport {
+    pub(crate) fn with_success_responses() -> Self {
+        use ciborium::Value as CborValue;
+
+        let mut auth_data = vec![0u8; 32];
+        auth_data.push(0x41);
+        auth_data.extend([0u8; 4]);
+        auth_data.extend([0u8; 16]);
+        auth_data.push(0);
+        auth_data.push(4);
+        auth_data.extend_from_slice(&[1, 2, 3, 4]);
+        auth_data.extend_from_slice(&[0xa1, 0x01, 0x18, 0x2b]);
+
+        let mc = CborValue::Map(vec![
+            (
+                CborValue::Integer(1.into()),
+                CborValue::Text("packed".to_string()),
+            ),
+            (CborValue::Integer(2.into()), CborValue::Bytes(auth_data)),
+            (CborValue::Integer(3.into()), CborValue::Map(vec![])),
+        ]);
+        let mut mc_body = Vec::new();
+        ciborium::into_writer(&mc, &mut mc_body).unwrap();
+        let mut make_cred = vec![CTAP2_OK];
+        make_cred.extend(mc_body);
+
+        let ga = CborValue::Map(vec![
+            (
+                CborValue::Integer(2.into()),
+                CborValue::Bytes(vec![0xcc; 37]),
+            ),
+            (
+                CborValue::Integer(3.into()),
+                CborValue::Bytes(vec![0xdd; 64]),
+            ),
+        ]);
+        let mut ga_body = Vec::new();
+        ciborium::into_writer(&ga, &mut ga_body).unwrap();
+        let mut get_assert = vec![CTAP2_OK];
+        get_assert.extend(ga_body);
+
+        Self {
+            make_cred_response: make_cred,
+            get_assertion_response: get_assert,
+        }
+    }
+}
+
+#[cfg(test)]
+async fn mock_send_receive(
+    mock: &mut MockCtap2Transport,
+    command: &[u8],
+) -> Result<Vec<u8>, BearDogError> {
+    match command.first() {
+        Some(&x) if x == CTAP2_MAKE_CREDENTIAL => Ok(mock.make_cred_response.clone()),
+        Some(&x) if x == CTAP2_GET_ASSERTION => Ok(mock.get_assertion_response.clone()),
+        _ => Err(BearDogError::system(
+            "mock: unknown CTAP command".to_string(),
+        )),
+    }
+}
+
+#[cfg(test)]
+impl Ctap2Transport for MockCtap2Transport {
+    fn send_receive(
+        &mut self,
+        command: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
+        mock_send_receive(self, command)
+    }
+}
+
+/// Enum dispatch for [`Ctap2Transport`].
+pub enum Ctap2TransportBackend {
+    Hid(HidCtap2Transport),
+    #[cfg(test)]
+    Mock(MockCtap2Transport),
+}
+
+async fn ctap2_backend_send_receive(
+    backend: &mut Ctap2TransportBackend,
+    command: &[u8],
+) -> Result<Vec<u8>, BearDogError> {
+    match backend {
+        Ctap2TransportBackend::Hid(t) => hid_send_receive(t, command).await,
+        #[cfg(test)]
+        Ctap2TransportBackend::Mock(t) => mock_send_receive(t, command).await,
+    }
+}
+
+impl Ctap2Transport for Ctap2TransportBackend {
+    fn send_receive(
+        &mut self,
+        command: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
+        ctap2_backend_send_receive(self, command)
+    }
 }

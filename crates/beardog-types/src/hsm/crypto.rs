@@ -5,6 +5,7 @@
 //! Defines the core cryptographic provider interface for HSM operations.
 
 use crate::BearDogError;
+use std::future::Future;
 
 /// Cryptographic Provider Trait
 ///
@@ -14,7 +15,7 @@ use crate::BearDogError;
 /// provides a unified, object-safe interface for all HSM backends.
 /// New code should use `HsmKeyProvider` via the `HsmProviderRegistry`.
 /// This trait will be removed in a future release.
-#[async_trait::async_trait]
+#[allow(async_fn_in_trait)]
 pub trait CryptoProvider<KeyType = ()>: Send + Sync
 where
     KeyType: Send + Sync + std::fmt::Debug,
@@ -54,9 +55,12 @@ where
     /// - Unsupported key type
     /// - Insufficient entropy
     /// - Library errors
-    async fn generate_key_material(&self, key_type: &KeyType) -> Result<Vec<u8>, BearDogError> {
+    fn generate_key_material(
+        &self,
+        key_type: &KeyType,
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
         let _ = key_type;
-        Ok(vec![0; 32])
+        async { Ok(vec![0; 32]) }
     }
 
     /// Encrypt data using the provided key material
@@ -77,8 +81,11 @@ where
     /// - Invalid key material
     /// - Encryption operation failure
     /// - Memory allocation failure
-    async fn encrypt(&self, key_material: &[u8], plaintext: &[u8])
-    -> Result<Vec<u8>, BearDogError>;
+    fn encrypt(
+        &self,
+        key_material: &[u8],
+        plaintext: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_;
 
     /// Decrypt data using the provided key material
     ///
@@ -98,11 +105,11 @@ where
     /// - Corrupted ciphertext
     /// - Authentication failure
     /// - Decryption operation failure
-    async fn decrypt(
+    fn decrypt(
         &self,
         key_material: &[u8],
         ciphertext: &[u8],
-    ) -> Result<Vec<u8>, BearDogError>;
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_;
 
     /// Sign data using the provided key material
     ///
@@ -124,7 +131,11 @@ where
     /// - Invalid key material
     /// - Unsupported key type for signing
     /// - Signing operation failure
-    async fn sign(&self, key_material: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError>;
+    fn sign(
+        &self,
+        key_material: &[u8],
+        data: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_;
 
     /// Verify a signature using the provided key material
     ///
@@ -144,12 +155,12 @@ where
     /// - Invalid key material
     /// - Malformed signature
     /// - Verification operation failure
-    async fn verify(
+    fn verify(
         &self,
         key_material: &[u8],
         data: &[u8],
         signature: &[u8],
-    ) -> Result<bool, BearDogError>;
+    ) -> impl Future<Output = Result<bool, BearDogError>> + Send + '_;
 
     /// Derive a key from root key material
     ///
@@ -170,15 +181,17 @@ where
     /// Returns an error if key derivation fails due to:
     /// - Invalid root key
     /// - Derivation operation failure
-    async fn derive_key(
+    fn derive_key(
         &self,
         root_key: &[u8],
         derivation_data: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
         let _ = (root_key, derivation_data);
-        // Default implementation returns a fixed-size key
-        // Implementations should override this with proper HKDF
-        Ok(vec![0; 32])
+        async {
+            // Default implementation returns a fixed-size key
+            // Implementations should override this with proper HKDF
+            Ok(vec![0; 32])
+        }
     }
 }
 

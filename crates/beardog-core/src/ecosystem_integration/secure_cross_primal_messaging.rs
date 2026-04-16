@@ -48,7 +48,7 @@ use tokio::sync::RwLock;
 use tracing::{debug, info};
 
 /// Trait for discovering primals by capability (not by hardcoded name)
-#[async_trait::async_trait]
+#[allow(async_fn_in_trait)]
 pub trait PrimalDiscoveryService: Send + Sync {
     /// Discover primals with specific capabilities
     async fn discover_by_capability(
@@ -108,9 +108,9 @@ pub struct SecureSession {
 }
 
 /// Secure Cross-Primal Messenger (Zero Hardcoded Primal Names)
-pub struct SecureCrossPrimalMessenger {
+pub struct SecureCrossPrimalMessenger<D: PrimalDiscoveryService> {
     /// Discovery service for capability-based primal discovery
-    discovery_service: Arc<dyn PrimalDiscoveryService>,
+    discovery_service: Arc<D>,
     /// Our identity (`BearDog` only knows itself)
     our_identity: String,
     /// Active secure sessions (by session ID)
@@ -136,12 +136,12 @@ pub struct MessengerMetrics {
     pub last_activity: Option<chrono::DateTime<chrono::Utc>>,
 }
 
-impl SecureCrossPrimalMessenger {
+impl<D: PrimalDiscoveryService> SecureCrossPrimalMessenger<D> {
     /// Create new secure cross-primal messenger
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub fn new(discovery_service: Arc<dyn PrimalDiscoveryService>) -> Result<Self, BearDogError> {
+    pub fn new(discovery_service: Arc<D>) -> Result<Self, BearDogError> {
         info!("🔐 Initializing Secure Cross-Primal Messenger");
         info!("📋 Using capability-based discovery - zero hardcoded primal names");
 

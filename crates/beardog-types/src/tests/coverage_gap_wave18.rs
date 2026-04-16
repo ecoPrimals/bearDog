@@ -24,7 +24,7 @@ use crate::canonical::config::security::{
 };
 use crate::canonical::discovery::service_discovery_capability::{
     ConsulDiscovery, DiscoveryError, DnsHttpDiscovery, EtcdDiscovery, KubernetesDiscovery,
-    ServiceDiscoveryCapability, create_service_discovery,
+    ServiceDiscoveryBackend, ServiceDiscoveryCapability, create_service_discovery,
 };
 use crate::canonical::hsm::config::{
     AuthMethod, CloudCredentials, CloudHsmConfig, HsmConfigBuilder, HsmProviderConfig,
@@ -844,8 +844,8 @@ fn dns_http_discovery_is_cloneable() {
 }
 
 #[test]
-fn service_discovery_capability_object_safe() {
-    let d: Box<dyn ServiceDiscoveryCapability> = Box::new(DnsHttpDiscovery::new());
+fn service_discovery_enum_dispatch() {
+    let d = ServiceDiscoveryBackend::DnsHttp(DnsHttpDiscovery::new());
     assert_eq!(d.provider_name(), "dns-http-fallback");
 }
 

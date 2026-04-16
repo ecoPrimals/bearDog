@@ -7,16 +7,17 @@
 //! This module provides REAL cryptographic operations using the software HSM crypto providers.
 
 use beardog_errors::BearDogError;
+use beardog_types::hsm::CryptoProvider;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{debug, info};
 
 // Import real crypto providers (100% Pure Rust!)
+use crate::tunnel::hsm::CryptoProviderBackend;
 use crate::tunnel::hsm::software_hsm::crypto_providers::RustCryptoProvider;
 // RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust, ARM-ready!)
 // OpenSslCryptoProvider removed - evolved to pure Rust alternatives
 use crate::tunnel::hsm::types::KeyType;
-use beardog_types::hsm::CryptoProvider;
 
 /// Software Universal HSM Provider
 pub struct SoftwareUniversalProvider {
@@ -27,7 +28,7 @@ pub struct SoftwareUniversalProvider {
     /// Provider metadata
     metadata: HashMap<String, String>,
     /// Real crypto provider implementation
-    crypto_impl: Arc<dyn CryptoProvider<KeyType> + Send + Sync>,
+    crypto_impl: Arc<CryptoProviderBackend>,
     /// Key storage (maps `key_id` -> `key_material`)
     keys: HashMap<String, Vec<u8>>,
 }
@@ -69,10 +70,10 @@ impl SoftwareUniversalProvider {
     /// Returns an error if initialization fails
     pub async fn new(provider_type: CryptoProviderType) -> Result<Self, BearDogError> {
         // Create real crypto provider based on type
-        let crypto_impl: Arc<dyn CryptoProvider<KeyType> + Send + Sync> = match &provider_type {
+        let crypto_impl: Arc<CryptoProviderBackend> = match &provider_type {
             CryptoProviderType::Software => {
                 let provider = RustCryptoProvider::new().await?;
-                Arc::new(provider)
+                Arc::new(CryptoProviderBackend::RustCrypto(provider))
             }
             CryptoProviderType::OpenSsl => {
                 // OpenSSL evolved to RustCrypto (100% Pure Rust sovereignty!)
@@ -80,13 +81,13 @@ impl SoftwareUniversalProvider {
                     "OpenSSL backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)"
                 );
                 let provider = RustCryptoProvider::new().await?;
-                Arc::new(provider)
+                Arc::new(CryptoProviderBackend::RustCrypto(provider))
             }
             CryptoProviderType::Ring => {
                 // Ring evolved to RustCrypto (100% Pure Rust, ARM-ready!)
                 tracing::warn!("Ring backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)");
                 let provider = RustCryptoProvider::new().await?;
-                Arc::new(provider)
+                Arc::new(CryptoProviderBackend::RustCrypto(provider))
             }
             CryptoProviderType::Hardware => {
                 return Err(BearDogError::unsupported_operation(

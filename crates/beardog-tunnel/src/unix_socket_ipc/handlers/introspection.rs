@@ -12,7 +12,6 @@
 use super::utils::{IdentityHints, get_primal_name_with};
 use super::{HandlerRegistry, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
-use async_trait::async_trait;
 use beardog_types::constants::domains::network::ipc_discovery::BEARDOG_CAPABILITY_DOMAIN;
 use serde_json::{Value, json};
 use std::sync::Arc;
@@ -39,7 +38,6 @@ impl IntrospectionHandler {
     }
 }
 
-#[async_trait]
 impl MethodHandler for IntrospectionHandler {
     fn methods(&self) -> Vec<&'static str> {
         vec!["primal.info", "rpc.methods", "primal.capabilities"]

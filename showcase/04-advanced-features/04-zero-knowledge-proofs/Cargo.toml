@@ -14,7 +14,6 @@ beardog-errors = { path = "../../../crates/beardog-errors" }
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }
-async-trait = "0.1"
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

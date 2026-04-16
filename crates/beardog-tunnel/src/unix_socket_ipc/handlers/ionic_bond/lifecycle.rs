@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::crypto::{compute_terms_hash, sign_terms_ed25519, verify_ed25519_signature};
+use super::persistence::BondPersistence;
 use super::{IonicBondHandler, PendingProposal};
 use crate::btsp_provider::BeardogBtspProvider;
 use beardog_types::ionic_bond::{

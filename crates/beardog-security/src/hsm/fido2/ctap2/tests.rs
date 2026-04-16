@@ -85,7 +85,6 @@ fn test_ctap2_device_info_debug() {
 #[cfg(all(test, feature = "fido2"))]
 mod fido2_hid_tests {
     use super::super::*;
-    use async_trait::async_trait;
     use beardog_hid::{HidDevice, HidDeviceInfo, ProductId, VendorId};
     use ciborium::Value as CborValue;
 
@@ -136,28 +135,37 @@ mod fido2_hid_tests {
         }
     }
 
-    #[async_trait]
     impl HidDevice for ScriptedHid {
-        async fn write(&mut self, report: &[u8]) -> Result<usize, BearDogError> {
-            if report.len() >= 15 && report[4] == CtapHidCommand::Init as u8 {
-                self.init_nonce.copy_from_slice(&report[7..15]);
+        fn write<'a>(
+            &'a mut self,
+            report: &'a [u8],
+        ) -> impl std::future::Future<Output = Result<usize, BearDogError>> + Send + 'a {
+            async {
+                if report.len() >= 15 && report[4] == CtapHidCommand::Init as u8 {
+                    self.init_nonce.copy_from_slice(&report[7..15]);
+                }
+                Ok(report.len())
             }
-            Ok(report.len())
         }
 
-        async fn read(&mut self, buf: &mut [u8]) -> Result<usize, BearDogError> {
-            self.reads += 1;
-            if self.reads == 1 {
-                return Ok(self.fill_init_response(buf));
+        fn read<'a>(
+            &'a mut self,
+            buf: &'a mut [u8],
+        ) -> impl std::future::Future<Output = Result<usize, BearDogError>> + Send + 'a {
+            async {
+                self.reads += 1;
+                if self.reads == 1 {
+                    return Ok(self.fill_init_response(buf));
+                }
+                let map = CborValue::Map(vec![(
+                    CborValue::Integer(1i64.into()),
+                    CborValue::Array(vec![CborValue::Text("FIDO_2_0".to_string())]),
+                )]);
+                let mut body = Vec::new();
+                ciborium::into_writer(&map, &mut body).unwrap();
+                let n = self.fill_ctap_ok_cbor(buf, 0xCAFE_BABE, &body);
+                Ok(n)
             }
-            let map = CborValue::Map(vec![(
-                CborValue::Integer(1i64.into()),
-                CborValue::Array(vec![CborValue::Text("FIDO_2_0".to_string())]),
-            )]);
-            let mut body = Vec::new();
-            ciborium::into_writer(&map, &mut body).unwrap();
-            let n = self.fill_ctap_ok_cbor(buf, 0xCAFE_BABE, &body);
-            Ok(n)
         }
 
         fn info(&self) -> &HidDeviceInfo {
@@ -167,14 +175,14 @@ mod fido2_hid_tests {
 
     #[tokio::test]
     async fn ctaphid_init_success() {
-        let mut dev: Box<dyn HidDevice> = Box::new(ScriptedHid::new());
+        let mut dev = ScriptedHid::new();
         let cid = ctaphid_init(&mut dev).await.expect("init");
         assert_eq!(cid, 0xCAFE_BABE);
     }
 
     #[tokio::test]
     async fn send_ctap2_command_success_after_init() {
-        let mut dev: Box<dyn HidDevice> = Box::new(ScriptedHid::new());
+        let mut dev = ScriptedHid::new();
         let cid = ctaphid_init(&mut dev).await.unwrap();
         let payload = send_ctap2_command(&mut dev, cid, Ctap2Command::GetInfo, &[])
             .await
@@ -184,7 +192,7 @@ mod fido2_hid_tests {
 
     #[tokio::test]
     async fn ctap2_get_info_parses_versions() {
-        let mut dev: Box<dyn HidDevice> = Box::new(ScriptedHid::new());
+        let mut dev = ScriptedHid::new();
         let info = ctap2_get_info(&mut dev).await.expect("getinfo");
         assert!(info.versions.iter().any(|v| v.contains("FIDO")));
     }

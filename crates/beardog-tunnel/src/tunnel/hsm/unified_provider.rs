@@ -15,7 +15,7 @@ use tracing::{debug, info};
 
 /// Unified HSM provider that routes to appropriate backends
 pub struct UnifiedHsmProvider {
-    providers: Arc<RwLock<HashMap<String, Arc<dyn HsmProvider>>>>,
+    providers: Arc<RwLock<HashMap<String, Arc<crate::tunnel::hsm::HsmProviderBackend>>>>,
     default_provider: Option<String>,
 }
 
@@ -50,7 +50,7 @@ impl UnifiedHsmProvider {
     pub fn register_provider(
         &mut self,
         id: String,
-        provider: Arc<dyn HsmProvider>,
+        provider: Arc<crate::tunnel::hsm::HsmProviderBackend>,
     ) -> Result<(), BearDogError> {
         info!("📝 Registering HSM provider: {}", id);
 
@@ -107,7 +107,10 @@ impl UnifiedHsmProvider {
     /// # Errors
     ///
     /// Returns an error if the provider is not registered.
-    pub fn get_provider(&self, id: &str) -> Result<Arc<dyn HsmProvider>, BearDogError> {
+    pub fn get_provider(
+        &self,
+        id: &str,
+    ) -> Result<Arc<crate::tunnel::hsm::HsmProviderBackend>, BearDogError> {
         let providers = self.providers.read();
 
         providers
@@ -121,7 +124,9 @@ impl UnifiedHsmProvider {
     /// # Errors
     ///
     /// Returns an error if no default provider is set or lookup fails.
-    pub fn get_default_provider(&self) -> Result<Arc<dyn HsmProvider>, BearDogError> {
+    pub fn get_default_provider(
+        &self,
+    ) -> Result<Arc<crate::tunnel::hsm::HsmProviderBackend>, BearDogError> {
         let default_id = self
             .default_provider
             .as_ref()
@@ -302,7 +307,12 @@ mod tests {
         let config = SoftwareHsmConfig::default();
         let software_hsm = RustSoftwareHsm::new(config).await?;
 
-        let result = unified.register_provider("software".to_string(), Arc::new(software_hsm));
+        let result = unified.register_provider(
+            "software".to_string(),
+            Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+                software_hsm,
+            )),
+        );
 
         assert!(result.is_ok());
         assert_eq!(unified.list_providers().len(), 1);
@@ -316,7 +326,12 @@ mod tests {
         let config = SoftwareHsmConfig::default();
         let software_hsm = RustSoftwareHsm::new(config).await?;
 
-        unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
+        unified.register_provider(
+            "software".to_string(),
+            Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+                software_hsm,
+            )),
+        )?;
 
         let provider = unified.get_default_provider();
         assert!(provider.is_ok());
@@ -330,7 +345,12 @@ mod tests {
         let config = SoftwareHsmConfig::default();
         let software_hsm = RustSoftwareHsm::new(config).await?;
 
-        unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
+        unified.register_provider(
+            "software".to_string(),
+            Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+                software_hsm,
+            )),
+        )?;
 
         let provider = unified.get_provider("software");
         assert!(provider.is_ok());
@@ -344,7 +364,12 @@ mod tests {
         let config = SoftwareHsmConfig::default();
         let software_hsm = RustSoftwareHsm::new(config).await?;
 
-        unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
+        unified.register_provider(
+            "software".to_string(),
+            Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+                software_hsm,
+            )),
+        )?;
 
         assert_eq!(unified.list_providers().len(), 1);
 
@@ -361,8 +386,18 @@ mod tests {
         let software_hsm1 = RustSoftwareHsm::new(config.clone()).await?;
         let software_hsm2 = RustSoftwareHsm::new(config).await?;
 
-        unified.register_provider("provider1".to_string(), Arc::new(software_hsm1))?;
-        unified.register_provider("provider2".to_string(), Arc::new(software_hsm2))?;
+        unified.register_provider(
+            "provider1".to_string(),
+            Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+                software_hsm1,
+            )),
+        )?;
+        unified.register_provider(
+            "provider2".to_string(),
+            Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+                software_hsm2,
+            )),
+        )?;
 
         let result = unified.set_default_provider("provider2".to_string());
         assert!(result.is_ok());
@@ -376,7 +411,12 @@ mod tests {
         let config = SoftwareHsmConfig::default();
         let software_hsm = RustSoftwareHsm::new(config).await?;
 
-        unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
+        unified.register_provider(
+            "software".to_string(),
+            Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+                software_hsm,
+            )),
+        )?;
 
         let result = unified.generate_key("test_key", &KeyType::Ed25519).await;
         assert!(result.is_ok());
@@ -390,7 +430,12 @@ mod tests {
         let config = SoftwareHsmConfig::default();
         let software_hsm = RustSoftwareHsm::new(config).await?;
 
-        unified.register_provider("software".to_string(), Arc::new(software_hsm))?;
+        unified.register_provider(
+            "software".to_string(),
+            Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+                software_hsm,
+            )),
+        )?;
 
         // Generate key
         let key = unified.generate_key("test_key", &KeyType::Ed25519).await?;

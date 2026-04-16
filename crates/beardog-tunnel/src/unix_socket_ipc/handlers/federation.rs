@@ -27,7 +27,6 @@
 
 use crate::btsp_provider::BeardogBtspProvider;
 use crate::unix_socket_ipc::handlers::MethodHandler;
-use async_trait::async_trait;
 use beardog_types::primal_identity::PrimalIdentity;
 use chrono::Utc;
 use std::sync::Arc;
@@ -41,7 +40,6 @@ pub struct FederationHandler {
     identity: Arc<PrimalIdentity>,
 }
 
-#[async_trait]
 impl MethodHandler for FederationHandler {
     fn methods(&self) -> Vec<&'static str> {
         vec![

@@ -24,6 +24,7 @@
 use crate::tunnel::hsm::software_hsm::CryptoProvider;
 use crate::tunnel::hsm::types::KeyType;
 use beardog_errors::BearDogError;
+use std::future::Future;
 use tracing::{debug, info, warn};
 
 // Pure Rust crypto imports - ZERO FFI!
@@ -161,222 +162,253 @@ impl Default for GeneticCryptoProvider {
     }
 }
 
-#[async_trait::async_trait]
 impl CryptoProvider<KeyType> for GeneticCryptoProvider {
     async fn initialize(&self) -> Result<(), BearDogError> {
         info!("🚀 GeneticCrypto provider initialized (100% Pure Rust, zero FFI)");
         Ok(())
     }
 
-    async fn generate_key_material(&self, key_type: &KeyType) -> Result<Vec<u8>, BearDogError> {
-        debug!(
-            "🔑 Generating {:?} key with GeneticCrypto (Pure Rust)",
-            key_type
-        );
+    fn generate_key_material(
+        &self,
+        key_type: &KeyType,
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let key_type = key_type.clone();
+        let slf = self.clone();
+        async move {
+            debug!(
+                "🔑 Generating {:?} key with GeneticCrypto (Pure Rust)",
+                key_type
+            );
 
-        let key_length = match key_type {
-            KeyType::Aes | KeyType::ChaCha20 => 32, // 256-bit symmetric keys
-            KeyType::Ed25519 | KeyType::X25519 | KeyType::EllipticCurve => 32, // EC keys
-            KeyType::Rsa | KeyType::Generic | KeyType::Custom(_) => {
-                return Err(BearDogError::unsupported_operation(format!(
-                    "GeneticCrypto supports AES, ChaCha20, Ed25519, X25519, and ECC. Got: {key_type:?}"
-                )));
-            }
-        };
+            let key_length = match &key_type {
+                KeyType::Aes | KeyType::ChaCha20 => 32, // 256-bit symmetric keys
+                KeyType::Ed25519 | KeyType::X25519 | KeyType::EllipticCurve => 32, // EC keys
+                KeyType::Rsa | KeyType::Generic | KeyType::Custom(_) => {
+                    return Err(BearDogError::unsupported_operation(format!(
+                        "GeneticCrypto supports AES, ChaCha20, Ed25519, X25519, and ECC. Got: {key_type:?}"
+                    )));
+                }
+            };
 
-        let key_material = self.generate_random_bytes(key_length)?;
-        debug!(
-            "✅ Generated {} byte key (Pure Rust OsRng)",
-            key_material.len()
-        );
-        Ok(key_material)
+            let key_material = slf.generate_random_bytes(key_length)?;
+            debug!(
+                "✅ Generated {} byte key (Pure Rust OsRng)",
+                key_material.len()
+            );
+            Ok(key_material)
+        }
     }
 
-    async fn encrypt(
+    fn encrypt(
         &self,
         key_material: &[u8],
         plaintext: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        debug!(
-            "🔒 Encrypting {} bytes with AES-256-GCM (Pure Rust, AES-NI)",
-            plaintext.len()
-        );
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let key_material = key_material.to_vec();
+        let plaintext = plaintext.to_vec();
+        let slf = self.clone();
+        async move {
+            debug!(
+                "🔒 Encrypting {} bytes with AES-256-GCM (Pure Rust, AES-NI)",
+                plaintext.len()
+            );
 
-        if key_material.len() != 32 {
-            return Err(BearDogError::crypto_error(format!(
-                "Invalid key size: expected 32 bytes, got {}",
-                key_material.len()
-            )));
+            if key_material.len() != 32 {
+                return Err(BearDogError::crypto_error(format!(
+                    "Invalid key size: expected 32 bytes, got {}",
+                    key_material.len()
+                )));
+            }
+
+            // Create AES-256-GCM cipher (Pure Rust with AES-NI acceleration)
+            let cipher = Aes256Gcm::new_from_slice(key_material.as_slice()).map_err(|e| {
+                BearDogError::crypto_error(format!("Failed to create AES-256-GCM cipher: {e}"))
+            })?;
+
+            // Generate random nonce (96 bits for GCM)
+            let nonce_bytes = slf.generate_random_bytes(12)?;
+            let nonce = Nonce::from_slice(&nonce_bytes);
+
+            // Encrypt with authenticated encryption (AEAD)
+            let ciphertext = cipher
+                .encrypt(nonce, plaintext.as_slice())
+                .map_err(|e| BearDogError::crypto_error(format!("Encryption failed: {e}")))?;
+
+            // Prepend nonce to ciphertext (standard format)
+            let mut result = nonce_bytes;
+            result.extend(ciphertext);
+
+            debug!(
+                "✅ Encrypted to {} bytes (nonce + ciphertext + tag)",
+                result.len()
+            );
+            Ok(result)
         }
-
-        // Create AES-256-GCM cipher (Pure Rust with AES-NI acceleration)
-        let cipher = Aes256Gcm::new_from_slice(key_material).map_err(|e| {
-            BearDogError::crypto_error(format!("Failed to create AES-256-GCM cipher: {e}"))
-        })?;
-
-        // Generate random nonce (96 bits for GCM)
-        let nonce_bytes = self.generate_random_bytes(12)?;
-        let nonce = Nonce::from_slice(&nonce_bytes);
-
-        // Encrypt with authenticated encryption (AEAD)
-        let ciphertext = cipher
-            .encrypt(nonce, plaintext)
-            .map_err(|e| BearDogError::crypto_error(format!("Encryption failed: {e}")))?;
-
-        // Prepend nonce to ciphertext (standard format)
-        let mut result = nonce_bytes;
-        result.extend(ciphertext);
-
-        debug!(
-            "✅ Encrypted to {} bytes (nonce + ciphertext + tag)",
-            result.len()
-        );
-        Ok(result)
     }
 
-    async fn decrypt(
+    fn decrypt(
         &self,
         key_material: &[u8],
         ciphertext: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        const NONCE_LEN: usize = 12;
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let key_material = key_material.to_vec();
+        let ciphertext = ciphertext.to_vec();
+        async move {
+            const NONCE_LEN: usize = 12;
 
-        debug!(
-            "🔓 Decrypting {} bytes with AES-256-GCM (Pure Rust, AES-NI)",
-            ciphertext.len()
-        );
-
-        if ciphertext.len() < NONCE_LEN {
-            return Err(BearDogError::crypto_error(format!(
-                "Ciphertext too short: expected at least {NONCE_LEN} bytes, got {}",
+            debug!(
+                "🔓 Decrypting {} bytes with AES-256-GCM (Pure Rust, AES-NI)",
                 ciphertext.len()
-            )));
+            );
+
+            if ciphertext.len() < NONCE_LEN {
+                return Err(BearDogError::crypto_error(format!(
+                    "Ciphertext too short: expected at least {NONCE_LEN} bytes, got {}",
+                    ciphertext.len()
+                )));
+            }
+
+            // Extract nonce and ciphertext
+            let (nonce_bytes, ciphertext_data) = ciphertext.split_at(NONCE_LEN);
+            let nonce = Nonce::from_slice(nonce_bytes);
+
+            // Create cipher
+            let cipher = Aes256Gcm::new_from_slice(key_material.as_slice()).map_err(|e| {
+                BearDogError::crypto_error(format!("Failed to create AES-256-GCM cipher: {e}"))
+            })?;
+
+            // Decrypt and verify authentication tag
+            let plaintext = cipher.decrypt(nonce, ciphertext_data).map_err(|e| {
+                BearDogError::crypto_error(format!(
+                    "Decryption failed (wrong key or tampered data): {e}"
+                ))
+            })?;
+
+            debug!("✅ Decrypted to {} bytes", plaintext.len());
+            Ok(plaintext)
         }
-
-        // Extract nonce and ciphertext
-        let (nonce_bytes, ciphertext_data) = ciphertext.split_at(NONCE_LEN);
-        let nonce = Nonce::from_slice(nonce_bytes);
-
-        // Create cipher
-        let cipher = Aes256Gcm::new_from_slice(key_material).map_err(|e| {
-            BearDogError::crypto_error(format!("Failed to create AES-256-GCM cipher: {e}"))
-        })?;
-
-        // Decrypt and verify authentication tag
-        let plaintext = cipher.decrypt(nonce, ciphertext_data).map_err(|e| {
-            BearDogError::crypto_error(format!(
-                "Decryption failed (wrong key or tampered data): {e}"
-            ))
-        })?;
-
-        debug!("✅ Decrypted to {} bytes", plaintext.len());
-        Ok(plaintext)
     }
 
-    async fn sign(&self, key_material: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        debug!(
-            "✍️ Signing {} bytes with Ed25519 (Pure Rust, AVX2)",
-            data.len()
-        );
+    fn sign(
+        &self,
+        key_material: &[u8],
+        data: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let key_material = key_material.to_vec();
+        let data = data.to_vec();
+        async move {
+            debug!(
+                "✍️ Signing {} bytes with Ed25519 (Pure Rust, AVX2)",
+                data.len()
+            );
 
-        if key_material.len() != 32 {
-            return Err(BearDogError::crypto_error(format!(
-                "Invalid Ed25519 private key length: expected 32 bytes, got {}",
-                key_material.len()
-            )));
-        }
+            if key_material.len() != 32 {
+                return Err(BearDogError::crypto_error(format!(
+                    "Invalid Ed25519 private key length: expected 32 bytes, got {}",
+                    key_material.len()
+                )));
+            }
 
-        // Create signing key from seed (Pure Rust)
-        let signing_key =
-            SigningKey::from_bytes(key_material.try_into().map_err(|_| {
+            // Create signing key from seed (Pure Rust)
+            let key_bytes: [u8; 32] = key_material.try_into().map_err(|_| {
                 BearDogError::crypto_error("Invalid private key format".to_string())
-            })?);
+            })?;
+            let signing_key = SigningKey::from_bytes(&key_bytes);
 
-        // Sign the data (Pure Rust, uses AVX2 if available)
-        let signature = signing_key.sign(data);
+            // Sign the data (Pure Rust, uses AVX2 if available)
+            let signature = signing_key.sign(data.as_slice());
 
-        debug!(
-            "✅ Generated Ed25519 signature ({} bytes)",
-            signature.to_bytes().len()
-        );
-        Ok(signature.to_bytes().to_vec())
+            debug!(
+                "✅ Generated Ed25519 signature ({} bytes)",
+                signature.to_bytes().len()
+            );
+            Ok(signature.to_bytes().to_vec())
+        }
     }
 
-    async fn verify(
+    fn verify(
         &self,
         key_material: &[u8],
         data: &[u8],
         signature: &[u8],
-    ) -> Result<bool, BearDogError> {
-        debug!(
-            "🔍 Verifying Ed25519 signature for {} bytes (Pure Rust)",
-            data.len()
-        );
+    ) -> impl Future<Output = Result<bool, BearDogError>> + Send + '_ {
+        let key_material = key_material.to_vec();
+        let data = data.to_vec();
+        let signature = signature.to_vec();
+        async move {
+            debug!(
+                "🔍 Verifying Ed25519 signature for {} bytes (Pure Rust)",
+                data.len()
+            );
 
-        if key_material.len() != 32 {
-            return Err(BearDogError::crypto_error(format!(
-                "Invalid Ed25519 key length: expected 32 bytes, got {}",
-                key_material.len()
-            )));
-        }
+            if key_material.len() != 32 {
+                return Err(BearDogError::crypto_error(format!(
+                    "Invalid Ed25519 key length: expected 32 bytes, got {}",
+                    key_material.len()
+                )));
+            }
 
-        if signature.len() != 64 {
-            return Err(BearDogError::crypto_error(format!(
-                "Invalid Ed25519 signature length: expected 64 bytes, got {}",
-                signature.len()
-            )));
-        }
+            if signature.len() != 64 {
+                return Err(BearDogError::crypto_error(format!(
+                    "Invalid Ed25519 signature length: expected 64 bytes, got {}",
+                    signature.len()
+                )));
+            }
 
-        let verifying_key =
-            ed25519_dalek::VerifyingKey::from_bytes(key_material.try_into().map_err(|_| {
+            let key_bytes: [u8; 32] = key_material.try_into().map_err(|_| {
                 BearDogError::crypto_error("Invalid Ed25519 public key format".to_string())
-            })?)
-            .map_err(|e| {
-                BearDogError::crypto_error(format!("Failed to create verifying key: {e}"))
             })?;
+            let verifying_key =
+                ed25519_dalek::VerifyingKey::from_bytes(&key_bytes).map_err(|e| {
+                    BearDogError::crypto_error(format!("Failed to create verifying key: {e}"))
+                })?;
 
-        // Create signature
-        let sig = Signature::from_bytes(
-            signature
+            // Create signature
+            let sig_bytes: [u8; 64] = signature
                 .try_into()
-                .map_err(|_| BearDogError::crypto_error("Invalid signature format".to_string()))?,
-        );
+                .map_err(|_| BearDogError::crypto_error("Invalid signature format".to_string()))?;
+            let sig = Signature::from_bytes(&sig_bytes);
 
-        // Verify signature (Pure Rust)
-        if matches!(verifying_key.verify(data, &sig), Ok(())) {
-            debug!("✅ Signature valid");
-            Ok(true)
-        } else {
-            debug!("❌ Signature invalid");
-            Ok(false)
+            // Verify signature (Pure Rust)
+            if matches!(verifying_key.verify(data.as_slice(), &sig), Ok(())) {
+                debug!("✅ Signature valid");
+                Ok(true)
+            } else {
+                debug!("❌ Signature invalid");
+                Ok(false)
+            }
         }
     }
 
-    async fn derive_key(
+    fn derive_key(
         &self,
         root_key: &[u8],
         derivation_data: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        use hmac::Mac as _; // Import Mac trait for update/finalize
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let root_key = root_key.to_vec();
+        let derivation_data = derivation_data.to_vec();
+        async move {
+            use hmac::Mac as _; // Import Mac trait for update/finalize
 
-        debug!("🔑 Deriving key with HMAC-SHA256 (Pure Rust)");
+            debug!("🔑 Deriving key with HMAC-SHA256 (Pure Rust)");
 
-        if root_key.is_empty() {
-            return Err(BearDogError::crypto_error(
-                "Root key cannot be empty".to_string(),
-            ));
+            if root_key.is_empty() {
+                return Err(BearDogError::crypto_error(
+                    "Root key cannot be empty".to_string(),
+                ));
+            }
+
+            // Use HMAC-SHA256 for key derivation (Pure Rust)
+            let mut mac = <HmacSha256 as Mac>::new_from_slice(root_key.as_slice())
+                .map_err(|e| BearDogError::crypto_error(format!("Failed to create HMAC: {e}")))?;
+
+            mac.update(derivation_data.as_slice());
+            let result = mac.finalize();
+            let key_bytes = result.into_bytes();
+
+            debug!("✅ Derived key of {} bytes", key_bytes.len());
+            Ok(key_bytes.to_vec())
         }
-
-        // Use HMAC-SHA256 for key derivation (Pure Rust)
-        let mut mac = <HmacSha256 as Mac>::new_from_slice(root_key)
-            .map_err(|e| BearDogError::crypto_error(format!("Failed to create HMAC: {e}")))?;
-
-        mac.update(derivation_data);
-        let result = mac.finalize();
-        let key_bytes = result.into_bytes();
-
-        debug!("✅ Derived key of {} bytes", key_bytes.len());
-        Ok(key_bytes.to_vec())
     }
 }
 

@@ -306,8 +306,13 @@ mod tests {
         let software_hsm = RustSoftwareHsm::new(SoftwareHsmConfig::default())
             .await
             .expect("software hsm");
-        hsm.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))
-            .expect("register");
+        hsm.register_hsm_provider(
+            HsmTier::Software,
+            Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+                software_hsm,
+            )),
+        )
+        .expect("register");
         let hsm = Arc::new(hsm);
         let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
         Arc::new(BeardogBtspProvider::new(hsm, genetics).await.expect("btsp"))

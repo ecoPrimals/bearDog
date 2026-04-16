@@ -13,8 +13,8 @@ use crate::tunnel::hsm::crypto::capabilities::{
     CryptoCapabilities, HardwareFeature, PerformanceProfile, Platform, SideChannelResistance,
 };
 use crate::tunnel::hsm::crypto::provider::{NonceGenerator, UniversalCryptoProvider};
-use async_trait::async_trait;
 use beardog_errors::BearDogError;
+use std::future::Future;
 
 /// `RustCrypto` provider implementation
 #[derive(Debug, Clone)]
@@ -112,7 +112,6 @@ impl Default for RustCryptoProvider {
     }
 }
 
-#[async_trait]
 impl UniversalCryptoProvider for RustCryptoProvider {
     fn provider_name(&self) -> &'static str {
         "RustCrypto"
@@ -122,80 +121,99 @@ impl UniversalCryptoProvider for RustCryptoProvider {
         env!("CARGO_PKG_VERSION")
     }
 
-    async fn discover_capabilities(&self) -> Result<CryptoCapabilities, BearDogError> {
-        Ok(self.capabilities.clone())
+    fn discover_capabilities(
+        &self,
+    ) -> impl Future<Output = Result<CryptoCapabilities, BearDogError>> + Send {
+        let cap = self.capabilities.clone();
+        async move { Ok(cap) }
     }
 
-    async fn supports_algorithm(&self, algorithm: &CryptoAlgorithm) -> bool {
-        match algorithm {
-            CryptoAlgorithm::Symmetric(sym) => self.capabilities.supports_symmetric(sym),
-            CryptoAlgorithm::Signature(sig) => self.capabilities.supports_signature(sig),
-            CryptoAlgorithm::Hash(hash) => self.capabilities.supports_hash(hash),
-            _ => false,
+    fn supports_algorithm(&self, algorithm: &CryptoAlgorithm) -> impl Future<Output = bool> + Send {
+        let algorithm = algorithm.clone();
+        let caps = self.capabilities.clone();
+        async move {
+            match &algorithm {
+                CryptoAlgorithm::Symmetric(sym) => caps.supports_symmetric(sym),
+                CryptoAlgorithm::Signature(sig) => caps.supports_signature(sig),
+                CryptoAlgorithm::Hash(hash) => caps.supports_hash(hash),
+                _ => false,
+            }
         }
     }
 
-    async fn encrypt_symmetric(
+    fn encrypt_symmetric(
         &self,
         algorithm: SymmetricAlgorithm,
         key: &[u8],
         plaintext: &[u8],
         options: &EncryptionOptions,
-    ) -> Result<EncryptedData, BearDogError> {
-        match algorithm {
-            SymmetricAlgorithm::Aes {
-                mode: AesMode::Gcm,
-                key_size: 256,
+    ) -> impl Future<Output = Result<EncryptedData, BearDogError>> + Send {
+        let key = key.to_vec();
+        let plaintext = plaintext.to_vec();
+        let options = options.clone();
+        let this = self;
+        async move {
+            match algorithm {
+                SymmetricAlgorithm::Aes {
+                    mode: AesMode::Gcm,
+                    key_size: 256,
+                }
+                | SymmetricAlgorithm::Aes256Gcm => {
+                    this.encrypt_aes_256_gcm(&key, &plaintext, &options).await
+                }
+                SymmetricAlgorithm::Aes {
+                    mode: AesMode::Gcm,
+                    key_size: 128,
+                }
+                | SymmetricAlgorithm::Aes128Gcm => {
+                    this.encrypt_aes_128_gcm(&key, &plaintext, &options).await
+                }
+                SymmetricAlgorithm::ChaCha20Poly1305 => {
+                    this.encrypt_chacha20_poly1305(&key, &plaintext, &options)
+                        .await
+                }
+                _ => Err(BearDogError::unsupported_operation(format!(
+                    "RustCrypto doesn't support: {algorithm}"
+                ))),
             }
-            | SymmetricAlgorithm::Aes256Gcm => {
-                self.encrypt_aes_256_gcm(key, plaintext, options).await
-            }
-            SymmetricAlgorithm::Aes {
-                mode: AesMode::Gcm,
-                key_size: 128,
-            }
-            | SymmetricAlgorithm::Aes128Gcm => {
-                self.encrypt_aes_128_gcm(key, plaintext, options).await
-            }
-            SymmetricAlgorithm::ChaCha20Poly1305 => {
-                self.encrypt_chacha20_poly1305(key, plaintext, options)
-                    .await
-            }
-            _ => Err(BearDogError::unsupported_operation(format!(
-                "RustCrypto doesn't support: {algorithm}"
-            ))),
         }
     }
 
-    async fn decrypt_symmetric(
+    fn decrypt_symmetric(
         &self,
         algorithm: SymmetricAlgorithm,
         key: &[u8],
         ciphertext: &EncryptedData,
         options: &DecryptionOptions,
-    ) -> Result<Vec<u8>, BearDogError> {
-        match algorithm {
-            SymmetricAlgorithm::Aes {
-                mode: AesMode::Gcm,
-                key_size: 256,
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
+        let key = key.to_vec();
+        let ciphertext = ciphertext.clone();
+        let options = options.clone();
+        let this = self;
+        async move {
+            match algorithm {
+                SymmetricAlgorithm::Aes {
+                    mode: AesMode::Gcm,
+                    key_size: 256,
+                }
+                | SymmetricAlgorithm::Aes256Gcm => {
+                    this.decrypt_aes_256_gcm(&key, &ciphertext, &options).await
+                }
+                SymmetricAlgorithm::Aes {
+                    mode: AesMode::Gcm,
+                    key_size: 128,
+                }
+                | SymmetricAlgorithm::Aes128Gcm => {
+                    this.decrypt_aes_128_gcm(&key, &ciphertext, &options).await
+                }
+                SymmetricAlgorithm::ChaCha20Poly1305 => {
+                    this.decrypt_chacha20_poly1305(&key, &ciphertext, &options)
+                        .await
+                }
+                _ => Err(BearDogError::unsupported_operation(format!(
+                    "RustCrypto doesn't support: {algorithm}"
+                ))),
             }
-            | SymmetricAlgorithm::Aes256Gcm => {
-                self.decrypt_aes_256_gcm(key, ciphertext, options).await
-            }
-            SymmetricAlgorithm::Aes {
-                mode: AesMode::Gcm,
-                key_size: 128,
-            }
-            | SymmetricAlgorithm::Aes128Gcm => {
-                self.decrypt_aes_128_gcm(key, ciphertext, options).await
-            }
-            SymmetricAlgorithm::ChaCha20Poly1305 => {
-                self.decrypt_chacha20_poly1305(key, ciphertext, options)
-                    .await
-            }
-            _ => Err(BearDogError::unsupported_operation(format!(
-                "RustCrypto doesn't support: {algorithm}"
-            ))),
         }
     }
 
@@ -223,78 +241,104 @@ impl UniversalCryptoProvider for RustCryptoProvider {
         )))
     }
 
-    async fn sign(
+    fn sign(
         &self,
         algorithm: SignatureAlgorithm,
         private_key: &[u8],
         message: &[u8],
         _options: &SigningOptions,
-    ) -> Result<Signature, BearDogError> {
-        match algorithm {
-            SignatureAlgorithm::Ed25519 => self.sign_ed25519(private_key, message).await,
-            SignatureAlgorithm::EcdsaP256 { .. } => {
-                self.sign_ecdsa_p256(private_key, message).await
+    ) -> impl Future<Output = Result<Signature, BearDogError>> + Send {
+        let private_key = private_key.to_vec();
+        let message = message.to_vec();
+        let this = self;
+        async move {
+            match algorithm {
+                SignatureAlgorithm::Ed25519 => this.sign_ed25519(&private_key, &message).await,
+                SignatureAlgorithm::EcdsaP256 { .. } => {
+                    this.sign_ecdsa_p256(&private_key, &message).await
+                }
+                _ => Err(BearDogError::unsupported_operation(format!(
+                    "RustCrypto doesn't support signing with: {algorithm}"
+                ))),
             }
-            _ => Err(BearDogError::unsupported_operation(format!(
-                "RustCrypto doesn't support signing with: {algorithm}"
-            ))),
         }
     }
 
-    async fn verify(
+    fn verify(
         &self,
         algorithm: SignatureAlgorithm,
         public_key: &[u8],
         message: &[u8],
         signature: &Signature,
         _options: &VerificationOptions,
-    ) -> Result<bool, BearDogError> {
-        match algorithm {
-            SignatureAlgorithm::Ed25519 => {
-                self.verify_ed25519(public_key, message, signature).await
+    ) -> impl Future<Output = Result<bool, BearDogError>> + Send {
+        let public_key = public_key.to_vec();
+        let message = message.to_vec();
+        let signature = signature.clone();
+        let this = self;
+        async move {
+            match algorithm {
+                SignatureAlgorithm::Ed25519 => {
+                    this.verify_ed25519(&public_key, &message, &signature).await
+                }
+                SignatureAlgorithm::EcdsaP256 { .. } => {
+                    this.verify_ecdsa_p256(&public_key, &message, &signature)
+                        .await
+                }
+                _ => Err(BearDogError::unsupported_operation(format!(
+                    "RustCrypto doesn't support verification with: {algorithm}"
+                ))),
             }
-            SignatureAlgorithm::EcdsaP256 { .. } => {
-                self.verify_ecdsa_p256(public_key, message, signature).await
-            }
-            _ => Err(BearDogError::unsupported_operation(format!(
-                "RustCrypto doesn't support verification with: {algorithm}"
-            ))),
         }
     }
 
-    async fn hash(&self, algorithm: HashAlgorithm, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        match algorithm {
-            HashAlgorithm::Sha256 => Ok(self.hash_sha256(data)),
-            HashAlgorithm::Sha384 => Ok(self.hash_sha384(data)),
-            HashAlgorithm::Sha512 => Ok(self.hash_sha512(data)),
-            HashAlgorithm::Blake3 => Ok(self.hash_blake3(data)),
-            _ => Err(BearDogError::unsupported_operation(format!(
-                "RustCrypto doesn't support hashing with: {algorithm}"
-            ))),
+    fn hash(
+        &self,
+        algorithm: HashAlgorithm,
+        data: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
+        let data = data.to_vec();
+        let this = self;
+        async move {
+            match algorithm {
+                HashAlgorithm::Sha256 => Ok(this.hash_sha256(&data)),
+                HashAlgorithm::Sha384 => Ok(this.hash_sha384(&data)),
+                HashAlgorithm::Sha512 => Ok(this.hash_sha512(&data)),
+                HashAlgorithm::Blake3 => Ok(this.hash_blake3(&data)),
+                _ => Err(BearDogError::unsupported_operation(format!(
+                    "RustCrypto doesn't support hashing with: {algorithm}"
+                ))),
+            }
         }
     }
 
-    async fn derive_key(
+    fn derive_key(
         &self,
         algorithm: KdfAlgorithm,
         input_key: &[u8],
         salt: &[u8],
         info: &[u8],
         output_length: usize,
-    ) -> Result<Vec<u8>, BearDogError> {
-        match algorithm {
-            KdfAlgorithm::HkdfSha256 => {
-                self.derive_hkdf_sha256(input_key, salt, info, output_length)
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
+        let input_key = input_key.to_vec();
+        let salt = salt.to_vec();
+        let info = info.to_vec();
+        let this = self;
+        async move {
+            match algorithm {
+                KdfAlgorithm::HkdfSha256 => {
+                    this.derive_hkdf_sha256(&input_key, &salt, &info, output_length)
+                }
+                KdfAlgorithm::HkdfSha384 => {
+                    this.derive_hkdf_sha384(&input_key, &salt, &info, output_length)
+                }
+                KdfAlgorithm::HkdfSha512 => {
+                    this.derive_hkdf_sha512(&input_key, &salt, &info, output_length)
+                }
+                _ => Err(BearDogError::unsupported_operation(format!(
+                    "RustCrypto doesn't support KDF with: {algorithm}"
+                ))),
             }
-            KdfAlgorithm::HkdfSha384 => {
-                self.derive_hkdf_sha384(input_key, salt, info, output_length)
-            }
-            KdfAlgorithm::HkdfSha512 => {
-                self.derive_hkdf_sha512(input_key, salt, info, output_length)
-            }
-            _ => Err(BearDogError::unsupported_operation(format!(
-                "RustCrypto doesn't support KDF with: {algorithm}"
-            ))),
         }
     }
 }

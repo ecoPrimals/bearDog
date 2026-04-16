@@ -6,7 +6,8 @@
 //! Production code injects real JNI transports; tests and non-Android hosts use the deterministic
 //! stubs defined here.
 
-use async_trait::async_trait;
+use std::future::{Future, ready};
+
 use beardog_errors::BearDogError;
 use parking_lot::Mutex;
 use sha2::{Digest, Sha256};
@@ -19,38 +20,132 @@ use super::tier::AttestationLevel;
 // --- Keystore transport (JNI boundary) -----------------------------------------------------------
 
 /// Thin port for Android Keystore JNI communication.
-#[async_trait]
 pub trait KeystoreTransport: Send + Sync {
     /// JNI: generate a new key; returned bytes are implementation-defined (e.g. handle or pubkey).
-    async fn jni_generate_key(
+    fn jni_generate_key(
         &self,
         alias: &str,
         params: &AndroidKeyParams,
-    ) -> Result<Vec<u8>, BearDogError>;
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send;
     /// JNI: sign `data` with the key named `alias`.
-    async fn jni_sign(&self, alias: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>;
+    fn jni_sign(
+        &self,
+        alias: &str,
+        data: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send;
     /// JNI: verify `signature` over `data` for `alias`.
-    async fn jni_verify(
+    fn jni_verify(
         &self,
         alias: &str,
         data: &[u8],
         signature: &[u8],
-    ) -> Result<bool, BearDogError>;
+    ) -> impl Future<Output = Result<bool, BearDogError>> + Send;
     /// JNI: encrypt `plaintext` with `alias`.
-    async fn jni_encrypt(&self, alias: &str, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError>;
+    fn jni_encrypt(
+        &self,
+        alias: &str,
+        plaintext: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send;
     /// JNI: decrypt `ciphertext` with `alias`.
-    async fn jni_decrypt(&self, alias: &str, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError>;
+    fn jni_decrypt(
+        &self,
+        alias: &str,
+        ciphertext: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send;
     /// JNI: list all key aliases in the keystore.
-    async fn jni_list_aliases(&self) -> Result<Vec<String>, BearDogError>;
+    fn jni_list_aliases(&self) -> impl Future<Output = Result<Vec<String>, BearDogError>> + Send;
     /// JNI: delete the key named `alias`.
-    async fn jni_delete_key(&self, alias: &str) -> Result<(), BearDogError>;
+    fn jni_delete_key(&self, alias: &str) -> impl Future<Output = Result<(), BearDogError>> + Send;
     /// JNI: import raw key material under `alias`.
-    async fn jni_import_key(
+    fn jni_import_key(
         &self,
         alias: &str,
         key_data: &[u8],
         key_type: HsmKeyType,
-    ) -> Result<(), BearDogError>;
+    ) -> impl Future<Output = Result<(), BearDogError>> + Send;
+}
+
+/// Enum dispatch for [`KeystoreTransport`].
+#[derive(Debug)]
+pub enum KeystoreTransportBackend {
+    /// Non-Android test stub (no JNI).
+    Stub(StubKeystoreTransport),
+}
+
+impl KeystoreTransport for KeystoreTransportBackend {
+    fn jni_generate_key(
+        &self,
+        alias: &str,
+        params: &AndroidKeyParams,
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
+        match self {
+            Self::Stub(t) => t.jni_generate_key(alias, params),
+        }
+    }
+
+    fn jni_sign(
+        &self,
+        alias: &str,
+        data: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
+        match self {
+            Self::Stub(t) => t.jni_sign(alias, data),
+        }
+    }
+
+    fn jni_verify(
+        &self,
+        alias: &str,
+        data: &[u8],
+        signature: &[u8],
+    ) -> impl Future<Output = Result<bool, BearDogError>> + Send {
+        match self {
+            Self::Stub(t) => t.jni_verify(alias, data, signature),
+        }
+    }
+
+    fn jni_encrypt(
+        &self,
+        alias: &str,
+        plaintext: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
+        match self {
+            Self::Stub(t) => t.jni_encrypt(alias, plaintext),
+        }
+    }
+
+    fn jni_decrypt(
+        &self,
+        alias: &str,
+        ciphertext: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
+        match self {
+            Self::Stub(t) => t.jni_decrypt(alias, ciphertext),
+        }
+    }
+
+    fn jni_list_aliases(&self) -> impl Future<Output = Result<Vec<String>, BearDogError>> + Send {
+        match self {
+            Self::Stub(t) => t.jni_list_aliases(),
+        }
+    }
+
+    fn jni_delete_key(&self, alias: &str) -> impl Future<Output = Result<(), BearDogError>> + Send {
+        match self {
+            Self::Stub(t) => t.jni_delete_key(alias),
+        }
+    }
+
+    fn jni_import_key(
+        &self,
+        alias: &str,
+        key_data: &[u8],
+        key_type: HsmKeyType,
+    ) -> impl Future<Output = Result<(), BearDogError>> + Send {
+        match self {
+            Self::Stub(t) => t.jni_import_key(alias, key_data, key_type),
+        }
+    }
 }
 
 /// Stub transport with deterministic behavior for exercising [`super::android::AndroidKeystore`]
@@ -72,98 +167,171 @@ fn xor_with_alias(alias: &str, data: &[u8]) -> Vec<u8> {
         .collect()
 }
 
-#[async_trait]
+async fn stub_jni_verify(
+    this: &StubKeystoreTransport,
+    alias: &str,
+    data: &[u8],
+    signature: &[u8],
+) -> Result<bool, BearDogError> {
+    let expected = KeystoreTransport::jni_sign(this, alias, data).await?;
+    Ok(expected == signature)
+}
+
 impl KeystoreTransport for StubKeystoreTransport {
-    async fn jni_generate_key(
+    fn jni_generate_key(
         &self,
         alias: &str,
         _params: &AndroidKeyParams,
-    ) -> Result<Vec<u8>, BearDogError> {
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
         let handle = stub_digest(alias.as_bytes());
         self.keys.lock().insert(alias.to_string(), handle.clone());
-        Ok(handle)
+        ready(Ok(handle))
     }
 
-    async fn jni_sign(&self, alias: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+    fn jni_sign(
+        &self,
+        alias: &str,
+        data: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
         if !self.keys.lock().contains_key(alias) {
-            return Err(BearDogError::not_found(format!(
+            return ready(Err(BearDogError::not_found(format!(
                 "stub keystore: no key for alias {alias}"
-            )));
+            ))));
         }
         let mut input = Vec::with_capacity(alias.len() + data.len());
         input.extend_from_slice(alias.as_bytes());
         input.extend_from_slice(data);
-        Ok(stub_digest(&input))
+        ready(Ok(stub_digest(&input)))
     }
 
-    async fn jni_verify(
+    fn jni_verify(
         &self,
         alias: &str,
         data: &[u8],
         signature: &[u8],
-    ) -> Result<bool, BearDogError> {
-        let expected = self.jni_sign(alias, data).await?;
-        Ok(expected == signature)
+    ) -> impl Future<Output = Result<bool, BearDogError>> + Send {
+        stub_jni_verify(self, alias, data, signature)
     }
 
-    async fn jni_encrypt(&self, alias: &str, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Ok(xor_with_alias(alias, plaintext))
+    fn jni_encrypt(
+        &self,
+        alias: &str,
+        plaintext: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
+        ready(Ok(xor_with_alias(alias, plaintext)))
     }
 
-    async fn jni_decrypt(&self, alias: &str, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        Ok(xor_with_alias(alias, ciphertext))
+    fn jni_decrypt(
+        &self,
+        alias: &str,
+        ciphertext: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
+        ready(Ok(xor_with_alias(alias, ciphertext)))
     }
 
-    async fn jni_list_aliases(&self) -> Result<Vec<String>, BearDogError> {
-        Ok(self.keys.lock().keys().cloned().collect())
+    fn jni_list_aliases(&self) -> impl Future<Output = Result<Vec<String>, BearDogError>> + Send {
+        ready(Ok(self.keys.lock().keys().cloned().collect()))
     }
 
-    async fn jni_delete_key(&self, alias: &str) -> Result<(), BearDogError> {
+    fn jni_delete_key(&self, alias: &str) -> impl Future<Output = Result<(), BearDogError>> + Send {
         self.keys.lock().remove(alias);
-        Ok(())
+        ready(Ok(()))
     }
 
-    async fn jni_import_key(
+    fn jni_import_key(
         &self,
         alias: &str,
         key_data: &[u8],
         _key_type: HsmKeyType,
-    ) -> Result<(), BearDogError> {
+    ) -> impl Future<Output = Result<(), BearDogError>> + Send {
         self.keys
             .lock()
             .insert(alias.to_string(), key_data.to_vec());
-        Ok(())
+        ready(Ok(()))
     }
 }
 
 // --- Attestation transport -----------------------------------------------------------------------
 
 /// Port for Android Key Attestation JNI (hardware-backed attestation).
-#[async_trait]
 pub trait AttestationTransport: Send + Sync {
     /// JNI: initialize attestation for the given security level.
-    async fn jni_initialize(&self, level: AttestationLevel) -> Result<(), BearDogError>;
+    fn jni_initialize(
+        &self,
+        level: AttestationLevel,
+    ) -> impl Future<Output = Result<(), BearDogError>> + Send;
+}
+
+/// Enum dispatch for [`AttestationTransport`].
+#[derive(Debug)]
+pub enum AttestationTransportBackend {
+    /// Non-Android test stub (no JNI).
+    Stub(StubAttestationTransport),
+}
+
+impl AttestationTransport for AttestationTransportBackend {
+    fn jni_initialize(
+        &self,
+        level: AttestationLevel,
+    ) -> impl Future<Output = Result<(), BearDogError>> + Send {
+        match self {
+            Self::Stub(t) => t.jni_initialize(level),
+        }
+    }
 }
 
 /// Stub attestation transport for tests (no JNI).
 #[derive(Debug, Clone, Copy, Default)]
 pub struct StubAttestationTransport;
 
-#[async_trait]
 impl AttestationTransport for StubAttestationTransport {
-    async fn jni_initialize(&self, _level: AttestationLevel) -> Result<(), BearDogError> {
-        Ok(())
+    fn jni_initialize(
+        &self,
+        _level: AttestationLevel,
+    ) -> impl Future<Output = Result<(), BearDogError>> + Send {
+        ready(Ok(()))
     }
 }
 
 // --- Health metrics transport --------------------------------------------------------------------
 
 /// Port for collecting HSM health / performance metrics (JNI on device, stub in tests).
-#[async_trait]
 pub trait HealthMetricsTransport: Send + Sync {
     /// Collect current HSM/process performance metrics (JNI on Android, stub in tests).
-    async fn collect_performance_metrics(&self)
-    -> Result<status::PerformanceMetrics, BearDogError>;
+    fn collect_performance_metrics(
+        &self,
+    ) -> impl Future<Output = Result<status::PerformanceMetrics, BearDogError>> + Send;
+}
+
+/// Enum dispatch for [`HealthMetricsTransport`].
+#[derive(Debug)]
+pub enum HealthMetricsTransportBackend {
+    /// Non-Android test stub (no JNI).
+    Stub(StubHealthMetricsTransport),
+    #[cfg(target_os = "android")]
+    AndroidJni(AndroidJniHealthMetricsTransport),
+}
+
+async fn health_metrics_backend_collect(
+    backend: &HealthMetricsTransportBackend,
+) -> Result<status::PerformanceMetrics, BearDogError> {
+    match backend {
+        HealthMetricsTransportBackend::Stub(t) => {
+            HealthMetricsTransport::collect_performance_metrics(t).await
+        }
+        #[cfg(target_os = "android")]
+        HealthMetricsTransportBackend::AndroidJni(t) => {
+            HealthMetricsTransport::collect_performance_metrics(t).await
+        }
+    }
+}
+
+impl HealthMetricsTransport for HealthMetricsTransportBackend {
+    fn collect_performance_metrics(
+        &self,
+    ) -> impl Future<Output = Result<status::PerformanceMetrics, BearDogError>> + Send {
+        health_metrics_backend_collect(self)
+    }
 }
 
 /// Deterministic metrics for unit tests and non-Android hosts.
@@ -190,12 +358,11 @@ impl Default for StubHealthMetricsTransport {
     }
 }
 
-#[async_trait]
 impl HealthMetricsTransport for StubHealthMetricsTransport {
-    async fn collect_performance_metrics(
+    fn collect_performance_metrics(
         &self,
-    ) -> Result<status::PerformanceMetrics, BearDogError> {
-        Ok(self.metrics.clone())
+    ) -> impl Future<Output = Result<status::PerformanceMetrics, BearDogError>> + Send {
+        ready(Ok(self.metrics.clone()))
     }
 }
 
@@ -226,15 +393,21 @@ fn android_resident_memory_mb() -> Option<f64> {
 }
 
 #[cfg(target_os = "android")]
-#[async_trait]
+async fn android_jni_collect_performance_metrics(
+    this: &AndroidJniHealthMetricsTransport,
+) -> Result<status::PerformanceMetrics, BearDogError> {
+    let mut m = status::PerformanceMetrics::default();
+    m.uptime_seconds = this.start.elapsed().as_secs();
+    m.memory_usage_mb = android_resident_memory_mb().unwrap_or(0.0);
+    m.latency_ms = m.average_latency_ms;
+    Ok(m)
+}
+
+#[cfg(target_os = "android")]
 impl HealthMetricsTransport for AndroidJniHealthMetricsTransport {
-    async fn collect_performance_metrics(
+    fn collect_performance_metrics(
         &self,
-    ) -> Result<status::PerformanceMetrics, BearDogError> {
-        let mut m = status::PerformanceMetrics::default();
-        m.uptime_seconds = self.start.elapsed().as_secs();
-        m.memory_usage_mb = android_resident_memory_mb().unwrap_or(0.0);
-        m.latency_ms = m.average_latency_ms;
-        Ok(m)
+    ) -> impl Future<Output = Result<status::PerformanceMetrics, BearDogError>> + Send {
+        android_jni_collect_performance_metrics(self)
     }
 }

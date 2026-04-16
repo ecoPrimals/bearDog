@@ -44,8 +44,8 @@ pub enum Ctap2Command {
     dead_code,
     reason = "Phase-2 CTAP2 HID integration: remove when first caller lands"
 )]
-pub async fn send_ctap2_command(
-    _device: &mut Box<dyn beardog_hid::HidDevice>,
+pub async fn send_ctap2_command<D: beardog_hid::HidDevice + ?Sized>(
+    _device: &mut D,
     _command: Ctap2Command,
     _payload: &[u8],
 ) -> Result<Vec<u8>, BearDogError> {
@@ -63,8 +63,8 @@ pub async fn send_ctap2_command(
     dead_code,
     reason = "Phase-2 CTAP2 HID integration: remove when first caller lands"
 )]
-pub async fn get_device_info(
-    _device: &mut Box<dyn beardog_hid::HidDevice>,
+pub async fn get_device_info<D: beardog_hid::HidDevice + ?Sized>(
+    _device: &mut D,
 ) -> Result<super::types::Fido2DeviceInfo, BearDogError> {
     Err(BearDogError::requires_capability(
         "fido2-ctap2",
@@ -83,8 +83,8 @@ pub async fn get_device_info(
     dead_code,
     reason = "Phase-2 CTAP2 HID integration: remove when first caller lands"
 )]
-pub async fn generate_entropy_via_hmac_secret(
-    _device: &mut Box<dyn beardog_hid::HidDevice>,
+pub async fn generate_entropy_via_hmac_secret<D: beardog_hid::HidDevice + ?Sized>(
+    _device: &mut D,
     _size: usize,
 ) -> Result<Vec<u8>, BearDogError> {
     Err(BearDogError::requires_capability(

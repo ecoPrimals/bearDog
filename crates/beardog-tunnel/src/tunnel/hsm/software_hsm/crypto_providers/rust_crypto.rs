@@ -11,6 +11,7 @@ use ed25519_dalek::{Signer, SigningKey, Verifier, VerifyingKey};
 use hkdf::Hkdf;
 use rand::RngCore;
 use sha2::Sha256;
+use std::future::Future;
 use tracing::{debug, info};
 
 /// Pure Rust crypto provider with no C dependencies
@@ -31,177 +32,207 @@ impl RustCryptoProvider {
     }
 }
 
-#[async_trait::async_trait]
 impl CryptoProvider<KeyType> for RustCryptoProvider {
     async fn initialize(&self) -> Result<(), BearDogError> {
         info!("Initializing Rust crypto provider");
         Ok(())
     }
 
-    async fn generate_key_material(&self, key_type: &KeyType) -> Result<Vec<u8>, BearDogError> {
-        debug!("Generating {:?} key with Rust crypto", key_type);
-        let key_length = match key_type {
-            KeyType::Aes | KeyType::ChaCha20 => 32, // Symmetric keys
-            KeyType::EllipticCurve | KeyType::Ed25519 | KeyType::X25519 => 32, // EC keys
-            KeyType::Rsa => 256,                    // RSA-2048
-            KeyType::Generic | KeyType::Custom(_) => 32, // Default
-        };
-        #[expect(
-            clippy::cast_sign_loss,
-            reason = "key sizes from KeyType are positive byte lengths"
-        )]
-        let mut key_material = vec![0u8; key_length as usize];
-        rand::rng().fill_bytes(&mut key_material);
-        debug!("Generated {} byte key", key_material.len());
-        Ok(key_material)
+    fn generate_key_material(
+        &self,
+        key_type: &KeyType,
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let key_type = key_type.clone();
+        async move {
+            debug!("Generating {:?} key with Rust crypto", key_type);
+            let key_length = match &key_type {
+                KeyType::Aes | KeyType::ChaCha20 => 32, // Symmetric keys
+                KeyType::EllipticCurve | KeyType::Ed25519 | KeyType::X25519 => 32, // EC keys
+                KeyType::Rsa => 256,                    // RSA-2048
+                KeyType::Generic | KeyType::Custom(_) => 32, // Default
+            };
+            #[expect(
+                clippy::cast_sign_loss,
+                reason = "key sizes from KeyType are positive byte lengths"
+            )]
+            let mut key_material = vec![0u8; key_length as usize];
+            rand::rng().fill_bytes(&mut key_material);
+            debug!("Generated {} byte key", key_material.len());
+            Ok(key_material)
+        }
     }
 
-    async fn encrypt(
+    fn encrypt(
         &self,
         key_material: &[u8],
         plaintext: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        debug!(
-            "Encrypting {} bytes with ChaCha20-Poly1305",
-            plaintext.len()
-        );
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let key_material = key_material.to_vec();
+        let plaintext = plaintext.to_vec();
+        async move {
+            debug!(
+                "Encrypting {} bytes with ChaCha20-Poly1305",
+                plaintext.len()
+            );
 
-        if key_material.len() != 32 {
-            return Err(BearDogError::crypto_error(format!(
-                "Invalid key size for ChaCha20-Poly1305: expected 32 bytes, got {}",
-                key_material.len()
-            )));
+            if key_material.len() != 32 {
+                return Err(BearDogError::crypto_error(format!(
+                    "Invalid key size for ChaCha20-Poly1305: expected 32 bytes, got {}",
+                    key_material.len()
+                )));
+            }
+
+            let key: [u8; 32] = key_material
+                .try_into()
+                .map_err(|_| BearDogError::crypto_error("Invalid key length".to_string()))?;
+
+            let cipher = ChaCha20Poly1305::new(&key.into());
+            let nonce = ChaCha20Poly1305::generate_nonce(&mut OsRng);
+
+            let ciphertext = cipher
+                .encrypt(&nonce, plaintext.as_slice())
+                .map_err(|e| BearDogError::crypto_error(format!("Encryption failed: {e}")))?;
+
+            let mut result = nonce.to_vec();
+            result.extend(ciphertext);
+            debug!("Encrypted to {} bytes", result.len());
+            Ok(result)
         }
-
-        let key: [u8; 32] = key_material
-            .try_into()
-            .map_err(|_| BearDogError::crypto_error("Invalid key length".to_string()))?;
-
-        let cipher = ChaCha20Poly1305::new(&key.into());
-        let nonce = ChaCha20Poly1305::generate_nonce(&mut OsRng);
-
-        let ciphertext = cipher
-            .encrypt(&nonce, plaintext)
-            .map_err(|e| BearDogError::crypto_error(format!("Encryption failed: {e}")))?;
-
-        let mut result = nonce.to_vec();
-        result.extend(ciphertext);
-        debug!("Encrypted to {} bytes", result.len());
-        Ok(result)
     }
 
-    async fn decrypt(
+    fn decrypt(
         &self,
         key_material: &[u8],
         ciphertext: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        debug!(
-            "Decrypting {} bytes with ChaCha20-Poly1305",
-            ciphertext.len()
-        );
-
-        if ciphertext.len() < 12 {
-            return Err(BearDogError::crypto_error(format!(
-                "Ciphertext too short: expected at least 12 bytes, got {}",
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let key_material = key_material.to_vec();
+        let ciphertext = ciphertext.to_vec();
+        async move {
+            debug!(
+                "Decrypting {} bytes with ChaCha20-Poly1305",
                 ciphertext.len()
-            )));
-        }
+            );
 
-        let key: [u8; 32] = key_material
-            .try_into()
-            .map_err(|_| BearDogError::crypto_error("Invalid key length".to_string()))?;
+            if ciphertext.len() < 12 {
+                return Err(BearDogError::crypto_error(format!(
+                    "Ciphertext too short: expected at least 12 bytes, got {}",
+                    ciphertext.len()
+                )));
+            }
 
-        let cipher = ChaCha20Poly1305::new(&key.into());
-        let (nonce_bytes, encrypted_data) = ciphertext.split_at(12);
-        let nonce = nonce_bytes.into();
-
-        let plaintext = cipher
-            .decrypt(nonce, encrypted_data)
-            .map_err(|e| BearDogError::crypto_error(format!("Decryption failed: {e}")))?;
-
-        debug!("Decrypted to {} bytes", plaintext.len());
-        Ok(plaintext)
-    }
-
-    async fn sign(&self, key_material: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        debug!("Signing {} bytes with Ed25519", data.len());
-
-        if key_material.len() != 32 {
-            return Err(BearDogError::crypto_error(format!(
-                "Invalid key size for Ed25519: expected 32 bytes, got {}",
-                key_material.len()
-            )));
-        }
-
-        let signing_key = SigningKey::from_bytes(
-            key_material
+            let key: [u8; 32] = key_material
                 .try_into()
-                .map_err(|_| BearDogError::crypto_error("Invalid signing key".to_string()))?,
-        );
+                .map_err(|_| BearDogError::crypto_error("Invalid key length".to_string()))?;
 
-        let signature = signing_key.sign(data);
-        debug!(
-            "Generated signature of {} bytes",
-            signature.to_bytes().len()
-        );
-        Ok(signature.to_bytes().to_vec())
+            let cipher = ChaCha20Poly1305::new(&key.into());
+            let (nonce_bytes, encrypted_data) = ciphertext.split_at(12);
+            let nonce = nonce_bytes.into();
+
+            let plaintext = cipher
+                .decrypt(nonce, encrypted_data)
+                .map_err(|e| BearDogError::crypto_error(format!("Decryption failed: {e}")))?;
+
+            debug!("Decrypted to {} bytes", plaintext.len());
+            Ok(plaintext)
+        }
     }
 
-    async fn verify(
+    fn sign(
+        &self,
+        key_material: &[u8],
+        data: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let key_material = key_material.to_vec();
+        let data = data.to_vec();
+        async move {
+            debug!("Signing {} bytes with Ed25519", data.len());
+
+            if key_material.len() != 32 {
+                return Err(BearDogError::crypto_error(format!(
+                    "Invalid key size for Ed25519: expected 32 bytes, got {}",
+                    key_material.len()
+                )));
+            }
+
+            let key_arr: [u8; 32] = key_material
+                .try_into()
+                .map_err(|_| BearDogError::crypto_error("Invalid signing key".to_string()))?;
+            let signing_key = SigningKey::from_bytes(&key_arr);
+
+            let signature = signing_key.sign(data.as_slice());
+            debug!(
+                "Generated signature of {} bytes",
+                signature.to_bytes().len()
+            );
+            Ok(signature.to_bytes().to_vec())
+        }
+    }
+
+    fn verify(
         &self,
         key_material: &[u8],
         data: &[u8],
         signature: &[u8],
-    ) -> Result<bool, BearDogError> {
-        debug!("Verifying signature for {} bytes with Ed25519", data.len());
+    ) -> impl Future<Output = Result<bool, BearDogError>> + Send + '_ {
+        let key_material = key_material.to_vec();
+        let data = data.to_vec();
+        let signature = signature.to_vec();
+        async move {
+            debug!("Verifying signature for {} bytes with Ed25519", data.len());
 
-        if signature.len() != 64 {
-            return Err(BearDogError::crypto_error(format!(
-                "Invalid signature size for Ed25519: expected 64 bytes, got {}",
-                signature.len()
-            )));
-        }
+            if signature.len() != 64 {
+                return Err(BearDogError::crypto_error(format!(
+                    "Invalid signature size for Ed25519: expected 64 bytes, got {}",
+                    signature.len()
+                )));
+            }
 
-        let verifying_key = VerifyingKey::from_bytes(
-            key_material
+            let vk_bytes: [u8; 32] = key_material
                 .try_into()
-                .map_err(|_| BearDogError::crypto_error("Invalid verifying key".to_string()))?,
-        )
-        .map_err(|e| BearDogError::crypto_error(format!("Failed to create verifying key: {e}")))?;
+                .map_err(|_| BearDogError::crypto_error("Invalid verifying key".to_string()))?;
+            let verifying_key = VerifyingKey::from_bytes(&vk_bytes).map_err(|e| {
+                BearDogError::crypto_error(format!("Failed to create verifying key: {e}"))
+            })?;
 
-        let sig: [u8; 64] = signature
-            .try_into()
-            .map_err(|_| BearDogError::crypto_error("Invalid signature length".to_string()))?;
+            let sig_bytes: [u8; 64] = signature
+                .try_into()
+                .map_err(|_| BearDogError::crypto_error("Invalid signature length".to_string()))?;
+            let sig = ed25519_dalek::Signature::from_bytes(&sig_bytes);
 
-        if matches!(verifying_key.verify(data, &sig.into()), Ok(())) {
-            debug!("Signature valid");
-            Ok(true)
-        } else {
-            debug!("Signature invalid");
-            Ok(false)
+            if matches!(verifying_key.verify(data.as_slice(), &sig), Ok(())) {
+                debug!("Signature valid");
+                Ok(true)
+            } else {
+                debug!("Signature invalid");
+                Ok(false)
+            }
         }
     }
 
-    async fn derive_key(
+    fn derive_key(
         &self,
         root_key: &[u8],
         derivation_data: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        debug!("Deriving key with HKDF-SHA256");
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send + '_ {
+        let root_key = root_key.to_vec();
+        let derivation_data = derivation_data.to_vec();
+        async move {
+            debug!("Deriving key with HKDF-SHA256");
 
-        if root_key.is_empty() {
-            return Err(BearDogError::crypto_error(
-                "Root key cannot be empty".to_string(),
-            ));
+            if root_key.is_empty() {
+                return Err(BearDogError::crypto_error(
+                    "Root key cannot be empty".to_string(),
+                ));
+            }
+
+            let hkdf = Hkdf::<Sha256>::new(None, root_key.as_slice());
+            let mut derived_key = vec![0u8; 32];
+            hkdf.expand(derivation_data.as_slice(), &mut derived_key)
+                .map_err(|e| BearDogError::crypto_error(format!("Key derivation failed: {e}")))?;
+
+            debug!("Derived key of {} bytes", derived_key.len());
+            Ok(derived_key)
         }
-
-        let hkdf = Hkdf::<Sha256>::new(None, root_key);
-        let mut derived_key = vec![0u8; 32];
-        hkdf.expand(derivation_data, &mut derived_key)
-            .map_err(|e| BearDogError::crypto_error(format!("Key derivation failed: {e}")))?;
-
-        debug!("Derived key of {} bytes", derived_key.len());
-        Ok(derived_key)
     }
 }
 

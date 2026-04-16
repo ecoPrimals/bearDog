@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 16, 2026 -- Wave 53: Stadial Parity Gate — Native Async Traits, Enum Dispatch, `async-trait` Removal
+
+- **All `#[async_trait]` removed** — Roughly 49 trait attributes across 22+ traits migrated to native `async fn` in traits (RPITIT). No `#[async_trait]` remains in any `.rs` file.
+- **`async-trait` dropped from every manifest** — Removed from 17 `Cargo.toml` files (7 core crates, 9 showcase, workspace root).
+- **Transitive `ring` in lockfile** — Already resolved in a prior wave; lockfile remains clean.
+- **Enum dispatch for finite backends** — Replaced `dyn Trait` dispatch with explicit enum types for monomorphized, zero-vtable-overhead routing. Dispatch enums include `MethodHandlerKind`, `BondPersistenceBackend`, `HsmKeyProviderBackend`, `HsmProviderBackend`, `UniversalCryptoBackend`, `CryptoProviderBackend`, `KeyManagementBackend`, `ServiceDiscoveryBackend`, `KeystoreTransportBackend`, `AttestationTransportBackend`, `HealthMetricsTransportBackend`, `IpcHandlerBackend`, `PlatformListenerBackend`, `StorageBackend`, `EncryptionKeyBackend`, `AuditLoggerBackend`, `Ctap2TransportBackend`, `HidDeviceBackend`.
+- **Verification** — 14,786+ tests passing (0 failures); Clippy and rustdoc clean with `-D warnings` on all workspace crates.
+
 ### April 15, 2026 -- Wave 51: primalSpring Audit Resolution — UDS Peek, Chain Proofs, Bond Persistence, ring Elimination
 
 - **UDS first-byte protocol auto-detection** — `PrefixedStream` wrapper in `platform/mod.rs` implements `AsyncRead`+`AsyncWrite` to re-prepend a peeked byte. Production UDS connections in `unix_socket_ipc/server.rs` now peek first byte with 5s timeout: `0x7B` → JSON-RPC bypass (local composition traffic), otherwise → BTSP handshake. Matches TCP server behavior. BearDog is no longer the last BTSP-enforcing primal without UDS peek.

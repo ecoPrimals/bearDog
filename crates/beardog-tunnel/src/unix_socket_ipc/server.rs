@@ -17,7 +17,9 @@ use super::{
 };
 use crate::btsp_handshake::{self, BtspSecurityMode, BtspSession};
 use crate::btsp_provider::BeardogBtspProvider;
-use crate::platform::{PlatformSocket, PlatformStream, PrefixedStream, Socket, SocketEndpoint};
+use crate::platform::{
+    PlatformListener, PlatformSocket, PlatformStream, PrefixedStream, Socket, SocketEndpoint,
+};
 use anyhow::{Context, Result};
 use beardog_core::socket_config::{
     IpcCapabilitySymlinksConfig, install_ipc_symlinks_at, remove_ipc_symlinks_at,

@@ -11,7 +11,6 @@
 use super::MethodHandler;
 use super::utils::get_primal_name;
 use crate::btsp_provider::BeardogBtspProvider;
-use async_trait::async_trait;
 use base64::Engine;
 use beardog_types::primal_identity::PrimalIdentity;
 use chrono::Utc;
@@ -49,7 +48,6 @@ pub struct SecurityHandler {
     identity: Arc<PrimalIdentity>,
 }
 
-#[async_trait]
 impl MethodHandler for SecurityHandler {
     fn methods(&self) -> Vec<&'static str> {
         vec![

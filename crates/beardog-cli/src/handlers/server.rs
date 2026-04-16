@@ -18,7 +18,7 @@ use beardog_tunnel::btsp_provider::BeardogBtspProvider;
 use beardog_tunnel::multi_transport_server::MultiTransportServer;
 use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 use beardog_tunnel::tunnel::hsm::software_hsm::RustSoftwareHsm;
-use beardog_tunnel::tunnel::hsm::{HsmTier, SoftwareHsmConfig};
+use beardog_tunnel::tunnel::hsm::{HsmProviderBackend, HsmTier, SoftwareHsmConfig};
 use beardog_types::constants::domains::network::addresses::WILDCARD_IPV4;
 use beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional;
 use std::sync::Arc;
@@ -145,10 +145,13 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
                 message: format!("Failed to create software HSM: {e}"),
             })?;
 
-    hsm.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))
-        .map_err(|e| BearDogError::Initialization {
-            message: format!("Failed to register HSM provider: {e}"),
-        })?;
+    hsm.register_hsm_provider(
+        HsmTier::Software,
+        Arc::new(HsmProviderBackend::RustSoftware(software_hsm)),
+    )
+    .map_err(|e| BearDogError::Initialization {
+        message: format!("Failed to register HSM provider: {e}"),
+    })?;
     let hsm = Arc::new(hsm);
     info!("HSM manager initialized");
 

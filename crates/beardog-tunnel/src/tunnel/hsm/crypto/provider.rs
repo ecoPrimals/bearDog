@@ -10,14 +10,14 @@ use super::algorithms::{
     VerificationOptions,
 };
 use super::capabilities::CryptoCapabilities;
-use async_trait::async_trait;
 use beardog_errors::BearDogError;
+use std::future::Future;
 
 /// Universal crypto provider trait
 ///
 /// This trait eliminates crypto library lock-in by providing a vendor-agnostic
 /// interface, similar to our Universal HSM architecture.
-#[async_trait]
+#[allow(async_fn_in_trait)]
 pub trait UniversalCryptoProvider: Send + Sync + std::fmt::Debug {
     // ============================================================================
     // Provider Information
@@ -34,32 +34,34 @@ pub trait UniversalCryptoProvider: Send + Sync + std::fmt::Debug {
     // ============================================================================
 
     /// Discover what this provider can do
-    async fn discover_capabilities(&self) -> Result<CryptoCapabilities, BearDogError>;
+    fn discover_capabilities(
+        &self,
+    ) -> impl Future<Output = Result<CryptoCapabilities, BearDogError>> + Send;
 
     /// Check if this provider supports a specific algorithm
-    async fn supports_algorithm(&self, algorithm: &CryptoAlgorithm) -> bool;
+    fn supports_algorithm(&self, algorithm: &CryptoAlgorithm) -> impl Future<Output = bool> + Send;
 
     // ============================================================================
     // Symmetric Encryption
     // ============================================================================
 
     /// Encrypt data using symmetric algorithm
-    async fn encrypt_symmetric(
+    fn encrypt_symmetric(
         &self,
         algorithm: SymmetricAlgorithm,
         key: &[u8],
         plaintext: &[u8],
         options: &EncryptionOptions,
-    ) -> Result<EncryptedData, BearDogError>;
+    ) -> impl Future<Output = Result<EncryptedData, BearDogError>> + Send;
 
     /// Decrypt data using symmetric algorithm
-    async fn decrypt_symmetric(
+    fn decrypt_symmetric(
         &self,
         algorithm: SymmetricAlgorithm,
         key: &[u8],
         ciphertext: &EncryptedData,
         options: &DecryptionOptions,
-    ) -> Result<Vec<u8>, BearDogError>;
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send;
 
     // ============================================================================
     // Asymmetric Encryption
@@ -88,44 +90,48 @@ pub trait UniversalCryptoProvider: Send + Sync + std::fmt::Debug {
     // ============================================================================
 
     /// Sign data
-    async fn sign(
+    fn sign(
         &self,
         algorithm: SignatureAlgorithm,
         private_key: &[u8],
         message: &[u8],
         options: &SigningOptions,
-    ) -> Result<Signature, BearDogError>;
+    ) -> impl Future<Output = Result<Signature, BearDogError>> + Send;
 
     /// Verify signature
-    async fn verify(
+    fn verify(
         &self,
         algorithm: SignatureAlgorithm,
         public_key: &[u8],
         message: &[u8],
         signature: &Signature,
         options: &VerificationOptions,
-    ) -> Result<bool, BearDogError>;
+    ) -> impl Future<Output = Result<bool, BearDogError>> + Send;
 
     // ============================================================================
     // Hashing
     // ============================================================================
 
     /// Hash data
-    async fn hash(&self, algorithm: HashAlgorithm, data: &[u8]) -> Result<Vec<u8>, BearDogError>;
+    fn hash(
+        &self,
+        algorithm: HashAlgorithm,
+        data: &[u8],
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send;
 
     // ============================================================================
     // Key Derivation
     // ============================================================================
 
     /// Derive key
-    async fn derive_key(
+    fn derive_key(
         &self,
         algorithm: KdfAlgorithm,
         input_key: &[u8],
         salt: &[u8],
         info: &[u8],
         output_length: usize,
-    ) -> Result<Vec<u8>, BearDogError>;
+    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send;
 }
 
 /// Helper trait for generating nonces/IVs

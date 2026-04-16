@@ -18,8 +18,8 @@ use tracing::{debug, info, warn};
 ///
 /// Returns [`BearDogError`] on HID I/O failure, timeout, or invalid INIT response.
 #[cfg(feature = "fido2")]
-pub async fn ctaphid_init(
-    device: &mut Box<dyn beardog_hid::HidDevice>,
+pub async fn ctaphid_init<D: beardog_hid::HidDevice + ?Sized>(
+    device: &mut D,
 ) -> Result<u32, BearDogError> {
     use rand::RngCore;
 
@@ -117,8 +117,8 @@ pub async fn ctaphid_init(
     clippy::cast_possible_truncation,
     reason = "CTAP2 HID payload length fits u16 per protocol framing"
 )]
-pub async fn send_ctap2_command(
-    device: &mut Box<dyn beardog_hid::HidDevice>,
+pub async fn send_ctap2_command<D: beardog_hid::HidDevice + ?Sized>(
+    device: &mut D,
     cid: u32,
     command: Ctap2Command,
     payload: &[u8],

@@ -5,7 +5,7 @@
 use super::RustSoftwareHsm;
 use crate::tunnel::hsm::HsmConfig;
 use beardog_errors::BearDogError;
-use beardog_types::hsm::AuditEvent;
+use beardog_types::hsm::{AuditEvent, CryptoProvider};
 use tracing::info;
 
 impl RustSoftwareHsm {

@@ -43,6 +43,7 @@
 //! ```
 
 mod discovery;
+pub mod key_management_backend;
 mod software_hsm_provider;
 mod types;
 
@@ -50,6 +51,7 @@ mod types;
 mod tests;
 
 pub use discovery::create_key_management;
+pub use key_management_backend::KeyManagementBackend;
 pub use software_hsm_provider::SoftwareHsmProvider;
 pub use types::{
     KeyAlgorithm, KeyManagementCapability, KeyMetadata, KeySpec, KeyState, KeyUsage,

@@ -5,39 +5,6 @@ use beardog_core::capabilities::{
     Capability, CapabilityRequest, CapabilityResponse, ResponseStatus,
 };
 
-struct TestHandler;
-
-#[async_trait::async_trait]
-impl IpcHandler for TestHandler {
-    async fn handle_capability_request(
-        &self,
-        request: CapabilityRequest,
-    ) -> Result<CapabilityResponse, BearDogError> {
-        Ok(CapabilityResponse {
-            request_id: request.request_id,
-            status: ResponseStatus::Success,
-            data: Some(serde_json::json!({"message": "test"})),
-            error: None,
-        })
-    }
-
-    async fn handle_register(
-        &self,
-        _primal_id: String,
-        _capabilities: Vec<String>,
-    ) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    async fn handle_event(
-        &self,
-        _event_type: String,
-        _data: serde_json::Value,
-    ) -> Result<(), BearDogError> {
-        Ok(())
-    }
-}
-
 #[test]
 fn ipc_message_register_roundtrips_json() -> Result<(), BearDogError> {
     let msg = IpcMessage::Register {
@@ -113,7 +80,7 @@ fn ipc_message_pong_roundtrips_json() -> Result<(), BearDogError> {
 fn ipc_server_new_stores_socket_path() {
     use std::path::PathBuf;
     let p = PathBuf::from("/tmp/beardog-ipc-coverage.sock");
-    let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+    let handler: Arc<IpcHandlerBackend> = Arc::new(IpcHandlerBackend::Test(IpcTestHandler));
     let srv = IpcServer::new(p.clone(), handler);
     assert_eq!(srv.socket_path, p);
 }
@@ -202,7 +169,7 @@ fn test_capability_request_serialization() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn handle_message_capability_request_ok() -> Result<(), BearDogError> {
-    let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+    let handler: Arc<IpcHandlerBackend> = Arc::new(IpcHandlerBackend::Test(IpcTestHandler));
     let connections = Arc::new(RwLock::new(Vec::new()));
     let req = CapabilityRequest {
         from_primal: "a".to_string(),
@@ -237,7 +204,7 @@ async fn handle_message_capability_request_ok() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn handle_message_register_ok_returns_pong() {
-    let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+    let handler: Arc<IpcHandlerBackend> = Arc::new(IpcHandlerBackend::Test(IpcTestHandler));
     let connections = Arc::new(RwLock::new(Vec::new()));
     let out = IpcServer::handle_message(
         IpcMessage::Register {
@@ -252,37 +219,11 @@ async fn handle_message_register_ok_returns_pong() {
     assert_eq!(*connections.read().await, vec!["p1".to_string()]);
 }
 
-struct FailingRegisterHandler;
-
-#[async_trait::async_trait]
-impl IpcHandler for FailingRegisterHandler {
-    async fn handle_capability_request(
-        &self,
-        _request: CapabilityRequest,
-    ) -> Result<CapabilityResponse, BearDogError> {
-        unreachable!()
-    }
-
-    async fn handle_register(
-        &self,
-        _primal_id: String,
-        _capabilities: Vec<String>,
-    ) -> Result<(), BearDogError> {
-        Err(BearDogError::business("register failed".to_string()))
-    }
-
-    async fn handle_event(
-        &self,
-        _event_type: String,
-        _data: serde_json::Value,
-    ) -> Result<(), BearDogError> {
-        Ok(())
-    }
-}
-
 #[tokio::test]
 async fn handle_message_register_err_returns_none() {
-    let handler: Arc<dyn IpcHandler> = Arc::new(FailingRegisterHandler);
+    let handler: Arc<IpcHandlerBackend> = Arc::new(IpcHandlerBackend::FailingRegister(
+        IpcFailingRegisterHandler,
+    ));
     let connections = Arc::new(RwLock::new(Vec::new()));
     let out = IpcServer::handle_message(
         IpcMessage::Register {
@@ -299,7 +240,7 @@ async fn handle_message_register_err_returns_none() {
 
 #[tokio::test]
 async fn handle_message_ping_returns_pong() {
-    let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+    let handler: Arc<IpcHandlerBackend> = Arc::new(IpcHandlerBackend::Test(IpcTestHandler));
     let connections = Arc::new(RwLock::new(Vec::new()));
     let out = IpcServer::handle_message(
         IpcMessage::Ping {
@@ -314,7 +255,7 @@ async fn handle_message_ping_returns_pong() {
 
 #[tokio::test]
 async fn handle_message_event_returns_none() {
-    let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+    let handler: Arc<IpcHandlerBackend> = Arc::new(IpcHandlerBackend::Test(IpcTestHandler));
     let connections = Arc::new(RwLock::new(Vec::new()));
     let out = IpcServer::handle_message(
         IpcMessage::Event {
@@ -330,7 +271,7 @@ async fn handle_message_event_returns_none() {
 
 #[tokio::test]
 async fn handle_message_response_variants_yield_none() {
-    let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+    let handler: Arc<IpcHandlerBackend> = Arc::new(IpcHandlerBackend::Test(IpcTestHandler));
     let connections = Arc::new(RwLock::new(Vec::new()));
     assert!(
         IpcServer::handle_message(
@@ -356,37 +297,10 @@ async fn handle_message_response_variants_yield_none() {
     );
 }
 
-struct FailingEventHandler;
-
-#[async_trait::async_trait]
-impl IpcHandler for FailingEventHandler {
-    async fn handle_capability_request(
-        &self,
-        _request: CapabilityRequest,
-    ) -> Result<CapabilityResponse, BearDogError> {
-        unreachable!()
-    }
-
-    async fn handle_register(
-        &self,
-        _primal_id: String,
-        _capabilities: Vec<String>,
-    ) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    async fn handle_event(
-        &self,
-        _event_type: String,
-        _data: serde_json::Value,
-    ) -> Result<(), BearDogError> {
-        Err(BearDogError::business("event failed".to_string()))
-    }
-}
-
 #[tokio::test]
 async fn handle_message_event_error_returns_none() {
-    let handler: Arc<dyn IpcHandler> = Arc::new(FailingEventHandler);
+    let handler: Arc<IpcHandlerBackend> =
+        Arc::new(IpcHandlerBackend::FailingEvent(IpcFailingEventHandler));
     let connections = Arc::new(RwLock::new(Vec::new()));
     let out = IpcServer::handle_message(
         IpcMessage::Event {
@@ -400,37 +314,11 @@ async fn handle_message_event_error_returns_none() {
     assert!(out.is_none());
 }
 
-struct FailingCapabilityHandler;
-
-#[async_trait::async_trait]
-impl IpcHandler for FailingCapabilityHandler {
-    async fn handle_capability_request(
-        &self,
-        _request: CapabilityRequest,
-    ) -> Result<CapabilityResponse, BearDogError> {
-        Err(BearDogError::business("capability failed".to_string()))
-    }
-
-    async fn handle_register(
-        &self,
-        _primal_id: String,
-        _capabilities: Vec<String>,
-    ) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    async fn handle_event(
-        &self,
-        _event_type: String,
-        _data: serde_json::Value,
-    ) -> Result<(), BearDogError> {
-        Ok(())
-    }
-}
-
 #[tokio::test]
 async fn handle_message_capability_request_err_returns_none() {
-    let handler: Arc<dyn IpcHandler> = Arc::new(FailingCapabilityHandler);
+    let handler: Arc<IpcHandlerBackend> = Arc::new(IpcHandlerBackend::FailingCapability(
+        IpcFailingCapabilityHandler,
+    ));
     let connections = Arc::new(RwLock::new(Vec::new()));
     let req = CapabilityRequest {
         from_primal: "a".to_string(),
@@ -453,7 +341,7 @@ async fn handle_connection_ping_roundtrip_returns_pong_line() -> Result<(), Bear
 
     let (mut local, remote) = tokio::net::UnixStream::pair()
         .map_err(|e| BearDogError::system(format!("unix pair: {e}")))?;
-    let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+    let handler: Arc<IpcHandlerBackend> = Arc::new(IpcHandlerBackend::Test(IpcTestHandler));
     let connections = Arc::new(RwLock::new(Vec::new()));
     let h = Arc::clone(&handler);
     let c = Arc::clone(&connections);
@@ -505,7 +393,7 @@ async fn handle_connection_malformed_json_line_is_skipped_without_panic() {
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
     let (mut local, remote) = tokio::net::UnixStream::pair().expect("unix pair");
-    let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+    let handler: Arc<IpcHandlerBackend> = Arc::new(IpcHandlerBackend::Test(IpcTestHandler));
     let connections = Arc::new(RwLock::new(Vec::new()));
     let h = Arc::clone(&handler);
     let c = Arc::clone(&connections);
@@ -546,7 +434,7 @@ async fn handle_connection_eof_without_request_exits_ok() {
     let (local, remote) = tokio::net::UnixStream::pair().expect("unix pair");
     drop(local);
 
-    let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+    let handler: Arc<IpcHandlerBackend> = Arc::new(IpcHandlerBackend::Test(IpcTestHandler));
     let connections = Arc::new(RwLock::new(Vec::new()));
     IpcServer::handle_connection(remote, handler, connections)
         .await

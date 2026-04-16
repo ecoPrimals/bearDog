@@ -14,6 +14,9 @@ pub mod manager;
 pub mod provider;
 pub mod providers;
 pub mod requirements;
+mod universal_crypto_backend;
+
+pub use universal_crypto_backend::UniversalCryptoBackend;
 
 #[cfg(test)]
 mod algorithms_tests;

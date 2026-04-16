@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use super::key_management_backend::KeyManagementBackend;
 use super::software_hsm_provider::SoftwareHsmProvider;
-use super::types::{KeyManagementCapability, KmsError};
+use super::types::KmsError;
 use std::sync::Arc;
 
 /// Auto-detect and create the best available KMS implementation
@@ -15,13 +16,13 @@ use std::sync::Arc;
 ///
 /// # Returns
 ///
-/// * `Ok(Arc<dyn KeyManagementCapability>)` - Best available KMS
+/// * `Ok(Arc<KeyManagementBackend>)` - Best available KMS
 /// * `Err(KmsError)` - If all providers fail (unlikely)
 ///
 /// # Errors
 ///
 /// Returns an error if the software HSM provider cannot be constructed (e.g. entropy failure).
-pub async fn create_key_management() -> Result<Arc<dyn KeyManagementCapability>, KmsError> {
+pub async fn create_key_management() -> Result<Arc<KeyManagementBackend>, KmsError> {
     // VENDOR-AGNOSTIC APPROACH: Discover ANY available KMS
     // We detect capabilities, not vendor names
 
@@ -37,12 +38,16 @@ pub async fn create_key_management() -> Result<Arc<dyn KeyManagementCapability>,
         tracing::info!("✅ Using discovered KMS: {}", kms.endpoint);
         // For now, return software fallback (real implementation coming)
         // Real implementation would instantiate actual provider based on endpoint
-        return Ok(Arc::new(SoftwareHsmProvider::new()?));
+        return Ok(Arc::new(KeyManagementBackend::SoftwareHsm(
+            SoftwareHsmProvider::new()?,
+        )));
     }
 
     // Fallback to software HSM (always available)
     tracing::info!("📦 Using software HSM fallback (no cloud KMS detected)");
-    Ok(Arc::new(SoftwareHsmProvider::new()?))
+    Ok(Arc::new(KeyManagementBackend::SoftwareHsm(
+        SoftwareHsmProvider::new()?,
+    )))
 }
 
 // VENDOR-AGNOSTIC DISCOVERY FUNCTIONS
@@ -174,6 +179,7 @@ fn select_best_kms(available: &[KmsDiscoveryResult]) -> Option<&KmsDiscoveryResu
 
 #[cfg(test)]
 mod tests {
+    use super::super::types::KeyManagementCapability;
     use super::create_key_management;
 
     /// Exercise full discovery path + software HSM fallback without mutating process environment

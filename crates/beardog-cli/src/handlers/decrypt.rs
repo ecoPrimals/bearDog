@@ -69,7 +69,11 @@ pub async fn handle_decrypt(
 
     // Initialize Software HSM with default config (vendor-agnostic crypto provider)
     let config = SoftwareHsmConfig::default();
-    let software_hsm: Arc<dyn HsmProvider> = Arc::new(SoftwareHsm::new(config).await?);
+    let software_hsm: Arc<beardog_tunnel::tunnel::hsm::HsmProviderBackend> = Arc::new(
+        beardog_tunnel::tunnel::hsm::HsmProviderBackend::RustSoftware(
+            SoftwareHsm::new(config).await?,
+        ),
+    );
 
     // Import the key into HSM for operation
     let key_material = key_store::base64_decode(&stored_key.key_material_b64)?;

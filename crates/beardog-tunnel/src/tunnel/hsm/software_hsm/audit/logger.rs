@@ -8,6 +8,7 @@ use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use std::collections::VecDeque;
 use std::fmt::Write as _;
+use std::future::Future;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::sync::Mutex;
@@ -400,17 +401,23 @@ impl DefaultAuditLogger {
     }
 }
 
-#[async_trait::async_trait]
 impl AuditLogger for DefaultAuditLogger {
-    async fn log_operation(&self, operation: &AuditLogEntry) -> Result<(), BearDogError> {
-        self.storage.log_entry(operation.clone()).await
+    fn log_operation(
+        &self,
+        operation: &AuditLogEntry,
+    ) -> impl Future<Output = Result<(), BearDogError>> + Send {
+        let op = operation.clone();
+        let storage = Arc::clone(&self.storage);
+        async move { storage.log_entry(op).await }
     }
 
-    async fn get_audit_log(
+    fn get_audit_log(
         &self,
         filter: &AuditLogFilter,
-    ) -> Result<Vec<AuditLogEntry>, BearDogError> {
-        self.storage.get_entries(filter).await
+    ) -> impl Future<Output = Result<Vec<AuditLogEntry>, BearDogError>> + Send {
+        let filter = filter.clone();
+        let storage = Arc::clone(&self.storage);
+        async move { storage.get_entries(&filter).await }
     }
 }
 

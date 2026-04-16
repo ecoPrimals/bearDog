@@ -26,7 +26,6 @@ thiserror = { workspace = true }
 tracing = "0.1"
 tokio = { version = "1.0", features = ["rt", "rt-multi-thread", "time", "fs", "macros"], optional = true }
 rand = { workspace = true }
-async-trait = "0.1"
 
 # Safe concurrent data structures
 crossbeam = "0.8"

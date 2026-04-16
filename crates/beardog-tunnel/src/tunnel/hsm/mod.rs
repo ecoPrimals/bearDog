@@ -20,6 +20,13 @@ pub mod config;
 pub mod manager;
 /// HSM provider implementations
 pub mod providers;
+
+mod hsm_key_provider_backend;
+mod hsm_provider_backend;
+#[cfg(test)]
+pub mod hsm_provider_mocks;
+pub use hsm_key_provider_backend::HsmKeyProviderBackend;
+pub use hsm_provider_backend::HsmProviderBackend;
 /// HSM type definitions and enums
 pub mod types;
 
@@ -36,6 +43,7 @@ pub use universal_discovery::{
 // Crypto system
 pub mod crypto; // NEW: Universal Crypto Provider System
 pub mod crypto_dispatch;
+mod crypto_provider_backend;
 // NOTE: provider_dispatch.rs was removed (Jan 2026)
 // Performance optimization deferred to Phase 2
 pub mod zero_cost_provider;
@@ -75,6 +83,7 @@ pub use beardog_types::hsm::{
 
 // ✅ MIGRATED: Using real crypto providers from software_hsm/crypto_providers and canonical trait (100% Pure Rust!)
 pub use beardog_types::hsm::CryptoProvider; // Canonical trait
+pub use crypto_provider_backend::CryptoProviderBackend;
 pub use software_hsm::crypto_providers::RustCryptoProvider;
 // RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust, ARM-ready!)
 // OpenSslCryptoProvider removed - evolved to pure Rust alternatives

@@ -27,6 +27,7 @@ mod kubernetes_discovery_tests {
 // -- Factory: create_service_discovery DNS fallback --
 
 mod factory_tests {
+    use crate::canonical::discovery::service_discovery_capability::ServiceDiscoveryCapability;
     use crate::canonical::discovery::service_discovery_capability::create_service_discovery;
 
     #[tokio::test]

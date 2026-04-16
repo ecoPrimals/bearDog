@@ -96,9 +96,6 @@ workspace = true
 [dependencies.beardog-tower-atomic]
 path = "../beardog-tower-atomic"
 
-[dependencies.async-trait]
-workspace = true
-
 [dependencies.blake3]
 workspace = true
 

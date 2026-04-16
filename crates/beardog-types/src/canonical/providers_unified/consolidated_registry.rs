@@ -22,31 +22,37 @@
 //! - **Maintainability**: Single location for all provider management logic
 
 use beardog_errors::BearDogError;
-use beardog_errors::BearDogError;
 use super::traits::consolidated::{ConsolidatedProvider, ProviderInfo, ProviderHealth, ProviderType, HealthStatus};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 use parking_lot::RwLock;
 use tracing::{info, warn, error};
+
+type Result<T> = std::result::Result<T, BearDogError>;
 
 /// **Type-Erased Provider Wrapper**
 ///
 /// This wrapper allows us to store different ConsolidatedProvider implementations
 /// in the same collection by erasing their associated types.
-#[async_trait::async_trait]
 pub trait ErasedProvider: Send + Sync + std::fmt::Debug + 'static {
     /// Get provider identification information
     fn provider_info(&self) -> ProviderInfo;
-    
-    /// Get provider version string  
+
+    /// Get provider version string
     fn provider_version(&self) -> &str;
-    
+
     /// Perform health check and return current status
-    async fn health_check(&self) -> Result<ProviderHealth>;
-    
+    fn health_check(
+        &self,
+    ) -> Pin<Box<dyn Future<Output = std::result::Result<ProviderHealth, BearDogError>> + Send + '_>>;
+
     /// Shutdown the provider gracefully
-    async fn shutdown(&mut self) -> Result<()>;
+    fn shutdown(
+        &mut self,
+    ) -> Pin<Box<dyn Future<Output = std::result::Result<(), BearDogError>> + Send + '_>>;
 }
 
 /// **Concrete Implementation of Type-Erased Provider**
@@ -77,7 +83,6 @@ where
     }
 }
 
-#[async_trait::async_trait]
 impl<P> ErasedProvider for ErasedProviderImpl<P>
 where
     P: ConsolidatedProvider,
@@ -86,17 +91,32 @@ where
     fn provider_info(&self) -> ProviderInfo {
         self.provider.provider_info()
     }
-    
+
     fn provider_version(&self) -> &str {
         self.provider.provider_version()
     }
-    
-    async fn health_check(&self) -> Result<ProviderHealth> {
-        self.provider.health_check().await.map_err(|e| e.into())
+
+    fn health_check(
+        &self,
+    ) -> Pin<Box<dyn Future<Output = std::result::Result<ProviderHealth, BearDogError>> + Send + '_>>
+    {
+        Box::pin(async {
+            self.provider
+                .health_check()
+                .await
+                .map_err(|e: P::Error| e.into())
+        })
     }
-    
-    async fn shutdown(&mut self) -> Result<()> {
-        self.provider.shutdown().await.map_err(|e| e.into())
+
+    fn shutdown(
+        &mut self,
+    ) -> Pin<Box<dyn Future<Output = std::result::Result<(), BearDogError>> + Send + '_>> {
+        Box::pin(async {
+            self.provider
+                .shutdown()
+                .await
+                .map_err(|e: P::Error| e.into())
+        })
     }
 }
 

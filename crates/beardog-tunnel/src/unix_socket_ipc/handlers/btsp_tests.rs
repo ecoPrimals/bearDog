@@ -273,7 +273,9 @@ async fn btsp_verify_peer_genetic_lineage_uses_tunnel_and_trust_db() {
         .expect("software hsm");
     hsm.register_hsm_provider(
         crate::tunnel::hsm::types::HsmTier::Software,
-        Arc::new(software_hsm),
+        Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+            software_hsm,
+        )),
     )
     .expect("register");
     let hsm = Arc::new(hsm);
@@ -558,7 +560,9 @@ async fn btsp_tunnel_establish_unified_internal_returns_response_shape() {
         .expect("software hsm");
     hsm.register_hsm_provider(
         crate::tunnel::hsm::types::HsmTier::Software,
-        Arc::new(software_hsm),
+        Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+            software_hsm,
+        )),
     )
     .expect("register");
     let hsm = Arc::new(hsm);
@@ -603,7 +607,9 @@ async fn btsp_tunnel_encrypt_decrypt_status_close_roundtrip() {
         .expect("software hsm");
     hsm.register_hsm_provider(
         crate::tunnel::hsm::types::HsmTier::Software,
-        Arc::new(software_hsm),
+        Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+            software_hsm,
+        )),
     )
     .expect("register");
     let hsm = Arc::new(hsm);

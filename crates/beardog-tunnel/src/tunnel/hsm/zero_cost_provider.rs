@@ -60,8 +60,7 @@ where
 ///
 /// # Migration (v0.10.0)
 ///
-/// Superseded by [`beardog_traits::hsm::HsmKeyProvider`] which supports
-/// both compile-time and dynamic dispatch via `Arc<dyn HsmKeyProvider>`.
+/// Superseded by [`beardog_traits::hsm::HsmKeyProvider`] (RPITIT + enum dispatch in the tunnel crate).
 /// This trait will be removed in a future release.
 pub trait HsmProviderTrait: Send + Sync + 'static {
     /// Associated capabilities type

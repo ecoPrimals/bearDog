@@ -4,6 +4,7 @@
 //!
 //! Manages multiple crypto providers and selects the best one for each operation.
 
+use super::UniversalCryptoBackend;
 use super::capabilities::CryptoCapabilities;
 use super::provider::UniversalCryptoProvider;
 use super::requirements::CryptoRequirements;
@@ -15,7 +16,7 @@ use tokio::sync::RwLock;
 /// Manages multiple crypto providers and selects the best one
 #[derive(Clone)]
 pub struct CryptoProviderManager {
-    providers: Arc<RwLock<Vec<Arc<dyn UniversalCryptoProvider>>>>,
+    providers: Arc<RwLock<Vec<Arc<UniversalCryptoBackend>>>>,
     capabilities_cache: Arc<RwLock<HashMap<String, CryptoCapabilities>>>,
 }
 
@@ -34,7 +35,7 @@ impl CryptoProviderManager {
     /// Register a crypto provider
     pub async fn register_provider(
         &self,
-        provider: Arc<dyn UniversalCryptoProvider>,
+        provider: Arc<UniversalCryptoBackend>,
     ) -> Result<(), BearDogError> {
         // Discover and cache capabilities
         let capabilities = provider.discover_capabilities().await?;
@@ -59,7 +60,7 @@ impl CryptoProviderManager {
     pub async fn select_provider(
         &self,
         requirements: &CryptoRequirements,
-    ) -> Result<Arc<dyn UniversalCryptoProvider>, BearDogError> {
+    ) -> Result<Arc<UniversalCryptoBackend>, BearDogError> {
         let providers = self.providers.read().await;
 
         if providers.is_empty() {
@@ -94,7 +95,7 @@ impl CryptoProviderManager {
     /// Check if a provider meets requirements
     async fn meets_requirements(
         &self,
-        provider: &Arc<dyn UniversalCryptoProvider>,
+        provider: &Arc<UniversalCryptoBackend>,
         requirements: &CryptoRequirements,
     ) -> bool {
         // Check algorithm support
@@ -140,9 +141,9 @@ impl CryptoProviderManager {
     /// Rank providers by score (higher is better)
     async fn rank_providers(
         &self,
-        candidates: Vec<Arc<dyn UniversalCryptoProvider>>,
+        candidates: Vec<Arc<UniversalCryptoBackend>>,
         requirements: &CryptoRequirements,
-    ) -> Vec<Arc<dyn UniversalCryptoProvider>> {
+    ) -> Vec<Arc<UniversalCryptoBackend>> {
         let cache = self.capabilities_cache.read().await;
 
         let mut scored: Vec<_> = candidates
@@ -162,7 +163,7 @@ impl CryptoProviderManager {
     /// Calculate score for a provider (higher is better)
     fn calculate_score(
         &self,
-        provider: &Arc<dyn UniversalCryptoProvider>,
+        provider: &Arc<UniversalCryptoBackend>,
         requirements: &CryptoRequirements,
         cache: &HashMap<String, CryptoCapabilities>,
     ) -> f64 {
@@ -220,7 +221,7 @@ impl CryptoProviderManager {
     }
 
     /// Get all registered providers
-    pub async fn get_providers(&self) -> Vec<Arc<dyn UniversalCryptoProvider>> {
+    pub async fn get_providers(&self) -> Vec<Arc<UniversalCryptoBackend>> {
         self.providers.read().await.clone()
     }
 
@@ -251,6 +252,7 @@ impl std::fmt::Debug for CryptoProviderManager {
 
 #[cfg(test)]
 mod tests {
+    use super::super::UniversalCryptoBackend;
     use super::super::UniversalCryptoProvider;
     use super::super::algorithms::{
         AesMode, AsymmetricAlgorithm, CryptoAlgorithm, CryptoOperation, HashAlgorithm,
@@ -264,7 +266,7 @@ mod tests {
     #[tokio::test]
     async fn crypto_provider_manager_new_default_register_and_select() {
         let mgr = CryptoProviderManager::new();
-        let prov = Arc::new(RustCryptoProvider::new()) as Arc<dyn UniversalCryptoProvider>;
+        let prov = Arc::new(UniversalCryptoBackend::RustCrypto(RustCryptoProvider::new()));
         mgr.register_provider(prov)
             .await
             .expect("register RustCrypto provider");
@@ -312,7 +314,7 @@ mod tests {
     #[tokio::test]
     async fn select_provider_no_candidate_when_constant_time_required_for_hash() {
         let mgr = CryptoProviderManager::new();
-        let prov = Arc::new(RustCryptoProvider::new()) as Arc<dyn UniversalCryptoProvider>;
+        let prov = Arc::new(UniversalCryptoBackend::RustCrypto(RustCryptoProvider::new()));
         mgr.register_provider(prov).await.expect("register");
 
         let reqs = CryptoRequirements {
@@ -335,7 +337,7 @@ mod tests {
     #[tokio::test]
     async fn select_provider_rejects_excessive_latency_budget() {
         let mgr = CryptoProviderManager::new();
-        let prov = Arc::new(RustCryptoProvider::new()) as Arc<dyn UniversalCryptoProvider>;
+        let prov = Arc::new(UniversalCryptoBackend::RustCrypto(RustCryptoProvider::new()));
         mgr.register_provider(prov).await.expect("register");
 
         let alg = CryptoAlgorithm::Symmetric(SymmetricAlgorithm::Aes {
@@ -356,7 +358,7 @@ mod tests {
     #[tokio::test]
     async fn select_provider_prefers_hardware_when_required_and_available() {
         let mgr = CryptoProviderManager::new();
-        let prov = Arc::new(RustCryptoProvider::new()) as Arc<dyn UniversalCryptoProvider>;
+        let prov = Arc::new(UniversalCryptoBackend::RustCrypto(RustCryptoProvider::new()));
         mgr.register_provider(prov).await.expect("register");
 
         let alg = CryptoAlgorithm::Signature(SignatureAlgorithm::Ed25519);
@@ -378,7 +380,7 @@ mod tests {
     #[tokio::test]
     async fn select_provider_security_scoring_branch_non_performance() {
         let mgr = CryptoProviderManager::new();
-        let prov = Arc::new(RustCryptoProvider::new()) as Arc<dyn UniversalCryptoProvider>;
+        let prov = Arc::new(UniversalCryptoBackend::RustCrypto(RustCryptoProvider::new()));
         mgr.register_provider(prov).await.expect("register");
 
         let alg = CryptoAlgorithm::Symmetric(SymmetricAlgorithm::ChaCha20Poly1305);
@@ -403,7 +405,7 @@ mod tests {
     #[tokio::test]
     async fn select_provider_no_asymmetric_support_in_rustcrypto() {
         let mgr = CryptoProviderManager::new();
-        let prov = Arc::new(RustCryptoProvider::new()) as Arc<dyn UniversalCryptoProvider>;
+        let prov = Arc::new(UniversalCryptoBackend::RustCrypto(RustCryptoProvider::new()));
         mgr.register_provider(prov).await.expect("register");
 
         let reqs = CryptoRequirements {

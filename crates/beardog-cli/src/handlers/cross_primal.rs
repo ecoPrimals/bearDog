@@ -118,8 +118,7 @@ async fn handle_key_ceremony(
     info!("✅ Loaded seed from: {}", seed_file);
 
     // Create discovery client and messenger
-    let discovery_client: Arc<dyn PrimalDiscoveryService> =
-        Arc::new(EcosystemDiscoveryAdapter::new()?);
+    let discovery_client = Arc::new(EcosystemDiscoveryAdapter::new()?);
     let messenger = SecureCrossPrimalMessenger::new(discovery_client)?;
 
     info!("🔍 Discovering security-capable primals in ecosystem...");
@@ -177,8 +176,7 @@ async fn handle_send_secure(
     );
 
     // Create discovery client and messenger
-    let discovery_client: Arc<dyn PrimalDiscoveryService> =
-        Arc::new(EcosystemDiscoveryAdapter::new()?);
+    let discovery_client = Arc::new(EcosystemDiscoveryAdapter::new()?);
     let messenger = SecureCrossPrimalMessenger::new(discovery_client)?;
 
     info!("🔍 Discovering primals with '{}' capability...", capability);
@@ -239,8 +237,7 @@ async fn handle_discover_primals(capability: &str) -> Result<(), beardog_errors:
     info!("🔍 Discovering primals with '{}' capability...", capability);
 
     // Create discovery client
-    let discovery_client: Arc<dyn PrimalDiscoveryService> =
-        Arc::new(EcosystemDiscoveryAdapter::new()?);
+    let discovery_client = Arc::new(EcosystemDiscoveryAdapter::new()?);
 
     // Determine capability type (universal discovery — no hardcoded primal identifiers)
     let capability_type = match capability.to_lowercase().as_str() {

@@ -20,7 +20,7 @@ use tokio::sync::Mutex;
 use tracing::{debug, info};
 
 #[cfg(feature = "fido2")]
-use beardog_hid::{HidDevice, open_device};
+use beardog_hid::{HidDeviceBackend, open_device};
 
 /// FIDO2/CTAP2 HSM Provider (Pure Rust)
 ///
@@ -53,7 +53,7 @@ pub struct Fido2HsmProvider {
 
     /// HID device handle (Pure Rust)
     #[cfg(feature = "fido2")]
-    device: Arc<Mutex<Option<Box<dyn HidDevice>>>>,
+    device: Arc<Mutex<Option<HidDeviceBackend>>>,
 }
 
 impl Fido2HsmProvider {

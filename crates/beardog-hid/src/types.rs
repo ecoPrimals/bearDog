@@ -6,6 +6,7 @@
 
 use beardog_errors::BearDogError;
 use std::fmt;
+use std::future::Future;
 
 /// USB Vendor ID
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -67,7 +68,6 @@ impl fmt::Display for HidDeviceInfo {
 ///
 /// Provides async read/write interface to HID devices.
 /// All implementations must be Pure Rust (ecoBin compliant).
-#[async_trait::async_trait]
 pub trait HidDevice: Send + Sync {
     /// Write HID report to device
     ///
@@ -85,7 +85,10 @@ pub trait HidDevice: Send + Sync {
     /// - Device is disconnected
     /// - I/O error occurs
     /// - Report is malformed
-    async fn write(&mut self, report: &[u8]) -> Result<usize, BearDogError>;
+    fn write<'a>(
+        &'a mut self,
+        report: &'a [u8],
+    ) -> impl Future<Output = Result<usize, BearDogError>> + Send + 'a;
 
     /// Read HID report from device
     ///
@@ -103,7 +106,10 @@ pub trait HidDevice: Send + Sync {
     /// - Device is disconnected
     /// - I/O error occurs
     /// - Timeout occurs
-    async fn read(&mut self, buf: &mut [u8]) -> Result<usize, BearDogError>;
+    fn read<'a>(
+        &'a mut self,
+        buf: &'a mut [u8],
+    ) -> impl Future<Output = Result<usize, BearDogError>> + Send + 'a;
 
     /// Get device information
     fn info(&self) -> &HidDeviceInfo;

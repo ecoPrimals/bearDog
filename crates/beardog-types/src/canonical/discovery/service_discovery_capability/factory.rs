@@ -4,9 +4,10 @@
 
 use std::sync::Arc;
 
-use super::core::{DiscoveryError, ServiceDiscoveryCapability};
+use super::core::DiscoveryError;
 use super::kubernetes::KubernetesDiscovery;
 use super::providers::DnsHttpDiscovery;
+use super::service_discovery_backend::ServiceDiscoveryBackend;
 
 /// Auto-detect and create the best available service discovery implementation
 ///
@@ -18,7 +19,7 @@ use super::providers::DnsHttpDiscovery;
 ///
 /// # Returns
 ///
-/// * `Ok(Arc<dyn ServiceDiscoveryCapability>)` — Kubernetes discovery when the cluster is
+/// * `Ok(Arc<ServiceDiscoveryBackend>)` — Kubernetes discovery when the cluster is
 ///   detected, otherwise the DNS/HTTP fallback (this function does not return `Err` today).
 ///
 /// # Examples
@@ -36,12 +37,11 @@ use super::providers::DnsHttpDiscovery;
 ///
 /// This factory does not currently return `Err`: it tries Kubernetes first, and if that is
 /// unavailable it falls back to DNS/HTTP. Consul/etcd are not selected here (see module comments).
-pub async fn create_service_discovery()
--> Result<Arc<dyn ServiceDiscoveryCapability>, DiscoveryError> {
+pub async fn create_service_discovery() -> Result<Arc<ServiceDiscoveryBackend>, DiscoveryError> {
     // Try Kubernetes first (environment detection implemented)
     if let Ok(discovery) = KubernetesDiscovery::try_create().await {
         tracing::info!("Using Kubernetes service discovery");
-        return Ok(Arc::new(discovery));
+        return Ok(Arc::new(ServiceDiscoveryBackend::Kubernetes(discovery)));
     }
 
     // ✅ ARCHITECTURAL DECISION: Service discovery delegated via capability discovery
@@ -55,11 +55,14 @@ pub async fn create_service_discovery()
 
     // Fallback to DNS + HTTP (always available)
     tracing::info!("Using DNS/HTTP fallback discovery");
-    Ok(Arc::new(DnsHttpDiscovery::new()))
+    Ok(Arc::new(ServiceDiscoveryBackend::DnsHttp(
+        DnsHttpDiscovery::new(),
+    )))
 }
 
 #[cfg(test)]
 mod tests {
+    use super::super::core::ServiceDiscoveryCapability;
     use super::*;
 
     #[tokio::test]

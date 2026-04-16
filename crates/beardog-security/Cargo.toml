@@ -108,7 +108,6 @@ jni = { workspace = true }
 libc = { workspace = true }
 
 [dev-dependencies]
-async-trait = { workspace = true }
 proptest = { workspace = true }
 
 [features]

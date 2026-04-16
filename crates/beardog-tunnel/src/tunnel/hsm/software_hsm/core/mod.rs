@@ -14,10 +14,10 @@ mod lifecycle;
 #[path = "core_tests.rs"]
 mod tests;
 
-use super::super::types::KeyType;
 use super::audit::logger::DefaultAuditLogger;
 use super::memory::{DefaultMemoryProtector, MemoryProtectionConfig};
-use super::types::{CryptoProvider, SoftwareHealthMonitor, SoftwareKeyStore};
+use super::types::{SoftwareHealthMonitor, SoftwareKeyStore};
+use crate::tunnel::hsm::CryptoProviderBackend;
 use crate::tunnel::hsm::crypto::{CryptoProviderManager, RustCryptoProvider};
 use crate::tunnel::hsm::software_hsm::crypto_providers::{
     GeneticCryptoProvider, RustCryptoProvider as SoftwareRustCryptoProvider,
@@ -97,7 +97,7 @@ use tracing::info;
 pub struct RustSoftwareHsm {
     pub(super) _config: CanonicalSoftwareHsmConfig,
     pub(super) key_store: Arc<RwLock<SoftwareKeyStore>>,
-    pub(super) crypto_provider: Arc<dyn CryptoProvider<KeyType> + Send + Sync>,
+    pub(super) crypto_provider: Arc<CryptoProviderBackend>,
     pub(super) crypto_manager: Arc<CryptoProviderManager>,
     pub(super) memory_protector: Arc<DefaultMemoryProtector>,
     pub(super) audit_logger: Arc<DefaultAuditLogger>,
@@ -180,8 +180,11 @@ impl RustSoftwareHsm {
         let health_monitor = Arc::new(SoftwareHealthMonitor::new().await?);
 
         let crypto_manager = Arc::new(CryptoProviderManager::new());
-        let rust_crypto = Arc::new(RustCryptoProvider::new())
-            as Arc<dyn crate::tunnel::hsm::crypto::UniversalCryptoProvider>;
+        let rust_crypto = Arc::new(
+            crate::tunnel::hsm::crypto::UniversalCryptoBackend::RustCrypto(
+                RustCryptoProvider::new(),
+            ),
+        );
         crypto_manager.register_provider(rust_crypto).await?;
 
         let hsm = Self {
@@ -201,23 +204,27 @@ impl RustSoftwareHsm {
     /// Create crypto provider based on backend configuration
     pub(super) async fn create_crypto_provider(
         backend: &CryptoBackendType,
-    ) -> Result<Arc<dyn CryptoProvider<KeyType> + Send + Sync>, BearDogError> {
+    ) -> Result<Arc<CryptoProviderBackend>, BearDogError> {
         match backend {
-            CryptoBackendType::GeneticCrypto => Ok(Arc::new(GeneticCryptoProvider::new()?)
-                as Arc<dyn CryptoProvider<KeyType> + Send + Sync>),
-            CryptoBackendType::RustCrypto => Ok(Arc::new(SoftwareRustCryptoProvider::new().await?)
-                as Arc<dyn CryptoProvider<KeyType> + Send + Sync>),
+            CryptoBackendType::GeneticCrypto => Ok(Arc::new(CryptoProviderBackend::Genetic(
+                GeneticCryptoProvider::new()?,
+            ))),
+            CryptoBackendType::RustCrypto => Ok(Arc::new(CryptoProviderBackend::RustCrypto(
+                SoftwareRustCryptoProvider::new().await?,
+            ))),
             CryptoBackendType::Ring => {
                 tracing::warn!("Ring backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)");
-                Ok(Arc::new(SoftwareRustCryptoProvider::new().await?)
-                    as Arc<dyn CryptoProvider<KeyType> + Send + Sync>)
+                Ok(Arc::new(CryptoProviderBackend::RustCrypto(
+                    SoftwareRustCryptoProvider::new().await?,
+                )))
             }
             CryptoBackendType::OpenSsl => {
                 tracing::warn!(
                     "OpenSSL backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)"
                 );
-                Ok(Arc::new(SoftwareRustCryptoProvider::new().await?)
-                    as Arc<dyn CryptoProvider<KeyType> + Send + Sync>)
+                Ok(Arc::new(CryptoProviderBackend::RustCrypto(
+                    SoftwareRustCryptoProvider::new().await?,
+                )))
             }
         }
     }

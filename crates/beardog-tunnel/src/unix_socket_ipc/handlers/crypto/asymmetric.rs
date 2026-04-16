@@ -361,6 +361,7 @@ pub async fn handle_x25519_generate_ephemeral(params: Option<&Value>) -> Result<
 /// Returns an error when the requested HSM backend is unavailable or unknown.
 pub async fn handle_generate_keypair_with_hsm(params: Option<&Value>) -> Result<Value, String> {
     use crate::tunnel::hsm::providers::registry::HsmProviderRegistry;
+    use beardog_traits::hsm::HsmKeyProvider;
     use beardog_types::hsm::{HsmAlgorithm, KeyGenParams, SelectionPreference};
 
     let hsm_backend = params

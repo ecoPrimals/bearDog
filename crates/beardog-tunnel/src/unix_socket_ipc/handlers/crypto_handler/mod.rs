@@ -4,7 +4,6 @@
 
 use crate::btsp_provider::BeardogBtspProvider;
 use crate::unix_socket_ipc::handlers::MethodHandler;
-use async_trait::async_trait;
 use std::sync::Arc;
 
 pub(crate) mod aliases_and_beardog;
@@ -21,7 +20,6 @@ mod tls_ops;
 /// Crypto RPC handler — routes all cryptographic JSON-RPC operations.
 pub struct CryptoHandler;
 
-#[async_trait]
 impl MethodHandler for CryptoHandler {
     fn methods(&self) -> Vec<&'static str> {
         method_list::crypto_method_names()

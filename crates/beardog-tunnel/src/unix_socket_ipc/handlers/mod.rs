@@ -34,7 +34,6 @@
 //! ```
 
 use crate::btsp_provider::BeardogBtspProvider;
-use async_trait::async_trait;
 use beardog_ipc::{DispatchOutcome, IpcErrorPhase};
 use std::sync::Arc;
 
@@ -69,11 +68,10 @@ pub mod security;
 /// # Example
 ///
 /// ```rust,ignore
-/// use async_trait::async_trait;
+/// use std::sync::Arc;
 ///
 /// struct MyHandler;
 ///
-/// #[async_trait]
 /// impl MethodHandler for MyHandler {
 ///     fn methods(&self) -> Vec<&'static str> {
 ///         vec!["my.method1", "my.method2"]
@@ -93,7 +91,7 @@ pub mod security;
 ///     }
 /// }
 /// ```
-#[async_trait]
+#[allow(async_fn_in_trait)]
 pub trait MethodHandler: Send + Sync {
     /// Get the methods this handler can handle
     ///
@@ -118,6 +116,67 @@ pub trait MethodHandler: Send + Sync {
     ) -> Result<serde_json::Value, String>;
 }
 
+/// Concrete enum of all [`MethodHandler`] implementations held by [`HandlerRegistry`].
+#[allow(missing_docs)]
+pub enum MethodHandlerKind {
+    Health(health::HealthHandler),
+    Security(security::SecurityHandler),
+    Btsp(btsp::BtspHandler),
+    IonicBond(ionic_bond::IonicBondHandler),
+    Crypto(crypto_handler::CryptoHandler),
+    Federation(federation::FederationHandler),
+    Encryption(encryption::EncryptionHandler),
+    GraphSecurity(graph_security::GraphSecurityHandler),
+    Beacon(beacon::BeaconHandler),
+    Secrets(secrets::SecretsHandler),
+    Relay(relay::RelayHandler),
+    Capabilities(capabilities::CapabilitiesHandler),
+    Introspection(introspection::IntrospectionHandler),
+}
+
+impl MethodHandler for MethodHandlerKind {
+    fn methods(&self) -> Vec<&'static str> {
+        match self {
+            Self::Health(h) => h.methods(),
+            Self::Security(h) => h.methods(),
+            Self::Btsp(h) => h.methods(),
+            Self::IonicBond(h) => h.methods(),
+            Self::Crypto(h) => h.methods(),
+            Self::Federation(h) => h.methods(),
+            Self::Encryption(h) => h.methods(),
+            Self::GraphSecurity(h) => h.methods(),
+            Self::Beacon(h) => h.methods(),
+            Self::Secrets(h) => h.methods(),
+            Self::Relay(h) => h.methods(),
+            Self::Capabilities(h) => h.methods(),
+            Self::Introspection(h) => h.methods(),
+        }
+    }
+
+    async fn handle(
+        &self,
+        method: &str,
+        params: Option<&serde_json::Value>,
+        btsp_provider: &Arc<BeardogBtspProvider>,
+    ) -> Result<serde_json::Value, String> {
+        match self {
+            Self::Health(h) => h.handle(method, params, btsp_provider).await,
+            Self::Security(h) => h.handle(method, params, btsp_provider).await,
+            Self::Btsp(h) => h.handle(method, params, btsp_provider).await,
+            Self::IonicBond(h) => h.handle(method, params, btsp_provider).await,
+            Self::Crypto(h) => h.handle(method, params, btsp_provider).await,
+            Self::Federation(h) => h.handle(method, params, btsp_provider).await,
+            Self::Encryption(h) => h.handle(method, params, btsp_provider).await,
+            Self::GraphSecurity(h) => h.handle(method, params, btsp_provider).await,
+            Self::Beacon(h) => h.handle(method, params, btsp_provider).await,
+            Self::Secrets(h) => h.handle(method, params, btsp_provider).await,
+            Self::Relay(h) => h.handle(method, params, btsp_provider).await,
+            Self::Capabilities(h) => h.handle(method, params, btsp_provider).await,
+            Self::Introspection(h) => h.handle(method, params, btsp_provider).await,
+        }
+    }
+}
+
 /// Registry of all JSON-RPC method handlers
 ///
 /// The registry maintains a list of all registered handlers and routes
@@ -125,16 +184,15 @@ pub trait MethodHandler: Send + Sync {
 ///
 /// # Architecture
 ///
-/// The registry uses dynamic dispatch (`Arc<dyn MethodHandler>`) to allow
-/// different handler types to coexist in a single collection. This is a
-/// zero-cost abstraction at runtime (single vtable lookup per request).
+/// The registry stores [`MethodHandlerKind`] variants so all handlers share one
+/// concrete collection type while keeping static dispatch per handler.
 ///
 /// # Thread Safety
 ///
 /// The registry is `Send + Sync` and can be safely shared across threads.
 /// All handlers must also be `Send + Sync`.
 pub struct HandlerRegistry {
-    handlers: tokio::sync::RwLock<Vec<Arc<dyn MethodHandler>>>,
+    handlers: tokio::sync::RwLock<Vec<MethodHandlerKind>>,
 }
 
 impl HandlerRegistry {
@@ -155,7 +213,9 @@ impl HandlerRegistry {
     pub fn new(identity: Arc<beardog_types::primal_identity::PrimalIdentity>) -> Arc<Self> {
         Self::with_bond_persistence(
             identity,
-            Arc::new(ionic_bond::InMemoryBondPersistence::default()),
+            Arc::new(ionic_bond::BondPersistenceBackend::InMemory(
+                ionic_bond::InMemoryBondPersistence::default(),
+            )),
         )
     }
 
@@ -166,7 +226,7 @@ impl HandlerRegistry {
     /// to persist bonds via loamSpine's `bonding.ledger.*` RPCs.
     pub fn with_bond_persistence(
         identity: Arc<beardog_types::primal_identity::PrimalIdentity>,
-        bond_persistence: Arc<dyn ionic_bond::BondPersistence>,
+        bond_persistence: Arc<ionic_bond::BondPersistenceBackend>,
     ) -> Arc<Self> {
         // Two-phase construction: handlers that need a back-reference to the
         // registry (CapabilitiesHandler, IntrospectionHandler) are added in Phase 2.
@@ -174,34 +234,32 @@ impl HandlerRegistry {
         // Phase 1: handlers that do NOT need registry access
         let registry = Arc::new(Self {
             handlers: tokio::sync::RwLock::new(vec![
-                Arc::new(health::HealthHandler::new()),
-                Arc::new(security::SecurityHandler::new(identity.clone())),
-                Arc::new(btsp::BtspHandler::new()),
-                Arc::new(ionic_bond::IonicBondHandler::with_persistence(
+                MethodHandlerKind::Health(health::HealthHandler::new()),
+                MethodHandlerKind::Security(security::SecurityHandler::new(identity.clone())),
+                MethodHandlerKind::Btsp(btsp::BtspHandler::new()),
+                MethodHandlerKind::IonicBond(ionic_bond::IonicBondHandler::with_persistence(
                     bond_persistence,
                 )),
-                Arc::new(crypto_handler::CryptoHandler),
-                Arc::new(federation::FederationHandler::new(identity.clone())),
-                Arc::new(encryption::EncryptionHandler),
-                Arc::new(graph_security::GraphSecurityHandler),
-                Arc::new(beacon::BeaconHandler::new()),
-                Arc::new(secrets::SecretsHandler::new(identity.clone())),
-                Arc::new(relay::RelayHandler::new(identity.clone())),
+                MethodHandlerKind::Crypto(crypto_handler::CryptoHandler),
+                MethodHandlerKind::Federation(federation::FederationHandler::new(identity.clone())),
+                MethodHandlerKind::Encryption(encryption::EncryptionHandler),
+                MethodHandlerKind::GraphSecurity(graph_security::GraphSecurityHandler),
+                MethodHandlerKind::Beacon(beacon::BeaconHandler::new()),
+                MethodHandlerKind::Secrets(secrets::SecretsHandler::new(identity.clone())),
+                MethodHandlerKind::Relay(relay::RelayHandler::new(identity.clone())),
             ]),
         });
 
         // Phase 2: handlers that need registry access for method enumeration.
         // Creates intentional Arc cycles — these handlers call registry.all_methods().
-        let capabilities_handler = Arc::new(capabilities::CapabilitiesHandler::new(
-            identity,
-            registry.clone(),
-        ));
-        let introspection = Arc::new(introspection::IntrospectionHandler::new(registry.clone()));
+        let capabilities_handler =
+            capabilities::CapabilitiesHandler::new(identity, registry.clone());
+        let introspection = introspection::IntrospectionHandler::new(registry.clone());
 
         match registry.handlers.try_write() {
             Ok(mut handlers) => {
-                handlers.push(capabilities_handler);
-                handlers.push(introspection);
+                handlers.push(MethodHandlerKind::Capabilities(capabilities_handler));
+                handlers.push(MethodHandlerKind::Introspection(introspection));
             }
             Err(_) => {
                 tracing::error!(
@@ -335,7 +393,6 @@ mod tests {
     /// Test handler for testing the registry
     struct TestHandler;
 
-    #[async_trait]
     impl MethodHandler for TestHandler {
         fn methods(&self) -> Vec<&'static str> {
             vec!["test.method"]

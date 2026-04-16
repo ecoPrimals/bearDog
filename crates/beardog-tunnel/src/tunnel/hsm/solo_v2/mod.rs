@@ -87,7 +87,7 @@ pub mod types;
 pub mod hid_transport;
 
 #[cfg(feature = "ctap2")]
-pub use hid_transport::HidCtap2Transport;
+pub use hid_transport::{Ctap2TransportBackend, HidCtap2Transport};
 
 pub use ctap2_protocol::{
     GetAssertionResponse, MakeCredentialResponse, build_get_assertion, build_make_credential,
