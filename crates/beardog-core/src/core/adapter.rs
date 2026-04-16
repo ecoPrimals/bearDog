@@ -35,7 +35,9 @@ impl UniversalAdapter {
     }
 
     ///
-    /// This is used to find where a particular service capability is hosted.
+    /// This is used to find where a particular service capability is hosted. Endpoints are
+    /// supplied via [`Self::register_capability`] from configuration or capability discovery — there
+    /// is no default URL baked into production code.
     ///
     /// # Arguments
     /// * `capability` - The type of capability to discover

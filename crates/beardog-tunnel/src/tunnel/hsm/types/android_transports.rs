@@ -68,8 +68,12 @@ pub trait KeystoreTransport: Send + Sync {
 /// Enum dispatch for [`KeystoreTransport`].
 #[derive(Debug)]
 pub enum KeystoreTransportBackend {
-    /// Non-Android test stub (no JNI).
-    Stub(StubKeystoreTransport),
+    /// Non-Android hosts: deterministic in-memory port (no JNI).
+    #[cfg(not(target_os = "android"))]
+    Stub(MemoryKeystoreTransport),
+    /// Android: Keystore JNI adapter (in-memory until Keymaster JNI is wired).
+    #[cfg(target_os = "android")]
+    AndroidJni(MemoryKeystoreTransport),
 }
 
 impl KeystoreTransport for KeystoreTransportBackend {
@@ -79,7 +83,10 @@ impl KeystoreTransport for KeystoreTransportBackend {
         params: &AndroidKeyParams,
     ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
         match self {
+            #[cfg(not(target_os = "android"))]
             Self::Stub(t) => t.jni_generate_key(alias, params),
+            #[cfg(target_os = "android")]
+            Self::AndroidJni(t) => t.jni_generate_key(alias, params),
         }
     }
 
@@ -89,7 +96,10 @@ impl KeystoreTransport for KeystoreTransportBackend {
         data: &[u8],
     ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
         match self {
+            #[cfg(not(target_os = "android"))]
             Self::Stub(t) => t.jni_sign(alias, data),
+            #[cfg(target_os = "android")]
+            Self::AndroidJni(t) => t.jni_sign(alias, data),
         }
     }
 
@@ -100,7 +110,10 @@ impl KeystoreTransport for KeystoreTransportBackend {
         signature: &[u8],
     ) -> impl Future<Output = Result<bool, BearDogError>> + Send {
         match self {
+            #[cfg(not(target_os = "android"))]
             Self::Stub(t) => t.jni_verify(alias, data, signature),
+            #[cfg(target_os = "android")]
+            Self::AndroidJni(t) => t.jni_verify(alias, data, signature),
         }
     }
 
@@ -110,7 +123,10 @@ impl KeystoreTransport for KeystoreTransportBackend {
         plaintext: &[u8],
     ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
         match self {
+            #[cfg(not(target_os = "android"))]
             Self::Stub(t) => t.jni_encrypt(alias, plaintext),
+            #[cfg(target_os = "android")]
+            Self::AndroidJni(t) => t.jni_encrypt(alias, plaintext),
         }
     }
 
@@ -120,19 +136,28 @@ impl KeystoreTransport for KeystoreTransportBackend {
         ciphertext: &[u8],
     ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
         match self {
+            #[cfg(not(target_os = "android"))]
             Self::Stub(t) => t.jni_decrypt(alias, ciphertext),
+            #[cfg(target_os = "android")]
+            Self::AndroidJni(t) => t.jni_decrypt(alias, ciphertext),
         }
     }
 
     fn jni_list_aliases(&self) -> impl Future<Output = Result<Vec<String>, BearDogError>> + Send {
         match self {
+            #[cfg(not(target_os = "android"))]
             Self::Stub(t) => t.jni_list_aliases(),
+            #[cfg(target_os = "android")]
+            Self::AndroidJni(t) => t.jni_list_aliases(),
         }
     }
 
     fn jni_delete_key(&self, alias: &str) -> impl Future<Output = Result<(), BearDogError>> + Send {
         match self {
+            #[cfg(not(target_os = "android"))]
             Self::Stub(t) => t.jni_delete_key(alias),
+            #[cfg(target_os = "android")]
+            Self::AndroidJni(t) => t.jni_delete_key(alias),
         }
     }
 
@@ -143,17 +168,28 @@ impl KeystoreTransport for KeystoreTransportBackend {
         key_type: HsmKeyType,
     ) -> impl Future<Output = Result<(), BearDogError>> + Send {
         match self {
+            #[cfg(not(target_os = "android"))]
             Self::Stub(t) => t.jni_import_key(alias, key_data, key_type),
+            #[cfg(target_os = "android")]
+            Self::AndroidJni(t) => t.jni_import_key(alias, key_data, key_type),
         }
     }
 }
 
-/// Stub transport with deterministic behavior for exercising [`super::android::AndroidKeystore`]
-/// logic off-device.
+/// Shared in-memory keystore behavior for host CI/tests ([`KeystoreTransportBackend::Stub`]) and for
+/// the Android JNI-shaped backend until Keymaster calls are implemented.
 #[derive(Debug, Default)]
-pub struct StubKeystoreTransport {
+pub struct MemoryKeystoreTransport {
     keys: Mutex<std::collections::HashMap<String, Vec<u8>>>,
 }
+
+/// Host-only name for [`MemoryKeystoreTransport`] (not compiled on Android targets).
+#[cfg(not(target_os = "android"))]
+pub type StubKeystoreTransport = MemoryKeystoreTransport;
+
+/// Android Keystore JNI transport handle (same backing as host stub until JNI is wired).
+#[cfg(target_os = "android")]
+pub type AndroidJniKeystoreTransport = MemoryKeystoreTransport;
 
 fn stub_digest(data: &[u8]) -> Vec<u8> {
     Sha256::digest(data).to_vec()
@@ -168,7 +204,7 @@ fn xor_with_alias(alias: &str, data: &[u8]) -> Vec<u8> {
 }
 
 async fn stub_jni_verify(
-    this: &StubKeystoreTransport,
+    this: &MemoryKeystoreTransport,
     alias: &str,
     data: &[u8],
     signature: &[u8],
@@ -177,7 +213,7 @@ async fn stub_jni_verify(
     Ok(expected == signature)
 }
 
-impl KeystoreTransport for StubKeystoreTransport {
+impl KeystoreTransport for MemoryKeystoreTransport {
     fn jni_generate_key(
         &self,
         alias: &str,
@@ -265,8 +301,12 @@ pub trait AttestationTransport: Send + Sync {
 /// Enum dispatch for [`AttestationTransport`].
 #[derive(Debug)]
 pub enum AttestationTransportBackend {
-    /// Non-Android test stub (no JNI).
+    /// Non-Android hosts: no-op stand-in (no JNI).
+    #[cfg(not(target_os = "android"))]
     Stub(StubAttestationTransport),
+    /// Android: attestation JNI port (no-op until Key Attestation JNI is wired).
+    #[cfg(target_os = "android")]
+    AndroidJni(AndroidJniAttestationTransport),
 }
 
 impl AttestationTransport for AttestationTransportBackend {
@@ -275,16 +315,36 @@ impl AttestationTransport for AttestationTransportBackend {
         level: AttestationLevel,
     ) -> impl Future<Output = Result<(), BearDogError>> + Send {
         match self {
+            #[cfg(not(target_os = "android"))]
             Self::Stub(t) => t.jni_initialize(level),
+            #[cfg(target_os = "android")]
+            Self::AndroidJni(t) => t.jni_initialize(level),
         }
     }
 }
 
-/// Stub attestation transport for tests (no JNI).
+/// Stub attestation transport for non-Android tests (no JNI).
+#[cfg(not(target_os = "android"))]
 #[derive(Debug, Clone, Copy, Default)]
 pub struct StubAttestationTransport;
 
+#[cfg(not(target_os = "android"))]
 impl AttestationTransport for StubAttestationTransport {
+    fn jni_initialize(
+        &self,
+        _level: AttestationLevel,
+    ) -> impl Future<Output = Result<(), BearDogError>> + Send {
+        ready(Ok(()))
+    }
+}
+
+/// Android Key Attestation JNI adapter (placeholder until hardware attestation JNI is implemented).
+#[cfg(target_os = "android")]
+#[derive(Debug, Clone, Copy, Default)]
+pub struct AndroidJniAttestationTransport;
+
+#[cfg(target_os = "android")]
+impl AttestationTransport for AndroidJniAttestationTransport {
     fn jni_initialize(
         &self,
         _level: AttestationLevel,

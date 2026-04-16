@@ -414,5 +414,4 @@ impl Default for ComplianceHandler {
 }
 
 #[cfg(test)]
-#[path = "handlers_coverage_extension.rs"]
 mod handlers_coverage_extension;

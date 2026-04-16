@@ -20,33 +20,39 @@ workspace = true
 # BearDog internal crates
 beardog-config = { path = "../beardog-config" }
 
-serde_json = "1.0"
+serde = { workspace = true, features = ["rc"] }
+serde_json = { workspace = true }
 semver = "1.0"
 thiserror = { workspace = true }
-tracing = "0.1"
-tokio = { version = "1.0", features = ["rt", "rt-multi-thread", "time", "fs", "macros"], optional = true }
+tracing = { workspace = true }
+tokio = { workspace = true, optional = true }
 rand = { workspace = true }
 
 # Safe concurrent data structures
 crossbeam = "0.8"
-parking_lot = "0.12"
+parking_lot = { workspace = true }
 
 # Modern cryptography (RustCrypto ecosystem - pure Rust, audited)
-aes-gcm = "0.10"              # AES-256-GCM authenticated encryption
-chacha20poly1305 = "0.10"     # ChaCha20-Poly1305 AEAD
-ed25519-dalek = "2.1"         # Ed25519 signatures
+aes-gcm = { workspace = true }
+chacha20poly1305 = { workspace = true }
+ed25519-dalek = { workspace = true }
 getrandom = "0.2"             # OS entropy source
-hkdf = "0.12"                 # HMAC-based key derivation
-hmac = "0.12"                 # HMAC for message authentication
-sha2 = "0.10"                 # SHA-256/512 hashing
-sha3 = "0.10"                 # SHA3-256 hashing (for constraints)
-zeroize = { version = "1.7", features = ["derive"] }  # Memory zeroing for keys
+hkdf = { workspace = true }
+hmac = { workspace = true }
+sha2 = { workspace = true }
+sha3 = { workspace = true }
+zeroize = { workspace = true }
 postcard = { workspace = true }  # Binary serialization for constraint hashing
 
+chrono = { workspace = true }
+uuid = { workspace = true }
+toml = { workspace = true, optional = true }
+serde_yaml = { workspace = true, optional = true }
+
 [dev-dependencies]
-tokio = { version = "1.0", features = ["rt", "rt-multi-thread", "macros", "sync"] }
-tokio-test = "0.4"
-criterion = { version = "0.5", features = ["html_reports"] }
+tokio = { workspace = true }
+tokio-test = { workspace = true }
+criterion = { workspace = true }
 serial_test = { workspace = true }
 tempfile = { workspace = true }
 proptest = { workspace = true }
@@ -67,26 +73,6 @@ harness = false
 
 [dependencies.beardog-errors]
 path = "../beardog-errors"
-
-[dependencies.serde]
-version = "1.0"
-features = ["derive", "rc"]
-
-[dependencies.chrono]
-version = "0.4"
-features = [ "serde",]
-
-[dependencies.uuid]
-version = "1.0"
-features = [ "v4", "serde",]
-
-[dependencies.serde_yaml]
-version = "0.9"
-optional = true
-
-[dependencies.toml]
-version = "0.8"
-optional = true
 
 # REMOVED: ring crate (Feb 4, 2026 - Deep Debt Round 10)
 # ring contains C/assembly code; replaced by RustCrypto throughout beardog

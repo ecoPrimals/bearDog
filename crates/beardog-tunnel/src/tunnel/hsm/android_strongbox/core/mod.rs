@@ -60,8 +60,14 @@ impl AndroidStrongBoxHsm {
         // Initialize with minimal synchronous setup
         let device_info =
             Arc::new(crate::tunnel::hsm::android_strongbox::types::AndroidDeviceInfo::detect()?);
-        let keystore = Arc::new(AndroidKeystore::with_stub_transport(config.clone())?);
-        let attestation_service = Arc::new(AndroidAttestationService::new(Default::default()));
+        let keystore = Arc::new(AndroidKeystore::with_platform_keystore_transport(
+            config.clone(),
+        )?);
+        let attestation_service = Arc::new(
+            AndroidAttestationService::with_platform_attestation_transport(
+                AttestationLevel::StrongBox,
+            ),
+        );
         let health_monitor = Arc::new(AndroidHealthMonitor::new());
 
         Ok(Self {
@@ -88,7 +94,9 @@ impl AndroidStrongBoxHsm {
             info!("📱 Detected Pixel device - excellent StrongBox support");
         }
 
-        let keystore = Arc::new(AndroidKeystore::with_stub_transport(config.clone())?);
+        let keystore = Arc::new(AndroidKeystore::with_platform_keystore_transport(
+            config.clone(),
+        )?);
 
         if !keystore.is_strongbox_available() {
             return Err(BearDogError::system(
@@ -96,9 +104,11 @@ impl AndroidStrongBoxHsm {
             ));
         }
 
-        // Create attestation config from string placeholder
-        let attestation_config = super::types::AttestationConfig::default();
-        let attestation_service = Arc::new(AndroidAttestationService::new(attestation_config));
+        let attestation_service = Arc::new(
+            AndroidAttestationService::with_platform_attestation_transport(
+                config.attestation_level,
+            ),
+        );
         let health_monitor = Arc::new(AndroidHealthMonitor::new());
 
         let hsm = Self {

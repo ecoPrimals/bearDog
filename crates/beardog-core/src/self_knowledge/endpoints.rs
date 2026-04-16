@@ -139,8 +139,12 @@ impl std::fmt::Display for Protocol {
 ///
 /// Priority order:
 /// 1. Explicit `beardog_listen_addr`
-/// 2. `beardog_port` (with 127.0.0.1)
-/// 3. Default: 127.0.0.1:0 (let OS assign port)
+/// 2. `beardog_port` (with loopback from [`NetworkAddressesConfig`])
+/// 3. Default: loopback with port `0` (OS-assigned ephemeral port)
+///
+/// The loopback address comes from environment-driven [`NetworkAddressesConfig`] (not a fixed
+/// literal). Peer URLs and remote service endpoints for the wider ecosystem should come from
+/// capability discovery / registry data rather than being assumed here.
 ///
 /// # Errors
 ///
@@ -192,9 +196,11 @@ pub fn discover_endpoints_from_inputs(
         return Ok(endpoints);
     }
 
-    debug!("No explicit endpoint configured, using OS-assigned port");
+    debug!("No explicit endpoint configured, using OS-assigned port on loopback");
     endpoints.push(Endpoint {
         protocol: Protocol::Http,
+        // Default bind for local development: ephemeral port on configured loopback (see
+        // `NetworkAddressesConfig::from_env`). Remote peers must be resolved via capability discovery.
         address: SocketAddr::new(bind_loopback, 0),
         unix_socket_path: None,
     });

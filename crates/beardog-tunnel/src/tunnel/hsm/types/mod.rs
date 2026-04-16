@@ -23,11 +23,16 @@ pub use android::{
     AndroidKeyParams, AndroidKeyPurpose, AndroidKeystore, AndroidKeystoreConfig,
     AttestationTransport, AttestationTransportBackend, HealthMetricsTransport,
     HealthMetricsTransportBackend, KeystoreTransport, KeystoreTransportBackend,
-    StubAttestationTransport, StubHealthMetricsTransport, StubKeystoreTransport,
+    MemoryKeystoreTransport, StubHealthMetricsTransport,
 };
 
+#[cfg(not(target_os = "android"))]
+pub use android::{StubAttestationTransport, StubKeystoreTransport};
+
 #[cfg(target_os = "android")]
-pub use android::AndroidJniHealthMetricsTransport;
+pub use android::{
+    AndroidJniAttestationTransport, AndroidJniHealthMetricsTransport, AndroidJniKeystoreTransport,
+};
 pub use capability::CapabilityRequirements;
 pub use capability::HsmCapabilities;
 pub use capability::HsmCapability;

@@ -181,11 +181,15 @@ pub struct AndroidDeviceCapabilities {
 // Re-export transport traits and stubs from the dedicated module.
 #[cfg(target_os = "android")]
 pub use super::android_transports::AndroidJniHealthMetricsTransport;
+#[cfg(target_os = "android")]
+pub use super::android_transports::{AndroidJniAttestationTransport, AndroidJniKeystoreTransport};
 pub use super::android_transports::{
     AttestationTransport, AttestationTransportBackend, HealthMetricsTransport,
     HealthMetricsTransportBackend, KeystoreTransport, KeystoreTransportBackend,
-    StubAttestationTransport, StubHealthMetricsTransport, StubKeystoreTransport,
+    MemoryKeystoreTransport, StubHealthMetricsTransport,
 };
+#[cfg(not(target_os = "android"))]
+pub use super::android_transports::{StubAttestationTransport, StubKeystoreTransport};
 
 // --- Android keystore (logic + delegation) -------------------------------------------------------
 
@@ -222,18 +226,43 @@ impl AndroidKeystore {
         })
     }
 
-    /// Convenience: build with [`StubKeystoreTransport`] (tests and CI).
+    /// Build with the platform-appropriate keystore transport: in-memory stub on non-Android
+    /// hosts; JNI-shaped backend on Android (see [`MemoryKeystoreTransport`]).
     ///
     /// # Errors
     ///
     /// Returns the same errors as [`Self::new`].
+    pub fn with_platform_keystore_transport(
+        config: AndroidHsmConfig,
+    ) -> Result<Self, BearDogError> {
+        #[cfg(target_os = "android")]
+        {
+            Self::new(
+                config,
+                Arc::new(KeystoreTransportBackend::AndroidJni(
+                    MemoryKeystoreTransport::default(),
+                )),
+            )
+        }
+        #[cfg(not(target_os = "android"))]
+        {
+            Self::new(
+                config,
+                Arc::new(KeystoreTransportBackend::Stub(
+                    StubKeystoreTransport::default(),
+                )),
+            )
+        }
+    }
+
+    /// Non-Android only: explicit stub transport for unit tests and CI.
+    ///
+    /// # Errors
+    ///
+    /// Returns the same errors as [`Self::new`].
+    #[cfg(not(target_os = "android"))]
     pub fn with_stub_transport(config: AndroidHsmConfig) -> Result<Self, BearDogError> {
-        Self::new(
-            config,
-            Arc::new(KeystoreTransportBackend::Stub(
-                StubKeystoreTransport::default(),
-            )),
-        )
+        Self::with_platform_keystore_transport(config)
     }
 
     fn validate_key_id(key_id: &str) -> Result<(), BearDogError> {
@@ -484,12 +513,30 @@ impl AndroidAttestationService {
         }
     }
 
-    /// Convenience for tests: stub transport.
+    /// Attestation transport for the current platform (stub on hosts, JNI adapter on Android).
+    pub fn with_platform_attestation_transport(attestation_level: AttestationLevel) -> Self {
+        #[cfg(target_os = "android")]
+        {
+            Self::new(
+                attestation_level,
+                Arc::new(AttestationTransportBackend::AndroidJni(
+                    AndroidJniAttestationTransport::default(),
+                )),
+            )
+        }
+        #[cfg(not(target_os = "android"))]
+        {
+            Self::new(
+                attestation_level,
+                Arc::new(AttestationTransportBackend::Stub(StubAttestationTransport)),
+            )
+        }
+    }
+
+    /// Non-Android only: explicit stub for tests.
+    #[cfg(not(target_os = "android"))]
     pub fn with_stub_transport(attestation_level: AttestationLevel) -> Self {
-        Self::new(
-            attestation_level,
-            Arc::new(AttestationTransportBackend::Stub(StubAttestationTransport)),
-        )
+        Self::with_platform_attestation_transport(attestation_level)
     }
 
     /// Initialize the attestation service
