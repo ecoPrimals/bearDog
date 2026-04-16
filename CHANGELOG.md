@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dependency cleanup** — `beardog-types` explicit version pins unified to workspace deps. `gethostname` consolidated to workspace `hostname`. `syn v1` eliminated by upgrading `tokio-serde` 0.8 to 0.9.
 - **Mock isolation** — Android transport stubs platform-gated (`#[cfg(not(target_os = "android"))]`). All mocks verified behind `#[cfg(test)]` or `test-utils` feature.
 - **Hardcoding audit** — All production paths confirmed env-driven or capability-discovered. Zero hardcoded primal names in production dispatch.
-- **Deep debt status** — Zero `unsafe` (all crates `#![forbid(unsafe_code)]`). Zero TODOs/FIXMEs. Zero production mocks. 14,786 tests, 0 failures.
+- **Deep debt status** — Zero `unsafe` (all crates `#![forbid(unsafe_code)]`). Zero TODOs/FIXMEs. Zero production mocks. 14,786+ tests, 0 failures.
 
 ### April 16, 2026 -- Wave 53: Stadial Parity Gate — Native Async Traits, Enum Dispatch, `async-trait` Removal
 

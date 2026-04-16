@@ -2,6 +2,8 @@
 
 # Context — BearDog
 
+**Last Updated**: April 16, 2026
+
 ## What This Is
 
 BearDog is the **sovereign genetic cryptography primal** for the ecoPrimals ecosystem: a 100% Pure Rust cryptographic service provider that implements lineage-aware identity, entropy, and hardware-backed key operations. Other primals delegate crypto to BearDog via the Tower Atomic pattern (JSON-RPC and related IPC), so there is a single auditable crypto surface across the stack.
