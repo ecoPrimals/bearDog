@@ -21,6 +21,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **async-trait migration** — `SecureTunnelProvider` in `beardog-capabilities` migrated to native `async fn` in traits. Removed `#[async_trait]` from trait def + 2 impls + `async-trait` dep from `beardog-capabilities/Cargo.toml`. Instance count: ~50 → 49.
 - **All quality gates clean** — fmt, clippy -D warnings, doc -D warnings, test (14,785 passing; 1 pre-existing flaky: `key_export_roundtrip` HOME env race).
 
+### Wave 52 — Deep Debt & syn Elimination (April 15, 2026)
+
+- **async-trait elimination**: Removed unused `async-trait` dependency from 5 crates (`beardog-discovery`, `beardog-ipc`, `beardog-adapters`, `beardog-workflows`, `beardog-integration`) — reducing `syn` compilation surface
+- **Smart file refactoring**: Split 3 production files approaching 800 LOC by domain concern:
+  - `android_strongbox/core.rs` (796 LOC) → `core/` module directory (4 files, max 298)
+  - `production/monitoring.rs` (794 LOC) → `monitoring/` module directory (4 files, max 340)
+  - `crypto_handlers_tor.rs` (792 LOC) → `crypto_handlers_tor/` module directory (7 files, max 184)
+- **Clippy compliance**: Added `# Errors` doc sections, derived `Default` for `HealthStatus`
+- Quality gate: 14,787 tests passing, 0 failures, fmt/clippy/rustdoc clean
+
 ### April 15, 2026 -- Wave 50: Evolution Pass — Hardcoding, Large File Refactor, Overstep Cleanup
 
 - **Hardcoded ecosystem namespace evolved** — `beardog-tower-atomic/discovery.rs`: replaced 4 hardcoded `"biomeos"` strings in production 5-tier socket discovery with `resolve_biomeos_ipc_subdir_from_optional()`. Added `ipc_namespace` field to `DiscoverSocketEnv` for runtime configurability via `BIOMEOS_IPC_NAMESPACE`. `beardog-core/socket_config.rs`: replaced `.join("biomeos")` with shared constant `BIOMEOS_RUNTIME_SOCKET_SUBDIR`.

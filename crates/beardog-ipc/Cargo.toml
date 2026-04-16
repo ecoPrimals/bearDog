@@ -22,7 +22,6 @@ beardog-types = { path = "../beardog-types" }
 
 # Core async runtime
 tokio = { workspace = true, features = ["net", "io-util", "time", "sync"] }
-async-trait = { workspace = true }
 
 # Serialization
 serde = { workspace = true }

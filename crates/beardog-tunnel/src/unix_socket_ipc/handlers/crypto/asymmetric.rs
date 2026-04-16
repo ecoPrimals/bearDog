@@ -347,34 +347,94 @@ pub async fn handle_x25519_generate_ephemeral(params: Option<&Value>) -> Result<
     }))
 }
 
-/// Semantic `crypto.generate_keypair` when `hsm_backend` is supplied.
+/// Semantic `crypto.generate_keypair` with HSM backend selection.
 ///
-/// Software generation uses the same X25519 ephemeral path as
-/// [`handle_x25519_generate_ephemeral`]. Hardware backends are reserved;
-/// callers receive a JSON-shaped error string they can parse.
+/// Routes key generation through the `HsmProviderRegistry` when a hardware
+/// backend is requested. On platforms with Android StrongBox/Titan M2, the
+/// registry selects the hardware provider; otherwise falls back to software.
+///
+/// `titan_m2` is an alias for `strongbox` — on Pixel devices, `StrongBox` IS
+/// backed by Titan M2 via the same Android Keystore API.
 ///
 /// # Errors
 ///
 /// Returns an error when the requested HSM backend is unavailable or unknown.
 pub async fn handle_generate_keypair_with_hsm(params: Option<&Value>) -> Result<Value, String> {
+    use crate::tunnel::hsm::providers::registry::HsmProviderRegistry;
+    use beardog_types::hsm::{HsmAlgorithm, KeyGenParams, SelectionPreference};
+
     let hsm_backend = params
         .and_then(|p| p.get("hsm_backend"))
         .and_then(|v| v.as_str());
 
+    let algorithm_str = params
+        .and_then(|p| p.get("algorithm"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("X25519");
+
+    let algorithm = match algorithm_str {
+        "X25519" | "x25519" => HsmAlgorithm::X25519,
+        "Ed25519" | "ed25519" => HsmAlgorithm::Ed25519,
+        "AES-256-GCM" | "aes256gcm" => HsmAlgorithm::Aes256Gcm,
+        "ChaCha20-Poly1305" | "chacha20poly1305" => HsmAlgorithm::ChaCha20Poly1305,
+        "ECDSA-P256" | "ecdsa_p256" => HsmAlgorithm::EcdsaP256,
+        _ => return Err(format!("unsupported algorithm: {algorithm_str}")),
+    };
+
     match hsm_backend {
         None | Some("software") => handle_x25519_generate_ephemeral(params).await,
-        Some(b @ ("strongbox" | "titan_m2")) => Err(serde_json::to_string(&serde_json::json!({
-            "error": "hsm_backend_not_available",
-            "message": "Requested HSM backend is not yet available on this platform",
-            "hsm_backend_requested": b,
-            "available_backends": ["software"],
-        }))
-        .unwrap_or_else(|e| format!("hsm_backend_not_available: {e}"))),
+
+        Some(backend @ ("strongbox" | "titan_m2")) => {
+            let registry = HsmProviderRegistry::discover().await;
+            let preference = SelectionPreference::PreferHardware;
+
+            match registry.select(preference) {
+                Ok(provider) => {
+                    let label = params
+                        .and_then(|p| p.get("label"))
+                        .and_then(|v| v.as_str())
+                        .map(String::from);
+                    let gen_params = KeyGenParams {
+                        algorithm,
+                        label,
+                        extractable: false,
+                    };
+
+                    match provider.generate_key(&gen_params).await {
+                        Ok(handle) => Ok(serde_json::json!({
+                            "key_id": handle.key_id,
+                            "algorithm": algorithm_str,
+                            "hardware_backed": handle.hardware_backed,
+                            "hsm_backend": backend,
+                            "provider_id": provider.provider_id(),
+                            "created_at_ms": handle.created_at_ms,
+                        })),
+                        Err(e) => Err(serde_json::to_string(&serde_json::json!({
+                            "error": "hsm_key_generation_failed",
+                            "message": e.to_string(),
+                            "hsm_backend_requested": backend,
+                            "provider_id": provider.provider_id(),
+                        }))
+                        .unwrap_or_else(|e| format!("hsm_key_generation_failed: {e}"))),
+                    }
+                }
+                Err(e) => Err(serde_json::to_string(&serde_json::json!({
+                    "error": "hsm_backend_not_available",
+                    "message": e.to_string(),
+                    "hsm_backend_requested": backend,
+                    "available_backends": registry.iter()
+                        .map(|p| p.provider_id())
+                        .collect::<Vec<_>>(),
+                }))
+                .unwrap_or_else(|e| format!("hsm_backend_not_available: {e}"))),
+            }
+        }
+
         Some(other) => Err(serde_json::to_string(&serde_json::json!({
             "error": "hsm_backend_unknown",
-            "message": "Unknown hsm_backend value",
+            "message": format!("Unknown hsm_backend: {other}"),
             "hsm_backend_requested": other,
-            "available_backends": ["software"],
+            "available_backends": ["software", "strongbox", "titan_m2"],
         }))
         .unwrap_or_else(|e| format!("hsm_backend_unknown: {e}"))),
     }

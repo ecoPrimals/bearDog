@@ -19,7 +19,6 @@ default = []
 workspace = true
 
 [dependencies]
-async-trait = "0.1"
 serde_json = "1.0"
 tracing = "0.1"
 semver = "1.0"

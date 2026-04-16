@@ -18,7 +18,6 @@ workspace = true
 [dependencies]
 # Async runtime - modern concurrent patterns
 tokio = { workspace = true, features = ["full"] }
-async-trait = { workspace = true }
 futures = { workspace = true }
 
 # Tower Atomic client (Pure Rust IPC via Unix sockets!)

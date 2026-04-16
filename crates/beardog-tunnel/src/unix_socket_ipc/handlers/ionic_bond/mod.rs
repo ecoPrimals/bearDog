@@ -22,7 +22,9 @@ mod crypto;
 mod lifecycle;
 pub mod persistence;
 
-pub use persistence::{BondPersistence, InMemoryBondPersistence};
+pub use persistence::{
+    BondPersistence, CapabilityDiscoveryBondPersistence, InMemoryBondPersistence,
+};
 
 /// In-memory ionic bond state manager.
 ///

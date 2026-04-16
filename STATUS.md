@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,785+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,787+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
@@ -89,6 +89,11 @@
 ---
 
 ## Recent Improvements
+
+### Wave 52 — Deep Debt & syn Elimination (April 15, 2026)
+- Removed unused `async-trait` from 5 crates (reducing `syn` compilation surface)
+- Smart-refactored 3 production files from ~800 LOC to domain-organized module directories
+- Full clippy compliance on refactored code
 
 ### Wave 51: primalSpring Audit Resolution — UDS Peek, Chain Proofs, Bond Persistence, ring Elimination (April 15, 2026)
 

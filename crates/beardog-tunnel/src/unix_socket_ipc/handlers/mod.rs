@@ -153,6 +153,21 @@ impl HandlerRegistry {
     /// would be if lock acquisition fails during construction, which should never
     /// happen since we hold the only reference at that point.
     pub fn new(identity: Arc<beardog_types::primal_identity::PrimalIdentity>) -> Arc<Self> {
+        Self::with_bond_persistence(
+            identity,
+            Arc::new(ionic_bond::InMemoryBondPersistence::default()),
+        )
+    }
+
+    /// Create a registry with a custom bond persistence backend.
+    ///
+    /// Production NUCLEUS deployments should pass a
+    /// [`CapabilityDiscoveryBondPersistence`](ionic_bond::CapabilityDiscoveryBondPersistence)
+    /// to persist bonds via loamSpine's `bonding.ledger.*` RPCs.
+    pub fn with_bond_persistence(
+        identity: Arc<beardog_types::primal_identity::PrimalIdentity>,
+        bond_persistence: Arc<dyn ionic_bond::BondPersistence>,
+    ) -> Arc<Self> {
         // Two-phase construction: handlers that need a back-reference to the
         // registry (CapabilitiesHandler, IntrospectionHandler) are added in Phase 2.
 
@@ -162,7 +177,9 @@ impl HandlerRegistry {
                 Arc::new(health::HealthHandler::new()),
                 Arc::new(security::SecurityHandler::new(identity.clone())),
                 Arc::new(btsp::BtspHandler::new()),
-                Arc::new(ionic_bond::IonicBondHandler::new()),
+                Arc::new(ionic_bond::IonicBondHandler::with_persistence(
+                    bond_persistence,
+                )),
                 Arc::new(crypto_handler::CryptoHandler),
                 Arc::new(federation::FederationHandler::new(identity.clone())),
                 Arc::new(encryption::EncryptionHandler),
