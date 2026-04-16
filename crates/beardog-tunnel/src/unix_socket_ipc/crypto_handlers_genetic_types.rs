@@ -118,6 +118,12 @@ pub struct VerifyLineageRequest {
     pub lineage_proof: String,
     /// Lineage seed (base64-encoded)
     pub lineage_seed: String,
+    /// Chain ID for full chain-based verification via `LineageProofManager`.
+    /// When present (along with structured proof JSON), the handler uses the
+    /// generation-aware Merkle verification path instead of the simple Blake3
+    /// hash check.
+    #[serde(default)]
+    pub chain_id: Option<String>,
 }
 
 /// Response containing lineage verification result
@@ -128,6 +134,12 @@ pub struct VerifyLineageResponse {
     /// Optional failure reason
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<String>,
+    /// Verified depth in the lineage chain (only set for chain-based proofs).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub depth: Option<u32>,
+    /// Generation counter from the chain (only set for chain-based proofs).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub generation: Option<u64>,
 }
 
 // ============================================================================
@@ -143,15 +155,37 @@ pub struct GenerateLineageProofRequest {
     pub peer_family_id: String,
     /// Lineage seed (base64-encoded)
     pub lineage_seed: String,
+    /// Chain ID for full chain-based proof via `LineageProofManager`.
+    /// When present with `node_id`, the handler generates a structured
+    /// Merkle-path proof with generation tracking and head commitment.
+    #[serde(default)]
+    pub chain_id: Option<String>,
+    /// Node ID within the chain (required when `chain_id` is set).
+    #[serde(default)]
+    pub node_id: Option<String>,
 }
 
 /// Response containing generated lineage proof
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GenerateLineageProofResponse {
-    /// Lineage proof (base64-encoded)
+    /// Lineage proof (base64-encoded Blake3 hash for simple proofs,
+    /// or JSON-serialized `LineageProof` for chain-based proofs).
     pub proof: String,
     /// Proof generation timestamp
     pub timestamp: u64,
+    /// Generation counter (only set for chain-based proofs).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub generation: Option<u64>,
+    /// Head commitment hex (only set for chain-based proofs).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub head_commitment: Option<String>,
+    /// Proof mode: `"simple"` (Blake3 hash) or `"chain"` (full Merkle proof).
+    #[serde(default = "default_proof_mode")]
+    pub mode: String,
+}
+
+fn default_proof_mode() -> String {
+    "simple".to_string()
 }
 
 // ============================================================================

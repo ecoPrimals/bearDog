@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: April 14, 2026
+**Last Updated**: April 15, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,784+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,785+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
@@ -69,7 +69,7 @@
 | Standard | Status |
 |----------|--------|
 | Edition 2024 | MSRV 1.93.0, all crates, `rust-toolchain.toml` pinned |
-| Pure Rust (ecoBin) | Zero C deps; blake3 pure feature; sysinfo removed |
+| Pure Rust (ecoBin) | Zero C deps; blake3 pure feature; sysinfo removed; `ring` eliminated (hickory-resolver 0.24) |
 | UniBin/ecoBin | Single binary, standalone identity fallback per UniBin v1.1, cross-compilation ready |
 | Dependency Injection | Pure `Default`, `from_env()` at startup, `from_env_provider()` for tests |
 | Zero Hardcoding | 20+ named constants extracted; capability-based discovery everywhere |
@@ -89,6 +89,25 @@
 ---
 
 ## Recent Improvements
+
+### Wave 51: primalSpring Audit Resolution — UDS Peek, Chain Proofs, Bond Persistence, ring Elimination (April 15, 2026)
+
+- **UDS first-byte peek** — Protocol auto-detection for Unix sockets matching TCP behavior. `PrefixedStream` wrapper in `platform/mod.rs`; production UDS connections peek first byte (`0x7B` → JSON-RPC bypass, else BTSP handshake). BearDog is no longer the last BTSP-enforcing primal without UDS peek.
+- **Genetic RPC → full chain proofs** — `genetic.generate_lineage_proof` and `verify_lineage` now wire through `BirdSongManager`'s `LineageProofManager` for generation-aware chain proofs with `head_commitment`. Backward-compatible: simple Blake3 mode when no `chain_id` provided.
+- **Bond persistence trait** — `BondPersistence` trait + `InMemoryBondPersistence` default. `IonicBondHandler` seal/revoke/list now persist via trait; `with_persistence()` constructor for runtime capability discovery of `bonding.ledger.*` providers.
+- **HSM/Titan M2 dispatch path** — `crypto.generate_keypair` accepts `hsm_backend` parameter; routes to named backend with programmatic availability signaling for `strongbox`/`titan_m2`.
+- **`ring` eliminated** — `beardog-discovery` aligned from `hickory-resolver 0.25` (ring+cc) to 0.24 (ring-free). `cargo tree -i ring` returns zero matches.
+- **`Box<dyn Error>` evolved** — `SafeOps::safe_execute` generic error bound; doctests in `beardog-security`, `beardog-client` use typed errors.
+- **Hardcoded addresses centralized** — 9 production files evolved from literal `127.0.0.1`/`0.0.0.0`/`localhost` to `WILDCARD_IPV4`/`DEFAULT_EXTERNAL_HOST`/`LOCALHOST_NAME` constants.
+- **async-trait: ~50 → 49** — `SecureTunnelProvider` migrated to native `async fn` in traits.
+- **14,785+ tests passing**, all quality gates clean.
+
+### Wave 50: Evolution Pass — Hardcoding, Large File Refactor, Overstep Cleanup (April 15, 2026)
+
+- 3 large production files refactored (android.rs 802→588, ios.rs 864→286, mobile_discoverer.rs 806→471)
+- 3 orphaned files wired into module tree
+- Ecosystem namespace hardcoding evolved to configurable discovery
+- All quality gates clean (14,784 tests)
 
 ### Wave 49: Deep Debt Sweep — Workspace Deps, Large File Refactor, Dead Exports (April 14, 2026)
 

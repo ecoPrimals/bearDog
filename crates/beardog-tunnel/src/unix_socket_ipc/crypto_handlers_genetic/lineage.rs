@@ -22,10 +22,12 @@ use crate::tunnel::hsm::software_hsm::crypto_providers::genetic_crypto::GeneticC
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
+use beardog_genetics::birdsong::manager::BirdSongManager;
 use hkdf::Hkdf;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use sha2::Sha256;
+use std::sync::Arc;
 use tracing::{debug, info, warn};
 
 /// # Errors
@@ -202,12 +204,48 @@ pub async fn handle_mix_entropy(params: &Value) -> Result<Value, BearDogError> {
 ///
 /// # Performance
 /// - Expected: < 300μs (Blake3 proof verification)
-pub async fn handle_verify_lineage(params: &Value) -> Result<Value, BearDogError> {
+pub async fn handle_verify_lineage(
+    params: &Value,
+    birdsong: &Arc<BirdSongManager>,
+) -> Result<Value, BearDogError> {
     debug!("🔍 RPC: genetic.verify_lineage");
 
     let request: VerifyLineageRequest = VerifyLineageRequest::deserialize(params)
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid verify_lineage params: {e}")))?;
 
+    // Chain-based verification when chain_id is provided and proof is structured JSON.
+    if let Some(ref chain_id) = request.chain_id {
+        let proof_json = BASE64
+            .decode(&request.lineage_proof)
+            .map_err(|e| BearDogError::invalid_input(&format!("Invalid lineage_proof: {e}")))?;
+
+        if let Ok(proof) =
+            serde_json::from_slice::<beardog_genetics::birdsong::types::LineageProof>(&proof_json)
+        {
+            let result = birdsong.verify_lineage_proof(&proof, chain_id)?;
+            let response = VerifyLineageResponse {
+                valid: result.valid,
+                reason: result
+                    .failure_reason
+                    .as_ref()
+                    .map(std::string::ToString::to_string),
+                depth: Some(result.depth),
+                generation: birdsong.get_lineage_chain(chain_id).map(|c| c.generation),
+            };
+            info!(
+                chain_id = %chain_id,
+                valid = result.valid,
+                depth = result.depth,
+                "Chain-based lineage verification complete"
+            );
+            return Ok(json!(response));
+        }
+        debug!(
+            "chain_id provided but proof is not structured JSON — falling back to simple verification"
+        );
+    }
+
+    // Simple Blake3 verification (backward compatible).
     let lineage_proof = BASE64
         .decode(&request.lineage_proof)
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid lineage_proof: {e}")))?;
@@ -233,6 +271,8 @@ pub async fn handle_verify_lineage(params: &Value) -> Result<Value, BearDogError
         VerifyLineageResponse {
             valid: true,
             reason: None,
+            depth: None,
+            generation: None,
         }
     } else {
         warn!(
@@ -242,6 +282,8 @@ pub async fn handle_verify_lineage(params: &Value) -> Result<Value, BearDogError
         VerifyLineageResponse {
             valid: false,
             reason: Some("Lineage proof verification failed".to_string()),
+            depth: None,
+            generation: None,
         }
     };
 
@@ -257,7 +299,10 @@ pub async fn handle_verify_lineage(params: &Value) -> Result<Value, BearDogError
 ///
 /// # Performance
 /// - Expected: < 400μs (Blake3 + HMAC)
-pub async fn handle_generate_lineage_proof(params: &Value) -> Result<Value, BearDogError> {
+pub async fn handle_generate_lineage_proof(
+    params: &Value,
+    birdsong: &Arc<BirdSongManager>,
+) -> Result<Value, BearDogError> {
     debug!("🔐 RPC: genetic.generate_lineage_proof");
 
     let request: GenerateLineageProofRequest = GenerateLineageProofRequest::deserialize(params)
@@ -265,6 +310,36 @@ pub async fn handle_generate_lineage_proof(params: &Value) -> Result<Value, Bear
             BearDogError::invalid_input(&format!("Invalid generate_lineage_proof params: {e}"))
         })?;
 
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|e| BearDogError::system(format!("Failed to get timestamp: {e}")))?
+        .as_secs();
+
+    // Chain-based proof when chain_id + node_id are provided.
+    if let (Some(chain_id), Some(node_id)) = (&request.chain_id, &request.node_id) {
+        let proof = birdsong.generate_lineage_proof(chain_id, node_id)?;
+
+        let proof_json = serde_json::to_vec(&proof)
+            .map_err(|e| BearDogError::system(format!("Failed to serialize chain proof: {e}")))?;
+        let proof_b64 = BASE64.encode(&proof_json);
+
+        info!(
+            chain_id = %chain_id,
+            node_id = %node_id,
+            generation = proof.generation,
+            "Generated chain-based lineage proof"
+        );
+
+        return Ok(json!(GenerateLineageProofResponse {
+            proof: proof_b64,
+            timestamp,
+            generation: Some(proof.generation),
+            head_commitment: Some(hex::encode(&proof.head_commitment)),
+            mode: "chain".to_string(),
+        }));
+    }
+
+    // Simple Blake3 proof (backward compatible).
     let lineage_seed = BASE64
         .decode(&request.lineage_seed)
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid lineage_seed: {e}")))?;
@@ -276,11 +351,6 @@ pub async fn handle_generate_lineage_proof(params: &Value) -> Result<Value, Bear
     hasher.update(b"GENETIC_LINEAGE_PROOF_V1");
     let proof = hasher.finalize();
 
-    let timestamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_err(|e| BearDogError::system(format!("Failed to get timestamp: {e}")))?
-        .as_secs();
-
     let proof_b64 = BASE64.encode(proof.as_bytes());
 
     info!(
@@ -291,12 +361,23 @@ pub async fn handle_generate_lineage_proof(params: &Value) -> Result<Value, Bear
     Ok(json!(GenerateLineageProofResponse {
         proof: proof_b64,
         timestamp,
+        generation: None,
+        head_commitment: None,
+        mode: "simple".to_string(),
     }))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    async fn test_birdsong() -> Arc<BirdSongManager> {
+        Arc::new(
+            BirdSongManager::new(vec![0xAB; 32], None)
+                .await
+                .expect("BirdSongManager::new in test"),
+        )
+    }
 
     #[tokio::test]
     async fn test_derive_lineage_key_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
@@ -365,6 +446,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_and_verify_lineage() -> Result<(), Box<dyn std::error::Error>> {
+        let bs = test_birdsong().await;
         let lineage_seed = BASE64.encode(b"test_lineage_seed_for_roundtrip");
 
         let gen_params = json!({
@@ -373,8 +455,9 @@ mod tests {
             "lineage_seed": lineage_seed.clone(),
         });
 
-        let gen_result = handle_generate_lineage_proof(&gen_params).await?;
+        let gen_result = handle_generate_lineage_proof(&gen_params, &bs).await?;
         let gen_response: GenerateLineageProofResponse = serde_json::from_value(gen_result)?;
+        assert_eq!(gen_response.mode, "simple");
 
         let verify_params = json!({
             "our_family_id": "beardog-family",
@@ -383,7 +466,7 @@ mod tests {
             "lineage_seed": lineage_seed,
         });
 
-        let verify_result = handle_verify_lineage(&verify_params).await?;
+        let verify_result = handle_verify_lineage(&verify_params, &bs).await?;
         let verify_response: VerifyLineageResponse = serde_json::from_value(verify_result)?;
 
         assert!(verify_response.valid, "Lineage should verify");
@@ -394,6 +477,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_verify_lineage_invalid_proof() -> Result<(), Box<dyn std::error::Error>> {
+        let bs = test_birdsong().await;
         let lineage_seed = BASE64.encode(b"test_lineage_seed_for_invalid_");
         let invalid_proof = BASE64.encode(b"this_is_not_a_valid_proof_data");
 
@@ -404,11 +488,52 @@ mod tests {
             "lineage_seed": lineage_seed,
         });
 
-        let result = handle_verify_lineage(&params).await?;
+        let result = handle_verify_lineage(&params, &bs).await?;
         let response: VerifyLineageResponse = serde_json::from_value(result)?;
 
         assert!(!response.valid, "Invalid proof should not verify");
         assert!(response.reason.is_some());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_chain_based_proof_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
+        let bs = test_birdsong().await;
+
+        let chain = bs
+            .generate_root_lineage("root-node".to_string(), None)
+            .await?;
+        bs.add_child(&chain.chain_id, "root-node", "child-1".to_string(), None)
+            .await?;
+
+        let gen_params = json!({
+            "our_family_id": "fam-a",
+            "peer_family_id": "fam-b",
+            "lineage_seed": BASE64.encode(b"unused-for-chain-proofs-ok!!!"),
+            "chain_id": chain.chain_id,
+            "node_id": "child-1",
+        });
+
+        let gen_result = handle_generate_lineage_proof(&gen_params, &bs).await?;
+        let gen_response: GenerateLineageProofResponse = serde_json::from_value(gen_result)?;
+        assert_eq!(gen_response.mode, "chain");
+        assert!(gen_response.generation.is_some());
+        assert!(gen_response.head_commitment.is_some());
+
+        let verify_params = json!({
+            "our_family_id": "fam-a",
+            "peer_family_id": "fam-b",
+            "lineage_proof": gen_response.proof,
+            "lineage_seed": BASE64.encode(b"unused-for-chain-proofs-ok!!!"),
+            "chain_id": chain.chain_id,
+        });
+
+        let verify_result = handle_verify_lineage(&verify_params, &bs).await?;
+        let verify_response: VerifyLineageResponse = serde_json::from_value(verify_result)?;
+
+        assert!(verify_response.valid, "Chain proof should verify");
+        assert_eq!(verify_response.depth, Some(1));
 
         Ok(())
     }

@@ -247,9 +247,10 @@ impl SafeOps {
     ///
     /// # Errors
     /// Returns error with provided message if function panics or returns error
-    pub fn safe_execute<F, T>(f: F, error_msg: &str) -> Result<T, BearDogError>
+    pub fn safe_execute<F, T, E>(f: F, error_msg: &str) -> Result<T, BearDogError>
     where
-        F: FnOnce() -> Result<T, Box<dyn std::error::Error>>,
+        F: FnOnce() -> Result<T, E>,
+        E: std::fmt::Display,
     {
         f().map_err(|e| BearDogError::system(format!("{error_msg}: {e}")))
     }

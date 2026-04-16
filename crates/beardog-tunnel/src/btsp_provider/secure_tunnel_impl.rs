@@ -6,8 +6,6 @@
 //! Contains the real implementation of all tunnel operations using genetic
 //! cryptography and TOFU trust management.
 
-use async_trait::async_trait;
-
 use super::BeardogBtspProvider;
 use super::tunnel::Tunnel;
 use super::types::TrustLevel;
@@ -18,7 +16,6 @@ use beardog_capabilities::traits::{
 use beardog_errors::BearDogError;
 use tracing::{debug, info, warn};
 
-#[async_trait]
 impl SecureTunnelProvider for BeardogBtspProvider {
     async fn establish_tunnel(
         &self,

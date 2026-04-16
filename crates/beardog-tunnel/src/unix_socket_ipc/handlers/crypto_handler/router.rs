@@ -15,7 +15,7 @@ use super::{
 pub async fn dispatch(
     method: &str,
     params: Option<&serde_json::Value>,
-    _btsp_provider: &Arc<BeardogBtspProvider>,
+    btsp_provider: &Arc<BeardogBtspProvider>,
 ) -> Result<serde_json::Value, String> {
     if let Some(v) = signatures::route(method, params).await? {
         return Ok(v);
@@ -35,7 +35,7 @@ pub async fn dispatch(
     if let Some(v) = tls12_dot::route(method, params).await? {
         return Ok(v);
     }
-    if let Some(v) = genetic::route(method, params).await? {
+    if let Some(v) = genetic::route(method, params, btsp_provider).await? {
         return Ok(v);
     }
     if let Some(v) = aliases_and_beardog::route(method, params).await? {

@@ -2,6 +2,8 @@
 
 //! Consul, etcd, and DNS/HTTP fallback discovery providers.
 
+use crate::constants::domains::network::addresses::LOCALHOST_IPV4;
+use crate::constants::domains::network::config::LOCALHOST_NAME;
 use crate::constants::localhost::LOCALHOST_V4;
 use async_trait::async_trait;
 use beardog_config::domains::network_ports::DEFAULT_API_PORT_STR;
@@ -116,7 +118,7 @@ impl DnsHttpDiscovery {
     async fn resolve_service_name(&self, name: &str) -> Result<Vec<String>, DiscoveryError> {
         // Real implementation would use DNS A/AAAA lookups
         // For now, check if it's already an IP or localhost
-        if name == "localhost" || name == "127.0.0.1" {
+        if name == LOCALHOST_NAME || name == LOCALHOST_IPV4 {
             // Use canonical network configuration instead of hardcoding
             let default_port = std::env::var("BEARDOG_DEFAULT_SERVICE_PORT")
                 .or_else(|_| std::env::var("BEARDOG_API_PORT"))
@@ -264,6 +266,7 @@ impl ServiceDiscoveryCapability for DnsHttpDiscovery {
 mod tests {
     use super::*;
     use crate::canonical::capabilities::ServiceCapabilityType;
+    use crate::constants::domains::network::config::LOCALHOST_NAME;
 
     #[tokio::test]
     async fn consul_try_create_returns_backend_unavailable() {
@@ -319,7 +322,7 @@ mod tests {
     async fn dns_http_discover_localhost_yields_endpoint() {
         let d = DnsHttpDiscovery::with_domains(vec![]);
         let out = d
-            .discover_by_name("localhost")
+            .discover_by_name(LOCALHOST_NAME)
             .await
             .expect("localhost resolution should succeed");
         assert!(!out.is_empty(), "expected at least one localhost endpoint");

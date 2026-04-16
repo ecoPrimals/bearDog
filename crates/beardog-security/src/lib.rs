@@ -135,7 +135,7 @@ use sha2::{Digest, Sha256, Sha512};
 /// ```rust
 /// use beardog_security::compute_sha256_hash;
 ///
-/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// # fn main() -> Result<(), beardog_errors::BearDogError> {
 /// let data = b"Hello, World!";
 /// let hash = compute_sha256_hash(data)?;
 /// assert_eq!(hash.len(), 32); // SHA-256 produces 32 bytes
@@ -170,7 +170,7 @@ pub fn compute_sha256_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
 /// ```rust
 /// use beardog_security::compute_sha512_hash;
 ///
-/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// # fn main() -> Result<(), beardog_errors::BearDogError> {
 /// let data = b"Hello, World!";
 /// let hash = compute_sha512_hash(data)?;
 /// assert_eq!(hash.len(), 64); // SHA-512 produces 64 bytes
@@ -214,7 +214,7 @@ pub fn compute_sha512_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
 /// ```rust
 /// use beardog_security::generate_secure_random_bytes;
 ///
-/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// # fn main() -> Result<(), beardog_errors::BearDogError> {
 /// // Generate 32-byte (256-bit) key for AES-256
 /// let key = generate_secure_random_bytes(32)?;
 /// assert_eq!(key.len(), 32);
@@ -231,7 +231,7 @@ pub fn compute_sha512_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
 /// ```rust
 /// use beardog_security::generate_secure_random_bytes;
 ///
-/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// # fn main() -> Result<(), beardog_errors::BearDogError> {
 /// // Generate 12-byte (96-bit) nonce/IV for AES-GCM
 /// let nonce = generate_secure_random_bytes(12)?;
 /// assert_eq!(nonce.len(), 12);
@@ -244,7 +244,7 @@ pub fn compute_sha512_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
 /// ```rust
 /// use beardog_security::generate_secure_random_bytes;
 ///
-/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// # fn main() -> Result<(), beardog_errors::BearDogError> {
 /// // Generate 32-byte token and encode as hex
 /// let token_bytes = generate_secure_random_bytes(32)?;
 /// let token = hex::encode(token_bytes);
@@ -305,7 +305,7 @@ pub fn generate_secure_random_bytes(size: usize) -> Result<Vec<u8>, BearDogError
 /// ```rust
 /// use beardog_security::{derive_key_from_password, generate_secure_random_bytes};
 ///
-/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// # fn main() -> Result<(), beardog_errors::BearDogError> {
 /// // User's password
 /// let password = b"correct horse battery staple";
 ///
@@ -326,7 +326,7 @@ pub fn generate_secure_random_bytes(size: usize) -> Result<Vec<u8>, BearDogError
 /// ```rust
 /// use beardog_security::{derive_key_from_password, constant_time_compare};
 ///
-/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// # fn main() -> Result<(), beardog_errors::BearDogError> {
 /// // During registration, derive and store key
 /// let password = b"user_password";
 /// let salt = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
@@ -457,7 +457,7 @@ pub fn derive_key_from_password(
 /// ```rust
 /// use beardog_security::{compute_sha256_hash, constant_time_compare};
 ///
-/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// # fn main() -> Result<(), beardog_errors::BearDogError> {
 /// // Compute expected HMAC
 /// let secret = b"hmac_secret_key";
 /// let message = b"important message";
@@ -479,7 +479,7 @@ pub fn derive_key_from_password(
 /// ```rust
 /// use beardog_security::{derive_key_from_password, constant_time_compare};
 ///
-/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// # fn main() -> Result<(), beardog_errors::BearDogError> {
 /// let salt = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 ///
 /// // Stored password hash

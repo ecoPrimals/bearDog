@@ -347,6 +347,39 @@ pub async fn handle_x25519_generate_ephemeral(params: Option<&Value>) -> Result<
     }))
 }
 
+/// Semantic `crypto.generate_keypair` when `hsm_backend` is supplied.
+///
+/// Software generation uses the same X25519 ephemeral path as
+/// [`handle_x25519_generate_ephemeral`]. Hardware backends are reserved;
+/// callers receive a JSON-shaped error string they can parse.
+///
+/// # Errors
+///
+/// Returns an error when the requested HSM backend is unavailable or unknown.
+pub async fn handle_generate_keypair_with_hsm(params: Option<&Value>) -> Result<Value, String> {
+    let hsm_backend = params
+        .and_then(|p| p.get("hsm_backend"))
+        .and_then(|v| v.as_str());
+
+    match hsm_backend {
+        None | Some("software") => handle_x25519_generate_ephemeral(params).await,
+        Some(b @ ("strongbox" | "titan_m2")) => Err(serde_json::to_string(&serde_json::json!({
+            "error": "hsm_backend_not_available",
+            "message": "Requested HSM backend is not yet available on this platform",
+            "hsm_backend_requested": b,
+            "available_backends": ["software"],
+        }))
+        .unwrap_or_else(|e| format!("hsm_backend_not_available: {e}"))),
+        Some(other) => Err(serde_json::to_string(&serde_json::json!({
+            "error": "hsm_backend_unknown",
+            "message": "Unknown hsm_backend value",
+            "hsm_backend_requested": other,
+            "available_backends": ["software"],
+        }))
+        .unwrap_or_else(|e| format!("hsm_backend_unknown: {e}"))),
+    }
+}
+
 /// # Errors
 ///
 /// Returns an error if key derivation fails.

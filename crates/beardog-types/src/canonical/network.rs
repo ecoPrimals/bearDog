@@ -4,6 +4,7 @@
 // Provides network-related configuration structures and utilities
 
 use crate::canonical::traits::TimeoutPolicy;
+use crate::constants::domains::network::addresses::WILDCARD_IPV4;
 use beardog_config::domains::network_ports::DEFAULT_API_PORT;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -222,7 +223,7 @@ impl NetworkConfig {
         Self {
             bind_address: std::env::var("BEARDOG_NETWORK_BIND_ADDRESS")
                 .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
-                .unwrap_or_else(|_| "0.0.0.0".to_string()),
+                .unwrap_or_else(|_| WILDCARD_IPV4.to_string()),
             port: std::env::var("BEARDOG_NETWORK_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())

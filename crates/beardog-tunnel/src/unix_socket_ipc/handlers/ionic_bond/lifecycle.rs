@@ -11,6 +11,7 @@ use beardog_types::ionic_bond::{
 };
 use chrono::Utc;
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{info, warn};
 
@@ -151,64 +152,70 @@ impl IonicBondHandler {
         let seal_params = IonicBondSealParams::deserialize(params_value)
             .map_err(|e| format!("Invalid seal params: {e}"))?;
 
-        let mut bonds = self.bonds.write().await;
+        let sealed_bond = {
+            let mut bonds = self.bonds.write().await;
 
-        let bond = bonds
-            .get_mut(&seal_params.bond_id)
-            .ok_or_else(|| format!("Bond not found: {}", seal_params.bond_id))?;
+            let bond = bonds
+                .get_mut(&seal_params.bond_id)
+                .ok_or_else(|| format!("Bond not found: {}", seal_params.bond_id))?;
 
-        if bond.proposer != seal_params.sealer && bond.acceptor != seal_params.sealer {
-            return Err(format!(
-                "Sealer '{}' is neither proposer nor acceptor",
-                seal_params.sealer
-            ));
-        }
+            if bond.proposer != seal_params.sealer && bond.acceptor != seal_params.sealer {
+                return Err(format!(
+                    "Sealer '{}' is neither proposer nor acceptor",
+                    seal_params.sealer
+                ));
+            }
 
-        if bond.state != BondState::Active {
-            let resp = IonicBondSealResponse {
-                sealed: false,
-                bond: None,
-                error: Some(format!(
-                    "Bond cannot be sealed from state {:?} (must be Active)",
-                    bond.state
-                )),
-            };
-            return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"));
-        }
+            if bond.state != BondState::Active {
+                let resp = IonicBondSealResponse {
+                    sealed: false,
+                    bond: None,
+                    error: Some(format!(
+                        "Bond cannot be sealed from state {:?} (must be Active)",
+                        bond.state
+                    )),
+                };
+                return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"));
+            }
 
-        if let Some(ref exp) = bond.expires_at
-            && let Ok(expiry) = chrono::DateTime::parse_from_rfc3339(exp)
-            && Utc::now() > expiry
-        {
-            bond.state = BondState::Expired;
-            let resp = IonicBondSealResponse {
-                sealed: false,
-                bond: None,
-                error: Some("Bond has expired".to_string()),
-            };
-            return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"));
-        }
+            if let Some(ref exp) = bond.expires_at
+                && let Ok(expiry) = chrono::DateTime::parse_from_rfc3339(exp)
+                && Utc::now() > expiry
+            {
+                bond.state = BondState::Expired;
+                let resp = IonicBondSealResponse {
+                    sealed: false,
+                    bond: None,
+                    error: Some("Bond has expired".to_string()),
+                };
+                return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"));
+            }
 
-        if !Self::verify_bond_signatures(bond) {
-            let resp = IonicBondSealResponse {
-                sealed: false,
-                bond: None,
-                error: Some("Ed25519 signature verification failed during seal".to_string()),
-            };
-            return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"));
-        }
+            if !Self::verify_bond_signatures(bond) {
+                let resp = IonicBondSealResponse {
+                    sealed: false,
+                    bond: None,
+                    error: Some("Ed25519 signature verification failed during seal".to_string()),
+                };
+                return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"));
+            }
 
-        bond.state = BondState::Sealed;
+            bond.state = BondState::Sealed;
 
-        info!(
-            bond_id = %seal_params.bond_id,
-            sealer = %seal_params.sealer,
-            "Ionic bond sealed — both signatures cryptographically verified"
-        );
+            info!(
+                bond_id = %seal_params.bond_id,
+                sealer = %seal_params.sealer,
+                "Ionic bond sealed — both signatures cryptographically verified"
+            );
+
+            bond.clone()
+        };
+
+        self.persistence.store(&sealed_bond).await?;
 
         let resp = IonicBondSealResponse {
             sealed: true,
-            bond: Some(bond.clone()),
+            bond: Some(sealed_bond),
             error: None,
         };
         serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
@@ -294,23 +301,33 @@ impl IonicBondHandler {
         let revoke_params = IonicBondRevokeParams::deserialize(params_value)
             .map_err(|e| format!("Invalid revoke params: {e}"))?;
 
-        let mut bonds = self.bonds.write().await;
+        let revoked = {
+            let mut bonds = self.bonds.write().await;
 
-        if let Some(bond) = bonds.get_mut(&revoke_params.bond_id) {
-            if bond.proposer != revoke_params.revoker && bond.acceptor != revoke_params.revoker {
-                return Err(format!(
-                    "Revoker '{}' is neither proposer nor acceptor",
-                    revoke_params.revoker
-                ));
+            if let Some(bond) = bonds.get_mut(&revoke_params.bond_id) {
+                if bond.proposer != revoke_params.revoker && bond.acceptor != revoke_params.revoker
+                {
+                    return Err(format!(
+                        "Revoker '{}' is neither proposer nor acceptor",
+                        revoke_params.revoker
+                    ));
+                }
+
+                bond.state = BondState::Revoked;
+                warn!(
+                    bond_id = %revoke_params.bond_id,
+                    revoker = %revoke_params.revoker,
+                    "Ionic bond revoked"
+                );
+
+                true
+            } else {
+                false
             }
+        };
 
-            bond.state = BondState::Revoked;
-            warn!(
-                bond_id = %revoke_params.bond_id,
-                revoker = %revoke_params.revoker,
-                "Ionic bond revoked"
-            );
-
+        if revoked {
+            self.persistence.remove(&revoke_params.bond_id).await?;
             let resp = IonicBondRevokeResponse { revoked: true };
             serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
         } else {
@@ -328,10 +345,20 @@ impl IonicBondHandler {
             })
             .transpose()?;
 
-        let bonds = self.bonds.read().await;
+        let mut merged: HashMap<String, IonicBond> = self
+            .persistence
+            .list()
+            .await?
+            .into_iter()
+            .map(|b| (b.bond_id.clone(), b))
+            .collect();
 
-        let filtered: Vec<IonicBond> = bonds
-            .values()
+        for b in self.bonds.read().await.values() {
+            merged.insert(b.bond_id.clone(), b.clone());
+        }
+
+        let filtered: Vec<IonicBond> = merged
+            .into_values()
             .filter(|b| {
                 if let Some(ref lp) = list_params {
                     let domain_ok = lp
@@ -344,7 +371,6 @@ impl IonicBondHandler {
                     true
                 }
             })
-            .cloned()
             .collect();
 
         let resp = IonicBondListResponse { bonds: filtered };

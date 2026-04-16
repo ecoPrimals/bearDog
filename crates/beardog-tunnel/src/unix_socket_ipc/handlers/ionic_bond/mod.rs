@@ -20,6 +20,9 @@ use tokio::sync::RwLock;
 mod contract;
 mod crypto;
 mod lifecycle;
+pub mod persistence;
+
+pub use persistence::{BondPersistence, InMemoryBondPersistence};
 
 /// In-memory ionic bond state manager.
 ///
@@ -34,6 +37,7 @@ mod lifecycle;
 pub struct IonicBondHandler {
     proposals: Arc<RwLock<HashMap<String, PendingProposal>>>,
     bonds: Arc<RwLock<HashMap<String, IonicBond>>>,
+    persistence: Arc<dyn BondPersistence>,
 }
 
 struct PendingProposal {
@@ -59,6 +63,17 @@ impl IonicBondHandler {
         Self {
             proposals: Arc::new(RwLock::new(HashMap::new())),
             bonds: Arc::new(RwLock::new(HashMap::new())),
+            persistence: Arc::new(InMemoryBondPersistence::default()),
+        }
+    }
+
+    /// Create a handler using the given durable bond store (e.g. ledger-backed).
+    #[must_use]
+    pub fn with_persistence(persistence: Arc<dyn BondPersistence>) -> Self {
+        Self {
+            proposals: Arc::new(RwLock::new(HashMap::new())),
+            bonds: Arc::new(RwLock::new(HashMap::new())),
+            persistence,
         }
     }
 }

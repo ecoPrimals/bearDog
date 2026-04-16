@@ -19,6 +19,7 @@ use beardog_tunnel::multi_transport_server::MultiTransportServer;
 use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 use beardog_tunnel::tunnel::hsm::software_hsm::RustSoftwareHsm;
 use beardog_tunnel::tunnel::hsm::{HsmTier, SoftwareHsmConfig};
+use beardog_types::constants::domains::network::addresses::WILDCARD_IPV4;
 use beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional;
 use std::sync::Arc;
 use tracing::{info, warn};
@@ -30,7 +31,7 @@ use tracing::{info, warn};
 #[must_use]
 pub fn resolve_effective_tcp_listen(port: Option<u16>, listen: Option<&str>) -> Option<String> {
     match (port, listen) {
-        (Some(p), None) => Some(format!("0.0.0.0:{p}")),
+        (Some(p), None) => Some(format!("{WILDCARD_IPV4}:{p}")),
         (None, Some(addr)) => Some(addr.to_string()),
         _ => None,
     }

@@ -31,6 +31,7 @@
 //!    └─ DiscoveryConfig    (runtime discovery)
 //! ```
 
+use crate::domains::network_addresses::WILDCARD_IPV4;
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::str::FromStr;
@@ -89,7 +90,7 @@ impl EndpointConfig {
             rpc_port: Self::env_port("BEARDOG_RPC_PORT", 0),
             ws_port: Self::env_port("BEARDOG_WS_PORT", 0),
             metrics_port: Self::env_port("BEARDOG_METRICS_PORT", 0),
-            bind_addr: Self::env_addr("BEARDOG_BIND_ADDR", "0.0.0.0"),
+            bind_addr: Self::env_addr("BEARDOG_BIND_ADDR", WILDCARD_IPV4),
         }
     }
 

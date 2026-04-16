@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 15, 2026 -- Wave 51: primalSpring Audit Resolution — UDS Peek, Chain Proofs, Bond Persistence, ring Elimination
+
+- **UDS first-byte protocol auto-detection** — `PrefixedStream` wrapper in `platform/mod.rs` implements `AsyncRead`+`AsyncWrite` to re-prepend a peeked byte. Production UDS connections in `unix_socket_ipc/server.rs` now peek first byte with 5s timeout: `0x7B` → JSON-RPC bypass (local composition traffic), otherwise → BTSP handshake. Matches TCP server behavior. BearDog is no longer the last BTSP-enforcing primal without UDS peek.
+- **Genetic RPC → full chain proofs** — `genetic.generate_lineage_proof` and `verify_lineage` JSON-RPC handlers now wire through `BirdSongManager`'s `LineageProofManager` for generation-aware chain proofs with `head_commitment` and `depth`. Request/response types extended with `chain_id`, `node_id`, `generation`, `head_commitment`, `mode`. Backward-compatible: omitting `chain_id` falls back to simple Blake3 hash proofs.
+- **Bond persistence trait** — New `BondPersistence` trait in `ionic_bond/persistence.rs` with `store`/`retrieve`/`list`/`remove`. `InMemoryBondPersistence` as default. `IonicBondHandler` updated: `handle_seal` persists, `handle_list` merges persistence with in-memory proposals, `handle_revoke` removes from persistence. `with_persistence(Arc<dyn BondPersistence>)` constructor enables runtime wiring to `bonding.ledger.*` providers.
+- **HSM/Titan M2 dispatch path** — `handle_generate_keypair_with_hsm` routes `crypto.generate_keypair` by `hsm_backend` parameter: `"software"` or `None` → existing X25519; `"strongbox"`/`"titan_m2"` → structured JSON error with `available_backends` signaling. Wired through `aliases_and_beardog.rs`.
+- **`ring` transitive dependency eliminated** — `beardog-discovery` downgraded from `hickory-resolver 0.25` (pulls ring+cc) to `0.24` (ring-free, matches `beardog-core`). DNS-SD adapted to 0.24 API (`TokioAsyncResolver`, `RData` match, `Box<[u8]>` TXT). `cargo tree -i ring` returns zero matches.
+- **`Box<dyn Error>` evolved to typed errors** — `SafeOps::safe_execute` generic `E: Display` bound (no boxing). `beardog-security` (9 doctests) and `beardog-client` (5 doctests) evolved to `BearDogError`/`BearDogClientError`.
+- **Hardcoded addresses centralized** — 9 production files: CLI server, config, core self-knowledge, tunnel multi-transport, types monitoring/network/providers, utils zero-copy all use `WILDCARD_IPV4`/`DEFAULT_EXTERNAL_HOST`/`LOCALHOST_NAME` constants.
+- **async-trait migration** — `SecureTunnelProvider` in `beardog-capabilities` migrated to native `async fn` in traits. Removed `#[async_trait]` from trait def + 2 impls + `async-trait` dep from `beardog-capabilities/Cargo.toml`. Instance count: ~50 → 49.
+- **All quality gates clean** — fmt, clippy -D warnings, doc -D warnings, test (14,785 passing; 1 pre-existing flaky: `key_export_roundtrip` HOME env race).
+
 ### April 15, 2026 -- Wave 50: Evolution Pass — Hardcoding, Large File Refactor, Overstep Cleanup
 
 - **Hardcoded ecosystem namespace evolved** — `beardog-tower-atomic/discovery.rs`: replaced 4 hardcoded `"biomeos"` strings in production 5-tier socket discovery with `resolve_biomeos_ipc_subdir_from_optional()`. Added `ipc_namespace` field to `DiscoverSocketEnv` for runtime configurability via `BIOMEOS_IPC_NAMESPACE`. `beardog-core/socket_config.rs`: replaced `.join("biomeos")` with shared constant `BIOMEOS_RUNTIME_SOCKET_SUBDIR`.

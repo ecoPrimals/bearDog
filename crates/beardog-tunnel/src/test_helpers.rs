@@ -10,7 +10,6 @@
 #[cfg(test)]
 pub mod mocks {
     use crate::btsp_provider::ContactInfo;
-    use async_trait::async_trait;
     use beardog_capabilities::traits::{
         PeerEndpoint, SecureTunnelProvider, TunnelHandle, TunnelStatus,
     };
@@ -62,7 +61,6 @@ pub mod mocks {
         }
     }
 
-    #[async_trait]
     impl SecureTunnelProvider for MockBtspProvider {
         async fn establish_tunnel(&self, peer: PeerEndpoint) -> Result<TunnelHandle, BearDogError> {
             if *self.should_fail.lock().unwrap() {

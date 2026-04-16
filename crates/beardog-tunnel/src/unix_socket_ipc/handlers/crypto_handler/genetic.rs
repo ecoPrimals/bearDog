@@ -3,12 +3,14 @@
 
 //! Lineage, entropy, challenge, and device-enrollment genetic crypto routing.
 
+use crate::btsp_provider::BeardogBtspProvider;
 use crate::unix_socket_ipc::crypto_handlers_genetic::{
     handle_derive_device_seed, handle_derive_lineage_beacon_key, handle_derive_lineage_key,
     handle_generate_challenge, handle_generate_lineage_proof, handle_mix_entropy,
     handle_respond_to_challenge, handle_sign_lineage_certificate, handle_verify_challenge_response,
     handle_verify_lineage, handle_verify_lineage_certificate,
 };
+use std::sync::Arc;
 use tracing::info;
 
 /// # Errors
@@ -17,6 +19,7 @@ use tracing::info;
 pub async fn route(
     method: &str,
     params: Option<&serde_json::Value>,
+    btsp_provider: &Arc<BeardogBtspProvider>,
 ) -> Result<Option<serde_json::Value>, String> {
     match method {
         "genetic.derive_lineage_key" => {
@@ -55,11 +58,13 @@ pub async fn route(
 
         "genetic.verify_lineage" => {
             info!("🔍 Genetic: verify_lineage (family relationship verification)");
+            let birdsong = btsp_provider.birdsong_manager();
             Ok(Some(
                 handle_verify_lineage(
                     params.ok_or_else(|| {
                         "Parameters required for genetic.verify_lineage".to_string()
                     })?,
+                    &birdsong,
                 )
                 .await
                 .map_err(|e| e.to_string())?,
@@ -68,10 +73,14 @@ pub async fn route(
 
         "genetic.generate_lineage_proof" => {
             info!("🔐 Genetic: generate_lineage_proof (proof generation)");
+            let birdsong = btsp_provider.birdsong_manager();
             Ok(Some(
-                handle_generate_lineage_proof(params.ok_or_else(|| {
-                    "Parameters required for genetic.generate_lineage_proof".to_string()
-                })?)
+                handle_generate_lineage_proof(
+                    params.ok_or_else(|| {
+                        "Parameters required for genetic.generate_lineage_proof".to_string()
+                    })?,
+                    &birdsong,
+                )
                 .await
                 .map_err(|e| e.to_string())?,
             ))
@@ -150,22 +159,41 @@ pub async fn route(
 #[cfg(test)]
 mod tests {
     use super::route;
+    use crate::btsp_provider::BeardogBtspProvider;
+    use crate::tunnel::hsm::HsmManager;
     use base64::Engine;
+    use beardog_genetics::ecosystem_evolution::engine::EcosystemGeneticEngine;
     use serde_json::json;
+    use std::sync::Arc;
 
     fn seed32() -> String {
         base64::engine::general_purpose::STANDARD.encode([11u8; 32])
     }
 
+    async fn test_btsp() -> Arc<BeardogBtspProvider> {
+        let hsm = Arc::new(HsmManager::new());
+        let genetics =
+            Arc::new(EcosystemGeneticEngine::new().expect("EcosystemGeneticEngine::new"));
+        Arc::new(
+            BeardogBtspProvider::new_for_testing(hsm, genetics)
+                .await
+                .expect("BeardogBtspProvider::new_for_testing"),
+        )
+    }
+
     #[tokio::test]
     async fn genetic_route_unknown_method_returns_none() {
-        let out = route("genetic.unknown_rpc", None).await.expect("route");
+        let btsp = test_btsp().await;
+        let out = route("genetic.unknown_rpc", None, &btsp)
+            .await
+            .expect("route");
         assert!(out.is_none());
     }
 
     #[tokio::test]
     async fn genetic_route_derive_lineage_key_requires_params() {
-        let err = route("genetic.derive_lineage_key", None)
+        let btsp = test_btsp().await;
+        let err = route("genetic.derive_lineage_key", None, &btsp)
             .await
             .expect_err("expected parameter error");
         assert!(
@@ -176,7 +204,8 @@ mod tests {
 
     #[tokio::test]
     async fn genetic_route_mix_entropy_requires_params() {
-        let err = route("genetic.mix_entropy", None)
+        let btsp = test_btsp().await;
+        let err = route("genetic.mix_entropy", None, &btsp)
             .await
             .expect_err("expected parameter error");
         assert!(
@@ -187,7 +216,8 @@ mod tests {
 
     #[tokio::test]
     async fn genetic_route_verify_lineage_requires_params() {
-        let err = route("genetic.verify_lineage", None)
+        let btsp = test_btsp().await;
+        let err = route("genetic.verify_lineage", None, &btsp)
             .await
             .expect_err("expected parameter error");
         assert!(
@@ -198,7 +228,8 @@ mod tests {
 
     #[tokio::test]
     async fn genetic_route_derive_lineage_beacon_key_empty_seed_rejected() {
-        let err = route("genetic.derive_lineage_beacon_key", Some(&json!({})))
+        let btsp = test_btsp().await;
+        let err = route("genetic.derive_lineage_beacon_key", Some(&json!({})), &btsp)
             .await
             .expect_err("empty seed should be rejected");
         assert!(
@@ -209,7 +240,8 @@ mod tests {
 
     #[tokio::test]
     async fn genetic_route_mix_entropy_empty_tiers_uses_machine_entropy() {
-        let out = route("genetic.mix_entropy", Some(&json!({})))
+        let btsp = test_btsp().await;
+        let out = route("genetic.mix_entropy", Some(&json!({})), &btsp)
             .await
             .expect("route")
             .expect("some");
@@ -219,6 +251,7 @@ mod tests {
 
     #[tokio::test]
     async fn genetic_route_derive_lineage_key_success() {
+        let btsp = test_btsp().await;
         let s = seed32();
         let params = json!({
             "our_family_id": "fam-a",
@@ -226,7 +259,7 @@ mod tests {
             "context": "unit-test",
             "lineage_seed": s,
         });
-        let out = route("genetic.derive_lineage_key", Some(&params))
+        let out = route("genetic.derive_lineage_key", Some(&params), &btsp)
             .await
             .expect("route")
             .expect("some");
@@ -235,13 +268,14 @@ mod tests {
 
     #[tokio::test]
     async fn genetic_route_generate_then_verify_lineage_proof() {
+        let btsp = test_btsp().await;
         let s = seed32();
         let proof_req = json!({
             "our_family_id": "fam-a",
             "peer_family_id": "fam-b",
             "lineage_seed": s,
         });
-        let proof_val = route("genetic.generate_lineage_proof", Some(&proof_req))
+        let proof_val = route("genetic.generate_lineage_proof", Some(&proof_req), &btsp)
             .await
             .expect("route")
             .expect("some");
@@ -253,7 +287,7 @@ mod tests {
             "lineage_proof": proof,
             "lineage_seed": s,
         });
-        let v = route("genetic.verify_lineage", Some(&verify))
+        let v = route("genetic.verify_lineage", Some(&verify), &btsp)
             .await
             .expect("route")
             .expect("some");
@@ -262,12 +296,14 @@ mod tests {
 
     #[tokio::test]
     async fn genetic_route_generate_challenge_success() {
+        let btsp = test_btsp().await;
         let challenge = route(
             "genetic.generate_challenge",
             Some(&json!({
                 "challenger_node_id": "n1",
                 "target_family_id": "fam-t",
             })),
+            &btsp,
         )
         .await
         .expect("route")

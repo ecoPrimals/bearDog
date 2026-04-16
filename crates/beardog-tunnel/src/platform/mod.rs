@@ -49,7 +49,9 @@ pub mod ios;
 pub mod wasm;
 
 use std::path::PathBuf;
-use tokio::io::{AsyncRead, AsyncWrite};
+use std::pin::Pin;
+use std::task::{Context, Poll};
+use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
 use beardog_types::constants::domains::config::system::DEFAULT_SYSTEM_NAME;
 use beardog_types::constants::domains::network::ipc_discovery;
@@ -222,6 +224,61 @@ pub fn default_socket_path() -> String {
 ///
 /// All platforms provide async read/write through this unified interface.
 pub trait PlatformStream: AsyncRead + AsyncWrite + Send + Sync + Unpin {}
+
+/// Stream wrapper that prepends a single consumed byte.
+///
+/// After reading the first byte off a connection for protocol auto-detection
+/// (JSON-RPC `{` vs BTSP binary framing), this wrapper makes the byte available
+/// for the chosen handler to re-read so neither path loses data.
+pub struct PrefixedStream {
+    prefix: Option<u8>,
+    inner: Box<dyn PlatformStream>,
+}
+
+impl PrefixedStream {
+    /// Wrap `inner` so the next read yields `byte` first.
+    #[must_use]
+    pub fn new(byte: u8, inner: Box<dyn PlatformStream>) -> Self {
+        Self {
+            prefix: Some(byte),
+            inner,
+        }
+    }
+}
+
+impl AsyncRead for PrefixedStream {
+    fn poll_read(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<std::io::Result<()>> {
+        if let Some(byte) = self.prefix.take() {
+            buf.put_slice(&[byte]);
+            return Poll::Ready(Ok(()));
+        }
+        Pin::new(&mut *self.inner).poll_read(cx, buf)
+    }
+}
+
+impl AsyncWrite for PrefixedStream {
+    fn poll_write(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &[u8],
+    ) -> Poll<std::io::Result<usize>> {
+        Pin::new(&mut *self.inner).poll_write(cx, buf)
+    }
+
+    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
+        Pin::new(&mut *self.inner).poll_flush(cx)
+    }
+
+    fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
+        Pin::new(&mut *self.inner).poll_shutdown(cx)
+    }
+}
+
+impl PlatformStream for PrefixedStream {}
 
 /// Universal platform listener trait (replaces `UnixListener`)
 ///

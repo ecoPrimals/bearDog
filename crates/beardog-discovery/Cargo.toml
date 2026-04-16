@@ -27,7 +27,7 @@ toml = "0.8"
 mdns-sd = { version = "0.11", optional = true }
 
 # DNS-SD discovery (biomeOS owns network discovery — feature-gated, off by default)
-hickory-resolver = { version = "0.25", optional = true }
+hickory-resolver = { version = "0.24", optional = true }
 
 # REMOVED: HTTP client (not needed - Unix sockets + mDNS only!)
 # reqwest = { workspace = true }

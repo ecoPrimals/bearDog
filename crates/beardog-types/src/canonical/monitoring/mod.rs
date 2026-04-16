@@ -22,6 +22,7 @@
 // - **Extensible Design**: Easy addition of new monitoring capabilities
 // - **Performance Optimized**: Efficient configuration loading and validation
 
+use crate::constants::domains::network::addresses::WILDCARD_IPV4;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -216,7 +217,7 @@ impl Default for PrometheusExporterConfig {
             enabled: true,
             endpoint: std::env::var("BEARDOG_PROMETHEUS_ENDPOINT")
                 .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
-                .unwrap_or_else(|_| "0.0.0.0".to_string()), // Standard bind-to-all-interfaces
+                .unwrap_or_else(|_| WILDCARD_IPV4.to_string()), // Standard bind-to-all-interfaces
             port: std::env::var("BEARDOG_PROMETHEUS_PORT")
                 .ok()
                 .and_then(|v| v.parse().ok())

@@ -16,11 +16,11 @@
 //! ## Example
 //!
 //! ```rust,no_run
-//! use beardog_client::BearDogClient;
+//! use beardog_client::{BearDogClient, BearDogClientError};
 //! use serde_json::json;
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! async fn main() -> Result<(), BearDogClientError> {
 //!     // Connect to BearDog via Unix socket (not HTTP!)
 //!     let mut client = BearDogClient::connect().await?;
 //!     
@@ -72,9 +72,9 @@ impl BearDogClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use beardog_client::BearDogClient;
+    /// use beardog_client::{BearDogClient, BearDogClientError};
     ///
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn example() -> Result<(), BearDogClientError> {
     /// let client = BearDogClient::connect().await?;
     /// # Ok(())
     /// # }
@@ -105,8 +105,8 @@ impl BearDogClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// # use beardog_client::BearDogClient;
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// # use beardog_client::{BearDogClient, BearDogClientError};
+    /// # async fn example() -> Result<(), BearDogClientError> {
     /// let mut client = BearDogClient::connect().await?;
     /// let genesis = client.create_lineage("tower", None).await?;
     /// println!("Created: {}", genesis["lineage_id"]);
@@ -144,9 +144,9 @@ impl BearDogClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// # use beardog_client::BearDogClient;
+    /// # use beardog_client::{BearDogClient, BearDogClientError};
     /// # use beardog_genetics::birdsong::LineageProof;
-    /// # async fn example(proof: LineageProof) -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn example(proof: LineageProof) -> Result<(), BearDogClientError> {
     /// let mut client = BearDogClient::connect().await?;
     /// let verification = client.verify_lineage(&proof).await?;
     ///
@@ -182,8 +182,8 @@ impl BearDogClient {
     /// # Example
     ///
     /// ```rust,no_run
-    /// # use beardog_client::BearDogClient;
-    /// # async fn example(lineage_id: String, parent_id: String) -> Result<(), Box<dyn std::error::Error>> {
+    /// # use beardog_client::{BearDogClient, BearDogClientError};
+    /// # async fn example(lineage_id: String, parent_id: String) -> Result<(), BearDogClientError> {
     /// let mut client = BearDogClient::connect().await?;
     /// let extended = client.extend_lineage(&lineage_id, &parent_id, None).await?;
     /// println!("Extended: {}", extended["node_id"]);

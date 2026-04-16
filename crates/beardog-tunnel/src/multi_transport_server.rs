@@ -142,7 +142,11 @@ impl MultiTransportServer {
         // Use config-based port discovery instead of hardcoded value
         let default_tcp_addr = {
             use beardog_config::global::BEARDOG_CONFIG;
-            format!("127.0.0.1:{}", BEARDOG_CONFIG.network.ports.tcp_ipc_port)
+            use beardog_types::constants::domains::network::addresses::DEFAULT_LOCALHOST_IPV4_STR;
+            format!(
+                "{}:{}",
+                DEFAULT_LOCALHOST_IPV4_STR, BEARDOG_CONFIG.network.ports.tcp_ipc_port
+            )
         };
         let tcp_address = tcp_addr.unwrap_or(&default_tcp_addr);
 

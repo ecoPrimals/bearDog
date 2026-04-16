@@ -17,7 +17,7 @@ use super::{
 };
 use crate::btsp_handshake::{self, BtspSecurityMode, BtspSession};
 use crate::btsp_provider::BeardogBtspProvider;
-use crate::platform::{PlatformSocket, PlatformStream, Socket, SocketEndpoint};
+use crate::platform::{PlatformSocket, PlatformStream, PrefixedStream, Socket, SocketEndpoint};
 use anyhow::{Context, Result};
 use beardog_core::socket_config::{
     IpcCapabilitySymlinksConfig, install_ipc_symlinks_at, remove_ipc_symlinks_at,
@@ -25,7 +25,7 @@ use beardog_core::socket_config::{
 use beardog_ipc::protocol::JSONRPC_VERSION;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::time::Duration;
 use tracing::{debug, error, info, warn};
 
@@ -297,11 +297,13 @@ impl UnixSocketIpcServer {
         }
     }
 
-    /// Handle a single client connection with protocol detection
+    /// Handle a single client connection with protocol auto-detection.
     ///
-    /// In production mode (`FAMILY_ID` set), runs the BTSP 4-step handshake
-    /// before accepting any JSON-RPC traffic. On successful handshake,
-    /// communication switches to length-prefixed encrypted frames.
+    /// In production mode (`FAMILY_ID` set), peeks the first byte to distinguish
+    /// JSON-RPC (`0x7B` = `{`) from BTSP binary framing — matching the TCP
+    /// server pattern. This allows biomeOS composition traffic over UDS without
+    /// requiring a BTSP client, while external connections still get full BTSP
+    /// enforcement.
     ///
     /// In development mode, falls through to the existing NDJSON path.
     ///
@@ -312,44 +314,76 @@ impl UnixSocketIpcServer {
 
         #[cfg(unix)]
         {
-            // ── BTSP production mode: handshake before anything else ───
-            if let BtspSecurityMode::Production { ref family_seed } = self.security_mode {
-                debug!("BTSP production: initiating handshake");
+            // Protocol auto-detection in production; passthrough in dev.
+            let stream = if let BtspSecurityMode::Production { ref family_seed } =
+                self.security_mode
+            {
                 let mut stream = stream;
-                match btsp_handshake::perform_server_handshake(&mut stream, family_seed).await {
-                    Ok(session) => {
-                        info!(
-                            session_id = %session.session_id,
-                            cipher = %session.cipher.wire_name(),
-                            "BTSP handshake succeeded — switching to encrypted frames"
+
+                // Peek first byte: JSON-RPC starts with '{' (0x7B); BTSP frames
+                // use a 4-byte big-endian length prefix. PrefixedStream puts the
+                // consumed byte back for whichever handler wins.
+                let mut peek = [0u8; 1];
+                match tokio::time::timeout(Duration::from_secs(5), stream.read_exact(&mut peek))
+                    .await
+                {
+                    Ok(Ok(1)) if peek[0] == b'{' => {
+                        debug!(
+                            "UDS peek: JSON-RPC detected (0x7B) — bypassing BTSP for local composition"
                         );
-                        return self.handle_jsonrpc_btsp(stream, session).await;
+                        Box::new(PrefixedStream::new(peek[0], stream)) as Box<dyn PlatformStream>
                     }
-                    Err(e) => {
-                        warn!(error = %e, "BTSP handshake failed — refusing connection (family-scoped socket requires BTSP)");
-                        let rejection = serde_json::json!({
-                            "jsonrpc": JSONRPC_VERSION,
-                            "error": {
-                                "code": -32600,
-                                "message": "BTSP handshake required",
-                                "data": {
-                                    "reason": "This socket is family-scoped and requires a BTSP handshake before JSON-RPC traffic. Use btsp.server.create_session to initiate, or connect to the dev socket (beardog-default.sock) for plaintext.",
-                                    "btsp_version": "2.0",
+                    Ok(Ok(_)) => {
+                        debug!("BTSP production: initiating UDS handshake");
+                        let mut prefixed = PrefixedStream::new(peek[0], stream);
+                        match btsp_handshake::perform_server_handshake(&mut prefixed, family_seed)
+                            .await
+                        {
+                            Ok(session) => {
+                                info!(
+                                    session_id = %session.session_id,
+                                    cipher = %session.cipher.wire_name(),
+                                    "BTSP handshake succeeded — switching to encrypted frames"
+                                );
+                                return self.handle_jsonrpc_btsp(Box::new(prefixed), session).await;
+                            }
+                            Err(e) => {
+                                warn!(error = %e, "BTSP handshake failed — refusing connection");
+                                let rejection = serde_json::json!({
+                                    "jsonrpc": JSONRPC_VERSION,
+                                    "error": {
+                                        "code": -32600,
+                                        "message": "BTSP handshake required",
+                                        "data": {
+                                            "reason": "This socket is family-scoped and requires a BTSP handshake before JSON-RPC traffic. Use btsp.server.create_session to initiate, or connect to the dev socket (beardog-default.sock) for plaintext.",
+                                            "btsp_version": "2.0",
+                                        }
+                                    },
+                                    "id": serde_json::Value::Null,
+                                });
+                                if let Ok(msg) = serde_json::to_string(&rejection) {
+                                    let mut s: Box<dyn PlatformStream> = Box::new(prefixed);
+                                    let _ = s.write_all(format!("{msg}\n").as_bytes()).await;
+                                    let _ = s.flush().await;
                                 }
-                            },
-                            "id": serde_json::Value::Null,
-                        });
-                        if let Ok(msg) = serde_json::to_string(&rejection) {
-                            let mut stream = stream;
-                            let _ = stream.write_all(format!("{msg}\n").as_bytes()).await;
-                            let _ = stream.flush().await;
+                                return Ok(());
+                            }
                         }
+                    }
+                    Ok(Err(e)) => {
+                        warn!(error = %e, "UDS peek read failed — closing connection");
+                        return Ok(());
+                    }
+                    Err(_) => {
+                        warn!("UDS peek timed out — closing connection");
                         return Ok(());
                     }
                 }
-            }
+            } else {
+                stream
+            };
 
-            // ── Development mode: plain NDJSON (existing path) ─────────
+            // ── NDJSON handler (dev mode or JSON-RPC auto-detected in prod) ──
 
             let mut buf_stream = BufReader::new(stream);
             let mut buffer = Vec::with_capacity(1024);
@@ -377,8 +411,8 @@ impl UnixSocketIpcServer {
                 }
             }
 
-            // `from_utf8_lossy` returns `Cow`; avoid `.to_string()` so valid UTF-8 borrows `buffer`
-            // instead of allocating a second copy on the hot path.
+            // `from_utf8_lossy` returns `Cow`; avoid `.to_string()` so valid UTF-8
+            // borrows `buffer` instead of allocating a second copy on the hot path.
             let first_line = String::from_utf8_lossy(&buffer);
             let stream = buf_stream.into_inner();
 

@@ -33,6 +33,7 @@
 //! - `BEARDOG_TCP_IPC_PORT` - TCP IPC fallback when Unix sockets unavailable (default: 9900)
 //! - `BEARDOG_PROFILING_PORT` - Profiling / diagnostic HTTP (default: 6060; see `DEFAULT_PROFILING_PORT`)
 
+use crate::domains::network_addresses::DEFAULT_EXTERNAL_HOST;
 use serde::{Deserialize, Serialize};
 
 /// Network ports configuration
@@ -111,7 +112,8 @@ pub fn resolve_upa_fallback_base_url() -> String {
     if let Ok(url) = std::env::var("BEARDOG_UPA_URL") {
         return url;
     }
-    let host = std::env::var("BEARDOG_EXTERNAL_HOST").unwrap_or_else(|_| "localhost".to_string());
+    let host = std::env::var("BEARDOG_EXTERNAL_HOST")
+        .unwrap_or_else(|_| DEFAULT_EXTERNAL_HOST.to_string());
     let port = std::env::var("BEARDOG_API_PORT")
         .ok()
         .and_then(|s| s.parse::<u16>().ok())
@@ -120,6 +122,9 @@ pub fn resolve_upa_fallback_base_url() -> String {
 }
 
 /// Compile-time fallback constant for code that cannot call [`resolve_upa_fallback_base_url`].
+///
+/// Must stay aligned with [`DEFAULT_EXTERNAL_HOST`]
+/// and [`DEFAULT_API_PORT`].
 pub const DEFAULT_UPA_FALLBACK_BASE_URL: &str = concat!("https://", "localhost", ":", "8080");
 
 /// Default discovery service port (9090)

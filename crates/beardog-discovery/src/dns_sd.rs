@@ -7,9 +7,9 @@
 
 use crate::error::{DiscoveryError, Result};
 use crate::types::{Capability, DiscoveredService, HealthStatus, QoSMetrics, ServiceEndpoint};
-use hickory_resolver::TokioResolver;
+use hickory_resolver::TokioAsyncResolver;
 use hickory_resolver::config::{ResolverConfig, ResolverOpts};
-use hickory_resolver::name_server::TokioConnectionProvider;
+use hickory_resolver::proto::rr::RData;
 use hickory_resolver::proto::rr::RecordType;
 use std::collections::HashMap;
 use std::net::IpAddr;
@@ -49,7 +49,7 @@ impl Default for DnsSdConfig {
 /// DNS Service Discovery client - complete implementation
 #[derive(Clone)]
 pub struct DnsSdDiscovery {
-    resolver: Arc<TokioResolver>,
+    resolver: Arc<TokioAsyncResolver>,
     config: DnsSdConfig,
     cache: Arc<RwLock<HashMap<String, Vec<DiscoveredService>>>>,
 }
@@ -70,12 +70,8 @@ impl DnsSdDiscovery {
     ///
     /// Returns an error when the DNS resolver cannot be built.
     pub async fn with_config(config: DnsSdConfig) -> Result<Self> {
-        let resolver = TokioResolver::builder_with_config(
-            config.resolver_config.clone(),
-            TokioConnectionProvider::default(),
-        )
-        .with_options(config.resolver_opts.clone())
-        .build();
+        let resolver =
+            TokioAsyncResolver::tokio(config.resolver_config.clone(), config.resolver_opts.clone());
 
         Ok(Self {
             resolver: Arc::new(resolver),
@@ -174,7 +170,10 @@ impl DnsSdDiscovery {
 
         let instances: Vec<String> = response
             .iter()
-            .filter_map(|record| record.as_ptr().map(std::string::ToString::to_string))
+            .filter_map(|rdata| match rdata {
+                RData::PTR(ptr) => Some(ptr.to_string()),
+                _ => None,
+            })
             .collect();
 
         debug!("Found {} service instances", instances.len());
@@ -196,7 +195,10 @@ impl DnsSdDiscovery {
 
         let srv_record = srv_response
             .iter()
-            .find_map(|r| r.as_srv())
+            .find_map(|r| match r {
+                RData::SRV(srv) => Some(srv),
+                _ => None,
+            })
             .ok_or_else(|| DiscoveryError::InvalidServiceInfo("No SRV record found".to_string()))?;
 
         let hostname = srv_record.target().to_string();
@@ -204,9 +206,15 @@ impl DnsSdDiscovery {
 
         // Query TXT record for metadata
         let txt_properties = match self.resolver.lookup(instance_name, RecordType::TXT).await {
-            Ok(response) => {
-                Self::parse_txt_records(response.iter().filter_map(|r| r.as_txt()).collect())
-            }
+            Ok(response) => Self::parse_txt_records(
+                response
+                    .iter()
+                    .filter_map(|r| match r {
+                        RData::TXT(txt) => Some(txt),
+                        _ => None,
+                    })
+                    .collect(),
+            ),
             Err(e) => {
                 debug!("No TXT records for {}: {}", instance_name, e);
                 HashMap::new()
@@ -269,7 +277,7 @@ impl DnsSdDiscovery {
 
         for txt in txt_records {
             for data in txt.iter() {
-                if let Ok(text) = std::str::from_utf8(data)
+                if let Ok(text) = std::str::from_utf8(data.as_ref())
                     && let Some((key, value)) = text.split_once('=')
                 {
                     properties.insert(key.to_string(), value.to_string());

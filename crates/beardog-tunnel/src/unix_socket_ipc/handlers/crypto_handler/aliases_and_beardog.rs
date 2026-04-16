@@ -9,8 +9,9 @@ use crate::unix_socket_ipc::crypto_handlers_tor::{
 };
 use crate::unix_socket_ipc::handlers::crypto::{
     handle_blake3_hash, handle_chacha20_poly1305_decrypt, handle_chacha20_poly1305_encrypt,
-    handle_ed25519_generate_keypair, handle_hmac_sha256, handle_sign_ed25519,
-    handle_verify_ed25519, handle_x25519_derive_secret, handle_x25519_generate_ephemeral,
+    handle_ed25519_generate_keypair, handle_generate_keypair_with_hsm, handle_hmac_sha256,
+    handle_sign_ed25519, handle_verify_ed25519, handle_x25519_derive_secret,
+    handle_x25519_generate_ephemeral,
 };
 use tracing::info;
 
@@ -53,8 +54,13 @@ pub async fn route(
         }
 
         "crypto.generate_keypair" => {
-            info!("🔑 Crypto: generate_keypair (semantic → x25519_generate_ephemeral)");
-            Ok(Some(handle_x25519_generate_ephemeral(params).await?))
+            if params.is_some_and(|p| p.get("hsm_backend").is_some()) {
+                info!("🔑 Crypto: generate_keypair (hsm_backend → generate_keypair_with_hsm)");
+                Ok(Some(handle_generate_keypair_with_hsm(params).await?))
+            } else {
+                info!("🔑 Crypto: generate_keypair (semantic → x25519_generate_ephemeral)");
+                Ok(Some(handle_x25519_generate_ephemeral(params).await?))
+            }
         }
 
         "crypto.derive_secret" => {

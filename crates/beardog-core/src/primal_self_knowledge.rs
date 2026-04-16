@@ -70,6 +70,7 @@ use beardog_errors::BearDogError;
 use beardog_types::canonical::discovery::{
     SecurityService, UniversalCapabilityType, UniversalServiceDescriptor,
 };
+use beardog_types::constants::domains::network::addresses::WILDCARD_IPV4;
 
 type Result<T> = std::result::Result<T, BearDogError>;
 use serde::{Deserialize, Serialize};
@@ -247,7 +248,7 @@ impl PrimalIdentity {
             let host = inputs
                 .beardog_grpc_host
                 .clone()
-                .unwrap_or_else(|| "0.0.0.0".to_string());
+                .unwrap_or_else(|| WILDCARD_IPV4.to_string());
 
             endpoints.push(Endpoint {
                 protocol: Protocol::Grpc,

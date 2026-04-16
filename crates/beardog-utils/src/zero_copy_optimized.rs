@@ -121,10 +121,21 @@ impl ZeroCopyManager {
     /// Check if a string is commonly used and worth caching
     /// Checks if common string
     fn is_common_string(&self, s: &str) -> bool {
-        matches!(
-            s,
-            // HTTP methods
-            "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" |
+        use beardog_types::constants::domains::network::addresses::{
+            DEFAULT_LOCALHOST_IPV4_STR, DEFAULT_LOCALHOST_IPV6_STR, DEFAULT_WILDCARD_IPV4_STR,
+        };
+        use beardog_types::constants::domains::network::config::DEFAULT_LOCALHOST_NAME_STR;
+
+        let is_reserved_literal_host = s == DEFAULT_LOCALHOST_NAME_STR
+            || s == DEFAULT_LOCALHOST_IPV4_STR
+            || s == DEFAULT_WILDCARD_IPV4_STR
+            || s == DEFAULT_LOCALHOST_IPV6_STR;
+
+        is_reserved_literal_host
+            || matches!(
+                s,
+                // HTTP methods
+                "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" |
             // Content types
             "application/json" | "text/plain" | "application/octet-stream" |
             "text/html" | "application/xml" | "multipart/form-data" |
@@ -132,8 +143,6 @@ impl ZeroCopyManager {
             "api" | "metrics" | "health" | "admin" | "status" | "ping" |
             // Security
             "bearer" | "jwt" | "authorization" | "x-api-key" |
-            // Network
-            "localhost" | "127.0.0.1" | "0.0.0.0" | "::1" |
             // BearDog specific
             "beardog " | "capability" | "discovery" | "security" | "hsm" |
             "compute" | "storage" | "network" | "monitoring" |
@@ -142,7 +151,8 @@ impl ZeroCopyManager {
             "healthy" | "unhealthy" | "degraded" | "unknown" |
             // Boolean strings
             "true" | "false" | "null" | "undefined"
-        ) || s.len() <= 2
+            )
+            || s.len() <= 2
             || s.starts_with("id_")
             || s.ends_with("_id")
             || s.starts_with("bearer_")

@@ -7,7 +7,6 @@
 //! These traits define capabilities without any primal-specific knowledge.
 //! `BearDog` implements these traits, and any primal can consume them.
 
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
@@ -61,7 +60,6 @@ pub struct TunnelStatus {
 ///
 /// **Note**: Documentation may reference "BTSP" (`BearDog` Tunnel Security Protocol)
 /// for developer context, but the code remains fully generic.
-#[async_trait]
 pub trait SecureTunnelProvider: Send + Sync {
     /// Establish a secure tunnel to a peer
     ///
