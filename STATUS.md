@@ -90,6 +90,14 @@
 
 ## Recent Improvements
 
+### Wave 54 — Deep Debt Pass (April 16, 2026)
+
+- **File refactoring** — Smart-refactored 2 production files over 800 LOC by domain concern: `software_hsm/types.rs` (936 LOC to 9 modules), `handlers_coverage_extension.rs` (911 LOC to 7 modules).
+- **Dependency cleanup** — Unified `beardog-types` explicit version pins to workspace deps. Consolidated hostname crates (`gethostname` to `hostname`). Eliminated `syn v1` by upgrading `tokio-serde` 0.8 to 0.9.
+- **Mock isolation** — Transport stubs now platform-gated. All mocks verified behind `#[cfg(test)]` or `test-utils` feature.
+- **Hardcoding audit** — All production paths confirmed env-driven or capability-discovered. Test-only hardcoding is acceptable.
+- **Quality** — 14,786 tests, 0 failures. Zero TODOs/FIXMEs. Zero unsafe code (`#![forbid(unsafe_code)]` on all crates).
+
 ### Wave 53 — Stadial Parity Gate (April 16, 2026)
 
 - **`#[async_trait]` eliminated** — Migrated roughly 49 trait attributes across 22+ traits to native `async fn` (RPITIT). Zero `#[async_trait]` in any `.rs` file.
