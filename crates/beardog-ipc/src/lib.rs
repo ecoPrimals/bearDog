@@ -53,18 +53,6 @@ pub mod protocol;
 pub mod registry_client;
 pub mod types;
 
-// tarpc high-performance RPC (Protocol Graduation: JSON-RPC → tarpc)
-// Walk → Run pattern: JSON-RPC for flexibility, tarpc for speed
-#[cfg(feature = "tarpc")]
-pub mod tarpc_client;
-#[cfg(feature = "tarpc")]
-pub mod tarpc_server;
-#[cfg(feature = "tarpc")]
-pub mod tarpc_types;
-
-// Protocol routing and multi-transport (always available for discovery)
-#[cfg(feature = "tarpc")]
-pub mod multi_transport;
 pub mod protocol_router;
 
 pub use client::OrchestratorRegistryClient;
@@ -86,23 +74,6 @@ pub use isomorphic::{
 pub use protocol::JsonRpcRequest as ProtocolJsonRpcRequest;
 pub use registry_client::{JsonRpcRequest, PrimalRegistryClient};
 
-// tarpc types, server, client (when feature enabled)
-#[cfg(feature = "tarpc")]
-pub use multi_transport::{MultiTransportConfig, MultiTransportServer, ProtocolSelector};
-#[cfg(feature = "tarpc")]
-pub use tarpc_client::TarpcCryptoClient;
-#[cfg(feature = "tarpc")]
-pub use tarpc_server::BearDogCryptoServer;
-#[cfg(feature = "tarpc")]
-pub use tarpc_types::{
-    BearDogCrypto, BearDogCryptoClient, CryptoError, CryptoResult, DecryptRequest, DecryptResponse,
-    EncryptRequest, EncryptResponse, EntropyMixRequest, HashResponse, HealthStatus, HmacRequest,
-    KeyExchangeRequest, KeyPair, LineageKey, LineageRequest, MethodInfo, MixedEntropy, PrimalInfo,
-    ProtocolInfo, SharedSecret, SignRequest, SignResponse, TlsSecrets, TlsSecretsRequest,
-    TlsSignRequest, VerifyRequest,
-};
-
-// Protocol routing (always available)
 pub use protocol_router::{Protocol, ProtocolCapabilities, ProtocolDetector, RouterConfig};
 
 /// Primal IPC Protocol version

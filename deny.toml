@@ -55,6 +55,7 @@ skip = [
     { crate = "winnow" },
 ]
 deny = [
+    { crate = "async-trait", wrappers = ["hickory-proto", "hickory-resolver"] },
     { crate = "openssl", wrappers = [] },
     { crate = "openssl-sys", wrappers = [] },
     { crate = "ring", wrappers = [] },

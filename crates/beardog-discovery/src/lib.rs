@@ -37,8 +37,8 @@ pub mod announcement;
 pub mod capability_env;
 pub mod config;
 pub mod discovery;
-#[cfg(feature = "dns-sd")]
-pub mod dns_sd;
+// dns_sd module suspended — hickory-resolver pulls async-trait transitively.
+// Re-enable when hickory migrates to native async fn.
 pub mod error;
 #[cfg(feature = "mdns")]
 pub mod mdns;

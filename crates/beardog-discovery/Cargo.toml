@@ -25,8 +25,9 @@ toml = "0.8"
 # mDNS discovery (biomeOS owns network discovery — feature-gated, off by default)
 mdns-sd = { version = "0.11", optional = true }
 
-# DNS-SD discovery (biomeOS owns network discovery — feature-gated, off by default)
-hickory-resolver = { version = "0.24", optional = true }
+# DNS-SD discovery: hickory-resolver removed — it transitively pulls async-trait (via
+# hickory-proto). Re-add when hickory migrates to native async fn.  The dns_sd module
+# is cfg-gated and never enabled; code preserved in git history.
 
 # REMOVED: HTTP client (not needed - Unix sockets + mDNS only!)
 # reqwest = { workspace = true }
@@ -60,5 +61,5 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 default = []
 # biomeOS owns network discovery — these are opt-in for standalone/legacy use
 mdns = ["dep:mdns-sd"]
-dns-sd = ["dep:hickory-resolver"]
+# dns-sd feature suspended until hickory drops async-trait transitive dep
 

@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 16, 2026 -- Wave 55: async-trait Lockfile Elimination — Stadial Gate Cleared (13/13)
+
+- **async-trait fully eliminated from Cargo.lock** — Removed unused `hickory-resolver` from `beardog-core`. Removed never-enabled `tarpc` optional dep + 3 orphan tarpc source files from `beardog-ipc`. Suspended `dns-sd` feature in `beardog-discovery`.
+- **deny.toml ban** — `async-trait` added to `[bans].deny` with wrappers for `hickory-proto`/`hickory-resolver`.
+- **Lockfile** — Zero `async-trait`, `tarpc`, `opentelemetry`, `ring`, `sled`, `openssl`.
+- **Quality** — 14,786+ tests, 0 failures. BearDog clears the stadial async-trait gate as the final primal (13/13).
+
 ### April 16, 2026 -- Wave 54: Deep Debt Pass — File Refactoring, Dep Cleanup, Mock Isolation
 
 - **Smart file refactoring** — `software_hsm/types.rs` (936 LOC) split into 9 domain modules (storage, config, keys, encryption, audit, health, etc.). `handlers_coverage_extension.rs` (911 LOC) split into 7 test domain modules.

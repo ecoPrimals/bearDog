@@ -90,6 +90,13 @@
 
 ## Recent Improvements
 
+### Wave 55 — async-trait Lockfile Elimination (April 16, 2026)
+
+- **async-trait fully eliminated from Cargo.lock** — Removed unused `hickory-resolver` from `beardog-core` (zero source references). Removed never-enabled `tarpc` optional dep from `beardog-ipc` (transitive chain: `tarpc` → `opentelemetry_sdk` → `async-trait`). Deleted 3 orphan tarpc source files. Suspended `dns-sd` feature in `beardog-discovery` until `hickory` drops `async-trait`.
+- **deny.toml ban** — `async-trait` added to `[bans].deny` with `wrappers = ["hickory-proto", "hickory-resolver"]` to prevent re-introduction.
+- **Lockfile clean** — Zero `async-trait`, zero `tarpc`, zero `opentelemetry`, zero `ring` in `Cargo.lock`.
+- **Quality** — 14,786+ tests, 0 failures. Clippy/rustdoc/fmt clean. BearDog is now the 13th/13 primal to clear the stadial async-trait gate.
+
 ### Wave 54 — Deep Debt Pass (April 16, 2026)
 
 - **File refactoring** — Smart-refactored 2 production files over 800 LOC by domain concern: `software_hsm/types.rs` (936 LOC to 9 modules), `handlers_coverage_extension.rs` (911 LOC to 7 modules).
