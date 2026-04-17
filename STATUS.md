@@ -111,7 +111,7 @@
 - **Dependency cleanup** — Unified `beardog-types` explicit version pins to workspace deps. Consolidated hostname crates (`gethostname` to `hostname`). Eliminated `syn v1` by upgrading `tokio-serde` 0.8 to 0.9.
 - **Mock isolation** — Transport stubs now platform-gated. All mocks verified behind `#[cfg(test)]` or `test-utils` feature.
 - **Hardcoding audit** — All production paths confirmed env-driven or capability-discovered. Test-only hardcoding is acceptable.
-- **Quality** — 14,786 tests, 0 failures. Zero TODOs/FIXMEs. Zero unsafe code (`#![forbid(unsafe_code)]` on all crates).
+- **Quality** — 14,786+ tests, 0 failures. Zero TODOs/FIXMEs. Zero unsafe code (`#![forbid(unsafe_code)]` on all crates).
 
 ### Wave 53 — Stadial Parity Gate (April 16, 2026)
 

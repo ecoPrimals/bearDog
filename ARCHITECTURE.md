@@ -182,7 +182,7 @@ What are you implementing?
 
 ### Enum dispatch (finite implementors)
 
-Traits with a small, closed set of implementations (handlers, transports, crypto/HSM backends) dispatch through **enum wrapper types** rather than `Box<dyn Trait>`. Each variant holds a concrete type; `async` methods use native `async fn` in traits without the `async-trait` crate. This keeps call sites monomorphized and aligns with the Wave 53 stadial parity gate (no `#[async_trait]` in the tree).
+Traits with a small, closed set of implementations (handlers, transports, crypto/HSM backends) dispatch through **enum wrapper types** rather than `Box<dyn Trait>`. Each variant holds a concrete type; `async` methods use native `async fn` in traits without the `async-trait` crate. This keeps call sites monomorphized and aligns with the stadial parity gate (Wave 53–55: no `#[async_trait]` in source or lockfile).
 
 ### 1. Zero-Knowledge Bootstrap
 

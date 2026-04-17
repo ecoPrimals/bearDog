@@ -60,6 +60,14 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
+### serde_yaml Elimination + Deep Debt — DONE (Wave 56)
+
+`serde_yaml` (deprecated, uses `unsafe-libyaml`) removed from all crates and workspace. YAML config paths return deprecation errors; TOML/JSON remain. Sole production `Box<dyn Error>` converted to typed `BearDogError`. `#[allow()]` migrated to `#[expect()]`. 3 test files >900 LOC smart-refactored into domain modules. 14,786+ tests, 0 failures.
+
+### async-trait Lockfile Elimination — DONE (Wave 55)
+
+`async-trait` fully eliminated from `Cargo.lock` by removing unused `hickory-resolver` from `beardog-core` and never-enabled `tarpc` optional dep from `beardog-ipc`. Banned in `deny.toml`. BearDog clears stadial gate as 13th/13 primal.
+
 ### Deep Debt Pass — DONE (Wave 54)
 
 Smart-refactored 2 production files over 800 LOC by domain concern. Dependency cleanup: workspace pins unified, `gethostname` consolidated, `syn v1` eliminated. All mocks verified behind `#[cfg(test)]`. Zero unsafe, zero TODOs, zero production mocks. 14,786+ tests, 0 failures.
