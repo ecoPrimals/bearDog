@@ -91,7 +91,10 @@ pub mod security;
 ///     }
 /// }
 /// ```
-#[allow(async_fn_in_trait)]
+#[expect(
+    async_fn_in_trait,
+    reason = "JSON-RPC handlers are async; object-safe trait for registry"
+)]
 pub trait MethodHandler: Send + Sync {
     /// Get the methods this handler can handle
     ///
@@ -117,7 +120,10 @@ pub trait MethodHandler: Send + Sync {
 }
 
 /// Concrete enum of all [`MethodHandler`] implementations held by [`HandlerRegistry`].
-#[allow(missing_docs)]
+#[expect(
+    missing_docs,
+    reason = "enum variants mirror handler modules; names are self-explanatory"
+)]
 pub enum MethodHandlerKind {
     Health(health::HealthHandler),
     Security(security::SecurityHandler),

@@ -40,6 +40,14 @@ impl UnifiedConfigUtils {
         // Check file permissions
         Self::validate_file_permissions(path)?;
 
+        if let Some(ext) = path.extension().and_then(|e| e.to_str())
+            && (ext.eq_ignore_ascii_case("yaml") || ext.eq_ignore_ascii_case("yml"))
+        {
+            return Err(BearDogError::validation(
+                "YAML format deprecated; use TOML or JSON",
+            ));
+        }
+
         // Read and parse file
         let content = fs::read_to_string(path)
             .map_err(|e| BearDogError::io_error(&format!("Failed to read config file: {e}")))?;
@@ -49,8 +57,6 @@ impl UnifiedConfigUtils {
                 .map_err(|e| BearDogError::validation(&format!("Invalid TOML config: {e}")))?,
             Some("json") => serde_json::from_str(&content)
                 .map_err(|e| BearDogError::validation(&format!("Invalid JSON config: {e}")))?,
-            Some("yaml" | "yml") => serde_yaml::from_str(&content)
-                .map_err(|e| BearDogError::validation(&format!("Invalid YAML config: {e}")))?,
             _ => toml::from_str(&content)
                 .map_err(|e| BearDogError::validation(&format!("Invalid config format: {e}")))?,
         };
@@ -104,6 +110,14 @@ impl UnifiedConfigUtils {
         let path = path.as_ref();
         debug!("💾 Saving config to: {}", path.display());
 
+        if let Some(ext) = path.extension().and_then(|e| e.to_str())
+            && (ext.eq_ignore_ascii_case("yaml") || ext.eq_ignore_ascii_case("yml"))
+        {
+            return Err(BearDogError::validation(
+                "YAML format deprecated; use TOML or JSON",
+            ));
+        }
+
         // Create directory if it doesn't exist
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent).map_err(|e| {
@@ -118,9 +132,6 @@ impl UnifiedConfigUtils {
             })?,
             Some("json") => serde_json::to_string_pretty(config).map_err(|e| {
                 BearDogError::validation(&format!("Failed to serialize to JSON: {e}"))
-            })?,
-            Some("yaml" | "yml") => serde_yaml::to_string(config).map_err(|e| {
-                BearDogError::validation(&format!("Failed to serialize to YAML: {e}"))
             })?,
             _ => toml::to_string_pretty(config).map_err(|e| {
                 BearDogError::validation(&format!("Failed to serialize config: {e}"))

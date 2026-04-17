@@ -90,6 +90,14 @@
 
 ## Recent Improvements
 
+### Wave 56 — Deep Debt: serde_yaml Elimination + Idiomatic Cleanup (April 16, 2026)
+
+- **serde_yaml eliminated** — Deprecated dep (uses unsafe-libyaml) removed from all 3 crates and workspace. YAML config branches replaced with deprecation errors; TOML and JSON remain. `serde_yaml`/`unsafe-libyaml` gone from `Cargo.lock`.
+- **Box<dyn Error> in production** — Sole production instance (`orchestration.rs` AI module) converted to typed `BearDogError`.
+- **#[allow()] → #[expect()]** — Migrated production `#[allow()]` to `#[expect()]` where lints fire (handlers/mod.rs, ultimate_performance.rs). Crate-root and cross-target `#[allow()]` correctly retained.
+- **Test file refactoring** — 3 large test files (947, 935, 912 LOC) smart-refactored into domain modules. All production files under 800 LOC.
+- **Audit results** — Zero unsafe, zero TODOs/FIXMEs, zero production mocks, zero `Box<dyn Error>` in library code. `dyn` in HSM provider files confirmed test-only. 14,786+ tests, 0 failures.
+
 ### Wave 55 — async-trait Lockfile Elimination (April 16, 2026)
 
 - **async-trait fully eliminated from Cargo.lock** — Removed unused `hickory-resolver` from `beardog-core` (zero source references). Removed never-enabled `tarpc` optional dep from `beardog-ipc` (transitive chain: `tarpc` → `opentelemetry_sdk` → `async-trait`). Deleted 3 orphan tarpc source files. Suspended `dns-sd` feature in `beardog-discovery` until `hickory` drops `async-trait`.

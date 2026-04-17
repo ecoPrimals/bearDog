@@ -182,10 +182,6 @@ scrypt = "0.11"           # Memory-hard KDF - stable version (evolved from RC)
 tokio-tungstenite = "0.24"  # WebSocket for BTSP tunnel transport only
 
 # Serialization formats
-# NOTE: serde_yaml is deprecated upstream; internally uses unsafe-libyaml which
-# is a Rust translation of C libyaml (no C compiler needed — ecoBin compliant).
-# Track yaml_serde (github.com/yaml/yaml-serde) as the maintained successor.
-serde_yaml = "0.9"
 
 # Serialization
 postcard = { version = "1.0", features = ["alloc"] }

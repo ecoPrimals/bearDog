@@ -56,14 +56,21 @@ fn test_save_and_load_json_extension() -> Result<(), Box<dyn std::error::Error>>
 }
 
 #[test]
-fn test_save_and_load_yaml_extension() -> Result<(), Box<dyn std::error::Error>> {
-    let dir = tempfile::tempdir()?;
+fn test_yaml_extension_deprecated() {
+    let dir = tempfile::tempdir().expect("tempdir");
     let path = dir.path().join("cfg.yaml");
     let config = TestConfig::default();
-    UnifiedConfigUtils::save_to_file(&config, &path)?;
-    let loaded: TestConfig = UnifiedConfigUtils::load_from_file(&path)?;
-    assert_eq!(config, loaded);
-    Ok(())
+    let save_err = UnifiedConfigUtils::save_to_file(&config, &path).unwrap_err();
+    assert!(
+        save_err.to_string().contains("YAML format deprecated"),
+        "unexpected: {save_err}"
+    );
+    std::fs::write(&path, "key: value").expect("write");
+    let load_err = UnifiedConfigUtils::load_from_file::<TestConfig, _>(&path).unwrap_err();
+    assert!(
+        load_err.to_string().contains("YAML format deprecated"),
+        "unexpected: {load_err}"
+    );
 }
 
 #[test]

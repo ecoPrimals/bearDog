@@ -40,20 +40,6 @@ fn patch_toml_with_db_password(serialized: String) -> String {
     )
 }
 
-fn patch_yaml_with_db_password(serialized: &str) -> String {
-    let mut v: serde_yaml::Value = serde_yaml::from_str(serialized).expect("yaml parse");
-    if let Some(db) = v.get_mut("database")
-        && let Some(primary) = db.get_mut("primary")
-        && let serde_yaml::Value::Mapping(m) = primary
-    {
-        m.insert(
-            serde_yaml::Value::String("password".to_string()),
-            serde_yaml::Value::String(String::new()),
-        );
-    }
-    serde_yaml::to_string(&v).expect("yaml emit")
-}
-
 fn patch_json_with_db_password(cfg: &ProductionConfig) -> String {
     let mut v: serde_json::Value = serde_json::to_value(cfg).expect("json value");
     if let Some(db) = v.get_mut("database")
@@ -344,7 +330,7 @@ fn load_from_file_missing_path_is_noop() {
 
 #[test]
 #[serial]
-fn load_from_file_toml_yaml_and_json() {
+fn load_from_file_toml_and_json() {
     let tmp = TempDir::new().expect("tempdir");
     let _guard = CurrentDirGuard::new(tmp.path()).expect("chdir");
 
@@ -357,20 +343,9 @@ fn load_from_file_toml_yaml_and_json() {
     mgr.load_from_file(&mut cfg, "cfg.toml").expect("toml load");
     assert_eq!(cfg.application.port, 7777);
 
-    let yaml_raw = serde_yaml::to_string(&base).expect("yaml");
-    let yaml_str = patch_yaml_with_db_password(&yaml_raw);
-    fs::write("cfg.yaml", yaml_str).expect("write");
-    mgr.load_from_file(&mut cfg, "cfg.yaml").expect("yaml");
-    assert_eq!(cfg.application.port, 7777);
-
     let json_str = patch_json_with_db_password(&base);
     fs::write("cfg.json", json_str).expect("write");
     mgr.load_from_file(&mut cfg, "cfg.json").expect("json");
-    assert_eq!(cfg.application.port, 7777);
-
-    let yml_str = patch_yaml_with_db_password(&serde_yaml::to_string(&base).expect("yml"));
-    fs::write("cfg.yml", yml_str).expect("write");
-    mgr.load_from_file(&mut cfg, "cfg.yml").expect("yml ext");
     assert_eq!(cfg.application.port, 7777);
 }
 
@@ -610,13 +585,19 @@ fn load_from_file_unknown_extension_parses_as_json() {
 
 #[test]
 #[serial]
-fn load_from_file_invalid_yaml_errors() {
+fn load_from_file_yaml_extension_deprecated_errors() {
     let tmp = TempDir::new().expect("tempdir");
     let _guard = CurrentDirGuard::new(tmp.path()).expect("chdir");
     fs::write("bad.yaml", "{ not: yaml").expect("write");
     let mgr = ProductionConfigManager::new(Environment::Development).expect("mgr");
     let mut cfg = ProductionConfig::default();
-    assert!(mgr.load_from_file(&mut cfg, "bad.yaml").is_err());
+    let err = mgr
+        .load_from_file(&mut cfg, "bad.yaml")
+        .expect_err("yaml deprecated");
+    assert!(
+        err.to_string().contains("YAML format deprecated"),
+        "unexpected: {err}"
+    );
 }
 
 #[test]

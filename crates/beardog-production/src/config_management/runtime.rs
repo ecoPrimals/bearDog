@@ -112,8 +112,9 @@ impl ProductionConfigManager {
         } else if ext
             .is_some_and(|e| e.eq_ignore_ascii_case("yaml") || e.eq_ignore_ascii_case("yml"))
         {
-            serde_yaml::from_str(&content)
-                .map_err(|e| BearDogError::validation(&format!("Invalid YAML config: {e}")))?
+            return Err(BearDogError::validation(
+                "YAML format deprecated; use TOML or JSON",
+            ));
         } else {
             serde_json::from_str(&content)
                 .map_err(|e| BearDogError::validation(&format!("Invalid JSON config: {e}")))?

@@ -31,10 +31,6 @@ pub enum ConfigError {
     #[error("JSON parsing error: {0}")]
     JsonParse(#[from] serde_json::Error),
 
-    /// YAML parsing error
-    #[error("YAML parsing error: {0}")]
-    YamlParse(#[from] serde_yaml::Error),
-
     /// Generic serialization error
     #[error("Serialization error: {0}")]
     Serialization(String),

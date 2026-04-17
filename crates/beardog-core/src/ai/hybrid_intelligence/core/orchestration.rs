@@ -353,7 +353,7 @@ pub fn create_default_decision_config() -> DecisionEngineConfig {
 ///
 /// On Linux, reads `/proc/stat` to calculate CPU utilization.
 /// Returns percentage as a value between 0.0 and 100.0.
-async fn get_cpu_usage() -> Result<f64, Box<dyn std::error::Error + Send + Sync>> {
+async fn get_cpu_usage() -> Result<f64, BearDogError> {
     #[cfg(target_os = "linux")]
     {
         if let Ok(stat) = std::fs::read_to_string("/proc/stat") {
@@ -392,7 +392,7 @@ async fn get_cpu_usage() -> Result<f64, Box<dyn std::error::Error + Send + Sync>
 ///
 /// On Linux, reads `/proc/self/status` for process memory (VmRSS).
 /// Returns memory usage in megabytes.
-async fn get_memory_usage() -> Result<f64, Box<dyn std::error::Error + Send + Sync>> {
+async fn get_memory_usage() -> Result<f64, BearDogError> {
     #[cfg(target_os = "linux")]
     {
         if let Ok(status) = std::fs::read_to_string("/proc/self/status") {
@@ -421,7 +421,7 @@ async fn get_memory_usage() -> Result<f64, Box<dyn std::error::Error + Send + Sy
 ///
 /// On Linux, reads `/proc/net/dev` for network interface statistics.
 /// Returns combined RX+TX throughput in kilobytes per second.
-async fn get_network_io() -> Result<f64, Box<dyn std::error::Error + Send + Sync>> {
+async fn get_network_io() -> Result<f64, BearDogError> {
     #[cfg(target_os = "linux")]
     {
         if let Ok(net_dev) = std::fs::read_to_string("/proc/net/dev") {
@@ -457,7 +457,7 @@ async fn get_network_io() -> Result<f64, Box<dyn std::error::Error + Send + Sync
 ///
 /// On Linux, reads `/proc/diskstats` for disk I/O statistics.
 /// Returns combined read+write throughput in kilobytes per second.
-async fn get_disk_io() -> Result<f64, Box<dyn std::error::Error + Send + Sync>> {
+async fn get_disk_io() -> Result<f64, BearDogError> {
     #[cfg(target_os = "linux")]
     {
         if let Ok(diskstats) = std::fs::read_to_string("/proc/diskstats") {

@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 16, 2026 -- Wave 56: Deep Debt — serde_yaml Elimination, Typed Errors, Idiomatic Cleanup
+
+- **serde_yaml eliminated** — Deprecated dep removed from `beardog-config`, `beardog-production`, `beardog-types`, and workspace root. YAML config paths return deprecation errors; TOML/JSON remain. `serde_yaml`/`unsafe-libyaml` gone from lockfile.
+- **Box<dyn Error> → BearDogError** — Sole production instance in `orchestration.rs` (AI module) converted to typed error.
+- **#[allow()] → #[expect()]** — Production attrs migrated where lints fire; cross-target/crate-root attrs retained as `#[allow()]`.
+- **Test refactoring** — 3 test files >900 LOC split into domain modules (coverage_gap_wave18, rustcrypto_tests, software_hsm/tests).
+- **Quality** — 14,786+ tests, 0 failures. Zero `serde_yaml`, `async-trait`, `ring`, `sled`, `openssl` in lockfile.
+
 ### April 16, 2026 -- Wave 55: async-trait Lockfile Elimination — Stadial Gate Cleared (13/13)
 
 - **async-trait fully eliminated from Cargo.lock** — Removed unused `hickory-resolver` from `beardog-core`. Removed never-enabled `tarpc` optional dep + 3 orphan tarpc source files from `beardog-ipc`. Suspended `dns-sd` feature in `beardog-discovery`.
