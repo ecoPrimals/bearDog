@@ -64,8 +64,7 @@
 //! - wasm-bindgen: https://rustwasm.github.io/wasm-bindgen/
 //! - biomeOS IPC standard: cross-platform socket layout
 
-use super::{PlatformSocket, SocketEndpoint};
-use tokio::net::UnixListener;
+use super::{PlatformListenerBackend, PlatformSocket, SocketEndpoint};
 use tracing::{info, warn};
 
 /// WASM platform implementation
@@ -91,7 +90,7 @@ impl PlatformSocket for WASMSocket {
         Ok(SocketEndpoint::InProcess(channel_name))
     }
 
-    fn bind(_endpoint: &SocketEndpoint) -> std::io::Result<UnixListener> {
+    fn bind(_endpoint: &SocketEndpoint) -> std::io::Result<Box<PlatformListenerBackend>> {
         warn!("WASM socket binding not implemented");
         warn!("WebAssembly cannot bind traditional sockets due to sandbox");
         warn!("Implementation requires:");

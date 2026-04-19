@@ -53,7 +53,7 @@
 //! - Unix sockets on iOS: Limited by sandbox, but possible with entitlements
 //! - biomeOS IPC standard: cross-platform socket layout
 
-use super::{PlatformSocket, SocketEndpoint};
+use super::{PlatformListenerBackend, PlatformSocket, SocketEndpoint};
 use tokio::net::UnixListener;
 use tracing::{debug, info, warn};
 
@@ -115,24 +115,26 @@ impl PlatformSocket for IOSSocket {
         }
     }
 
-    fn bind(endpoint: &SocketEndpoint) -> std::io::Result<UnixListener> {
+    fn bind(endpoint: &SocketEndpoint) -> std::io::Result<Box<PlatformListenerBackend>> {
         match endpoint {
             // macOS: Bind Unix socket
             #[cfg(target_os = "macos")]
             SocketEndpoint::Filesystem(path) => {
                 debug!("Binding macOS Unix socket: {}", path.display());
 
-                // Remove stale socket if exists
                 if path.exists() {
                     debug!("Removing stale socket: {}", path.display());
                     std::fs::remove_file(path)?;
                 }
 
                 let listener = UnixListener::bind(path)?;
+                let path_str = path.display().to_string();
 
                 info!("✅ macOS Unix socket bound: {}", path.display());
 
-                Ok(listener)
+                Ok(Box::new(PlatformListenerBackend::Unix(
+                    super::unix::UnixPlatformListener::new(listener, path_str),
+                )))
             }
 
             // iOS: XPC endpoint (not yet implemented)

@@ -70,6 +70,12 @@ pub struct UnixPlatformListener {
     path: String,
 }
 
+impl UnixPlatformListener {
+    pub(super) fn new(listener: UnixListener, path: String) -> Self {
+        Self { listener, path }
+    }
+}
+
 impl PlatformListener for UnixPlatformListener {
     async fn accept(&mut self) -> std::io::Result<Box<dyn PlatformStream>> {
         let (stream, _addr) = self.listener.accept().await?;
@@ -201,10 +207,7 @@ impl PlatformSocket for UnixSocket {
                 );
 
                 Ok(Box::new(PlatformListenerBackend::Unix(
-                    UnixPlatformListener {
-                        listener,
-                        path: path_str,
-                    },
+                    UnixPlatformListener::new(listener, path_str),
                 )))
             }
             SocketEndpoint::Abstract(_) => Err(std::io::Error::new(

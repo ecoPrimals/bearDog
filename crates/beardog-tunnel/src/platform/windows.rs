@@ -37,9 +37,8 @@
 //!
 //! Ready for testing on Windows (x86_64, ARM64)
 
-use super::{PlatformSocket, SocketEndpoint};
+use super::{PlatformListenerBackend, PlatformSocket, SocketEndpoint};
 use beardog_types::constants::domains::network::ipc_discovery as ipc_layout;
-use tokio::net::UnixListener;
 use tracing::{debug, info, warn};
 
 /// Windows named pipe implementation
@@ -56,7 +55,7 @@ impl PlatformSocket for WindowsSocket {
         )
     }
 
-    fn bind(endpoint: &SocketEndpoint) -> std::io::Result<UnixListener> {
+    fn bind(endpoint: &SocketEndpoint) -> std::io::Result<Box<PlatformListenerBackend>> {
         match endpoint {
             SocketEndpoint::NamedPipe(name) => {
                 // On Windows: Use tokio's named pipe

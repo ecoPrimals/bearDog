@@ -476,13 +476,11 @@ impl SoftwareHsmDiscoverer {
             SoftwareHsmImplementation::BearDogNative,
             SoftwareHsmImplementation::OpenSsl,
             SoftwareHsmImplementation::SoftHsm,
+            #[cfg(target_os = "windows")]
+            SoftwareHsmImplementation::MicrosoftCng,
+            #[cfg(target_os = "macos")]
+            SoftwareHsmImplementation::MacOsKeychain,
         ];
-
-        #[cfg(target_os = "windows")]
-        implementations.push(SoftwareHsmImplementation::MicrosoftCng);
-
-        #[cfg(target_os = "macos")]
-        implementations.push(SoftwareHsmImplementation::MacOsKeychain);
 
         Ok(Self { implementations })
     }
