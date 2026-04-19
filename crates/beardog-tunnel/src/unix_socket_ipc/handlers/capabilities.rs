@@ -277,11 +277,21 @@ impl CapabilitiesHandler {
                 "btsp_version": "2.0",
                 "btsp_required": self.is_btsp_required(),
                 "btsp_server_available": true,
-                "cleartext_available": !self.is_btsp_required(),
+                "cleartext_available": true,
+                "cleartext_detection": "first-byte 0x7B auto-detect on UDS and TCP",
+                "cleartext_methods": [
+                    "crypto.hash",
+                    "crypto.blake3_hash",
+                    "health.liveness",
+                    "health.readiness",
+                    "health.version",
+                    "capabilities.list",
+                    "identity.get",
+                ],
                 "note": if self.is_btsp_required() {
-                    "Family-scoped socket: BTSP handshake required before JSON-RPC. Use btsp.server.create_session to initiate."
+                    "Family-scoped socket: BTSP preferred. Cleartext JSON-RPC accepted via first-byte 0x7B bypass for listed methods."
                 } else {
-                    "Dev/standalone socket: plaintext JSON-RPC accepted. Set FAMILY_ID for BTSP-secured mode."
+                    "Dev/standalone socket: plaintext JSON-RPC accepted for all methods."
                 },
             },
             "btsp_enabled": true,

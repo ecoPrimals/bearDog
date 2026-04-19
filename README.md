@@ -159,6 +159,41 @@ All primals delegate cryptographic operations to BearDog via JSON-RPC:
 
 Key material is derived from the family seed. A BearDog instance serving family A never shares keys with family B.
 
+### BTSP Security Modes
+
+BearDog enforces **BTSP (BearDog Transport Security Protocol)** based on environment configuration:
+
+| `FAMILY_ID` | `FAMILY_SEED` | Mode | Behavior |
+|-------------|---------------|------|----------|
+| unset / `"default"` | — | **Development** | No BTSP; cleartext JSON-RPC accepted on all transports |
+| set (e.g. `"alpha"`) | **required** | **Production** | BTSP handshake enforced; first-byte `{` bypasses for local composition |
+| set | **missing** | **Startup error** | Server refuses to start — set seed or remove `FAMILY_ID` |
+
+**Family seed resolution** (checked in order):
+
+1. `FAMILY_SEED` env var (raw bytes)
+2. `BEARDOG_FAMILY_SEED` env var (raw bytes)
+3. `.family.seed` file in the working directory
+
+```bash
+# Development mode (no BTSP)
+./beardog server
+
+# Production mode (BTSP enforced, cleartext bypass for JSON-RPC)
+FAMILY_ID=alpha FAMILY_SEED=my-secret-seed ./beardog server
+```
+
+### Cleartext JSON-RPC (BTSP bypass)
+
+In production mode, BearDog auto-detects cleartext JSON-RPC on both UDS and TCP: if the **first byte** of a connection is `{` (0x7B), the connection is treated as cleartext NDJSON without a BTSP handshake. This allows other primals and springs to call methods like `crypto.hash`, `health.liveness`, and `capabilities.list` without implementing BTSP.
+
+```bash
+# Works in both development and production modes
+echo '{"jsonrpc":"2.0","method":"crypto.hash","params":{"data":"aGVsbG8="},"id":1}' | nc -U beardog.sock
+```
+
+The `capabilities.list` response includes a `transport_security` block with `cleartext_available: true/false` so clients can discover BTSP requirements programmatically.
+
 ---
 
 ## Quality

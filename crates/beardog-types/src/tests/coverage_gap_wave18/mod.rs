@@ -3,11 +3,11 @@
 
 #![cfg(test)]
 
-mod common;
 mod cloud_hsm;
-mod service_discovery;
-mod workflow_adapter;
-mod security_alerting;
+mod common;
 mod hsm_config;
 mod network_ipc;
 mod performance;
+mod security_alerting;
+mod service_discovery;
+mod workflow_adapter;

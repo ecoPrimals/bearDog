@@ -15,10 +15,10 @@
 #![cfg(test)]
 
 mod common;
+mod concurrency;
+mod crypto_operations;
+mod edge_cases;
+mod errors;
 mod initialization;
 mod key_generation;
-mod crypto_operations;
 mod key_management;
-mod errors;
-mod concurrency;
-mod edge_cases;
