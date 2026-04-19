@@ -60,6 +60,14 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
+### Deep Debt: Workspace Dep Normalization, Cross-Arch Fix — DONE (Wave 61)
+
+40+ explicit dep pins across 9 crates normalized to `{ workspace = true }`. Cross-arch compilation fixed (macOS/iOS/Windows/WASM `PlatformSocket::bind` return type, platform HSM `vec![]` initialization). Deep debt survey: zero production files >800 LOC, zero unsafe, zero TODOs. 14,786+ tests, 0 failures.
+
+### Documentation Cleanup, Clippy Fixes — DONE (Wave 60)
+
+All 7 root docs updated with Wave 58/59 entries. Enum dispatch count corrected to 20. 56 CLI receipt artifacts cleaned. 2 clippy fixes.
+
 ### Deep Debt: Enum Dispatch, Workspace Deps, Test Refactoring — DONE (Wave 59)
 
 `Box<dyn ProtocolHandler>` → `ProtocolHandlerBackend` enum; `Box<dyn AsyncStream>` → `IpcStream` enum (20 dispatch types total). 21 explicit dep pins normalized to workspace. 7 `#[allow()]` → `#[expect()]`. 2 test files >800 LOC smart-refactored. 14,786+ tests, 0 failures.

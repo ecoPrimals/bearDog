@@ -90,6 +90,16 @@
 
 ## Recent Improvements
 
+### Wave 61 — Deep Debt: Workspace Dep Normalization (9 Crates), Cross-Arch Fix (April 20, 2026)
+
+- **Workspace deps normalized** — 40+ explicit version pins across 9 crates aligned to `{ workspace = true }` (`beardog-discovery`, `beardog-workflows`, `beardog-capabilities`, `beardog-traits`, `beardog-utils`, `beardog-tower-atomic`, `beardog-production`, `beardog-monitoring`, `beardog-types`). Version drift fixed (`serial_test` 3.2.0 → 3.0).
+- **Cross-arch fix** — macOS/iOS/Windows/WASM `PlatformSocket::bind` return type corrected; platform HSM `vec![]` initialization fixed. Resolves primalSpring cross-arch audit.
+- **Deep debt survey clean** — Zero production files >800 LOC, zero unsafe, zero TODOs, zero commented-out code, zero hardcoded peer primal names. All `#[allow()]` documented.
+
+### Wave 60 — Documentation Cleanup, Clippy Fixes (April 20, 2026)
+
+- **Root docs updated** — All 7 root docs aligned to April 20, 2026 with Wave 58/59 entries. Enum dispatch count corrected to 20. 56 CLI receipt artifacts cleaned. 2 clippy fixes.
+
 ### Wave 59 — Deep Debt: Enum Dispatch, Workspace Deps, Test Refactoring (April 20, 2026)
 
 - **`Box<dyn>` → enum dispatch** — `ProtocolHandlerBackend` (Minimal, Mdns) and `IpcStream` (Unix, Tcp) replace heap-allocated trait objects. **20 enum dispatch types** total (was 18).

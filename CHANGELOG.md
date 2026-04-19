@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 20, 2026 -- Wave 61: Deep Debt — Workspace Dep Normalization (9 Crates), Cross-Arch Fix
+
+- **Workspace dependency normalization** — 40+ explicit version pins across 9 crates (`beardog-discovery`, `beardog-workflows`, `beardog-capabilities`, `beardog-traits`, `beardog-utils`, `beardog-tower-atomic`, `beardog-production`, `beardog-monitoring`, `beardog-types`) normalized to `{ workspace = true }`. Fixes version drift (`serial_test` 3.2.0 → workspace 3.0 in `beardog-monitoring`).
+- **Cross-arch compilation fix** — Resolved macOS/iOS/Windows/WASM build errors from primalSpring audit: `PlatformSocket::bind` return type corrected (`UnixListener` → `Box<PlatformListenerBackend>`) in `ios.rs`, `windows.rs`, `wasm.rs`. Platform-specific HSM implementations moved inline into `vec![]` with `#[cfg]` attrs in `discovery_engine.rs`.
+- **Deep debt survey** — Zero production files >800 LOC, zero unsafe, zero TODOs, zero commented-out code, zero hardcoded peer primal names. All remaining `#[allow()]` instances documented with reasons and unfulfillable via `#[expect()]`.
+- **Quality** — 14,786+ tests, 0 failures. Clippy/fmt/rustdoc clean.
+
+### April 20, 2026 -- Wave 60: Documentation Cleanup, Clippy Fixes, Debris Removal
+
+- **Root docs updated** — All 7 root docs updated to April 20, 2026 with Wave 58 + 59 entries. Enum dispatch inventory corrected to 20 types.
+- **Clippy fixes** — `map_unwrap_or` in `primal_discovery_mdns.rs`, unused import + missing variant doc in `hid_transport.rs`.
+- **Debris cleaned** — 56 CLI receipt JSON artifacts removed.
+- **Quality** — 14,786+ tests, 0 failures.
+
 ### April 20, 2026 -- Wave 59: Deep Debt — Enum Dispatch, Workspace Deps, Test Refactoring
 
 - **`Box<dyn>` → enum dispatch** — `Box<dyn ProtocolHandler>` → `ProtocolHandlerBackend` enum (`Minimal`, `Mdns`) in `beardog-core`; `Box<dyn AsyncStream>` → `IpcStream` enum (`Unix`, `Tcp`) in `beardog-ipc` with direct `AsyncRead`/`AsyncWrite` delegation. 20 enum dispatch types total.
