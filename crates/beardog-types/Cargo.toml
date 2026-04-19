@@ -22,7 +22,7 @@ beardog-config = { path = "../beardog-config" }
 
 serde = { workspace = true, features = ["rc"] }
 serde_json = { workspace = true }
-semver = "1.0"
+semver = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 tokio = { workspace = true, optional = true }

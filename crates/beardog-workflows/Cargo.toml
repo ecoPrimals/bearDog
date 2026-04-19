@@ -11,14 +11,14 @@ readme = "README.md"
 license = "AGPL-3.0-or-later"
 
 [dependencies]
-parking_lot = "0.12"
-hex = "0.4"
-hmac = "0.12"
-sha2 = "0.10"
-base64 = "0.22"
+parking_lot = { workspace = true }
+hex = { workspace = true }
+hmac = { workspace = true }
+sha2 = { workspace = true }
+base64 = { workspace = true }
 
 [dev-dependencies]
-tokio-test = "0.4"
+tokio-test = { workspace = true }
 
 [package.version]
 workspace = true

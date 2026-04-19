@@ -11,7 +11,7 @@ use super::primal_types::{
 /// in the ecosystem, enabling universal discovery, integration, and management.
 #[allow(
     async_fn_in_trait,
-    reason = "Async primal trait methods for ecosystem integration"
+    reason = "concrete implementors only; no dyn dispatch"
 )]
 pub trait EcoPrimal: Send + Sync {
     /// Returns metadata describing this primal's identity and characteristics

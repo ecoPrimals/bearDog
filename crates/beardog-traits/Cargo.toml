@@ -16,23 +16,13 @@ documentation = "https://docs.rs/beardog"
 workspace = true
 
 [dependencies]
-serde_json = "1.0"
+serde_json = { workspace = true }
 thiserror = { workspace = true }
-uuid = { version = "1.0", features = ["v4"] }
+uuid = { workspace = true }
+serde = { workspace = true }
+chrono = { workspace = true }
+beardog-errors = { workspace = true }
+beardog-types = { workspace = true }
 
 [dev-dependencies]
-tokio = { version = "1.0", features = ["rt", "macros"] }
-
-[dependencies.beardog-errors]
-path = "../beardog-errors"
-
-[dependencies.beardog-types]
-path = "../beardog-types"
-
-[dependencies.serde]
-version = "1.0"
-features = [ "derive",]
-
-[dependencies.chrono]
-version = "0.4"
-features = [ "serde",]
+tokio = { workspace = true }

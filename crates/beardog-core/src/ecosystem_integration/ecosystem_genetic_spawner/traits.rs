@@ -16,7 +16,7 @@ use std::collections::HashMap;
 /// and requesting primal spawning operations.
 #[allow(
     async_fn_in_trait,
-    reason = "Async ecosystem hooks for async trait ecosystem integration"
+    reason = "concrete implementors only; no dyn dispatch"
 )]
 pub trait EcosystemPrimalClient: Send + Sync {
     /// Checks if a primal with given capabilities exists

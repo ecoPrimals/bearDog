@@ -55,4 +55,4 @@ workspace = true
 workspace = true
 
 [dev-dependencies]
-serial_test = "3.2.0"
+serial_test = { workspace = true }

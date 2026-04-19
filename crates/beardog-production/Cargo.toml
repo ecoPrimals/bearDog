@@ -65,7 +65,7 @@ workspace = true
 workspace = true
 
 [dependencies.hkdf]
-version = "0.12"
+workspace = true
 
 [dependencies.sha2]
 workspace = true
