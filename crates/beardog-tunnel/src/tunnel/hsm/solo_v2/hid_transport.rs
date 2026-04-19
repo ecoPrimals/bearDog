@@ -6,7 +6,6 @@
 
 use std::future::Future;
 
-use super::ctap2_protocol::{CTAP2_GET_ASSERTION, CTAP2_MAKE_CREDENTIAL, CTAP2_OK};
 use super::transport::Ctap2Transport;
 use beardog_errors::BearDogError;
 use beardog_hid::{HidDevice, HidDeviceBackend};
@@ -295,6 +294,7 @@ pub struct MockCtap2Transport {
 #[cfg(test)]
 impl MockCtap2Transport {
     pub(crate) fn with_success_responses() -> Self {
+        use super::ctap2_protocol::CTAP2_OK;
         use ciborium::Value as CborValue;
 
         let mut auth_data = vec![0u8; 32];
@@ -367,6 +367,7 @@ impl Ctap2Transport for MockCtap2Transport {
 
 /// Enum dispatch for [`Ctap2Transport`].
 pub enum Ctap2TransportBackend {
+    /// HID-backed CTAP2 transport.
     Hid(HidCtap2Transport),
     #[cfg(test)]
     Mock(MockCtap2Transport),

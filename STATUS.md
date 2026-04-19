@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: April 16, 2026
+**Last Updated**: April 20, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -90,6 +90,19 @@
 
 ## Recent Improvements
 
+### Wave 59 — Deep Debt: Enum Dispatch, Workspace Deps, Test Refactoring (April 20, 2026)
+
+- **`Box<dyn>` → enum dispatch** — `ProtocolHandlerBackend` (Minimal, Mdns) and `IpcStream` (Unix, Tcp) replace heap-allocated trait objects. **20 enum dispatch types** total (was 18).
+- **Workspace deps normalized** — 21 explicit version pins across 3 crates aligned to `{ workspace = true }`.
+- **`#[allow()]` → `#[expect()]`** — 7 more instances migrated with explicit reasons.
+- **Test files refactored** — `fault_injection/mod.rs` (966 LOC → 4 modules), `graph_security_integration_tests.rs` (881 LOC → directory with 3 modules). All test files <800 LOC.
+- **Quality** — 14,786+ tests, 0 failures. Zero unsafe, zero TODOs. All production files <800 LOC.
+
+### Wave 58 — primalSpring Audit: BTSP Documentation, Cleartext Bypass (April 20, 2026)
+
+- **`BEARDOG_FAMILY_SEED` documented** — README includes BTSP Security Modes table and seed resolution order.
+- **Cleartext JSON-RPC bypass** — `capabilities.list` advertises `cleartext_available: true` in production with `cleartext_methods` array for safe methods.
+
 ### Wave 56 — Deep Debt: serde_yaml Elimination + Idiomatic Cleanup (April 16, 2026)
 
 - **serde_yaml eliminated** — Deprecated dep (uses unsafe-libyaml) removed from all 3 crates and workspace. YAML config branches replaced with deprecation errors; TOML and JSON remain. `serde_yaml`/`unsafe-libyaml` gone from `Cargo.lock`.
@@ -118,7 +131,7 @@
 - **`#[async_trait]` eliminated** — Migrated roughly 49 trait attributes across 22+ traits to native `async fn` (RPITIT). Zero `#[async_trait]` in any `.rs` file.
 - **`async-trait` removed from all manifests** — Dependency dropped from 17 `Cargo.toml` files (7 core crates, 9 showcase, workspace root).
 - **Ring lockfile** — Already clean from prior wave; unchanged.
-- **Enum dispatch types** — Finite-implementor `dyn Trait` dispatch replaced with enum dispatch for zero-cost monomorphized calls. Types include: `MethodHandlerKind`, `BondPersistenceBackend`, `HsmKeyProviderBackend`, `HsmProviderBackend`, `UniversalCryptoBackend`, `CryptoProviderBackend`, `KeyManagementBackend`, `ServiceDiscoveryBackend`, `KeystoreTransportBackend`, `AttestationTransportBackend`, `HealthMetricsTransportBackend`, `IpcHandlerBackend`, `PlatformListenerBackend`, `StorageBackend`, `EncryptionKeyBackend`, `AuditLoggerBackend`, `Ctap2TransportBackend`, `HidDeviceBackend`.
+- **Enum dispatch types (20)** — Finite-implementor `dyn Trait` dispatch replaced with enum dispatch for zero-cost monomorphized calls: `MethodHandlerKind`, `BondPersistenceBackend`, `HsmKeyProviderBackend`, `HsmProviderBackend`, `UniversalCryptoBackend`, `CryptoProviderBackend`, `KeyManagementBackend`, `ServiceDiscoveryBackend`, `KeystoreTransportBackend`, `AttestationTransportBackend`, `HealthMetricsTransportBackend`, `IpcHandlerBackend`, `PlatformListenerBackend`, `StorageBackend`, `EncryptionKeyBackend`, `AuditLoggerBackend`, `Ctap2TransportBackend`, `HidDeviceBackend`, `ProtocolHandlerBackend`, `IpcStream`.
 - **Quality** — 14,786+ tests passing (0 failures); `cargo clippy` and `cargo doc` clean with `-D warnings` on workspace crates.
 
 ### Wave 52 — Deep Debt & syn Elimination (April 15, 2026)

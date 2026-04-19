@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 20, 2026 -- Wave 59: Deep Debt — Enum Dispatch, Workspace Deps, Test Refactoring
+
+- **`Box<dyn>` → enum dispatch** — `Box<dyn ProtocolHandler>` → `ProtocolHandlerBackend` enum (`Minimal`, `Mdns`) in `beardog-core`; `Box<dyn AsyncStream>` → `IpcStream` enum (`Unix`, `Tcp`) in `beardog-ipc` with direct `AsyncRead`/`AsyncWrite` delegation. 20 enum dispatch types total.
+- **Workspace dependency normalization** — 21 explicit version pins across `beardog-hid`, `beardog-adapters`, `beardog-genetics` normalized to `{ workspace = true }`. Added `semver` and `crossterm` to workspace deps.
+- **`#[allow()]` → `#[expect()]`** — 7 instances migrated (6× `async_fn_in_trait`, 1× `clippy::cast_precision_loss`) with explicit `reason` strings.
+- **Test file refactoring** — `fault_injection/mod.rs` (966 LOC) split into 4 domain modules; `graph_security_integration_tests.rs` (881 LOC) split into directory with 3 domain modules + helpers. `type_validation_comprehensive.rs` (820 LOC) kept as-is (short tests, marginal gain).
+- **Quality** — 14,786+ tests, 0 failures. All production files <800 LOC. Zero unsafe, zero TODOs.
+
+### April 20, 2026 -- Wave 58: primalSpring Audit — BTSP Documentation, Cleartext Bypass
+
+- **`BEARDOG_FAMILY_SEED` documented** — README now includes BTSP Security Modes table (Development/Production/Startup error) and family seed resolution order (`FAMILY_SEED` → `BEARDOG_FAMILY_SEED` → `.family.seed` file).
+- **Cleartext JSON-RPC bypass documented** — README describes first-byte `{` (0x7B) auto-detection on UDS and TCP. `capabilities.list` updated: `cleartext_available: true` in production, `cleartext_methods` array lists safe methods (`crypto.hash`, `health.liveness`, etc.).
+- **Quality** — 14,786+ tests, 0 failures. Resolves primalSpring spring audit findings (silent failure on connection reset, BTSP-free basic mode).
+
 ### April 16, 2026 -- Wave 56: Deep Debt — serde_yaml Elimination, Typed Errors, Idiomatic Cleanup
 
 - **serde_yaml eliminated** — Deprecated dep removed from `beardog-config`, `beardog-production`, `beardog-types`, and workspace root. YAML config paths return deprecation errors; TOML/JSON remain. `serde_yaml`/`unsafe-libyaml` gone from lockfile.
@@ -37,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **All `#[async_trait]` removed** — Roughly 49 trait attributes across 22+ traits migrated to native `async fn` in traits (RPITIT). No `#[async_trait]` remains in any `.rs` file.
 - **`async-trait` dropped from every manifest** — Removed from 17 `Cargo.toml` files (7 core crates, 9 showcase, workspace root).
 - **Transitive `ring` in lockfile** — Already resolved in a prior wave; lockfile remains clean.
-- **Enum dispatch for finite backends** — Replaced `dyn Trait` dispatch with explicit enum types for monomorphized, zero-vtable-overhead routing. Dispatch enums include `MethodHandlerKind`, `BondPersistenceBackend`, `HsmKeyProviderBackend`, `HsmProviderBackend`, `UniversalCryptoBackend`, `CryptoProviderBackend`, `KeyManagementBackend`, `ServiceDiscoveryBackend`, `KeystoreTransportBackend`, `AttestationTransportBackend`, `HealthMetricsTransportBackend`, `IpcHandlerBackend`, `PlatformListenerBackend`, `StorageBackend`, `EncryptionKeyBackend`, `AuditLoggerBackend`, `Ctap2TransportBackend`, `HidDeviceBackend`.
+- **Enum dispatch for finite backends** — Replaced `dyn Trait` dispatch with explicit enum types for monomorphized, zero-vtable-overhead routing. 20 dispatch enums: `MethodHandlerKind`, `BondPersistenceBackend`, `HsmKeyProviderBackend`, `HsmProviderBackend`, `UniversalCryptoBackend`, `CryptoProviderBackend`, `KeyManagementBackend`, `ServiceDiscoveryBackend`, `KeystoreTransportBackend`, `AttestationTransportBackend`, `HealthMetricsTransportBackend`, `IpcHandlerBackend`, `PlatformListenerBackend`, `StorageBackend`, `EncryptionKeyBackend`, `AuditLoggerBackend`, `Ctap2TransportBackend`, `HidDeviceBackend`, `ProtocolHandlerBackend`, `IpcStream`.
 - **Verification** — 14,786+ tests passing (0 failures); Clippy and rustdoc clean with `-D warnings` on all workspace crates.
 
 ### April 15, 2026 -- Wave 51: primalSpring Audit Resolution — UDS Peek, Chain Proofs, Bond Persistence, ring Elimination

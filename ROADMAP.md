@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: April 16, 2026
+**Updated**: April 20, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -59,6 +59,14 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### Deep Debt: Enum Dispatch, Workspace Deps, Test Refactoring — DONE (Wave 59)
+
+`Box<dyn ProtocolHandler>` → `ProtocolHandlerBackend` enum; `Box<dyn AsyncStream>` → `IpcStream` enum (20 dispatch types total). 21 explicit dep pins normalized to workspace. 7 `#[allow()]` → `#[expect()]`. 2 test files >800 LOC smart-refactored. 14,786+ tests, 0 failures.
+
+### primalSpring Audit: BTSP Documentation, Cleartext Bypass — DONE (Wave 58)
+
+`BEARDOG_FAMILY_SEED` documented in README with security modes table. Cleartext JSON-RPC bypass documented and advertised in `capabilities.list` (`cleartext_methods` array). Resolves spring audit findings.
 
 ### serde_yaml Elimination + Deep Debt — DONE (Wave 56)
 
@@ -135,4 +143,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: April 16, 2026
+**Last Updated**: April 20, 2026
