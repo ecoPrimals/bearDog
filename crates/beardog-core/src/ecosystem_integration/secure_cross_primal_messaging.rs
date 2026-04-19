@@ -48,7 +48,10 @@ use tokio::sync::RwLock;
 use tracing::{debug, info};
 
 /// Trait for discovering primals by capability (not by hardcoded name)
-#[allow(async_fn_in_trait)]
+#[expect(
+    async_fn_in_trait,
+    reason = "concrete implementors only; no dyn dispatch"
+)]
 pub trait PrimalDiscoveryService: Send + Sync {
     /// Discover primals with specific capabilities
     async fn discover_by_capability(

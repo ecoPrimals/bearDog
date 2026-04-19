@@ -17,7 +17,10 @@ use std::future::Future;
 ///
 /// This trait eliminates crypto library lock-in by providing a vendor-agnostic
 /// interface, similar to our Universal HSM architecture.
-#[allow(async_fn_in_trait)]
+#[expect(
+    async_fn_in_trait,
+    reason = "concrete dispatch via enum backends; no dyn usage"
+)]
 pub trait UniversalCryptoProvider: Send + Sync + std::fmt::Debug {
     // ============================================================================
     // Provider Information

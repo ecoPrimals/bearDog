@@ -197,6 +197,8 @@ bytes = "1.5"
 parking_lot = "0.12"
 base64 = "0.22"
 hex = "0.4"
+semver = "1.0"
+crossterm = "0.27"
 bcrypt = "0.18"  # Legacy password hashing - Phase 7
 # JWT: Implemented using RustCrypto (hmac + sha2 + base64) - 100% Pure Rust!
 
@@ -309,6 +311,11 @@ harness = true
 [[test]]
 name = "fault_injection"
 path = "tests/fault_injection/mod.rs"
+harness = true
+
+[[test]]
+name = "graph_security_integration_tests"
+path = "tests/graph_security_integration_tests/mod.rs"
 harness = true
 
 [profile.dev]

@@ -7,8 +7,8 @@ repository = "https://github.com/ecoPrimals/beardog"
 rust-version = "1.93.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
-keywords = [ "adapters", "integration", "beardog", "ecosystem", "universal",]
-categories = [ "development-tools", "integration", "adapters",]
+keywords = ["adapters", "integration", "beardog", "ecosystem", "universal"]
+categories = ["development-tools", "integration", "adapters"]
 readme = "README.md"
 license = "AGPL-3.0-or-later"
 
@@ -19,50 +19,25 @@ default = []
 workspace = true
 
 [dependencies]
-serde_json = "1.0"
-tracing = "0.1"
-semver = "1.0"
-sha2 = "0.10"
+beardog-config = { path = "../beardog-config" }
+beardog-discovery = { path = "../beardog-discovery" }
+beardog-errors = { path = "../beardog-errors" }
+beardog-traits = { path = "../beardog-traits" }
+beardog-types = { path = "../beardog-types" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+semver = { workspace = true }
+sha2 = { workspace = true }
 rand = { workspace = true }
-ed25519-dalek = "2.1"
-blake3 = { version = "1.5", features = ["pure"] }  # Pure Rust (no C assembly) for universal portability
+ed25519-dalek = { workspace = true }
+blake3 = { workspace = true }
 postcard = { workspace = true }
-hex = "0.4"
-mdns-sd = { version = "0.11", optional = true }  # Standardized to 0.11
+hex = { workspace = true }
+mdns-sd = { version = "0.11", optional = true }
 
 [dev-dependencies]
 tokio-test = "0.4"
-
-[package.authors]
-workspace = true
-
-[dependencies.beardog-config]
-path = "../beardog-config"
-
-[dependencies.beardog-discovery]
-path = "../beardog-discovery"
-
-[dependencies.beardog-errors]
-path = "../beardog-errors"
-
-[dependencies.beardog-traits]
-path = "../beardog-traits"
-
-[dependencies.beardog-types]
-path = "../beardog-types"
-
-[dependencies.serde]
-version = "1.0"
-features = [ "derive",]
-
-[dependencies.tokio]
-version = "1.0"
-features = [ "full",]
-
-[dependencies.chrono]
-version = "0.4"
-features = [ "serde",]
-
-[dependencies.uuid]
-version = "1.0"
-features = [ "v4", "serde",]

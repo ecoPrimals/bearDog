@@ -239,9 +239,69 @@ impl ProtocolHandler for MdnsProtocolHandler {
     }
 }
 
+/// Concrete dispatch enum for finite protocol handler implementors.
+#[derive(Debug)]
+pub enum ProtocolHandlerBackend {
+    /// Minimal no-op handler for protocols without full implementations.
+    Minimal(MinimalProtocolHandler),
+    /// mDNS-based discovery.
+    #[cfg(feature = "mdns")]
+    Mdns(MdnsProtocolHandler),
+}
+
+impl ProtocolHandler for ProtocolHandlerBackend {
+    fn start(&self) -> Result<(), BearDogError> {
+        match self {
+            Self::Minimal(h) => h.start(),
+            #[cfg(feature = "mdns")]
+            Self::Mdns(h) => h.start(),
+        }
+    }
+
+    fn stop(&self) -> Result<(), BearDogError> {
+        match self {
+            Self::Minimal(h) => h.stop(),
+            #[cfg(feature = "mdns")]
+            Self::Mdns(h) => h.stop(),
+        }
+    }
+
+    fn register_service(&self, service: &ServiceInfo) -> Result<(), BearDogError> {
+        match self {
+            Self::Minimal(h) => h.register_service(service),
+            #[cfg(feature = "mdns")]
+            Self::Mdns(h) => h.register_service(service),
+        }
+    }
+
+    fn deregister_service(&self, service: &ServiceInfo) -> Result<(), BearDogError> {
+        match self {
+            Self::Minimal(h) => h.deregister_service(service),
+            #[cfg(feature = "mdns")]
+            Self::Mdns(h) => h.deregister_service(service),
+        }
+    }
+
+    fn discover_services(&self, service_name: &str) -> Result<Vec<ServiceInfo>, BearDogError> {
+        match self {
+            Self::Minimal(h) => h.discover_services(service_name),
+            #[cfg(feature = "mdns")]
+            Self::Mdns(h) => h.discover_services(service_name),
+        }
+    }
+
+    fn get_statistics(&self) -> Result<ProtocolStatistics, BearDogError> {
+        match self {
+            Self::Minimal(h) => h.get_statistics(),
+            #[cfg(feature = "mdns")]
+            Self::Mdns(h) => h.get_statistics(),
+        }
+    }
+}
+
 pub(super) fn create_modern_discovery(
     protocol: &DiscoveryProtocol,
-) -> Result<Box<dyn ProtocolHandler>, BearDogError> {
+) -> Result<ProtocolHandlerBackend, BearDogError> {
     match protocol {
         DiscoveryProtocol::Mdns {
             service_type: _,
@@ -249,62 +309,41 @@ pub(super) fn create_modern_discovery(
             timeout_ms: _,
             continuous_monitoring: _,
         } => {
-            // mDNS handler - integrate with primal_discovery_mdns module
             #[cfg(feature = "mdns")]
             {
                 use crate::primal_discovery_mdns::MdnsDiscoveryClient;
                 use std::time::Duration;
 
-                // Extract timeout and service_type from match pattern
                 let timeout = match protocol {
                     DiscoveryProtocol::Mdns { timeout_ms, .. } => {
                         Duration::from_millis(*timeout_ms)
                     }
-                    _ => Duration::from_secs(5), // Fallback
+                    _ => Duration::from_secs(5),
                 };
 
                 let service = match protocol {
                     DiscoveryProtocol::Mdns { service_type, .. } => service_type.clone(),
-                    _ => "_services._dns-sd._udp.local.".to_string(), // Default
+                    _ => "_services._dns-sd._udp.local.".to_string(),
                 };
 
                 let client = MdnsDiscoveryClient::new().with_timeout(timeout);
-                Ok(Box::new(MdnsProtocolHandler::new(client, service)))
+                Ok(ProtocolHandlerBackend::Mdns(MdnsProtocolHandler::new(
+                    client, service,
+                )))
             }
             #[cfg(not(feature = "mdns"))]
             {
                 tracing::warn!("mDNS feature not enabled, using minimal handler");
-                Ok(Box::new(MinimalProtocolHandler::new()))
+                Ok(ProtocolHandlerBackend::Minimal(
+                    MinimalProtocolHandler::new(),
+                ))
             }
         }
-        DiscoveryProtocol::Http {
-            endpoint: _,
-            headers: _,
-        } => {
-            // HTTP discovery handler - using minimal implementation pending full protocol support
-            Ok(Box::new(MinimalProtocolHandler::new()))
-        }
-        DiscoveryProtocol::Dns {
-            domain: _,
-            servers: _,
-        } => {
-            // DNS-based discovery handler - using minimal implementation pending full protocol support
-            Ok(Box::new(MinimalProtocolHandler::new()))
-        }
-        DiscoveryProtocol::Consul {
-            address: _,
-            datacenter: _,
-        } => {
-            // Consul discovery handler - using minimal implementation pending full protocol support
-            Ok(Box::new(MinimalProtocolHandler::new()))
-        }
-        DiscoveryProtocol::Etcd {
-            endpoints: _,
-            key_prefix: _,
-            timeout_ms: _,
-        } => {
-            // etcd discovery handler - using minimal implementation pending full protocol support
-            Ok(Box::new(MinimalProtocolHandler::new()))
-        }
+        DiscoveryProtocol::Http { .. }
+        | DiscoveryProtocol::Dns { .. }
+        | DiscoveryProtocol::Consul { .. }
+        | DiscoveryProtocol::Etcd { .. } => Ok(ProtocolHandlerBackend::Minimal(
+            MinimalProtocolHandler::new(),
+        )),
     }
 }

@@ -13,7 +13,7 @@ use tracing::{debug, info, warn};
 
 use super::health::{self, HealthMonitor};
 use super::load_balancing::LoadBalancer;
-use super::protocol_handlers::{ProtocolHandler, create_modern_discovery};
+use super::protocol_handlers::{ProtocolHandler, ProtocolHandlerBackend, create_modern_discovery};
 use super::registry::ServiceRegistry;
 use super::types::{
     DiscoveryEvent, DiscoveryProtocol, DiscoveryStatistics, ProtocolStatistics,
@@ -26,7 +26,7 @@ pub struct UniversalServiceDiscovery {
     config: UniversalDiscoveryConfig,
 
     /// Service discovery protocol handlers
-    discovery_instances: HashMap<DiscoveryProtocol, Box<dyn ProtocolHandler>>,
+    discovery_instances: HashMap<DiscoveryProtocol, ProtocolHandlerBackend>,
 
     _service_registry: ServiceRegistry,
 

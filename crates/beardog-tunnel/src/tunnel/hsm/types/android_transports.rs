@@ -448,7 +448,10 @@ fn android_resident_memory_mb() -> Option<f64> {
     let s = std::fs::read_to_string("/proc/self/statm").ok()?;
     let resident_pages: u64 = s.split_whitespace().nth(1)?.parse().ok()?;
     const PAGE_SIZE: u64 = 4096;
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "memory size in MiB; f64 precision is sufficient"
+    )]
     Some((resident_pages * PAGE_SIZE) as f64 / (1024.0 * 1024.0))
 }
 

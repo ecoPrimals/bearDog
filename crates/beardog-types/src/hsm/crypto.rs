@@ -15,7 +15,10 @@ use std::future::Future;
 /// provides a unified, object-safe interface for all HSM backends.
 /// New code should use `HsmKeyProvider` via the `HsmProviderRegistry`.
 /// This trait will be removed in a future release.
-#[allow(async_fn_in_trait)]
+#[expect(
+    async_fn_in_trait,
+    reason = "concrete implementors only; no dyn dispatch"
+)]
 pub trait CryptoProvider<KeyType = ()>: Send + Sync
 where
     KeyType: Send + Sync + std::fmt::Debug,

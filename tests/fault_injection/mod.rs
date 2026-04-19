@@ -465,113 +465,16 @@ impl ResourceFaultInjector {
     }
 }
 
+mod config_fault_tests;
+mod crypto_fault_tests;
+mod ipc_fault_tests;
+mod state_fault_tests;
+
 #[cfg(test)]
-mod tests {
+mod framework_tests {
     use super::*;
-
-    use beardog_config::BearDogConfig;
-    use beardog_config::domains::network_ports::{DEFAULT_API_PORT, NetworkPortsConfig};
-    use beardog_config::domains::paths::PathConfig;
-    use beardog_core::crypto_service::algorithms::asymmetric::verify_ed25519;
-    use beardog_core::crypto_service::{BearDogCryptoService, CryptoService, CryptoServiceConfig};
-    use beardog_errors::BearDogError;
-    use beardog_ipc::protocol::error_codes;
-    use beardog_security::{MemoryKeyConfig, MemoryKeyManager};
-    use beardog_types::crypto_service::{
-        CryptoAlgorithm, DecryptOptions, EncryptOptions, EncryptedData, EncryptionMetadata,
-        SignOptions, Signature, SignatureAlgorithm, SignatureMetadata, VerifyOptions,
-    };
-    use serde_json::json;
-    use std::io::Write;
-    use std::panic;
-    use std::time::{Duration, SystemTime};
-    use tempfile::NamedTempFile;
-    use tokio::net::UnixStream;
-
-    /// Mirrors [`beardog_ipc::multi_transport::handle_jsonrpc_request_line`] JSON-RPC 2.0
-    /// parse/validation behavior (default `beardog-ipc` build without `tarpc` keeps that logic
-    /// in-crate; this test-side helper asserts the same contract for fault injection).
-    fn handle_jsonrpc_request_line_for_fault(line: &str) -> Option<String> {
-        const MAX_JSONRPC_LINE_BYTES: usize = 256 * 1024;
-
-        let trimmed = line.trim();
-        if trimmed.is_empty() {
-            return None;
-        }
-        if trimmed.len() > MAX_JSONRPC_LINE_BYTES {
-            return Some(
-                json!({
-                    "jsonrpc": "2.0",
-                    "error": { "code": error_codes::INTERNAL_ERROR, "message": "Message too large" },
-                    "id": null
-                })
-                .to_string(),
-            );
-        }
-
-        let v: serde_json::Value = match serde_json::from_str(trimmed) {
-            Ok(v) => v,
-            Err(_) => {
-                return Some(
-                    json!({
-                        "jsonrpc": "2.0",
-                        "error": { "code": error_codes::PARSE_ERROR, "message": "Parse error" },
-                        "id": null
-                    })
-                    .to_string(),
-                );
-            }
-        };
-
-        let Some(obj) = v.as_object() else {
-            return Some(
-                json!({
-                    "jsonrpc": "2.0",
-                    "error": { "code": error_codes::INVALID_REQUEST, "message": "Invalid Request" },
-                    "id": null
-                })
-                .to_string(),
-            );
-        };
-
-        if obj.get("jsonrpc") != Some(&json!("2.0")) {
-            return Some(
-                json!({
-                    "jsonrpc": "2.0",
-                    "error": { "code": error_codes::INVALID_REQUEST, "message": "Invalid Request" },
-                    "id": obj.get("id").cloned().unwrap_or(serde_json::Value::Null)
-                })
-                .to_string(),
-            );
-        }
-
-        if !obj.contains_key("id") {
-            return None;
-        }
-
-        let id = obj.get("id").cloned().unwrap_or(serde_json::Value::Null);
-        let method = obj.get("method").and_then(|m| m.as_str()).unwrap_or("");
-
-        if method.is_empty() {
-            return Some(
-                json!({
-                    "jsonrpc": "2.0",
-                    "error": { "code": error_codes::INVALID_REQUEST, "message": "Invalid Request" },
-                    "id": id
-                })
-                .to_string(),
-            );
-        }
-
-        Some(
-            json!({
-                "jsonrpc": "2.0",
-                "error": { "code": error_codes::METHOD_NOT_FOUND, "message": "Method not found" },
-                "id": id
-            })
-            .to_string(),
-        )
-    }
+    use std::sync::Arc;
+    use std::sync::atomic::Ordering;
 
     #[test]
     fn test_fault_injector_creation() {
@@ -595,40 +498,36 @@ mod tests {
     #[test]
     fn test_should_inject_fault() {
         let mut config = FaultConfig::default();
-        config.injection_rate = 0.0; // Never inject
+        config.injection_rate = 0.0;
         let injector = FaultInjector::new(config);
-
         assert!(!injector.should_inject_fault(FaultType::NetworkTimeout));
     }
 
     #[tokio::test]
     async fn test_network_fault_injector() {
         let base = Arc::new(FaultInjector::default_injector());
-        base.disable(); // Disable for predictable test
-
+        base.disable();
         let network = NetworkFaultInjector::new(base);
         let result = network.maybe_connection_refused();
-        assert!(result.is_ok()); // Should not inject when disabled
+        assert!(result.is_ok());
     }
 
     #[test]
     fn test_hsm_fault_injector() {
         let base = Arc::new(FaultInjector::default_injector());
-        base.disable(); // Disable for predictable test
-
+        base.disable();
         let hsm = HsmFaultInjector::new(base);
         let result = hsm.maybe_fail();
-        assert!(result.is_ok()); // Should not inject when disabled
+        assert!(result.is_ok());
     }
 
     #[test]
     fn test_resource_fault_injector() {
         let base = Arc::new(FaultInjector::default_injector());
-        base.disable(); // Disable for predictable test
-
+        base.disable();
         let resource = ResourceFaultInjector::new(base);
         let result = resource.maybe_disk_full();
-        assert!(result.is_ok()); // Should not inject when disabled
+        assert!(result.is_ok());
     }
 
     #[test]
@@ -641,326 +540,7 @@ mod tests {
             recoveries_succeeded: 95,
             recoveries_failed: 5,
         };
-
         assert_eq!(metrics.faults_injected, 100);
         assert_eq!(metrics.errors_caught, 95);
-    }
-
-    // --- Configuration fault injection ----------------------------------------------------
-
-    /// Missing config file path must surface as an error (no panic) when loading explicitly.
-    #[tokio::test]
-    async fn config_fault_missing_file_returns_error() {
-        let dir = tempfile::tempdir().expect("temp directory for missing config test");
-        let path = dir.path().join("definitely_missing.toml");
-        assert!(!path.exists());
-        let result = BearDogConfig::from_file(&path);
-        assert!(
-            result.is_err(),
-            "missing file should not panic; expect error"
-        );
-    }
-
-    /// Corrupt TOML in a config file must fail parsing with a meaningful error.
-    #[tokio::test]
-    async fn config_fault_corrupt_toml_returns_parse_error() {
-        let mut file = NamedTempFile::new().expect("temp config file");
-        writeln!(file, "[[[not_valid_toml").expect("write corrupt toml");
-        let path = file.path().to_path_buf();
-        let result = BearDogConfig::from_file(&path);
-        assert!(
-            result.is_err(),
-            "corrupt TOML should yield error, not panic"
-        );
-    }
-
-    /// Invalid env-style port strings match `NetworkPortsConfig::from_env` parsing: non-numeric
-    /// values are ignored and the documented default port is used (no panic).
-    #[tokio::test]
-    async fn config_fault_invalid_port_string_uses_default_like_from_env() {
-        let parsed = "not-a-port".parse::<u16>().ok();
-        assert!(parsed.is_none());
-        let api_port = parsed.unwrap_or(DEFAULT_API_PORT);
-        assert_eq!(api_port, DEFAULT_API_PORT);
-    }
-
-    /// Privileged API port fails [`NetworkPortsConfig::validate`] with a clear error (same rule
-    /// `BearDogConfig::validate` applies via centralized ports).
-    #[tokio::test]
-    async fn config_fault_privileged_api_port_fails_validation() {
-        let mut ports = NetworkPortsConfig::with_defaults();
-        ports.api_port = 80;
-        let v = ports.validate();
-        assert!(
-            v.is_err(),
-            "privileged port should fail validation with clear error"
-        );
-    }
-
-    /// PKCS#11 library path that does not exist fails [`PathConfig::validate`] (no panic).
-    #[tokio::test]
-    async fn config_fault_bad_pkcs11_path_returns_path_error() {
-        let dir = tempfile::tempdir().expect("temp directory for fake pkcs11 path");
-        let fake = dir.path().join("no_such_lib.so");
-        assert!(!fake.exists());
-        let mut paths = PathConfig::default();
-        paths.pkcs11_library = Some(fake);
-        let v = paths.validate();
-        assert!(
-            v.is_err(),
-            "missing PKCS#11 library path should error in validate()"
-        );
-    }
-
-    /// Empty `network` table in TOML still deserializes; validation catches invalid state (e.g. port 0).
-    #[tokio::test]
-    async fn config_fault_empty_network_section_validates_or_loads() {
-        let mut file = NamedTempFile::new().expect("temp network toml");
-        writeln!(file, "[network.ports]").expect("write header");
-        writeln!(file, "api_port = 0").expect("write invalid port");
-        let path = file.path();
-        let loaded = BearDogConfig::from_file(path);
-        if let Ok(cfg) = loaded {
-            assert!(cfg.validate().is_err(), "port 0 must not validate");
-        } else {
-            // Deserialization may also reject invalid port depending on schema
-        }
-    }
-
-    // --- IPC fault injection --------------------------------------------------------------
-
-    /// Connecting to a non-existent Unix socket path should fail quickly (no hang).
-    #[tokio::test]
-    async fn ipc_fault_nonexistent_unix_socket_fails_without_hanging() {
-        let dir = tempfile::tempdir().expect("temp directory for bogus socket");
-        let socket_path = dir.path().join("nonexistent.sock");
-        let connect = UnixStream::connect(&socket_path);
-        let outcome = tokio::time::timeout(Duration::from_secs(2), connect)
-            .await
-            .expect("connect should complete within timeout");
-        assert!(
-            outcome.is_err(),
-            "connection to missing socket should fail with error"
-        );
-    }
-
-    /// Malformed JSON-RPC lines yield parse error responses (JSON-RPC -32700).
-    #[tokio::test]
-    async fn ipc_fault_malformed_jsonrpc_returns_parse_error_response() {
-        let line = "not-json-at-all{{{";
-        let response = handle_jsonrpc_request_line_for_fault(line).expect("response for bad line");
-        let v: serde_json::Value = serde_json::from_str(&response).expect("response is JSON");
-        assert_eq!(v["error"]["code"], error_codes::PARSE_ERROR);
-    }
-
-    /// Invalid JSON-RPC object (missing 2.0) yields invalid request (-32600).
-    #[tokio::test]
-    async fn ipc_fault_invalid_jsonrpc_version_returns_invalid_request() {
-        let line = r#"{"jsonrpc":"1.0","method":"x","id":1}"#;
-        let response = handle_jsonrpc_request_line_for_fault(line).expect("response");
-        let v: serde_json::Value = serde_json::from_str(&response).expect("response is JSON");
-        assert_eq!(v["error"]["code"], error_codes::INVALID_REQUEST);
-    }
-
-    /// Oversized JSON-RPC lines are rejected before parse (bounded handler).
-    #[tokio::test]
-    async fn ipc_fault_oversized_jsonrpc_line_rejected() {
-        let padding = "x".repeat(300_000);
-        let line = format!(r#"{{"jsonrpc":"2.0","method":"x","id":1,"p":"{padding}"}}"#);
-        let response = handle_jsonrpc_request_line_for_fault(&line).expect("oversized response");
-        let v: serde_json::Value = serde_json::from_str(&response).expect("response is JSON");
-        assert_eq!(v["error"]["code"], error_codes::INTERNAL_ERROR);
-    }
-
-    /// Very large invalid UTF-8-free JSON blob should not panic on parse failure.
-    #[tokio::test]
-    async fn ipc_fault_large_invalid_json_does_not_panic() {
-        let line = "a".repeat(500_000);
-        let result = panic::catch_unwind(|| serde_json::from_str::<serde_json::Value>(&line));
-        assert!(
-            result.is_ok(),
-            "serde_json should not panic on invalid input"
-        );
-        assert!(result.expect("no panic").is_err());
-    }
-
-    // --- Crypto fault injection -----------------------------------------------------------
-
-    /// Wrong-length Ed25519 public key material returns validation error, not panic.
-    #[tokio::test]
-    async fn crypto_fault_invalid_ed25519_key_length_returns_error() {
-        let data = b"message";
-        let sig = [0u8; 64];
-        let short_pk = [0u8; 31];
-        let err: BearDogError =
-            verify_ed25519(data, &sig, &short_pk).expect_err("short public key");
-        assert!(!err.to_string().is_empty());
-    }
-
-    /// Corrupted ciphertext fails AEAD decrypt with an error (authentication failure), not a panic.
-    #[tokio::test]
-    async fn crypto_fault_tampered_ciphertext_decrypt_returns_error() {
-        let mut cfg = CryptoServiceConfig::default();
-        cfg.max_data_size = 4096;
-        let service = BearDogCryptoService::new(cfg).expect("crypto service init");
-
-        let encrypted = service
-            .encrypt(
-                b"hello",
-                CryptoAlgorithm::Aes256Gcm,
-                EncryptOptions {
-                    key_id: "fault-test-key".to_string(),
-                    ..Default::default()
-                },
-            )
-            .await
-            .expect("encrypt should succeed");
-
-        let mut tampered = encrypted.clone();
-        tampered.ciphertext = vec![0xFF; encrypted.ciphertext.len()];
-
-        let bad = service
-            .decrypt(
-                &tampered,
-                DecryptOptions {
-                    key_id: "fault-test-key".to_string(),
-                    ..Default::default()
-                },
-            )
-            .await;
-        assert!(bad.is_err(), "tampered ciphertext must fail AEAD decrypt");
-    }
-
-    /// Invalid signature bytes length returns error from verifier (no panic).
-    #[tokio::test]
-    async fn crypto_fault_invalid_signature_length_returns_error() {
-        let data = b"signed-payload";
-        let sig = Signature {
-            signature: vec![0u8; 8],
-            algorithm: SignatureAlgorithm::Ed25519,
-            metadata: SignatureMetadata {
-                timestamp: SystemTime::UNIX_EPOCH,
-                key_id: None,
-                context: None,
-            },
-        };
-        let service =
-            BearDogCryptoService::new(CryptoServiceConfig::default()).expect("crypto init");
-        let v = service
-            .verify(
-                data,
-                &sig,
-                VerifyOptions {
-                    public_key: vec![0u8; 32],
-                    context: None,
-                },
-            )
-            .await;
-        assert!(v.is_err(), "short signature must be rejected");
-    }
-
-    /// Wrong public key yields false verification result without panic.
-    #[tokio::test]
-    async fn crypto_fault_invalid_signature_returns_false() {
-        let seed_b = [9u8; 32];
-        let (_, pk_b) =
-            beardog_core::crypto_service::algorithms::asymmetric::generate_ed25519_from_seed(
-                &seed_b,
-            )
-            .expect("keypair B");
-
-        let service =
-            BearDogCryptoService::new(CryptoServiceConfig::default()).expect("crypto init");
-        let signature = service
-            .sign(
-                b"doc",
-                SignatureAlgorithm::Ed25519,
-                SignOptions {
-                    key_id: "fault-test-sign".to_string(),
-                    context: None,
-                },
-            )
-            .await
-            .expect("sign");
-
-        let ok = service
-            .verify(
-                b"doc",
-                &signature,
-                VerifyOptions {
-                    public_key: pk_b.to_vec(),
-                    context: None,
-                },
-            )
-            .await
-            .expect("verify completes");
-        assert!(!ok, "signature must not verify under unrelated public key");
-        assert_eq!(pk_b.len(), 32);
-    }
-
-    /// Oversized plaintext is rejected by crypto service limits (no panic).
-    #[tokio::test]
-    async fn crypto_fault_oversized_plaintext_rejected() {
-        let mut cfg = CryptoServiceConfig::default();
-        cfg.max_data_size = 32;
-        let service = BearDogCryptoService::new(cfg).expect("crypto init");
-        let big = vec![0u8; 64];
-        let err = service
-            .encrypt(
-                &big,
-                CryptoAlgorithm::Aes256Gcm,
-                EncryptOptions {
-                    key_id: "big".to_string(),
-                    ..Default::default()
-                },
-            )
-            .await;
-        assert!(err.is_err(), "oversized input must be rejected");
-    }
-
-    // --- State / key store resilience -----------------------------------------------------
-
-    /// Corrupt on-disk config cannot be loaded, but a fresh in-memory key manager still initializes.
-    #[tokio::test]
-    async fn state_fault_corrupt_config_then_fresh_key_manager_initializes() {
-        let mut file = NamedTempFile::new().expect("temp file");
-        writeln!(file, "{{{{{{not json").expect("write");
-        let path = file.path();
-        let load = BearDogConfig::from_file(path);
-        assert!(load.is_err(), "corrupt config should not load");
-
-        let mgr = MemoryKeyManager::new(MemoryKeyConfig::default()).expect("fresh key manager");
-        let key_id = mgr.generate_key().expect("generate after failed load");
-        assert!(key_id.starts_with("key_"));
-    }
-
-    /// Empty encrypted payload with wrong metadata is rejected on decrypt (no panic).
-    #[tokio::test]
-    async fn state_fault_corrupted_encrypted_struct_decrypt_errors() {
-        let service =
-            BearDogCryptoService::new(CryptoServiceConfig::default()).expect("crypto init");
-        let bad = EncryptedData {
-            ciphertext: vec![],
-            algorithm: CryptoAlgorithm::Aes256Gcm,
-            metadata: EncryptionMetadata {
-                timestamp: SystemTime::UNIX_EPOCH,
-                key_id: Some("k".to_string()),
-                nonce: vec![0u8; 12],
-                tag: Some(vec![0u8; 16]),
-            },
-        };
-        let r = service
-            .decrypt(
-                &bad,
-                DecryptOptions {
-                    key_id: "k".to_string(),
-                    ..Default::default()
-                },
-            )
-            .await;
-        assert!(
-            r.is_err(),
-            "empty ciphertext with fake tag should fail decrypt"
-        );
     }
 }

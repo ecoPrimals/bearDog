@@ -33,7 +33,9 @@ use beardog_types::constants::domains::system::defaults::{
 };
 use std::net::SocketAddr;
 use std::path::PathBuf;
-use tokio::io::{AsyncRead, AsyncWrite};
+use std::pin::Pin;
+use std::task::Poll;
+use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tokio::net::{TcpStream, UnixStream};
 use tracing::{debug, info};
 
@@ -74,6 +76,65 @@ pub trait AsyncStream: AsyncRead + AsyncWrite + Send + Unpin {}
 // Implement for both Unix and TCP streams
 impl AsyncStream for UnixStream {}
 impl AsyncStream for TcpStream {}
+
+/// Concrete enum dispatch for IPC streams (replaces `Box<dyn AsyncStream>`).
+///
+/// Both variants are `Unpin + Send`, so the enum delegates directly.
+#[derive(Debug)]
+pub enum IpcStream {
+    /// Unix domain socket transport.
+    Unix(UnixStream),
+    /// TCP transport (localhost fallback).
+    Tcp(TcpStream),
+}
+
+impl AsyncRead for IpcStream {
+    fn poll_read(
+        self: Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<std::io::Result<()>> {
+        match self.get_mut() {
+            Self::Unix(s) => Pin::new(s).poll_read(cx, buf),
+            Self::Tcp(s) => Pin::new(s).poll_read(cx, buf),
+        }
+    }
+}
+
+impl AsyncWrite for IpcStream {
+    fn poll_write(
+        self: Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+        buf: &[u8],
+    ) -> Poll<std::io::Result<usize>> {
+        match self.get_mut() {
+            Self::Unix(s) => Pin::new(s).poll_write(cx, buf),
+            Self::Tcp(s) => Pin::new(s).poll_write(cx, buf),
+        }
+    }
+
+    fn poll_flush(
+        self: Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> Poll<std::io::Result<()>> {
+        match self.get_mut() {
+            Self::Unix(s) => Pin::new(s).poll_flush(cx),
+            Self::Tcp(s) => Pin::new(s).poll_flush(cx),
+        }
+    }
+
+    fn poll_shutdown(
+        self: Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> Poll<std::io::Result<()>> {
+        match self.get_mut() {
+            Self::Unix(s) => Pin::new(s).poll_shutdown(cx),
+            Self::Tcp(s) => Pin::new(s).poll_shutdown(cx),
+        }
+    }
+}
+
+impl AsyncStream for IpcStream {}
 
 /// Discover `BearDog` IPC endpoint (Unix or TCP)
 ///
@@ -279,7 +340,7 @@ fn get_tcp_discovery_file_candidates() -> Vec<String> {
 /// **Isomorphic Connection** (automatic adaptation):
 /// - Unix socket → Uses `UnixStream`
 /// - TCP → Uses `TcpStream`
-/// - Returns `Box<dyn AsyncStream>` (universal!)
+/// - Returns [`IpcStream`] (enum dispatch, zero heap allocation)
 ///
 /// ## Example
 ///
@@ -303,7 +364,7 @@ fn get_tcp_discovery_file_candidates() -> Vec<String> {
 /// # Errors
 ///
 /// Propagates [`discover_beardog_endpoint`] failures, or I/O errors when opening the socket.
-pub async fn connect_beardog() -> Result<Box<dyn AsyncStream>> {
+pub async fn connect_beardog() -> Result<IpcStream> {
     let endpoint = discover_beardog_endpoint().await?;
 
     info!("🔌 Connecting to BearDog via {}", endpoint.display());
@@ -316,7 +377,7 @@ pub async fn connect_beardog() -> Result<Box<dyn AsyncStream>> {
             ))?;
 
             info!("✅ Connected via Unix socket (optimal)");
-            Ok(Box::new(stream) as Box<dyn AsyncStream>)
+            Ok(IpcStream::Unix(stream))
         }
         IpcEndpoint::TcpLocal(addr) => {
             let stream = TcpStream::connect(addr)
@@ -324,7 +385,7 @@ pub async fn connect_beardog() -> Result<Box<dyn AsyncStream>> {
                 .context(format!("Failed to connect to TCP: {addr}"))?;
 
             info!("✅ Connected via TCP (isomorphic fallback)");
-            Ok(Box::new(stream) as Box<dyn AsyncStream>)
+            Ok(IpcStream::Tcp(stream))
         }
     }
 }

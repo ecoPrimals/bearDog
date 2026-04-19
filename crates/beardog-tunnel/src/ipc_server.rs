@@ -64,7 +64,10 @@ pub enum IpcMessage {
 /// IPC request handler trait
 ///
 /// Implement this to handle capability requests in a primal-specific way
-#[allow(async_fn_in_trait)]
+#[expect(
+    async_fn_in_trait,
+    reason = "concrete dispatch via IpcHandlerBackend; no dyn usage"
+)]
 pub trait IpcHandler: Send + Sync {
     /// Handle a capability request
     async fn handle_capability_request(

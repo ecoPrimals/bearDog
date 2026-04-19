@@ -48,7 +48,10 @@ pub struct HealthStatus {
 /// canonical HSM abstraction. Use `HsmProviderRegistry`
 /// for runtime provider selection.
 /// This trait will be removed in a future release.
-#[allow(async_fn_in_trait)]
+#[expect(
+    async_fn_in_trait,
+    reason = "concrete dispatch via HsmProviderBackend enum"
+)]
 pub trait HsmProvider: Send + Sync {
     /// Get provider information
     async fn get_info(&self) -> Result<ProviderInfo, BearDogError>;

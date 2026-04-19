@@ -288,7 +288,10 @@ impl PlatformStream for PrefixedStream {}
 /// - Custom `BroadcastChannel` listener (WASM)
 ///
 /// **Philosophy**: "1 unified codebase" - same API works everywhere!
-#[allow(async_fn_in_trait)]
+#[expect(
+    async_fn_in_trait,
+    reason = "concrete dispatch via PlatformListenerBackend enum"
+)]
 pub trait PlatformListener: Send + Sync {
     /// Accept incoming connection
     ///
