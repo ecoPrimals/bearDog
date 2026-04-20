@@ -37,11 +37,11 @@ beardog-node-registry = { path = "../beardog-node-registry" }
 beardog-production = { path = "../beardog-production" }
 beardog-utils = { path = "../beardog-utils" }
 beardog-types = { path = "../beardog-types" }
-tracing = "0.1"
-tracing-subscriber = "0.3"
-tokio = { version = "1", features = ["full"] }
-serde_json = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-uuid = { version = "1", features = ["v4", "serde"] }
-chrono = { version = "0.4", features = ["serde"] }
-anyhow = "1.0"
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tokio = { workspace = true }
+serde_json = { workspace = true }
+serde = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+anyhow = { workspace = true }

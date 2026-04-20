@@ -38,16 +38,15 @@ multiple-versions = "deny"
 wildcards = "allow"
 skip = [
     # Transitive version splits — will resolve as upstream deps align.
-    # Last audited: 2026-04-02 — removed 12 resolved skips.
+    # Last audited: 2026-04-20 — removed 3 resolved single-version skips.
+    { crate = "cpufeatures" },  # 0.2 (aes/sha2) + 0.3 (blake3)
     { crate = "getrandom" },
     { crate = "hashbrown" },
-    { crate = "linux-raw-sys" },
     { crate = "mio" },
     { crate = "rand" },
     { crate = "rand_chacha" },
     { crate = "rand_core" },
-    { crate = "rustix" },
-    { crate = "syn" },
+    { crate = "socket2" },  # 0.5 (local-ip-address) + 0.6 (tokio)
     { crate = "thiserror" },
     { crate = "thiserror-impl" },
     { crate = "toml_datetime" },
@@ -55,7 +54,7 @@ skip = [
     { crate = "winnow" },
 ]
 deny = [
-    { crate = "async-trait", wrappers = ["hickory-proto", "hickory-resolver"] },
+    { crate = "async-trait" },
     { crate = "openssl", wrappers = [] },
     { crate = "openssl-sys", wrappers = [] },
     { crate = "ring", wrappers = [] },
