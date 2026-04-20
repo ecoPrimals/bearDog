@@ -90,6 +90,12 @@
 
 ## Recent Improvements
 
+### Wave 63 — Deep Debt: deny.toml Cleanup, Final Workspace Dep Normalization (April 20, 2026)
+
+- **`cargo deny` 4/4 clean** — 3 stale skips removed, unused wrappers pruned, transitive duplicates documented.
+- **Final dep normalization** — 8 explicit version pins in `crates/beardog/Cargo.toml` migrated to workspace. All crates now use workspace deps exclusively.
+- **Comprehensive survey** — 0 production files >800 LOC, 0 unsafe, 0 TODO, 0 C deps compiled, all mocks `#[cfg(test)]`, all primal refs env-driven.
+
 ### Wave 62 — primalSpring Phase 45 Audit: Sign→Verify Roundtrip, Base64 Standardization (April 20, 2026)
 
 - **`crypto.sign` now returns `public_key`** — Standard-base64-encoded Ed25519 public key included in sign response, enabling sign→verify roundtrip via IPC.

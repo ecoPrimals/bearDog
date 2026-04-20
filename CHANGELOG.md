@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 20, 2026 -- Wave 63: Deep Debt — deny.toml Cleanup, Final Workspace Dep Normalization
+
+- **`cargo deny` 4/4 clean** — Removed 3 stale skip entries (`linux-raw-sys`, `rustix`, `syn` — now single-version). Removed unused `async-trait` wrappers (`hickory-proto`, `hickory-resolver`). Added `cpufeatures` + `socket2` skip entries for transitive duplicates.
+- **`crates/beardog/Cargo.toml` normalized** — 8 explicit version pins (`tracing`, `tracing-subscriber`, `tokio`, `serde_json`, `serde`, `uuid`, `chrono`, `anyhow`) migrated to `{ workspace = true }`.
+- **Deep debt survey clean** — 0 production files >800 LOC, 0 unsafe, 0 TODO/FIXME/HACK, 0 C deps compiled, all mocks `#[cfg(test)]` gated, all hardcoded primal refs are env-driven constants.
+- **Quality** — 14,786+ tests, 0 failures. Clippy/fmt/deny clean.
+
 ### April 20, 2026 -- Wave 62: primalSpring Phase 45 Audit — Sign→Verify Roundtrip, Ed25519 Base64 Standardization
 
 - **`crypto.sign` now returns `public_key`** — Sign response includes the standard-base64-encoded Ed25519 public key alongside signature, enabling sign→verify roundtrip via IPC without re-deriving the key. Resolves primalSpring guidestone item BD-PG-01.
