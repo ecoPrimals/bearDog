@@ -90,6 +90,11 @@
 
 ## Recent Improvements
 
+### Wave 62 — primalSpring Phase 45 Audit: Sign→Verify Roundtrip, Base64 Standardization (April 20, 2026)
+
+- **`crypto.sign` now returns `public_key`** — Standard-base64-encoded Ed25519 public key included in sign response, enabling sign→verify roundtrip via IPC.
+- **Ed25519 encoding standardized** — All Ed25519 output (capability announcements, ionic bond signatures, contract signatures) migrated from hex to standard base64. Verification accepts both for backward compatibility.
+
 ### Wave 61 — Deep Debt: Workspace Dep Normalization (9 Crates), Cross-Arch Fix (April 20, 2026)
 
 - **Workspace deps normalized** — 40+ explicit version pins across 9 crates aligned to `{ workspace = true }` (`beardog-discovery`, `beardog-workflows`, `beardog-capabilities`, `beardog-traits`, `beardog-utils`, `beardog-tower-atomic`, `beardog-production`, `beardog-monitoring`, `beardog-types`). Version drift fixed (`serial_test` 3.2.0 → 3.0).

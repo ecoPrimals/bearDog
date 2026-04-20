@@ -276,9 +276,9 @@ pub struct SignContractParams {
 pub struct SignContractResponse {
     /// SHA-256 hex digest of the canonical contract terms.
     pub terms_hash: String,
-    /// Ed25519 signature over the terms hash (hex-encoded, 128 hex chars).
+    /// Ed25519 signature over the terms hash (standard base64, 64 bytes decoded).
     pub signature: String,
-    /// Ed25519 public key of the signer (hex-encoded, 64 hex chars).
+    /// Ed25519 public key of the signer (standard base64, 32 bytes decoded).
     pub public_key: String,
     /// Signing timestamp (RFC 3339).
     pub signed_at: String,

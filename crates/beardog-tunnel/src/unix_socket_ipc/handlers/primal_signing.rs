@@ -9,6 +9,7 @@
 //!
 //! The seed is `SHA-256("primal-identity-key:" || name || ":" || node_id)`.
 
+use base64::Engine;
 use ed25519_dalek::{Signer, SigningKey, VerifyingKey};
 use sha2::{Digest, Sha256};
 
@@ -35,18 +36,19 @@ pub fn derive_primal_verifying_key(primal_name: &str, node_id: &str) -> Verifyin
 
 /// Sign arbitrary bytes with the primal's identity key.
 ///
-/// Returns `(signature_hex, public_key_hex)`.
+/// Returns `(signature_base64, public_key_base64)` using standard base64.
 pub fn sign_with_primal_identity(
     primal_name: &str,
     node_id: &str,
     message: &[u8],
 ) -> (String, String) {
+    let b64 = &base64::engine::general_purpose::STANDARD;
     let signing_key = derive_primal_signing_key(primal_name, node_id);
     let verifying_key = signing_key.verifying_key();
     let signature = signing_key.sign(message);
     (
-        hex::encode(signature.to_bytes()),
-        hex::encode(verifying_key.as_bytes()),
+        b64.encode(signature.to_bytes()),
+        b64.encode(verifying_key.as_bytes()),
     )
 }
 
@@ -79,6 +81,7 @@ pub fn canonical_announcement_message(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use base64::engine::general_purpose::STANDARD as BASE64;
     use ed25519_dalek::Verifier;
 
     #[test]
@@ -97,9 +100,9 @@ mod tests {
 
     #[test]
     fn sign_and_verify_roundtrip() {
-        let (sig_hex, pk_hex) = sign_with_primal_identity("beardog", "node-1", b"hello");
-        let pk_bytes: [u8; 32] = hex::decode(&pk_hex).unwrap().try_into().unwrap();
-        let sig_bytes: [u8; 64] = hex::decode(&sig_hex).unwrap().try_into().unwrap();
+        let (sig_b64, pk_b64) = sign_with_primal_identity("beardog", "node-1", b"hello");
+        let pk_bytes: [u8; 32] = BASE64.decode(&pk_b64).unwrap().try_into().unwrap();
+        let sig_bytes: [u8; 64] = BASE64.decode(&sig_b64).unwrap().try_into().unwrap();
         let vk = VerifyingKey::from_bytes(&pk_bytes).unwrap();
         let sig = ed25519_dalek::Signature::from_bytes(&sig_bytes);
         assert!(vk.verify(b"hello", &sig).is_ok());

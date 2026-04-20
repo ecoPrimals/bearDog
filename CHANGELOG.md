@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 20, 2026 -- Wave 62: primalSpring Phase 45 Audit — Sign→Verify Roundtrip, Ed25519 Base64 Standardization
+
+- **`crypto.sign` now returns `public_key`** — Sign response includes the standard-base64-encoded Ed25519 public key alongside signature, enabling sign→verify roundtrip via IPC without re-deriving the key. Resolves primalSpring guidestone item BD-PG-01.
+- **Ed25519 encoding standardized to standard base64** — `primal_signing::sign_with_primal_identity` migrated from hex to standard base64. Capability announcements and ionic bond signatures now use base64 (was hex). `verify_ed25519_signature` accepts both base64 and hex for backward compatibility. `SignContractResponse` doc comments updated.
+- **Quality** — 14,786+ tests, 0 failures. Clippy/fmt clean.
+
 ### April 20, 2026 -- Wave 61: Deep Debt — Workspace Dep Normalization (9 Crates), Cross-Arch Fix
 
 - **Workspace dependency normalization** — 40+ explicit version pins across 9 crates (`beardog-discovery`, `beardog-workflows`, `beardog-capabilities`, `beardog-traits`, `beardog-utils`, `beardog-tower-atomic`, `beardog-production`, `beardog-monitoring`, `beardog-types`) normalized to `{ workspace = true }`. Fixes version drift (`serial_test` 3.2.0 → workspace 3.0 in `beardog-monitoring`).

@@ -20,8 +20,8 @@ async fn test_ed25519_sign_basic() {
     assert_eq!(value["algorithm"], "Ed25519");
     assert!(value["signature"].is_string());
     assert!(value["key_id"].is_string());
+    assert!(value["public_key"].is_string());
 
-    // Verify signature is 64 bytes
     let sig_str = value["signature"]
         .as_str()
         .expect("signature should be a string");
@@ -29,6 +29,14 @@ async fn test_ed25519_sign_basic() {
         .decode(sig_str)
         .expect("signature should be valid base64");
     assert_eq!(signature.len(), 64);
+
+    let pk_str = value["public_key"]
+        .as_str()
+        .expect("public_key should be a string");
+    let pk = BASE64
+        .decode(pk_str)
+        .expect("public_key should be valid base64");
+    assert_eq!(pk.len(), 32);
 }
 
 #[tokio::test]
@@ -288,23 +296,25 @@ async fn test_ed25519_generate_keypair_with_purpose() {
 
 #[tokio::test]
 async fn test_ed25519_sign_verify_roundtrip() {
-    use beardog_core::crypto_service::algorithms::asymmetric;
     let msg = BASE64.encode(b"roundtrip");
     let sign_p = json!({ "message": msg, "key_id": "rt-key", "purpose": "t" });
     let signed = handle_sign_ed25519(Some(&sign_p)).await.expect("sign");
     let sig = signed["signature"].as_str().expect("sig");
-    let seed = super::super::utils::derive_key_from_id("rt-key", "t").expect("seed");
-    let (_sk, pk) = asymmetric::generate_ed25519_from_seed(&seed).expect("kp");
-    let pk_b64 = BASE64.encode(pk);
+    let pk = signed["public_key"]
+        .as_str()
+        .expect("public_key in sign response");
     let verify_p = json!({
         "message": msg,
         "signature": sig,
-        "public_key": pk_b64,
+        "public_key": pk,
     });
     let v = handle_verify_ed25519(Some(&verify_p))
         .await
         .expect("verify");
-    assert_eq!(v["valid"], true);
+    assert_eq!(
+        v["valid"], true,
+        "sign→verify roundtrip via IPC response fields"
+    );
 }
 
 // ========================================================================

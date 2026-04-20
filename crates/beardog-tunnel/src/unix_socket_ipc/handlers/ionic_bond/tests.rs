@@ -3,17 +3,19 @@
 use super::super::MethodHandler;
 use super::*;
 use crate::btsp_provider::BeardogBtspProvider;
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use ed25519_dalek::{Signer, SigningKey};
 use std::sync::Arc;
 
 /// Generate a real Ed25519 signature over `terms_hash` and return
-/// `(signature_hex, public_key_hex)` for use in accept params.
+/// `(signature_base64, public_key_base64)` for use in accept params.
 fn sign_as_acceptor(terms_hash: &str) -> (String, String) {
     let key = SigningKey::from_bytes(&[0x42; 32]);
     let sig = key.sign(terms_hash.as_bytes());
     (
-        hex::encode(sig.to_bytes()),
-        hex::encode(key.verifying_key().as_bytes()),
+        BASE64.encode(sig.to_bytes()),
+        BASE64.encode(key.verifying_key().as_bytes()),
     )
 }
 
@@ -107,8 +109,8 @@ async fn accept_rejects_invalid_signature() {
     let (proposal_id, _terms_hash) = propose_bond(&handler, &provider, "a", "b").await;
 
     let key = SigningKey::from_bytes(&[0x42; 32]);
-    let wrong_sig = hex::encode([0xAA; 64]);
-    let pubkey = hex::encode(key.verifying_key().as_bytes());
+    let wrong_sig = BASE64.encode([0xAA; 64]);
+    let pubkey = BASE64.encode(key.verifying_key().as_bytes());
 
     let params = serde_json::json!({
         "proposal_id": proposal_id,
@@ -217,7 +219,7 @@ async fn verify_detects_tampered_proposer_signature() {
     {
         let mut bonds = handler.bonds.write().await;
         let bond = bonds.get_mut(&bond_id).unwrap();
-        bond.proposer_signature = Some(hex::encode([0xDE; 64]));
+        bond.proposer_signature = Some(BASE64.encode([0xDE; 64]));
     }
 
     let verify_params = serde_json::json!({ "bond_id": bond_id });
@@ -246,7 +248,7 @@ async fn verify_detects_tampered_acceptor_signature() {
     {
         let mut bonds = handler.bonds.write().await;
         let bond = bonds.get_mut(&bond_id).unwrap();
-        bond.acceptor_signature = Some(hex::encode([0xBB; 64]));
+        bond.acceptor_signature = Some(BASE64.encode([0xBB; 64]));
     }
 
     let verify_params = serde_json::json!({ "bond_id": bond_id });
@@ -341,10 +343,16 @@ async fn sign_contract_returns_valid_signature() {
     assert!(!result["public_key"].as_str().unwrap().is_empty());
     assert!(!result["signed_at"].as_str().unwrap().is_empty());
 
-    let sig_hex = result["signature"].as_str().unwrap();
-    assert_eq!(sig_hex.len(), 128, "Ed25519 signature = 64 bytes = 128 hex");
-    let pk_hex = result["public_key"].as_str().unwrap();
-    assert_eq!(pk_hex.len(), 64, "Ed25519 public key = 32 bytes = 64 hex");
+    let sig_b64 = result["signature"].as_str().unwrap();
+    let sig_bytes = BASE64
+        .decode(sig_b64)
+        .expect("signature must be valid base64");
+    assert_eq!(sig_bytes.len(), 64, "Ed25519 signature = 64 bytes");
+    let pk_b64 = result["public_key"].as_str().unwrap();
+    let pk_bytes = BASE64
+        .decode(pk_b64)
+        .expect("public_key must be valid base64");
+    assert_eq!(pk_bytes.len(), 32, "Ed25519 public key = 32 bytes");
 }
 
 #[tokio::test]
@@ -414,7 +422,7 @@ async fn verify_contract_rejects_tampered_signature() {
             "crypto.verify_contract",
             Some(&serde_json::json!({
                 "terms_hash": sign_result["terms_hash"],
-                "signature": hex::encode([0xDE; 64]),
+                "signature": BASE64.encode([0xDE; 64]),
                 "public_key": sign_result["public_key"],
             })),
             &provider,
@@ -586,7 +594,7 @@ async fn seal_detects_tampered_signature() {
     {
         let mut bonds = handler.bonds.write().await;
         let bond = bonds.get_mut(&bond_id).unwrap();
-        bond.acceptor_signature = Some(hex::encode([0xCC; 64]));
+        bond.acceptor_signature = Some(BASE64.encode([0xCC; 64]));
     }
 
     let seal_result = handler

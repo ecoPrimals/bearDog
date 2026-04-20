@@ -119,15 +119,16 @@ pub async fn handle_sign_ed25519(params: Option<&Value>) -> Result<Value, String
 
     // Derive signing key from key_id
     let seed = derive_key_from_id(key_id, purpose)?;
-    let (secret_key, _public_key) = asymmetric::generate_ed25519_from_seed(&seed)
+    let (secret_key, public_key) = asymmetric::generate_ed25519_from_seed(&seed)
         .map_err(|e| format!("Failed to generate Ed25519 keypair: {e}"))?;
 
     // Sign the message
     let signature = asymmetric::sign_ed25519(&message, &secret_key)
         .map_err(|e| format!("Ed25519 signing failed: {e}"))?;
 
-    // Encode signature
-    let signature_b64 = base64::engine::general_purpose::STANDARD.encode(&signature);
+    let b64 = &base64::engine::general_purpose::STANDARD;
+    let signature_b64 = b64.encode(&signature);
+    let public_key_b64 = b64.encode(public_key);
 
     info!("✅ Ed25519 signature generated ({} bytes)", signature.len());
 
@@ -135,6 +136,7 @@ pub async fn handle_sign_ed25519(params: Option<&Value>) -> Result<Value, String
         "signature": signature_b64,
         "algorithm": "Ed25519",
         "key_id": key_id,
+        "public_key": public_key_b64,
     }))
 }
 
