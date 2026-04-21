@@ -423,6 +423,29 @@ impl UnixSocketIpcServer {
                 return Ok(());
             }
 
+            // ── BTSP JSON-line auto-detect ─────────────────────────────
+            //
+            // primalSpring (and other springs) send a BTSP ClientHello as
+            // the first JSON line on UDS:
+            //
+            //   {"protocol":"btsp","version":1,"client_ephemeral_pub":"<b64>"}
+            //
+            // The first-byte peek sees `{` and classifies it as JSON-RPC.
+            // Detect BTSP by checking for `"protocol":"btsp"` with no
+            // `"jsonrpc"` field, then route to the JSON-line handshake.
+            if let BtspSecurityMode::Production { ref family_seed } = self.security_mode
+                && let Ok(obj) = serde_json::from_str::<serde_json::Value>(first_line.trim())
+                && obj.get("protocol").and_then(|v| v.as_str()) == Some("btsp")
+                && obj.get("jsonrpc").is_none()
+            {
+                debug!("UDS: BTSP ClientHello detected (JSON-line framed)");
+                let client_hello: btsp_handshake::ClientHello = serde_json::from_value(obj)
+                    .map_err(|e| anyhow::anyhow!("BTSP ClientHello parse: {e}"))?;
+                return self
+                    .handle_btsp_jsonline_connection(stream, &client_hello, family_seed)
+                    .await;
+            }
+
             let protocol = Protocol::detect_from_bytes(first_line.as_bytes());
 
             match protocol {
@@ -553,6 +576,86 @@ impl UnixSocketIpcServer {
         let response = b"HTTP/1.1 501 Not Implemented\r\nContent-Length: 50\r\n\r\nHTTP deprecated - use JSON-RPC over Unix sockets\n";
         stream.write_all(response).await?;
         Ok(())
+    }
+
+    /// Handle a UDS connection that began with a JSON-line BTSP `ClientHello`.
+    ///
+    /// Completes the 4-step handshake (steps 2–4) using newline-delimited JSON,
+    /// then transitions to the appropriate post-handshake handler:
+    /// - `Null` cipher → plain NDJSON JSON-RPC loop
+    /// - Encrypted cipher → length-prefixed encrypted frame loop
+    async fn handle_btsp_jsonline_connection(
+        &self,
+        mut stream: Box<dyn PlatformStream>,
+        client_hello: &btsp_handshake::ClientHello,
+        family_seed: &btsp_handshake::FamilySeed,
+    ) -> Result<()> {
+        match btsp_handshake::continue_server_handshake_jsonline(
+            &mut stream,
+            client_hello,
+            family_seed,
+        )
+        .await
+        {
+            Ok(session) => {
+                info!(
+                    session_id = %session.session_id,
+                    cipher = %session.cipher.wire_name(),
+                    "BTSP handshake succeeded (JSON-line framed)"
+                );
+                if session.cipher == btsp_handshake::BtspCipher::Null {
+                    self.handle_jsonrpc_ndjson_loop(stream).await
+                } else {
+                    self.handle_jsonrpc_btsp(stream, session).await
+                }
+            }
+            Err(e) => {
+                warn!(error = %e, "BTSP handshake failed (JSON-line)");
+                Ok(())
+            }
+        }
+    }
+
+    /// Read NDJSON JSON-RPC requests in a loop (post-handshake, null cipher).
+    async fn handle_jsonrpc_ndjson_loop(&self, stream: Box<dyn PlatformStream>) -> Result<()> {
+        let mut buf_stream = BufReader::new(stream);
+        let mut line_buf = Vec::with_capacity(1024);
+
+        loop {
+            line_buf.clear();
+
+            let read_result = tokio::time::timeout(
+                IPC_READ_TIMEOUT,
+                buf_stream.read_until(b'\n', &mut line_buf),
+            )
+            .await;
+
+            match read_result {
+                Err(_) => {
+                    debug!("Post-handshake NDJSON read timed out — closing connection");
+                    return Ok(());
+                }
+                Ok(Ok(0)) => {
+                    debug!("Client disconnected after BTSP handshake");
+                    return Ok(());
+                }
+                Ok(Ok(_)) => {}
+                Ok(Err(e)) => return Err(anyhow::anyhow!("Post-handshake read: {e}")),
+            }
+
+            let line = String::from_utf8_lossy(&line_buf);
+            if line.trim().is_empty() {
+                continue;
+            }
+
+            if let Some(response) = self
+                .handle_one_jsonrpc_request_universal(line.as_ref())
+                .await?
+            {
+                buf_stream.get_mut().write_all(response.as_bytes()).await?;
+                buf_stream.get_mut().write_all(b"\n").await?;
+            }
+        }
     }
 
     /// Handle JSON-RPC over BTSP encrypted frames (production mode).

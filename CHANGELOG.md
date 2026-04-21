@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 21, 2026 -- Wave 64: primalSpring Phase 45b — BTSP JSON-Line Wire-Format Recognition on UDS
+
+- **BTSP ClientHello detection on UDS** — primalSpring sends `{"protocol":"btsp","version":1,"client_ephemeral_pub":"<b64>"}` as the first line on UDS. BearDog's first-byte peek sees `{` and misclassifies it as JSON-RPC (parse error → broken pipe). Now: after reading the full first line, check for `"protocol":"btsp"` with no `"jsonrpc"` field. If matched, route to JSON-line BTSP handshake instead of JSON-RPC dispatch.
+- **`continue_server_handshake_jsonline`** — New handshake function in `btsp_handshake` that performs steps 2–4 using newline-delimited JSON framing (vs. the existing length-prefixed `perform_server_handshake`). Supports primalSpring's wire protocol: ServerHello with `session_id`, HandshakeComplete with `status:"ok"`.
+- **Post-handshake routing** — After JSON-line handshake: `null` cipher → plain NDJSON JSON-RPC loop; encrypted ciphers → length-prefixed encrypted frame handler.
+- **3 new tests** — `jsonline_handshake_null_cipher` (full roundtrip), `jsonline_handshake_rejects_bad_version`, `jsonline_handshake_rejects_short_key`.
+- **Quality** — 14,789+ tests, 0 failures (1 known flaky pre-existing). Clippy/fmt/deny clean.
+
 ### April 20, 2026 -- Wave 63: Deep Debt — deny.toml Cleanup, Final Workspace Dep Normalization
 
 - **`cargo deny` 4/4 clean** — Removed 3 stale skip entries (`linux-raw-sys`, `rustix`, `syn` — now single-version). Removed unused `async-trait` wrappers (`hickory-proto`, `hickory-resolver`). Added `cpufeatures` + `socket2` skip entries for transitive duplicates.

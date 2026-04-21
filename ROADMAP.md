@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: April 20, 2026
+**Updated**: April 21, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -59,6 +59,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### primalSpring Phase 45b: BTSP JSON-Line Wire-Format on UDS — DONE (Wave 64)
+
+BTSP ClientHello detection on UDS: first-line JSON inspection for `"protocol":"btsp"` routes to new `continue_server_handshake_jsonline` (NDJSON steps 2–4). Post-handshake: null cipher → NDJSON loop, encrypted → frame handler. 3 new tests. Resolves primalSpring `btsp:Tower:security` FAIL.
 
 ### Deep Debt: deny.toml Cleanup, Final Workspace Dep Normalization — DONE (Wave 63)
 

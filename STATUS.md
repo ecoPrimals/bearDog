@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: April 20, 2026
+**Last Updated**: April 21, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -89,6 +89,11 @@
 ---
 
 ## Recent Improvements
+
+### Wave 64 — primalSpring Phase 45b: BTSP JSON-Line Wire-Format on UDS (April 21, 2026)
+
+- **BTSP ClientHello detection** — First-line JSON inspection detects `"protocol":"btsp"` on UDS, routing to JSON-line handshake instead of JSON-RPC parse error. Resolves primalSpring `btsp:Tower:security` FAIL.
+- **JSON-line handshake** — New `continue_server_handshake_jsonline` (steps 2–4 via NDJSON framing). Post-handshake: `null` cipher → NDJSON loop, encrypted → frame handler.
 
 ### Wave 63 — Deep Debt: deny.toml Cleanup, Final Workspace Dep Normalization (April 20, 2026)
 
