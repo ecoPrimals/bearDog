@@ -30,7 +30,7 @@ dotenvy = "0.15"
 dirs = "5.0"
 
 # Validation
-validator = { version = "0.20", features = ["derive"] }
+validator = { workspace = true }
 
 # Logging
 tracing = { workspace = true }

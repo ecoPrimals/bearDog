@@ -26,7 +26,7 @@ hostname = { workspace = true }
 beardog-errors = { workspace = true }
 
 # mDNS discovery (biomeOS owns network discovery — feature-gated, off by default)
-mdns-sd = { version = "0.11", optional = true }
+mdns-sd = { workspace = true, optional = true }
 
 # URL parsing
 url = "2.5"

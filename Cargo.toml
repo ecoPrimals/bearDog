@@ -180,6 +180,8 @@ scrypt = "0.11"           # Memory-hard KDF - stable version (evolved from RC)
 
 # Networking
 tokio-tungstenite = "0.24"  # WebSocket for BTSP tunnel transport only
+mdns-sd = "0.11"            # mDNS/DNS-SD service discovery (feature-gated)
+tokio-serde = { version = "0.9", features = ["json"] }  # Async serde framing
 
 # Serialization formats
 
@@ -210,6 +212,9 @@ tempfile = "3.8"
 proptest = "1.4"
 wiremock = "0.6"
 criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
+
+# Validation
+validator = { version = "0.20", features = ["derive"] }
 
 # CLI
 clap = { version = "4.4", features = ["derive", "env"] }
