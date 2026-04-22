@@ -349,6 +349,7 @@ impl CapabilitiesHandler {
             "crypto.sha512",
             "crypto.sign",
             "crypto.verify",
+            "crypto.public_key",
             "crypto.key_exchange",
             "crypto.encrypt",
             "crypto.decrypt",

@@ -318,6 +318,46 @@ async fn test_ed25519_sign_verify_roundtrip() {
 }
 
 // ========================================================================
+// PUBLIC KEY RETRIEVAL TESTS
+// ========================================================================
+
+#[tokio::test]
+async fn test_public_key_default() {
+    let r = handle_public_key(None).await.expect("public_key");
+    assert_eq!(r["algorithm"], "Ed25519");
+    assert_eq!(r["key_id"], "default_signing_key");
+    let pk = BASE64
+        .decode(r["public_key"].as_str().expect("pk str"))
+        .expect("valid base64");
+    assert_eq!(pk.len(), 32);
+}
+
+#[tokio::test]
+async fn test_public_key_matches_sign() {
+    let params = json!({ "key_id": "pk-match-test", "purpose": "general" });
+    let pk_resp = handle_public_key(Some(&params)).await.expect("pk");
+    let pk_b64 = pk_resp["public_key"].as_str().expect("pk str");
+
+    let msg = BASE64.encode(b"pk match");
+    let sign_p = json!({ "message": msg, "key_id": "pk-match-test", "purpose": "general" });
+    let signed = handle_sign_ed25519(Some(&sign_p)).await.expect("sign");
+    assert_eq!(signed["public_key"].as_str().expect("sign pk"), pk_b64);
+
+    let verify_p = json!({
+        "message": msg,
+        "signature": signed["signature"].as_str().expect("sig"),
+        "public_key": pk_b64,
+    });
+    let v = handle_verify_ed25519(Some(&verify_p))
+        .await
+        .expect("verify");
+    assert_eq!(
+        v["valid"], true,
+        "public_key from crypto.public_key must verify signatures from crypto.sign"
+    );
+}
+
+// ========================================================================
 // BD-01: ENCODING HINT TESTS (WireWitnessRef compatibility)
 // ========================================================================
 

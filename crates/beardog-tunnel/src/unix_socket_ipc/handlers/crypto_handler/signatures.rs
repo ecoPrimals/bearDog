@@ -85,10 +85,8 @@ pub async fn route(
 #[cfg(test)]
 mod tests {
     use super::route;
-    use crate::unix_socket_ipc::handlers::crypto::utils::derive_key_from_id_for_tests;
     use base64::Engine;
     use base64::engine::general_purpose::STANDARD as BASE64;
-    use beardog_core::crypto_service::algorithms::asymmetric;
     use serde_json::json;
 
     #[tokio::test]
@@ -105,12 +103,12 @@ mod tests {
             .get("signature")
             .and_then(|x| x.as_str())
             .expect("signature");
-        let seed =
-            derive_key_from_id_for_tests(key_id, purpose).expect("derive_key_from_id_for_tests");
-        let (_sk, pk) =
-            asymmetric::generate_ed25519_from_seed(&seed).expect("generate_ed25519_from_seed");
+        let pk_b64 = sig
+            .get("public_key")
+            .and_then(|x| x.as_str())
+            .expect("sign response must include public_key for IPC roundtrip");
         let verify_p = json!({
-            "public_key": BASE64.encode(pk),
+            "public_key": pk_b64,
             "message": msg,
             "signature": sig_b64,
         });

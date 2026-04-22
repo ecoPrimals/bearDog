@@ -10,7 +10,7 @@ use crate::unix_socket_ipc::crypto_handlers_tor::{
 use crate::unix_socket_ipc::handlers::crypto::{
     handle_blake3_hash, handle_chacha20_poly1305_decrypt, handle_chacha20_poly1305_encrypt,
     handle_ed25519_generate_keypair, handle_generate_keypair_with_hsm, handle_hmac_sha256,
-    handle_sign_ed25519, handle_verify_ed25519, handle_x25519_derive_secret,
+    handle_public_key, handle_sign_ed25519, handle_verify_ed25519, handle_x25519_derive_secret,
     handle_x25519_generate_ephemeral,
 };
 use tracing::info;
@@ -41,6 +41,11 @@ pub async fn route(
         "crypto.verify" => {
             info!("✅ Crypto: verify (semantic → verify_ed25519)");
             Ok(Some(handle_verify_ed25519(params).await?))
+        }
+
+        "crypto.public_key" => {
+            info!("🔑 Crypto: public_key (retrieve Ed25519 public key for key_id)");
+            Ok(Some(handle_public_key(params).await?))
         }
 
         "crypto.encrypt" => {
@@ -177,10 +182,8 @@ pub async fn route(
 #[cfg(test)]
 mod tests {
     use super::route;
-    use crate::unix_socket_ipc::handlers::crypto::utils::derive_key_from_id_for_tests;
     use base64::Engine;
     use base64::engine::general_purpose::STANDARD as BASE64;
-    use beardog_core::crypto_service::algorithms::asymmetric;
     use serde_json::json;
 
     #[tokio::test]
@@ -224,12 +227,12 @@ mod tests {
             .expect("route")
             .expect("sign");
         let sig_b64 = sig.get("signature").and_then(|x| x.as_str()).expect("sig");
-        let seed =
-            derive_key_from_id_for_tests(key_id, purpose).expect("derive_key_from_id_for_tests");
-        let (_sk, pk) =
-            asymmetric::generate_ed25519_from_seed(&seed).expect("generate_ed25519_from_seed");
+        let pk_b64 = sig
+            .get("public_key")
+            .and_then(|x| x.as_str())
+            .expect("sign response must include public_key for IPC roundtrip");
         let verify_params = json!({
-            "public_key": BASE64.encode(pk),
+            "public_key": pk_b64,
             "message": msg,
             "signature": sig_b64,
         });
@@ -238,6 +241,71 @@ mod tests {
             .expect("route")
             .expect("verify");
         assert_eq!(v.get("valid").and_then(|x| x.as_bool()), Some(true));
+    }
+
+    #[tokio::test]
+    async fn route_crypto_public_key_matches_sign_response() {
+        let key_id = "pk-roundtrip-key";
+        let purpose = "general";
+        let pk_params = json!({ "key_id": key_id, "purpose": purpose });
+        let pk_result = route("crypto.public_key", Some(&pk_params))
+            .await
+            .expect("route")
+            .expect("public_key");
+        let pk_b64 = pk_result
+            .get("public_key")
+            .and_then(|x| x.as_str())
+            .expect("public_key field");
+        assert_eq!(
+            pk_result.get("algorithm").and_then(|x| x.as_str()),
+            Some("Ed25519")
+        );
+
+        let msg = BASE64.encode(b"verify pk matches");
+        let sign_params = json!({ "message": msg, "key_id": key_id, "purpose": purpose });
+        let sig = route("crypto.sign", Some(&sign_params))
+            .await
+            .expect("route")
+            .expect("sign");
+        let sign_pk = sig
+            .get("public_key")
+            .and_then(|x| x.as_str())
+            .expect("sign public_key");
+        assert_eq!(
+            pk_b64, sign_pk,
+            "crypto.public_key must return the same key as crypto.sign"
+        );
+
+        let verify_params = json!({
+            "public_key": pk_b64,
+            "message": msg,
+            "signature": sig.get("signature").and_then(|x| x.as_str()).expect("sig"),
+        });
+        let v = route("crypto.verify", Some(&verify_params))
+            .await
+            .expect("route")
+            .expect("verify");
+        assert_eq!(v.get("valid").and_then(|x| x.as_bool()), Some(true));
+    }
+
+    #[tokio::test]
+    async fn route_crypto_public_key_default_key_id() {
+        let pk = route("crypto.public_key", None)
+            .await
+            .expect("route")
+            .expect("public_key with defaults");
+        assert_eq!(
+            pk.get("key_id").and_then(|x| x.as_str()),
+            Some("default_signing_key")
+        );
+        assert_eq!(
+            pk.get("algorithm").and_then(|x| x.as_str()),
+            Some("Ed25519")
+        );
+        let pk_bytes = BASE64
+            .decode(pk.get("public_key").and_then(|x| x.as_str()).expect("pk"))
+            .expect("valid base64");
+        assert_eq!(pk_bytes.len(), 32);
     }
 
     #[tokio::test]

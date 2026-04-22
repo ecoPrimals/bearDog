@@ -28,7 +28,8 @@ fn test_crypto_handler_methods() {
     //   - 2 Tor v3 Phase 1 (crypto.derive_onion_address semantic + beardog.crypto.* alias; generate_onion_identity)
     //   - 6 Tor Phase 2 (ntor_client_init, ntor_client_finish, ntor_server_respond, cell_encrypt, cell_decrypt, tor_kdf)
     //   - 2 semantic dot-separated aliases (crypto.ed25519.sign, crypto.ed25519.verify)
-    assert_eq!(methods.len(), 95);
+    //   - 1 crypto.public_key (standalone key retrieval)
+    assert_eq!(methods.len(), 96);
 
     // Verify all core crypto methods are present
     assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -78,6 +79,7 @@ fn test_crypto_handler_methods() {
     assert!(methods.contains(&"crypto.hmac"));
     assert!(methods.contains(&"crypto.sign"));
     assert!(methods.contains(&"crypto.verify"));
+    assert!(methods.contains(&"crypto.public_key"));
     assert!(methods.contains(&"crypto.encrypt"));
     assert!(methods.contains(&"crypto.decrypt"));
     assert!(methods.contains(&"crypto.generate_keypair"));
@@ -118,7 +120,7 @@ fn test_handler_method_count() {
     let handler = CryptoHandler;
     assert_eq!(
         handler.methods().len(),
-        95,
-        "Should have exactly 95 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3 + Tor Phase 2 + derive_lineage_beacon_key + dot-separated ed25519 aliases)"
+        96,
+        "Should have exactly 96 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3 + Tor Phase 2 + derive_lineage_beacon_key + dot-separated ed25519 aliases + crypto.public_key)"
     );
 }

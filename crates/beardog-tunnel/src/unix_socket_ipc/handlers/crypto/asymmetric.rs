@@ -140,6 +140,46 @@ pub async fn handle_sign_ed25519(params: Option<&Value>) -> Result<Value, String
     }))
 }
 
+/// Retrieve the Ed25519 public key for a given `key_id` without signing.
+///
+/// # Parameters
+///
+/// - `key_id`: Key identifier (optional, defaults to `"default_signing_key"`)
+/// - `purpose`: Purpose string (optional, defaults to `"general"`)
+///
+/// # Returns
+///
+/// - `public_key`: Base64-encoded Ed25519 public key (32 bytes)
+/// - `algorithm`: `"Ed25519"`
+/// - `key_id`: The key identifier used
+///
+/// # Errors
+///
+/// Returns an error if key derivation fails.
+pub async fn handle_public_key(params: Option<&Value>) -> Result<Value, String> {
+    let key_id = params
+        .and_then(|p| p.get("key_id"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("default_signing_key");
+
+    let purpose = params
+        .and_then(|p| p.get("purpose"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("general");
+
+    let seed = derive_key_from_id(key_id, purpose)?;
+    let (_secret_key, public_key) = asymmetric::generate_ed25519_from_seed(&seed)
+        .map_err(|e| format!("Failed to derive Ed25519 public key: {e}"))?;
+
+    let public_key_b64 = base64::engine::general_purpose::STANDARD.encode(public_key);
+
+    Ok(serde_json::json!({
+        "public_key": public_key_b64,
+        "algorithm": "Ed25519",
+        "key_id": key_id,
+    }))
+}
+
 /// Decode an evidence/payload string according to the `ATTESTATION_ENCODING_STANDARD.md`
 /// encoding values: `base64` (default), `hex`, `base64url`, `utf8`, `none`.
 fn decode_with_encoding(

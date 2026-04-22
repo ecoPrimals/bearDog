@@ -88,6 +88,7 @@ pub fn crypto_method_names() -> Vec<&'static str> {
         "crypto.hmac",
         "crypto.sign",
         "crypto.verify",
+        "crypto.public_key",
         "crypto.encrypt",
         "crypto.decrypt",
         "crypto.generate_keypair",
