@@ -118,7 +118,7 @@ impl CapabilityDiscovery {
                 "environment" => self.discover_via_environment(capability).await?,
                 "service_registry" => self.discover_via_service_registry(capability).await?,
                 "mdns" | "dns_sd" => {
-                    debug!("Skipping {method} — biomeOS owns network discovery");
+                    debug!("Skipping {method} — orchestrator layer owns network discovery");
                     continue;
                 }
                 _ => {

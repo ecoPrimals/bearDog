@@ -274,7 +274,7 @@ impl PrimalDiscovery {
             Some("multi") | None => {
                 let registry_addr = ipc::resolve_upa_registry_endpoint();
                 info!(
-                    "Using multi-method discovery (environment + biomeOS sockets → UPA at {})",
+                    "Using multi-method discovery (environment + platform sockets → UPA at {})",
                     registry_addr
                 );
                 Ok(DiscoveryMethod::Multi(vec![
