@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 22, 2026 -- Wave 67: Deep Debt — Hardcoded Primal Name Cleanup, Full Audit
+
+- **Hardcoded primal name cleanup** — Removed 2 production-code `biomeOS` references from tracing messages in `primal_discovery.rs` and `discovery.rs`. Replaced with generic terms ("platform sockets", "orchestrator layer"). Primal code now has pure self-knowledge only.
+- **Comprehensive debt audit** — 0 unsafe, 0 TODO/FIXME/HACK, 0 `#[async_trait]`, 0 production files >800 LOC, all mocks `#[cfg(test)]` gated, all ports env/config-driven, `Box<dyn Error>` only in tests/docs, `#[allow()]` all justified. `cargo deny` 4/4 PASS.
+- **Quality** — 14,925 tests, 0 failures (1 known flaky pre-existing). Clippy/fmt/deny clean.
+
+### April 22, 2026 -- Wave 66: primalSpring Audit — crypto.public_key Method, Sign→Verify IPC Roundtrip
+
+- **`crypto.public_key` method** — New standalone method returns Ed25519 public key for a `key_id` without signing. Enables primals (toadStool, primalSpring) to retrieve public keys for client-side verification. Registered in capabilities list.
+- **Sign→verify IPC roundtrip tests** — Updated `route_crypto_sign_and_verify_alias` and `route_ed25519_sign_verify_roundtrip` tests to use the `public_key` from the sign response instead of re-deriving locally. Proves the IPC contract end-to-end.
+- **Resolves primalSpring `crypto:ed25519_verify` SKIP** — `crypto.sign` already returned `public_key` (Wave 62); now the router tests prove it, and `crypto.public_key` gives standalone access.
+- **Quality** — 14,925 tests (4 new), 96 crypto methods registered. Clippy/fmt/deny clean.
+
 ### April 21, 2026 -- Wave 65: Deep Debt — Workspace Dep Normalization, server.rs Smart Refactor
 
 - **Workspace dependency normalization** — `mdns-sd` (4 crates), `validator` (1 crate), `tokio-serde` (1 crate) migrated from explicit version pins to `{ workspace = true }`. Root `Cargo.toml` updated. All crates now use workspace deps exclusively.

@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: April 21, 2026
+**Last Updated**: April 22, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,921+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,925+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
@@ -89,6 +89,15 @@
 ---
 
 ## Recent Improvements
+
+### Wave 67 — Deep Debt: Hardcoded Primal Name Cleanup, Full Audit (April 22, 2026)
+
+- **Self-knowledge enforced** — 2 hardcoded `biomeOS` references removed from production tracing. Full audit: 0 unsafe, 0 TODO, 0 async-trait, 0 production files >800 LOC, all mocks gated, all ports config-driven.
+
+### Wave 66 — primalSpring Audit: crypto.public_key, Sign→Verify Roundtrip (April 22, 2026)
+
+- **`crypto.public_key` method** — Standalone Ed25519 public key retrieval for a `key_id`. 96 crypto methods registered.
+- **IPC roundtrip proven** — Router tests now use `public_key` from sign response. Resolves primalSpring `crypto:ed25519_verify` SKIP.
 
 ### Wave 65 — Deep Debt: Workspace Dep Normalization, server.rs Smart Refactor (April 21, 2026)
 

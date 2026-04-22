@@ -60,6 +60,14 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
+### Deep Debt: Hardcoded Primal Name Cleanup, Full Audit — DONE (Wave 67)
+
+2 hardcoded `biomeOS` references removed. Full audit: 0 unsafe, 0 TODO/FIXME, 0 async-trait, 0 production files >800 LOC, all mocks gated, all ports config-driven, `Box<dyn Error>` tests/docs only.
+
+### primalSpring Audit: crypto.public_key, Sign→Verify Roundtrip — DONE (Wave 66)
+
+New `crypto.public_key` method for standalone public key retrieval. Router tests updated to use sign response `public_key`. Resolves primalSpring `crypto:ed25519_verify` SKIP. 96 crypto methods, 14,925 tests.
+
 ### Deep Debt: Workspace Dep Normalization, server.rs Smart Refactor — DONE (Wave 65)
 
 6 dep pins normalized to workspace references (`mdns-sd` ×4, `validator`, `tokio-serde`). `server.rs` smart-refactored 834 → 619 LOC with 5 handlers extracted to `connection_handlers.rs` (231 LOC). Mock isolation verified.
