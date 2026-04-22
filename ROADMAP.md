@@ -60,6 +60,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
+### Deep Debt: Workspace Dep Normalization, server.rs Smart Refactor — DONE (Wave 65)
+
+6 dep pins normalized to workspace references (`mdns-sd` ×4, `validator`, `tokio-serde`). `server.rs` smart-refactored 834 → 619 LOC with 5 handlers extracted to `connection_handlers.rs` (231 LOC). Mock isolation verified.
+
 ### primalSpring Phase 45b: BTSP JSON-Line Wire-Format on UDS — DONE (Wave 64)
 
 BTSP ClientHello detection on UDS: first-line JSON inspection for `"protocol":"btsp"` routes to new `continue_server_handshake_jsonline` (NDJSON steps 2–4). Post-handshake: null cipher → NDJSON loop, encrypted → frame handler. 3 new tests. Resolves primalSpring `btsp:Tower:security` FAIL.

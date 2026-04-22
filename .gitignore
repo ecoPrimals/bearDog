@@ -59,9 +59,6 @@ session-reports-*/
 # Lock files (keep Cargo.lock for reproducible builds)
 # Cargo.lock
 
-# Documentation build
-/target/doc/
-
 # Backup files
 *~
 *.swp

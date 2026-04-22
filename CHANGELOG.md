@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 21, 2026 -- Wave 65: Deep Debt — Workspace Dep Normalization, server.rs Smart Refactor
+
+- **Workspace dependency normalization** — `mdns-sd` (4 crates), `validator` (1 crate), `tokio-serde` (1 crate) migrated from explicit version pins to `{ workspace = true }`. Root `Cargo.toml` updated. All crates now use workspace deps exclusively.
+- **`server.rs` smart refactor** — `unix_socket_ipc/server.rs` reduced from 834 → 619 LOC. 5 protocol-specific connection handlers extracted to new `connection_handlers.rs` (231 LOC): `handle_jsonrpc_universal`, `handle_http_universal`, `handle_btsp_jsonline_connection`, `handle_jsonrpc_ndjson_loop`, `handle_jsonrpc_btsp`.
+- **Mock isolation verified** — `hsm_provider_mocks.rs` confirmed `#[cfg(test)]` gated (corrected false positive from prior survey).
+- **Quality** — 14,921 tests, 0 failures (1 known flaky pre-existing). Clippy/fmt/deny clean.
+
 ### April 21, 2026 -- Wave 64: primalSpring Phase 45b — BTSP JSON-Line Wire-Format Recognition on UDS
 
 - **BTSP ClientHello detection on UDS** — primalSpring sends `{"protocol":"btsp","version":1,"client_ephemeral_pub":"<b64>"}` as the first line on UDS. BearDog's first-byte peek sees `{` and misclassifies it as JSON-RPC (parse error → broken pipe). Now: after reading the full first line, check for `"protocol":"btsp"` with no `"jsonrpc"` field. If matched, route to JSON-line BTSP handshake instead of JSON-RPC dispatch.

@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,786+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,921+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
@@ -89,6 +89,12 @@
 ---
 
 ## Recent Improvements
+
+### Wave 65 — Deep Debt: Workspace Dep Normalization, server.rs Smart Refactor (April 21, 2026)
+
+- **6 dep pins normalized** — `mdns-sd` (4 crates), `validator`, `tokio-serde` migrated to workspace references. Zero explicit version pins remain.
+- **server.rs smart refactor** — 834 → 619 LOC. 5 connection handlers extracted to `connection_handlers.rs` (231 LOC).
+- **Mock isolation verified** — `hsm_provider_mocks.rs` confirmed `#[cfg(test)]` gated.
 
 ### Wave 64 — primalSpring Phase 45b: BTSP JSON-Line Wire-Format on UDS (April 21, 2026)
 
