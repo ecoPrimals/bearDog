@@ -196,7 +196,7 @@ impl CapabilitiesHandler {
                     "type": "lineage",
                     "version": "1.0",
                     "methods": ["list", "verify", "get"],
-                    "description": "Verifiable lineage queries — chain enumeration, proof verification, and chain retrieval (enables skunkBat thymic selection)"
+                    "description": "Verifiable lineage queries — chain enumeration, proof verification, and chain retrieval for downstream thymic selection"
                 },
                 {
                     "type": "graph",

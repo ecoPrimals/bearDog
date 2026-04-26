@@ -43,7 +43,13 @@ mod consolidated_traits;
 #[path = "consolidated_types.rs"]
 mod consolidated_types;
 
-#[allow(clippy::wildcard_imports)]
+#[allow(
+    clippy::wildcard_imports,
+    reason = "facade re-export: single public surface for consolidated traits"
+)]
 pub use consolidated_traits::*;
-#[allow(clippy::wildcard_imports)]
+#[allow(
+    clippy::wildcard_imports,
+    reason = "facade re-export: single public surface for consolidated types"
+)]
 pub use consolidated_types::*;
