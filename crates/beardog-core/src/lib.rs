@@ -197,8 +197,8 @@ mod crypto_service_chacha_tests;
 mod crypto_service_comprehensive_tests;
 
 #[cfg(test)]
-#[path = "tests/coverage_march26_core_wave.rs"]
-mod coverage_march26_core_wave;
+#[path = "tests/coverage_core_wave.rs"]
+mod coverage_core_wave;
 
 #[cfg(test)]
 #[path = "tests/core_edge_cases_oct22.rs"]

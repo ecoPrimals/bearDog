@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: April 21, 2026
+**Updated**: April 26, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -16,13 +16,13 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 - Rust edition 2024 (MSRV 1.93.0, `rust-toolchain.toml` pinned)
 - 100% Pure Rust (zero C dependencies, RustCrypto suite)
-- 100 JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing)
+- 100+ JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing, lineage queries)
 - 0 clippy warnings (pedantic + nursery + all cast lints warn + `doc_markdown` warn + `missing_errors_doc` warn + unwrap/expect warn, workspace-centralized)
 - 0 missing documentation warnings (all public items documented, all `# Errors` sections present)
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 1000 lines of code (production)
-- 14,786+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
+- 14,928+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
 - 90.51% line coverage (llvm-cov workspace) — target 90% met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - `#[serial]` minimized — 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent
@@ -44,7 +44,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - Hardcoding eliminated — capability-based discovery throughout
 - `deny.toml` hardened — C deps banned, duplicate versions denied
 - `CommandRunner` trait for mocking external commands (`adb`) in tests
-- **Stadial parity gate (Wave 53)** — Complete: all `#[async_trait]` removed in favor of native `async fn` in traits; `async-trait` dependency removed from every `Cargo.toml`; finite-implementor `dyn Trait` sites replaced with enum dispatch for monomorphized async routing; 14,786+ tests, Clippy and rustdoc `-D warnings` clean
+- **Stadial parity gate (Wave 53)** — Complete: all `#[async_trait]` removed in favor of native `async fn` in traits; `async-trait` dependency removed from every `Cargo.toml`; finite-implementor `dyn Trait` sites replaced with enum dispatch for monomorphized async routing; 14,928+ tests, Clippy and rustdoc `-D warnings` clean
 
 ### Platform Coverage
 
@@ -60,13 +60,25 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
+### Deep Debt: Self-Knowledge, Allow-Reasons, Blake3 Pure — DONE (Wave 69b)
+
+Removed `skunkBat` from capabilities wire data. Added structured `reason` to all `#[allow()]`. Aligned 5 showcase `blake3` to `features=["pure"]`. Full audit: 0 unsafe, 0 TODO, 0 other-primal refs in production, 0 ungated mocks, 0 ring/openssl. 99 CryptoHandler + 9 IonicBondHandler methods. 14,928+ tests.
+
+### Lineage Semantic IPC Methods — DONE (Wave 69)
+
+`lineage.list`, `lineage.verify`, `lineage.get` semantic IPC methods for verifiable lineage queries. `crypto.sign_contract` confirmed fully wired via `IonicBondHandler`. Enables downstream thymic selection and multi-gate federation.
+
+### primalSpring Launcher Audit: NODE_ID Env Var Documentation — DONE (Wave 68)
+
+Documented `NODE_ID`/`BEARDOG_NODE_ID` env var requirements. Standardized precedence: `BEARDOG_*` first across `primal_identity.rs`, `handlers/utils.rs`, `socket_config.rs`.
+
 ### Deep Debt: Hardcoded Primal Name Cleanup, Full Audit — DONE (Wave 67)
 
 2 hardcoded `biomeOS` references removed. Full audit: 0 unsafe, 0 TODO/FIXME, 0 async-trait, 0 production files >800 LOC, all mocks gated, all ports config-driven, `Box<dyn Error>` tests/docs only.
 
 ### primalSpring Audit: crypto.public_key, Sign→Verify Roundtrip — DONE (Wave 66)
 
-New `crypto.public_key` method for standalone public key retrieval. Router tests updated to use sign response `public_key`. Resolves primalSpring `crypto:ed25519_verify` SKIP. 96 crypto methods, 14,925 tests.
+New `crypto.public_key` method for standalone public key retrieval. Router tests updated to use sign response `public_key`. Resolves primalSpring `crypto:ed25519_verify` SKIP. 99 crypto methods, 14,928+ tests.
 
 ### Deep Debt: Workspace Dep Normalization, server.rs Smart Refactor — DONE (Wave 65)
 
@@ -86,7 +98,7 @@ BTSP ClientHello detection on UDS: first-line JSON inspection for `"protocol":"b
 
 ### Deep Debt: Workspace Dep Normalization, Cross-Arch Fix — DONE (Wave 61)
 
-40+ explicit dep pins across 9 crates normalized to `{ workspace = true }`. Cross-arch compilation fixed (macOS/iOS/Windows/WASM `PlatformSocket::bind` return type, platform HSM `vec![]` initialization). Deep debt survey: zero production files >800 LOC, zero unsafe, zero TODOs. 14,786+ tests, 0 failures.
+40+ explicit dep pins across 9 crates normalized to `{ workspace = true }`. Cross-arch compilation fixed (macOS/iOS/Windows/WASM `PlatformSocket::bind` return type, platform HSM `vec![]` initialization). Deep debt survey: zero production files >800 LOC, zero unsafe, zero TODOs. 14,928+ tests, 0 failures.
 
 ### Documentation Cleanup, Clippy Fixes — DONE (Wave 60)
 
@@ -94,7 +106,7 @@ All 7 root docs updated with Wave 58/59 entries. Enum dispatch count corrected t
 
 ### Deep Debt: Enum Dispatch, Workspace Deps, Test Refactoring — DONE (Wave 59)
 
-`Box<dyn ProtocolHandler>` → `ProtocolHandlerBackend` enum; `Box<dyn AsyncStream>` → `IpcStream` enum (20 dispatch types total). 21 explicit dep pins normalized to workspace. 7 `#[allow()]` → `#[expect()]`. 2 test files >800 LOC smart-refactored. 14,786+ tests, 0 failures.
+`Box<dyn ProtocolHandler>` → `ProtocolHandlerBackend` enum; `Box<dyn AsyncStream>` → `IpcStream` enum (20 dispatch types total). 21 explicit dep pins normalized to workspace. 7 `#[allow()]` → `#[expect()]`. 2 test files >800 LOC smart-refactored. 14,928+ tests, 0 failures.
 
 ### primalSpring Audit: BTSP Documentation, Cleartext Bypass — DONE (Wave 58)
 
@@ -102,7 +114,7 @@ All 7 root docs updated with Wave 58/59 entries. Enum dispatch count corrected t
 
 ### serde_yaml Elimination + Deep Debt — DONE (Wave 56)
 
-`serde_yaml` (deprecated, uses `unsafe-libyaml`) removed from all crates and workspace. YAML config paths return deprecation errors; TOML/JSON remain. Sole production `Box<dyn Error>` converted to typed `BearDogError`. `#[allow()]` migrated to `#[expect()]`. 3 test files >900 LOC smart-refactored into domain modules. 14,786+ tests, 0 failures.
+`serde_yaml` (deprecated, uses `unsafe-libyaml`) removed from all crates and workspace. YAML config paths return deprecation errors; TOML/JSON remain. Sole production `Box<dyn Error>` converted to typed `BearDogError`. `#[allow()]` migrated to `#[expect()]`. 3 test files >900 LOC smart-refactored into domain modules. 14,928+ tests, 0 failures.
 
 ### async-trait Lockfile Elimination — DONE (Wave 55)
 
@@ -110,15 +122,15 @@ All 7 root docs updated with Wave 58/59 entries. Enum dispatch count corrected t
 
 ### Deep Debt Pass — DONE (Wave 54)
 
-Smart-refactored 2 production files over 800 LOC by domain concern. Dependency cleanup: workspace pins unified, `gethostname` consolidated, `syn v1` eliminated. All mocks verified behind `#[cfg(test)]`. Zero unsafe, zero TODOs, zero production mocks. 14,786+ tests, 0 failures.
+Smart-refactored 2 production files over 800 LOC by domain concern. Dependency cleanup: workspace pins unified, `gethostname` consolidated, `syn v1` eliminated. All mocks verified behind `#[cfg(test)]`. Zero unsafe, zero TODOs, zero production mocks. 14,928+ tests, 0 failures.
 
 ### Stadial Parity Gate — DONE (Wave 53)
 
-Native async traits (RPITIT) across the workspace, zero `async-trait` in manifests, enum-backed dispatch for closed backend sets, quality gates unchanged (14,786+ tests; Clippy and rustdoc `-D warnings`).
+Native async traits (RPITIT) across the workspace, zero `async-trait` in manifests, enum-backed dispatch for closed backend sets, quality gates unchanged (14,928+ tests; Clippy and rustdoc `-D warnings`).
 
 ### Test Coverage to 90% — DONE (Wave 20)
 
-Coverage reached **90.51% line** (14,786+ tests passing).
+Coverage reached **90.51% line** (14,928+ tests passing).
 
 ### primalSpring Composition Fixes — DONE (Wave 18c)
 
@@ -175,4 +187,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: April 20, 2026
+**Last Updated**: April 26, 2026

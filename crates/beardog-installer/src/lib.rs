@@ -59,7 +59,7 @@ mod test_env_lock;
 mod coverage_boost_wave10;
 
 #[cfg(test)]
-mod coverage_march26_installer_wave;
+mod coverage_installer_wave;
 
 #[cfg(test)]
 mod tests {

@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,925+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,928+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
@@ -89,6 +89,24 @@
 ---
 
 ## Recent Improvements
+
+### Wave 69b — Deep Debt: Self-Knowledge, Allow-Reasons, Blake3 Pure (April 26, 2026)
+
+- **Self-knowledge cleanup** — Removed `skunkBat` from capabilities wire data. Zero other-primal references in production logic.
+- **`#[allow()]` hygiene** — All `#[allow(clippy::wildcard_imports)]` now carry structured `reason`.
+- **`blake3` pure alignment** — 5 showcase Cargo.toml aligned to `features=["pure"]`.
+
+### Wave 69 — Lineage Semantic IPC Methods (April 26, 2026)
+
+- **`lineage.list`** — Enumerate all lineage chains with summary metadata via `BirdSongManager`.
+- **`lineage.verify`** — Semantic alias delegating to `genetic.verify_lineage` (Blake3 + chain Merkle).
+- **`lineage.get`** — Retrieve full chain by ID. 99 CryptoHandler methods, 14,928+ tests.
+- **`crypto.sign_contract`** — Confirmed already fully wired via `IonicBondHandler`.
+
+### Wave 68 — primalSpring Launcher Audit: NODE_ID Env Var Documentation (April 26, 2026)
+
+- **Env var precedence** — `BEARDOG_*` prefixed vars now take precedence across all resolution sites.
+- **README documentation** — New "Identity Environment Variables" section.
 
 ### Wave 67 — Deep Debt: Hardcoded Primal Name Cleanup, Full Audit (April 22, 2026)
 
