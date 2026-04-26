@@ -194,6 +194,35 @@ echo '{"jsonrpc":"2.0","method":"crypto.hash","params":{"data":"aGVsbG8="},"id":
 
 The `capabilities.list` response includes a `transport_security` block with `cleartext_available: true/false` so clients can discover BTSP requirements programmatically.
 
+### Identity Environment Variables
+
+BearDog resolves identity from environment variables for orchestrated deployments. All are optional — standalone mode works without any env vars.
+
+| Variable | Fallback | Purpose |
+|----------|----------|---------|
+| `FAMILY_ID` / `BEARDOG_FAMILY_ID` | `"standalone"` | Family isolation — determines socket naming (`beardog-{family}.sock`) and key derivation scope |
+| `FAMILY_SEED` / `BEARDOG_FAMILY_SEED` | `.family.seed` file | BTSP key material — required when `FAMILY_ID` is set |
+| `NODE_ID` / `BEARDOG_NODE_ID` | `standalone-{uuid}` | Node identity within a family — used in IPC routing, contact exchange, and BTSP session metadata |
+
+**Resolution behavior:**
+- `BEARDOG_*` prefixed vars take precedence, then unprefixed (`NODE_ID`, `FAMILY_ID`)
+- Empty strings are treated as unset
+- When `NODE_ID` is absent, a stable per-process ephemeral id (`standalone-{uuid}`) is generated once and reused for the process lifetime
+- Standalone mode is fully operational for local-only usage — primals MUST NOT hard-fail on missing identity vars (per UniBin v1.1 / PRIMAL IPC Protocol v3.1)
+
+```bash
+# Orchestrated deployment (recommended for multi-primal hosts)
+export FAMILY_ID=nat0
+export NODE_ID=tower1
+export FAMILY_SEED=my-secret-seed
+./beardog server
+
+# Standalone mode (no env vars needed)
+./beardog server --port 9000
+```
+
+**For launcher scripts:** auto-set `NODE_ID` to `$(hostname)` if not already set. See `start_primal.sh` in primalSpring for reference.
+
 ---
 
 ## Quality

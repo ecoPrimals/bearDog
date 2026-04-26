@@ -29,11 +29,13 @@ impl IdentityHints {
     pub fn from_env() -> Self {
         Self {
             primal_name: beardog_errors::process_env::var("PRIMAL_NAME").ok(),
-            family_id: beardog_errors::process_env::var("FAMILY_ID").ok(),
-            biomeos_family: beardog_errors::process_env::var("BIOMEOS_FAMILY").ok(),
-            node_id: beardog_errors::process_env::var("NODE_ID")
+            family_id: beardog_errors::process_env::var("BEARDOG_FAMILY_ID")
                 .ok()
-                .or_else(|| beardog_errors::process_env::var("BEARDOG_NODE_ID").ok()),
+                .or_else(|| beardog_errors::process_env::var("FAMILY_ID").ok()),
+            biomeos_family: beardog_errors::process_env::var("BIOMEOS_FAMILY").ok(),
+            node_id: beardog_errors::process_env::var("BEARDOG_NODE_ID")
+                .ok()
+                .or_else(|| beardog_errors::process_env::var("NODE_ID").ok()),
             hostname: beardog_errors::process_env::var("HOSTNAME").ok(),
         }
     }

@@ -119,9 +119,9 @@ pub struct PrimalIdentity {
 impl PrimalIdentity {
     /// Create identity from environment variables with standalone fallback.
     ///
-    /// Reads from:
-    /// 1. `FAMILY_ID` or `BEARDOG_FAMILY_ID` (defaults to `"standalone"`; empty = unset)
-    /// 2. `NODE_ID` or `BEARDOG_NODE_ID` (if unset or empty: stable per-process `standalone-{uuid}`; see [`resolve_process_node_id`])
+    /// Reads from (primal-specific override wins):
+    /// 1. `BEARDOG_FAMILY_ID` then `FAMILY_ID` (defaults to `"standalone"`; empty = unset)
+    /// 2. `BEARDOG_NODE_ID` then `NODE_ID` (if unset or empty: stable per-process `standalone-{uuid}`; see [`resolve_process_node_id`])
     ///
     /// Per `UniBin` v1.1 / PRIMAL IPC Protocol v3.1, primals MUST NOT
     /// hard-fail when identity env vars are absent. Standalone mode
@@ -139,8 +139,8 @@ impl PrimalIdentity {
     /// ```
     #[must_use]
     pub fn from_env() -> Self {
-        let family_id = env_nonempty("FAMILY_ID", "BEARDOG_FAMILY_ID");
-        let node_id = env_nonempty("NODE_ID", "BEARDOG_NODE_ID");
+        let family_id = env_nonempty("BEARDOG_FAMILY_ID", "FAMILY_ID");
+        let node_id = env_nonempty("BEARDOG_NODE_ID", "NODE_ID");
 
         let is_standalone = family_id.is_none() && node_id.is_none();
 
