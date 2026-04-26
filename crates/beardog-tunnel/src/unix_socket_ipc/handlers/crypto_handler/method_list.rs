@@ -83,6 +83,10 @@ pub fn crypto_method_names() -> Vec<&'static str> {
         "genetic.derive_device_seed",
         "genetic.sign_lineage_certificate",
         "genetic.verify_lineage_certificate",
+        // Lineage semantic methods (blocks skunkBat thymic selection)
+        "lineage.list",
+        "lineage.verify",
+        "lineage.get",
         // Semantic aliases
         "crypto.hash",
         "crypto.hmac",

@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: April 22, 2026
+**Last Updated**: April 26, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -35,7 +35,7 @@
 
 - **Crates**: 29 directories (beardog-integration excluded — overstep)
 - **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
-- **Crypto Methods**: 100 JSON-RPC methods (`methods()` handler count: +1 ionic_bond.seal)
+- **Crypto Methods**: 99 CryptoHandler + IonicBondHandler methods (`lineage.list`, `lineage.verify`, `lineage.get` added Wave 69)
 - **`#[allow(`**: 81 (was 86)
 - **`#[expect(`**: 646 (was 642)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS

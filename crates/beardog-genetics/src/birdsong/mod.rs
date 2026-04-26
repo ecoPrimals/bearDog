@@ -77,7 +77,7 @@ pub use genesis_types::{
     PhysicalChannelType, TrustLevel,
 };
 pub use key_derivation::LineageKeyDerivation;
-pub use lineage_chain::LineageChainManager;
+pub use lineage_chain::{LineageChainManager, LineageChainSummary};
 pub use lineage_id::LineageID;
 pub use lineage_proof::LineageProofManager;
 pub use manager::BirdSongManager;

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 26, 2026 -- Wave 69: Lineage Semantic IPC Methods
+
+- **`lineage.list` method** — Enumerates all lineage chains via BirdSongManager with summary metadata (chain_id, root_node_id, node_count, generation, created_at). Enables skunkBat thymic selection and federation mesh queries.
+- **`lineage.verify` method** — Semantic alias that delegates to `genetic.verify_lineage`. Accepts same params (our_family_id, peer_family_id, lineage_proof, lineage_seed, optional chain_id). Supports both simple Blake3 and chain-based Merkle verification.
+- **`lineage.get` method** — Retrieves full lineage chain by chain_id, returns serialized `LineageChain` with nodes, relationships, generation, and head_commitment.
+- **`LineageChainSummary` type** — New struct in `beardog-genetics` for efficient chain listing without full serialization.
+- **`crypto.sign_contract` confirmed wired** — Verified already fully routed through `IonicBondHandler` with propose→accept→seal lifecycle, capabilities registered, and cost metrics present.
+- **Quality** — 99 crypto methods registered. 3 new tests (lineage_list_returns_empty_chains, lineage_verify_delegates_to_genetic, lineage_get_missing_chain). Clippy/fmt clean.
+
 ### April 22, 2026 -- Wave 67: Deep Debt — Hardcoded Primal Name Cleanup, Full Audit
 
 - **Hardcoded primal name cleanup** — Removed 2 production-code `biomeOS` references from tracing messages in `primal_discovery.rs` and `discovery.rs`. Replaced with generic terms ("platform sockets", "orchestrator layer"). Primal code now has pure self-knowledge only.

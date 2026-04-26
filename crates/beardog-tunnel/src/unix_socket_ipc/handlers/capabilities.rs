@@ -193,6 +193,12 @@ impl CapabilitiesHandler {
                     "description": "Ed25519 contract signing for cross-family trust (IONIC-RUNTIME: propose→accept→seal with signed contracts)"
                 },
                 {
+                    "type": "lineage",
+                    "version": "1.0",
+                    "methods": ["list", "verify", "get"],
+                    "description": "Verifiable lineage queries — chain enumeration, proof verification, and chain retrieval (enables skunkBat thymic selection)"
+                },
+                {
                     "type": "graph",
                     "version": "1.0",
                     "methods": ["authorize_modification", "validate_template", "audit_origin"],
@@ -258,6 +264,9 @@ impl CapabilitiesHandler {
                 "crypto.ionic_bond.list":          { "cpu": "low",    "latency_ms": 1 },
                 "crypto.sign_contract":            { "cpu": "low",    "latency_ms": 1 },
                 "crypto.verify_contract":          { "cpu": "low",    "latency_ms": 1 },
+                "lineage.list":                    { "cpu": "low",    "latency_ms": 1 },
+                "lineage.verify":                  { "cpu": "medium", "latency_ms": 2 },
+                "lineage.get":                     { "cpu": "low",    "latency_ms": 1 },
                 "security.evaluate":               { "cpu": "medium", "latency_ms": 5 },
                 "graph.authorize_modification":    { "cpu": "medium", "latency_ms": 5 },
                 "tls.derive_secrets":              { "cpu": "medium", "latency_ms": 2 },

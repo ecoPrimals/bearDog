@@ -16,6 +16,21 @@ use rand::RngCore;
 
 use super::types::{LineageChain, LineageMetadata, LineageNode, LineageRelationship};
 
+/// Summary of a lineage chain for listing.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct LineageChainSummary {
+    /// Unique chain identifier.
+    pub chain_id: String,
+    /// Node ID of the genesis (root) node.
+    pub root_node_id: String,
+    /// Total number of nodes in the chain.
+    pub node_count: usize,
+    /// Monotonic generation counter.
+    pub generation: u64,
+    /// ISO-8601 creation timestamp.
+    pub created_at: String,
+}
+
 /// Manager for lineage chain operations
 pub struct LineageChainManager {
     /// Active lineage chains (`chain_id` -> `LineageChain`)
@@ -286,6 +301,21 @@ impl LineageChainManager {
                 Ok(false)
             }
         }
+    }
+
+    /// List all chain IDs with summary metadata.
+    pub fn list_chains(&self) -> Vec<LineageChainSummary> {
+        let chains = self.chains.read();
+        chains
+            .values()
+            .map(|c| LineageChainSummary {
+                chain_id: c.chain_id.clone(),
+                root_node_id: c.root_node.node_id.clone(),
+                node_count: c.nodes.len(),
+                generation: c.generation,
+                created_at: c.created_at.to_rfc3339(),
+            })
+            .collect()
     }
 
     /// Get a lineage chain by ID

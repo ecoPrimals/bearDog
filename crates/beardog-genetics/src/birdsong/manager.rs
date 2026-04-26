@@ -127,6 +127,11 @@ impl BirdSongManager {
             .await
     }
 
+    /// List all lineage chains with summary metadata.
+    pub fn list_lineage_chains(&self) -> Vec<super::LineageChainSummary> {
+        self.chain_manager.list_chains()
+    }
+
     /// Get a lineage chain
     pub fn get_lineage_chain(&self, chain_id: &str) -> Option<LineageChain> {
         self.chain_manager.get_chain(chain_id)

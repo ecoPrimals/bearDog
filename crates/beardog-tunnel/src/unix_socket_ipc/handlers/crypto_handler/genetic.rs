@@ -152,6 +152,46 @@ pub async fn route(
             ))
         }
 
+        "lineage.list" => {
+            info!("📋 Lineage: list (enumerate all lineage chains)");
+            let birdsong = btsp_provider.birdsong_manager();
+            let chains = birdsong.list_lineage_chains();
+            Ok(Some(serde_json::json!({
+                "chains": chains,
+                "count": chains.len(),
+            })))
+        }
+
+        "lineage.verify" => {
+            info!("🔍 Lineage: verify (semantic → genetic.verify_lineage)");
+            let birdsong = btsp_provider.birdsong_manager();
+            Ok(Some(
+                handle_verify_lineage(
+                    params.ok_or_else(|| "Parameters required for lineage.verify".to_string())?,
+                    &birdsong,
+                )
+                .await
+                .map_err(|e| e.to_string())?,
+            ))
+        }
+
+        "lineage.get" => {
+            info!("📖 Lineage: get (retrieve chain by ID)");
+            let chain_id = params
+                .and_then(|p| p.get("chain_id"))
+                .and_then(|v| v.as_str())
+                .ok_or("Missing required parameter: chain_id")?;
+            let birdsong = btsp_provider.birdsong_manager();
+            match birdsong.get_lineage_chain(chain_id) {
+                Some(chain) => serde_json::to_value(chain)
+                    .map(Some)
+                    .map_err(|e| format!("Serialize: {e}")),
+                None => Ok(Some(
+                    serde_json::json!({ "error": "chain_not_found", "chain_id": chain_id }),
+                )),
+            }
+        }
+
         _ => Ok(None),
     }
 }
@@ -292,6 +332,56 @@ mod tests {
             .expect("route")
             .expect("some");
         assert_eq!(v["valid"], true);
+    }
+
+    #[tokio::test]
+    async fn lineage_list_returns_empty_chains() {
+        let btsp = test_btsp().await;
+        let out = route("lineage.list", None, &btsp)
+            .await
+            .expect("route")
+            .expect("some");
+        assert_eq!(out["count"], 0);
+        assert!(out["chains"].as_array().expect("chains array").is_empty());
+    }
+
+    #[tokio::test]
+    async fn lineage_verify_delegates_to_genetic() {
+        let btsp = test_btsp().await;
+        let s = seed32();
+        let proof_req = json!({
+            "our_family_id": "fam-a",
+            "peer_family_id": "fam-b",
+            "lineage_seed": s,
+        });
+        let proof_val = route("genetic.generate_lineage_proof", Some(&proof_req), &btsp)
+            .await
+            .expect("route")
+            .expect("some");
+        let proof = proof_val["proof"].as_str().expect("proof");
+
+        let verify = json!({
+            "our_family_id": "fam-a",
+            "peer_family_id": "fam-b",
+            "lineage_proof": proof,
+            "lineage_seed": s,
+        });
+        let v = route("lineage.verify", Some(&verify), &btsp)
+            .await
+            .expect("route")
+            .expect("some");
+        assert_eq!(v["valid"], true);
+    }
+
+    #[tokio::test]
+    async fn lineage_get_missing_chain() {
+        let btsp = test_btsp().await;
+        let params = json!({ "chain_id": "nonexistent" });
+        let out = route("lineage.get", Some(&params), &btsp)
+            .await
+            .expect("route")
+            .expect("some");
+        assert_eq!(out["error"], "chain_not_found");
     }
 
     #[tokio::test]
