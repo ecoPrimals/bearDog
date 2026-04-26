@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 26, 2026 -- Wave 69b: Deep Debt — Self-Knowledge, Allow-Reasons, Blake3 Pure
+
+- **Self-knowledge cleanup** — Removed `skunkBat` reference from `capabilities.rs` wire data and `method_list.rs` comment. Primal code now has pure self-knowledge only (zero other-primal references in production logic).
+- **`#[allow()]` hygiene** — Added structured `reason = "..."` to all 3 remaining `#[allow(clippy::wildcard_imports)]` attributes in production code. All `#[allow()]` now carry justification.
+- **`blake3` pure alignment** — 5 showcase `Cargo.toml` files aligned to `features = ["pure"]` matching workspace standard. Eliminates `cc`/assembly build path for pure Rust crypto.
+- **Comprehensive audit clean** — 0 unsafe, 0 async-trait, 0 TODO/FIXME/HACK, 0 `Box<dyn Error>` in production, 0 production files >800 LOC, 0 ungated mocks, 0 ring/openssl/serde_yaml in Cargo.lock. All `#[allow()]` justified. cargo deny 4/4 PASS.
+
 ### April 26, 2026 -- Wave 69: Lineage Semantic IPC Methods
 
 - **`lineage.list` method** — Enumerates all lineage chains via BirdSongManager with summary metadata (chain_id, root_node_id, node_count, generation, created_at). Enables skunkBat thymic selection and federation mesh queries.
