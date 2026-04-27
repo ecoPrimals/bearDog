@@ -56,12 +56,16 @@ pub fn get_primal_name() -> String {
 }
 
 /// Resolves family id from explicit hints.
+///
+/// Fallback chain: `BEARDOG_FAMILY_ID` / `FAMILY_ID` → `BIOMEOS_FAMILY` → `"standalone"`
+/// (aligned with [`PrimalIdentity::from_env`]).
 #[must_use]
 pub fn get_family_id_with(h: &IdentityHints) -> String {
     h.family_id
         .clone()
         .or_else(|| h.biomeos_family.clone())
-        .unwrap_or_else(|| "unknown".to_string())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| beardog_types::primal_identity::DEFAULT_STANDALONE_FAMILY.to_string())
 }
 
 /// Get the family ID using self-knowledge pattern (reads environment).
@@ -71,12 +75,16 @@ pub fn get_family_id() -> String {
 }
 
 /// Resolves node id from explicit hints.
+///
+/// Fallback chain: `BEARDOG_NODE_ID` / `NODE_ID` → `HOSTNAME` → ephemeral
+/// `standalone-{uuid}` (same as [`PrimalIdentity::from_env`] and [`SocketConfig`]).
 #[must_use]
 pub fn get_node_id_with(h: &IdentityHints) -> String {
     h.node_id
         .clone()
         .or_else(|| h.hostname.clone())
-        .unwrap_or_else(|| "unknown".to_string())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(beardog_types::primal_identity::resolve_process_node_id)
 }
 
 /// Get the node ID using self-knowledge pattern (reads environment).
@@ -109,7 +117,7 @@ mod tests {
 
     #[test]
     fn test_get_family_id_default() {
-        assert_eq!(get_family_id_with(&IdentityHints::default()), "unknown");
+        assert_eq!(get_family_id_with(&IdentityHints::default()), "standalone");
     }
 
     #[test]

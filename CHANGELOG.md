@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 27, 2026 -- Wave 70: ludoSpring Audit — Identity Fallback Alignment
+
+- **Identity fallback consistency** — `get_node_id_with()` and `get_family_id_with()` in handler utils now use the same fallbacks as `PrimalIdentity::from_env()` and `SocketConfig`: `resolve_process_node_id()` (ephemeral `standalone-{uuid}`) for missing node ID, `DEFAULT_STANDALONE_FAMILY` (`"standalone"`) for missing family ID. Previously returned `"unknown"` which could silently diverge from the socket path's identity.
+- **Documentation clarification** — README now explicitly states that only ONE of `NODE_ID` / `BEARDOG_NODE_ID` is needed (not both), addressing the ludoSpring launcher misconception.
+- **Resolves** ludoSpring audit: "BearDog needs both NODE_ID and BEARDOG_NODE_ID set, or it fails silently." BearDog has always accepted either variable; the silent issue was inconsistent fallback values across identity resolution sites.
+
 ### April 26, 2026 -- Wave 69b: Deep Debt — Self-Knowledge, Allow-Reasons, Blake3 Pure
 
 - **Self-knowledge cleanup** — Removed `skunkBat` reference from `capabilities.rs` wire data and `method_list.rs` comment. Primal code now has pure self-knowledge only (zero other-primal references in production logic).

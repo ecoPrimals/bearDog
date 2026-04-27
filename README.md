@@ -221,6 +221,8 @@ export FAMILY_SEED=my-secret-seed
 ./beardog server --port 9000
 ```
 
+**Important:** You only need ONE of `NODE_ID` or `BEARDOG_NODE_ID` (not both). Similarly for `FAMILY_ID` / `BEARDOG_FAMILY_ID`. The `BEARDOG_*` prefixed form takes precedence when both are set.
+
 **For launcher scripts:** auto-set `NODE_ID` to `$(hostname)` if not already set. See `start_primal.sh` in primalSpring for reference.
 
 ---
