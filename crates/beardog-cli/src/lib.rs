@@ -194,4 +194,4 @@ pub struct DoctorArgs {
 }
 
 #[cfg(test)]
-mod coverage_expansion_march_2026;
+mod coverage_expansion_cli_wave;

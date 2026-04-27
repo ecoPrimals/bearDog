@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 27, 2026 -- Wave 70b: Deep Debt Audit — Clean Bill of Health
+
+- **Comprehensive 8-dimension audit**: async-trait, unsafe, Box<dyn Error>, ring, large files, hardcoding, self-knowledge, mocks — all clean.
+- **Date-stamped test file renamed**: `coverage_expansion_march_2026.rs` → `coverage_expansion_cli_wave.rs` (beardog-cli)
+- **Allow-reason hygiene**: converted remaining bare `#[allow(clippy::await_holding_lock)]` and `#[allow(dead_code)]` to use `reason` fields for full consistency.
+- **Audit summary**: zero async-trait, zero unsafe blocks (28 crates `#![forbid(unsafe_code)]`), zero production `Box<dyn Error>`, zero ring, zero ungated mocks, zero TODO/FIXME, zero hardcoded peer primal names, all >800L files are test-only.
+
 ### April 27, 2026 -- Wave 70: ludoSpring Audit — Identity Fallback Alignment
 
 - **Identity fallback consistency** — `get_node_id_with()` and `get_family_id_with()` in handler utils now use the same fallbacks as `PrimalIdentity::from_env()` and `SocketConfig`: `resolve_process_node_id()` (ephemeral `standalone-{uuid}`) for missing node ID, `DEFAULT_STANDALONE_FAMILY` (`"standalone"`) for missing family ID. Previously returned `"unknown"` which could silently diverge from the socket path's identity.

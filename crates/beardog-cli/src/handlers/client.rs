@@ -512,7 +512,10 @@ mod client_handler_tests {
 
     #[cfg(unix)]
     #[tokio::test]
-    #[allow(clippy::await_holding_lock)] // serializes handle_client tests against shared env
+    #[allow(
+        clippy::await_holding_lock,
+        reason = "serializes handle_client tests against shared env"
+    )]
     async fn test_handle_client_runs_one_shot_command() {
         use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 

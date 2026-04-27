@@ -39,7 +39,10 @@ impl SoftwareHsmProvider {
     ///
     /// # Errors
     /// Returns an error if HSM initialization fails
-    #[allow(dead_code)] // Public API hook; not referenced in this crate — dead_code lint not always emitted; expect would be unfulfilled
+    #[allow(
+        dead_code,
+        reason = "public API hook; not referenced in this crate — dead_code lint not always emitted; expect would be unfulfilled"
+    )]
     pub async fn with_config(
         #[expect(
             unused_variables,
