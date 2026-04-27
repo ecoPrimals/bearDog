@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 27, 2026 -- Wave 70d: primalSpring Convergence — ENVIRONMENT_VARIABLES.md Reconciled
+
+- **`docs/references/ENVIRONMENT_VARIABLES.md` rewritten** — Updated from February 2026 to April 27, 2026. Documents `BEARDOG_NODE_ID`, `BEARDOG_FAMILY_ID`, `FAMILY_SEED`/`BEARDOG_FAMILY_SEED`, `BIOMEOS_INSECURE`, `BIOMEOS_SOCKET_DIR`, and `PRIMAL_NAME`. Corrected `FAMILY_ID`/`NODE_ID` from "REQUIRED" to optional with standalone fallback. Updated socket resolution from 4-tier to 5-tier. Added BTSP security mode truth table. Removed stale "Related Documents" links.
+- **Resolves** primalSpring convergence validation gap: long-form env var reference now consistent with README.
+
 ### April 27, 2026 -- Wave 70b: Deep Debt Audit — Clean Bill of Health
 
 - **Comprehensive 8-dimension audit**: async-trait, unsafe, Box<dyn Error>, ring, large files, hardcoding, self-knowledge, mocks — all clean.
