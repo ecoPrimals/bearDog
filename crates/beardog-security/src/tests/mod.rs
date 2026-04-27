@@ -129,7 +129,7 @@ mod crypto_error_boundary_tests;
 
 // October 22, 2025 - Security Edge Cases (High-Value Test Coverage Expansion)
 #[cfg(test)]
-mod security_edge_cases_oct22;
+mod security_edge_cases;
 
 // October 31, 2025 - Week 1 Test Expansion: Authorization Tests
 #[cfg(test)]

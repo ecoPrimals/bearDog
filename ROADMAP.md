@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: April 26, 2026
+**Updated**: April 27, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -59,6 +59,14 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### Deep Debt Audit: Clean Bill of Health — DONE (Wave 70b)
+
+Comprehensive 8-dimension audit: zero async-trait, zero unsafe (28 crates `#![forbid(unsafe_code)]`), zero production `Box<dyn Error>`, zero ring, zero ungated mocks, zero TODO/FIXME, zero hardcoded peer primal names. All >800L files are test-only. Renamed stale date-stamped test file. Enforced `reason` on all remaining bare `#[allow()]`.
+
+### ludoSpring Audit: Identity Fallback Alignment — DONE (Wave 70)
+
+Aligned `get_node_id_with()` and `get_family_id_with()` fallbacks to match `PrimalIdentity::from_env()` and `SocketConfig` (ephemeral `standalone-{uuid}` and `"standalone"` instead of `"unknown"`). Clarified in README that only ONE of `NODE_ID`/`BEARDOG_NODE_ID` is needed. Resolves ludoSpring launcher audit.
 
 ### Deep Debt: Self-Knowledge, Allow-Reasons, Blake3 Pure — DONE (Wave 69b)
 
@@ -187,4 +195,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: April 26, 2026
+**Last Updated**: April 27, 2026

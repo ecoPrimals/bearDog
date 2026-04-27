@@ -54,13 +54,13 @@ mod configuration_validation_tests;
 
 // November 22, 2025: Adapter coverage expansion for 85% coverage goal
 #[cfg(test)]
-#[path = "tests/adapter_coverage_expansion_nov_22_tests.rs"]
-mod adapter_coverage_expansion_nov_22_tests;
+#[path = "tests/adapter_coverage_expansion_tests.rs"]
+mod adapter_coverage_expansion_tests;
 
 // November 27, 2025: Coverage Sprint Phase 1 - Additional lib.rs coverage
 #[cfg(test)]
-#[path = "tests/lib_nov_27_coverage_tests.rs"]
-mod lib_nov_27_coverage_tests;
+#[path = "tests/lib_coverage_tests.rs"]
+mod lib_coverage_tests;
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};

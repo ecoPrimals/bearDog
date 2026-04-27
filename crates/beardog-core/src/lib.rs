@@ -201,8 +201,8 @@ mod crypto_service_comprehensive_tests;
 mod coverage_core_wave;
 
 #[cfg(test)]
-#[path = "tests/core_edge_cases_oct22.rs"]
-mod core_edge_cases_oct22;
+#[path = "tests/core_edge_cases.rs"]
+mod core_edge_cases;
 
 // Re-export key components
 pub use core::{

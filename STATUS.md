@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: April 26, 2026
+**Last Updated**: April 27, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -89,6 +89,18 @@
 ---
 
 ## Recent Improvements
+
+### Wave 70b — Deep Debt Audit: Clean Bill of Health (April 27, 2026)
+
+- **Comprehensive 8-dimension audit**: async-trait, unsafe, Box<dyn Error>, ring, large files, hardcoding, self-knowledge, mocks — all clean.
+- **Date-stamped test file renamed**: `coverage_expansion_march_2026.rs` → `coverage_expansion_cli_wave.rs`.
+- **Allow-reason hygiene**: All remaining bare `#[allow()]` converted to use `reason` fields.
+- Zero async-trait, zero unsafe blocks (28 crates `#![forbid(unsafe_code)]`), zero production `Box<dyn Error>`, zero ring, zero ungated mocks, zero TODO/FIXME, zero hardcoded peer primal names. All >800L files are test-only.
+
+### Wave 70 — ludoSpring Audit: Identity Fallback Alignment (April 27, 2026)
+
+- **Identity fallback consistency** — `get_node_id_with()` and `get_family_id_with()` in handler utils aligned to `PrimalIdentity::from_env()` fallbacks (`standalone-{uuid}` and `"standalone"` instead of `"unknown"`).
+- **Documentation clarification** — README clarifies only ONE of `NODE_ID` / `BEARDOG_NODE_ID` needed (not both).
 
 ### Wave 69b — Deep Debt: Self-Knowledge, Allow-Reasons, Blake3 Pure (April 26, 2026)
 
