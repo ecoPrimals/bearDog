@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 28, 2026 -- Wave 72: primalSpring Phase 55 Audit — NUCLEUS Purpose Key Derivation & Signed Registrations
+
+- **`crypto.derive_purpose_key`** — New first-class IPC method for the NUCLEUS two-tier crypto model. Derives purpose-specific keys from a parent family key using `HMAC-SHA256(key, hex("purpose-v1:" + purpose))`. Replaces the workaround of chaining raw `crypto.hmac_sha256` calls. Deterministic, 32-byte output, aligned with `wateringHole/NUCLEUS_TWO_TIER_CRYPTO_MODEL.md`.
+- **`crypto.sign_registration`** — New IPC method for signing `ipc.register` payloads. Canonicalizes registration fields (`primal_id`, sorted `capabilities`, `endpoint`) into a deterministic string and signs with Ed25519. Consumers can verify authentic service registrations using `crypto.verify`. Resolves primalSpring audit: "service registrations are unsigned and consumers can't verify authenticity."
+- **Method count**: 99 → 101 (CryptoHandler + IonicBondHandler)
+- **5 new tests**: derive_purpose_key (basic, deterministic, different-purposes-differ), sign_registration (basic, verify-roundtrip)
+- **Resolves** primalSpring v0.9.20 Phase 55 audit gaps 1 and 2.
+
 ### April 27, 2026 -- Wave 71: Deep Debt Pass — Workspace Hygiene, Debris Cleanup & Broken Link Fixes
 
 - **Workspace dependency normalization** — `tokio-test` (beardog-adapters, beardog-ipc, beardog-integration), `parking_lot`, `uuid` (beardog-integration) converted from version-pinned to `{ workspace = true }`. Redundant feature echoes (`chrono` serde, `tracing-subscriber` env-filter) removed from beardog-integration.

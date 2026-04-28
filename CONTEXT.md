@@ -2,7 +2,7 @@
 
 # Context — BearDog
 
-**Last Updated**: April 27, 2026
+**Last Updated**: April 28, 2026
 
 ## What This Is
 

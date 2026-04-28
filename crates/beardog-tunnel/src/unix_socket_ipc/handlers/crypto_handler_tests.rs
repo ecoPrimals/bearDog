@@ -120,7 +120,7 @@ fn test_handler_method_count() {
     let handler = CryptoHandler;
     assert_eq!(
         handler.methods().len(),
-        99,
-        "Should have exactly 99 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3 + Tor Phase 2 + derive_lineage_beacon_key + dot-separated ed25519 aliases + crypto.public_key + lineage.list/verify/get)"
+        101,
+        "Should have exactly 101 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3 + Tor Phase 2 + derive_lineage_beacon_key + dot-separated ed25519 aliases + crypto.public_key + lineage.list/verify/get + crypto.derive_purpose_key + crypto.sign_registration)"
     );
 }

@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: April 27, 2026
+**Updated**: April 28, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -59,6 +59,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### primalSpring Phase 55 Audit — NUCLEUS Purpose Key Derivation & Signed Registrations — DONE (Wave 72)
+
+Added `crypto.derive_purpose_key` (HMAC-SHA256 purpose-v1 convention) and `crypto.sign_registration` (canonical Ed25519 signing of ipc.register payloads). Methods 99→101. Resolves primalSpring gaps: single-family self-derivation and unsigned service registrations.
 
 ### Workspace Hygiene, Debris Cleanup & Broken Links — DONE (Wave 71)
 

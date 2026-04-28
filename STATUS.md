@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: April 27, 2026
+**Last Updated**: April 28, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -35,7 +35,7 @@
 
 - **Crates**: 29 directories (beardog-integration excluded — overstep)
 - **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
-- **Crypto Methods**: 99 CryptoHandler + IonicBondHandler methods (`lineage.list`, `lineage.verify`, `lineage.get` added Wave 69)
+- **Crypto Methods**: 101 CryptoHandler + IonicBondHandler methods (`crypto.derive_purpose_key`, `crypto.sign_registration` added Wave 72)
 - **`#[allow(`**: 81 (was 86)
 - **`#[expect(`**: 646 (was 642)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
@@ -89,6 +89,12 @@
 ---
 
 ## Recent Improvements
+
+### Wave 72 — primalSpring Phase 55 Audit: NUCLEUS Purpose Key Derivation & Signed Registrations (April 28, 2026)
+
+- **`crypto.derive_purpose_key`**: First-class NUCLEUS two-tier purpose key derivation (replaces raw HMAC chain workaround).
+- **`crypto.sign_registration`**: Signed `ipc.register` payloads for verifiable service registrations.
+- Method count: 99 → 101.
 
 ### Wave 71 — Deep Debt Pass: Workspace Hygiene, Debris Cleanup & Broken Links (April 27, 2026)
 

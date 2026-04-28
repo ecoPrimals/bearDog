@@ -264,6 +264,8 @@ impl CapabilitiesHandler {
                 "crypto.ionic_bond.list":          { "cpu": "low",    "latency_ms": 1 },
                 "crypto.sign_contract":            { "cpu": "low",    "latency_ms": 1 },
                 "crypto.verify_contract":          { "cpu": "low",    "latency_ms": 1 },
+                "crypto.derive_purpose_key":       { "cpu": "low",    "latency_ms": 1 },
+                "crypto.sign_registration":        { "cpu": "low",    "latency_ms": 1 },
                 "lineage.list":                    { "cpu": "low",    "latency_ms": 1 },
                 "lineage.verify":                  { "cpu": "medium", "latency_ms": 2 },
                 "lineage.get":                     { "cpu": "low",    "latency_ms": 1 },
