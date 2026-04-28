@@ -25,8 +25,10 @@ pub use core::{AlertingConfig, MetricsConfig, MonitoringCoreConfig, MonitoringHe
 /// Canonical monitoring configuration
 ///
 /// ⚠️  DEPRECATED: Use `beardog_types::canonical::monitoring::MonitoringConfig` instead
-#[allow(deprecated)]
-// Deprecated type definition; rustc does not emit deprecated on this line — expect would be unfulfilled
+#[allow(
+    deprecated,
+    reason = "deprecated type definition; rustc does not emit deprecated on this line — expect would be unfulfilled"
+)]
 #[deprecated(
     since = "3.1.0",
     note = "Use beardog_types::canonical::monitoring::MonitoringConfig instead"

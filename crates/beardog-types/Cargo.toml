@@ -60,10 +60,6 @@ proptest = { workspace = true }
 default = [ "config",]
 # Enable test utilities for external testing
 test-utils = []
-# REMOVED: crypto feature (ring is C-dependent, replaced by RustCrypto throughout beardog)
-# crypto = [ "ring",]
-# REMOVED: network feature (reqwest not needed!)
-# network = [ "reqwest", "tokio",]
 config = [ "toml", "tokio",]
 
 [[bench]]
@@ -73,14 +69,3 @@ harness = false
 [dependencies.beardog-errors]
 path = "../beardog-errors"
 
-# REMOVED: ring crate (Feb 4, 2026 - Deep Debt Round 10)
-# ring contains C/assembly code; replaced by RustCrypto throughout beardog
-# [dependencies.ring]
-# version = "0.17"
-# optional = true
-
-# REMOVED: reqwest (HTTP client not needed!)
-# [dependencies.reqwest]
-# version = "0.12"
-# features = [ "json",]
-# optional = true

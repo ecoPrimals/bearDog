@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 28, 2026 -- Wave 73: Deep Debt Pass — Orphan Cleanup, Benchmark Normalization & Lint Hygiene
+
+- **Orphan test files deleted (2,277 LOC)** — 6 `*_comprehensive_tests.rs` files across `beardog-core`, `beardog-types`, `beardog-security`, and `beardog-cli` were never referenced in any module tree (never compiled). Deleted: `operations_comprehensive_tests.rs` (421), `tests_comprehensive.rs` (507), `security_operations_comprehensive_tests.rs` (390), `capability_registry_comprehensive_tests.rs` (254), `cli_comprehensive_tests.rs` (354), `handler_integration_comprehensive_tests.rs` (351).
+- **Benchmarks workspace normalization** — 9 dependencies in `benchmarks/Cargo.toml` converted from version-pinned/path to `{ workspace = true }`: `beardog-core`, `beardog-errors`, `beardog-utils`, `criterion`, `tokio`, `toml`, `serde`, `chrono`, `tracing`. Added `[lints] workspace = true`.
+- **Missing `[lints] workspace = true`** — Added to `beardog-integration-tests/Cargo.toml` (only crate under `crates/` missing it).
+- **`#[allow(deprecated)]` reason hygiene** — 6 bare `#[allow(deprecated)]` attributes across `beardog-types` (monitoring_unified, production config, type_aliases) and `beardog-core` (trait_impl) now carry `reason = "..."` fields. All `#[allow()]` in production code are now justified.
+- **`#[expect(` reason hygiene** — 2 bare `#[expect(clippy::*)]` in `zero_knowledge_bootstrap/mod.rs` now carry `reason` fields.
+- **Stale commented dependency blocks removed** — `beardog-types/Cargo.toml`: removed 4 `REMOVED:` comment blocks (ring, reqwest features and dependency stubs) whose removal history is already in CHANGELOG.
+- **Clippy fix** — 2 `map().unwrap_or()` → `map_or()` in `benchmarks/src/utils.rs`.
+
 ### April 28, 2026 -- Wave 72: primalSpring Phase 55 Audit — NUCLEUS Purpose Key Derivation & Signed Registrations
 
 - **`crypto.derive_purpose_key`** — New first-class IPC method for the NUCLEUS two-tier crypto model. Derives purpose-specific keys from a parent family key using `HMAC-SHA256(key, hex("purpose-v1:" + purpose))`. Replaces the workaround of chaining raw `crypto.hmac_sha256` calls. Deterministic, 32-byte output, aligned with `wateringHole/NUCLEUS_TWO_TIER_CRYPTO_MODEL.md`.

@@ -63,7 +63,10 @@ pub mod ecosystem_listener;
 #[path = "ecosystem_listener_tests.rs"]
 mod ecosystem_listener_tests;
 
-#[expect(clippy::useless_vec)]
+#[expect(
+    clippy::useless_vec,
+    reason = "test setup uses vec![] for clarity over fixed arrays"
+)]
 #[cfg(test)]
 #[path = "bootstrap_tests.rs"]
 mod bootstrap_tests;
@@ -730,7 +733,10 @@ pub struct EcosystemState {
 }
 
 // Note: Day 2 discovery tests live in `zero_knowledge_bootstrap_tests.rs`.
-#[expect(clippy::uninlined_format_args)]
+#[expect(
+    clippy::uninlined_format_args,
+    reason = "test assertions use explicit format args for readability"
+)]
 #[cfg(test)]
 #[path = "zero_knowledge_bootstrap_tests.rs"]
 mod tests;

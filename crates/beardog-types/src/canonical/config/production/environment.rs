@@ -345,7 +345,10 @@ impl ModernSecretsConfig {
     /// Check if this provider supports automatic rotation
     /// DEPRECATED: Use capability-based feature detection instead
     #[deprecated(note = "Use universal adapter capability discovery to check features")]
-    #[allow(deprecated)] // Body uses non-deprecated paths; no deprecated-use lint — expect would be unfulfilled
+    #[allow(
+        deprecated,
+        reason = "body uses non-deprecated paths; no deprecated-use lint — expect would be unfulfilled"
+    )]
     #[must_use]
     pub fn supports_rotation(&self) -> bool {
         // This check is now handled by required_capabilities
@@ -374,7 +377,10 @@ impl ModernSecretsConfig {
     }
 
     /// Check if provider is deprecated
-    #[allow(deprecated)] // Body uses non-deprecated paths; no deprecated-use lint — expect would be unfulfilled
+    #[allow(
+        deprecated,
+        reason = "body uses non-deprecated paths; no deprecated-use lint — expect would be unfulfilled"
+    )]
     #[must_use]
     pub fn is_deprecated(&self) -> bool {
         // This check is now handled by required_capabilities

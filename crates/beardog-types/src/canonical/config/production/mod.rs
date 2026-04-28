@@ -49,8 +49,10 @@ pub use resources::ResourceManagementConfig;
 
 // Explicit re-exports for backward compatibility
 pub use core::{EnvironmentLevel, ProductionFeatureFlags};
-#[allow(deprecated)]
-// Re-export of deprecated aliases; rustc does not emit deprecated on this line — expect would be unfulfilled
+#[allow(
+    deprecated,
+    reason = "re-export of deprecated aliases; rustc does not emit deprecated on this line — expect would be unfulfilled"
+)]
 pub use environment::{EnvironmentType, EnvironmentValidation, ModernSecretsConfig};
 
 ///

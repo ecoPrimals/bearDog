@@ -64,13 +64,11 @@ pub fn calculate_stats(measurements: &[Duration]) -> BenchmarkStats {
         min_ns: measurements
             .iter()
             .min()
-            .map(|d| d.as_nanos() as f64)
-            .unwrap_or(0.0),
+            .map_or(0.0, |d| d.as_nanos() as f64),
         max_ns: measurements
             .iter()
             .max()
-            .map(|d| d.as_nanos() as f64)
-            .unwrap_or(0.0),
+            .map_or(0.0, |d| d.as_nanos() as f64),
         count: measurements.len(),
     }
 }

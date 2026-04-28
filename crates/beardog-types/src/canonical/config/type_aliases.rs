@@ -281,7 +281,10 @@ pub struct TracingConfig {
     since = "3.1.0",
     note = "Use canonical::config::domains::network::monitoring::HealthCheckConfiguration instead"
 )]
-#[allow(deprecated)] // Alias to deprecated name; no deprecated-use lint on this declaration — expect would be unfulfilled
+#[allow(
+    deprecated,
+    reason = "alias to deprecated name; no deprecated-use lint on this declaration — expect would be unfulfilled"
+)]
 pub type HealthCheckConfig = super::domains::network::monitoring::HealthCheckConfiguration;
 
 /// Alerting configuration
