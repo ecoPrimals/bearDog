@@ -89,14 +89,11 @@ pub use types::{CryptoServiceConfig, CryptoServiceState};
 /// This allows shorter function signatures throughout the crypto service.
 pub type Result<T> = std::result::Result<T, beardog_errors::BearDogError>;
 
-// Test coverage expansion - December 17, 2025
 #[cfg(test)]
-mod tests_coverage_expansion_dec17;
+mod tests_coverage_expansion;
 
-// Deep edge case testing - December 18, 2025
 #[cfg(test)]
-mod tests_dec18_edge_cases;
+mod tests_edge_cases;
 
-// Key persistence testing - January 8, 2026
 #[cfg(test)]
 mod tests_key_persistence;

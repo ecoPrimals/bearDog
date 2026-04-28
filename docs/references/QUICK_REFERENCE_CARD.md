@@ -45,9 +45,9 @@ cargo doc --no-deps --open
 
 ## 📚 DOCUMENTATION MAP
 
-**Start Here**: `START_HERE_UNIFICATION_SESSION.md`  
-**What To Do**: `ACTIONABLE_NEXT_STEPS_NOV_7_2025.md`  
-**Full Analysis**: `COMPREHENSIVE_UNIFICATION_REPORT_NOV_7_2025.md`
+**Start Here**: `../../START_HERE.md`  
+**Status**: `../../STATUS.md`  
+**Architecture**: `../../ARCHITECTURE.md`
 
 ---
 
@@ -119,10 +119,10 @@ A **world-class Rust codebase** with:
 ## 📞 QUICK HELP
 
 **Want to...**
-- **Ship to production?** → Read: `ACTIONABLE_NEXT_STEPS_NOV_7_2025.md`
-- **Add mobile support?** → See: Platform HSM section (40h work)
-- **Optimize performance?** → See: Clone optimization section (20h work)
-- **Understand status?** → Read: `COMPREHENSIVE_UNIFICATION_REPORT_NOV_7_2025.md`
+- **Ship to production?** → Read: `../../START_HERE.md`
+- **Add mobile support?** → See: Platform HSM section
+- **Optimize performance?** → See: Clone optimization section
+- **Understand status?** → Read: `../../STATUS.md`
 
 ---
 

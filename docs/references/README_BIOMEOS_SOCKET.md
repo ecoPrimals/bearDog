@@ -106,9 +106,9 @@ echo '{"jsonrpc":"2.0","method":"health","id":1}' | \
 
 ## See Also
 
-- **[BIOMEOS_SOCKET_INTEGRATION_JAN_30_2026.md](BIOMEOS_SOCKET_INTEGRATION_JAN_30_2026.md)** - Complete implementation guide
-- **[README.md](README.md)** - BearDog project overview
-- **[START_HERE.md](START_HERE.md)** - Quick start guide
+- **[ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)** - Complete environment variable reference (including socket path resolution)
+- **[README.md](../../README.md)** - BearDog project overview
+- **[START_HERE.md](../../START_HERE.md)** - Quick start guide
 
 ---
 

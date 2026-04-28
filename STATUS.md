@@ -90,10 +90,12 @@
 
 ## Recent Improvements
 
-### Wave 71 — Deep Debt Pass: Workspace Hygiene & Broken Link Cleanup (April 27, 2026)
+### Wave 71 — Deep Debt Pass: Workspace Hygiene, Debris Cleanup & Broken Links (April 27, 2026)
 
 - **Workspace dependency normalization**: 5 crate deps converted to `{ workspace = true }`, redundant feature echoes removed.
-- **Broken documentation links fixed**: 10+ broken cross-references in showcase, docs, and specs corrected.
+- **Orphan code deleted**: 2,685 LOC across `beardog-errors` (orphaned `unified_error_system/` directory + 2 unreferenced test files).
+- **Date-stamped test files renamed**: `tests_coverage_expansion_dec17.rs` and `tests_dec18_edge_cases.rs` in `crypto_service`.
+- **Broken documentation links fixed**: 15+ broken cross-references in showcase, docs, and specs corrected.
 - **Duplicate comment debris cleaned**: AES Phase 7 deferred block de-duplicated in beardog-tunnel.
 
 ### Wave 70b — Deep Debt Audit: Clean Bill of Health (April 27, 2026)

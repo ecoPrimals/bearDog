@@ -435,12 +435,10 @@ beardog/
 ## 🔗 Related Documents
 
 **Architecture**:
-- `CAPABILITY_BASED_PRIMAL_INTERACTION.md` - Primal interaction patterns
-- `BIRDSONG_INTEGRATION_ROADMAP_DEC_21_2025.md` - BirdSong phases
+- `../../specs/current/architecture/CAPABILITY_BASED_PRIMAL_INTERACTION.md` - Primal interaction patterns
 
 **Implementation**:
-- See wateringHole handoffs for phase evolution plans (no single `WHATS_NEXT.md` in-repo).
-- `PHASE3_IMPLEMENTATION_PLAN.md` - Detailed Phase 3 tasks
+- See wateringHole handoffs for phase evolution plans.
 
 **Specs**:
 - `specs/LINEAGE_GATED_RELAY_PROTOCOL.md` - Lineage concepts

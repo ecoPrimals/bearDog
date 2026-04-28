@@ -60,9 +60,9 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
-### Workspace Hygiene & Broken Link Cleanup — DONE (Wave 71)
+### Workspace Hygiene, Debris Cleanup & Broken Links — DONE (Wave 71)
 
-Normalized 5 workspace dependencies, removed duplicate comment debris, fixed 10+ broken cross-references across showcase/docs/specs. Full audit confirmed 70+ deprecated items are intentional v0.10.0 migration targets, zero `todo!()`/`unimplemented!()`, all feature gates valid.
+Normalized 5 workspace dependencies, deleted 2,685 LOC of orphan code (beardog-errors `unified_error_system/` + unreferenced tests), renamed 2 date-stamped test files, fixed 15+ broken cross-references across showcase/docs/specs. Full audit confirmed 70+ deprecated items are intentional v0.10.0 migration targets, zero `todo!()`/`unimplemented!()`, all feature gates valid.
 
 ### Deep Debt Audit: Clean Bill of Health — DONE (Wave 70b)
 
