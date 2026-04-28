@@ -164,8 +164,6 @@ hmac = "0.12"
 sha2 = "0.10"
 sha3 = "0.10"
 sha1 = "0.10"  # Legacy hashing (Git compatibility) - Phase 7
-# REMOVED: lettre = "0.11"  # Email - unused
-# REMOVED: cryptoki = "0.6"  # PKCS#11 FFI - unused (have our own pkcs11_provider.rs)
 rsa = "0.9"
 p256 = { version = "0.13", features = ["ecdsa"] }
 p384 = { version = "0.13", features = ["ecdsa"] }  # ECDSA P-384 (Phase 2)

@@ -35,7 +35,7 @@
 
 - **Crates**: 29 directories (beardog-integration excluded — overstep)
 - **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
-- **Crypto Methods**: 101 CryptoHandler + IonicBondHandler methods (`crypto.derive_purpose_key`, `crypto.sign_registration` added Wave 72)
+- **Crypto Methods**: 101 CryptoHandler methods + 9 IonicBondHandler methods (`crypto.derive_purpose_key`, `crypto.sign_registration` added Wave 72)
 - **`#[allow(`**: 81 (was 86)
 - **`#[expect(`**: 646 (was 642)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
@@ -89,6 +89,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 73 — Deep Debt Pass: Orphan Cleanup, Benchmark Normalization & Lint Hygiene (April 28, 2026)
+
+- **Orphan test files deleted**: 6 `*_comprehensive_tests.rs` files (2,277 LOC) never in module tree — dead code removed.
+- **Benchmarks workspace normalization**: 9 deps converted to `{ workspace = true }`, `[lints]` inherited.
+- **`[lints] workspace = true`**: Added to `beardog-integration-tests` (last gap).
+- **`#[allow(deprecated)]` + `#[expect()]` reason hygiene**: 8 attributes now carry `reason` fields.
+- **Stale comment debris**: Removed from `beardog-types/Cargo.toml`.
 
 ### Wave 72 — primalSpring Phase 55 Audit: NUCLEUS Purpose Key Derivation & Signed Registrations (April 28, 2026)
 

@@ -203,4 +203,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: April 27, 2026
+**Last Updated**: April 28, 2026

@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`#[expect(` reason hygiene** — 2 bare `#[expect(clippy::*)]` in `zero_knowledge_bootstrap/mod.rs` now carry `reason` fields.
 - **Stale commented dependency blocks removed** — `beardog-types/Cargo.toml`: removed 4 `REMOVED:` comment blocks (ring, reqwest features and dependency stubs) whose removal history is already in CHANGELOG.
 - **Clippy fix** — 2 `map().unwrap_or()` → `map_or()` in `benchmarks/src/utils.rs`.
+- **tarpc debris deleted** — `tests/tarpc_e2e_tests.rs` (301 LOC, dead since Jan 29 2026 tarpc removal) and `docs/references/QUICK_REFERENCE_TARPC.md` (108 lines, references non-existent docs, contradicts current JSON-RPC architecture). 4 broken references to non-existent `TARPC_REMOVAL_RATIONALE_JAN_29_2026.md` replaced with self-contained comments. Link removed from `docs/references/ROOT_INDEX.md`.
+- **Stale Cargo.toml comment blocks cleaned** — `REMOVED:` blocks purged across root `Cargo.toml`, `beardog-tunnel`, `beardog-cli`, `beardog-deploy`, `beardog-workflows`, `beardog-node-registry`. Duplicate AES deferred block in beardog-tunnel consolidated to a pointer to root workspace. Commented-out `[[bin]]` UniBin block removed from beardog-tunnel.
 
 ### April 28, 2026 -- Wave 72: primalSpring Phase 55 Audit — NUCLEUS Purpose Key Derivation & Signed Registrations
 

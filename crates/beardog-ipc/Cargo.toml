@@ -34,9 +34,7 @@ anyhow = { workspace = true }
 # Logging
 tracing = { workspace = true }
 
-# tarpc removed — it transitively pulls async-trait (via opentelemetry_sdk).
-# See TARPC_REMOVAL_RATIONALE_JAN_29_2026.md. JSON-RPC provides full functionality.
-# Source code preserved under #[cfg(feature = "tarpc")] in git history.
+# tarpc removed (Jan 29, 2026) — transitively pulls async-trait; JSON-RPC provides full functionality.
 
 [features]
 default = []

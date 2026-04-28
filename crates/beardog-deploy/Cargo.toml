@@ -30,8 +30,6 @@ serde_json = { workspace = true }
 path-absolutize = "3.0"
 console = "0.15"
 indicatif = "0.17"
-# REMOVED: sysinfo (C-dependency) - ecoBin compliance; device metadata uses env vars / adb
-
 [dependencies.clap]
 workspace = true
 

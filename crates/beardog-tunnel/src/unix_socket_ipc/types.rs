@@ -148,8 +148,7 @@ impl JsonRpcError {
 /// 1. JSON-RPC (PRIMARY) - Universal, comprehensive, production-ready
 /// 2. HTTP (LEGACY) - Compatibility only, less secure
 ///
-/// Note: TARPC was removed (Jan 29, 2026) - see `TARPC_REMOVAL_RATIONALE_JAN_29_2026.md`
-/// JSON-RPC provides all needed functionality with 8+ handler modules.
+/// Note: tarpc was removed (Jan 29, 2026) — JSON-RPC provides all needed functionality.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Protocol {
     /// Primary: Universal JSON-RPC 2.0 (security level 4)

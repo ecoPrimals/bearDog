@@ -85,7 +85,6 @@ Complete guide to BearDog documentation, organized by purpose.
 |----------|-------------|
 | [PRIMAL_CONTRACTS.md](../PRIMAL_CONTRACTS.md) | JSON-RPC method contracts |
 | [QUICK_REFERENCE_CARD.md](QUICK_REFERENCE_CARD.md) | Quick reference card |
-| [QUICK_REFERENCE_TARPC.md](QUICK_REFERENCE_TARPC.md) | tarpc quick reference |
 | [README_BIOMEOS_SOCKET.md](README_BIOMEOS_SOCKET.md) | biomeOS socket discovery |
 | [TOR_PHASE2_EVOLUTION.md](TOR_PHASE2_EVOLUTION.md) | Tor Phase 2 evolution plan |
 

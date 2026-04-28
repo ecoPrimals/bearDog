@@ -60,10 +60,6 @@ workspace = true
 [dependencies.sha2]
 workspace = true
 
-# REMOVED: reqwest (HTTP client not needed - Unix sockets only!)
-# [dependencies]
-# reqwest = { workspace = true }
-
 [dev-dependencies]
 serde_json = { workspace = true }
 
