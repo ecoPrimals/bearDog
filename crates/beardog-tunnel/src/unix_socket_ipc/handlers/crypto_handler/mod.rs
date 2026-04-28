@@ -12,6 +12,7 @@ mod hashing;
 mod kex_aead;
 mod method_list;
 mod password_kdf;
+pub(crate) mod purpose_key;
 mod router;
 mod signatures;
 mod tls12_dot;

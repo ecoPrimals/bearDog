@@ -19,7 +19,7 @@
 | **Unsafe Code** | 0 production | `forbid(unsafe_code)` workspace-wide + all crate `lib.rs` |
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
-| **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
+| **Files > 800 LOC** | 0 | All production .rs files compliant (threshold lowered to 800; `aliases_and_beardog.rs` refactored Wave 75) |
 | **Tests** | 14,928+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
@@ -79,7 +79,7 @@
 | `forbid(unsafe_code)` | Workspace level + every crate `lib.rs` (beardog-errors platform FFI documented per wateringHole) |
 | Workspace Lints | Centralized clippy pedantic + nursery + all cast lints warn + `doc_markdown` + `missing_errors_doc` + unwrap/expect warn |
 | All Public Items Documented | 0 missing_docs warnings |
-| File Size | 0 production files > 1000 LOC |
+| File Size | 0 production files > 800 LOC (threshold lowered Wave 75) |
 | Zero Sleeps (non-chaos) | All test synchronization via barriers/channels/notifications |
 | `#[serial]` Minimized | 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent |
 | Production Mocks | Mocks in `#[cfg(test)]`; FIDO2/iOS Phase 2 stubs return proper errors, not fake data |
@@ -89,6 +89,12 @@
 ---
 
 ## Recent Improvements
+
+### Wave 75 — Deep Debt: Purpose-Key Module Extraction, Dependency Drift & Stale Feature (April 28, 2026)
+
+- **`aliases_and_beardog.rs` 927→452 LOC**: NUCLEUS purpose-key ops extracted to `purpose_key.rs`; file size threshold tightened to 800 LOC.
+- **2 workspace dep drifts normalized**: `tokio-test`, `wiremock` → `{ workspace = true }`.
+- **Stale `dns-sd` feature gate cleaned** from `beardog-discovery` tests.
 
 ### Wave 74 — primalSpring Phase 55b: Lazy Purpose-Key Derivation & Purpose-Based Encrypt/Decrypt (April 28, 2026)
 

@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 28, 2026 -- Wave 75: Deep Debt Pass — Purpose-Key Module Extraction, Dependency Drift & Stale Feature Cleanup
+
+- **`aliases_and_beardog.rs` refactored (927 → 452 LOC)** — Extracted NUCLEUS purpose-key operations (`handle_derive_purpose_key`, `handle_sign_registration`, `handle_purpose_encrypt`, `handle_purpose_decrypt`, `resolve_purpose_key`, `load_family_seed`) and their 8 tests into a new `purpose_key.rs` submodule in `crypto_handler/`. Routing in `aliases_and_beardog.rs` now delegates via `use super::purpose_key::*`. Zero behavior change.
+- **Workspace dependency drift fixed** — `tokio-test` in `beardog-client` and `wiremock` in `beardog-integration` converted from inline version pins to `{ workspace = true }`. Eliminates future version skew risk.
+- **Stale `dns-sd` feature gate removed** — `beardog-discovery/tests/coverage_boost.rs` had `#[cfg(feature = "dns-sd")]` gated imports and a test, but the `dns-sd` feature was suspended and removed from `Cargo.toml`. Dead code deleted.
+- **Unused imports cleaned** — `serde_json::{Value, json}` removed from `aliases_and_beardog.rs` (moved to `purpose_key.rs`).
+- **CI gates**: `cargo fmt` clean, `cargo clippy --workspace -- -D warnings` 0 warnings, `cargo deny check` 4/4 pass, `cargo test --workspace` zero new failures (1 pre-existing flaky test in beardog-cli).
+
 ### April 28, 2026 -- Wave 74: primalSpring Phase 55b — Lazy Purpose-Key Derivation & Purpose-Based Encrypt/Decrypt
 
 - **Lazy purpose-key derivation in `secrets.retrieve`** — When a secret matching the NUCLEUS pattern `nucleus:{family}:purpose:{name}` is requested and doesn't exist, BearDog now auto-derives the purpose key from `FAMILY_SEED`/`BEARDOG_FAMILY_SEED` via `HMAC-SHA256(seed, hex("purpose-v1:" + purpose))` and stores it. NestGate and Squirrel can call `secrets.retrieve("nucleus:{family}:purpose:storage")` without requiring `nucleus_crypto_bootstrap.sh` to have run first.

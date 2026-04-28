@@ -35,7 +35,7 @@ beardog-genetics = { version = "0.9.0", path = "../beardog-genetics" }
 tracing = { workspace = true }
 
 [dev-dependencies]
-tokio-test = "0.4"
+tokio-test = { workspace = true }
 mockito = "1.0"
 tempfile = { workspace = true }
 chrono = { workspace = true }

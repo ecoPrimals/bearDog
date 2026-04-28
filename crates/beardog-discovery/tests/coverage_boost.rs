@@ -9,8 +9,6 @@ use beardog_discovery::capability_env::{
 };
 use beardog_discovery::config::DiscoveryConfig;
 use beardog_discovery::discovery::CapabilityDiscovery;
-#[cfg(feature = "dns-sd")]
-use beardog_discovery::dns_sd::DnsSdDiscovery;
 use beardog_discovery::error::DiscoveryError;
 #[cfg(feature = "mdns")]
 use beardog_discovery::mdns::MdnsDiscovery;
@@ -20,7 +18,7 @@ use beardog_discovery::types::{
 };
 use std::collections::HashMap;
 use std::env::VarError;
-#[cfg(any(feature = "mdns", feature = "dns-sd"))]
+#[cfg(feature = "mdns")]
 use std::time::Duration;
 use std::time::SystemTime;
 
@@ -342,23 +340,6 @@ async fn mdns_short_timeout_and_clear() {
     .expect("mdns");
     let v = d.discover(&format!("cap_{}", line!())).await.expect("disc");
     assert!(v.is_empty());
-    d.clear_cache().await;
-}
-
-#[cfg(feature = "dns-sd")]
-#[tokio::test]
-async fn dns_sd_short_timeout() {
-    let d = DnsSdDiscovery::with_config(beardog_discovery::dns_sd::DnsSdConfig {
-        timeout: Duration::from_millis(50),
-        ..Default::default()
-    })
-    .await
-    .expect("dns");
-    let result = d.discover("noop-cap").await;
-    match result {
-        Ok(v) => assert!(v.is_empty(), "expected no services for noop-cap"),
-        Err(_) => {}
-    }
     d.clear_cache().await;
 }
 
