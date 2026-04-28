@@ -241,7 +241,7 @@ Key material derived from family seed. Family A never shares keys with Family B.
 | Zero unsafe | `forbid(unsafe_code)` workspace-wide |
 | Zero panics | No `unwrap()` in production; `#[expect]` with reason on justified invariants; `unwrap_used`/`expect_used` warn at workspace |
 | Zero hardcoding | Environment variables and capability discovery |
-| File size | < 1000 LOC per file (exceptions justified) |
+| File size | < 800 LOC per file |
 | std preferred | `std::sync::LazyLock` over `once_cell`, etc. |
 | Mock isolation | All mocks behind `#[cfg(test)]` or `test-utils` feature |
 | `#[serial]` minimized | 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent |

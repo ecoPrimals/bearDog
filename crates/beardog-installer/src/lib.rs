@@ -56,7 +56,7 @@ pub const NAME: &str = env!("CARGO_PKG_NAME");
 mod test_env_lock;
 
 #[cfg(test)]
-mod coverage_boost_wave10;
+mod coverage_boost;
 
 #[cfg(test)]
 mod coverage_installer_wave;

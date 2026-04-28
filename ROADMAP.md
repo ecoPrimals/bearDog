@@ -21,7 +21,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 0 missing documentation warnings (all public items documented, all `# Errors` sections present)
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
-- 0 files exceeding 1000 lines of code (production)
+- 0 files exceeding 800 lines of code (production)
 - 14,928+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
 - 90.51% line coverage (llvm-cov workspace) — target 90% met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
@@ -59,6 +59,18 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### Deep Debt: Purpose-Key Module Extraction, Dependency Drift & Stale Feature Cleanup — DONE (Wave 75)
+
+Refactored `aliases_and_beardog.rs` (927→452 LOC) by extracting NUCLEUS purpose-key ops into `purpose_key.rs`. Normalized 2 workspace dep drifts (`tokio-test`, `wiremock`). Removed dead `dns-sd` feature gate. File-size threshold tightened from 1000 to 800 LOC — zero files exceed it.
+
+### primalSpring Phase 55b — Lazy Purpose-Key Derivation & Purpose-Based Encrypt/Decrypt — DONE (Wave 74)
+
+Added lazy purpose-key derivation in `secrets.retrieve` (auto-derives NUCLEUS purpose keys from `FAMILY_SEED` on first access) and `purpose` parameter in `crypto.encrypt`/`crypto.decrypt` for NUCLEUS envelope operations. Resolves Phase 55b audit: lights up end-to-end encryption for NestGate and Squirrel.
+
+### Deep Debt: Orphan Cleanup, Benchmark Normalization, Lint Hygiene & Stale Comment Purge — DONE (Waves 73/73b)
+
+Deleted 6 orphan test files (2,277 LOC), normalized 9 benchmark deps to workspace, added missing `[lints] workspace = true`, added `reason` fields to all bare `#[allow(deprecated)]` and `#[expect()]`. Deleted tarpc debris (`tests/tarpc_e2e_tests.rs`, `docs/references/QUICK_REFERENCE_TARPC.md`). Purged stale `REMOVED:` comment blocks from 7 `Cargo.toml` files.
 
 ### primalSpring Phase 55 Audit — NUCLEUS Purpose Key Derivation & Signed Registrations — DONE (Wave 72)
 

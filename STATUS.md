@@ -74,7 +74,7 @@
 | Dependency Injection | Pure `Default`, `from_env()` at startup, `from_env_provider()` for tests |
 | Zero Hardcoding | 20+ named constants extracted; capability-based discovery everywhere |
 | Self-Knowledge | Primals discover peers at runtime via capability registry |
-| JSON-RPC | Primary IPC protocol with NDJSON framing and batch support; tarpc optional behind feature gate in `beardog-ipc` |
+| JSON-RPC | Primary IPC protocol with NDJSON framing and batch support |
 | AGPL-3.0-or-later | License verified; SPDX headers on all .rs files |
 | `forbid(unsafe_code)` | Workspace level + every crate `lib.rs` (beardog-errors platform FFI documented per wateringHole) |
 | Workspace Lints | Centralized clippy pedantic + nursery + all cast lints warn + `doc_markdown` + `missing_errors_doc` + unwrap/expect warn |

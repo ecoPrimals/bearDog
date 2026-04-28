@@ -194,7 +194,7 @@ pub use tunnel::hsm::{
 pub use beardog_errors::BearDogError;
 
 #[cfg(test)]
-mod coverage_boost_wave10;
+mod coverage_boost;
 #[cfg(test)]
 mod crypto_fault_injection_tests;
 #[cfg(test)]

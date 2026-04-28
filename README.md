@@ -238,7 +238,7 @@ export FAMILY_SEED=my-secret-seed
 | **Unsafe Code** | 0 production blocks (`forbid(unsafe_code)` workspace-wide) |
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
-| **Files > 1000 LOC** | 0 (production code) |
+| **Files > 800 LOC** | 0 (production code) |
 | **Rust files** | 2,150 |
 | **Tests** | 14,928+ (concurrent; 35 `#[serial]` in `beardog-production`) |
 | **Coverage** | 90.51% line (llvm-cov workspace, target 90% met) |
@@ -254,7 +254,7 @@ export FAMILY_SEED=my-secret-seed
 - **Zero Hardcoding** — Environment variables and capability-based discovery
 - **Result<T, E>** — Zero `.unwrap()` in production; `#[expect(clippy::expect_used, reason = "...")]` for justified invariants; `unwrap_used`/`expect_used` warn at workspace level
 - **Concurrent Tests** — 35 `#[serial]` isolated to `beardog-production` (shared `AtomicBool`); all others concurrent, zero sleeps in non-chaos tests
-- **< 1000 LOC** — File size discipline across all production .rs files
+- **< 800 LOC** — File size discipline across all production .rs files
 - **Workspace Lints** — Centralized clippy pedantic + nursery + all cast lints + `doc_markdown` + `missing_errors_doc` at warn
 - **SPDX headers** — Every `.rs` file has `// SPDX-License-Identifier: AGPL-3.0-or-later`
 - **`rust-toolchain.toml`** — Pinned toolchain with cross-compile targets

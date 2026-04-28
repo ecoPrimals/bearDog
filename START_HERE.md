@@ -116,7 +116,7 @@ Introspection: `discover_capabilities`, `primal.info`, `rpc.methods`
 - **Self-Knowledge Only** — Primals discover peers at runtime, never hardcode other primal names
 - **Result<T, E>** — Zero `unwrap()` in production; `expect()` only on documented invariants
 - **Concurrent Tests** — 35 `#[serial]` isolated to `beardog-production`; all others concurrent, zero sleeps in non-chaos tests
-- **< 1000 LOC** — File size discipline (production code)
+- **< 800 LOC** — File size discipline (production code)
 - **Constant-Time** — Use `subtle` crate for secret comparisons
 
 ### Workflow
@@ -152,7 +152,7 @@ cargo build --release                # Build
 | Tests | 14,928+ (concurrent; 35 `#[serial]` in `beardog-production`) |
 | Coverage | 90.51% line (llvm-cov) |
 | `#[serial]` | 35 (`beardog-production` shared `AtomicBool`) |
-| Files > 1000 LOC | 0 (production) |
+| Files > 800 LOC | 0 (production) |
 
 ---
 

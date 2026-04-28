@@ -68,4 +68,4 @@ pub mod prelude {
 }
 
 #[cfg(test)]
-mod coverage_boost_wave10;
+mod coverage_boost;

@@ -22,11 +22,11 @@ BearDog answers "who is this node?" and "perform this crypto operation safely" f
 - **Tests:** 14,928+ passing (0 failed; `cargo test --workspace`)
 - **Coverage:** 90.51% line (llvm-cov, workspace; see [STATUS.md](STATUS.md))
 - **Unsafe:** 0 production blocks (`forbid(unsafe_code)` workspace-wide)
-- **IPC:** JSON-RPC 2.0 over NDJSON via Unix sockets / TCP / named pipes (platform-dependent); tarpc optional behind feature gate
+- **IPC:** JSON-RPC 2.0 over NDJSON via Unix sockets / TCP / named pipes (platform-dependent)
 
 ## Key Capabilities
 
-- **Protocols:** JSON-RPC 2.0 over NDJSON (100+ methods); tarpc optional behind feature gate
+- **Protocols:** JSON-RPC 2.0 over NDJSON (100+ methods)
 - **Cryptography:** Ed25519, X25519, ChaCha20-Poly1305, BLAKE3 (plus TLS, Tor, post-quantum, and broader RustCrypto suite as exposed by handlers)
 - **Hardware / identity:** HSM abstraction (software, PKCS#11, StrongBox, etc.), **FIDO2** / HID device discovery (`beardog-hid`)
 - **Witness encoding:** `crypto.verify_ed25519` accepts encoding hints (`base64`, `hex`, `base64url`, `utf8`, `none`) per `ATTESTATION_ENCODING_STANDARD.md` v2.0
