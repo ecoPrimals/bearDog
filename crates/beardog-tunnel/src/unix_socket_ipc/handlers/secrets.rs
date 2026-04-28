@@ -46,6 +46,7 @@ use super::utils::get_primal_name;
 use crate::btsp_provider::BeardogBtspProvider;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
+use beardog_core::crypto_service::algorithms::hashing;
 use beardog_types::primal_identity::PrimalIdentity;
 use chacha20poly1305::{
     ChaCha20Poly1305,
@@ -182,6 +183,76 @@ impl SecretsHandler {
     /// - `value`: Decrypted secret value
     /// - `name`: echo of the secret name
     /// - `stored_at`: timestamp of when the secret was stored
+    /// Parse a `nucleus:{family}:purpose:{name}` key pattern.
+    ///
+    /// Returns `Some(purpose_name)` if the pattern matches, `None` otherwise.
+    fn parse_nucleus_purpose_key(name: &str) -> Option<&str> {
+        let rest = name.strip_prefix("nucleus:")?;
+        let (_family, after_family) = rest.split_once(':')?;
+        let purpose_name = after_family.strip_prefix("purpose:")?;
+        if purpose_name.is_empty() {
+            return None;
+        }
+        Some(purpose_name)
+    }
+
+    /// Load the family seed from environment for purpose-key derivation.
+    ///
+    /// Checks `BEARDOG_FAMILY_SEED` then `FAMILY_SEED` (BearDog-prefixed takes precedence).
+    fn load_family_seed() -> Result<Vec<u8>, String> {
+        if let Ok(seed) = beardog_errors::process_env::var("BEARDOG_FAMILY_SEED")
+            && !seed.is_empty()
+        {
+            return Ok(seed.into_bytes());
+        }
+        if let Ok(seed) = beardog_errors::process_env::var("FAMILY_SEED")
+            && !seed.is_empty()
+        {
+            return Ok(seed.into_bytes());
+        }
+        Err(
+            "Lazy purpose-key derivation requires FAMILY_SEED or BEARDOG_FAMILY_SEED env var"
+                .to_string(),
+        )
+    }
+
+    /// Derive a NUCLEUS purpose key and auto-store it as a secret.
+    ///
+    /// Uses the same HMAC-SHA256 convention as `crypto.derive_purpose_key`:
+    /// `purpose_key = HMAC-SHA256(family_seed, hex("purpose-v1:" + purpose))`
+    fn lazy_derive_and_store(&self, name: &str, purpose: &str) -> Result<(), String> {
+        let family_seed = Self::load_family_seed()?;
+
+        let msg = hex::encode(format!("purpose-v1:{purpose}"));
+        let derived = hashing::hmac_sha256(&family_seed, msg.as_bytes())
+            .map_err(|e| format!("HMAC-SHA256 purpose derivation failed: {e}"))?;
+
+        let derived_b64 = BASE64.encode(&derived);
+
+        let key = self.derive_secret_key(name)?;
+        let cipher = ChaCha20Poly1305::new(&key.into());
+        let nonce = ChaCha20Poly1305::generate_nonce(OsRng);
+
+        let ciphertext = cipher
+            .encrypt(&nonce, derived_b64.as_bytes())
+            .map_err(|e| format!("Encryption of derived purpose key failed: {e}"))?;
+
+        let entry = EncryptedSecret {
+            ciphertext: BASE64.encode(&ciphertext),
+            nonce: BASE64.encode(nonce),
+            stored_at: chrono::Utc::now().to_rfc3339(),
+        };
+
+        self.store.write().insert(name.to_string(), entry);
+
+        info!(
+            "🔑 Lazy-derived and stored purpose key '{}' for purpose '{}'",
+            name, purpose
+        );
+
+        Ok(())
+    }
+
     async fn handle_retrieve(
         &self,
         params: Option<&serde_json::Value>,
@@ -201,7 +272,24 @@ impl SecretsHandler {
             store.get(name).cloned()
         };
 
-        let entry = entry.ok_or_else(|| format!("Secret '{name}' not found"))?;
+        // Lazy purpose-key derivation: if the secret doesn't exist and matches
+        // the NUCLEUS pattern `nucleus:{family}:purpose:{name}`, derive it from
+        // FAMILY_SEED and auto-store before retrieval.
+        let entry = match entry {
+            Some(e) => e,
+            None => {
+                if let Some(purpose) = Self::parse_nucleus_purpose_key(name) {
+                    self.lazy_derive_and_store(name, purpose)?;
+                    let store = self.store.read();
+                    store
+                        .get(name)
+                        .cloned()
+                        .ok_or_else(|| format!("Secret '{name}' not found after derivation"))?
+                } else {
+                    return Err(format!("Secret '{name}' not found"));
+                }
+            }
+        };
 
         // Decode stored ciphertext and nonce
         let ciphertext = BASE64
@@ -318,6 +406,7 @@ impl MethodHandler for SecretsHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     fn test_identity() -> Arc<PrimalIdentity> {
         Arc::new(PrimalIdentity::for_test("test-family", "test-node"))
@@ -470,6 +559,105 @@ mod tests {
         assert_eq!(
             result.expect("delete nonexistent should return Ok")["deleted"],
             false
+        );
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_lazy_derive_purpose_key() {
+        beardog_errors::process_env::set_var("FAMILY_SEED", "test-lazy-derive-seed-material!");
+        let handler = SecretsHandler::new(test_identity());
+
+        // Secret doesn't exist yet — retrieve should lazy-derive it
+        let params = serde_json::json!({ "name": "nucleus:test-family:purpose:storage" });
+        let result = handler.handle_retrieve(Some(&params)).await;
+        assert!(result.is_ok(), "lazy derivation should succeed");
+        let resp = result.expect("should succeed");
+        assert_eq!(resp["name"], "nucleus:test-family:purpose:storage");
+        assert!(
+            resp["value"].as_str().is_some(),
+            "should return derived key"
+        );
+
+        // Derived key should be base64-encoded 32 bytes
+        let key_b64 = resp["value"].as_str().expect("value");
+        let key_bytes = BASE64.decode(key_b64).expect("valid base64");
+        assert_eq!(key_bytes.len(), 32, "purpose key must be 32 bytes");
+
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_lazy_derive_is_deterministic() {
+        beardog_errors::process_env::set_var("FAMILY_SEED", "deterministic-lazy-seed!!!!!!!!!");
+        let handler = SecretsHandler::new(test_identity());
+
+        let params = serde_json::json!({ "name": "nucleus:test-family:purpose:inference" });
+        let r1 = handler.handle_retrieve(Some(&params)).await.expect("r1");
+
+        // Delete and re-derive — should produce the same key
+        handler
+            .handle_delete(Some(
+                &serde_json::json!({ "name": "nucleus:test-family:purpose:inference" }),
+            ))
+            .await
+            .expect("delete");
+
+        let r2 = handler.handle_retrieve(Some(&params)).await.expect("r2");
+        assert_eq!(
+            r1["value"], r2["value"],
+            "lazy derivation must be deterministic"
+        );
+
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_lazy_derive_without_family_seed_fails() {
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_SEED");
+        let handler = SecretsHandler::new(test_identity());
+
+        let params = serde_json::json!({ "name": "nucleus:fam:purpose:storage" });
+        let result = handler.handle_retrieve(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("FAMILY_SEED"));
+    }
+
+    #[tokio::test]
+    async fn test_non_nucleus_key_not_lazy_derived() {
+        let handler = SecretsHandler::new(test_identity());
+
+        // Non-matching pattern should NOT trigger lazy derivation
+        let params = serde_json::json!({ "name": "my-regular-secret" });
+        let result = handler.handle_retrieve(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("not found"));
+    }
+
+    #[tokio::test]
+    async fn test_parse_nucleus_purpose_key() {
+        assert_eq!(
+            SecretsHandler::parse_nucleus_purpose_key("nucleus:fam-123:purpose:storage"),
+            Some("storage")
+        );
+        assert_eq!(
+            SecretsHandler::parse_nucleus_purpose_key("nucleus:fam:purpose:inference"),
+            Some("inference")
+        );
+        assert_eq!(
+            SecretsHandler::parse_nucleus_purpose_key("nucleus:fam:purpose:"),
+            None
+        );
+        assert_eq!(
+            SecretsHandler::parse_nucleus_purpose_key("not-nucleus:fam:purpose:x"),
+            None
+        );
+        assert_eq!(
+            SecretsHandler::parse_nucleus_purpose_key("regular-key"),
+            None
         );
     }
 

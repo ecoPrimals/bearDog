@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 28, 2026 -- Wave 74: primalSpring Phase 55b — Lazy Purpose-Key Derivation & Purpose-Based Encrypt/Decrypt
+
+- **Lazy purpose-key derivation in `secrets.retrieve`** — When a secret matching the NUCLEUS pattern `nucleus:{family}:purpose:{name}` is requested and doesn't exist, BearDog now auto-derives the purpose key from `FAMILY_SEED`/`BEARDOG_FAMILY_SEED` via `HMAC-SHA256(seed, hex("purpose-v1:" + purpose))` and stores it. NestGate and Squirrel can call `secrets.retrieve("nucleus:{family}:purpose:storage")` without requiring `nucleus_crypto_bootstrap.sh` to have run first.
+- **`crypto.encrypt` with `purpose` param** — When `purpose` is provided (instead of `key`), resolves the purpose key from `FAMILY_SEED` and encrypts with ChaCha20-Poly1305. Returns the NUCLEUS standard envelope: `{"v":1,"ct":"<b64>","n":"<b64>","alg":"chacha20-poly1305"}`. Backward-compatible: existing `key`-based calls unchanged.
+- **`crypto.decrypt` with `purpose` param** — Accepts NUCLEUS envelope fields (`ct`/`n`) or standard names (`ciphertext`/`nonce`), resolves the purpose key, and decrypts. Backward-compatible.
+- **No new RPC methods** — Both features are enhancements to existing `secrets.retrieve`, `crypto.encrypt`, and `crypto.decrypt` methods. Method count stays at 101.
+- **9 new tests** — 5 for secrets lazy derivation (basic, deterministic, no-seed-fails, non-nucleus-not-derived, parse-pattern), 4 for purpose encrypt/decrypt (roundtrip, different-purposes-differ, no-seed-fails, key-path-unchanged). All `#[serial]` for env-var safety.
+- **Resolves** primalSpring v0.9.21 Phase 55b audit: "lazy purpose-key derivation" and "purpose param in encrypt/decrypt."
+
 ### April 28, 2026 -- Wave 73: Deep Debt Pass — Orphan Cleanup, Benchmark Normalization & Lint Hygiene
 
 - **Orphan test files deleted (2,277 LOC)** — 6 `*_comprehensive_tests.rs` files across `beardog-core`, `beardog-types`, `beardog-security`, and `beardog-cli` were never referenced in any module tree (never compiled). Deleted: `operations_comprehensive_tests.rs` (421), `tests_comprehensive.rs` (507), `security_operations_comprehensive_tests.rs` (390), `capability_registry_comprehensive_tests.rs` (254), `cli_comprehensive_tests.rs` (354), `handler_integration_comprehensive_tests.rs` (351).

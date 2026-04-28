@@ -16,6 +16,10 @@ use crate::unix_socket_ipc::handlers::crypto::{
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_core::crypto_service::algorithms::hashing;
+use chacha20poly1305::{
+    ChaCha20Poly1305,
+    aead::{Aead, AeadCore, KeyInit, OsRng},
+};
 use serde_json::{Value, json};
 use tracing::info;
 
@@ -53,13 +57,23 @@ pub async fn route(
         }
 
         "crypto.encrypt" => {
-            info!("🔒 Crypto: encrypt (semantic → chacha20_poly1305_encrypt)");
-            Ok(Some(handle_chacha20_poly1305_encrypt(params).await?))
+            if params.is_some_and(|p| p.get("purpose").is_some()) {
+                info!("🔒 Crypto: encrypt with purpose (NUCLEUS purpose-key envelope)");
+                Ok(Some(handle_purpose_encrypt(params).await?))
+            } else {
+                info!("🔒 Crypto: encrypt (semantic → chacha20_poly1305_encrypt)");
+                Ok(Some(handle_chacha20_poly1305_encrypt(params).await?))
+            }
         }
 
         "crypto.decrypt" => {
-            info!("🔓 Crypto: decrypt (semantic → chacha20_poly1305_decrypt)");
-            Ok(Some(handle_chacha20_poly1305_decrypt(params).await?))
+            if params.is_some_and(|p| p.get("purpose").is_some()) {
+                info!("🔓 Crypto: decrypt with purpose (NUCLEUS purpose-key envelope)");
+                Ok(Some(handle_purpose_decrypt(params).await?))
+            } else {
+                info!("🔓 Crypto: decrypt (semantic → chacha20_poly1305_decrypt)");
+                Ok(Some(handle_chacha20_poly1305_decrypt(params).await?))
+            }
         }
 
         "crypto.generate_keypair" => {
@@ -321,12 +335,177 @@ async fn handle_sign_registration(params: Option<&Value>) -> Result<Value, Strin
     }))
 }
 
+/// Resolve a NUCLEUS purpose key from `FAMILY_SEED` / `BEARDOG_FAMILY_SEED`.
+///
+/// Same HMAC-SHA256 convention as `handle_derive_purpose_key`:
+/// `purpose_key = HMAC-SHA256(family_seed, hex("purpose-v1:" + purpose))`
+fn resolve_purpose_key(purpose: &str) -> Result<[u8; 32], String> {
+    let family_seed = load_family_seed_for_purpose()?;
+
+    let msg = hex::encode(format!("purpose-v1:{purpose}"));
+    let derived = hashing::hmac_sha256(&family_seed, msg.as_bytes())
+        .map_err(|e| format!("HMAC-SHA256 purpose derivation failed: {e}"))?;
+
+    let key: [u8; 32] = derived
+        .as_slice()
+        .try_into()
+        .map_err(|_| "Purpose key derivation produced unexpected length".to_string())?;
+
+    Ok(key)
+}
+
+fn load_family_seed_for_purpose() -> Result<Vec<u8>, String> {
+    if let Ok(seed) = beardog_errors::process_env::var("BEARDOG_FAMILY_SEED")
+        && !seed.is_empty()
+    {
+        return Ok(seed.into_bytes());
+    }
+    if let Ok(seed) = beardog_errors::process_env::var("FAMILY_SEED")
+        && !seed.is_empty()
+    {
+        return Ok(seed.into_bytes());
+    }
+    Err(
+        "Purpose-based encrypt/decrypt requires FAMILY_SEED or BEARDOG_FAMILY_SEED env var"
+            .to_string(),
+    )
+}
+
+/// Encrypt with a NUCLEUS purpose key, returning the standard envelope.
+///
+/// Wire: `crypto.encrypt` with `purpose` param
+///
+/// # Parameters
+///
+/// - `data`: Base64-encoded plaintext
+/// - `purpose`: Purpose string (e.g. `"storage"`, `"inference"`)
+/// - `algorithm` (optional): defaults to `"chacha20-poly1305"`
+///
+/// # Returns
+///
+/// NUCLEUS standard envelope: `{"v":1,"ct":"<b64>","n":"<b64>","alg":"chacha20-poly1305"}`
+async fn handle_purpose_encrypt(params: Option<&Value>) -> Result<Value, String> {
+    let params = params.ok_or("Missing params for crypto.encrypt with purpose")?;
+
+    let data_b64 = params
+        .get("data")
+        .and_then(|v| v.as_str())
+        .or_else(|| params.get("plaintext").and_then(|v| v.as_str()))
+        .ok_or("Missing required parameter: data (base64-encoded plaintext)")?;
+
+    let purpose = params
+        .get("purpose")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: purpose")?;
+
+    let plaintext = BASE64
+        .decode(data_b64)
+        .map_err(|e| format!("Invalid base64 data: {e}"))?;
+
+    let key = resolve_purpose_key(purpose)?;
+    let cipher = ChaCha20Poly1305::new(&key.into());
+    let nonce = ChaCha20Poly1305::generate_nonce(OsRng);
+
+    // AEAD output = ciphertext || tag (standard format, compatible with NestGate envelope)
+    let ciphertext = cipher
+        .encrypt(&nonce, plaintext.as_ref())
+        .map_err(|e| format!("ChaCha20-Poly1305 encryption failed: {e}"))?;
+
+    info!(
+        "✅ Purpose-key encrypt: purpose='{}', {} bytes → {} bytes",
+        purpose,
+        plaintext.len(),
+        ciphertext.len()
+    );
+
+    Ok(json!({
+        "v": 1,
+        "ct": BASE64.encode(&ciphertext),
+        "n": BASE64.encode(nonce),
+        "alg": "chacha20-poly1305",
+        "purpose": purpose,
+    }))
+}
+
+/// Decrypt a NUCLEUS purpose-key envelope.
+///
+/// Wire: `crypto.decrypt` with `purpose` param
+///
+/// # Parameters
+///
+/// Accepts either the NUCLEUS envelope or flat params:
+/// - `purpose`: Purpose string (required)
+/// - `ct` or `ciphertext`: Base64-encoded ciphertext
+/// - `n` or `nonce`: Base64-encoded nonce
+///
+/// # Returns
+///
+/// - `plaintext`: Base64-encoded decrypted data
+/// - `algorithm`: `"chacha20-poly1305"`
+async fn handle_purpose_decrypt(params: Option<&Value>) -> Result<Value, String> {
+    let params = params.ok_or("Missing params for crypto.decrypt with purpose")?;
+
+    let purpose = params
+        .get("purpose")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: purpose")?;
+
+    let ct_b64 = params
+        .get("ct")
+        .or_else(|| params.get("ciphertext"))
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: ct (base64-encoded ciphertext)")?;
+
+    let nonce_b64 = params
+        .get("n")
+        .or_else(|| params.get("nonce"))
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: n (base64-encoded nonce)")?;
+
+    let ciphertext = BASE64
+        .decode(ct_b64)
+        .map_err(|e| format!("Invalid base64 ciphertext: {e}"))?;
+
+    let nonce_bytes = BASE64
+        .decode(nonce_b64)
+        .map_err(|e| format!("Invalid base64 nonce: {e}"))?;
+
+    if nonce_bytes.len() != 12 {
+        return Err(format!(
+            "Invalid nonce length: expected 12, got {}",
+            nonce_bytes.len()
+        ));
+    }
+
+    let key = resolve_purpose_key(purpose)?;
+    let cipher = ChaCha20Poly1305::new(&key.into());
+    let nonce = chacha20poly1305::Nonce::from_slice(&nonce_bytes);
+
+    let plaintext = cipher
+        .decrypt(nonce, ciphertext.as_ref())
+        .map_err(|e| format!("ChaCha20-Poly1305 decryption failed: {e}"))?;
+
+    info!(
+        "✅ Purpose-key decrypt: purpose='{}', {} bytes → {} bytes",
+        purpose,
+        ciphertext.len(),
+        plaintext.len()
+    );
+
+    Ok(json!({
+        "plaintext": BASE64.encode(&plaintext),
+        "algorithm": "chacha20-poly1305",
+        "purpose": purpose,
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::route;
     use base64::Engine;
     use base64::engine::general_purpose::STANDARD as BASE64;
     use serde_json::json;
+    use serial_test::serial;
 
     #[tokio::test]
     async fn route_crypto_hash_alias() {
@@ -644,5 +823,105 @@ mod tests {
                 .expect("route")
                 .is_none()
         );
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn route_crypto_encrypt_decrypt_with_purpose() {
+        beardog_errors::process_env::set_var("FAMILY_SEED", "test-family-seed-for-purpose-keys");
+
+        let enc_params = json!({
+            "data": BASE64.encode(b"secret storage payload"),
+            "purpose": "storage",
+        });
+        let enc = route("crypto.encrypt", Some(&enc_params))
+            .await
+            .expect("route")
+            .expect("purpose encrypt");
+
+        assert_eq!(enc["v"], 1);
+        assert_eq!(enc["alg"], "chacha20-poly1305");
+        assert_eq!(enc["purpose"], "storage");
+        assert!(enc["ct"].as_str().is_some());
+        assert!(enc["n"].as_str().is_some());
+
+        let dec_params = json!({
+            "ct": enc["ct"].as_str().expect("ct"),
+            "n": enc["n"].as_str().expect("n"),
+            "purpose": "storage",
+        });
+        let dec = route("crypto.decrypt", Some(&dec_params))
+            .await
+            .expect("route")
+            .expect("purpose decrypt");
+
+        let plaintext = BASE64
+            .decode(dec["plaintext"].as_str().expect("pt"))
+            .expect("valid base64");
+        assert_eq!(plaintext, b"secret storage payload");
+        assert_eq!(dec["purpose"], "storage");
+
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn route_crypto_purpose_encrypt_different_purposes_differ() {
+        beardog_errors::process_env::set_var("FAMILY_SEED", "purpose-isolation-test-seed!!");
+
+        let storage = route(
+            "crypto.encrypt",
+            Some(&json!({ "data": BASE64.encode(b"same data"), "purpose": "storage" })),
+        )
+        .await
+        .expect("route")
+        .expect("storage");
+
+        let inference = route(
+            "crypto.encrypt",
+            Some(&json!({ "data": BASE64.encode(b"same data"), "purpose": "inference" })),
+        )
+        .await
+        .expect("route")
+        .expect("inference");
+
+        // Different purposes must produce different ciphertexts (different keys)
+        assert_ne!(storage["ct"], inference["ct"]);
+
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn route_crypto_purpose_encrypt_without_family_seed_fails() {
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_SEED");
+
+        let result = route(
+            "crypto.encrypt",
+            Some(&json!({ "data": BASE64.encode(b"test"), "purpose": "storage" })),
+        )
+        .await;
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("FAMILY_SEED"));
+    }
+
+    #[tokio::test]
+    async fn route_crypto_encrypt_without_purpose_uses_key_path() {
+        let key = [42u8; 32];
+        let params = json!({
+            "plaintext": BASE64.encode(b"no purpose"),
+            "key": BASE64.encode(key),
+        });
+        let enc = route("crypto.encrypt", Some(&params))
+            .await
+            .expect("route")
+            .expect("key-based encrypt");
+
+        // Key-based path returns {ciphertext, nonce, tag} (not v1 envelope)
+        assert!(enc.get("ciphertext").is_some());
+        assert!(enc.get("v").is_none());
     }
 }

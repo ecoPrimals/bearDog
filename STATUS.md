@@ -90,6 +90,12 @@
 
 ## Recent Improvements
 
+### Wave 74 — primalSpring Phase 55b: Lazy Purpose-Key Derivation & Purpose-Based Encrypt/Decrypt (April 28, 2026)
+
+- **Lazy purpose-key derivation**: `secrets.retrieve("nucleus:{family}:purpose:{name}")` auto-derives from `FAMILY_SEED` when not yet stored.
+- **Purpose-based encrypt/decrypt**: `crypto.encrypt`/`crypto.decrypt` with `purpose` param resolve keys automatically, return NUCLEUS envelope.
+- Resolves Phase 55b audit: lights up end-to-end encryption for NestGate and Squirrel.
+
 ### Wave 73 — Deep Debt Pass: Orphan Cleanup, Benchmark Normalization & Lint Hygiene (April 28, 2026)
 
 - **Orphan test files deleted**: 6 `*_comprehensive_tests.rs` files (2,277 LOC) never in module tree — dead code removed.
