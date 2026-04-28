@@ -33,21 +33,21 @@ anyhow = { workspace = true }
 
 # Logging and tracing
 tracing = { workspace = true }
-tracing-subscriber = { workspace = true, features = ["env-filter"] }
+tracing-subscriber = { workspace = true }
 
 # System metrics
 sysinfo = "0.30"
 
 # Time handling
-chrono = { workspace = true, features = ["serde"] }
+chrono = { workspace = true }
 tokio-util = "0.7"
 
 # Synchronization primitives
-parking_lot = "0.12"
+parking_lot = { workspace = true }
 arc-swap = "1.6"  # Lock-free atomic Arc swaps
 
 # UUID generation
-uuid = { version = "1.6", features = ["v4", "serde"] }
+uuid = { workspace = true }
 
 # BearDog dependencies
 beardog-config = { path = "../beardog-config" }
@@ -65,7 +65,7 @@ tower-http = { version = "0.5", features = ["trace", "cors", "timeout"] }
 
 [dev-dependencies]
 http = "1"
-tokio-test = "0.4"
+tokio-test = { workspace = true }
 mockito = "1.2"
 wiremock = "0.6"
 

@@ -60,6 +60,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
+### Workspace Hygiene & Broken Link Cleanup — DONE (Wave 71)
+
+Normalized 5 workspace dependencies, removed duplicate comment debris, fixed 10+ broken cross-references across showcase/docs/specs. Full audit confirmed 70+ deprecated items are intentional v0.10.0 migration targets, zero `todo!()`/`unimplemented!()`, all feature gates valid.
+
 ### Deep Debt Audit: Clean Bill of Health — DONE (Wave 70b)
 
 Comprehensive 8-dimension audit: zero async-trait, zero unsafe (28 crates `#![forbid(unsafe_code)]`), zero production `Box<dyn Error>`, zero ring, zero ungated mocks, zero TODO/FIXME, zero hardcoded peer primal names. All >800L files are test-only. Renamed stale date-stamped test file. Enforced `reason` on all remaining bare `#[allow()]`.

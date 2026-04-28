@@ -97,7 +97,7 @@ cd 04-entropy-mixing
 
 **Key Takeaway**: Real entropy = Real sovereignty. Never simulate!
 
-⚠️ **Important**: Read `../../ENTROPY_HIERARCHY_PRINCIPLE.md` after this demo!
+⚠️ **Important**: Read `../../docs/references/ENTROPY_HIERARCHY_PRINCIPLE.md` after this demo!
 
 ---
 
@@ -311,7 +311,7 @@ Status: COMPLETE
 ## 📚 Essential Reading
 
 ### Must Read (After Completing Level 0)
-1. **../../ENTROPY_HIERARCHY_PRINCIPLE.md** ⭐
+1. **../../docs/references/ENTROPY_HIERARCHY_PRINCIPLE.md** ⭐
    - Core principle of BearDog
    - Why simulation violates trust
    - Real vs fake entropy
@@ -329,7 +329,7 @@ Status: COMPLETE
 ### Deep Dives (Optional)
 - **../../specs/current/** - Technical specifications
 - **../../docs/guides/** - Comprehensive guides
-- **../../COMPREHENSIVE_AUDIT_REPORT_DEC_24_2025.md** - Quality audit
+- **../../STATUS.md** - Current status and quality metrics
 
 ---
 

@@ -95,14 +95,6 @@ ciborium = { workspace = true, optional = true }
 base64 = { workspace = true }  # Aligned with workspace version (0.21 → 0.22 upgrade eliminates dep duplication)
 data-encoding = "2.5"  # Base32 encoding for Tor v3 onion addresses (Feb 7, 2026)
 
-# DEFERRED Phase 7: AES legacy modes - RustCrypto RC version conflicts (like P-521/Ed448)
-# These dependencies were added for Phase 7 but deferred due to RC version incompatibilities.
-# The code architecture is complete (~700 lines) and ready to activate when crates stabilize.
-# aes = "0.9.0-rc.2"        # AES cipher (for CBC/CTR/XTS modes)
-# cipher = "0.5.0-rc.5"     # Cipher traits (for AES modes)
-# cbc = "0.2.0-rc.2"        # AES-CBC mode (TLS 1.2)
-# ctr = "0.10.0-rc.2"       # AES-CTR mode (streaming)
-# xts-mode = "0.5.1"        # AES-XTS mode (disk encryption)
 
 [dev-dependencies]
 tokio-test = { workspace = true }

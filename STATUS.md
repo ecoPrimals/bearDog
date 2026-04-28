@@ -90,6 +90,12 @@
 
 ## Recent Improvements
 
+### Wave 71 — Deep Debt Pass: Workspace Hygiene & Broken Link Cleanup (April 27, 2026)
+
+- **Workspace dependency normalization**: 5 crate deps converted to `{ workspace = true }`, redundant feature echoes removed.
+- **Broken documentation links fixed**: 10+ broken cross-references in showcase, docs, and specs corrected.
+- **Duplicate comment debris cleaned**: AES Phase 7 deferred block de-duplicated in beardog-tunnel.
+
 ### Wave 70b — Deep Debt Audit: Clean Bill of Health (April 27, 2026)
 
 - **Comprehensive 8-dimension audit**: async-trait, unsafe, Box<dyn Error>, ring, large files, hardcoding, self-knowledge, mocks — all clean.

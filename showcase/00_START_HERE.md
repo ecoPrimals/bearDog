@@ -152,7 +152,7 @@ BearDog enforces a strict hierarchy:
 3. **Real Human Input** - Non-fungible (YOUR behavior)
 4. **❌ Simulated Human** - REJECTED (breaks trust)
 
-See: [ENTROPY_HIERARCHY_PRINCIPLE.md](../ENTROPY_HIERARCHY_PRINCIPLE.md)
+See: [ENTROPY_HIERARCHY_PRINCIPLE.md](../docs/references/ENTROPY_HIERARCHY_PRINCIPLE.md)
 
 ### 2. Genetic Keys
 Keys can self-enforce constraints through "genetic code":
@@ -211,13 +211,12 @@ Browse `00-local-primal/`, `02-ecosystem-integration/`, `03-production-features/
 1. [README.md](../README.md) - Project overview
 2. [START_HERE.md](../START_HERE.md) - Getting started
 3. [ARCHITECTURE.md](../ARCHITECTURE.md) - System design
-4. [ENTROPY_HIERARCHY_PRINCIPLE.md](../ENTROPY_HIERARCHY_PRINCIPLE.md) - Core principle
+4. [ENTROPY_HIERARCHY_PRINCIPLE.md](../docs/references/ENTROPY_HIERARCHY_PRINCIPLE.md) - Core principle
 
 ### Deep Dives
-- [COMPREHENSIVE_AUDIT_REPORT_DEC_24_2025.md](../COMPREHENSIVE_AUDIT_REPORT_DEC_24_2025.md) - Quality audit
-- [STATUS.md](../STATUS.md) - Current status
-- [specs/](../specs/) - Technical specifications (85 files)
-- [docs/](../docs/) - Comprehensive docs (166 files)
+- [STATUS.md](../STATUS.md) - Current status and quality metrics
+- [specs/](../specs/) - Technical specifications (63 files)
+- [docs/](../docs/) - Reference documentation (20 files)
 
 ---
 
@@ -312,7 +311,7 @@ After completing the showcase, you should be able to:
 ### Right Now (5 minutes)
 1. ✅ Read this guide (you're here!)
 2. 🎯 Try `05-mixed-entropy/` demo
-3. 📚 Read [ENTROPY_HIERARCHY_PRINCIPLE.md](../ENTROPY_HIERARCHY_PRINCIPLE.md)
+3. 📚 Read [ENTROPY_HIERARCHY_PRINCIPLE.md](../docs/references/ENTROPY_HIERARCHY_PRINCIPLE.md)
 
 ### This Session (45 minutes)
 1. 🎯 Complete Level 0 demos (when available)

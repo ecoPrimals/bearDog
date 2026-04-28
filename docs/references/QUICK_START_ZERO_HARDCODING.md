@@ -279,12 +279,10 @@ export BEARDOG_LISTEN_ADDR=beardog.local:8900
 
 ## 📚 Further Reading
 
-- `ZERO_HARDCODING_COMPLETE_JAN_13_2026.md` - Full evolution documentation
-- `HARDCODING_EVOLUTION_PLAN_JAN_13_2026.md` - Design philosophy
-- `SESSION_SUMMARY_JAN_13_2026_FINAL.md` - Complete session summary
-- `crates/beardog-core/src/self_knowledge.rs` - Self-knowledge implementation
+- `crates/beardog-core/src/self_knowledge/` - Self-knowledge implementation (identity, capabilities, endpoints)
 - `crates/beardog-core/src/primal_discovery.rs` - Discovery implementation
-- `crates/beardog-core/src/capability_router.rs` - Routing implementation
+- `crates/beardog-core/src/capability_routing/` - Capability-based routing implementation
+- `crates/beardog-core/src/primal_self_knowledge.rs` - Self-knowledge facade
 
 ---
 
@@ -311,7 +309,7 @@ If you see the self-knowledge discovery output, you're ready to go! 🚀
 
 ---
 
-**Last Updated**: January 13, 2026  
+**Last Updated**: April 27, 2026  
 **Status**: Production-Ready  
 **Support**: See docs/ for detailed guides
 

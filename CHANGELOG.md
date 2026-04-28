@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 27, 2026 -- Wave 71: Deep Debt Pass — Workspace Hygiene & Broken Link Cleanup
+
+- **Workspace dependency normalization** — `tokio-test` (beardog-adapters, beardog-ipc, beardog-integration), `parking_lot`, `uuid` (beardog-integration) converted from version-pinned to `{ workspace = true }`. Redundant feature echoes (`chrono` serde, `tracing-subscriber` env-filter) removed from beardog-integration.
+- **Duplicate comment debris removed** — Duplicate AES Phase 7 deferred block in beardog-tunnel `Cargo.toml` (copy-paste of root workspace comment) deleted.
+- **Broken documentation links fixed** — `showcase/00_START_HERE.md` and `showcase/00-local-primal/README.md`: corrected `ENTROPY_HIERARCHY_PRINCIPLE.md` path (root → `docs/references/`), removed reference to deleted `COMPREHENSIVE_AUDIT_REPORT_DEC_24_2025.md`, corrected overstated file counts (specs: 85→63, docs: 166→20). `docs/references/QUICK_START_ZERO_HARDCODING.md`: replaced 3 references to deleted Jan 2026 session files with valid current paths, fixed `self_knowledge.rs` → `self_knowledge/`, `capability_router.rs` → `capability_routing/`, updated date to April 2026.
+- **Spec link cleanup** — `specs/current/integration/BEARDOG_ECOSYSTEM_SECURITY_INTEGRATION.md`: removed broken references to never-created `ECOSYSTEM_INTEGRATION_ACTION_PLAN.md` and `ECOSYSTEM_SECURITY_READINESS_REPORT.md`, updated phase status, corrected date from December 2025 to April 2026.
+- **Audit findings (no action needed)** — 70+ `#[deprecated]` items are intentional migration targets for v0.10.0. 2 `BearDogError::not_implemented` in `quantum_discovery.rs` are explicit Phase 2 deferrals. `hsm_provider_mocks.rs` stubs are `#[cfg(test)]`-gated. Zero `todo!()` / `unimplemented!()` macros. All feature gates validated against `Cargo.toml` `[features]`. 31 production files at 700-799 LOC monitored (under threshold).
+
 ### April 27, 2026 -- Wave 70d: primalSpring Convergence — ENVIRONMENT_VARIABLES.md Reconciled
 
 - **`docs/references/ENVIRONMENT_VARIABLES.md` rewritten** — Updated from February 2026 to April 27, 2026. Documents `BEARDOG_NODE_ID`, `BEARDOG_FAMILY_ID`, `FAMILY_SEED`/`BEARDOG_FAMILY_SEED`, `BIOMEOS_INSECURE`, `BIOMEOS_SOCKET_DIR`, and `PRIMAL_NAME`. Corrected `FAMILY_ID`/`NODE_ID` from "REQUIRED" to optional with standalone fallback. Updated socket resolution from 4-tier to 5-tier. Added BTSP security mode truth table. Removed stale "Related Documents" links.
