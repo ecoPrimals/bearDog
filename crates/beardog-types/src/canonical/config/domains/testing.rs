@@ -7,7 +7,7 @@
 //!
 //! ## 🎯 Consolidation Achievement
 //!
-//! **Previously Scattered Locations** (Now Unified):
+//! **Previously Scattered Locations** (consolidated and originals deleted):
 //! - `tests/common/zero_cost_harness.rs::TestConfig`
 //! - `tests/api/comprehensive_tests.rs::ApiTestConfig`
 //! - `tests/production/deployment_validation.rs::ProductionDeploymentConfig`

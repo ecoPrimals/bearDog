@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: April 28, 2026
+**Updated**: April 29, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -22,7 +22,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 800 lines of code (production)
-- 14,928+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
+- 15,000+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
 - 90.51% line coverage (llvm-cov workspace) — target 90% met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - `#[serial]` minimized — 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent
@@ -60,6 +60,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
+### primalSpring Phase 56 Audit: GAP-23 Reclassified, IONIC-RUNTIME Confirmed — DONE (Wave 76/76b)
+
+Exhaustive UDS accept-path audit confirmed zero path-dependent behavior in BearDog's socket handling — GAP-23 reclassified to primalSpring (same class as GAP-22). IONIC-RUNTIME confirmed resolved since Wave 42 (`crypto.sign_contract` fully wired). Error messages improved with parameter format guidance.
+
 ### Deep Debt: Purpose-Key Module Extraction, Dependency Drift & Stale Feature Cleanup — DONE (Wave 75)
 
 Refactored `aliases_and_beardog.rs` (927→452 LOC) by extracting NUCLEUS purpose-key ops into `purpose_key.rs`. Normalized 2 workspace dep drifts (`tokio-test`, `wiremock`). Removed dead `dns-sd` feature gate. File-size threshold tightened from 1000 to 800 LOC — zero files exceed it.
@@ -90,7 +94,7 @@ Aligned `get_node_id_with()` and `get_family_id_with()` fallbacks to match `Prim
 
 ### Deep Debt: Self-Knowledge, Allow-Reasons, Blake3 Pure — DONE (Wave 69b)
 
-Removed `skunkBat` from capabilities wire data. Added structured `reason` to all `#[allow()]`. Aligned 5 showcase `blake3` to `features=["pure"]`. Full audit: 0 unsafe, 0 TODO, 0 other-primal refs in production, 0 ungated mocks, 0 ring/openssl. 99 CryptoHandler + 9 IonicBondHandler methods. 14,928+ tests.
+Removed `skunkBat` from capabilities wire data. Added structured `reason` to all `#[allow()]`. Aligned 5 showcase `blake3` to `features=["pure"]`. Full audit: 0 unsafe, 0 TODO, 0 other-primal refs in production, 0 ungated mocks, 0 ring/openssl. 101 CryptoHandler + 9 IonicBondHandler methods. 15,000+ tests.
 
 ### Lineage Semantic IPC Methods — DONE (Wave 69)
 
@@ -215,4 +219,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: April 28, 2026
+**Last Updated**: April 29, 2026

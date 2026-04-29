@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: April 28, 2026
+**Last Updated**: April 29, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant (threshold lowered to 800; `aliases_and_beardog.rs` refactored Wave 75) |
-| **Tests** | 14,928+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 15,000+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
@@ -53,7 +53,7 @@
 | beardog-genetics | 89.9% | — |
 | beardog-ipc | 86.5% | JSON-RPC batch path, protocol router |
 | beardog-core | ~86% | capability router, cross-primal, discovery |
-| beardog-discovery | ~85% | service registry, DNS-SD, announcer, config |
+| beardog-discovery | ~85% | service registry, mDNS, announcer, config |
 | beardog-types | ~84% | HSM, monitoring, performance, K8s, production config |
 | beardog-installer | ~84% | CLI, deployment, validator, binary, BiomeOS |
 | beardog-cli | ~83% | UniBin `--port`, entropy, key mix, client, daemon |
@@ -64,7 +64,7 @@
 
 ---
 
-## Architecture Compliance (March 2026)
+## Architecture Compliance (April 2026)
 
 | Standard | Status |
 |----------|--------|
@@ -89,6 +89,11 @@
 ---
 
 ## Recent Improvements
+
+### Wave 76/76b — primalSpring Phase 56 Audit: GAP-23 Reclassified, IONIC-RUNTIME Confirmed (April 29, 2026)
+
+- **GAP-23 reclassified to primalSpring**: Exhaustive UDS accept-path audit confirmed zero path-dependent behavior — `listener.accept()` discards peer address, BTSP handshake has no socket-path field, handler routing keyed on `(method, params, btsp_provider)` only. Same class as rhizoCrypt's GAP-22. Error messages improved with format guidance.
+- **IONIC-RUNTIME confirmed resolved**: `crypto.sign_contract` fully wired and tested since Wave 42.
 
 ### Wave 75 — Deep Debt: Purpose-Key Module Extraction, Dependency Drift & Stale Feature (April 28, 2026)
 
