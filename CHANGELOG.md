@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 29, 2026 -- Wave 76b: GAP-23 Exhaustive UDS Audit — Reclassification Confirmed
+
+- **Exhaustive UDS accept-path audit** — Matching rhizoCrypt's GAP-22 methodology, performed a full audit of BearDog's Unix socket IPC path. **Zero path-dependent behavior found:**
+  - `listener.accept()` discards peer address (`_addr`, `platform/unix.rs:81`)
+  - `handle_connection()` takes only `Box<dyn PlatformStream>` — no socket path argument (`server.rs:314`)
+  - BTSP `ClientHello` wire type has no socket path field (`btsp_handshake/types.rs:12-19`)
+  - BTSP handshake keyed on `family_seed` only — no path validation (`btsp_handshake/handshake.rs:35-109`)
+  - First-byte auto-detect branches on `0x7B` (JSON) vs length-prefix (BTSP) — no path (`server.rs:320-341`)
+  - `HandlerRegistry::route()` signature: `(method, params, btsp_provider)` — no path (`handlers/mod.rs:302-327`)
+  - `FAMILY_ID` sourced from `PrimalIdentity` or RPC params — never from socket path
+- **GAP-23 formally reclassified to primalSpring** — A symlink produces the exact same `UnixStream` at the kernel level. BearDog never sees which pathname the client used to `connect()`. Same three hypotheses as GAP-22: startup ordering, stale binary, or proxy layer — all primalSpring-side.
+- **Handoff updated** with full evidence table and diagnostic guide for primalSpring.
+
 ### April 29, 2026 -- Wave 76: primalSpring Phase 56 Audit — GAP-23 & IONIC-RUNTIME Resolution
 
 - **GAP-23 resolved (not a BearDog bug)** — `crypto.blake3_hash` error on capability socket (`crypto-{family}.sock`) was a parameter encoding issue on the caller side. The capability socket is a symlink to `beardog-{family}.sock` — identical code path. BearDog requires `{"data": "<standard-base64>"}` (JSON object, not array). Error messages improved with format guidance: missing params now says `expected: {"data": "<standard-base64>"}`, missing `data` says `(standard base64 encoded string)`, invalid base64 says `use standard base64 (RFC 4648, +/= alphabet)`.
