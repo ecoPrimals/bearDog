@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 29, 2026 -- Wave 76: primalSpring Phase 56 Audit — GAP-23 & IONIC-RUNTIME Resolution
+
+- **GAP-23 resolved (not a BearDog bug)** — `crypto.blake3_hash` error on capability socket (`crypto-{family}.sock`) was a parameter encoding issue on the caller side. The capability socket is a symlink to `beardog-{family}.sock` — identical code path. BearDog requires `{"data": "<standard-base64>"}` (JSON object, not array). Error messages improved with format guidance: missing params now says `expected: {"data": "<standard-base64>"}`, missing `data` says `(standard base64 encoded string)`, invalid base64 says `use standard base64 (RFC 4648, +/= alphabet)`.
+- **IONIC-RUNTIME resolved (already complete)** — `crypto.sign_contract` has been wired and tested since Wave 42. Full lifecycle: `crypto.ionic_bond.propose` → `.accept` → `.seal` + standalone `crypto.sign_contract` / `crypto.verify_contract`. 8 methods in `IonicBondHandler`, 10+ integration tests. The gap in primalSpring `PRIMAL_GAPS.md` was stale.
+- **No new RPC methods** — Both gaps were documentation/parameter issues, not missing functionality.
+
 ### April 28, 2026 -- Wave 75: Deep Debt Pass — Purpose-Key Module Extraction, Dependency Drift & Stale Feature Cleanup
 
 - **`aliases_and_beardog.rs` refactored (927 → 452 LOC)** — Extracted NUCLEUS purpose-key operations (`handle_derive_purpose_key`, `handle_sign_registration`, `handle_purpose_encrypt`, `handle_purpose_decrypt`, `resolve_purpose_key`, `load_family_seed`) and their 8 tests into a new `purpose_key.rs` submodule in `crypto_handler/`. Routing in `aliases_and_beardog.rs` now delegates via `use super::purpose_key::*`. Zero behavior change.

@@ -216,18 +216,22 @@ pub async fn handle_hash_for_cipher(params: Option<&Value>) -> Result<Value, Str
 ///
 /// Returns an error if `data` is missing or not valid Base64.
 pub async fn handle_blake3_hash(params: Option<&Value>) -> Result<Value, String> {
-    let params = params.ok_or("Missing params for crypto.blake3_hash")?;
+    let params = params.ok_or(
+        "Missing params for crypto.blake3_hash — expected: {\"data\": \"<standard-base64>\"}",
+    )?;
 
-    // Extract parameters
     let data_b64 = params
         .get("data")
         .and_then(|v| v.as_str())
-        .ok_or("Missing required parameter: data")?;
+        .ok_or("Missing required parameter: data (standard base64 encoded string)")?;
 
-    // Decode data
     let data = base64::engine::general_purpose::STANDARD
         .decode(data_b64)
-        .map_err(|e| format!("Invalid base64 data: {e}"))?;
+        .map_err(|e| {
+            format!(
+                "Invalid base64 in 'data' field: {e} — use standard base64 (RFC 4648, +/= alphabet)"
+            )
+        })?;
 
     debug!("🔨 Hashing {} bytes with BLAKE3", data.len());
 
