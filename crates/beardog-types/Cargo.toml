@@ -29,14 +29,14 @@ tokio = { workspace = true, optional = true }
 rand = { workspace = true }
 
 # Safe concurrent data structures
-crossbeam = "0.8"
+crossbeam = { workspace = true }
 parking_lot = { workspace = true }
 
 # Modern cryptography (RustCrypto ecosystem - pure Rust, audited)
 aes-gcm = { workspace = true }
 chacha20poly1305 = { workspace = true }
 ed25519-dalek = { workspace = true }
-getrandom = "0.2"             # OS entropy source
+getrandom = { workspace = true }
 hkdf = { workspace = true }
 hmac = { workspace = true }
 sha2 = { workspace = true }

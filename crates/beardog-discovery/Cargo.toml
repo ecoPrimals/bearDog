@@ -29,7 +29,7 @@ beardog-errors = { workspace = true }
 mdns-sd = { workspace = true, optional = true }
 
 # URL parsing
-url = "2.5"
+url = { workspace = true }
 
 # Network utilities
 local-ip-address = "0.6"

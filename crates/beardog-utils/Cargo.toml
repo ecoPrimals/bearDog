@@ -37,8 +37,8 @@ beardog-errors = { workspace = true }
 beardog-types = { workspace = true }
 
 # Safe concurrent data structures
-dashmap = "5.5"
-crossbeam = "0.8"
+dashmap = { workspace = true }
+crossbeam = { workspace = true }
 
 [features]
 test-utils = []

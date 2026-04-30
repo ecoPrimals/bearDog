@@ -25,7 +25,7 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 # CLEANED: anyhow removed - using BearDogError/BearDogResult (October 2025)
 thiserror = { workspace = true }
-walkdir = "2.0"
+walkdir = { workspace = true }
 serde_json = { workspace = true }
 path-absolutize = "3.0"
 console = "0.15"

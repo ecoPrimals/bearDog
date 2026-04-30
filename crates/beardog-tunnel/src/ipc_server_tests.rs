@@ -4,6 +4,8 @@ use super::*;
 use beardog_core::capabilities::{
     Capability, CapabilityRequest, CapabilityResponse, ResponseStatus,
 };
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 #[test]
 fn ipc_message_register_roundtrips_json() -> Result<(), BearDogError> {

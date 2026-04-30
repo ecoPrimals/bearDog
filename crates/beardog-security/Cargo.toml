@@ -31,7 +31,7 @@ subtle = { workspace = true }
 zeroize = { workspace = true }
 bytes = { workspace = true }
 tempfile = { workspace = true }
-tokio-stream = "0.1"
+tokio-stream = { workspace = true }
 thiserror = { workspace = true }
 
 [dependencies.anyhow]

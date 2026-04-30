@@ -115,9 +115,10 @@ usb-discovery = ["dep:beardog-hid"]
 ctap2 = ["solo-v2", "dep:beardog-hid"]
 
 # Platform features
-# `ecosystem` removed: no cfg(feature) gate existed in source -- dead flag.
+# `ecosystem` removed: no cfg(feature) gate existed in source — dead flag.
+# `android_native` removed: emitted by build.rs on Android targets but
+# never checked via cfg(feature) in Rust source — dead flag.
 default = []
-android_native = []
 
 [package.version]
 workspace = true

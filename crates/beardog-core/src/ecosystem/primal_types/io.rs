@@ -161,7 +161,7 @@ impl Default for PrimalResponse {
 /// Helper for migrating from hardcoded primal types to capability-based discovery
 ///
 /// Deprecated: Use `CapabilityBasedEcosystem` for capability-based service discovery.
-#[deprecated = "Use CapabilityBasedEcosystem instead"]
+#[deprecated(since = "0.9.0", note = "Use CapabilityBasedEcosystem instead")]
 pub struct PrimalTypeMigrationHelper;
 
 impl PrimalTypeMigrationHelper {

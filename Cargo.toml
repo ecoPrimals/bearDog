@@ -202,6 +202,19 @@ crossterm = "0.27"
 bcrypt = "0.18"  # Legacy password hashing - Phase 7
 # JWT: Implemented using RustCrypto (hmac + sha2 + base64) - 100% Pure Rust!
 
+# Concurrent data structures
+crossbeam = "0.8"
+dashmap = "5.5"
+
+# Utilities
+http = "1"
+url = "2.5"
+walkdir = "2.0"
+dotenvy = "0.15"
+dirs = "5.0"
+tokio-stream = "0.1"
+getrandom = "0.2"
+
 # Error handling
 color-eyre = "0.6"
 

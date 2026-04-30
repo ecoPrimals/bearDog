@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 30, 2026 -- Wave 78b: Deep Debt Pass — Production Mock Isolation, Workspace Drift & Dead Feature Cleanup
+
+- **Production mocks gated behind `#[cfg(test)]`** — `IpcTestHandler`, `IpcFailingRegisterHandler`, `IpcFailingEventHandler`, `IpcFailingCapabilityHandler`, `IpcHandlerBackend` enum dispatch, and `IpcServer` struct in `ipc_server.rs` were compiled into the production library despite being test-only. All moved into a `#[cfg(test)] mod test_fixtures` submodule. `unreachable!()` calls in test fixture impls no longer ship in release binaries.
+- **10 workspace dependency drifts normalized** — `crossbeam`, `dashmap`, `http`, `url`, `walkdir`, `dotenvy`, `dirs`, `tokio-stream`, `getrandom` added to `[workspace.dependencies]`. Crate-local version pins in `beardog-core`, `beardog-types`, `beardog-utils`, `beardog-deploy`, `beardog-config`, `beardog-discovery`, `beardog-security` converted to `{ workspace = true }`.
+- **Dead `android_native` feature removed** from `beardog-tunnel/Cargo.toml` — declared and emitted by `build.rs` on Android targets but never checked via `cfg(feature)` in any Rust source file.
+- **Deprecation form normalized** — `#[deprecated = "msg"]` in `primal_types/io.rs` converted to structured `#[deprecated(since = "0.9.0", note = "...")]` form.
+- **Deep debt audit confirmed clean**: 0 files >800 LOC, 0 unsafe, 0 `todo!()`/`unimplemented!()`, 0 `#[async_trait]`, 0 `Box<dyn Error>` in production, 0 hardcoded peer primal names in runtime logic, 0 production mocks outside `#[cfg(test)]`.
+
 ### April 30, 2026 -- Wave 78: primalSpring Phase 56c Audit — Both BearDog Items Confirmed Resolved
 
 - **`async-trait` 49→0 confirmed complete** — primalSpring's own `PRIMAL_GAPS.md` confirms "COMPLETE (Wave 53–55: 49→0, 22 traits → 18 enum dispatch types, RPITIT, dep removed + lockfile clean, banned in deny.toml)". `syn v1` fully eliminated from dependency tree. Only `syn v2` remains (proc-macro derives: serde, clap, thiserror, tokio, tracing — all compile-time, not actionable).

@@ -24,10 +24,10 @@ toml = { workspace = true }
 serde_json = { workspace = true }
 
 # Environment variables
-dotenvy = "0.15"
+dotenvy = { workspace = true }
 
 # Path manipulation
-dirs = "5.0"
+dirs = { workspace = true }
 
 # Validation
 validator = { workspace = true }
