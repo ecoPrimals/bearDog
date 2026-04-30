@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 30, 2026 -- Wave 78: primalSpring Phase 56c Audit — Both BearDog Items Confirmed Resolved
+
+- **`async-trait` 49→0 confirmed complete** — primalSpring's own `PRIMAL_GAPS.md` confirms "COMPLETE (Wave 53–55: 49→0, 22 traits → 18 enum dispatch types, RPITIT, dep removed + lockfile clean, banned in deny.toml)". `syn v1` fully eliminated from dependency tree. Only `syn v2` remains (proc-macro derives: serde, clap, thiserror, tokio, tracing — all compile-time, not actionable).
+- **`crypto.sign_contract` confirmed wired since Wave 42** — Fully implemented in `IonicBondHandler` (`ionic_bond/contract.rs`), registered in method list, advertised in `capabilities.list`, with 10+ integration tests. The audit blurb's "not yet exposed as IPC method" is stale information.
+- **Audit cross-check**: `lineage.list` (genetic.rs), `btsp.session.verify` (btsp/mod.rs), `crypto.derive_public_key` (purpose_key.rs) — all IPC methods referenced by other primals are wired and tested.
+- **Dependency duplication audit**: thiserror v1 (transitive from x509-parser, tungstenite, asn1-rs — not actionable), getrandom v0.2/v0.3/v0.4, rand v0.8/v0.9 (ecosystem migration, transitive). All BearDog-owned code on latest versions.
+- **`mockito` workspace normalized** in Wave 77b (cont.) — beardog-client and beardog-integration now use `{ workspace = true }`.
+- **`cargo deny check`** — 4/4 PASS (advisories, bans, licenses, sources).
+- **Zero new code changes** — all items were already complete.
+
 ### April 30, 2026 -- Wave 77b: Deep Debt Pass — `#[allow]` Reason Hygiene & Workspace Dependency Drift
 
 - **19 bare `#[allow(...)]` in production code given `reason` metadata** — `async_fn_in_trait` (4 files), `deprecated` (4 files), `missing_docs` (8 coordination config files), `cast_precision_loss`/`cast_possible_wrap`/`cast_sign_loss` (resilience), `dead_code` (infrastructure), `wildcard_imports`/`missing_errors_doc` (consolidated traits), `double_must_use`/`missing_errors_doc` (algorithms), `needless_doctest_main` (threat management), `cast_precision_loss` (math constants).
