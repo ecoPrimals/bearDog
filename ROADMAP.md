@@ -60,6 +60,14 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
+### Deep Debt: Production Mock Isolation, Workspace Drift & Dead Feature — DONE (Wave 78b)
+
+Production mocks (`IpcTestHandler`, `IpcFailing*`, `IpcHandlerBackend`, `IpcServer`) gated behind `#[cfg(test)]`. 10 workspace deps centralized. Dead `android_native` feature removed. Deprecation form normalized. Audit: 0 production mocks outside test gates, 0 `unreachable!()` in release binaries.
+
+### primalSpring Phase 56c Audit Response — DONE (Wave 78)
+
+Both audit items confirmed stale/resolved: `async-trait` 49→0 (Wave 53-55), `crypto.sign_contract` wired since Wave 42, `syn v1` eliminated. Zero code changes.
+
 ### Deep Debt Pass: `#[allow]` Reason Hygiene & Workspace Dependency Drift — DONE (Wave 77b)
 
 19 bare `#[allow]` given `reason` metadata. 4 internal crates added to `[workspace.dependencies]`, 11 path pins normalized. `mockito` unified to workspace. Deep audit confirmed zero remaining unsafe, production mocks, `#[async_trait]`, `Box<dyn Error>`, or `todo!()`.

@@ -90,6 +90,18 @@
 
 ## Recent Improvements
 
+### Wave 78b — Deep Debt: Production Mock Isolation, Workspace Drift & Dead Feature (April 30, 2026)
+
+- **Production mocks gated behind `#[cfg(test)]`** — `IpcTestHandler`, `IpcFailing*`, `IpcHandlerBackend`, and `IpcServer` moved to `#[cfg(test)]` submodule in `ipc_server.rs`. `unreachable!()` test panics no longer ship in release binaries.
+- **10 workspace deps normalized** — `crossbeam`, `dashmap`, `http`, `url`, `walkdir`, `dotenvy`, `dirs`, `tokio-stream`, `getrandom` centralized; 7 crates converted.
+- **Dead `android_native` feature removed** from `beardog-tunnel/Cargo.toml`.
+- **Deprecation form normalized** — legacy `#[deprecated = "msg"]` → structured `#[deprecated(since, note)]`.
+
+### Wave 78 — primalSpring Phase 56c Audit Response (April 30, 2026)
+
+- **Both BearDog audit items confirmed stale/resolved** — `async-trait` 49→0 complete (Wave 53-55), `crypto.sign_contract` wired since Wave 42. Zero code changes needed.
+- **`syn v1` fully eliminated** from dependency tree. Only `syn v2` remains (proc-macro derives).
+
 ### Wave 77b — Deep Debt Pass: `#[allow]` Reason Hygiene & Workspace Dependency Drift (April 30, 2026)
 
 - **19 bare `#[allow(...)]` given `reason` metadata** — `async_fn_in_trait`, `deprecated`, `missing_docs`, cast lints, `dead_code`, `wildcard_imports`, `missing_errors_doc`, `double_must_use`, `needless_doctest_main`.
