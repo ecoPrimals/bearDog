@@ -209,6 +209,7 @@ color-eyre = "0.6"
 tempfile = "3.8"
 proptest = "1.4"
 wiremock = "0.6"
+mockito = "1.2"
 criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 
 # Validation

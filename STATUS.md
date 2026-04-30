@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: April 29, 2026
+**Last Updated**: April 30, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -35,7 +35,7 @@
 
 - **Crates**: 29 directories (beardog-integration excluded — overstep)
 - **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
-- **Crypto Methods**: 101 CryptoHandler methods + 9 IonicBondHandler methods (`crypto.derive_purpose_key`, `crypto.sign_registration` added Wave 72)
+- **Crypto Methods**: 102 CryptoHandler methods (97) + IonicBondHandler methods (5) — `crypto.derive_public_key` added Wave 77
 - **`#[allow(`**: 81 (was 86)
 - **`#[expect(`**: 646 (was 642)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
@@ -89,6 +89,20 @@
 ---
 
 ## Recent Improvements
+
+### Wave 77b — Deep Debt Pass: `#[allow]` Reason Hygiene & Workspace Dependency Drift (April 30, 2026)
+
+- **19 bare `#[allow(...)]` given `reason` metadata** — `async_fn_in_trait`, `deprecated`, `missing_docs`, cast lints, `dead_code`, `wildcard_imports`, `missing_errors_doc`, `double_must_use`, `needless_doctest_main`.
+- **Workspace dependency drift fixed** — 4 internal crates added to `[workspace.dependencies]`; 11 path pins converted to `{ workspace = true }`.
+- **`mockito` normalized to workspace** — version-pinned `mockito` in `beardog-client` and `beardog-integration` unified under `[workspace.dependencies]`.
+- **Deep debt audit confirmed clean**: 0 files >800 LOC, 0 unsafe, 0 production mocks, 0 hardcoded peers, 0 `#[async_trait]`, 0 `Box<dyn Error>`, 0 `todo!()`/`unimplemented!()`.
+
+### Wave 77 — `crypto.derive_public_key` for biomeOS Coordination Keys (April 30, 2026)
+
+- **New method: `crypto.derive_public_key`** — Derives Ed25519 public key for a named purpose from `FAMILY_SEED`. Enables biomeOS Neural API auto-derivation of coordination keys at startup.
+- **Methods 101 → 102** (CryptoHandler 97, IonicBondHandler 5).
+- **7 new tests** for the new method.
+- **BTSP Phase 3 deferred** — Phase 2 handshake sufficient for current composition.
 
 ### Wave 76/76b — primalSpring Phase 56 Audit: GAP-23 Reclassified, IONIC-RUNTIME Confirmed (April 29, 2026)
 

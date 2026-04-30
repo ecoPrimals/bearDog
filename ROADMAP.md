@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: April 29, 2026
+**Updated**: April 30, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -59,6 +59,14 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### Deep Debt Pass: `#[allow]` Reason Hygiene & Workspace Dependency Drift — DONE (Wave 77b)
+
+19 bare `#[allow]` given `reason` metadata. 4 internal crates added to `[workspace.dependencies]`, 11 path pins normalized. `mockito` unified to workspace. Deep audit confirmed zero remaining unsafe, production mocks, `#[async_trait]`, `Box<dyn Error>`, or `todo!()`.
+
+### `crypto.derive_public_key` for biomeOS Coordination Keys — DONE (Wave 77)
+
+New RPC method derives Ed25519 public key for a named purpose from `FAMILY_SEED`. Enables biomeOS Neural API auto-derivation of coordination keys. Methods 101→102 (CryptoHandler 97, IonicBondHandler 5). 7 new tests. BTSP Phase 3 deferred.
 
 ### primalSpring Phase 56 Audit: GAP-23 Reclassified, IONIC-RUNTIME Confirmed — DONE (Wave 76/76b)
 
@@ -219,4 +227,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: April 29, 2026
+**Last Updated**: April 30, 2026
