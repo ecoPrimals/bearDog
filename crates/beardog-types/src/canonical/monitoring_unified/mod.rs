@@ -6,7 +6,10 @@
 //
 // Consolidated monitoring configuration for the BearDog ecosystem.
 
-#![allow(deprecated)]
+#![allow(
+    deprecated,
+    reason = "module itself is deprecated; internal use of deprecated items is expected"
+)]
 
 use serde::{Deserialize, Serialize};
 

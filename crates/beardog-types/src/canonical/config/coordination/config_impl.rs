@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-#![allow(missing_docs)]
+#![allow(
+    missing_docs,
+    reason = "coordination config types — serde-derived structs with self-documenting field names"
+)]
 
 //! Default values, constructors, validation, and migration helpers for coordination config.
 

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-#![allow(async_fn_in_trait)] // Native `async fn` in public trait; impls are `Send + Sync`
+#![allow(
+    async_fn_in_trait,
+    reason = "native async fn in public trait; all impls are Send + Sync"
+)]
 
 //! Protocol-agnostic `CryptoService` trait
 //!

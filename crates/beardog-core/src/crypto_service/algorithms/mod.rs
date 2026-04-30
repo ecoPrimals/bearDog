@@ -5,8 +5,14 @@
 // Allow pedantic lints for algorithm implementations
 // These functions have comprehensive documentation and error handling
 // The `# Errors` sections would be repetitive (all return "encryption/decryption failed")
-#![allow(clippy::missing_errors_doc)]
-#![allow(clippy::double_must_use)]
+#![allow(
+    clippy::missing_errors_doc,
+    reason = "algorithm error docs would be repetitive — all return crypto-op-failed"
+)]
+#![allow(
+    clippy::double_must_use,
+    reason = "inner Result + must_use on fn is intentional for crypto APIs"
+)]
 
 /// Public-key and signature primitives exposed through the crypto service.
 pub mod asymmetric;

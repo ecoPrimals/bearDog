@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-#![allow(clippy::needless_doctest_main)]
+#![allow(
+    clippy::needless_doctest_main,
+    reason = "doctest examples show standalone main() for clarity"
+)]
 
 //! Management extensions: rule CRUD, health probes, maintenance, and aggregate stats.
 

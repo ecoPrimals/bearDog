@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-#![allow(clippy::wildcard_imports)]
-#![allow(clippy::missing_errors_doc)]
-#![allow(async_fn_in_trait)]
+#![allow(
+    clippy::wildcard_imports,
+    reason = "consolidated types re-export all items from sibling module"
+)]
+#![allow(
+    clippy::missing_errors_doc,
+    reason = "trait error docs are on the concrete impls, not the trait definitions"
+)]
+#![allow(
+    async_fn_in_trait,
+    reason = "native async fn in traits; all impls are Send + Sync"
+)]
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};

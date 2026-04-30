@@ -5,7 +5,10 @@
 //! This module provides capability-based types that replace hardcoded primal references
 //! to maintain sovereignty compliance where primals only know themselves.
 
-#![allow(deprecated)]
+#![allow(
+    deprecated,
+    reason = "v0.10.0 migration target — deprecated types re-exported for backward compat"
+)]
 
 mod attestation;
 mod discovery;

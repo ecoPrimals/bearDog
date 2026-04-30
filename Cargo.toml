@@ -240,6 +240,10 @@ beardog-deploy = { path = "crates/beardog-deploy" }
 beardog-production = { path = "crates/beardog-production" }
 beardog-node-registry = { path = "crates/beardog-node-registry" }
 beardog-hid = { path = "crates/beardog-hid" }
+beardog-tower-atomic = { path = "crates/beardog-tower-atomic" }
+beardog-discovery = { path = "crates/beardog-discovery" }
+beardog-installer = { path = "crates/beardog-installer" }
+beardog-client = { path = "crates/beardog-client" }
 
 [package]
 name = "beardog"

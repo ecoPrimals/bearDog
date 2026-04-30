@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 30, 2026 -- Wave 77b: Deep Debt Pass — `#[allow]` Reason Hygiene & Workspace Dependency Drift
+
+- **19 bare `#[allow(...)]` in production code given `reason` metadata** — `async_fn_in_trait` (4 files), `deprecated` (4 files), `missing_docs` (8 coordination config files), `cast_precision_loss`/`cast_possible_wrap`/`cast_sign_loss` (resilience), `dead_code` (infrastructure), `wildcard_imports`/`missing_errors_doc` (consolidated traits), `double_must_use`/`missing_errors_doc` (algorithms), `needless_doctest_main` (threat management), `cast_precision_loss` (math constants).
+- **Workspace dependency drift fixed** — `beardog-tower-atomic`, `beardog-discovery`, `beardog-installer`, `beardog-client` added to `[workspace.dependencies]`. `beardog-client/Cargo.toml`: 3 path pins (`beardog-tower-atomic`, `beardog-genetics`, `beardog-errors`) converted to `{ workspace = true }`. `beardog-integration/Cargo.toml`: 8 path pins converted to `{ workspace = true }`.
+- **Deep debt audit confirmed clean**: 0 files >800 LOC, 0 unsafe blocks, 0 production mocks (all `#[cfg(test)]`-gated), 0 hardcoded peer primal names, 0 `#[async_trait]`, 0 `Box<dyn Error>` in production, 0 `todo!()`/`unimplemented!()`.
+
 ### April 30, 2026 -- Wave 77: primalSpring v0.9.24 — `crypto.derive_public_key` for biomeOS Coordination Keys
 
 - **New method: `crypto.derive_public_key`** — Derives an Ed25519 public key for a named purpose from `FAMILY_SEED`. Wire: `{"method":"crypto.derive_public_key","params":{"purpose":"coordination"}}` → `{"public_key":"<b64>","algorithm":"Ed25519","purpose":"coordination","derivation":"HMAC-SHA256-purpose-v1 → Ed25519"}`. Enables biomeOS Neural API to auto-derive coordination keys at startup without manual key provisioning.

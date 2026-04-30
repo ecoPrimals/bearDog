@@ -5,9 +5,18 @@
 // Provider resilience patterns including retry logic, circuit breakers, and fault tolerance.
 
 // Allow pedantic clippy lints for intentional type conversions
-#![allow(clippy::cast_precision_loss)]
-#![allow(clippy::cast_possible_wrap)]
-#![allow(clippy::cast_sign_loss)]
+#![allow(
+    clippy::cast_precision_loss,
+    reason = "intentional f64 conversions for retry/circuit-breaker math"
+)]
+#![allow(
+    clippy::cast_possible_wrap,
+    reason = "counter values are bounded well below i64::MAX"
+)]
+#![allow(
+    clippy::cast_sign_loss,
+    reason = "values are guaranteed non-negative by construction"
+)]
 
 use crate::canonical::traits::{RetryStrategy, TimeoutPolicy};
 use serde::{Deserialize, Serialize};

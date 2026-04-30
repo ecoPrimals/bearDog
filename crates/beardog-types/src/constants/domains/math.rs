@@ -6,7 +6,10 @@
 //! trigonometric constants for performance-critical operations.
 
 // Allow pedantic clippy lints for intentional type conversions in mathematical operations
-#![allow(clippy::cast_precision_loss)]
+#![allow(
+    clippy::cast_precision_loss,
+    reason = "intentional f64 conversions for mathematical lookup tables"
+)]
 
 /// Pre-computed sine lookup table for 360 degrees
 ///

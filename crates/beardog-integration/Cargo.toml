@@ -21,7 +21,7 @@ tokio = { workspace = true, features = ["full"] }
 futures = { workspace = true }
 
 # Tower Atomic client (Pure Rust IPC via Unix sockets!)
-beardog-tower-atomic = { version = "0.9.0", path = "../beardog-tower-atomic" }
+beardog-tower-atomic = { workspace = true }
 
 # Serialization
 serde = { workspace = true }
@@ -50,13 +50,13 @@ arc-swap = "1.6"  # Lock-free atomic Arc swaps
 uuid = { workspace = true }
 
 # BearDog dependencies
-beardog-config = { path = "../beardog-config" }
-beardog-errors = { path = "../beardog-errors" }
-beardog-discovery = { path = "../beardog-discovery" }
-beardog-tunnel = { path = "../beardog-tunnel" }
-beardog-genetics = { path = "../beardog-genetics" }
-beardog-types = { path = "../beardog-types" }
-beardog-capabilities = { path = "../beardog-capabilities" }
+beardog-config = { workspace = true }
+beardog-errors = { workspace = true }
+beardog-discovery = { workspace = true }
+beardog-tunnel = { workspace = true }
+beardog-genetics = { workspace = true }
+beardog-types = { workspace = true }
+beardog-capabilities = { workspace = true }
 
 # Web framework for API server
 axum = { version = "0.7", features = ["macros"] }

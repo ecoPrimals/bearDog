@@ -15,7 +15,7 @@ workspace = true
 
 [dependencies]
 # Tower Atomic client (Pure Rust IPC via Unix sockets!)
-beardog-tower-atomic = { version = "0.9.0", path = "../beardog-tower-atomic" }
+beardog-tower-atomic = { workspace = true }
 
 # Async runtime
 tokio = { workspace = true, features = ["full"] }
@@ -29,7 +29,7 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 
 # BearDog types
-beardog-genetics = { version = "0.9.0", path = "../beardog-genetics" }
+beardog-genetics = { workspace = true }
 
 # Logging
 tracing = { workspace = true }
@@ -39,5 +39,5 @@ tokio-test = { workspace = true }
 mockito = "1.0"
 tempfile = { workspace = true }
 chrono = { workspace = true }
-beardog-errors = { path = "../beardog-errors" }
+beardog-errors = { workspace = true }
 

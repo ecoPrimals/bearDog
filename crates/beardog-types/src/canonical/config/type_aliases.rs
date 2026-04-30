@@ -7,7 +7,10 @@
 //
 // Note: Some types in this module are intentionally deprecated with clear migration paths.
 
-#![allow(deprecated)]
+#![allow(
+    deprecated,
+    reason = "type aliases module intentionally re-exports deprecated items with migration paths"
+)]
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

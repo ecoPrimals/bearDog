@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-#![allow(async_fn_in_trait)] // Native `async fn` in traits; `Send` on futures matches our `Send + Sync` impls
+#![allow(
+    async_fn_in_trait,
+    reason = "native async fn in traits; Send on futures matches our Send + Sync impls"
+)]
 
 //! Generic capability trait definitions
 //!

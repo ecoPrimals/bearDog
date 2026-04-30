@@ -16,7 +16,10 @@
 
 // ecoPrimals: Migration plan - aes-gcm 0.10 uses deprecated generic-array.
 // When aes-gcm 0.11 is stable, upgrade and remove this allow.
-#![allow(deprecated)]
+#![allow(
+    deprecated,
+    reason = "aes-gcm 0.10 uses deprecated generic-array; upgrade to 0.11 when stable"
+)]
 
 use aes_gcm::{
     Aes256Gcm, Key, Nonce,

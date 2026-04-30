@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Domain capability vectors: network, storage, compute, performance, environment, system, entropy.
-#![allow(dead_code)]
+#![allow(
+    dead_code,
+    reason = "types are part of the public serde surface; not all variants instantiated in tests"
+)]
 // Types are part of the public serde surface; this crate does not instantiate every snapshot in tests.
 
 use serde::{Deserialize, Serialize};

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-#![allow(async_fn_in_trait)]
+#![allow(
+    async_fn_in_trait,
+    reason = "native async fn in trait; all impls are Send + Sync"
+)]
 
 use crate::BearDogCore;
 use crate::ecosystem::primal_types::ServiceDependency;
