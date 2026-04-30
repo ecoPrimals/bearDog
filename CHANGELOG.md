@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 30, 2026 -- Wave 77: primalSpring v0.9.24 — `crypto.derive_public_key` for biomeOS Coordination Keys
+
+- **New method: `crypto.derive_public_key`** — Derives an Ed25519 public key for a named purpose from `FAMILY_SEED`. Wire: `{"method":"crypto.derive_public_key","params":{"purpose":"coordination"}}` → `{"public_key":"<b64>","algorithm":"Ed25519","purpose":"coordination","derivation":"HMAC-SHA256-purpose-v1 → Ed25519"}`. Enables biomeOS Neural API to auto-derive coordination keys at startup without manual key provisioning.
+- **Methods**: 101 → 102 (CryptoHandler 97, IonicBondHandler 5).
+- **7 new tests**: basic, deterministic, different-purposes-differ, no-seed-fails, missing-purpose-fails, missing-params-fails, routing integration via `aliases_and_beardog::route`.
+- **BTSP Phase 3**: Deferred per primalSpring audit — Phase 2 handshake is sufficient for current composition validation.
+
 ### April 29, 2026 -- Wave 76b: GAP-23 Exhaustive UDS Audit — Reclassification Confirmed
 
 - **Exhaustive UDS accept-path audit** — Matching rhizoCrypt's GAP-22 methodology, performed a full audit of BearDog's Unix socket IPC path. **Zero path-dependent behavior found:**

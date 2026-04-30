@@ -3,8 +3,8 @@
 //! Semantic `crypto.*` operations are primary; `beardog.crypto.*` names are backward-compat aliases.
 
 use super::purpose_key::{
-    handle_derive_purpose_key, handle_purpose_decrypt, handle_purpose_encrypt,
-    handle_sign_registration,
+    handle_derive_public_key, handle_derive_purpose_key, handle_purpose_decrypt,
+    handle_purpose_encrypt, handle_sign_registration,
 };
 use crate::unix_socket_ipc::crypto_handlers_hashing::handle_generate_onion_identity;
 use crate::unix_socket_ipc::crypto_handlers_tor::{
@@ -90,6 +90,11 @@ pub async fn route(
         "crypto.derive_purpose_key" => {
             info!("🔑 Crypto: derive_purpose_key (NUCLEUS two-tier key derivation)");
             Ok(Some(handle_derive_purpose_key(params).await?))
+        }
+
+        "crypto.derive_public_key" => {
+            info!("🔑 Crypto: derive_public_key (purpose-key Ed25519 public key from FAMILY_SEED)");
+            Ok(Some(handle_derive_public_key(params).await?))
         }
 
         "crypto.sign_registration" => {

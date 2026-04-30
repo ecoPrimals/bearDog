@@ -4,6 +4,7 @@
 //!
 //! Implements the NUCLEUS two-tier crypto model:
 //! - `crypto.derive_purpose_key` — derive purpose-specific keys from a parent key
+//! - `crypto.derive_public_key` — derive Ed25519 public key for a purpose from `FAMILY_SEED`
 //! - `crypto.sign_registration` — sign `ipc.register` payloads for verifiable registrations
 //! - `crypto.encrypt` / `crypto.decrypt` with `purpose` param — purpose-key envelope operations
 
@@ -18,6 +19,7 @@ use serde_json::{Value, json};
 use tracing::info;
 
 use crate::unix_socket_ipc::handlers::crypto::handle_sign_ed25519;
+use ed25519_dalek::SigningKey;
 
 /// Derive a purpose-specific key from a parent key using the NUCLEUS convention.
 ///
@@ -68,6 +70,54 @@ pub async fn handle_derive_purpose_key(params: Option<&Value>) -> Result<Value, 
         "key": derived_b64,
         "purpose": purpose,
         "method": "HMAC-SHA256-purpose-v1",
+    }))
+}
+
+/// Derive a purpose-specific Ed25519 public key from `FAMILY_SEED`.
+///
+/// Wire: `crypto.derive_public_key`
+///
+/// Combines purpose-key derivation with Ed25519 keypair generation:
+/// 1. `purpose_key = HMAC-SHA256(FAMILY_SEED, hex("purpose-v1:" + purpose))`
+/// 2. `signing_key = Ed25519::from_bytes(purpose_key)`
+/// 3. Return the verifying (public) key.
+///
+/// # Parameters
+///
+/// - `purpose`: Purpose string (e.g. `"coordination"`, `"storage"`, `"inference"`)
+///
+/// # Returns
+///
+/// - `public_key`: Base64-encoded Ed25519 public key (32 bytes)
+/// - `algorithm`: `"Ed25519"`
+/// - `purpose`: Echo of the purpose string
+/// - `derivation`: `"HMAC-SHA256-purpose-v1 → Ed25519"`
+pub async fn handle_derive_public_key(params: Option<&Value>) -> Result<Value, String> {
+    let params = params.ok_or(
+        "Missing params for crypto.derive_public_key — expected: {\"purpose\": \"<string>\"}",
+    )?;
+
+    let purpose = params
+        .get("purpose")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: purpose (e.g. \"coordination\", \"storage\")")?;
+
+    let purpose_key = resolve_purpose_key(purpose)?;
+
+    let signing_key = SigningKey::from_bytes(&purpose_key);
+    let public_key = signing_key.verifying_key();
+    let public_key_b64 = BASE64.encode(public_key.as_bytes());
+
+    info!(
+        "🔑 Derived public key for purpose '{}' (Ed25519, 32 bytes)",
+        purpose
+    );
+
+    Ok(json!({
+        "public_key": public_key_b64,
+        "algorithm": "Ed25519",
+        "purpose": purpose,
+        "derivation": "HMAC-SHA256-purpose-v1 → Ed25519",
     }))
 }
 
@@ -475,6 +525,96 @@ mod tests {
             .expect("b64");
         assert_eq!(pt, b"routed");
 
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn derive_public_key_basic() {
+        beardog_errors::process_env::set_var("FAMILY_SEED", "derive-pubkey-test-seed-material!");
+        let params = json!({ "purpose": "coordination" });
+        let out = handle_derive_public_key(Some(&params))
+            .await
+            .expect("derive_public_key");
+        assert_eq!(out["algorithm"], "Ed25519");
+        assert_eq!(out["purpose"], "coordination");
+        assert_eq!(out["derivation"], "HMAC-SHA256-purpose-v1 → Ed25519");
+        let pk_bytes = BASE64
+            .decode(out["public_key"].as_str().expect("public_key"))
+            .expect("valid base64");
+        assert_eq!(pk_bytes.len(), 32);
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn derive_public_key_deterministic() {
+        beardog_errors::process_env::set_var("FAMILY_SEED", "deterministic-pubkey-seed!!!!!!!!");
+        let p = json!({ "purpose": "storage" });
+        let r1 = handle_derive_public_key(Some(&p)).await.expect("first");
+        let r2 = handle_derive_public_key(Some(&p)).await.expect("second");
+        assert_eq!(r1["public_key"], r2["public_key"]);
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn derive_public_key_different_purposes_differ() {
+        beardog_errors::process_env::set_var("FAMILY_SEED", "diffpurp-seed-material-for-test!!");
+        let coordination = handle_derive_public_key(Some(&json!({ "purpose": "coordination" })))
+            .await
+            .expect("coordination");
+        let storage = handle_derive_public_key(Some(&json!({ "purpose": "storage" })))
+            .await
+            .expect("storage");
+        assert_ne!(coordination["public_key"], storage["public_key"]);
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn derive_public_key_no_seed_fails() {
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_SEED");
+        let err = handle_derive_public_key(Some(&json!({ "purpose": "coordination" })))
+            .await
+            .expect_err("should fail without seed");
+        assert!(err.contains("FAMILY_SEED"));
+    }
+
+    #[tokio::test]
+    async fn derive_public_key_missing_purpose_fails() {
+        let err = handle_derive_public_key(Some(&json!({})))
+            .await
+            .expect_err("should fail without purpose");
+        assert!(err.contains("purpose"));
+    }
+
+    #[tokio::test]
+    async fn derive_public_key_missing_params_fails() {
+        let err = handle_derive_public_key(None)
+            .await
+            .expect_err("should fail without params");
+        assert!(err.contains("Missing params"));
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn derive_public_key_routes_via_aliases() {
+        beardog_errors::process_env::set_var("FAMILY_SEED", "routing-pubkey-test-seed-material!");
+        let out = route(
+            "crypto.derive_public_key",
+            Some(&json!({ "purpose": "coordination" })),
+        )
+        .await
+        .expect("route")
+        .expect("derive_public_key via route");
+        assert_eq!(out["algorithm"], "Ed25519");
+        assert_eq!(out["purpose"], "coordination");
+        let pk_bytes = BASE64
+            .decode(out["public_key"].as_str().expect("pk"))
+            .expect("b64");
+        assert_eq!(pk_bytes.len(), 32);
         beardog_errors::process_env::remove_var("FAMILY_SEED");
     }
 }

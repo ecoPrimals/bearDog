@@ -98,6 +98,7 @@ pub fn crypto_method_names() -> Vec<&'static str> {
         "crypto.generate_keypair",
         "crypto.derive_secret",
         "crypto.derive_purpose_key",
+        "crypto.derive_public_key",
         "crypto.sign_registration",
         // Dot-separated semantic names (SEMANTIC_METHOD_NAMING_STANDARD v2.0)
         "crypto.ed25519.sign",

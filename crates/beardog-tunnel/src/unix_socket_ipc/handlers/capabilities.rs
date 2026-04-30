@@ -361,6 +361,7 @@ impl CapabilitiesHandler {
             "crypto.sign",
             "crypto.verify",
             "crypto.public_key",
+            "crypto.derive_public_key",
             "crypto.key_exchange",
             "crypto.encrypt",
             "crypto.decrypt",
