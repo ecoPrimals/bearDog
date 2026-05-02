@@ -579,15 +579,14 @@ async fn test_export_with_home_fails_when_output_dir_unwritable() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn test_handle_key_export_errors_when_home_unset() {
-    let old_home = {
-        let _guard = crate::__cli_test_env::HOME
-            .lock()
-            .expect("cli HOME env test lock poisoned");
-        let old_home = std::env::var_os("HOME");
-        process_env::remove_var("HOME");
-        old_home
-    };
+    let _guard = crate::__cli_test_env::HOME
+        .lock()
+        .expect("cli HOME env test lock poisoned");
+
+    let old_home = std::env::var_os("HOME");
+    process_env::remove_var("HOME");
 
     let err = handle_key_export("any-key", "/tmp/out.json", false)
         .await
@@ -597,9 +596,6 @@ async fn test_handle_key_export_errors_when_home_unset() {
         "{err}"
     );
 
-    let _guard = crate::__cli_test_env::HOME
-        .lock()
-        .expect("cli HOME env test lock poisoned");
     match old_home {
         Some(h) => process_env::set_var("HOME", h.as_os_str()),
         None => process_env::remove_var("HOME"),
@@ -607,15 +603,14 @@ async fn test_handle_key_export_errors_when_home_unset() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn test_handle_key_import_errors_when_home_unset() {
-    let old_home = {
-        let _guard = crate::__cli_test_env::HOME
-            .lock()
-            .expect("cli HOME env test lock poisoned");
-        let old_home = std::env::var_os("HOME");
-        process_env::remove_var("HOME");
-        old_home
-    };
+    let _guard = crate::__cli_test_env::HOME
+        .lock()
+        .expect("cli HOME env test lock poisoned");
+
+    let old_home = std::env::var_os("HOME");
+    process_env::remove_var("HOME");
 
     let err = handle_key_import("/tmp/in.json", None, false)
         .await
@@ -625,9 +620,6 @@ async fn test_handle_key_import_errors_when_home_unset() {
         "{err}"
     );
 
-    let _guard = crate::__cli_test_env::HOME
-        .lock()
-        .expect("cli HOME env test lock poisoned");
     match old_home {
         Some(h) => process_env::set_var("HOME", h.as_os_str()),
         None => process_env::remove_var("HOME"),
@@ -635,17 +627,17 @@ async fn test_handle_key_import_errors_when_home_unset() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn test_handle_key_export_roundtrip_uses_default_home_env() {
     let dir = TempDir::new().expect("temp home for handle_key_export env test");
     let dst = TempDir::new().expect("temp home for handle_key_import env test");
-    let old_home = {
-        let _guard = crate::__cli_test_env::HOME
-            .lock()
-            .expect("cli HOME env test lock poisoned");
-        let old_home = std::env::var_os("HOME");
-        process_env::set_var("HOME", dir.path().as_os_str());
-        old_home
-    };
+
+    let _guard = crate::__cli_test_env::HOME
+        .lock()
+        .expect("cli HOME env test lock poisoned");
+
+    let old_home = std::env::var_os("HOME");
+    process_env::set_var("HOME", dir.path().as_os_str());
 
     let key = StoredKey {
         key_id: "env-roundtrip".to_string(),
@@ -669,12 +661,8 @@ async fn test_handle_key_export_roundtrip_uses_default_home_env() {
         .await
         .expect("handle_key_export with HOME");
 
-    {
-        let _guard = crate::__cli_test_env::HOME
-            .lock()
-            .expect("cli HOME env test lock poisoned");
-        process_env::set_var("HOME", dst.path().as_os_str());
-    }
+    process_env::set_var("HOME", dst.path().as_os_str());
+
     handle_key_import(out.to_str().expect("utf8"), None, false)
         .await
         .expect("handle_key_import with HOME");
@@ -682,9 +670,6 @@ async fn test_handle_key_export_roundtrip_uses_default_home_env() {
     let loaded = key_store::load_key_from_home("env-roundtrip", dst.path()).expect("load imported");
     assert_eq!(loaded.key_material_b64, key.key_material_b64);
 
-    let _guard = crate::__cli_test_env::HOME
-        .lock()
-        .expect("cli HOME env test lock poisoned");
     match old_home {
         Some(h) => process_env::set_var("HOME", h.as_os_str()),
         None => process_env::remove_var("HOME"),

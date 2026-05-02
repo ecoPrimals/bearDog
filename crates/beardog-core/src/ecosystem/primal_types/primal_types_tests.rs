@@ -148,14 +148,3 @@ fn test_error_rate_metrics_default() {
     assert_eq!(metrics.error_rate, 0.0);
     assert_eq!(metrics.timeout_rate, 0.0);
 }
-
-#[test]
-#[expect(
-    deprecated,
-    reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
-)]
-fn test_primal_type_migration_helper() {
-    let guidance = PrimalTypeMigrationHelper::get_migration_guidance();
-    assert!(guidance.contains("SOVEREIGNTY"));
-    assert!(guidance.contains("capability"));
-}

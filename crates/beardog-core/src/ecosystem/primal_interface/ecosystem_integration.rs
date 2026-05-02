@@ -6,7 +6,7 @@ use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
 use beardog_types::canonical::capabilities::CapabilityType;
 use serde_json::Value;
-use tracing::{debug, info, warn};
+use tracing::{info, warn};
 use uuid::Uuid;
 
 impl BearDogCore {
@@ -148,33 +148,6 @@ impl BearDogCore {
             Value::Object(result)
         };
         Ok(result)
-    }
-
-    #[expect(dead_code, reason = "Probe helper not yet wired into discovery paths")]
-    #[expect(
-        clippy::unused_self,
-        reason = "Instance parameter reserved for future authenticated health probes"
-    )]
-    #[expect(clippy::unnecessary_wraps, reason = "Result for future probe errors")]
-    fn probe_service_endpoint(
-        &self,
-        capability: &CapabilityType,
-        endpoint: &str,
-    ) -> Result<bool, BearDogError> {
-        // Simple availability check - in production this would be an actual health check
-        debug!(
-            "🔍 Probing service endpoint for {:?}: {}",
-            capability, endpoint
-        );
-
-        // Return true for core capabilities that we know are critical
-        Ok(matches!(
-            capability,
-            CapabilityType::Security
-                | CapabilityType::ComputeIntelligence
-                | CapabilityType::ServiceMesh
-                | CapabilityType::DistributedIntelligence
-        ))
     }
 
     /// Get ecosystem integration health status

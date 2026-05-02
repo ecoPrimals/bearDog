@@ -61,7 +61,7 @@ impl BtspHandler {
     /// After a successful Phase 1 handshake, the client sends `btsp.negotiate`
     /// offering cipher suites and a client nonce. The server selects the best
     /// cipher, generates a server nonce, and both sides derive session keys via
-    /// HKDF-SHA256(handshake_key, client_nonce || server_nonce).
+    /// `HKDF-SHA256(handshake_key, client_nonce || server_nonce)`.
     ///
     /// Wire: `{"session_id":"...","ciphers":["chacha20-poly1305"],"client_nonce":"<b64>"}`
     /// Response: `{"cipher":"chacha20-poly1305","server_nonce":"<b64>"}`

@@ -136,32 +136,6 @@ pub use constructors_unified::{
 };
 pub use core::BearDogError;
 
-/// Convenient type alias for `Result<T, BearDogError>` (DEPRECATED)
-///
-/// **DEPRECATED**: Use idiomatic `Result<T, BearDogError>` instead.
-/// Type aliases for Result violate Rust API Guidelines.
-///
-/// ## Migration Example
-///
-/// ```rust
-/// use beardog_errors::BearDogError;
-///
-/// // ✅ NEW (Idiomatic Rust):
-/// fn do_something(should_fail: bool) -> Result<String, BearDogError> {
-///     if should_fail {
-///         return Err(BearDogError::business("Operation failed".to_string()));
-///     }
-///     Ok("Success!".to_string())
-/// }
-/// ```
-///
-/// This type alias will be removed in version 4.0.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use Result<T, BearDogError> instead. See https://rust-lang.github.io/api-guidelines/future-proofing.html#c-result-alias"
-)]
-pub type BearDogResult<T> = Result<T, BearDogError>;
-
 use std::fmt::Display;
 
 /// Extension trait for Result types to add BearDog-specific error context

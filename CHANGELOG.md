@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 2, 2026 -- Wave 80: Deep Debt — Dead Code Removal, Deprecated Symbol Cleanup & Flaky Test Fix
+
+- **6 dead production code items removed**: orphaned `HsmSource` enum (duplicate of orchestrator's own), unused `DeployConfig` placeholder struct, unused `probe_service_endpoint` method, 3 unused `SovereigntyManager` fields (`genetics`, `crypto_config`, `hierarchy_manager`) that were constructed but never read.
+- **2 deprecated zero-caller symbols removed**: `BearDogResult<T>` type alias (beardog-errors + root lib.rs) and `PrimalTypeMigrationHelper` struct + migration guide. Both had zero production callers.
+- **Flaky test fixed**: `test_handle_key_export_roundtrip_uses_default_home_env` — the `HOME` mutex was released before handlers ran, allowing concurrent tests to corrupt the `process_env` overlay. Fixed by holding the lock for the entire test duration and adding `#[serial_test::serial]`. Same fix applied to 2 sibling tests. **Zero test failures across the full workspace for the first time.**
+- **2 doc_markdown clippy warnings fixed** in BTSP negotiation handler.
+
 ### May 2, 2026 -- Wave 79b: Deep Debt Pass — Workspace Dependency Drift, Build Script Cleanup & Dead Dep Removal
 
 - **16 workspace dependency drifts normalized** — `aes`, `ctr` (beardog-utils), `ahash`, `urlencoding`, `approx` (beardog-core), `local-ip-address` (beardog-discovery), `ecdsa`, `x509-parser`, `arrayref`, `data-encoding` (beardog-tunnel), `path-absolutize`, `console`, `indicatif` (beardog-deploy), `rpassword`, `whoami`, `assert_cmd`, `predicates` (beardog-cli), `directories` (beardog-installer) added to root `[workspace.dependencies]` and crate-local pins converted to `{ workspace = true }`.

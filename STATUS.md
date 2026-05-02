@@ -90,6 +90,12 @@
 
 ## Recent Improvements
 
+### Wave 80 — Deep Debt: Dead Code Removal, Deprecated Symbols, Flaky Test Fix (May 2, 2026)
+
+- **6 dead production code items removed** (orphaned `HsmSource`, `DeployConfig`, `probe_service_endpoint`, 3 `SovereigntyManager` fields).
+- **2 deprecated zero-caller symbols removed** (`BearDogResult`, `PrimalTypeMigrationHelper`).
+- **Flaky `key_export_roundtrip` test fixed** — `HOME` mutex scope extended + `#[serial_test::serial]`. Zero test failures across full workspace.
+
 ### Wave 79b — Deep Debt: Workspace Dependency Drift, Build Script Cleanup (May 2, 2026)
 
 - **16 workspace deps normalized** — `aes`, `ctr`, `ahash`, `urlencoding`, `ecdsa`, `x509-parser`, `arrayref`, `data-encoding`, `path-absolutize`, `console`, `indicatif`, `rpassword`, `whoami`, `directories`, `approx`, `assert_cmd`, `predicates` centralized.

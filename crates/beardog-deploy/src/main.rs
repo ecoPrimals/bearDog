@@ -71,13 +71,6 @@ enum Commands {
     },
 }
 
-#[derive(Debug)]
-#[expect(dead_code, reason = "DeployConfig shape kept for future CLI wiring")]
-struct DeployConfig {
-    release: bool,
-    skip_build: bool,
-}
-
 #[tokio::main]
 async fn main() -> Result<(), BearDogError> {
     let cli = Cli::parse();

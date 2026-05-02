@@ -36,4 +36,4 @@ pub use health::{
 pub use identity::{
     EndpointSecurityConfig, PrimalCapability, PrimalConfig, UniversalIntegrationConfig,
 };
-pub use io::{PrimalError, PrimalRequest, PrimalResponse, PrimalTypeMigrationHelper};
+pub use io::{PrimalError, PrimalRequest, PrimalResponse};

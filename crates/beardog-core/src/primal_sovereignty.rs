@@ -6,9 +6,7 @@
 // BearDog operates as a truly sovereign primal with genetic spawning capabilities.
 
 use beardog_errors::BearDogError;
-use beardog_genetics::{EntropyHierarchyConfig, EntropyHierarchyManager};
 use beardog_genetics::{GeneticSpawningEngine, SpawnRequest};
-use beardog_security::encryption::EncryptionConfig;
 use chrono::{DateTime, Utc};
 use tracing::info;
 use uuid::Uuid;
@@ -68,21 +66,6 @@ impl Default for SovereigntyState {
 pub struct SovereigntyManager {
     /// Sovereignty configuration
     config: PrimalSovereigntyConfig,
-    /// Genetic spawning engine for primal evolution
-    #[expect(dead_code, reason = "Reserved for future sovereignty genetic pathways")]
-    genetics: GeneticSpawningEngine,
-    /// Encryption configuration
-    #[expect(
-        dead_code,
-        reason = "Reserved for future sovereignty crypto integration"
-    )]
-    crypto_config: EncryptionConfig,
-    /// Human entropy hierarchy manager
-    #[expect(
-        dead_code,
-        reason = "Reserved for future entropy hierarchy enforcement"
-    )]
-    hierarchy_manager: EntropyHierarchyManager,
     /// Current sovereignty state
     sovereignty_state: SovereigntyState,
 }
@@ -92,22 +75,12 @@ impl SovereigntyManager {
     ///
     /// # Errors
     ///
-    /// Returns error if:
-    /// - Genetic spawning engine initialization fails
-    /// - Entropy hierarchy manager creation fails
+    /// Returns error if sovereignty manager initialization fails.
     pub fn new(config: PrimalSovereigntyConfig) -> Result<Self, BearDogError> {
         info!("🏛️ Initializing Primal Sovereignty Manager");
 
-        let genetics = GeneticSpawningEngine::new();
-        let crypto_config = EncryptionConfig::default();
-        let hierarchy_config = EntropyHierarchyConfig::default();
-        let hierarchy_manager = EntropyHierarchyManager::new(hierarchy_config);
-
         Ok(Self {
             config,
-            genetics,
-            crypto_config,
-            hierarchy_manager,
             sovereignty_state: SovereigntyState::default(),
         })
     }
@@ -195,15 +168,9 @@ pub struct SovereigntyStatus {
 impl Default for SovereigntyManager {
     fn default() -> Self {
         let config = SovereigntyConfig::default();
-        Self::new(config).unwrap_or_else(|_| {
-            // Fallback implementation
-            Self {
-                config: SovereigntyConfig::default(),
-                genetics: GeneticSpawningEngine::new(),
-                crypto_config: EncryptionConfig::default(),
-                hierarchy_manager: EntropyHierarchyManager::default(),
-                sovereignty_state: SovereigntyState::default(),
-            }
+        Self::new(config).unwrap_or_else(|_| Self {
+            config: SovereigntyConfig::default(),
+            sovereignty_state: SovereigntyState::default(),
         })
     }
 }

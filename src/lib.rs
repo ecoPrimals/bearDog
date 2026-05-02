@@ -305,16 +305,6 @@ impl BearDogFramework {
     }
 }
 
-/// Result type for `BearDog` operations
-///
-/// Deprecated: Use `Result<T, BearDogError>` directly instead.
-/// See <https://rust-lang.github.io/api-guidelines/future-proofing.html#c-result-alias>
-#[deprecated(
-    since = "3.1.0",
-    note = "Use Result<T, BearDogError> instead. See https://rust-lang.github.io/api-guidelines/future-proofing.html#c-result-alias"
-)]
-pub type BearDogResult<T> = Result<T, BearDogError>;
-
 // Re-exports would go here when the root crate includes ecosystem dependencies
 // For now, the root crate provides a simplified framework interface
 

@@ -66,20 +66,6 @@ pub enum SecurityLevel {
     StrongBox,
 }
 
-/// HSM source selection (internal use)
-#[expect(dead_code, reason = "Variants used as orchestrator integration lands")]
-enum HsmSource {
-    /// FIDO2 device
-    Fido2(usize), // Index in fido2_providers vec
-
-    /// Android `StrongBox`
-    Android,
-
-    /// iOS Secure Enclave
-    #[expect(clippy::upper_case_acronyms, reason = "iOS is the platform name")]
-    IOS,
-}
-
 /// Request for entropy generation
 #[derive(Debug, Clone)]
 pub struct EntropyGenerationRequest {
