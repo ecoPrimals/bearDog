@@ -115,7 +115,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("   Make sure:");
             println!("   1. SoloKeys are inserted");
             println!("   2. You have USB access permissions");
-            println!("   3. hidapi is installed (libhidapi-dev on Ubuntu)");
+            println!("   3. beardog-hid crate is available (Pure Rust HID — no C deps)");
         }
     }
 

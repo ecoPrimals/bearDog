@@ -28,7 +28,7 @@ This is your introduction to BearDog's sovereign key management.
 rustc --version
 
 # BearDog built
-cd /home/eastgate/Development/ecoPrimals/beardog
+cd /path/to/ecoPrimals/primals/bearDog
 cargo build --release
 ```
 

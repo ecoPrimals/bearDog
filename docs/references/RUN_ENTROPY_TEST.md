@@ -42,7 +42,7 @@ cargo run --release --example entropy_hardware_comparison
 ### Option 1: Modern Rust Runner (Recommended) 🦀
 
 ```bash
-cd /home/eastgate/Development/ecoPrimals/phase1/beardog
+cd /path/to/ecoPrimals/primals/bearDog
 ./target/release/examples/entropy_test_runner
 ```
 
@@ -80,7 +80,7 @@ cargo run --release --example entropy_hardware_comparison
 ### Option 3: Manual (Full Control) 🎛️
 
 ```bash
-cd /home/eastgate/Development/ecoPrimals/phase1/beardog
+cd /path/to/ecoPrimals/primals/bearDog
 
 # Software baseline
 cargo run --example entropy_hardware_comparison --release

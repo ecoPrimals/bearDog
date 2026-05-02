@@ -522,7 +522,7 @@ Result:            Public visibility, private sovereignty
 
 - `ecoPrimals/phase2/biomeOS/` - LiveSpore base image
 - `ecoPrimals/wateringHole/birdsong/BIRDSONG_PROTOCOL.md` - BirdSong v2 protocol
-- `ecoPrimals/phase1/beardog/crates/beardog-genetics/src/birdsong/genesis.rs` - Genetic lineage
+- `ecoPrimals/primals/bearDog/crates/beardog-genetics/src/birdsong/genesis.rs` - Genetic lineage
 - `ecoPrimals/phase1/songbird/crates/songbird-network-federation/src/beardog/birdsong.rs` - BirdSong crypto
 
 ### **Related Specs:**

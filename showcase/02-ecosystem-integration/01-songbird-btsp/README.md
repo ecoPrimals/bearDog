@@ -77,7 +77,7 @@
 ### Prerequisites
 ```bash
 # Ensure BearDog is built
-cd /home/eastgate/Development/ecoPrimals/beardog
+cd /path/to/ecoPrimals/primals/bearDog
 cargo build --release
 
 # Return to demo
@@ -87,7 +87,7 @@ cd showcase/02-ecosystem-integration/01-songbird-btsp
 ### Option 1: With Songbird (if available)
 ```bash
 # Start Songbird tower
-cd /home/eastgate/Development/ecoPrimals/songbird/showcase/02-federation
+cd /path/to/ecoPrimals/primals/songBird/showcase/02-federation
 ./start-tower.sh
 
 # Set environment for discovery
@@ -95,7 +95,7 @@ export PRIMAL_SONGBIRD_ENDPOINT="http://localhost:9090"
 export PRIMAL_SONGBIRD_CAPABILITIES="orchestration,federation"
 
 # Run demo
-cd /home/eastgate/Development/ecoPrimals/beardog/showcase/02-ecosystem-integration/01-songbird-btsp
+cd /path/to/ecoPrimals/primals/bearDog/showcase/02-ecosystem-integration/01-songbird-btsp
 ./run-demo.sh
 ```
 

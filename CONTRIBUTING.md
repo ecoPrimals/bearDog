@@ -19,7 +19,7 @@ All contributions must comply with the wateringHole standards:
 - **Clippy pedantic + nursery** — Zero warnings (`cargo clippy --workspace --all-features`)
 - **All public items documented** — `#![warn(missing_docs)]` on all library crates
 - **No TODO/FIXME/HACK** — Resolve before committing; track in ROADMAP.md instead
-- **< 1000 lines per file** — Smart refactoring into domain-driven modules, not arbitrary splits
+- **< 800 lines per file** — Smart refactoring into domain-driven modules, not arbitrary splits
 - **Result-based error handling** — Zero `.unwrap()` in production; `.expect("invariant")` only
 - **Zero hardcoding** — Capability-based discovery; `from_env()` at boundaries
 - **Self-knowledge only** — Primals discover peers at runtime, never hardcode other primal names
@@ -46,7 +46,7 @@ cargo deny check                   # Advisories, bans, licenses, sources
 1. **Tower Atomic Pattern** — BearDog provides crypto atoms via JSON-RPC; other primals delegate
 2. **Dependency Injection** — Pure `Default` (no I/O), `from_env()` at startup boundaries
 3. **Semantic method naming** — `{domain}.{operation}[.{variant}]` per wateringHole standard
-4. **JSON-RPC first, tarpc optional** — Dual protocol per `PRIMAL_IPC_PROTOCOL.md` v3.0
+4. **JSON-RPC 2.0 over NDJSON** — Single protocol per `PRIMAL_IPC_PROTOCOL.md` v3.0
 5. **Sovereignty** — Primal boundaries at the wire (JSON-RPC); no embedded cross-primal code
 
 ## Testing

@@ -1266,7 +1266,7 @@ BearDog uses **genetic lineage** for authentication:
 
 ### **Implementation**
 
-- BearDog source: `phase1/beardog/crates/beardog-tunnel/`
+- BearDog source: `primals/bearDog/crates/beardog-tunnel/`
 - Crypto handlers: `src/unix_socket_ipc/handlers/crypto/`
 - Genetic handlers: `src/unix_socket_ipc/crypto_handlers_genetic.rs`
 - Secret handlers: `src/unix_socket_ipc/handlers/secrets.rs`
