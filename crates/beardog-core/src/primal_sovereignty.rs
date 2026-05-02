@@ -11,11 +11,6 @@ use chrono::{DateTime, Utc};
 use tracing::info;
 use uuid::Uuid;
 
-// Type alias for compatibility - using PrimalSovereigntyConfig
-type SovereigntyConfig = PrimalSovereigntyConfig;
-
-/// Primal sovereignty configuration
-/// Renamed from `SovereigntyConfig` to avoid collision with `sovereignty::SovereigntyConfig`
 /// Configuration for primal sovereignty management
 ///
 /// Defines sovereignty monitoring and validation thresholds for primal instances.
@@ -167,9 +162,9 @@ pub struct SovereigntyStatus {
 
 impl Default for SovereigntyManager {
     fn default() -> Self {
-        let config = SovereigntyConfig::default();
+        let config = PrimalSovereigntyConfig::default();
         Self::new(config).unwrap_or_else(|_| Self {
-            config: SovereigntyConfig::default(),
+            config: PrimalSovereigntyConfig::default(),
             sovereignty_state: SovereigntyState::default(),
         })
     }

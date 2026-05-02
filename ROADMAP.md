@@ -60,6 +60,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
+### Deep Debt: Dead Code Removal, Deprecated Symbols, Flaky Test Fix — DONE (Wave 80)
+
+6 dead production code items removed (orphaned `HsmSource`, `DeployConfig`, `probe_service_endpoint`, 3 `SovereigntyManager` fields). Deprecated `BearDogResult` and `PrimalTypeMigrationHelper` removed (zero callers). Flaky `key_export_roundtrip` test fixed — HOME mutex scope extended. Zero test failures across full workspace.
+
 ### Deep Debt: Workspace Dependency Drift, Build Script Cleanup — DONE (Wave 79b)
 
 16 workspace deps normalized. Stale `android_native` cfg emission removed from build.rs. `tempfile` reclassified to dev-dep in beardog-security. Full audit: 0 unsafe, 0 `todo!()`, 0 `async_trait`, 0 production mocks outside test gates.
