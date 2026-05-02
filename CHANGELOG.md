@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 2, 2026 -- Wave 79b: Deep Debt Pass — Workspace Dependency Drift, Build Script Cleanup & Dead Dep Removal
+
+- **16 workspace dependency drifts normalized** — `aes`, `ctr` (beardog-utils), `ahash`, `urlencoding`, `approx` (beardog-core), `local-ip-address` (beardog-discovery), `ecdsa`, `x509-parser`, `arrayref`, `data-encoding` (beardog-tunnel), `path-absolutize`, `console`, `indicatif` (beardog-deploy), `rpassword`, `whoami`, `assert_cmd`, `predicates` (beardog-cli), `directories` (beardog-installer) added to root `[workspace.dependencies]` and crate-local pins converted to `{ workspace = true }`.
+- **Stale `android_native` cfg emission removed** from `beardog-tunnel/build.rs` — the feature was already removed from `[features]` in Wave 78b but `build.rs` line 30 still emitted `cargo:rustc-cfg=feature="android_native"` on Android targets. This created potential `unexpected_cfgs` warnings. Emission and stale doc reference removed.
+- **`tempfile` reclassified** in `beardog-security/Cargo.toml` — was under `[dependencies]` despite zero production usage. Moved to `[dev-dependencies]`.
+- **Deep debt audit confirmed clean**: 0 files >800 LOC, 0 unsafe, 0 `todo!()`/`unimplemented!()`, 0 `#[async_trait]`, 0 `Box<dyn Error>` in production, 0 hardcoded peer primal names in runtime logic, 0 production mocks outside `#[cfg(test)]`. `hsm_provider_mocks` module already correctly gated since prior wave.
+
 ### May 2, 2026 -- Wave 79: BTSP Phase 3 — `btsp.negotiate` Server-Side Implementation
 
 - **New method: `btsp.negotiate`** — Phase 3 encrypted post-handshake channel negotiation. After a successful Phase 1 handshake, primalSpring sends `btsp.negotiate` with `session_id`, `ciphers` (array), and `client_nonce` (base64). Server selects the best cipher (preference: `chacha20-poly1305` > `hmac-plain` > `null`), generates a 32-byte `server_nonce`, derives session keys via `HKDF-SHA256(handshake_key, client_nonce || server_nonce)` with directional info strings `btsp-session-v1-c2s` / `btsp-session-v1-s2c`, and returns `{"cipher":"chacha20-poly1305","server_nonce":"<b64>"}`. NULL cipher fallback returns `{"cipher":"null"}` — zero breakage for Phase 2-only clients.

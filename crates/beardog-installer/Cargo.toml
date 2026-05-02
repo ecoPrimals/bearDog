@@ -23,7 +23,7 @@ beardog-errors = { path = "../beardog-errors" }
 beardog-types = { path = "../beardog-types" }
 
 # Platform paths (XDG-compliant)
-directories = "5"
+directories = { workspace = true }
 
 # Serialization
 serde = { workspace = true }

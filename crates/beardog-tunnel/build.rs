@@ -2,8 +2,7 @@
 //! Build script for the `beardog-tunnel` crate.
 //!
 //! Configures platform-specific native linking for tunnel and StrongBox-related code paths.
-//! On **Android**, links NDK libraries (`log`, `android`, `keystore`) and sets
-//! `cfg(feature = "android_native")` when appropriate. On other targets, consumers rely on
+//! On **Android**, links NDK libraries (`log`, `android`, `keystore`). On other targets,
 //! non-Android targets omit the Android `StrongBox` module (see `cargo:warning` during build).
 //!
 //! Environment variables observed: `ANDROID_NDK_HOME`, `CARGO_CFG_TARGET_OS`.
@@ -27,7 +26,6 @@ fn main() {
             );
         }
 
-        println!("cargo:rustc-cfg=feature=\"android_native\"");
         println!("cargo:warning=Building for Android with StrongBox support");
     }
 

@@ -28,9 +28,9 @@ beardog-ipc = { path = "../beardog-ipc" }  # Neural API registration
 chacha20poly1305 = { workspace = true }
 hkdf = { workspace = true }
 pbkdf2 = { workspace = true }
-rpassword = "7.3"
+rpassword = { workspace = true }
 sha2.workspace = true
-whoami = "1.6.1"
+whoami = { workspace = true }
 
 [dependencies.beardog-core]
 workspace = true
@@ -101,8 +101,8 @@ workspace = true
 [dev-dependencies]
 serial_test.workspace = true
 tokio = { workspace = true }
-assert_cmd = "2.0"
-predicates = "3.0"
+assert_cmd = { workspace = true }
+predicates = { workspace = true }
 tempfile = { workspace = true }
 serde_json = { workspace = true }
 

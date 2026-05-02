@@ -60,6 +60,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
+### Deep Debt: Workspace Dependency Drift, Build Script Cleanup — DONE (Wave 79b)
+
+16 workspace deps normalized. Stale `android_native` cfg emission removed from build.rs. `tempfile` reclassified to dev-dep in beardog-security. Full audit: 0 unsafe, 0 `todo!()`, 0 `async_trait`, 0 production mocks outside test gates.
+
 ### BTSP Phase 3: `btsp.negotiate` Server-Side Implementation — DONE (Wave 79)
 
 `btsp.negotiate` JSON-RPC method handler implemented. ChaCha20-Poly1305 cipher negotiation with NULL cipher fallback. Phase 3 session key derivation via HKDF-SHA256(handshake_key, client_nonce || server_nonce) with directional info strings matching primalSpring reference implementation. 12 new tests. BTSP methods 35 → 36. primalSpring `#[ignore]` integration tests will auto-validate on next plasmidBin harvest.

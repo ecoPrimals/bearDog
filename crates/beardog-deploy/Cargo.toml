@@ -27,9 +27,9 @@ tracing-subscriber = { workspace = true }
 thiserror = { workspace = true }
 walkdir = { workspace = true }
 serde_json = { workspace = true }
-path-absolutize = "3.0"
-console = "0.15"
-indicatif = "0.17"
+path-absolutize = { workspace = true }
+console = { workspace = true }
+indicatif = { workspace = true }
 [dependencies.clap]
 workspace = true
 

@@ -30,7 +30,6 @@ sha3 = { workspace = true }
 subtle = { workspace = true }
 zeroize = { workspace = true }
 bytes = { workspace = true }
-tempfile = { workspace = true }
 tokio-stream = { workspace = true }
 thiserror = { workspace = true }
 
@@ -109,6 +108,7 @@ libc = { workspace = true }
 
 [dev-dependencies]
 proptest = { workspace = true }
+tempfile = { workspace = true }
 
 [features]
 fido2 = ["dep:beardog-hid", "dep:ciborium", "dep:base64-url"]

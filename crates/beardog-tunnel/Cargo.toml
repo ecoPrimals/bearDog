@@ -52,7 +52,7 @@ p384 = { workspace = true, features = ["ecdsa", "ecdh"] }  # ECDSA + ECDH P-384 
 # p521 removed: rand_core version conflict, < 1% usage, will add when stable
 ed448-goldilocks = { workspace = true }  # Ed448 signatures (Phase 3 - TLS 1.3)
 rsa = { workspace = true }  # RSA signatures (Phase 4 - TLS 1.3 legacy)
-ecdsa = "0.16"
+ecdsa = { workspace = true }
 rand = { workspace = true }
 rand_core = { workspace = true }  # Pure Rust CSRNG for genetic crypto
 sha2 = { workspace = true, features = ["oid"] }  # OID support for RSA PKCS#1 v1.5
@@ -70,8 +70,8 @@ sha1 = { workspace = true }             # Legacy hashing (Git compatibility)
 hex = { workspace = true }
 bytes = { workspace = true }
 hkdf = { workspace = true }  # HKDF key derivation for TLS 1.3
-x509-parser = "0.16"  # Pure Rust X.509 certificate parsing for TLS
-arrayref = "0.3"
+x509-parser = { workspace = true }  # Pure Rust X.509 certificate parsing for TLS
+arrayref = { workspace = true }
 postcard = { workspace = true }
 zeroize = { workspace = true }
 parking_lot = { workspace = true }
@@ -83,7 +83,7 @@ beardog-hid = { path = "../beardog-hid", optional = true }
 ciborium = { workspace = true, optional = true }
 
 base64 = { workspace = true }  # Aligned with workspace version (0.21 → 0.22 upgrade eliminates dep duplication)
-data-encoding = "2.5"  # Base32 encoding for Tor v3 onion addresses (Feb 7, 2026)
+data-encoding = { workspace = true }  # Base32 encoding for Tor v3 onion addresses
 
 
 [dev-dependencies]

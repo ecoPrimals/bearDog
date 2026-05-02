@@ -90,6 +90,11 @@
 
 ## Recent Improvements
 
+### Wave 79b — Deep Debt: Workspace Dependency Drift, Build Script Cleanup (May 2, 2026)
+
+- **16 workspace deps normalized** — `aes`, `ctr`, `ahash`, `urlencoding`, `ecdsa`, `x509-parser`, `arrayref`, `data-encoding`, `path-absolutize`, `console`, `indicatif`, `rpassword`, `whoami`, `directories`, `approx`, `assert_cmd`, `predicates` centralized.
+- **Stale `android_native` cfg removed** from build.rs. `tempfile` reclassified to dev-dep in beardog-security.
+
 ### Wave 79 — BTSP Phase 3: `btsp.negotiate` Server-Side Implementation (May 2, 2026)
 
 - **`btsp.negotiate` method shipped** — Phase 3 encrypted post-handshake channel negotiation. ChaCha20-Poly1305 cipher selection, HKDF-SHA256 session key derivation from handshake_key + nonces. NULL cipher fallback for backward compatibility.

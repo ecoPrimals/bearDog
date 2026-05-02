@@ -16,8 +16,8 @@ categories = [ "development-tools", "data-structures", "algorithms",]
 workspace = true
 
 [dependencies]
-aes = "0.8"
-ctr = "0.9"
+aes = { workspace = true }
+ctr = { workspace = true }
 tracing = { workspace = true }
 parking_lot = { workspace = true }
 bytes = { workspace = true }
