@@ -95,6 +95,8 @@ impl MethodHandler for BtspHandler {
             "btsp.server.export_keys",
             "btsp.server.negotiate",
             "btsp.server.status",
+            // Phase 3: encrypted post-handshake channel negotiation
+            "btsp.negotiate",
             // Legacy aliases (backward compat with pre-server-surface callers)
             "btsp.session.create",
             "btsp.session.verify",
@@ -153,6 +155,8 @@ impl MethodHandler for BtspHandler {
             self.handle_server_export_keys(params).await
         } else if method == "btsp.server.negotiate" || method == "btsp.session.negotiate" {
             self.handle_server_negotiate(params).await
+        } else if method == "btsp.negotiate" {
+            self.handle_phase3_negotiate(params).await
         } else if method == "btsp.server.status" {
             self.handle_server_status().await
         } else {

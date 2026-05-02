@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 2, 2026 -- Wave 79: BTSP Phase 3 — `btsp.negotiate` Server-Side Implementation
+
+- **New method: `btsp.negotiate`** — Phase 3 encrypted post-handshake channel negotiation. After a successful Phase 1 handshake, primalSpring sends `btsp.negotiate` with `session_id`, `ciphers` (array), and `client_nonce` (base64). Server selects the best cipher (preference: `chacha20-poly1305` > `hmac-plain` > `null`), generates a 32-byte `server_nonce`, derives session keys via `HKDF-SHA256(handshake_key, client_nonce || server_nonce)` with directional info strings `btsp-session-v1-c2s` / `btsp-session-v1-s2c`, and returns `{"cipher":"chacha20-poly1305","server_nonce":"<b64>"}`. NULL cipher fallback returns `{"cipher":"null"}` — zero breakage for Phase 2-only clients.
+- **Phase 3 key derivation** — `derive_phase3_session_keys()` added to `btsp_handshake/crypto.rs`. Mirrors primalSpring's `SessionKeys::derive()` exactly (same HKDF salt/info construction), ensuring both sides derive identical directional keys.
+- **Wire compatibility** — Accepts both `"ciphers"` (array, primalSpring canonical) and `"preferred_cipher"` (string, audit blurb form) parameter names.
+- **BTSP methods**: 35 → 36 (new `btsp.negotiate`). Registered in `BtspHandler::methods()`, routed in `handle()`, advertised in `capabilities.list` as `btsp_phase3` capability group.
+- **12 new tests**: cipher selection (4 tests: prefers chacha20, hmac fallback, null fallback, empty list), negotiate happy path, null cipher fallback for unsupported ciphers, missing params/session_id/client_nonce validation, missing FAMILY_SEED error, `preferred_cipher` alias, key derivation verification. Plus 4 crypto-level tests for `derive_phase3_session_keys` (deterministic, directional, nonzero, nonce sensitivity).
+- **Pre-existing crypto method count assertion fixed** — `test_crypto_handler_methods` and `test_handler_method_count` had conflicting assertions (97 vs 102); both normalized to actual count of 102.
+- **primalSpring validation**: Two `#[ignore]` integration tests (`phase3_negotiate_with_live_beardog`, `phase3_transport_full_roundtrip`) will auto-validate once plasmidBin harvests this binary.
+
 ### April 30, 2026 -- Wave 78b: Deep Debt Pass — Production Mock Isolation, Workspace Drift & Dead Feature Cleanup
 
 - **Production mocks gated behind `#[cfg(test)]`** — `IpcTestHandler`, `IpcFailingRegisterHandler`, `IpcFailingEventHandler`, `IpcFailingCapabilityHandler`, `IpcHandlerBackend` enum dispatch, and `IpcServer` struct in `ipc_server.rs` were compiled into the production library despite being test-only. All moved into a `#[cfg(test)] mod test_fixtures` submodule. `unreachable!()` calls in test fixture impls no longer ship in release binaries.

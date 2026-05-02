@@ -181,6 +181,12 @@ impl CapabilitiesHandler {
                     "description": "BTSP handshake-as-a-service — other primals call these to establish authenticated sessions"
                 },
                 {
+                    "type": "btsp_phase3",
+                    "version": "1.0",
+                    "methods": ["negotiate"],
+                    "description": "BTSP Phase 3 — ChaCha20-Poly1305 encrypted post-handshake channel negotiation"
+                },
+                {
                     "type": "ionic_bond",
                     "version": "2.0",
                     "methods": ["propose", "accept", "seal", "verify", "revoke", "list"],
@@ -257,6 +263,7 @@ impl CapabilitiesHandler {
                 "btsp.server.create_session":      { "cpu": "medium", "latency_ms": 2 },
                 "btsp.server.verify":              { "cpu": "medium", "latency_ms": 2 },
                 "btsp.server.export_keys":         { "cpu": "medium", "latency_ms": 2 },
+                "btsp.negotiate":                  { "cpu": "medium", "latency_ms": 2 },
                 "crypto.ionic_bond.propose":       { "cpu": "low",    "latency_ms": 1 },
                 "crypto.ionic_bond.accept":        { "cpu": "low",    "latency_ms": 1 },
                 "crypto.ionic_bond.seal":          { "cpu": "low",    "latency_ms": 1 },
@@ -276,6 +283,7 @@ impl CapabilitiesHandler {
             "operation_dependencies": {
                 "btsp.server.verify":              ["btsp.server.create_session"],
                 "btsp.server.negotiate":           ["btsp.server.verify"],
+                "btsp.negotiate":                  ["btsp.server.verify"],
                 "crypto.ionic_bond.accept":        ["crypto.ionic_bond.propose"],
                 "crypto.ionic_bond.seal":          ["crypto.ionic_bond.accept"],
                 "crypto.ionic_bond.verify":        ["crypto.ionic_bond.accept"],
@@ -373,6 +381,7 @@ impl CapabilitiesHandler {
             "consent.verify",
             "consent.issue",
             "ionic_bond.seal",
+            "btsp.negotiate",
         ]
         .iter()
         .map(|s| (*s).to_string())
@@ -559,7 +568,7 @@ mod tests {
         let caps = response["capabilities"]
             .as_array()
             .expect("capabilities should be array in test");
-        assert!(caps.len() >= 15, "Expected at least 15 capabilities");
+        assert!(caps.len() >= 16, "Expected at least 16 capabilities");
 
         let cap_strs: Vec<&str> = caps
             .iter()

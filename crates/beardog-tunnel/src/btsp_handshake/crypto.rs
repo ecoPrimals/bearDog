@@ -137,6 +137,55 @@ pub struct SessionKeys {
     pub client_to_server: [u8; 32],
 }
 
+/// Derive Phase 3 directional session keys from the handshake key and nonces.
+///
+/// ```text
+/// HKDF-SHA256(ikm = handshake_key, salt = client_nonce || server_nonce)
+///   info = "btsp-session-v1-c2s" → client_to_server key (32 bytes)
+///   info = "btsp-session-v1-s2c" → server_to_client key (32 bytes)
+/// ```
+///
+/// The `is_server` flag mirrors the keys: the server's encrypt key is
+/// `server_to_client`, and its decrypt key is `client_to_server`.
+///
+/// # Errors
+///
+/// Returns an error if HKDF expansion fails.
+pub fn derive_phase3_session_keys(
+    handshake_key: &[u8; 32],
+    client_nonce: &[u8],
+    server_nonce: &[u8],
+) -> Result<Phase3SessionKeys, BearDogError> {
+    let mut salt = Vec::with_capacity(client_nonce.len() + server_nonce.len());
+    salt.extend_from_slice(client_nonce);
+    salt.extend_from_slice(server_nonce);
+
+    let hk = Hkdf::<Sha256>::new(Some(&salt), handshake_key);
+
+    let mut client_to_server = [0u8; 32];
+    hk.expand(b"btsp-session-v1-c2s", &mut client_to_server)
+        .map_err(|e| BearDogError::system(format!("BTSP Phase 3 HKDF c2s: {e}")))?;
+
+    let mut server_to_client = [0u8; 32];
+    hk.expand(b"btsp-session-v1-s2c", &mut server_to_client)
+        .map_err(|e| BearDogError::system(format!("BTSP Phase 3 HKDF s2c: {e}")))?;
+
+    Ok(Phase3SessionKeys {
+        encrypt_key: server_to_client,
+        decrypt_key: client_to_server,
+    })
+}
+
+/// Directional session keys for Phase 3 encrypted channel (server perspective).
+///
+/// The server encrypts with `server_to_client` and decrypts with `client_to_server`.
+pub struct Phase3SessionKeys {
+    /// Key for encrypting server → client traffic.
+    pub encrypt_key: [u8; 32],
+    /// Key for decrypting client → server traffic.
+    pub decrypt_key: [u8; 32],
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -205,6 +254,47 @@ mod tests {
         let sid = b"sid";
         let keys = derive_session_keys(&shared, sid).expect("keys");
         assert_ne!(keys.server_to_client, keys.client_to_server);
+    }
+
+    #[test]
+    fn phase3_keys_deterministic() {
+        let hk = [0xAA; 32];
+        let cn = [0xBB; 32];
+        let sn = [0xCC; 32];
+        let k1 = derive_phase3_session_keys(&hk, &cn, &sn).expect("k1");
+        let k2 = derive_phase3_session_keys(&hk, &cn, &sn).expect("k2");
+        assert_eq!(k1.encrypt_key, k2.encrypt_key);
+        assert_eq!(k1.decrypt_key, k2.decrypt_key);
+    }
+
+    #[test]
+    fn phase3_keys_directions_differ() {
+        let hk = [0x42; 32];
+        let cn = [0x01; 32];
+        let sn = [0x02; 32];
+        let keys = derive_phase3_session_keys(&hk, &cn, &sn).expect("keys");
+        assert_ne!(keys.encrypt_key, keys.decrypt_key);
+    }
+
+    #[test]
+    fn phase3_keys_nonzero() {
+        let hk = [0xDE; 32];
+        let cn = [0xAD; 32];
+        let sn = [0xBE; 32];
+        let keys = derive_phase3_session_keys(&hk, &cn, &sn).expect("keys");
+        assert_ne!(keys.encrypt_key, [0u8; 32]);
+        assert_ne!(keys.decrypt_key, [0u8; 32]);
+    }
+
+    #[test]
+    fn phase3_different_nonces_produce_different_keys() {
+        let hk = [0x42; 32];
+        let cn = [0x01; 32];
+        let sn_a = [0x02; 32];
+        let sn_b = [0x03; 32];
+        let ka = derive_phase3_session_keys(&hk, &cn, &sn_a).expect("ka");
+        let kb = derive_phase3_session_keys(&hk, &cn, &sn_b).expect("kb");
+        assert_ne!(ka.encrypt_key, kb.encrypt_key);
     }
 
     #[test]

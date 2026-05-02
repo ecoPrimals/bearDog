@@ -11,9 +11,10 @@ async fn test_btsp_handler_methods() {
     // - 6 core operations x 4 aliases each = 24
     // - 3 unified methods (configure_tls, verify_peer, tunnel_send_http) = 3
     // - 5 server methods (create_session, verify, export_keys, negotiate, status) = 5
+    // - 1 Phase 3 method (btsp.negotiate) = 1
     // - 3 legacy session aliases (session.create, session.verify, session.negotiate) = 3
-    // Total = 35 methods
-    assert_eq!(methods.len(), 35);
+    // Total = 36 methods
+    assert_eq!(methods.len(), 36);
 
     // Semantic domain.operation names (primary in registry)
     assert!(methods.contains(&"btsp.contact.exchange"));
@@ -35,6 +36,9 @@ async fn test_btsp_handler_methods() {
     assert!(methods.contains(&"btsp.configure_tls"));
     assert!(methods.contains(&"btsp.verify_peer"));
     assert!(methods.contains(&"btsp.tunnel_send_http"));
+
+    // Phase 3 encrypted channel negotiation
+    assert!(methods.contains(&"btsp.negotiate"));
 
     // Check BTSP session methods (handshake-as-a-service)
     assert!(methods.contains(&"btsp.session.create"));

@@ -30,7 +30,7 @@ fn test_crypto_handler_methods() {
     //   - 2 semantic dot-separated aliases (crypto.ed25519.sign, crypto.ed25519.verify)
     //   - 1 crypto.public_key (standalone key retrieval)
     //   - 1 crypto.derive_public_key (purpose-key Ed25519 public key)
-    assert_eq!(methods.len(), 97);
+    assert_eq!(methods.len(), 102);
 
     // Verify all core crypto methods are present
     assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -122,6 +122,6 @@ fn test_handler_method_count() {
     assert_eq!(
         handler.methods().len(),
         102,
-        "Should have exactly 102 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3 + Tor Phase 2 + derive_lineage_beacon_key + dot-separated ed25519 aliases + crypto.public_key + lineage.list/verify/get + crypto.derive_purpose_key + crypto.derive_public_key + crypto.sign_registration)"
+        "Should have exactly 102 crypto methods (see test_crypto_handler_methods for breakdown)"
     );
 }

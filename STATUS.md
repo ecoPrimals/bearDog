@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: April 30, 2026
+**Last Updated**: May 2, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -89,6 +89,11 @@
 ---
 
 ## Recent Improvements
+
+### Wave 79 — BTSP Phase 3: `btsp.negotiate` Server-Side Implementation (May 2, 2026)
+
+- **`btsp.negotiate` method shipped** — Phase 3 encrypted post-handshake channel negotiation. ChaCha20-Poly1305 cipher selection, HKDF-SHA256 session key derivation from handshake_key + nonces. NULL cipher fallback for backward compatibility.
+- **BTSP methods**: 35 → 36. 12 new tests (handler + crypto). Wire-compatible with primalSpring `negotiate_phase3()`.
 
 ### Wave 78b — Deep Debt: Production Mock Isolation, Workspace Drift & Dead Feature (April 30, 2026)
 
