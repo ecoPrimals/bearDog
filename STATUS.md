@@ -36,8 +36,8 @@
 - **Crates**: 29 directories (beardog-integration excluded — overstep)
 - **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
 - **Crypto Methods**: 102 CryptoHandler methods (97) + IonicBondHandler methods (5) — `crypto.derive_public_key` added Wave 77
-- **`#[allow(`**: 81 (was 86)
-- **`#[expect(`**: 646 (was 642)
+- **`#[allow(`**: 81 (was 86; all carry `reason`)
+- **`#[expect(`**: 644 (was 646; 2 stale removed)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
 
 ---

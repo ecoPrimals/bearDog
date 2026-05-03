@@ -11,12 +11,12 @@
 use crate::canonical::config::domains::{bootstrap, database, system};
 
 /// Helper to set env var for test scope
-#[allow(dead_code)]
+#[allow(dead_code, reason = "RAII env guard for scoped test env mutations")]
 struct EnvGuard {
     key: String,
 }
 
-#[allow(dead_code)]
+#[allow(dead_code, reason = "RAII env guard for scoped test env mutations")]
 impl EnvGuard {
     fn set(key: &str, value: &str) -> Self {
         beardog_errors::process_env::set_var(key, value);

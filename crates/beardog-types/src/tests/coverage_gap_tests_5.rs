@@ -479,7 +479,7 @@ mod canonical_network_methods {
 // ===========================================================================
 // canonical/config/network.rs methods
 // ===========================================================================
-#[allow(deprecated)]
+#[allow(deprecated, reason = "tests exercise deprecated network config APIs")]
 mod config_network_methods {
     use crate::canonical::config::network::*;
 

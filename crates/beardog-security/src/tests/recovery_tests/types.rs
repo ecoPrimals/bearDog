@@ -27,7 +27,7 @@ use std::time::{Duration, Instant, SystemTime};
 
 /// Configuration for secret sharing
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[allow(dead_code, reason = "test-only recovery scaffold")]
 pub struct ShardConfig {
     total_shards: usize,
     threshold: usize,
@@ -51,7 +51,7 @@ impl ShardConfig {
         })
     }
 
-    #[allow(dead_code)]
+    #[allow(dead_code, reason = "test-only accessor")]
     pub fn threshold(&self) -> usize {
         self.threshold
     }
@@ -546,7 +546,7 @@ impl RecoveryChallenge {
 
 /// Multi-factor challenge
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[allow(dead_code)]
+#[allow(dead_code, reason = "MFA challenge variants for recovery tests")]
 pub enum ChallengeFactor {
     Password,
     Biometric,
@@ -599,7 +599,7 @@ impl MultiFactorChallenge {
 
 /// Recovery session
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[allow(dead_code, reason = "test-only recovery session scaffold")]
 pub struct RecoverySession {
     session_id: String,
     user_id: String,

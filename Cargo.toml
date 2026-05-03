@@ -229,6 +229,7 @@ indicatif = "0.17"
 rpassword = "7.3"
 whoami = "1.6"
 directories = "5"
+base64-url = "3.0"
 
 # Dev-only
 approx = "0.5"

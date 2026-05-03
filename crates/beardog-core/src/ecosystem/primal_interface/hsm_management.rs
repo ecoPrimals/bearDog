@@ -9,46 +9,42 @@ use tracing::{debug, info};
 
 impl BearDogCore {
     /// Initialize HSM providers for ecosystem integration.
-    #[cfg_attr(not(test), allow(dead_code))]
+    ///
+    /// Without `hsm-integration` feature, this is a no-op (software-only crypto).
+    #[cfg_attr(
+        not(test),
+        allow(dead_code, reason = "called only from ecosystem orchestration tests")
+    )]
     #[expect(clippy::unused_self, reason = "trait conformance requires &self")]
     pub(crate) fn initialize_hsm_providers(&self) -> Result<(), BearDogError> {
-        info!("Initializing universal HSM providers");
-        debug!("Detecting available hardware HSM modules");
-
-        #[cfg(feature = "hsm-integration")]
-        {
-            // Wire real HSM initialization when feature is enabled
-        }
-
+        info!("Initializing universal HSM providers (software-only mode)");
+        debug!("No hardware HSM modules configured — using software crypto");
         Ok(())
     }
 
     /// Shutdown HSM providers during ecosystem cleanup.
-    #[cfg_attr(not(test), allow(dead_code))]
+    ///
+    /// Without `hsm-integration` feature, this is a no-op.
+    #[cfg_attr(
+        not(test),
+        allow(dead_code, reason = "called only from ecosystem orchestration tests")
+    )]
     #[expect(clippy::unused_self, reason = "trait conformance requires &self")]
     pub(crate) fn shutdown_hsm_providers(&self) -> Result<(), BearDogError> {
-        debug!("Closing hardware HSM connections");
-
-        #[cfg(feature = "hsm-integration")]
-        {
-            // Wire real HSM shutdown when feature is enabled
-        }
-
-        info!("HSM providers shutdown complete");
+        debug!("HSM providers shutdown (software-only — no connections to close)");
         Ok(())
     }
 
     /// Check HSM health for monitoring.
-    #[cfg_attr(not(test), allow(dead_code))]
+    ///
+    /// Without `hsm-integration` feature, returns `Healthy` because the
+    /// software-only crypto path has no hardware dependencies to fail.
+    #[cfg_attr(
+        not(test),
+        allow(dead_code, reason = "called only from ecosystem orchestration tests")
+    )]
     #[expect(clippy::unused_self, reason = "trait conformance requires &self")]
     pub(crate) fn check_hsm_health(&self) -> HealthStatus {
-        debug!("Checking HSM provider health");
-
-        #[cfg(feature = "hsm-integration")]
-        {
-            // Wire real HSM health check when feature is enabled
-        }
-
         HealthStatus::Healthy
     }
 }

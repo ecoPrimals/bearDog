@@ -97,7 +97,7 @@ workspace = true
 optional = true
 
 [dependencies.base64-url]
-version = "3.0"
+workspace = true
 optional = true
 
 # Android-specific dependencies (target-conditional)

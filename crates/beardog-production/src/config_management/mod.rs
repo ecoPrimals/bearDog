@@ -20,9 +20,6 @@ use std::collections::HashMap;
 /// Result type for configuration and secrets operations in this module.
 pub type Result<T> = std::result::Result<T, BearDogError>;
 
-// Import canonical configuration types (Phase 1 Migration - Oct 2, 2025)
-use beardog_types::canonical::config::domains::database::MigrationConfig as CanonicalMigrationConfig;
-
 /// Production configuration manager - loads and validates production configs
 ///
 /// **NOTE**: This is a **production-specific runtime type**, not a canonical configuration.
@@ -164,38 +161,6 @@ pub struct DatabaseConnection {
     /// Connection timeout in seconds
     pub connection_timeout: u64,
 }
-
-/// Connection pool configuration (DEPRECATED - use canonical)
-///
-/// **MIGRATION**: Use `beardog_types::canonical::config::domains::network::ConnectionPoolConfig` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use beardog_types::canonical::config::domains::network::ConnectionPoolConfig instead"
-)]
-pub type ConnectionPoolConfig =
-    beardog_types::canonical::config::domains::network::ConnectionPoolConfig;
-
-/// Logging configuration (DEPRECATED - use canonical)
-///
-/// **MIGRATION**: Use `beardog_types::canonical::config::domains::system::LoggingConfig` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use beardog_types::canonical::config::domains::system::LoggingConfig instead"
-)]
-pub type LoggingConfig = beardog_types::canonical::config::domains::system::LoggingConfig;
-
-/// Log format (DEPRECATED - use canonical)
-///
-/// **MIGRATION**: Use `beardog_types::canonical::config::domains::system::LogFormat` instead.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use beardog_types::canonical::config::domains::system::LogFormat instead"
-)]
-pub type LogFormat = beardog_types::canonical::config::domains::system::LogFormat;
 
 /// Log level (canonical)
 pub type LogLevel = beardog_types::canonical::config::domains::system::LogLevel;
@@ -477,18 +442,6 @@ pub struct ServiceMeshConfig {
     pub provider: String,
 }
 
-/// Load balancer configuration
-///
-/// **DEPRECATED**: Use `beardog_types::canonical::config::domains::network::LoadBalancerConfiguration` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use beardog_types::canonical::config::domains::network::LoadBalancerConfiguration instead"
-)]
-pub type LoadBalancerConfig =
-    beardog_types::canonical::config::domains::network::connection::LoadBalancerConfiguration;
-
 /// Rate limiting configuration
 ///
 /// **NOTE**: This is a **production-specific runtime type** for rate limiting.
@@ -500,32 +453,6 @@ pub struct RateLimitingConfig {
     /// Requests per second limit
     pub requests_per_second: u32,
 }
-
-/// Database migration configuration (DEPRECATED - use canonical)
-///
-/// **MIGRATION**: Use `beardog_types::canonical::config::domains::database::MigrationConfig` instead.
-///
-/// The canonical version provides more comprehensive migration settings including
-/// directory paths, version tracking, and rollback support.
-///
-/// This type alias will be removed in v3.3.0 (Q1 2026).
-#[deprecated(
-    since = "3.1.1",
-    note = "Use beardog_types::canonical::config::domains::database::MigrationConfig instead. \
-            Canonical version provides comprehensive migration management."
-)]
-pub type MigrationConfig = CanonicalMigrationConfig;
-
-/// Backup configuration
-///
-/// **DEPRECATED**: Use `beardog_types::canonical::config::production::BackupConfig` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use beardog_types::canonical::config::production::operations::BackupConfig instead"
-)]
-pub type BackupConfig = beardog_types::canonical::config::production::operations::BackupConfig;
 
 /// Horizontal scaling configuration (Kubernetes HPA)
 ///

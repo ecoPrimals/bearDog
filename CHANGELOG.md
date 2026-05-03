@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 3, 2026 -- Wave 82: Deep Debt — Orphan Code Removal, Stale Lints & Workspace Hygiene
+
+- **716-line orphan file deleted** — `canonical/config/discovery.rs` was never included in any module tree (`mod.rs` had no `mod discovery` declaration). 716 lines of dead code containing deprecated `ConsolidatedDiscoveryConfig`, `LegacyDiscoveryProtocol`, `HealthCheckConfig`, `RetryConfig`, and `LoadBalancingConfig` structs that were never compiled.
+- **6 deprecated zero-caller type aliases removed** from `beardog-production/config_management` — `ConnectionPoolConfig`, `LoggingConfig`, `LogFormat`, `LoadBalancerConfig`, `MigrationConfig`, `BackupConfig`. All production code already uses the canonical paths directly. Stale `CanonicalMigrationConfig` import also cleaned.
+- **2 stale `#[expect(dead_code)]` removed** — `SIMDCapabilities` in `beardog-utils` (fields are alive, struct was never dead) and `MockCloudHsm::with_failures()` in `beardog-tunnel` (method now has callers). Replaced with `#[allow(dead_code, reason = "...")]` where field-level suppression is still needed.
+- **8 `#[allow]` attributes given `reason`** — `recovery_tests/types.rs` (4), `meta_tests.rs` (2), `coverage_gap_tests_5.rs` (1), `coverage_gap_tests_7.rs` (1). All `#[allow]` now carry `reason` per modern Rust style.
+- **`base64-url` centralized** to `[workspace.dependencies]` — was the last crate-local version pin outside the workspace table. `beardog-security/Cargo.toml` now uses `{ workspace = true }`.
+- **HSM management documentation clarified** — `hsm_management.rs` methods now document "software-only mode" behavior explicitly and carry `reason` on their `#[allow(dead_code)]` annotations.
+- **Session lifetime constant** `DEFAULT_EXTENDED_SESSION_LIFETIME_SECS` now has `reason` on its test-only `#[allow(dead_code)]`.
+- **Zero test failures** — 12,610 lib tests pass, 0 clippy warnings, 0 unfulfilled lint expectations.
+
 ### May 3, 2026 -- Wave 81: BTSP Phase 3 — Encrypted Frame I/O Transition (Interop Fix)
 
 - **Phase 3 interop gap fixed** — After `btsp.negotiate` returns `cipher: "chacha20-poly1305"` + `server_nonce`, the connection now transitions to encrypted frame I/O. Previously the connection stayed in plaintext NDJSON mode, causing the client (which had already transitioned to encrypted framing) to read `0x7B226A73` (`{"js`) as a 2 GB frame header.
