@@ -15,7 +15,7 @@ pub(crate) mod types;
 
 pub use framing::{read_frame, write_frame};
 pub use handshake::{continue_server_handshake_jsonline, perform_server_handshake};
-pub use session::{BtspCipher, BtspSession};
+pub use session::{BtspCipher, BtspSession, Phase3Session};
 pub use session_store::BtspSessionStore;
 pub use types::{ChallengeResponse, ClientHello, HandshakeComplete, HandshakeError, ServerHello};
 

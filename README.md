@@ -122,7 +122,7 @@ genetic.*      - Lineage keys, beacon, challenge-response
 secrets.*      - Store, retrieve, list, delete encrypted secrets
 relay.*        - Lineage-gated relay authorization (coordinated punch)
 beacon.*       - Dark Forest beacon generation, encryption, meeting exchange
-btsp.*         - Secure tunnel configuration (Phase 1–3: handshake, key exchange, encrypted framing)
+btsp.*         - Secure tunnel configuration (Phase 1–3: handshake, key exchange, encrypted framing with ChaCha20-Poly1305)
 quantum.*      - Post-quantum cryptographic operations
 ```
 

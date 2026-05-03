@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: May 2, 2026
+**Updated**: May 3, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -59,6 +59,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### BTSP Phase 3: Encrypted Frame I/O Transition — DONE (Wave 81)
+
+Phase 3 interop gap fixed. After `btsp.negotiate` selects a non-null cipher, BearDog now transitions the connection to encrypted frame I/O (`Phase3Session` with random 12-byte nonces, ChaCha20-Poly1305 AEAD). Both NDJSON loops (`handle_jsonrpc_universal`, `handle_jsonrpc_ndjson_loop`) detect the negotiate and upgrade. BearDog is the Tower reference — this fix pattern cascades to all other primals.
 
 ### Deep Debt: Dead Code Removal, Deprecated Symbols, Flaky Test Fix — DONE (Wave 80)
 

@@ -205,6 +205,94 @@ fn build_nonce(counter: u64) -> [u8; 12] {
     nonce
 }
 
+/// Per-connection Phase 3 encrypted channel session.
+///
+/// Uses **random 12-byte nonces** per frame (matching primalSpring wire format),
+/// unlike [`BtspSession`] which uses counter-based nonces from the Phase 2
+/// X25519 handshake.
+///
+/// Wire format (per frame, inside the length-prefix envelope):
+/// `[12 B random nonce][ciphertext || 16 B Poly1305 tag]`
+pub struct Phase3Session {
+    encrypt_key: [u8; 32],
+    decrypt_key: [u8; 32],
+}
+
+impl Phase3Session {
+    /// Create from Phase 3 derived keys (server perspective).
+    ///
+    /// `encrypt_key` = server→client, `decrypt_key` = client→server.
+    #[must_use]
+    pub fn new(keys: super::crypto::Phase3SessionKeys) -> Self {
+        Self {
+            encrypt_key: keys.encrypt_key,
+            decrypt_key: keys.decrypt_key,
+        }
+    }
+
+    /// Encrypt a plaintext frame for the client.
+    ///
+    /// Returns `nonce(12) || ciphertext || tag(16)` with a fresh random nonce.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if AEAD encryption fails.
+    pub fn encrypt_frame(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        use chacha20poly1305::KeyInit;
+
+        let cipher = ChaCha20Poly1305::new_from_slice(&self.encrypt_key)
+            .map_err(|e| BearDogError::system(format!("Phase 3 cipher init: {e}")))?;
+
+        let mut nonce_bytes = [0u8; 12];
+        rand::RngCore::fill_bytes(&mut rand::rng(), &mut nonce_bytes);
+        let nonce = Nonce::from_slice(&nonce_bytes);
+
+        let ciphertext = cipher
+            .encrypt(nonce, plaintext)
+            .map_err(|e| BearDogError::system(format!("Phase 3 encrypt: {e}")))?;
+
+        let mut frame = Vec::with_capacity(12 + ciphertext.len());
+        frame.extend_from_slice(&nonce_bytes);
+        frame.extend_from_slice(&ciphertext);
+        Ok(frame)
+    }
+
+    /// Decrypt a frame received from the client.
+    ///
+    /// Expects `nonce(12) || ciphertext || tag(16)`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if decryption or authentication fails.
+    pub fn decrypt_frame(&self, frame: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        use chacha20poly1305::KeyInit;
+
+        if frame.len() < 12 + 16 {
+            return Err(BearDogError::system(
+                "Phase 3 encrypted frame too short (need nonce + tag)".to_string(),
+            ));
+        }
+
+        let nonce_bytes = &frame[..12];
+        let ciphertext = &frame[12..];
+
+        let cipher = ChaCha20Poly1305::new_from_slice(&self.decrypt_key)
+            .map_err(|e| BearDogError::system(format!("Phase 3 cipher init: {e}")))?;
+        let nonce = Nonce::from_slice(nonce_bytes);
+
+        cipher
+            .decrypt(nonce, ciphertext)
+            .map_err(|e| BearDogError::system(format!("Phase 3 decrypt: {e}")))
+    }
+}
+
+impl Drop for Phase3Session {
+    fn drop(&mut self) {
+        self.encrypt_key.zeroize();
+        self.decrypt_key.zeroize();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -314,5 +402,78 @@ mod tests {
         let mut server =
             BtspSession::new_server("sid".into(), BtspCipher::HmacPlain, key_s2c, key_c2s);
         assert!(server.decrypt_frame(&[1, 2, 3]).is_err());
+    }
+
+    fn test_phase3_pair() -> (Phase3Session, Phase3Session) {
+        let keys_server = super::super::crypto::Phase3SessionKeys {
+            encrypt_key: [0x11; 32],
+            decrypt_key: [0x22; 32],
+        };
+        let keys_client = super::super::crypto::Phase3SessionKeys {
+            encrypt_key: [0x22; 32],
+            decrypt_key: [0x11; 32],
+        };
+        (
+            Phase3Session::new(keys_server),
+            Phase3Session::new(keys_client),
+        )
+    }
+
+    #[test]
+    fn phase3_roundtrip() {
+        let (server, client) = test_phase3_pair();
+        let msg = b"hello phase 3 encrypted world";
+
+        let encrypted = server.encrypt_frame(msg).expect("encrypt");
+        assert!(encrypted.len() >= 12 + 16);
+        assert_ne!(&encrypted[12..encrypted.len() - 16], msg);
+
+        let decrypted = client.decrypt_frame(&encrypted).expect("decrypt");
+        assert_eq!(decrypted, msg);
+    }
+
+    #[test]
+    fn phase3_random_nonces_differ() {
+        let (server, _client) = test_phase3_pair();
+        let e1 = server.encrypt_frame(b"msg1").expect("e1");
+        let e2 = server.encrypt_frame(b"msg2").expect("e2");
+        assert_ne!(e1[..12], e2[..12], "random nonces must differ");
+    }
+
+    #[test]
+    fn phase3_rejects_tampered_frame() {
+        let (server, client) = test_phase3_pair();
+        let mut frame = server.encrypt_frame(b"secret data").expect("encrypt");
+        frame[15] ^= 0xFF;
+        assert!(client.decrypt_frame(&frame).is_err());
+    }
+
+    #[test]
+    fn phase3_rejects_short_frame() {
+        let (_server, client) = test_phase3_pair();
+        assert!(client.decrypt_frame(&[0u8; 8]).is_err());
+    }
+
+    #[test]
+    fn phase3_multiple_roundtrips() {
+        let (server, client) = test_phase3_pair();
+        for i in 0..10 {
+            let msg = format!("message {i}");
+            let encrypted = server.encrypt_frame(msg.as_bytes()).expect("encrypt");
+            let decrypted = client.decrypt_frame(&encrypted).expect("decrypt");
+            assert_eq!(decrypted, msg.as_bytes());
+        }
+    }
+
+    #[test]
+    fn phase3_wrong_key_rejects() {
+        let (server, _) = test_phase3_pair();
+        let wrong_keys = super::super::crypto::Phase3SessionKeys {
+            encrypt_key: [0x33; 32],
+            decrypt_key: [0x44; 32],
+        };
+        let wrong_client = Phase3Session::new(wrong_keys);
+        let encrypted = server.encrypt_frame(b"secret").expect("encrypt");
+        assert!(wrong_client.decrypt_frame(&encrypted).is_err());
     }
 }

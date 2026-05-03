@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 3, 2026 -- Wave 81: BTSP Phase 3 — Encrypted Frame I/O Transition (Interop Fix)
+
+- **Phase 3 interop gap fixed** — After `btsp.negotiate` returns `cipher: "chacha20-poly1305"` + `server_nonce`, the connection now transitions to encrypted frame I/O. Previously the connection stayed in plaintext NDJSON mode, causing the client (which had already transitioned to encrypted framing) to read `0x7B226A73` (`{"js`) as a 2 GB frame header.
+- **New `Phase3Session` struct** in `btsp_handshake/session.rs` — handles ChaCha20-Poly1305 AEAD with **random 12-byte nonces** per frame (matching primalSpring wire format). Unlike `BtspSession` (Phase 2, counter-based nonces), Phase 3 uses CSPRNG nonces and no counter validation on decrypt.
+- **New `handle_jsonrpc_phase3` connection handler** — encrypted frame loop using Phase 3 session keys. Wire format: `[4B len BE u32][12B random nonce][ciphertext + Poly1305 tag]`.
+- **`try_phase3_upgrade` detection** — after writing any JSON-RPC response, the NDJSON loops (`handle_jsonrpc_universal` and `handle_jsonrpc_ndjson_loop`) check if the request was `btsp.negotiate` and the response selected a non-null cipher. On match, derives Phase 3 session keys and transitions to `handle_jsonrpc_phase3`.
+- **Key re-derivation** — `try_phase3_upgrade` parses `client_nonce` from the request and `server_nonce` from the response, loads `FAMILY_SEED`, and re-derives keys via the same `HKDF-SHA256` path as the handler. Deterministic derivation ensures both sides hold identical keys.
+- **6 new Phase3Session tests**: roundtrip encrypt/decrypt, random nonce uniqueness, tamper rejection, short frame rejection, multi-message roundtrip, wrong-key rejection.
+- **Zero test failures** — 2,133 beardog-tunnel lib tests pass, 12,610+ workspace lib tests pass.
+
 ### May 2, 2026 -- Wave 80: Deep Debt — Dead Code Removal, Deprecated Symbol Cleanup & Flaky Test Fix
 
 - **6 dead production code items removed**: orphaned `HsmSource` enum (duplicate of orchestrator's own), unused `DeployConfig` placeholder struct, unused `probe_service_endpoint` method, 3 unused `SovereigntyManager` fields (`genetics`, `crypto_config`, `hierarchy_manager`) that were constructed but never read.
