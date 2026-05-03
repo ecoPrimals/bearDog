@@ -41,10 +41,9 @@ println!("Found crypto at: {}", crypto_service.endpoint);
 let response = client.call(&crypto_service.endpoint, "crypto.sign", params).await?;
 ```
 
-## Features
+## Transport
 
-- `tarpc` - Type-safe RPC via tarpc (recommended)
-- `json-rpc` - JSON-RPC 2.0 (always enabled)
+- JSON-RPC 2.0 over NDJSON (newline-delimited JSON) via Unix sockets
 
 ## Standards Compliance
 

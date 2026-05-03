@@ -60,6 +60,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
+### Deep Debt: Orphan Code Removal, Stale Lints, Workspace Hygiene — DONE (Wave 82)
+
+716-line orphan `discovery.rs` deleted (never in module tree). 6 deprecated zero-caller type aliases removed. 2 stale `#[expect(dead_code)]` fixed. 8 `#[allow]` given `reason`. `base64-url` centralized. HSM docs clarified. Net -783 LOC.
+
 ### BTSP Phase 3: Encrypted Frame I/O Transition — DONE (Wave 81)
 
 Phase 3 interop gap fixed. After `btsp.negotiate` selects a non-null cipher, BearDog now transitions the connection to encrypted frame I/O (`Phase3Session` with random 12-byte nonces, ChaCha20-Poly1305 AEAD). Both NDJSON loops (`handle_jsonrpc_universal`, `handle_jsonrpc_ndjson_loop`) detect the negotiate and upgrade. BearDog is the Tower reference — this fix pattern cascades to all other primals.
@@ -234,7 +238,7 @@ Fully generic methods: `crypto.encrypt` + `{"algorithm": "aes-256-gcm"}` instead
 
 ### CI & Docker Scaffold Cleanup — DONE (Wave 20)
 
-Dead CI workflows (7 files), `docker-compose.yml`, stale profiling scripts, and deployment scripts removed. Moved to `ecoPrimals/infra/wateringHole/fossilRecord/beardog/`. Retained and fixed: `beardog-ci.yml` (pinned 1.93.0, correct workspace commands) and `Dockerfile` (correct binary name, no phantom features).
+Dead CI workflows (7 files), `docker-compose.yml`, stale profiling scripts, and deployment scripts removed. Moved to `ecoPrimals/infra/wateringHole/fossilRecord/beardog/`. Retained and fixed: `ci.yml` (pinned 1.93.0, correct workspace commands) and `Dockerfile` (correct binary name, no phantom features).
 
 ---
 
@@ -251,4 +255,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: May 2, 2026
+**Last Updated**: May 3, 2026

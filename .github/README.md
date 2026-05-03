@@ -4,7 +4,8 @@ This directory contains GitHub-specific configuration files.
 
 ## Workflows
 
-- **`workflows/beardog-ci.yml`** — Quality (fmt, clippy, doc, LOC), test (workspace + doc), security (cargo-deny, cargo-audit)
+- **`workflows/ci.yml`** — Quality gates: fmt check, clippy (`-D warnings`), `cargo test --workspace --lib`
+- **`workflows/notify-plasmidbin.yml`** — Dispatch to plasmidBin for binary harvesting on push to main
 
 ## Note
 

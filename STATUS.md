@@ -90,6 +90,14 @@
 
 ## Recent Improvements
 
+### Wave 82 — Deep Debt: Orphan Code Removal, Stale Lints, Workspace Hygiene (May 3, 2026)
+
+- **716-line orphan `discovery.rs` deleted** — never included in any module tree. 6 deprecated zero-caller type aliases removed from `config_management`. 2 stale `#[expect(dead_code)]` fixed. 8 `#[allow]` given `reason`. `base64-url` centralized to workspace deps.
+
+### Wave 81 — BTSP Phase 3: Encrypted Frame I/O Transition (May 3, 2026)
+
+- **Phase 3 interop gap fixed** — after `btsp.negotiate` selects a non-null cipher, the connection transitions to encrypted frame I/O (`Phase3Session`, random 12-byte nonces, ChaCha20-Poly1305). New `handle_jsonrpc_phase3` handler and `try_phase3_upgrade` detection in both NDJSON loops.
+
 ### Wave 80 — Deep Debt: Dead Code Removal, Deprecated Symbols, Flaky Test Fix (May 2, 2026)
 
 - **6 dead production code items removed** (orphaned `HsmSource`, `DeployConfig`, `probe_service_endpoint`, 3 `SovereigntyManager` fields).

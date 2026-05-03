@@ -1,7 +1,7 @@
 # 🔌 BearDog Primal Contracts - JSON-RPC API Specification
 
 **Version**: 1.0.0  
-**Date**: February 2, 2026  
+**Date**: May 3, 2026  
 **Status**: Production Stable  
 **Protocol**: JSON-RPC 2.0 over Unix Domain Sockets
 
@@ -34,7 +34,7 @@ BearDog exposes its cryptographic and genetic capabilities through a JSON-RPC 2.
 
 ## 📚 **API CATEGORIES**
 
-BearDog provides **100 JSON-RPC methods** across 11 categories:
+BearDog provides **100+ JSON-RPC methods** across 11+ categories:
 
 ### **1. Core Cryptography** (20 methods)
 - Signatures: Ed25519, ECDSA (P-256, P-384), RSA
