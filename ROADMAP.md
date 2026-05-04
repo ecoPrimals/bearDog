@@ -60,6 +60,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
+### Bond Persistence Default Upgraded to Capability Discovery — DONE (Wave 83)
+
+`HandlerRegistry::new()` now creates `CapabilityDiscoveryBondPersistence` instead of `InMemoryBondPersistence`. Sealed bonds auto-persist to NestGate/loamSpine `bonding.ledger` RPCs when available, in-memory fallback otherwise. Phase 58 primalSpring audit: 4/4 gaps resolved.
+
 ### Deep Debt: Orphan Code Removal, Stale Lints, Workspace Hygiene — DONE (Wave 82)
 
 716-line orphan `discovery.rs` deleted (never in module tree). 6 deprecated zero-caller type aliases removed. 2 stale `#[expect(dead_code)]` fixed. 8 `#[allow]` given `reason`. `base64-url` centralized. HSM docs clarified. Net -783 LOC.

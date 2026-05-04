@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 3, 2026
+**Last Updated**: May 4, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -89,6 +89,10 @@
 ---
 
 ## Recent Improvements
+
+### Wave 83 — Bond Persistence Default Upgraded to Capability Discovery (May 4, 2026)
+
+- **`HandlerRegistry::new()` now defaults to `CapabilityDiscoveryBondPersistence`** — discovers `bonding.ledger` providers at runtime, falls back to in-memory. Phase 58 primalSpring audit: all 4 gaps resolved or pre-existing.
 
 ### Wave 82 — Deep Debt: Orphan Code Removal, Stale Lints, Workspace Hygiene (May 3, 2026)
 

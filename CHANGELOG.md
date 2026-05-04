@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 4, 2026 -- Wave 83: Bond Persistence Default Upgraded to Capability Discovery
+
+- **Bond persistence default changed** — `HandlerRegistry::new()` now creates a `CapabilityDiscoveryBondPersistence` backend instead of `InMemoryBondPersistence`. When a `bonding.ledger` provider (NestGate/loamSpine) is discovered at runtime via Songbird, sealed bonds are persisted via JSON-RPC to that provider's socket. When no provider is available, falls back to in-memory (identical prior behavior). Zero breakage for standalone or composition deployments.
+- **Phase 58 primalSpring audit** — 4 gaps reviewed: (1) Phase 3 transport encryption RESOLVED (Wave 81), (2) `crypto.sign_contract` RESOLVED (already implemented in `IonicBondHandler`), (3) `btsp.negotiate` vs `btsp.session.negotiate` naming INTENTIONAL (different methods), (4) bond persistence default now upgraded.
+- **Zero test failures** — 12,610 lib tests pass.
+
 ### May 3, 2026 -- Wave 82: Deep Debt — Orphan Code Removal, Stale Lints & Workspace Hygiene
 
 - **716-line orphan file deleted** — `canonical/config/discovery.rs` was never included in any module tree (`mod.rs` had no `mod discovery` declaration). 716 lines of dead code containing deprecated `ConsolidatedDiscoveryConfig`, `LegacyDiscoveryProtocol`, `HealthCheckConfig`, `RetryConfig`, and `LoadBalancingConfig` structs that were never compiled.

@@ -34,7 +34,7 @@
 //! ```
 
 use crate::btsp_provider::BeardogBtspProvider;
-use beardog_ipc::{DispatchOutcome, IpcErrorPhase};
+use beardog_ipc::{DispatchOutcome, IpcErrorPhase, OrchestratorRegistryClient};
 use std::sync::Arc;
 
 // Dark Forest Beacon Genetics (Phase 1 - Feb 2026)
@@ -217,10 +217,12 @@ impl HandlerRegistry {
     /// would be if lock acquisition fails during construction, which should never
     /// happen since we hold the only reference at that point.
     pub fn new(identity: Arc<beardog_types::primal_identity::PrimalIdentity>) -> Arc<Self> {
+        let client = OrchestratorRegistryClient::new();
+        let persistence = ionic_bond::CapabilityDiscoveryBondPersistence::new(client);
         Self::with_bond_persistence(
             identity,
-            Arc::new(ionic_bond::BondPersistenceBackend::InMemory(
-                ionic_bond::InMemoryBondPersistence::default(),
+            Arc::new(ionic_bond::BondPersistenceBackend::CapabilityDiscovery(
+                persistence,
             )),
         )
     }
