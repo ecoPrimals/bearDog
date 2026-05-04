@@ -9,7 +9,7 @@
 #![allow(clippy::unnecessary_lazy_evaluations)] // Testing error recovery patterns
 
 use beardog_errors::BearDogError;
-use beardog_types::canonical::config::WorkingUnifiedConfig;
+use beardog_types::canonical::config::SimplifiedBearDogConfig;
 use beardog_types::canonical::crypto::EncryptionConfig;
 
 #[test]
@@ -44,7 +44,7 @@ fn test_capability_types() {
 
 #[test]
 fn test_unified_config_defaults() {
-    let config = WorkingUnifiedConfig::default();
+    let config = SimplifiedBearDogConfig::default();
 
     // Verify basic config fields exist
     assert!(!config.version.is_empty() || config.version.is_empty()); // Basic existence check
@@ -262,7 +262,7 @@ async fn test_parallel_operations() -> Result<(), BearDogError> {
             // TEST_DOMAIN: core
             // TEST_PRIORITY: normal
             task::spawn(async move {
-                let config = WorkingUnifiedConfig::default();
+                let config = SimplifiedBearDogConfig::default();
                 // No sleep needed - testing concurrent access, not simulating work
                 tokio::task::yield_now().await; // Allow interleaving
                 (i, config.version.clone())

@@ -222,7 +222,7 @@ mod lib_main_tests {
 
     #[test]
     fn test_unified_config_creation() {
-        let config = UnifiedBearDogConfig::default();
+        let config = SimplifiedBearDogConfig::default();
         assert!(!format!("{config:?}").is_empty());
     }
 
@@ -323,8 +323,7 @@ pub mod workflow;
 pub mod crypto_service;
 
 // **MODERNIZED CONFIGURATION EXPORTS** - Canonical unified configuration system
-// NEW: Use unified configuration exports (from unified.rs)
-pub use canonical::config::SimplifiedBearDogConfig as UnifiedBearDogConfig;
+pub use canonical::config::SimplifiedBearDogConfig;
 pub use canonical::config::{
     DatabaseSettings, MonitoringSettings, NetworkSettings, PerformanceSettings, SecuritySettings,
 };

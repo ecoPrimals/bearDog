@@ -39,8 +39,7 @@ pub mod biome;
 pub mod capabilities;
 /// Config module
 /// Configuration management
-pub mod config; // ✅ NEW: Unified canonical configuration system
-// Use config::unified_simple::WorkingUnifiedConfig
+pub mod config;
 /// Constants module
 pub mod constants;
 /// Cryptographic types and operations
@@ -167,10 +166,6 @@ pub use capabilities::{
     since = "3.1.0",
     note = "Use canonical::config::app::UnifiedAppConfig instead"
 )]
-// Legacy imports available through canonical paths:
-// - AppConfig: use beardog_types::canonical::config::AppConfig
-// - BearDogConfig: use beardog_types::canonical::config::unified::BearDogConfig
-// Use config::unified_simple::WorkingUnifiedConfig for configuration
 // Constants
 pub use constants::genetics;
 

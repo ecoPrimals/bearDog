@@ -60,6 +60,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
+### Stale Alias Cleanup, Dep Pruning & Feature Gating — DONE (Wave 85)
+
+4 confusing/dead re-export aliases removed (`UnifiedBearDogConfig` root alias, `PrimaryUnifiedBearDogConfig`, `WorkingUnifiedConfig`, `capability_router`). Unused `rsa` dep removed from `beardog-security`. `x509-parser` feature-gated behind `tls-x509` (default-on) in `beardog-tunnel`.
+
 ### O(1) Handler Dispatch, getrandom Alignment & Workspace Hygiene — DONE (Wave 84)
 
 `HandlerRegistry` builds a `HashMap<&str, usize>` at init for O(1) method→handler dispatch (was O(n)). `getrandom` 0.2→0.3 aligned with `rand 0.9`/`rand_core 0.9`. 5 internal crates migrated to `{ workspace = true }`, 3 zero-consumer workspace dep entries removed.

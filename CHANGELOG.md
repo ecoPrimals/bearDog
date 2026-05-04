@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 4, 2026 -- Wave 85: Deep Debt — Stale Alias Cleanup, Dep Pruning & Feature Gating
+
+- **Stale re-export aliases removed** — `SimplifiedBearDogConfig as UnifiedBearDogConfig` at `beardog_types` crate root (actively confusing since the name collided with the real `UnifiedBearDogConfig` struct in `canonical::config::unified`), `PrimaryUnifiedBearDogConfig` (zero callers), `WorkingUnifiedConfig` (3 test callers migrated to `SimplifiedBearDogConfig`), and `capability_routing as capability_router` (2 import sites migrated). Stale comments referencing removed aliases cleaned from `canonical/mod.rs`.
+- **Unused `rsa` dep removed from `beardog-security`** — zero `rsa::` usage in the crate; `rsa` is only actively used by `beardog-core` and `beardog-tunnel`.
+- **`x509-parser` feature-gated** in `beardog-tunnel` — new `tls-x509` feature (default-on) gates `x509-parser` and the `tls.verify_certificate` handler. Slim builds can disable it to shed the `nom`/`asn1-rs`/`der-parser`/`oid-registry` transitive dep tree. Both default and no-default builds compile cleanly.
+- **Zero test failures** — 12,610 lib tests pass, 0 clippy warnings.
+
 ### May 4, 2026 -- Wave 84: Deep Debt — O(1) Handler Dispatch, getrandom Alignment & Workspace Hygiene
 
 - **O(1) JSON-RPC method dispatch** — `HandlerRegistry` now builds a `HashMap<&'static str, usize>` at init (Phase 3 of construction) that maps every registered method name to its handler index. `route()` performs O(1) lookup instead of scanning all handlers and calling `.methods().contains()` per handler. Falls back to linear scan only if the map was never built (should not happen in normal operation).

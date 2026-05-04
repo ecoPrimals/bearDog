@@ -4,7 +4,11 @@
 
 /// All crypto RPC method names (must stay in sync with routing).
 pub fn crypto_method_names() -> Vec<&'static str> {
-    vec![
+    #[allow(
+        unused_mut,
+        reason = "mut needed when tls-x509 feature pushes an entry"
+    )]
+    let mut names = vec![
         // Core crypto operations (EdDSA)
         "crypto.ed25519_generate_keypair",
         "crypto.sign_ed25519",
@@ -59,7 +63,6 @@ pub fn crypto_method_names() -> Vec<&'static str> {
         "tls.derive_application_secrets",
         "tls.compute_finished_verify_data",
         "tls.sign_handshake",
-        "tls.verify_certificate",
         // TLS 1.2 crypto operations
         "crypto.ecdhe.p256.generate",
         "crypto.ecdhe.p256.compute_shared",
@@ -123,7 +126,10 @@ pub fn crypto_method_names() -> Vec<&'static str> {
         "beardog.crypto.tor_cell_encrypt",
         "beardog.crypto.tor_cell_decrypt",
         "beardog.crypto.tor_kdf",
-    ]
+    ];
+    #[cfg(feature = "tls-x509")]
+    names.push("tls.verify_certificate");
+    names
 }
 
 #[cfg(test)]

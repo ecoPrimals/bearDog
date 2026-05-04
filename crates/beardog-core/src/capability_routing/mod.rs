@@ -27,7 +27,7 @@
 //! # Usage Example
 //!
 //! ```rust,no_run
-//! use beardog_core::capability_router::{CapabilityRouter, RequestContext};
+//! use beardog_core::capability_routing::{CapabilityRouter, RequestContext};
 //! use beardog_core::self_knowledge::SimpleCapability;
 //!
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {

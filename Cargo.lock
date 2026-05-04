@@ -808,7 +808,6 @@ dependencies = [
  "proptest",
  "rand 0.9.4",
  "rand_core 0.9.5",
- "rsa",
  "serde",
  "serde_json",
  "sha2",

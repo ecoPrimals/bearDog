@@ -26,8 +26,8 @@ async fn test_observability_config_defaults() -> Result<(), BearDogError> {
     // This validates the configuration structure exists and has sensible defaults
 
     // For now, test basic functionality that exists
-    use beardog_types::canonical::config::WorkingUnifiedConfig;
-    let config = WorkingUnifiedConfig::default();
+    use beardog_types::canonical::config::SimplifiedBearDogConfig;
+    let config = SimplifiedBearDogConfig::default();
 
     // Verify config can be created
     assert!(config.version.is_empty() || !config.version.is_empty());

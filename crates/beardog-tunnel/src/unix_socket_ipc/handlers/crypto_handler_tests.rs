@@ -59,6 +59,7 @@ fn test_crypto_handler_methods() {
     assert!(methods.contains(&"tls.derive_handshake_secrets"));
     assert!(methods.contains(&"tls.derive_application_secrets"));
     assert!(methods.contains(&"tls.sign_handshake"));
+    #[cfg(feature = "tls-x509")]
     assert!(methods.contains(&"tls.verify_certificate"));
 
     // Verify genetic methods (Phase 5 + Dark Forest)

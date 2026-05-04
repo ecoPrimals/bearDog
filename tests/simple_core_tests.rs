@@ -6,7 +6,7 @@
 
 use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::ServiceCapabilityType;
-use beardog_types::canonical::config::WorkingUnifiedConfig;
+use beardog_types::canonical::config::SimplifiedBearDogConfig;
 
 /// Tests that `BearDogError::configuration` creates errors with correct messages
 ///
@@ -36,7 +36,7 @@ fn test_trust_levels() {
     assert!(matches!(capability, ServiceCapabilityType::Compute));
 }
 
-/// Tests that `WorkingUnifiedConfig` can be created with defaults
+/// Tests that `SimplifiedBearDogConfig` can be created with defaults
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -44,7 +44,7 @@ fn test_trust_levels() {
 #[test]
 fn test_configuration_defaults() {
     // When: creating a default configuration
-    let config = WorkingUnifiedConfig::default();
+    let config = SimplifiedBearDogConfig::default();
 
     // Then: the config is valid (has a version field)
     // Note: We check for either empty or non-empty to ensure field exists

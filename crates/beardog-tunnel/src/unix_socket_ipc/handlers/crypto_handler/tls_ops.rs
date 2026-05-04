@@ -2,10 +2,11 @@
 
 //! TLS 1.3-style handshake and certificate operations.
 
+#[cfg(feature = "tls-x509")]
+use crate::unix_socket_ipc::handlers::crypto::handle_tls_verify_certificate;
 use crate::unix_socket_ipc::handlers::crypto::{
     handle_tls_compute_finished_verify_data, handle_tls_derive_application_secrets,
     handle_tls_derive_handshake_secrets, handle_tls_derive_secrets, handle_tls_sign_handshake,
-    handle_tls_verify_certificate,
 };
 use tracing::info;
 
@@ -46,6 +47,7 @@ pub async fn route(
             Ok(Some(handle_tls_sign_handshake(params).await?))
         }
 
+        #[cfg(feature = "tls-x509")]
         "tls.verify_certificate" => {
             info!("🔍 TLS: verify_certificate (X.509 chain verification)");
             Ok(Some(handle_tls_verify_certificate(params).await?))
@@ -142,6 +144,7 @@ mod tests {
         assert_eq!(v.get("algorithm").and_then(|x| x.as_str()), Some("Ed25519"));
     }
 
+    #[cfg(feature = "tls-x509")]
     #[tokio::test]
     async fn route_tls_verify_certificate_empty_chain_errors() {
         let params = json!({

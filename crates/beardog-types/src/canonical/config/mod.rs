@@ -236,10 +236,6 @@ pub use unified::{
     UnifiedVersionInfo,
 };
 
-// Backward compatibility aliases
-pub use UnifiedBearDogConfig as PrimaryUnifiedBearDogConfig;
-pub use unified::SimplifiedBearDogConfig as WorkingUnifiedConfig;
-
 // NOTE: unified_simple module removed in Phase 2 cleanup (October 2025)
 // All functionality migrated to unified.rs
 

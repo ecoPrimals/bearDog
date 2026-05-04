@@ -103,7 +103,7 @@ for primal in crypto_providers {
 
 ### Example 3: Capability-Based Routing
 ```rust
-use beardog_core::capability_router::{CapabilityRouter, RequestContext, SelectionStrategy};
+use beardog_core::capability_routing::{CapabilityRouter, RequestContext, SelectionStrategy};
 
 let mut router = CapabilityRouter::new().await?;
 
@@ -299,7 +299,7 @@ export PRIMAL_DISCOVERY_METHOD=env
 # 2. Run tests
 cargo test -p beardog-core self_knowledge
 cargo test -p beardog-core primal_discovery
-cargo test -p beardog-core capability_router
+cargo test -p beardog-core capability_routing
 
 # 3. Run server
 cargo run --bin beardog -- server

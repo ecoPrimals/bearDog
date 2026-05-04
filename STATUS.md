@@ -90,6 +90,10 @@
 
 ## Recent Improvements
 
+### Wave 85 — Stale Alias Cleanup, Dep Pruning & Feature Gating (May 4, 2026)
+
+- **4 stale re-export aliases removed** — confusing `SimplifiedBearDogConfig as UnifiedBearDogConfig`, dead `PrimaryUnifiedBearDogConfig`, `WorkingUnifiedConfig`, `capability_router`. Unused `rsa` removed from `beardog-security`. `x509-parser` feature-gated behind `tls-x509` (default-on).
+
 ### Wave 84 — O(1) Handler Dispatch, getrandom Alignment & Workspace Hygiene (May 4, 2026)
 
 - **O(1) JSON-RPC dispatch** — `HandlerRegistry` builds a `HashMap<&str, usize>` at init for method→handler lookup (was O(n) linear scan). `getrandom` 0.2→0.3 aligned with `rand 0.9`. 5 internal crates migrated to `workspace = true`; 3 zero-consumer entries removed.

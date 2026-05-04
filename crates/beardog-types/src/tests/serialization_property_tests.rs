@@ -6,7 +6,7 @@
 
 use crate::BearDogError;
 use crate::SecuritySettings;
-use crate::UnifiedBearDogConfig;
+use crate::SimplifiedBearDogConfig;
 use crate::{KeyId, RegistrationId, ServiceInstanceId};
 use proptest::prelude::*;
 use serde_json::Value;
@@ -53,9 +53,9 @@ proptest! {
     /// raw JSON key order may differ between serializations).
     #[test]
     fn unified_bear_dog_config_default_roundtrip(_ in prop::num::u8::ANY) {
-        let config = UnifiedBearDogConfig::default();
+        let config = SimplifiedBearDogConfig::default();
         let json = serde_json::to_string(&config).expect("to_string");
-        let back: UnifiedBearDogConfig = serde_json::from_str(&json).expect("from_str");
+        let back: SimplifiedBearDogConfig = serde_json::from_str(&json).expect("from_str");
         let json2 = serde_json::to_string(&back).expect("to_string 2");
         let v1: Value = serde_json::from_str(&json).expect("value 1");
         let v2: Value = serde_json::from_str(&json2).expect("value 2");

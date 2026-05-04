@@ -111,11 +111,13 @@
 //! - RFC 6125 (Identity): <https://www.rfc-editor.org/rfc/rfc6125.html>
 
 // Sub-modules
+#[cfg(feature = "tls-x509")]
 pub mod certificates;
 pub mod key_derivation;
 pub mod signatures;
 
 // Re-export all public handlers for backward compatibility
+#[cfg(feature = "tls-x509")]
 pub use certificates::handle_tls_verify_certificate;
 pub use key_derivation::{
     handle_tls_derive_application_secrets, handle_tls_derive_handshake_secrets,

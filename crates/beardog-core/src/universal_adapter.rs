@@ -55,7 +55,7 @@
 //! # }
 //! ```
 
-use crate::capability_router::{CapabilityRouter, RequestContext, SelectionStrategy};
+use crate::capability_routing::{CapabilityRouter, RequestContext, SelectionStrategy};
 use crate::primal_discovery::{DiscoveredPrimal, DiscoveryQuery, PrimalDiscovery};
 use crate::self_knowledge::{PrimalSelfKnowledge, SimpleCapability};
 use beardog_errors::BearDogError;

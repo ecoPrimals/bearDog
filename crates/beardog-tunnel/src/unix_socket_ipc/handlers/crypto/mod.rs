@@ -62,10 +62,11 @@ pub mod utils; // ✅ Step 7 - Shared utility functions (derive_key_from_id)
 pub use sslkeylog::export_to_sslkeylogfile;
 
 // Re-export TLS handlers for backward compatibility
+#[cfg(feature = "tls-x509")]
+pub use tls::handle_tls_verify_certificate;
 pub use tls::{
     handle_tls_compute_finished_verify_data, handle_tls_derive_application_secrets,
     handle_tls_derive_handshake_secrets, handle_tls_derive_secrets, handle_tls_sign_handshake,
-    handle_tls_verify_certificate,
 };
 
 // Re-export asymmetric crypto handlers for backward compatibility
