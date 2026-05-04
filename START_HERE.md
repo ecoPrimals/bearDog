@@ -149,7 +149,7 @@ cargo build --release                # Build
 | Missing Docs | 0 |
 | Unsafe | `forbid(unsafe_code)` workspace-wide |
 | Pure Rust | 100% |
-| Tests | 14,800+ (concurrent; 35 `#[serial]` in `beardog-production`) |
+| Tests | 12,610 (concurrent; 35 `#[serial]` in `beardog-production`) |
 | Coverage | 90.51% line (llvm-cov) |
 | `#[serial]` | 35 (`beardog-production` shared `AtomicBool`) |
 | Files > 800 LOC | 0 (production) |
@@ -168,4 +168,4 @@ cargo build --release                # Build
 
 ---
 
-**Last Updated**: May 3, 2026
+**Last Updated**: May 4, 2026

@@ -11,7 +11,7 @@ Unified trait system for the `BearDog` distributed security ecosystem.
 2. **`unified/`** - 🟢 **CURRENT** (Active use, recommended for now)
 3. **`beardog-types::canonical::providers_unified/`** - 🔵 **TARGET** (Final location)
 
-**Recommendation**: Use `unified::*` traits for new code. Migration to final location in `beardog-types` planned for Week 3-4.
+**Recommendation**: Use `unified::*` traits for new code. Migration to `beardog-types::canonical::providers_unified` is the canonical path.
 
 ## Overview
 
@@ -62,9 +62,8 @@ use beardog_traits::unified::{BearDogProvider, SecurityProvider};
 
 ### Migration Timeline
 
-- **Now**: Use `unified::*` traits
-- **Week 3-4**: Migrate to `beardog-types::canonical::providers_unified::*`
-- **Future**: Remove `canonical/` (legacy) entirely
+- **Current**: Use `unified::*` traits
+- **Target**: `beardog-types::canonical::providers_unified::*` is the canonical path
 
 ## License
 

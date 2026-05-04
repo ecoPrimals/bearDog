@@ -113,10 +113,10 @@ config.validate()?;
 
 **NEW**:
 ```rust
-use beardog_types::canonical::config::unified_simple::WorkingUnifiedConfig;
+use beardog_types::canonical::config::SimplifiedBearDogConfig;
 
 // Use the working implementation for immediate deployment
-let config = WorkingUnifiedConfig::from_environment()?;
+let config = SimplifiedBearDogConfig::default();
 // Validation is built-in and automatic
 ```
 

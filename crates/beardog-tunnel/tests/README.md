@@ -231,9 +231,8 @@ BEARDOG_HARDWARE_TESTS=1 cargo bench --bench pkcs11_performance
 
 ## Documentation
 
-- **Hardware Setup:** `../../HARDWARE_SETUP.md`
-- **CLI Usage:** `../../START_HERE_NOW.md`
-- **Phase 1 Status:** `../../PHASE1_COMPLETE_SUCCESS.md`
+- **Project Overview:** `../../START_HERE.md`
+- **Architecture:** `../../ARCHITECTURE.md`
 
 ## Contributing
 
@@ -246,6 +245,6 @@ When adding new hardware tests:
 
 ---
 
-**Last Updated:** October 29, 2025  
-**Status:** Hardware tests ready for Phase 1 validation
+**Last Updated:** May 4, 2026  
+**Status:** Hardware test infrastructure in place
 

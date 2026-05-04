@@ -1,7 +1,7 @@
 # 🚀 Quick Start: Zero-Hardcoding BearDog
 
 **Status**: Production-Ready  
-**Date**: January 13, 2026  
+**Date**: May 4, 2026  
 **Achievement**: 100% Zero-Hardcoding Architecture
 
 ---
@@ -149,7 +149,6 @@ let client = connect_to_primal(endpoint).await?;
 - `env` - Environment variables only (simple, dev-friendly)
 - `upa` - Universal Primal Authority registry
 - `mdns` - Multicast DNS (local network)
-- `dns-sd` - DNS Service Discovery
 - `multi` - Try multiple methods (default)
 
 ---
@@ -309,7 +308,7 @@ If you see the self-knowledge discovery output, you're ready to go! 🚀
 
 ---
 
-**Last Updated**: April 27, 2026  
+**Last Updated**: May 4, 2026  
 **Status**: Production-Ready  
 **Support**: See docs/ for detailed guides
 
