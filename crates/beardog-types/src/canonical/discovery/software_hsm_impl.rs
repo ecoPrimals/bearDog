@@ -85,7 +85,7 @@ impl SecureSoftwareHsm {
     /// Returns an error if OS random bytes cannot be read for the primary key.
     pub fn new() -> Result<Self, KmsError> {
         let mut primary_key = Zeroizing::new([0u8; 32]);
-        getrandom::getrandom(primary_key.as_mut()).map_err(|e| KmsError::Other {
+        getrandom::fill(primary_key.as_mut()).map_err(|e| KmsError::Other {
             message: format!("Failed to generate primary key: {e}"),
         })?;
 
@@ -253,7 +253,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
 
         // Generate cryptographically secure random key material
         let mut key_bytes = vec![0u8; algorithm.key_size()];
-        getrandom::getrandom(&mut key_bytes).map_err(|e| KmsError::Other {
+        getrandom::fill(&mut key_bytes).map_err(|e| KmsError::Other {
             message: format!("Failed to generate random key: {e}"),
         })?;
 
@@ -357,7 +357,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
 
     async fn generate_random(&self, count: usize) -> Result<Vec<u8>, KmsError> {
         let mut bytes = vec![0u8; count];
-        getrandom::getrandom(&mut bytes).map_err(|e| KmsError::Other {
+        getrandom::fill(&mut bytes).map_err(|e| KmsError::Other {
             message: format!("Failed to generate random bytes: {e}"),
         })?;
         Ok(bytes)
@@ -432,7 +432,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
         // Check if we can generate random bytes (tests entropy source)
         let start = std::time::Instant::now();
         let mut test_bytes = vec![0u8; 32];
-        let is_healthy = getrandom::getrandom(&mut test_bytes).is_ok();
+        let is_healthy = getrandom::fill(&mut test_bytes).is_ok();
         #[expect(
             clippy::cast_possible_truncation,
             reason = "health check elapsed millis fit u64 for metrics"

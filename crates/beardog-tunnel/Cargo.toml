@@ -22,7 +22,7 @@ beardog-capabilities = { path = "../beardog-capabilities" }
 beardog-security = { path = "../beardog-security" }
 beardog-monitoring = { path = "../beardog-monitoring" }
 beardog-auth = { path = "../beardog-auth" }
-beardog-threat = { path = "../beardog-threat" }
+beardog-threat = { workspace = true }
 beardog-core = { path = "../beardog-core" }
 beardog-utils = { path = "../beardog-utils" }
 beardog-traits = { path = "../beardog-traits" }

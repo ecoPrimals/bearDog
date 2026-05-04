@@ -90,6 +90,10 @@
 
 ## Recent Improvements
 
+### Wave 84 — O(1) Handler Dispatch, getrandom Alignment & Workspace Hygiene (May 4, 2026)
+
+- **O(1) JSON-RPC dispatch** — `HandlerRegistry` builds a `HashMap<&str, usize>` at init for method→handler lookup (was O(n) linear scan). `getrandom` 0.2→0.3 aligned with `rand 0.9`. 5 internal crates migrated to `workspace = true`; 3 zero-consumer entries removed.
+
 ### Wave 83 — Bond Persistence Default Upgraded to Capability Discovery (May 4, 2026)
 
 - **`HandlerRegistry::new()` now defaults to `CapabilityDiscoveryBondPersistence`** — discovers `bonding.ledger` providers at runtime, falls back to in-memory. Phase 58 primalSpring audit: all 4 gaps resolved or pre-existing.

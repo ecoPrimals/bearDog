@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: May 3, 2026
+**Updated**: May 4, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -59,6 +59,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### O(1) Handler Dispatch, getrandom Alignment & Workspace Hygiene — DONE (Wave 84)
+
+`HandlerRegistry` builds a `HashMap<&str, usize>` at init for O(1) method→handler dispatch (was O(n)). `getrandom` 0.2→0.3 aligned with `rand 0.9`/`rand_core 0.9`. 5 internal crates migrated to `{ workspace = true }`, 3 zero-consumer workspace dep entries removed.
 
 ### Bond Persistence Default Upgraded to Capability Discovery — DONE (Wave 83)
 

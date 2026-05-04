@@ -35,6 +35,7 @@
 
 use crate::btsp_provider::BeardogBtspProvider;
 use beardog_ipc::{DispatchOutcome, IpcErrorPhase, OrchestratorRegistryClient};
+use std::collections::HashMap;
 use std::sync::Arc;
 
 // Dark Forest Beacon Genetics (Phase 1 - Feb 2026)
@@ -199,6 +200,9 @@ impl MethodHandler for MethodHandlerKind {
 /// All handlers must also be `Send + Sync`.
 pub struct HandlerRegistry {
     handlers: tokio::sync::RwLock<Vec<MethodHandlerKind>>,
+    /// O(1) method name → handler index lookup, built once after all handlers
+    /// are registered. Falls back to linear scan if unset (should never happen).
+    method_map: std::sync::OnceLock<HashMap<&'static str, usize>>,
 }
 
 impl HandlerRegistry {
@@ -256,6 +260,7 @@ impl HandlerRegistry {
                 MethodHandlerKind::Secrets(secrets::SecretsHandler::new(identity.clone())),
                 MethodHandlerKind::Relay(relay::RelayHandler::new(identity.clone())),
             ]),
+            method_map: std::sync::OnceLock::new(),
         });
 
         // Phase 2: handlers that need registry access for method enumeration.
@@ -275,6 +280,17 @@ impl HandlerRegistry {
                      Capabilities and introspection handlers will not be available. This is a bug."
                 );
             }
+        }
+
+        // Phase 3: build O(1) method→handler dispatch index.
+        if let Ok(handlers) = registry.handlers.try_read() {
+            let mut map = HashMap::with_capacity(128);
+            for (idx, handler) in handlers.iter().enumerate() {
+                for method in handler.methods() {
+                    map.insert(method, idx);
+                }
+            }
+            let _ = registry.method_map.set(map);
         }
 
         registry
@@ -298,9 +314,9 @@ impl HandlerRegistry {
     ///
     /// # Performance
     ///
-    /// O(n) where n is the number of handlers. In practice, n is small (< 20)
-    /// and the lookup is very fast. If performance becomes an issue, we can
-    /// use a `HashMap` for O(1) lookup.
+    /// O(1) via pre-built method→handler `HashMap` (constructed once at init).
+    /// Falls back to O(n) linear scan only if the map was never built (should
+    /// not happen in normal operation).
     pub async fn route(
         &self,
         method: &str,
@@ -308,8 +324,6 @@ impl HandlerRegistry {
         btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
         // Backward-compat bridge: bare crypto names → namespaced equivalents.
-        // Consuming primals may call bare names during migration to
-        // capability-based routing via the Neural API.
         let method = match method {
             "x25519_generate_ephemeral" => "crypto.x25519_generate_ephemeral",
             "x25519_derive_secret" => "crypto.x25519_derive_secret",
@@ -322,15 +336,22 @@ impl HandlerRegistry {
             other => other,
         };
 
-        // Try each handler in order
         let handlers = self.handlers.read().await;
+
+        // O(1) dispatch via pre-built index
+        if let Some(map) = self.method_map.get() {
+            if let Some(&idx) = map.get(method) {
+                return handlers[idx].handle(method, params, btsp_provider).await;
+            }
+            return Err(format!("Method not found: {method}"));
+        }
+
+        // Fallback: linear scan (only if method_map was never built)
         for handler in handlers.iter() {
             if handler.methods().contains(&method) {
                 return handler.handle(method, params, btsp_provider).await;
             }
         }
-
-        // No handler found (JSON-RPC 2.0 error message)
         Err(format!("Method not found: {method}"))
     }
 

@@ -76,13 +76,13 @@ workspace = true
 workspace = true
 
 [dependencies.beardog-threat]
-path = "../beardog-threat"
+workspace = true
 
 [dependencies.beardog-workflows]
-path = "../beardog-workflows"
+workspace = true
 
 [dependencies.beardog-compliance]
-path = "../beardog-compliance"
+workspace = true
 
 [dependencies.beardog-traits]
 path = "../beardog-traits"

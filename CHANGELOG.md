@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 4, 2026 -- Wave 84: Deep Debt — O(1) Handler Dispatch, getrandom Alignment & Workspace Hygiene
+
+- **O(1) JSON-RPC method dispatch** — `HandlerRegistry` now builds a `HashMap<&'static str, usize>` at init (Phase 3 of construction) that maps every registered method name to its handler index. `route()` performs O(1) lookup instead of scanning all handlers and calling `.methods().contains()` per handler. Falls back to linear scan only if the map was never built (should not happen in normal operation).
+- **`getrandom` 0.2→0.3** — workspace pin upgraded from `"0.2"` to `"0.3"` to align with `rand 0.9` / `rand_core 0.9` (which depend on `getrandom 0.3`). All 4 call sites in `software_hsm_impl.rs` migrated from `getrandom::getrandom()` to `getrandom::fill()`. Eliminates duplicate `getrandom` major versions in the dependency tree.
+- **Workspace dep hygiene** — 5 internal crates (`beardog-threat`, `beardog-compliance`, `beardog-workflows`, `beardog-production`, `beardog-node-registry`) migrated from `path = "../..."` to `{ workspace = true }` in their consumers. 3 zero-consumer entries (`beardog-deploy`, `beardog-installer`, `beardog-client`) removed from `[workspace.dependencies]`. Internal workspace section now annotated.
+- **Zero test failures** — 12,610 lib tests pass, 0 clippy warnings.
+
 ### May 4, 2026 -- Wave 83: Bond Persistence Default Upgraded to Capability Discovery
 
 - **Bond persistence default changed** — `HandlerRegistry::new()` now creates a `CapabilityDiscoveryBondPersistence` backend instead of `InMemoryBondPersistence`. When a `bonding.ledger` provider (NestGate/loamSpine) is discovered at runtime via Songbird, sealed bonds are persisted via JSON-RPC to that provider's socket. When no provider is available, falls back to in-memory (identical prior behavior). Zero breakage for standalone or composition deployments.

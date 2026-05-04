@@ -81,10 +81,10 @@ path = "../beardog-monitoring"
 path = "../beardog-auth"
 
 [dependencies.beardog-compliance]
-path = "../beardog-compliance"
+workspace = true
 
 [dependencies.beardog-threat]
-path = "../beardog-threat"
+workspace = true
 
 [dependencies.beardog-adapters]
 path = "../beardog-adapters"
