@@ -176,7 +176,7 @@ Is this port number for a BearDog service?
 ```bash
 # BearDog service ports
 export BEARDOG_API_PORT=8080
-export BEARDOG_METRICS_PORT=9090
+export BEARDOG_METRICS_PORT=9190
 export BEARDOG_HEALTH_PORT=8081
 export BEARDOG_ADMIN_PORT=8082
 export BEARDOG_DEBUG_PORT=8083

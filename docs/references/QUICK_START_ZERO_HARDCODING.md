@@ -141,7 +141,7 @@ let client = connect_to_primal(endpoint).await?;
 |----------|---------|---------|
 | `PRIMAL_DISCOVERY_METHOD` | How to find primals | `multi` |
 | `PRIMAL_<NAME>_ADDR` | Explicit primal address | - |
-| `BEARDOG_TCP_IPC_PORT` | TCP fallback port (containers/cross-arch) | `9900` (ecosystem: `9100`) |
+| `BEARDOG_TCP_IPC_PORT` | TCP fallback port (containers/cross-arch) | `9100` |
 | `DISCOVERY_CACHE_TTL_SECS` | Cache duration | `300` |
 
 ### Ecosystem Discovery Escalation Hierarchy

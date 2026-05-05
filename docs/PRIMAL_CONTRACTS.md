@@ -1,7 +1,7 @@
 # 🔌 BearDog Primal Contracts - JSON-RPC API Specification
 
 **Version**: 1.0.0  
-**Date**: May 4, 2026  
+**Date**: May 5, 2026  
 **Status**: Production Stable  
 **Protocol**: JSON-RPC 2.0 over Unix Domain Sockets
 
@@ -1278,7 +1278,7 @@ BearDog uses **genetic lineage** for authentication:
 ═══════════════════════════════════════════════════════════════════
 
 **Document Version**: 2.0.0  
-**Last Updated**: May 4, 2026  
+**Last Updated**: May 5, 2026  
 **Maintainer**: BearDog Security Primal  
 **License**: Documented interface (implementation MIT-licensed)
 

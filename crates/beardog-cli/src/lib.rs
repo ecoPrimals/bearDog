@@ -74,7 +74,7 @@ pub struct ServerArgs {
 
     /// TCP listen address (overrides --port with full addr:port)
     ///
-    /// Example: --listen 127.0.0.1:9900
+    /// Example: --listen 127.0.0.1:9100
     /// Use for cross-device communication or when native IPC is unavailable.
     #[arg(long, conflicts_with = "port")]
     pub listen: Option<String>,

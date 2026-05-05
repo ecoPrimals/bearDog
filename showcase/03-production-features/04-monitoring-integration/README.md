@@ -117,7 +117,7 @@ metrics.active_keys.set(key_count as f64);
 
 ### **Step 2: Export Metrics**
 ```bash
-curl http://localhost:9090/metrics
+curl http://localhost:9190/metrics
 
 # Output:
 # HELP beardog_operations_total Total operations by type and result
@@ -136,7 +136,7 @@ beardog_op_duration_microseconds_count{operation="encrypt"} 42
 scrape_configs:
   - job_name: 'beardog'
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ['localhost:9190']
     scrape_interval: 15s
 ```
 
@@ -189,13 +189,13 @@ cargo build --release
 ./run-demo.sh
 
 # In another terminal:
-curl http://localhost:9090/metrics
+curl http://localhost:9190/metrics
 ```
 
 ### **Expected Output**
 ```bash
 ✅ Metrics registry initialized
-✅ HTTP server started: http://localhost:9090/metrics
+✅ HTTP server started: http://localhost:9190/metrics
 ✅ Simulated 100 operations
 ✅ Metrics exported
 ✅ Export time: 3.2ms
@@ -246,7 +246,7 @@ for _ in 0..100 {
 let app = Router::new()
     .route("/metrics", get(metrics_handler));
 
-let listener = TcpListener::bind("0.0.0.0:9090").await?;
+let listener = TcpListener::bind("0.0.0.0:9190").await?;
 axum::serve(listener, app).await?;
 
 // GET /metrics returns Prometheus format
@@ -255,7 +255,7 @@ axum::serve(listener, app).await?;
 ### **4. Query Metrics**
 ```bash
 # Total operations
-curl -s http://localhost:9090/metrics | grep operations_total
+curl -s http://localhost:9190/metrics | grep operations_total
 
 # P95 latency (would need Prometheus)
 # histogram_quantile(0.95, beardog_op_duration_microseconds)
@@ -389,7 +389,7 @@ impl MetricsRegistry {
 
 After completing this demo:
 
-1. **Check Metrics** - `curl http://localhost:9090/metrics`
+1. **Check Metrics** - `curl http://localhost:9190/metrics`
 2. **Set Up Prometheus** - Configure scraping
 3. **Build Grafana Dashboard** - Visualize metrics
 4. **Set Alerts** - Configure thresholds

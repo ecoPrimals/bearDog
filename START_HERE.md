@@ -42,7 +42,7 @@ cargo run --release --bin beardog -- server
 **TCP (Android/Windows/cross-device)**:
 
 ```bash
-./beardog server --listen 127.0.0.1:9900
+./beardog server --listen 127.0.0.1:9100
 ```
 
 **Android (abstract sockets)**:
@@ -168,4 +168,4 @@ cargo build --release                # Build
 
 ---
 
-**Last Updated**: May 4, 2026
+**Last Updated**: May 5, 2026

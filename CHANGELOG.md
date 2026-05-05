@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 5, 2026 -- Wave 87: Dependency Evolution & Typed Config Errors
+
+- **`crossterm` 0.27→0.29** — eliminates `mio` 0.8/1.0 duplication; `crossterm 0.29` depends on `mio ^1.0`, unifying with tokio's `mio 1.x`. Zero API breakage.
+- **Typed config validation errors** — 5 `validate()` methods in `beardog-config` migrated from `Result<(), String>` to `ConfigResult<()>` (`Result<(), ConfigError>`). Errors use `ConfigError::InvalidValue { field, message }` and `ConfigError::PortConflict`. DRY `range_check()` helper introduced for timeout validation. 20+ test assertions updated.
+- **Deep dependency audit** — `syn` confirmed build-time only (proc-macro), `tokio` `full` feature justified (all sub-features used across workspace), zero `mio` duplication remaining, zero unused transitive crates identified.
+
+### May 5, 2026 -- Wave 86: TCP IPC Port Alignment & Discovery Hierarchy Documentation
+
+- **TCP IPC port aligned to ecosystem convention** — `DEFAULT_TCP_IPC_PORT` changed from `9900` to `9100` to match primalSpring/ironGate/plasmidBin probe targets. `DEFAULT_METRICS_PORT` moved from `9100` to `9190` to avoid collision.
+- **Discovery Escalation Hierarchy documented** — 5-tier discovery order (Songbird → biomeOS Neural API → UDS convention → socket registry → TCP probing) added to `ENVIRONMENT_VARIABLES.md` and `QUICK_START_ZERO_HARDCODING.md`.
+- **`BEARDOG_TCP_IPC_PORT` and `BEARDOG_METRICS_PORT` env vars documented** — added to reference docs with defaults and ecosystem context.
+- **Clippy fixes** — `async fn` syntax in HSM stub provider, `pub(crate)` visibility in test module.
+
 ### May 4, 2026 -- Wave 85: Deep Debt — Stale Alias Cleanup, Dep Pruning & Feature Gating
 
 - **Stale re-export aliases removed** — `SimplifiedBearDogConfig as UnifiedBearDogConfig` at `beardog_types` crate root (actively confusing since the name collided with the real `UnifiedBearDogConfig` struct in `canonical::config::unified`), `PrimaryUnifiedBearDogConfig` (zero callers), `WorkingUnifiedConfig` (3 test callers migrated to `SimplifiedBearDogConfig`), and `capability_routing as capability_router` (2 import sites migrated). Stale comments referencing removed aliases cleaned from `canonical/mod.rs`.

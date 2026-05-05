@@ -1,6 +1,6 @@
 # 🔄 Configuration System Migration Guide
 
-**BearDog v3.1.0 Configuration Migration**
+**BearDog v0.9.0 Configuration Migration**
 
 This guide helps you migrate from the legacy configuration system to the new canonical configuration architecture.
 

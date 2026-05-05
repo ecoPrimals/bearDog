@@ -48,7 +48,7 @@
 //! - `BEARDOG_SERVICE_HOST` / `BEARDOG_HOST` - Default host
 //! - `BEARDOG_API_PORT` - API service port (default: 8080)
 //! - `BEARDOG_ADMIN_PORT` - Admin interface port (default: 8081)
-//! - `BEARDOG_METRICS_PORT` - Metrics port (default: 9090)
+//! - `BEARDOG_METRICS_PORT` - Metrics port (default: 9190)
 //! - `BEARDOG_WS_PORT` - WebSocket port (default: 8082)
 //! - `BEARDOG_HEALTH_PORT` - Health check port (default: 8083)
 //! - `BEARDOG_REQUEST_TIMEOUT_MS` - Request timeout (default: 30000)

@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 4, 2026
+**Last Updated**: May 5, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -89,6 +89,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 87 — Dependency Evolution & Typed Config Errors (May 5, 2026)
+
+- **`crossterm` 0.27→0.29** — eliminates `mio` 0.8/1.0 duplication. 5 `beardog-config` `validate()` methods migrated from `Result<(), String>` to typed `ConfigError`. Deep dep audit confirms zero bloat.
+
+### Wave 86 — TCP IPC Port Alignment & Discovery Hierarchy (May 5, 2026)
+
+- **TCP IPC port `9900→9100`** (ecosystem convention), **metrics `9100→9190`** (collision avoidance). Discovery Escalation Hierarchy documented (5-tier). `BEARDOG_TCP_IPC_PORT` / `BEARDOG_METRICS_PORT` env vars documented.
 
 ### Wave 85 — Stale Alias Cleanup, Dep Pruning & Feature Gating (May 4, 2026)
 

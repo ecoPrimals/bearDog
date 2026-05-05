@@ -26,7 +26,7 @@
 //!
 //! - `BEARDOG_API_HOST` - API server hostname (default: 127.0.0.1)
 //! - `BEARDOG_API_PORT` - API server port (default: 8080)
-//! - `BEARDOG_METRICS_PORT` - Metrics port (default: 9090)
+//! - `BEARDOG_METRICS_PORT` - Metrics port (default: 9190)
 //! - `BEARDOG_HEALTH_PORT` - Health check port (default: 8081)
 //! - `BEARDOG_WS_PORT` - WebSocket port (default: 3000)
 //! - `BEARDOG_GRPC_PORT` - gRPC port (default: 50051)
@@ -46,7 +46,7 @@ use serde::{Deserialize, Serialize};
 /// |----------|---------|-------------|
 /// | `BEARDOG_API_HOST` | `127.0.0.1` | API server hostname |
 /// | `BEARDOG_API_PORT` | `8080` | API server port |
-/// | `BEARDOG_METRICS_PORT` | `9090` | Prometheus metrics port |
+/// | `BEARDOG_METRICS_PORT` | `9190` | Prometheus metrics port |
 /// | `BEARDOG_HEALTH_PORT` | `8081` | Health check port |
 /// | `BEARDOG_WS_PORT` | `3000` | WebSocket port |
 /// | `BEARDOG_GRPC_PORT` | `50051` | gRPC port |
@@ -121,7 +121,7 @@ pub struct RuntimeNetworkConfig {
     /// Prometheus metrics endpoint port
     ///
     /// Port for exposing Prometheus-compatible metrics.
-    /// Set via `BEARDOG_METRICS_PORT` (default: 9090).
+    /// Set via `BEARDOG_METRICS_PORT` (default: 9190).
     pub metrics_port: u16,
 
     /// Health check endpoint port

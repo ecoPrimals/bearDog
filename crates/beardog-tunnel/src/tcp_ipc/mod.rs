@@ -26,7 +26,7 @@
 //!
 //! ```bash
 //! # TCP mode (Android, universal)
-//! beardog server --listen 127.0.0.1:9900
+//! beardog server --listen 127.0.0.1:9100
 //!
 //! # Auto port (OS assigns)
 //! beardog server --listen 127.0.0.1:0

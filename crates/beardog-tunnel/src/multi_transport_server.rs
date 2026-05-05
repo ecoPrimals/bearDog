@@ -11,7 +11,7 @@
 //! **Before**: Choose ONE transport (mutually exclusive)
 //! ```bash
 //! ./beardog server --socket /tmp/beardog.sock  # Unix only
-//! ./beardog server --listen 127.0.0.1:9900     # TCP only
+//! ./beardog server --listen 127.0.0.1:9100     # TCP only
 //! ```
 //!
 //! **After**: Bind ALL available (concurrent)

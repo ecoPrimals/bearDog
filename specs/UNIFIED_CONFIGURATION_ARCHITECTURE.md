@@ -125,7 +125,7 @@ min_key_bits = 256
 
 [monitoring]
 enabled = true
-metrics_port = 9090
+metrics_port = 9190
 health_check_port = 9091
 alert_webhook_url = "${ALERT_WEBHOOK_URL}"
 

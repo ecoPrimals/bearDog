@@ -3,7 +3,7 @@
 
 # BearDog Documentation Index
 
-**Last Updated**: May 4, 2026
+**Last Updated**: May 5, 2026
 
 Complete guide to BearDog documentation, organized by purpose.
 
@@ -109,4 +109,4 @@ TOWER_ATOMIC_PATTERN.md -> PRIMAL_CONTRACTS.md -> START_HERE.md
 
 ---
 
-**Last Updated**: May 4, 2026
+**Last Updated**: May 5, 2026

@@ -20,8 +20,7 @@ This crate provides the integration layer between BearDog and Songbird's Univers
 ## Architecture
 
 Implements Phase 3 of the BirdSong Integration Roadmap:
-- See wateringHole handoffs for phase evolution plans.
-- `BEARDOG_PHASE3_HANDOFF_DEC_21_2025.md` - Songbird handoff document
+- See `infra/wateringHole/handoffs/` for phase evolution plans and ecosystem alignment documents.
 
 ### Components
 
