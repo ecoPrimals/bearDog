@@ -118,18 +118,12 @@ mod tests {
             }
         }
 
-        fn delete_key(
-            &self,
-            _key_id: &str,
-        ) -> impl Future<Output = Result<(), BearDogError>> + Send {
-            async move { Ok(()) }
+        async fn delete_key(&self, _key_id: &str) -> Result<(), BearDogError> {
+            Ok(())
         }
 
-        fn key_exists(
-            &self,
-            _key_id: &str,
-        ) -> impl Future<Output = Result<bool, BearDogError>> + Send {
-            async move { Ok(true) }
+        async fn key_exists(&self, _key_id: &str) -> Result<bool, BearDogError> {
+            Ok(true)
         }
 
         fn encrypt(
@@ -159,13 +153,13 @@ mod tests {
             async move { Ok(data) }
         }
 
-        fn verify(
+        async fn verify(
             &self,
             _key_id: &str,
             _data: &[u8],
             _signature: &[u8],
-        ) -> impl Future<Output = Result<bool, BearDogError>> + Send {
-            async move { Ok(true) }
+        ) -> Result<bool, BearDogError> {
+            Ok(true)
         }
     }
 

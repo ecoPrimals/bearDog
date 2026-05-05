@@ -28,9 +28,9 @@
 //! - `BEARDOG_DISCOVERY_PORT` - Discovery service port (default: 9090)
 //! - `BEARDOG_ADMIN_PORT` - Admin endpoint port (default: 9091)
 //! - `BEARDOG_HTTPS_PORT` - HTTPS API port (default: 8443)
-//! - `BEARDOG_METRICS_PORT` - Metrics/monitoring port (default: 9100)
+//! - `BEARDOG_METRICS_PORT` - Metrics/monitoring port (default: 9190)
 //! - `BEARDOG_HEALTH_PORT` - Health check port (default: 8081)
-//! - `BEARDOG_TCP_IPC_PORT` - TCP IPC fallback when Unix sockets unavailable (default: 9900)
+//! - `BEARDOG_TCP_IPC_PORT` - TCP IPC fallback when Unix sockets unavailable (default: 9100)
 //! - `BEARDOG_PROFILING_PORT` - Profiling / diagnostic HTTP (default: 6060; see `DEFAULT_PROFILING_PORT`)
 
 use crate::domains::network_addresses::DEFAULT_EXTERNAL_HOST;
@@ -72,7 +72,7 @@ pub struct NetworkPortsConfig {
 
     /// Metrics/monitoring port
     ///
-    /// Prometheus metrics and monitoring. Defaults to 9100.
+    /// Prometheus metrics and monitoring. Defaults to 9190.
     /// Override with `BEARDOG_METRICS_PORT` environment variable.
     #[serde(default = "default_metrics_port")]
     pub metrics_port: u16,
@@ -87,7 +87,8 @@ pub struct NetworkPortsConfig {
     /// TCP IPC fallback port
     ///
     /// Used when Unix sockets aren't available (Android, Windows containers).
-    /// This is the TCP endpoint for JSON-RPC IPC. Defaults to 9900.
+    /// This is the TCP endpoint for JSON-RPC IPC. Defaults to 9100
+    /// (ecosystem convention confirmed by plasmidBin/ironGate).
     /// Override with `BEARDOG_TCP_IPC_PORT` environment variable.
     #[serde(default = "default_tcp_ipc_port")]
     pub tcp_ipc_port: u16,
@@ -140,8 +141,8 @@ pub const DEFAULT_DEBUG_PORT: u16 = 9092;
 /// Default HTTPS API port (8443)
 pub const DEFAULT_HTTPS_PORT: u16 = 8443;
 
-/// Default metrics port (9100 - Prometheus standard)
-pub const DEFAULT_METRICS_PORT: u16 = 9100;
+/// Default metrics port (9190 — moved from 9100 to avoid collision with TCP IPC ecosystem convention)
+pub const DEFAULT_METRICS_PORT: u16 = 9190;
 
 /// Default health check port (8081)
 pub const DEFAULT_HEALTH_PORT: u16 = 8081;
@@ -177,9 +178,9 @@ pub const DEFAULT_GRAFANA_PORT: u16 = 3000;
 /// REST endpoints for cross-primal federation. Override with `BEARDOG_API_PORT`.
 pub const DEFAULT_INTEGRATION_API_PORT: u16 = 9000;
 
-/// Default TCP IPC fallback port (9900)
+/// Default TCP IPC fallback port (9100 — ecosystem convention from plasmidBin/primalSpring)
 /// Used when Unix sockets aren't available (Android, containers, Windows)
-pub const DEFAULT_TCP_IPC_PORT: u16 = 9900;
+pub const DEFAULT_TCP_IPC_PORT: u16 = 9100;
 
 /// Default Jaeger port (14268)
 pub const DEFAULT_JAEGER_PORT: u16 = 14268;

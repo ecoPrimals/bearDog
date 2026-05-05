@@ -141,15 +141,20 @@ let client = connect_to_primal(endpoint).await?;
 |----------|---------|---------|
 | `PRIMAL_DISCOVERY_METHOD` | How to find primals | `multi` |
 | `PRIMAL_<NAME>_ADDR` | Explicit primal address | - |
-| `UPA_REGISTRY_ADDR` | UPA registry address | - |
-| `MDNS_SERVICE_TYPE` | mDNS service type | `_ecoprimal._tcp` |
+| `BEARDOG_TCP_IPC_PORT` | TCP fallback port (containers/cross-arch) | `9900` (ecosystem: `9100`) |
 | `DISCOVERY_CACHE_TTL_SECS` | Cache duration | `300` |
 
-### Discovery Methods
-- `env` - Environment variables only (simple, dev-friendly)
-- `upa` - Universal Primal Authority registry
-- `mdns` - Multicast DNS (local network)
-- `multi` - Try multiple methods (default)
+### Ecosystem Discovery Escalation Hierarchy
+
+Springs discover BearDog (and other primals) in this order:
+
+1. **Songbird `ipc.resolve`** — highest-fidelity, cross-gate routing
+2. **biomeOS Neural API** (`capability.discover`) — capability→socket resolution
+3. **UDS filesystem convention** (`beardog-{family}.sock`) — works out of the box
+4. **Socket registry / manifests** — static fallback
+5. **TCP probing** (well-known ports) — last resort for containers and cross-arch
+
+BearDog supports Tier 3 natively. For Tier 5, set `BEARDOG_TCP_IPC_PORT=9100`.
 
 ---
 

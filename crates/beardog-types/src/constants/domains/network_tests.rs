@@ -333,8 +333,8 @@ fn test_rate_limiting_headers() {
 fn test_port_consistency() {
     // Ensure deprecated constants match their functional equivalents
     assert_eq!(defaults::default_api_port(), 8080);
-    // metrics_port is now 9100 (from config), not 9090
-    assert_eq!(defaults::default_metrics_port(), 9100);
+    // metrics_port is 9190 (moved from 9100 to avoid TCP IPC ecosystem collision)
+    assert_eq!(defaults::default_metrics_port(), 9190);
 }
 
 #[test]

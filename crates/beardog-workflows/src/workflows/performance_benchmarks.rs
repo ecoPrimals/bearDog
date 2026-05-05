@@ -15,7 +15,7 @@ fn duration_ms(d: std::time::Duration) -> u64 {
 #[derive(Debug, Clone)]
 pub struct BenchmarkResults {
     /// Wall-clock time for the baseline (boxed / heavier) path, in milliseconds.
-    pub async_trait_time_ms: u64,
+    pub baseline_time_ms: u64,
     /// Wall-clock time for the optimized path, in milliseconds.
     pub zero_cost_time_ms: u64,
     /// Relative improvement of the optimized path vs baseline, in percent.
@@ -60,7 +60,7 @@ The zero-cost architecture provides an average performance improvement of **{:.1
 ### Memory Efficiency
 - Allocation pattern optimization: {:.1}% improvement ({} ms → {} ms)
 ## Key Achievements
-- Eliminated async_trait boxing overhead
+- Eliminated boxing overhead via zero-cost architecture
 - Reduced memory allocations through direct calls
 - Improved compile-time optimization opportunities
 - Maintained full functionality and type safety
@@ -73,19 +73,19 @@ Based on these benchmarks, the zero-cost architecture is expected to provide:
 ",
             self.average_improvement,
             self.workflow_small.improvement_percent,
-            self.workflow_small.async_trait_time_ms,
+            self.workflow_small.baseline_time_ms,
             self.workflow_small.zero_cost_time_ms,
             self.workflow_medium.improvement_percent,
-            self.workflow_medium.async_trait_time_ms,
+            self.workflow_medium.baseline_time_ms,
             self.workflow_medium.zero_cost_time_ms,
             self.workflow_large.improvement_percent,
-            self.workflow_large.async_trait_time_ms,
+            self.workflow_large.baseline_time_ms,
             self.workflow_large.zero_cost_time_ms,
             self.hsm_operations.improvement_percent,
-            self.hsm_operations.async_trait_time_ms,
+            self.hsm_operations.baseline_time_ms,
             self.hsm_operations.zero_cost_time_ms,
             self.memory_efficiency.improvement_percent,
-            self.memory_efficiency.async_trait_time_ms,
+            self.memory_efficiency.baseline_time_ms,
             self.memory_efficiency.zero_cost_time_ms,
             self.average_improvement
         )
@@ -116,7 +116,7 @@ impl WorkflowPerformanceBenchmarks {
         for i in 0..operations {
             acc = acc.wrapping_add((i as u64).wrapping_mul(7));
         }
-        let async_trait_time = workflow_start.elapsed();
+        let baseline_time = workflow_start.elapsed();
 
         let zero_start = Instant::now();
         let mut acc2 = 0u64;
@@ -125,15 +125,15 @@ impl WorkflowPerformanceBenchmarks {
         }
         let zero_cost_time = zero_start.elapsed();
 
-        let async_trait_ms = duration_ms(async_trait_time);
+        let baseline_ms = duration_ms(baseline_time);
         let zero_cost_ms = duration_ms(zero_cost_time);
-        let improvement = Self::pct_improvement(async_trait_ms, zero_cost_ms);
+        let improvement = Self::pct_improvement(baseline_ms, zero_cost_ms);
 
         tracing::info!("Workflow Processing Results");
-        tracing::info!(async_trait_ms, zero_cost_ms, improvement = %improvement, "timing");
+        tracing::info!(baseline_ms, zero_cost_ms, improvement = %improvement, "timing");
 
         BenchmarkResults {
-            async_trait_time_ms: async_trait_ms,
+            baseline_time_ms: baseline_ms,
             zero_cost_time_ms: zero_cost_ms,
             improvement_percent: improvement,
             operations_count: operations,
@@ -179,9 +179,9 @@ impl WorkflowPerformanceBenchmarks {
         }
         let light_elapsed = light.elapsed();
 
-        let async_trait_ms = duration_ms(total_heavy);
+        let baseline_ms = duration_ms(total_heavy);
         let zero_cost_ms = duration_ms(light_elapsed);
-        let improvement = Self::pct_improvement(async_trait_ms, zero_cost_ms);
+        let improvement = Self::pct_improvement(baseline_ms, zero_cost_ms);
 
         tracing::info!("HSM Operations Results");
         tracing::info!(
@@ -207,7 +207,7 @@ impl WorkflowPerformanceBenchmarks {
         );
 
         BenchmarkResults {
-            async_trait_time_ms: async_trait_ms,
+            baseline_time_ms: baseline_ms,
             zero_cost_time_ms: zero_cost_ms,
             improvement_percent: improvement,
             operations_count: operations,
@@ -224,7 +224,7 @@ impl WorkflowPerformanceBenchmarks {
         for i in 0..operations {
             boxed.push(Box::new(u32::try_from(i).unwrap_or(0)));
         }
-        let async_trait_time = boxed_start.elapsed();
+        let baseline_time = boxed_start.elapsed();
 
         let direct_start = Instant::now();
         let mut sum = 0u32;
@@ -236,15 +236,15 @@ impl WorkflowPerformanceBenchmarks {
         let _ = boxed;
         let _ = sum;
 
-        let async_trait_ms = duration_ms(async_trait_time);
+        let baseline_ms = duration_ms(baseline_time);
         let zero_cost_ms = duration_ms(zero_cost_time);
-        let improvement = Self::pct_improvement(async_trait_ms, zero_cost_ms);
+        let improvement = Self::pct_improvement(baseline_ms, zero_cost_ms);
 
         tracing::info!("Memory Allocation Results");
-        tracing::info!(async_trait_ms, zero_cost_ms, improvement = %improvement, "timing");
+        tracing::info!(baseline_ms, zero_cost_ms, improvement = %improvement, "timing");
 
         BenchmarkResults {
-            async_trait_time_ms: async_trait_ms,
+            baseline_time_ms: baseline_ms,
             zero_cost_time_ms: zero_cost_ms,
             improvement_percent: improvement,
             operations_count: operations,
@@ -304,7 +304,7 @@ mod tests {
 
     fn assert_reasonable_benchmark_results(r: &BenchmarkResults) {
         assert!(r.operations_count < usize::MAX / 2);
-        assert!(r.async_trait_time_ms < u64::MAX / 2);
+        assert!(r.baseline_time_ms < u64::MAX / 2);
         assert!(r.zero_cost_time_ms < u64::MAX / 2);
         assert!(r.improvement_percent.is_finite());
     }

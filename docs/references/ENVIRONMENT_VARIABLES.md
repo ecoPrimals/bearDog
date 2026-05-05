@@ -259,6 +259,30 @@ export BEARDOG_API_PORT=8443
 
 ---
 
+#### `BEARDOG_TCP_IPC_PORT`
+
+**Purpose**: TCP IPC fallback port when Unix domain sockets are unavailable (Android, Windows containers, cross-gate deployments)
+**Required**: No
+**Default**: `9100` (aligned with ecosystem convention — plasmidBin/primalSpring/ironGate all probe BearDog at TCP 9100)
+
+```bash
+export BEARDOG_TCP_IPC_PORT=9100
+```
+
+---
+
+#### `BEARDOG_METRICS_PORT`
+
+**Purpose**: Prometheus metrics / monitoring HTTP endpoint
+**Required**: No
+**Default**: `9190` (moved from 9100 to avoid collision with TCP IPC ecosystem convention)
+
+```bash
+export BEARDOG_METRICS_PORT=9190
+```
+
+---
+
 ### Orchestrator Integration
 
 #### `BIOMEOS_SOCKET_PATH`
@@ -543,14 +567,30 @@ export NODE_ID=tower2
 | **Identity** | `FAMILY_ID`, `BEARDOG_FAMILY_ID`, `NODE_ID`, `BEARDOG_NODE_ID`, `FAMILY_SEED`, `BEARDOG_FAMILY_SEED`, `PRIMAL_NAME` | None (standalone mode) |
 | **HSM** | `BEARDOG_HSM_MODE`, `BEARDOG_YUBIKEY_SERIAL`, `BEARDOG_TPM_PATH` | None |
 | **Socket** | `BEARDOG_SOCKET`, `BIOMEOS_SOCKET_PATH`, `BIOMEOS_SOCKET_DIR` | None |
-| **Network** | `BEARDOG_BIND_ADDR`, `BEARDOG_ENDPOINT`, `BEARDOG_HOST`, `BEARDOG_API_PORT` | None |
+| **Network** | `BEARDOG_BIND_ADDR`, `BEARDOG_ENDPOINT`, `BEARDOG_HOST`, `BEARDOG_API_PORT`, `BEARDOG_TCP_IPC_PORT`, `BEARDOG_METRICS_PORT` | None |
 | **Security** | `BIOMEOS_INSECURE`, `BEARDOG_TRUST_MODE`, `BEARDOG_MTLS_ENABLED`, `BEARDOG_TLS_CERT`, `BEARDOG_TLS_KEY` | None |
 | **Registry** | `PRIMAL_REGISTRY_SOCKET`, `BEARDOG_UPA_URL` | None |
 | **Logging** | `RUST_LOG`, `BEARDOG_LOG_FORMAT`, `BEARDOG_LOG_FILE` | None |
 | **Performance** | `BEARDOG_WORKER_THREADS`, `BEARDOG_CONNECTION_POOL_SIZE`, `BEARDOG_REQUEST_TIMEOUT` | None |
 | **Development** | `BEARDOG_DEV_MODE`, `BEARDOG_API_DOCS_ENABLED`, `BEARDOG_METRICS_ENABLED` | None |
 
-**Total**: 30 environment variables — all optional. Standalone mode works with zero env vars.
+**Total**: 32 environment variables — all optional. Standalone mode works with zero env vars.
+
+---
+
+## Discovery Escalation Hierarchy
+
+primalSpring (and springs in general) discover composition members in this order:
+
+| Tier | Method | Requires | Notes |
+|------|--------|----------|-------|
+| 1 | **Songbird `ipc.resolve`** | Songbird socket reachable | Highest-fidelity routing with cross-gate capability |
+| 2 | **biomeOS Neural API** (`capability.discover`) | Neural API running | Capability→socket resolution without filesystem convention |
+| 3 | **UDS filesystem convention** | `{primal}-{family}.sock` present | No external service needed |
+| 4 | **Socket registry / manifests** | Registry file on disk | Static fallback |
+| 5 | **TCP probing** (well-known ports from tolerances) | `BEARDOG_TCP_IPC_PORT` or default 9100 | Last resort; for containers and cross-arch |
+
+Every tier is valid. BearDog is not required to support all tiers. Tier 3 (UDS convention) works out of the box. For TCP fallback (Tier 5), set `BEARDOG_TCP_IPC_PORT=9100` to match ecosystem convention.
 
 ---
 
@@ -563,6 +603,6 @@ export NODE_ID=tower2
 
 ---
 
-_Last Updated: May 4, 2026_
+_Last Updated: May 5, 2026_
 _Version: 0.9.0_
 _Status: Production Ready_

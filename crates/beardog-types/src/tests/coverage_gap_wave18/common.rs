@@ -4,7 +4,7 @@
 
 use serde::Serialize;
 
-pub(crate) fn assert_serde_json_roundtrip<T>(v: &T)
+pub fn assert_serde_json_roundtrip<T>(v: &T)
 where
     T: Serialize + for<'de> serde::Deserialize<'de> + std::fmt::Debug,
 {

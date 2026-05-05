@@ -30,7 +30,7 @@ pub const API_PORT: u16 = 8080;
 
 **Covered Ports:**
 - `default_api_port()` → `BEARDOG_API_PORT` (default: 8080)
-- `default_metrics_port()` → `BEARDOG_METRICS_PORT` (default: 9090)
+- `default_metrics_port()` → `BEARDOG_METRICS_PORT` (default: 9190)
 - `default_health_port()` → `BEARDOG_HEALTH_PORT` (default: 8081)
 - `default_admin_port()` → `BEARDOG_ADMIN_PORT` (default: 8082)
 - `default_debug_port()` → `BEARDOG_DEBUG_PORT` (default: 8083)
