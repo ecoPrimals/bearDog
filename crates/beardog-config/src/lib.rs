@@ -213,7 +213,7 @@ impl BearDogConfig {
         self.crypto.validate()?;
         self.security.validate()?;
         self.monitoring.validate()?;
-        self.timeouts.validate().map_err(ConfigError::Validation)?;
+        self.timeouts.validate()?;
         Ok(())
     }
 
@@ -343,6 +343,7 @@ mod tests {
         let err = cfg
             .validate()
             .expect_err("invalid timeouts should fail validate");
-        assert!(matches!(err, ConfigError::Validation(_)));
+        assert!(matches!(err, ConfigError::InvalidValue { .. }));
+        assert!(err.to_string().contains("health_check_secs"));
     }
 }

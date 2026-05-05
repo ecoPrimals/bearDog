@@ -198,7 +198,7 @@ parking_lot = "0.12"
 base64 = "0.22"
 hex = "0.4"
 semver = "1.0"
-crossterm = "0.27"
+crossterm = "0.29"
 bcrypt = "0.18"  # Legacy password hashing - Phase 7
 # JWT: Implemented using RustCrypto (hmac + sha2 + base64) - 100% Pure Rust!
 

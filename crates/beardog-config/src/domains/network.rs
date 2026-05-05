@@ -77,15 +77,8 @@ impl NetworkConfig {
     ///
     /// Returns [`ConfigError`] when nested port, address, API, discovery, or admin validation fails.
     pub fn validate(&self) -> ConfigResult<()> {
-        // Validate centralized ports configuration
-        self.ports.validate().map_err(|e| {
-            ConfigError::validation(format!("Port configuration validation failed: {e}"))
-        })?;
-
-        // Validate centralized addresses configuration
-        self.addresses.validate().map_err(|e| {
-            ConfigError::validation(format!("Address configuration validation failed: {e}"))
-        })?;
+        self.ports.validate()?;
+        self.addresses.validate()?;
 
         self.api.validate()?;
         self.discovery.validate()?;

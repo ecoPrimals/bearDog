@@ -310,8 +310,11 @@ impl NetworkPortsConfig {
     ///
     /// # Errors
     ///
-    /// Returns `Err` when any port is `0`, privileged, or conflicts with another configured port.
-    pub fn validate(&self) -> Result<(), String> {
+    /// Returns [`ConfigError::InvalidValue`] when a port is `0` or privileged,
+    /// or [`ConfigError::PortConflict`] when two configured ports collide.
+    pub fn validate(&self) -> crate::ConfigResult<()> {
+        use crate::ConfigError;
+
         let ports = [
             ("api_port", self.api_port),
             ("discovery_port", self.discovery_port),
@@ -324,19 +327,23 @@ impl NetworkPortsConfig {
 
         for (name, port) in ports {
             if port < 1024 {
-                return Err(format!("{name} ({port}) should be non-privileged (>1024)"));
+                return Err(ConfigError::invalid_value(
+                    name,
+                    format!("{port} should be non-privileged (>1024)"),
+                ));
             }
             if port == 0 {
-                return Err(format!("{name} cannot be 0"));
+                return Err(ConfigError::invalid_value(name, "cannot be 0"));
             }
         }
 
-        // Check for port conflicts
         let port_values: Vec<u16> = ports.iter().map(|(_, p)| *p).collect();
         for (i, &port1) in port_values.iter().enumerate() {
             for &port2 in port_values.iter().skip(i + 1) {
                 if port1 == port2 {
-                    return Err(format!("Port conflict detected: {port1}"));
+                    return Err(ConfigError::port_conflict(format!(
+                        "port {port1} assigned to multiple services"
+                    )));
                 }
             }
         }

@@ -269,31 +269,32 @@ impl NetworkAddressesConfig {
     ///
     /// # Errors
     ///
-    /// Returns `Err` with a message when any host or IP field is empty or unparsable.
-    pub fn validate(&self) -> Result<(), String> {
-        // Validate API host (can be hostname or IP)
+    /// Returns [`ConfigError::InvalidValue`] when any host or IP field is empty or unparsable.
+    pub fn validate(&self) -> crate::ConfigResult<()> {
+        use crate::ConfigError;
+
         if self.api_host.is_empty() {
-            return Err("api_host cannot be empty".to_string());
+            return Err(ConfigError::invalid_value("api_host", "cannot be empty"));
         }
 
-        // Validate bind address (must be valid IP)
         if self.bind_address.parse::<IpAddr>().is_err() {
-            return Err(format!(
-                "bind_address ({}) is not a valid IP address",
-                self.bind_address
+            return Err(ConfigError::invalid_value(
+                "bind_address",
+                format!("{} is not a valid IP address", self.bind_address),
             ));
         }
 
-        // Validate external host
         if self.external_host.is_empty() {
-            return Err("external_host cannot be empty".to_string());
+            return Err(ConfigError::invalid_value(
+                "external_host",
+                "cannot be empty",
+            ));
         }
 
-        // Validate multicast address
         if self.multicast_address.parse::<IpAddr>().is_err() {
-            return Err(format!(
-                "multicast_address ({}) is not a valid IP address",
-                self.multicast_address
+            return Err(ConfigError::invalid_value(
+                "multicast_address",
+                format!("{} is not a valid IP address", self.multicast_address),
             ));
         }
 

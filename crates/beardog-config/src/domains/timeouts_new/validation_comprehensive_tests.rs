@@ -39,7 +39,12 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Health check"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("health_check_secs")
+        );
     }
 
     #[test]
@@ -54,7 +59,12 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Health check"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("health_check_secs")
+        );
     }
 
     #[test]
@@ -96,7 +106,12 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("HSM operation"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("hsm_operation_secs")
+        );
     }
 
     #[test]
@@ -111,7 +126,12 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("HSM operation"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("hsm_operation_secs")
+        );
     }
 
     #[test]
@@ -148,7 +168,7 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("HSM probe"));
+        assert!(result.unwrap_err().to_string().contains("hsm_probe_millis"));
     }
 
     #[test]
@@ -163,7 +183,7 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("HSM probe"));
+        assert!(result.unwrap_err().to_string().contains("hsm_probe_millis"));
     }
 
     #[test]
@@ -201,7 +221,12 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Discovery"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("discovery_operation_secs")
+        );
     }
 
     #[test]
@@ -217,7 +242,12 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Discovery"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("discovery_operation_secs")
+        );
     }
 
     // AI decision validation tests
@@ -234,7 +264,7 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("AI decision"));
+        assert!(result.unwrap_err().to_string().contains("ai_decision_secs"));
     }
 
     #[test]
@@ -250,7 +280,7 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("AI decision"));
+        assert!(result.unwrap_err().to_string().contains("ai_decision_secs"));
     }
 
     // AI request validation tests
@@ -267,7 +297,7 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("AI request"));
+        assert!(result.unwrap_err().to_string().contains("ai_request_secs"));
     }
 
     #[test]
@@ -283,7 +313,7 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("AI request"));
+        assert!(result.unwrap_err().to_string().contains("ai_request_secs"));
     }
 
     // AI batch validation tests
@@ -300,7 +330,12 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("AI batch"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("ai_batch_timeout_millis")
+        );
     }
 
     #[test]
@@ -316,7 +351,12 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("AI batch"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("ai_batch_timeout_millis")
+        );
     }
 
     // Pool idle validation tests
@@ -332,7 +372,7 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Pool idle"));
+        assert!(result.unwrap_err().to_string().contains("pool_idle_secs"));
     }
 
     #[test]
@@ -347,7 +387,7 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Pool idle"));
+        assert!(result.unwrap_err().to_string().contains("pool_idle_secs"));
     }
 
     #[test]
@@ -384,7 +424,12 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Max connection age"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("max_connection_age_secs")
+        );
     }
 
     #[test]
@@ -399,7 +444,12 @@ mod tests {
 
         let result = validate_config(&config);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Max connection age"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("max_connection_age_secs")
+        );
     }
 
     #[test]
@@ -433,7 +483,7 @@ mod tests {
             .max_connection_age_secs(3600)
             .build();
         let err1 = validate_config(&config1).unwrap_err();
-        assert!(err1.contains("got 0"));
+        assert!(err1.to_string().contains("got 0"));
 
         let config2 = TimeoutConfigBuilder::new()
             .health_check_secs(30)
@@ -443,6 +493,6 @@ mod tests {
             .max_connection_age_secs(3600)
             .build();
         let err2 = validate_config(&config2).unwrap_err();
-        assert!(err2.contains("got 50"));
+        assert!(err2.to_string().contains("got 50"));
     }
 }

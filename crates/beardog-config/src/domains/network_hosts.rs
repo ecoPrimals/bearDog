@@ -292,8 +292,11 @@ impl NetworkHostsConfig {
     ///
     /// # Errors
     ///
-    /// Returns `Err` when any host is empty or contains whitespace/control characters.
-    pub fn validate(&self) -> Result<(), String> {
+    /// Returns [`ConfigError::InvalidValue`] when any host is empty or contains
+    /// whitespace/control characters.
+    pub fn validate(&self) -> crate::ConfigResult<()> {
+        use crate::ConfigError;
+
         let hosts = [
             ("api_host", &self.api_host),
             ("client_host", &self.client_host),
@@ -306,12 +309,14 @@ impl NetworkHostsConfig {
 
         for (name, host) in hosts {
             if host.is_empty() {
-                return Err(format!("{name} cannot be empty"));
+                return Err(ConfigError::invalid_value(name, "cannot be empty"));
             }
 
-            // Basic validation: no whitespace, no control characters
             if host.chars().any(|c| c.is_whitespace() || c.is_control()) {
-                return Err(format!("{name} contains invalid characters: {host}"));
+                return Err(ConfigError::invalid_value(
+                    name,
+                    format!("contains invalid characters: {host}"),
+                ));
             }
         }
 
@@ -369,7 +374,7 @@ mod tests {
 
         let result = config.validate();
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("api_host"));
+        assert!(result.unwrap_err().to_string().contains("api_host"));
     }
 
     #[test]
@@ -450,7 +455,7 @@ mod tests {
 
         let result = config.validate();
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("database_host"));
+        assert!(result.unwrap_err().to_string().contains("database_host"));
     }
 
     #[test]
@@ -460,7 +465,7 @@ mod tests {
 
         let result = config.validate();
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("redis_host"));
+        assert!(result.unwrap_err().to_string().contains("redis_host"));
     }
 
     #[test]
@@ -470,7 +475,7 @@ mod tests {
 
         let result = config.validate();
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("metrics_host"));
+        assert!(result.unwrap_err().to_string().contains("metrics_host"));
     }
 
     #[test]
@@ -480,7 +485,7 @@ mod tests {
 
         let result = config.validate();
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("external_host"));
+        assert!(result.unwrap_err().to_string().contains("external_host"));
     }
 
     #[test]
@@ -490,7 +495,7 @@ mod tests {
 
         let result = config.validate();
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("discovery_host"));
+        assert!(result.unwrap_err().to_string().contains("discovery_host"));
     }
 
     #[test]

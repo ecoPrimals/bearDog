@@ -94,7 +94,12 @@ fn test_timeout_validation_health_check_too_short() {
 
     let result = config.validate();
     assert!(result.is_err(), "Should fail with health_check_secs = 0");
-    assert!(result.unwrap_err().contains("Health check timeout"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("health_check_secs")
+    );
 }
 
 #[test]
