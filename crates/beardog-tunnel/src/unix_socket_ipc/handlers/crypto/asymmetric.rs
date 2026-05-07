@@ -180,6 +180,61 @@ pub async fn handle_public_key(params: Option<&Value>) -> Result<Value, String> 
     }))
 }
 
+/// Derive a `did:key` identifier from a `BearDog` Ed25519 signing key.
+///
+/// Returns a W3C DID using the `did:key` method (multicodec Ed25519 prefix `0xed01`
+/// + 32-byte public key, base58btc-encoded with `z` multibase prefix).
+///
+/// # Parameters
+///
+/// - `key_id`: Key identifier (optional, defaults to `"default_signing_key"`)
+/// - `purpose`: Purpose string (optional, defaults to `"general"`)
+///
+/// # Returns
+///
+/// - `did`: The `did:key:z6Mk...` string
+/// - `public_key`: Base64-encoded Ed25519 public key (32 bytes)
+/// - `algorithm`: `"Ed25519"`
+/// - `key_id`: The key identifier used
+///
+/// # Errors
+///
+/// Returns an error if key derivation fails.
+pub async fn handle_did_from_key(params: Option<&Value>) -> Result<Value, String> {
+    let key_id = params
+        .and_then(|p| p.get("key_id"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("default_signing_key");
+
+    let purpose = params
+        .and_then(|p| p.get("purpose"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("general");
+
+    let seed = derive_key_from_id(key_id, purpose)?;
+    let (_secret_key, public_key) = asymmetric::generate_ed25519_from_seed(&seed)
+        .map_err(|e| format!("Failed to derive Ed25519 public key: {e}"))?;
+
+    // did:key multicodec: 0xed = Ed25519 public key, varint-encoded as [0xed, 0x01]
+    let mut multicodec_bytes = Vec::with_capacity(34);
+    multicodec_bytes.push(0xed);
+    multicodec_bytes.push(0x01);
+    multicodec_bytes.extend_from_slice(&public_key);
+
+    // Multibase: 'z' prefix = base58btc
+    let did = format!("did:key:z{}", bs58::encode(&multicodec_bytes).into_string());
+    let public_key_b64 = base64::engine::general_purpose::STANDARD.encode(public_key);
+
+    info!("🆔 Crypto: did_from_key → {did}");
+
+    Ok(serde_json::json!({
+        "did": did,
+        "public_key": public_key_b64,
+        "algorithm": "Ed25519",
+        "key_id": key_id,
+    }))
+}
+
 /// Decode an evidence/payload string according to the `ATTESTATION_ENCODING_STANDARD.md`
 /// encoding values: `base64` (default), `hex`, `base64url`, `utf8`, `none`.
 fn decode_with_encoding(

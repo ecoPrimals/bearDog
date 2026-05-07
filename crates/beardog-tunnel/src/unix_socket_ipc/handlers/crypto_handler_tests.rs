@@ -29,8 +29,9 @@ fn test_crypto_handler_methods() {
     //   - 6 Tor Phase 2 (ntor_client_init, ntor_client_finish, ntor_server_respond, cell_encrypt, cell_decrypt, tor_kdf)
     //   - 2 semantic dot-separated aliases (crypto.ed25519.sign, crypto.ed25519.verify)
     //   - 1 crypto.public_key (standalone key retrieval)
+    //   - 1 crypto.did_from_key (did:key derivation from Ed25519 signing key)
     //   - 1 crypto.derive_public_key (purpose-key Ed25519 public key)
-    assert_eq!(methods.len(), 102);
+    assert_eq!(methods.len(), 103);
 
     // Verify all core crypto methods are present
     assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -122,7 +123,7 @@ fn test_handler_method_count() {
     let handler = CryptoHandler;
     assert_eq!(
         handler.methods().len(),
-        102,
-        "Should have exactly 102 crypto methods (see test_crypto_handler_methods for breakdown)"
+        103,
+        "Should have exactly 103 crypto methods (see test_crypto_handler_methods for breakdown)"
     );
 }

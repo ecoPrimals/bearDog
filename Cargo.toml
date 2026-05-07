@@ -230,6 +230,7 @@ rpassword = "7.3"
 whoami = "1.6"
 directories = "5"
 base64-url = "3.0"
+bs58 = "0.5"  # Base58 encoding for did:key multibase (Ed25519 → did:key:z6Mk...)
 
 # Dev-only
 approx = "0.5"

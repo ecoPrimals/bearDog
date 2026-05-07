@@ -13,9 +13,9 @@ use crate::unix_socket_ipc::crypto_handlers_tor::{
 };
 use crate::unix_socket_ipc::handlers::crypto::{
     handle_blake3_hash, handle_chacha20_poly1305_decrypt, handle_chacha20_poly1305_encrypt,
-    handle_ed25519_generate_keypair, handle_generate_keypair_with_hsm, handle_hmac_sha256,
-    handle_public_key, handle_sign_ed25519, handle_verify_ed25519, handle_x25519_derive_secret,
-    handle_x25519_generate_ephemeral,
+    handle_did_from_key, handle_ed25519_generate_keypair, handle_generate_keypair_with_hsm,
+    handle_hmac_sha256, handle_public_key, handle_sign_ed25519, handle_verify_ed25519,
+    handle_x25519_derive_secret, handle_x25519_generate_ephemeral,
 };
 use tracing::info;
 
@@ -50,6 +50,11 @@ pub async fn route(
         "crypto.public_key" => {
             info!("🔑 Crypto: public_key (retrieve Ed25519 public key for key_id)");
             Ok(Some(handle_public_key(params).await?))
+        }
+
+        "crypto.did_from_key" => {
+            info!("🆔 Crypto: did_from_key (derive did:key from Ed25519 signing key)");
+            Ok(Some(handle_did_from_key(params).await?))
         }
 
         "crypto.encrypt" => {

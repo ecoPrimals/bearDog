@@ -71,8 +71,8 @@ pub use tls::{
 
 // Re-export asymmetric crypto handlers for backward compatibility
 pub use asymmetric::{
-    handle_ed25519_generate_keypair, handle_generate_keypair_with_hsm, handle_public_key,
-    handle_sign_ed25519, handle_verify_ed25519, handle_x25519_derive_secret,
+    handle_did_from_key, handle_ed25519_generate_keypair, handle_generate_keypair_with_hsm,
+    handle_public_key, handle_sign_ed25519, handle_verify_ed25519, handle_x25519_derive_secret,
     handle_x25519_generate_ephemeral,
 };
 

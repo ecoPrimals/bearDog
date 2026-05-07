@@ -567,3 +567,73 @@ async fn test_verify_ed25519_per_field_invalid_encoding_error() {
         "per-field encoding error should surface"
     );
 }
+
+// ========================================================================
+// DID:KEY DERIVATION TESTS
+// ========================================================================
+
+#[tokio::test]
+async fn test_did_from_key_basic() {
+    let result = handle_did_from_key(None).await;
+    assert!(result.is_ok());
+
+    let value = result.expect("did_from_key should succeed");
+    let did = value["did"].as_str().expect("did should be a string");
+
+    assert!(
+        did.starts_with("did:key:z6Mk"),
+        "Ed25519 did:key should start with z6Mk"
+    );
+    assert_eq!(value["algorithm"], "Ed25519");
+    assert_eq!(value["key_id"], "default_signing_key");
+    assert!(value["public_key"].is_string());
+}
+
+#[tokio::test]
+async fn test_did_from_key_deterministic() {
+    let params = json!({ "key_id": "test_key", "purpose": "signing" });
+
+    let r1 = handle_did_from_key(Some(&params))
+        .await
+        .expect("first call");
+    let r2 = handle_did_from_key(Some(&params))
+        .await
+        .expect("second call");
+
+    assert_eq!(
+        r1["did"], r2["did"],
+        "same key_id+purpose must produce same DID"
+    );
+    assert_eq!(r1["public_key"], r2["public_key"]);
+}
+
+#[tokio::test]
+async fn test_did_from_key_different_purposes_produce_different_dids() {
+    let p1 = json!({ "key_id": "k", "purpose": "signing" });
+    let p2 = json!({ "key_id": "k", "purpose": "auth" });
+
+    let r1 = handle_did_from_key(Some(&p1))
+        .await
+        .expect("purpose=signing");
+    let r2 = handle_did_from_key(Some(&p2)).await.expect("purpose=auth");
+
+    assert_ne!(
+        r1["did"], r2["did"],
+        "different purposes should produce different DIDs"
+    );
+}
+
+#[tokio::test]
+async fn test_did_from_key_matches_public_key_output() {
+    let params = json!({ "key_id": "cross_check" });
+
+    let did_result = handle_did_from_key(Some(&params))
+        .await
+        .expect("did_from_key");
+    let pk_result = handle_public_key(Some(&params)).await.expect("public_key");
+
+    assert_eq!(
+        did_result["public_key"], pk_result["public_key"],
+        "did_from_key and public_key should return the same public key"
+    );
+}

@@ -1,7 +1,7 @@
 # 🔌 BearDog Primal Contracts - JSON-RPC API Specification
 
 **Version**: 1.0.0  
-**Date**: May 5, 2026  
+**Date**: May 7, 2026  
 **Status**: Production Stable  
 **Protocol**: JSON-RPC 2.0 over Unix Domain Sockets
 
@@ -114,33 +114,99 @@ BearDog provides **100+ JSON-RPC methods** across 11+ categories:
 
 ### **Ed25519 Signature**
 
-**Method**: `crypto.sign_ed25519`
+**Method**: `crypto.sign_ed25519`  
+**Semantic alias**: `crypto.sign` (routes to the same handler)  
+**Additional aliases**: `crypto.ed25519.sign`, `beardog.crypto.sign_ed25519`
+
+**Key model**: BearDog derives Ed25519 keys internally from `key_id` + `purpose` via BLAKE3 KDF. Callers never supply private key material. The same `(key_id, purpose)` pair always produces the same keypair.
 
 **Request**:
 ```json
 {
   "jsonrpc": "2.0",
-  "method": "crypto.sign_ed25519",
+  "method": "crypto.sign",
   "params": {
-    "data": "base64_encoded_data",
-    "key": "base64_encoded_private_key_32_bytes"
+    "message": "base64_encoded_bytes_to_sign",
+    "key_id": "default_signing_key",
+    "purpose": "general"
   },
   "id": 1
 }
 ```
+
+| Param | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `message` | **Yes** | — | Standard Base64 of the raw bytes to sign |
+| `key_id` | No | `"default_signing_key"` | Key identifier for deterministic derivation |
+| `purpose` | No | `"general"` | Purpose qualifier for key derivation context |
 
 **Response**:
 ```json
 {
   "jsonrpc": "2.0",
   "result": {
-    "signature": "base64_encoded_signature_64_bytes"
+    "signature": "base64_encoded_signature_64_bytes",
+    "algorithm": "Ed25519",
+    "key_id": "default_signing_key",
+    "public_key": "base64_encoded_public_key_32_bytes"
   },
   "id": 1
 }
 ```
 
+**Signing contract**: BearDog signs the decoded bytes of `message` using Ed25519 (RFC 8032). It has no knowledge of what the bytes represent — callers are responsible for domain separation. For cross-primal workflows (e.g. LoamSpine entry signing, RootPulse commit signing), the orchestrator should encode the structured data as bytes and pass them via `message`. BearDog does not accept a `data` or `did` parameter on this method.
+
 **Performance**: ~50-100μs
+
+---
+
+### **DID Key Derivation**
+
+**Method**: `crypto.did_from_key`
+
+Derives a W3C `did:key` identifier from a `BearDog` Ed25519 signing key. Uses the multicodec Ed25519 prefix (`0xed01`) + 32-byte public key, base58btc-encoded with `z` multibase prefix.
+
+**Request**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.did_from_key",
+  "params": {
+    "key_id": "default_signing_key",
+    "purpose": "general"
+  },
+  "id": 1
+}
+```
+
+| Param | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `key_id` | No | `"default_signing_key"` | Key identifier for deterministic derivation |
+| `purpose` | No | `"general"` | Purpose qualifier for key derivation context |
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "did": "did:key:z6MkhaXg...",
+    "public_key": "base64_encoded_public_key_32_bytes",
+    "algorithm": "Ed25519",
+    "key_id": "default_signing_key"
+  },
+  "id": 1
+}
+```
+
+**Cross-primal signing workflow (RP-5 clarification)**:
+
+For workflows like RootPulse commit signing or LoamSpine entry signing:
+
+1. Orchestrator calls `crypto.did_from_key` to obtain the `committer` DID
+2. Orchestrator calls `crypto.sign` with entry/commit bytes base64-encoded in `message`
+3. Orchestrator passes `signature` and `did` to LoamSpine's `entry.append` / `session.commit`
+
+`BearDog` signs raw bytes and has no knowledge of LoamSpine entry formats. The orchestrator (biomeOS graph or the calling primal) is responsible for serializing structured data into bytes for signing.
 
 ---
 
@@ -1054,8 +1120,10 @@ print(response['result']['hash'])
 
 ### **Core Cryptography (20 methods)**
 
-1. `crypto.sign_ed25519` - Ed25519 signature
-2. `crypto.verify_ed25519` - Ed25519 verification
+1. `crypto.sign_ed25519` - Ed25519 signature (params: `message`, `key_id`, `purpose`)
+1a. `crypto.sign` - Semantic alias → `crypto.sign_ed25519`
+1b. `crypto.did_from_key` - Derive `did:key` from Ed25519 signing key (params: `key_id`, `purpose`)
+2. `crypto.verify_ed25519` - Ed25519 verification (params: `message`, `signature`, `public_key`)
 3. `crypto.sign_ecdsa_secp256r1` - ECDSA P-256 signing
 4. `crypto.verify_ecdsa_secp256r1` - ECDSA P-256 verification
 5. `crypto.sign_ecdsa_secp384r1` - ECDSA P-384 signing
@@ -1278,7 +1346,7 @@ BearDog uses **genetic lineage** for authentication:
 ═══════════════════════════════════════════════════════════════════
 
 **Document Version**: 2.0.0  
-**Last Updated**: May 5, 2026  
+**Last Updated**: May 7, 2026  
 **Maintainer**: BearDog Security Primal  
 **License**: Documented interface (implementation MIT-licensed)
 

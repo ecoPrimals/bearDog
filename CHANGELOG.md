@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 7, 2026 -- Wave 89: crypto.sign Contract Fix & did:key Derivation (RP-1/RP-5)
+
+- **`crypto.sign` contract documentation fixed** — `PRIMAL_CONTRACTS.md` Ed25519 section rewritten: stale `data`/`key` params corrected to actual `message`/`key_id`/`purpose`. Semantic alias `crypto.sign` documented. Response fields (`signature`, `algorithm`, `key_id`, `public_key`) documented. Signing contract clarified: BearDog signs raw bytes, callers handle domain separation.
+- **`crypto.did_from_key` method added** — new JSON-RPC method derives W3C `did:key:z6Mk...` from BearDog Ed25519 signing key (multicodec Ed25519 prefix + base58btc). Unblocks RootPulse commit workflow and LoamSpine entry signing by providing the `committer` DID. 4 tests. `bs58` dep added (pure Rust).
+- **Method count 102 → 103** (CryptoHandler 97 → 98, IonicBondHandler 5 unchanged).
+- **Cross-primal signing workflow documented** in `PRIMAL_CONTRACTS.md`: `crypto.did_from_key` → `crypto.sign` → pass to LoamSpine.
+
 ### May 5, 2026 -- Wave 87: Dependency Evolution & Typed Config Errors
 
 - **`crossterm` 0.27→0.29** — eliminates `mio` 0.8/1.0 duplication; `crossterm 0.29` depends on `mio ^1.0`, unifying with tokio's `mio 1.x`. Zero API breakage.

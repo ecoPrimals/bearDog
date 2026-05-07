@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 5, 2026
+**Last Updated**: May 7, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -35,7 +35,7 @@
 
 - **Crates**: 29 directories (beardog-integration excluded — overstep)
 - **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
-- **Crypto Methods**: 102 CryptoHandler methods (97) + IonicBondHandler methods (5) — `crypto.derive_public_key` added Wave 77
+- **Crypto Methods**: 103 CryptoHandler methods (98) + IonicBondHandler methods (5) — `crypto.did_from_key` added Wave 89
 - **`#[allow(`**: 81 (was 86; all carry `reason`)
 - **`#[expect(`**: 644 (was 646; 2 stale removed)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
@@ -89,6 +89,10 @@
 ---
 
 ## Recent Improvements
+
+### Wave 89 — crypto.sign Contract Fix & did:key Derivation (May 7, 2026)
+
+- **`crypto.sign` contract fixed** — `PRIMAL_CONTRACTS.md` rewritten: `data`/`key` → `message`/`key_id`/`purpose`. New `crypto.did_from_key` method derives `did:key:z6Mk...` for RootPulse/LoamSpine workflows. Methods 102→103. Resolves RP-1 and RP-5 from primalSpring projectNUCLEUS audit.
 
 ### Wave 87 — Dependency Evolution & Typed Config Errors (May 5, 2026)
 
