@@ -257,4 +257,4 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ---
 
-**BearDog Types v3.0.0 - Pedantic Perfection Achieved** 🏆✨
+**BearDog Types v0.9.0 - Pedantic Perfection Achieved** 🏆✨

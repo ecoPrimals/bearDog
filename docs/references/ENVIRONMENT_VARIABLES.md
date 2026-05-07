@@ -603,6 +603,6 @@ Every tier is valid. BearDog is not required to support all tiers. Tier 3 (UDS c
 
 ---
 
-_Last Updated: May 5, 2026_
+_Last Updated: May 7, 2026_
 _Version: 0.9.0_
 _Status: Production Ready_

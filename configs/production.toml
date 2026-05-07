@@ -44,7 +44,7 @@ enable_quantum_resistant = true
 
 [monitoring]
 enable_metrics = true
-metrics_bind_address = "0.0.0.0:9090"
+metrics_bind_address = "0.0.0.0:9190"
 enable_health_checks = true
 health_check_interval_secs = 30
 enable_performance_tracking = true

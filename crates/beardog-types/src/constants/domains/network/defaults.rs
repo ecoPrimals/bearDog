@@ -17,7 +17,7 @@ pub fn default_api_port() -> u16 {
 
 /// Get default metrics port from configuration hierarchy
 ///
-/// Respects full config hierarchy with fallback to 9090 (in config)
+/// Respects full config hierarchy with fallback to 9190 (in config)
 ///
 /// Access via: `BEARDOG_CONFIG.network.ports.metrics_port`
 #[must_use]

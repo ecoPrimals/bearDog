@@ -73,7 +73,7 @@ timeout_ms = 5000
 # Security-related network configuration
 trusted_hosts = ["localhost", "127.0.0.1"]
 private_networks = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
-allowed_ports = [80, 443, 8080, 8443, 9090, 9091]
+allowed_ports = [80, 443, 8080, 8443, 9100, 9190, 9091]
 
 [load_balancing]
 # Load balancing configuration

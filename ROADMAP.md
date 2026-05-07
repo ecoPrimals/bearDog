@@ -44,7 +44,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - Hardcoding eliminated — capability-based discovery throughout
 - `deny.toml` hardened — C deps banned, duplicate versions denied
 - `CommandRunner` trait for mocking external commands (`adb`) in tests
-- **Stadial parity gate (Wave 53)** — Complete: all `#[async_trait]` removed in favor of native `async fn` in traits; `async-trait` dependency removed from every `Cargo.toml`; finite-implementor `dyn Trait` sites replaced with enum dispatch for monomorphized async routing; 14,928+ tests, Clippy and rustdoc `-D warnings` clean
+- **Stadial parity gate (Wave 53)** — Complete: all `#[async_trait]` removed in favor of native `async fn` in traits; `async-trait` dependency removed from every `Cargo.toml`; finite-implementor `dyn Trait` sites replaced with enum dispatch for monomorphized async routing; Clippy and rustdoc `-D warnings` clean
 
 ### Platform Coverage
 
@@ -142,7 +142,7 @@ Aligned `get_node_id_with()` and `get_family_id_with()` fallbacks to match `Prim
 
 ### Deep Debt: Self-Knowledge, Allow-Reasons, Blake3 Pure — DONE (Wave 69b)
 
-Removed `skunkBat` from capabilities wire data. Added structured `reason` to all `#[allow()]`. Aligned 5 showcase `blake3` to `features=["pure"]`. Full audit: 0 unsafe, 0 TODO, 0 other-primal refs in production, 0 ungated mocks, 0 ring/openssl. 101 CryptoHandler + 9 IonicBondHandler methods. 15,000+ tests.
+Removed `skunkBat` from capabilities wire data. Added structured `reason` to all `#[allow()]`. Aligned 5 showcase `blake3` to `features=["pure"]`. Full audit: 0 unsafe, 0 TODO, 0 other-primal refs in production, 0 ungated mocks, 0 ring/openssl. 101 CryptoHandler + 5 IonicBondHandler methods. 15,000+ tests.
 
 ### Lineage Semantic IPC Methods — DONE (Wave 69)
 

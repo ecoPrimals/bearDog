@@ -1248,7 +1248,7 @@ print(response['result']['hash'])
 88. `hsm.verify` - HSM-backed verification
 89. `hsm.status` - HSM health status
 
-### **Total**: **100 JSON-RPC methods**
+### **Total**: **103 JSON-RPC methods** (98 CryptoHandler + 5 IonicBondHandler)
 
 ═══════════════════════════════════════════════════════════════════
 

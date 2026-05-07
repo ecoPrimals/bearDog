@@ -150,9 +150,9 @@ pub const DEFAULT_BIND_ADDRESS: &str = WILDCARD_IPV4;
 )]
 /// Deprecated: use [`default_metrics_bind`].
 ///
-/// **Tier-5 fallback only** — literal `0.0.0.0:9090` when no env, config, or higher tier applies.
+/// **Tier-5 fallback only** — literal `0.0.0.0:9190` when no env, config, or higher tier applies.
 /// Primary sources: `BEARDOG_METRICS_BIND`, then address/port from env and [`super::defaults`].
-pub const DEFAULT_METRICS_BIND: &str = "0.0.0.0:9090";
+pub const DEFAULT_METRICS_BIND: &str = "0.0.0.0:9190";
 #[deprecated(
     since = "3.1.0",
     note = "Use default_health_bind() for environment-aware configuration"

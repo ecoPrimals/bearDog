@@ -5,7 +5,7 @@
 [network]
 # API server bind addresses - no more hardcoded "0.0.0.0:8080"
 api_bind_address = "0.0.0.0:8080"
-metrics_bind_address = "0.0.0.0:9090"
+metrics_bind_address = "0.0.0.0:9190"
 health_bind_address = "0.0.0.0:8088"
 admin_bind_address = "127.0.0.1:9999"
 
@@ -39,12 +39,12 @@ trusted_ip_ranges = [
 [network.ports]
 # Service ports - configurable instead of hardcoded
 api = 8080
-metrics = 9090
+metrics = 9190
 health = 8088
 admin = 9999
 p2p_discovery = 7777
 grpc = 9092
-prometheus = 9090
+prometheus = 9190
 grafana = 3000
 
 [security]
