@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 7, 2026 -- Wave 91: Typed Errors — BondPersistence & SslKeylog
+
+- **`BondPersistenceError` enum introduced** — `BondPersistence` trait migrated from `Result<_, String>` to `Result<_, BondPersistenceError>`. Five variants: `Serialization`, `Io`, `RpcTimeout`, `RpcError`, `InvalidResponse`. All three implementations (`InMemoryBondPersistence`, `BondPersistenceBackend`, `CapabilityDiscoveryBondPersistence`) updated. `BondPersistenceResult<T>` type alias added. Handler boundary converts via `.map_err(|e| e.to_string())`.
+- **`SslKeylogError` enum introduced** — `export_to_sslkeylogfile` migrated from `Result<(), String>` to `Result<(), SslKeylogError>`. Two variants: `InvalidClientRandom`, `Io`. Caller in `derive_handshake.rs` unchanged (uses `Display` via `warn!`).
+- **Zero `Result<_, String>` remaining in persistence or TLS keylog modules** — last P3 item from primalSpring Phase 60 audit resolved.
+- **24 tests pass** (2 persistence, 3 sslkeylog, 19 ionic_bond handler). Zero clippy warnings.
+
 ### May 7, 2026 -- Wave 89: crypto.sign Contract Fix & did:key Derivation (RP-1/RP-5)
 
 - **`crypto.sign` contract documentation fixed** — `PRIMAL_CONTRACTS.md` Ed25519 section rewritten: stale `data`/`key` params corrected to actual `message`/`key_id`/`purpose`. Semantic alias `crypto.sign` documented. Response fields (`signature`, `algorithm`, `key_id`, `public_key`) documented. Signing contract clarified: BearDog signs raw bytes, callers handle domain separation.

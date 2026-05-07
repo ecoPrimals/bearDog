@@ -212,7 +212,10 @@ impl IonicBondHandler {
             bond.clone()
         };
 
-        self.persistence.store(&sealed_bond).await?;
+        self.persistence
+            .store(&sealed_bond)
+            .await
+            .map_err(|e| e.to_string())?;
 
         let resp = IonicBondSealResponse {
             sealed: true,
@@ -328,7 +331,10 @@ impl IonicBondHandler {
         };
 
         if revoked {
-            self.persistence.remove(&revoke_params.bond_id).await?;
+            self.persistence
+                .remove(&revoke_params.bond_id)
+                .await
+                .map_err(|e| e.to_string())?;
             let resp = IonicBondRevokeResponse { revoked: true };
             serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
         } else {
@@ -349,7 +355,8 @@ impl IonicBondHandler {
         let mut merged: HashMap<String, IonicBond> = self
             .persistence
             .list()
-            .await?
+            .await
+            .map_err(|e| e.to_string())?
             .into_iter()
             .map(|b| (b.bond_id.clone(), b))
             .collect();

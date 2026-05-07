@@ -21,6 +21,56 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::sync::RwLock;
 use tracing::{debug, warn};
 
+/// Typed error for bond persistence operations.
+#[derive(Debug)]
+pub enum BondPersistenceError {
+    /// JSON serialization/deserialization failure.
+    Serialization {
+        /// What operation was being attempted.
+        context: &'static str,
+        /// Underlying serde error.
+        source: serde_json::Error,
+    },
+    /// I/O error communicating with a ledger provider.
+    Io {
+        /// What I/O operation failed.
+        context: &'static str,
+        /// Underlying I/O error.
+        source: std::io::Error,
+    },
+    /// Ledger RPC timed out.
+    RpcTimeout,
+    /// Ledger returned a JSON-RPC error object.
+    RpcError(String),
+    /// Ledger response was structurally invalid (e.g. missing `result` field).
+    InvalidResponse(&'static str),
+}
+
+impl std::fmt::Display for BondPersistenceError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Serialization { context, source } => write!(f, "{context}: {source}"),
+            Self::Io { context, source } => write!(f, "{context}: {source}"),
+            Self::RpcTimeout => write!(f, "ledger RPC timed out"),
+            Self::RpcError(msg) => write!(f, "ledger RPC error: {msg}"),
+            Self::InvalidResponse(msg) => write!(f, "ledger RPC: {msg}"),
+        }
+    }
+}
+
+impl std::error::Error for BondPersistenceError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Serialization { source, .. } => Some(source),
+            Self::Io { source, .. } => Some(source),
+            _ => None,
+        }
+    }
+}
+
+/// Convenience alias for bond persistence results.
+pub type BondPersistenceResult<T> = Result<T, BondPersistenceError>;
+
 /// Durable bond storage abstraction.
 ///
 /// `IonicBondHandler` calls these methods on seal/revoke/list to persist
@@ -28,16 +78,16 @@ use tracing::{debug, warn};
 /// NUCLEUS deployments should discover a `bonding.ledger.*` provider.
 pub trait BondPersistence: Send + Sync {
     /// Persist or overwrite a bond record (e.g. after seal).
-    fn store(&self, bond: &IonicBond) -> impl Future<Output = Result<(), String>> + Send;
+    fn store(&self, bond: &IonicBond) -> impl Future<Output = BondPersistenceResult<()>> + Send;
     /// Load a single bond by id, if present.
     fn retrieve(
         &self,
         bond_id: &str,
-    ) -> impl Future<Output = Result<Option<IonicBond>, String>> + Send;
+    ) -> impl Future<Output = BondPersistenceResult<Option<IonicBond>>> + Send;
     /// Enumerate all stored bonds.
-    fn list(&self) -> impl Future<Output = Result<Vec<IonicBond>, String>> + Send;
+    fn list(&self) -> impl Future<Output = BondPersistenceResult<Vec<IonicBond>>> + Send;
     /// Delete a bond record (e.g. after revoke).
-    fn remove(&self, bond_id: &str) -> impl Future<Output = Result<bool, String>> + Send;
+    fn remove(&self, bond_id: &str) -> impl Future<Output = BondPersistenceResult<bool>> + Send;
 }
 
 /// Enum dispatch for [`BondPersistence`].
@@ -51,7 +101,7 @@ pub enum BondPersistenceBackend {
 async fn bond_backend_store(
     backend: &BondPersistenceBackend,
     bond: &IonicBond,
-) -> Result<(), String> {
+) -> BondPersistenceResult<()> {
     match backend {
         BondPersistenceBackend::InMemory(p) => p.store(bond).await,
         BondPersistenceBackend::CapabilityDiscovery(p) => p.store(bond).await,
@@ -61,14 +111,16 @@ async fn bond_backend_store(
 async fn bond_backend_retrieve(
     backend: &BondPersistenceBackend,
     bond_id: &str,
-) -> Result<Option<IonicBond>, String> {
+) -> BondPersistenceResult<Option<IonicBond>> {
     match backend {
         BondPersistenceBackend::InMemory(p) => p.retrieve(bond_id).await,
         BondPersistenceBackend::CapabilityDiscovery(p) => p.retrieve(bond_id).await,
     }
 }
 
-async fn bond_backend_list(backend: &BondPersistenceBackend) -> Result<Vec<IonicBond>, String> {
+async fn bond_backend_list(
+    backend: &BondPersistenceBackend,
+) -> BondPersistenceResult<Vec<IonicBond>> {
     match backend {
         BondPersistenceBackend::InMemory(p) => p.list().await,
         BondPersistenceBackend::CapabilityDiscovery(p) => p.list().await,
@@ -78,7 +130,7 @@ async fn bond_backend_list(backend: &BondPersistenceBackend) -> Result<Vec<Ionic
 async fn bond_backend_remove(
     backend: &BondPersistenceBackend,
     bond_id: &str,
-) -> Result<bool, String> {
+) -> BondPersistenceResult<bool> {
     match backend {
         BondPersistenceBackend::InMemory(p) => p.remove(bond_id).await,
         BondPersistenceBackend::CapabilityDiscovery(p) => p.remove(bond_id).await,
@@ -86,22 +138,22 @@ async fn bond_backend_remove(
 }
 
 impl BondPersistence for BondPersistenceBackend {
-    fn store(&self, bond: &IonicBond) -> impl Future<Output = Result<(), String>> + Send {
+    fn store(&self, bond: &IonicBond) -> impl Future<Output = BondPersistenceResult<()>> + Send {
         bond_backend_store(self, bond)
     }
 
     fn retrieve(
         &self,
         bond_id: &str,
-    ) -> impl Future<Output = Result<Option<IonicBond>, String>> + Send {
+    ) -> impl Future<Output = BondPersistenceResult<Option<IonicBond>>> + Send {
         bond_backend_retrieve(self, bond_id)
     }
 
-    fn list(&self) -> impl Future<Output = Result<Vec<IonicBond>, String>> + Send {
+    fn list(&self) -> impl Future<Output = BondPersistenceResult<Vec<IonicBond>>> + Send {
         bond_backend_list(self)
     }
 
-    fn remove(&self, bond_id: &str) -> impl Future<Output = Result<bool, String>> + Send {
+    fn remove(&self, bond_id: &str) -> impl Future<Output = BondPersistenceResult<bool>> + Send {
         bond_backend_remove(self, bond_id)
     }
 }
@@ -112,7 +164,10 @@ pub struct InMemoryBondPersistence {
     bonds: RwLock<HashMap<String, IonicBond>>,
 }
 
-async fn inmemory_store(this: &InMemoryBondPersistence, bond: &IonicBond) -> Result<(), String> {
+async fn inmemory_store(
+    this: &InMemoryBondPersistence,
+    bond: &IonicBond,
+) -> BondPersistenceResult<()> {
     this.bonds
         .write()
         .await
@@ -123,35 +178,38 @@ async fn inmemory_store(this: &InMemoryBondPersistence, bond: &IonicBond) -> Res
 async fn inmemory_retrieve(
     this: &InMemoryBondPersistence,
     bond_id: &str,
-) -> Result<Option<IonicBond>, String> {
+) -> BondPersistenceResult<Option<IonicBond>> {
     Ok(this.bonds.read().await.get(bond_id).cloned())
 }
 
-async fn inmemory_list(this: &InMemoryBondPersistence) -> Result<Vec<IonicBond>, String> {
+async fn inmemory_list(this: &InMemoryBondPersistence) -> BondPersistenceResult<Vec<IonicBond>> {
     Ok(this.bonds.read().await.values().cloned().collect())
 }
 
-async fn inmemory_remove(this: &InMemoryBondPersistence, bond_id: &str) -> Result<bool, String> {
+async fn inmemory_remove(
+    this: &InMemoryBondPersistence,
+    bond_id: &str,
+) -> BondPersistenceResult<bool> {
     Ok(this.bonds.write().await.remove(bond_id).is_some())
 }
 
 impl BondPersistence for InMemoryBondPersistence {
-    fn store(&self, bond: &IonicBond) -> impl Future<Output = Result<(), String>> + Send {
+    fn store(&self, bond: &IonicBond) -> impl Future<Output = BondPersistenceResult<()>> + Send {
         inmemory_store(self, bond)
     }
 
     fn retrieve(
         &self,
         bond_id: &str,
-    ) -> impl Future<Output = Result<Option<IonicBond>, String>> + Send {
+    ) -> impl Future<Output = BondPersistenceResult<Option<IonicBond>>> + Send {
         inmemory_retrieve(self, bond_id)
     }
 
-    fn list(&self) -> impl Future<Output = Result<Vec<IonicBond>, String>> + Send {
+    fn list(&self) -> impl Future<Output = BondPersistenceResult<Vec<IonicBond>>> + Send {
         inmemory_list(self)
     }
 
-    fn remove(&self, bond_id: &str) -> impl Future<Output = Result<bool, String>> + Send {
+    fn remove(&self, bond_id: &str) -> impl Future<Output = BondPersistenceResult<bool>> + Send {
         inmemory_remove(self, bond_id)
     }
 }
@@ -216,7 +274,7 @@ impl CapabilityDiscoveryBondPersistence {
         endpoint: &str,
         method: &str,
         params: serde_json::Value,
-    ) -> Result<serde_json::Value, String> {
+    ) -> BondPersistenceResult<serde_json::Value> {
         let id = self.request_id.fetch_add(1, Ordering::Relaxed);
         let request = json!({
             "jsonrpc": "2.0",
@@ -225,49 +283,72 @@ impl CapabilityDiscoveryBondPersistence {
             "id": id,
         });
 
-        let request_bytes = serde_json::to_vec(&request).map_err(|e| format!("serialize: {e}"))?;
+        let request_bytes =
+            serde_json::to_vec(&request).map_err(|e| BondPersistenceError::Serialization {
+                context: "serialize request",
+                source: e,
+            })?;
 
         let mut stream = tokio::net::UnixStream::connect(endpoint)
             .await
-            .map_err(|e| format!("connect to {endpoint}: {e}"))?;
+            .map_err(|e| BondPersistenceError::Io {
+                context: "connect to ledger",
+                source: e,
+            })?;
 
         stream
             .write_all(&request_bytes)
             .await
-            .map_err(|e| format!("write: {e}"))?;
+            .map_err(|e| BondPersistenceError::Io {
+                context: "write request",
+                source: e,
+            })?;
         stream
             .write_all(b"\n")
             .await
-            .map_err(|e| format!("write newline: {e}"))?;
+            .map_err(|e| BondPersistenceError::Io {
+                context: "write newline",
+                source: e,
+            })?;
 
         let mut buf = vec![0u8; 16384];
         let n = tokio::time::timeout(std::time::Duration::from_secs(10), stream.read(&mut buf))
             .await
-            .map_err(|_| "ledger RPC timed out".to_string())?
-            .map_err(|e| format!("read: {e}"))?;
+            .map_err(|_| BondPersistenceError::RpcTimeout)?
+            .map_err(|e| BondPersistenceError::Io {
+                context: "read response",
+                source: e,
+            })?;
 
         let resp: serde_json::Value =
-            serde_json::from_slice(&buf[..n]).map_err(|e| format!("deserialize: {e}"))?;
+            serde_json::from_slice(&buf[..n]).map_err(|e| BondPersistenceError::Serialization {
+                context: "deserialize response",
+                source: e,
+            })?;
 
         if let Some(error) = resp.get("error") {
-            return Err(format!("ledger RPC error: {error}"));
+            return Err(BondPersistenceError::RpcError(error.to_string()));
         }
 
         resp.get("result")
             .cloned()
-            .ok_or_else(|| "ledger RPC: missing result".to_string())
+            .ok_or(BondPersistenceError::InvalidResponse("missing result"))
     }
 }
 
 async fn capability_store(
     this: &CapabilityDiscoveryBondPersistence,
     bond: &IonicBond,
-) -> Result<(), String> {
+) -> BondPersistenceResult<()> {
     let Some(endpoint) = this.resolve_endpoint().await else {
         return this.fallback.store(bond).await;
     };
 
-    let bond_json = serde_json::to_value(bond).map_err(|e| format!("serialize bond: {e}"))?;
+    let bond_json =
+        serde_json::to_value(bond).map_err(|e| BondPersistenceError::Serialization {
+            context: "serialize bond",
+            source: e,
+        })?;
 
     match this
         .rpc_call(
@@ -291,7 +372,7 @@ async fn capability_store(
 async fn capability_retrieve(
     this: &CapabilityDiscoveryBondPersistence,
     bond_id: &str,
-) -> Result<Option<IonicBond>, String> {
+) -> BondPersistenceResult<Option<IonicBond>> {
     let Some(endpoint) = this.resolve_endpoint().await else {
         return this.fallback.retrieve(bond_id).await;
     };
@@ -308,8 +389,12 @@ async fn capability_retrieve(
             if result.is_null() {
                 return this.fallback.retrieve(bond_id).await;
             }
-            let bond: IonicBond =
-                serde_json::from_value(result).map_err(|e| format!("deserialize bond: {e}"))?;
+            let bond: IonicBond = serde_json::from_value(result).map_err(|e| {
+                BondPersistenceError::Serialization {
+                    context: "deserialize bond",
+                    source: e,
+                }
+            })?;
             Ok(Some(bond))
         }
         Err(e) => {
@@ -321,7 +406,7 @@ async fn capability_retrieve(
 
 async fn capability_list(
     this: &CapabilityDiscoveryBondPersistence,
-) -> Result<Vec<IonicBond>, String> {
+) -> BondPersistenceResult<Vec<IonicBond>> {
     let Some(endpoint) = this.resolve_endpoint().await else {
         return this.fallback.list().await;
     };
@@ -353,7 +438,7 @@ async fn capability_list(
 async fn capability_remove(
     this: &CapabilityDiscoveryBondPersistence,
     bond_id: &str,
-) -> Result<bool, String> {
+) -> BondPersistenceResult<bool> {
     let local_removed = this.fallback.remove(bond_id).await?;
 
     let Some(endpoint) = this.resolve_endpoint().await else {
@@ -380,22 +465,22 @@ async fn capability_remove(
 }
 
 impl BondPersistence for CapabilityDiscoveryBondPersistence {
-    fn store(&self, bond: &IonicBond) -> impl Future<Output = Result<(), String>> + Send {
+    fn store(&self, bond: &IonicBond) -> impl Future<Output = BondPersistenceResult<()>> + Send {
         capability_store(self, bond)
     }
 
     fn retrieve(
         &self,
         bond_id: &str,
-    ) -> impl Future<Output = Result<Option<IonicBond>, String>> + Send {
+    ) -> impl Future<Output = BondPersistenceResult<Option<IonicBond>>> + Send {
         capability_retrieve(self, bond_id)
     }
 
-    fn list(&self) -> impl Future<Output = Result<Vec<IonicBond>, String>> + Send {
+    fn list(&self) -> impl Future<Output = BondPersistenceResult<Vec<IonicBond>>> + Send {
         capability_list(self)
     }
 
-    fn remove(&self, bond_id: &str) -> impl Future<Output = Result<bool, String>> + Send {
+    fn remove(&self, bond_id: &str) -> impl Future<Output = BondPersistenceResult<bool>> + Send {
         capability_remove(self, bond_id)
     }
 }

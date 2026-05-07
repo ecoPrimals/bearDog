@@ -84,11 +84,15 @@
 | `#[serial]` Minimized | 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent |
 | Production Mocks | Mocks in `#[cfg(test)]`; FIDO2/iOS Phase 2 stubs return proper errors, not fake data |
 | Commented-Out Code | 0 — all legacy stubs cleaned per wateringHole standard |
-| Typed Errors | `Box<dyn Error>` eliminated from public APIs; `BearDogError` throughout |
+| Typed Errors | `Box<dyn Error>` eliminated from public APIs; `BearDogError` throughout; `BondPersistenceError`/`SslKeylogError` replace last `Result<_, String>` |
 
 ---
 
 ## Recent Improvements
+
+### Wave 91 — Typed Errors: BondPersistence & SslKeylog (May 7, 2026)
+
+- **`BondPersistenceError` + `SslKeylogError` enums** — last `Result<_, String>` in persistence layer and TLS keylog migrated to typed errors. Final P3 item from primalSpring Phase 60 audit resolved. 24 tests pass.
 
 ### Wave 89 — crypto.sign Contract Fix & did:key Derivation (May 7, 2026)
 

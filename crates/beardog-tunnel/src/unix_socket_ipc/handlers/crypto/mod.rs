@@ -59,7 +59,7 @@ pub mod tls12; // ✅ Jan 27, 2026 - TLS 1.2 operations (ECDHE, AES-GCM, PRF)
 pub mod utils; // ✅ Step 7 - Shared utility functions (derive_key_from_id)
 
 // Re-export sslkeylog utility for backward compatibility
-pub use sslkeylog::export_to_sslkeylogfile;
+pub use sslkeylog::{SslKeylogError, export_to_sslkeylogfile};
 
 // Re-export TLS handlers for backward compatibility
 #[cfg(feature = "tls-x509")]

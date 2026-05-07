@@ -77,9 +77,45 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use tracing::info;
 
+/// Typed error for SSLKEYLOGFILE export operations.
+#[derive(Debug)]
+pub enum SslKeylogError {
+    /// `client_random` was not the required 32 bytes.
+    InvalidClientRandom(usize),
+    /// I/O failure opening or writing to the keylog file.
+    Io {
+        /// What I/O operation failed.
+        context: &'static str,
+        /// Underlying I/O error.
+        source: std::io::Error,
+    },
+}
+
+impl std::fmt::Display for SslKeylogError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InvalidClientRandom(len) => {
+                write!(f, "client_random must be 32 bytes, got {len}")
+            }
+            Self::Io { context, source } => write!(f, "{context}: {source}"),
+        }
+    }
+}
+
+impl std::error::Error for SslKeylogError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Io { source, .. } => Some(source),
+            Self::InvalidClientRandom(_) => None,
+        }
+    }
+}
+
 /// # Errors
 ///
-/// Returns an error if encryption fails.
+/// Returns [`SslKeylogError::InvalidClientRandom`] if `client_random` is not 32 bytes,
+/// or [`SslKeylogError::Io`] if the keylog file cannot be opened or written.
+///
 /// Export TLS session keys to SSLKEYLOGFILE (for Wireshark decryption)
 ///
 /// This function exports TLS 1.3 session secrets in the format required by Wireshark
@@ -147,7 +183,7 @@ pub fn export_to_sslkeylogfile(
     client_random: &[u8],
     handshake_secrets: Option<(&[u8], &[u8])>,
     application_secrets: Option<(&[u8], &[u8])>,
-) -> Result<(), String> {
+) -> Result<(), SslKeylogError> {
     // ALWAYS log that we're attempting export (for debugging)
     info!("🔐 export_to_sslkeylogfile() called");
     info!("   client_random: {} bytes", client_random.len());
@@ -185,10 +221,7 @@ pub fn export_to_sslkeylogfile(
     };
 
     if client_random.len() != 32 {
-        return Err(format!(
-            "client_random must be 32 bytes, got {}",
-            client_random.len()
-        ));
+        return Err(SslKeylogError::InvalidClientRandom(client_random.len()));
     }
 
     info!(
@@ -201,7 +234,10 @@ pub fn export_to_sslkeylogfile(
         .create(true)
         .append(true)
         .open(&keylog_path)
-        .map_err(|e| format!("Failed to open SSLKEYLOGFILE: {e}"))?;
+        .map_err(|e| SslKeylogError::Io {
+            context: "Failed to open SSLKEYLOGFILE",
+            source: e,
+        })?;
 
     let client_random_hex = hex::encode(client_random);
 
@@ -213,7 +249,10 @@ pub fn export_to_sslkeylogfile(
             client_random_hex,
             hex::encode(client_hs_secret)
         )
-        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {e}"))?;
+        .map_err(|e| SslKeylogError::Io {
+            context: "Failed to write to SSLKEYLOGFILE",
+            source: e,
+        })?;
 
         writeln!(
             file,
@@ -221,7 +260,10 @@ pub fn export_to_sslkeylogfile(
             client_random_hex,
             hex::encode(server_hs_secret)
         )
-        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {e}"))?;
+        .map_err(|e| SslKeylogError::Io {
+            context: "Failed to write to SSLKEYLOGFILE",
+            source: e,
+        })?;
 
         info!("  ✅ Exported handshake traffic secrets");
     }
@@ -234,7 +276,10 @@ pub fn export_to_sslkeylogfile(
             client_random_hex,
             hex::encode(client_app_secret)
         )
-        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {e}"))?;
+        .map_err(|e| SslKeylogError::Io {
+            context: "Failed to write to SSLKEYLOGFILE",
+            source: e,
+        })?;
 
         writeln!(
             file,
@@ -242,7 +287,10 @@ pub fn export_to_sslkeylogfile(
             client_random_hex,
             hex::encode(server_app_secret)
         )
-        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {e}"))?;
+        .map_err(|e| SslKeylogError::Io {
+            context: "Failed to write to SSLKEYLOGFILE",
+            source: e,
+        })?;
 
         info!("  ✅ Exported application traffic secrets");
     }
@@ -281,7 +329,14 @@ mod tests {
         let result = export_to_sslkeylogfile(&client_random, None, None);
 
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("must be 32 bytes"));
+        assert!(
+            matches!(
+                result.as_ref().unwrap_err(),
+                SslKeylogError::InvalidClientRandom(16)
+            ),
+            "expected InvalidClientRandom(16), got {:?}",
+            result.unwrap_err()
+        );
 
         beardog_errors::process_env::remove_var("SSLKEYLOGFILE");
     }

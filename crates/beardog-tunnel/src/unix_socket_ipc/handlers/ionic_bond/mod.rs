@@ -22,8 +22,8 @@ mod lifecycle;
 pub mod persistence;
 
 pub use persistence::{
-    BondPersistence, BondPersistenceBackend, CapabilityDiscoveryBondPersistence,
-    InMemoryBondPersistence,
+    BondPersistence, BondPersistenceBackend, BondPersistenceError, BondPersistenceResult,
+    CapabilityDiscoveryBondPersistence, InMemoryBondPersistence,
 };
 
 /// In-memory ionic bond state manager.
