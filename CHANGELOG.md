@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 7, 2026 -- Wave 92: Contract Signing IPC Confirmation & Documentation
+
+- **`crypto.sign_contract` and `crypto.verify_contract` confirmed IPC-routable** — primalSpring Phase 60 audit reported these as "not yet exposed as IPC-routable methods." Investigation confirms they have been registered on `IonicBondHandler::methods()` and dispatched through `HandlerRegistry::route()` since Wave 38/42. The gap was **documentation and discoverability**, not routing.
+- **`PRIMAL_CONTRACTS.md` expanded** — full Ionic Bond section added (8 methods): detailed request/response JSON for all lifecycle methods (`propose`, `accept`, `seal`, `verify`, `revoke`, `list`) and contract signing methods (`crypto.sign_contract`, `crypto.verify_contract`). Method index updated with all 8 IonicBondHandler methods. Cross-spring signing workflow documented for healthSpring/hotSpring/wetSpring.
+- **Method count corrected 103 → 111** — CryptoHandler has 103 methods (verified by test), IonicBondHandler has 8 methods (verified by test). Previous docs reported "103 (98 CryptoHandler + 5 IonicBondHandler)" which was doubly wrong: CryptoHandler was already 103 (not 98) and IonicBondHandler was 8 (not 5) since Wave 38. Fixed across `STATUS.md`, `PRIMAL_CONTRACTS.md`, `ROADMAP.md`.
+
 ### May 7, 2026 -- Wave 91: Typed Errors — BondPersistence & SslKeylog
 
 - **`BondPersistenceError` enum introduced** — `BondPersistence` trait migrated from `Result<_, String>` to `Result<_, BondPersistenceError>`. Five variants: `Serialization`, `Io`, `RpcTimeout`, `RpcError`, `InvalidResponse`. All three implementations (`InMemoryBondPersistence`, `BondPersistenceBackend`, `CapabilityDiscoveryBondPersistence`) updated. `BondPersistenceResult<T>` type alias added. Handler boundary converts via `.map_err(|e| e.to_string())`.

@@ -34,7 +34,7 @@ BearDog exposes its cryptographic and genetic capabilities through a JSON-RPC 2.
 
 ## 📚 **API CATEGORIES**
 
-BearDog provides **100+ JSON-RPC methods** across 11+ categories:
+BearDog provides **111 JSON-RPC methods** across 12 categories:
 
 ### **1. Core Cryptography** (20 methods)
 - Signatures: Ed25519, ECDSA (P-256, P-384), RSA
@@ -107,6 +107,11 @@ BearDog provides **100+ JSON-RPC methods** across 11+ categories:
 - Key storage (StrongBox on Android)
 - Entropy management
 - Session management
+
+### **12. Ionic Bond** (8 methods — IonicBondHandler)
+- Lifecycle: propose, accept, seal, verify, revoke, list
+- Contract signing: `crypto.sign_contract`, `crypto.verify_contract`
+- Cross-tower/cross-family trust establishment via Ed25519
 
 ═══════════════════════════════════════════════════════════════════
 
@@ -839,6 +844,213 @@ For workflows like RootPulse commit signing or LoamSpine entry signing:
 
 ═══════════════════════════════════════════════════════════════════
 
+## 🔗 **IONIC BOND** (IonicBondHandler — 8 methods)
+
+Cross-tower and cross-family trust establishment via Ed25519. The
+propose → accept → seal lifecycle creates cryptographically verifiable
+bonds between domains. Contract signing enables programmatic trust for
+multi-family deployments (healthSpring, hotSpring dual-tower bonds;
+wetSpring cross-spring provenance).
+
+### **Propose Bond**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.ionic_bond.propose",
+  "params": {
+    "proposer": "tower_a",
+    "target": "tower_b",
+    "trust_model": "btsp_enforced",
+    "encryption_tier": "aead",
+    "allowed_capabilities": ["crypto"],
+    "ttl_seconds": 3600
+  },
+  "id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "proposal_id": "...",
+    "terms_hash": "sha256hex...",
+    "proposer_signature": "hex..."
+  },
+  "id": 1
+}
+```
+
+### **Accept Bond**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.ionic_bond.accept",
+  "params": {
+    "proposal_id": "...",
+    "acceptor": "tower_b",
+    "acceptor_signature": "hex (128 chars, Ed25519 over terms_hash)",
+    "acceptor_public_key": "hex (64 chars, Ed25519 public key)"
+  },
+  "id": 2
+}
+```
+
+**Response**: `{ "bond": { IonicBond object } }`
+
+### **Seal Bond**
+
+Cryptographically seals an active bond by re-verifying both signatures.
+Third step in the propose → accept → seal lifecycle — confirms the bond
+is enforcement-ready.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.ionic_bond.seal",
+  "params": {
+    "bond_id": "...",
+    "sealer": "tower_a"
+  },
+  "id": 3
+}
+```
+
+**Response**: `{ "sealed": true, "bond": { IonicBond with state "sealed" } }`
+
+### **Verify Bond**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.ionic_bond.verify",
+  "params": { "bond_id": "..." },
+  "id": 4
+}
+```
+
+**Response**: `{ "valid": true/false, "state": "active"|"sealed"|"revoked", "bond": {...} }`
+
+### **Revoke Bond**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.ionic_bond.revoke",
+  "params": { "bond_id": "...", "revoker": "tower_a" },
+  "id": 5
+}
+```
+
+**Response**: `{ "revoked": true }`
+
+### **List Bonds**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.ionic_bond.list",
+  "params": { "domain": "tower_a", "state": "active" },
+  "id": 6
+}
+```
+
+Both `domain` and `state` are optional filters. **Response**: `{ "bonds": [ IonicBond, ... ] }`
+
+### **Sign Contract**
+
+Signs an arbitrary contract document with BearDog's Ed25519 identity.
+Terms are serialized canonically (sorted keys), SHA-256 hashed, then
+signed. Enables cross-family trust for dual-tower compositions
+(healthSpring, hotSpring) and cross-spring provenance (wetSpring).
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.sign_contract",
+  "params": {
+    "signer": "hotSpring",
+    "terms": {
+      "federation": "cern_grid",
+      "parties": ["family_a", "family_b"],
+      "gpu_lease": { "max_hours": 1000 }
+    },
+    "context": "gpu_lease"
+  },
+  "id": 7
+}
+```
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `signer` | string | yes | Identity of the signing party |
+| `terms` | object | yes | Contract terms (canonicalized before hashing) |
+| `context` | string | no | Optional scope label (e.g. `"gpu_lease"`, `"ionic_bond"`) |
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "terms_hash": "sha256hex...",
+    "signature": "base64 (Ed25519, 64 bytes decoded)",
+    "public_key": "base64 (Ed25519, 32 bytes decoded)",
+    "signed_at": "2026-05-07T21:00:00Z"
+  },
+  "id": 7
+}
+```
+
+### **Verify Contract**
+
+Verifies an Ed25519 signature over a contract terms hash. Any party
+can verify without access to the signing key.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "crypto.verify_contract",
+  "params": {
+    "terms_hash": "sha256hex...",
+    "signature": "hex (Ed25519)",
+    "public_key": "hex (Ed25519)"
+  },
+  "id": 8
+}
+```
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `terms_hash` | string | yes | SHA-256 hex of the canonical contract terms |
+| `signature` | string | yes | Ed25519 signature to verify (hex) |
+| `public_key` | string | yes | Ed25519 public key of the claimed signer (hex) |
+
+**Response**:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "valid": true,
+    "error": null
+  },
+  "id": 8
+}
+```
+
+### **Cross-Spring Signing Workflow**
+
+For healthSpring/hotSpring dual-tower bonds and wetSpring provenance:
+
+1. **Sign**: `crypto.sign_contract` with terms JSON → receive `terms_hash`, `signature`, `public_key`
+2. **Distribute**: Share `terms_hash` + `signature` + `public_key` to counterparty via any channel
+3. **Verify**: Counterparty calls `crypto.verify_contract` with all three fields
+4. **Bond**: Optionally establish an ionic bond with the same parties for ongoing trust enforcement
+
+═══════════════════════════════════════════════════════════════════
+
 ## 🔀 **RELAY AUTHORIZATION**
 
 ### **Authorize Relay**
@@ -1248,7 +1460,18 @@ print(response['result']['hash'])
 88. `hsm.verify` - HSM-backed verification
 89. `hsm.status` - HSM health status
 
-### **Total**: **103 JSON-RPC methods** (98 CryptoHandler + 5 IonicBondHandler)
+### **Ionic Bond (8 methods — IonicBondHandler)**
+
+90. `crypto.ionic_bond.propose` - Propose a cross-domain bond
+91. `crypto.ionic_bond.accept` - Accept a bond proposal (Ed25519 signature)
+92. `crypto.ionic_bond.seal` - Cryptographically seal an active bond
+93. `crypto.ionic_bond.verify` - Verify bond state and signatures
+94. `crypto.ionic_bond.revoke` - Revoke an active or sealed bond
+95. `crypto.ionic_bond.list` - List bonds (filterable by domain/state)
+96. `crypto.sign_contract` - Sign contract terms with Ed25519 identity
+97. `crypto.verify_contract` - Verify contract signature
+
+### **Total**: **111 JSON-RPC methods** (103 CryptoHandler + 8 IonicBondHandler)
 
 ═══════════════════════════════════════════════════════════════════
 

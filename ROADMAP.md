@@ -106,7 +106,7 @@ Both audit items confirmed stale/resolved: `async-trait` 49→0 (Wave 53-55), `c
 
 ### `crypto.derive_public_key` for biomeOS Coordination Keys — DONE (Wave 77)
 
-New RPC method derives Ed25519 public key for a named purpose from `FAMILY_SEED`. Enables biomeOS Neural API auto-derivation of coordination keys. Methods 101→102 (CryptoHandler 97, IonicBondHandler 5). 7 new tests. BTSP Phase 3 deferred.
+New RPC method derives Ed25519 public key for a named purpose from `FAMILY_SEED`. Enables biomeOS Neural API auto-derivation of coordination keys. Methods 101→102 (CryptoHandler 97, IonicBondHandler 8). 7 new tests. BTSP Phase 3 deferred.
 
 ### primalSpring Phase 56 Audit: GAP-23 Reclassified, IONIC-RUNTIME Confirmed — DONE (Wave 76/76b)
 
@@ -142,7 +142,7 @@ Aligned `get_node_id_with()` and `get_family_id_with()` fallbacks to match `Prim
 
 ### Deep Debt: Self-Knowledge, Allow-Reasons, Blake3 Pure — DONE (Wave 69b)
 
-Removed `skunkBat` from capabilities wire data. Added structured `reason` to all `#[allow()]`. Aligned 5 showcase `blake3` to `features=["pure"]`. Full audit: 0 unsafe, 0 TODO, 0 other-primal refs in production, 0 ungated mocks, 0 ring/openssl. 101 CryptoHandler + 5 IonicBondHandler methods. 15,000+ tests.
+Removed `skunkBat` from capabilities wire data. Added structured `reason` to all `#[allow()]`. Aligned 5 showcase `blake3` to `features=["pure"]`. Full audit: 0 unsafe, 0 TODO, 0 other-primal refs in production, 0 ungated mocks, 0 ring/openssl. 101 CryptoHandler + 8 IonicBondHandler methods. 15,000+ tests.
 
 ### Lineage Semantic IPC Methods — DONE (Wave 69)
 

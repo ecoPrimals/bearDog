@@ -35,7 +35,7 @@
 
 - **Crates**: 29 directories (beardog-integration excluded — overstep)
 - **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
-- **Crypto Methods**: 103 CryptoHandler methods (98) + IonicBondHandler methods (5) — `crypto.did_from_key` added Wave 89
+- **Crypto Methods**: 111 JSON-RPC methods — 103 CryptoHandler + 8 IonicBondHandler (6 lifecycle + 2 contract signing)
 - **`#[allow(`**: 81 (was 86; all carry `reason`)
 - **`#[expect(`**: 644 (was 646; 2 stale removed)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
@@ -89,6 +89,10 @@
 ---
 
 ## Recent Improvements
+
+### Wave 92 — Contract Signing IPC Confirmation & Documentation (May 7, 2026)
+
+- **`crypto.sign_contract` / `crypto.verify_contract` confirmed IPC-routable** since Wave 38/42 — gap was documentation, not routing. `PRIMAL_CONTRACTS.md` expanded with full Ionic Bond section (8 methods). Method count corrected: 111 total (103 CryptoHandler + 8 IonicBondHandler).
 
 ### Wave 91 — Typed Errors: BondPersistence & SslKeylog (May 7, 2026)
 
@@ -164,7 +168,7 @@
 ### Wave 77 — `crypto.derive_public_key` for biomeOS Coordination Keys (April 30, 2026)
 
 - **New method: `crypto.derive_public_key`** — Derives Ed25519 public key for a named purpose from `FAMILY_SEED`. Enables biomeOS Neural API auto-derivation of coordination keys at startup.
-- **Methods 101 → 102** (CryptoHandler 97, IonicBondHandler 5).
+- **Methods 101 → 102** (CryptoHandler 97, IonicBondHandler 8).
 - **7 new tests** for the new method.
 - **BTSP Phase 3 deferred** — Phase 2 handshake sufficient for current composition.
 
