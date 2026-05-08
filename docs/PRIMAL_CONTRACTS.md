@@ -21,14 +21,17 @@ BearDog exposes its cryptographic and genetic capabilities through a JSON-RPC 2.
 
 **Primary**: Unix Domain Sockets
 - Path: `/run/user/$UID/biomeos/beardog.sock` (Linux)
-- Protocol: JSON-RPC 2.0
-- Encoding: UTF-8 JSON
-- Authentication: Family lineage (genetic)
+- Protocol: JSON-RPC 2.0 over NDJSON (newline-delimited JSON)
+- Encoding: UTF-8
+- Authentication: Ionic tokens (Ed25519-signed, JH-1) + family lineage (genetic)
 
-**Fallback**: TCP (Android/constraints)
+**TCP** (Android, Windows, cross-host)
 - Discovered via: `~/.config/biomeos/beardog.sock` (contains `tcp:IP:PORT`)
-- Protocol: Same JSON-RPC 2.0
-- Use case: Android devices without Unix socket support
+- Protocol: JSON-RPC 2.0 over NDJSON or BTSP encrypted frames
+- Default port: 9190
+
+**Named Pipes** (Windows)
+- Protocol: Same JSON-RPC 2.0 over NDJSON
 
 ═══════════════════════════════════════════════════════════════════
 
@@ -108,20 +111,21 @@ BearDog provides **117 JSON-RPC methods** across 14 categories:
 - Entropy management
 - Session management
 
-### **13. Auth & Ionic Token Lifecycle** (5 methods — pre-dispatch, JH-0/JH-1)
-- `auth.check` — caller authentication status (includes validated claims when present)
-- `auth.mode` — enforcement mode (permissive/enforced)
-- `auth.issue_ionic` — issue Ed25519-signed ionic capability token
-- `auth.verify_ionic` — verify ionic token, return claims or error
-
-### **14. Identity** (1 method — pre-dispatch, JH-1)
-- `identity.create` — generate ephemeral Ed25519 caller keypair + DID
-- `auth.peer_info` — peer credential inspection
-
 ### **12. Ionic Bond** (8 methods — IonicBondHandler)
 - Lifecycle: propose, accept, seal, verify, revoke, list
 - Contract signing: `crypto.sign_contract`, `crypto.verify_contract`
 - Cross-tower/cross-family trust establishment via Ed25519
+
+### **13. Auth & Ionic Token Lifecycle** (5 methods — pre-dispatch, JH-0/JH-1)
+- `auth.check` — caller authentication status (includes validated claims when present)
+- `auth.mode` — enforcement mode (permissive/enforced)
+- `auth.peer_info` — peer credential inspection (SO_PEERCRED on Unix)
+- `auth.issue_ionic` — issue Ed25519-signed ionic capability token
+- `auth.verify_ionic` — verify ionic token, return claims or error
+
+### **14. Identity** (2 methods — pre-dispatch)
+- `identity.get` — primal identity (name, node_id, DID, public key)
+- `identity.create` — generate ephemeral Ed25519 caller keypair + DID
 
 ═══════════════════════════════════════════════════════════════════
 

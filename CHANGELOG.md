@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 8, 2026 -- Wave 96: Root Doc Alignment, PRIMAL_CONTRACTS Fix & ROADMAP Catchup
+
+- **Date alignment across 8 root docs** — README, ARCHITECTURE, CONTEXT, START_HERE, ROADMAP, SECURITY, docs/README, CONTRIBUTING all updated from May 7 → May 8. README also adds `JSON-RPC Methods: 117` to status line.
+- **PRIMAL_CONTRACTS.md corrections** — Category ordering fixed (12 Ionic Bond → 13 Auth → 14 Identity, was scrambled 13→14→12). Auth category now lists all 5 methods (was missing `auth.peer_info`). `auth.peer_info` moved from Identity to Auth where it belongs. Identity corrected from "1 method" to "2 methods" (`identity.get` + `identity.create`). Transport section expanded: NDJSON framing documented, BTSP encrypted frames, TCP port 9190, named pipes for Windows.
+- **ROADMAP.md catchup** — "Recently Completed" section extended from Wave 85 through Wave 95 (10 wave summaries added). Method count updated from "100+" to "117".
+- **CONTRIBUTING.md ↔ CI reconciliation** — Clippy command corrected from `--all-features` to `--all-targets -- -D warnings` (matching `ci.yml`). Test workflow documents CI gate (`--workspace --lib`) vs local full suite (`--workspace`). Note added that integration/chaos tests under `tests/` are local-only.
+- **ARCHITECTURE.md showcase correction** — "not workspace members" claim corrected: `showcase/05-mixed-entropy` is a workspace member.
+- **Audit: no debris, no archive candidates** — Full scan confirmed: 0 temp files, 0 dead scripts, 0 `todo!()`/`unimplemented!()` in production, 0 stale planning docs requiring removal. Showcase shell scripts are by-design (standalone demo runners for excluded workspace members). `crates/beardog-integration` and `crates/beardog-deploy` are intentionally excluded per PRIMAL_RESPONSIBILITY_MATRIX V2.
+- **wateringHole README.md** date updated.
+- **Modified files**: `README.md`, `ARCHITECTURE.md`, `CONTEXT.md`, `START_HERE.md`, `ROADMAP.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/README.md`, `docs/PRIMAL_CONTRACTS.md`, `STATUS.md`, `CHANGELOG.md`.
+
 ### May 8, 2026 -- Wave 95: Deep Debt Cleanup — Refactors, Bug Fixes & Dead Code Removal
 
 - **`method_gate.rs` smart refactor (811 → 425 LOC)** — Extracted 389-line test suite to `method_gate_tests.rs` using `#[path]` attribute. Production module well under 800-line threshold. All 55 gate tests pass unchanged.

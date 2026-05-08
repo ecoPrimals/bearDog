@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: May 7, 2026
+**Updated**: May 8, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -16,7 +16,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 - Rust edition 2024 (MSRV 1.93.0, `rust-toolchain.toml` pinned)
 - 100% Pure Rust (zero C dependencies, RustCrypto suite)
-- 100+ JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing, lineage queries)
+- 117 JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing, lineage queries, auth gate, ionic tokens)
 - 0 clippy warnings (pedantic + nursery + all cast lints warn + `doc_markdown` warn + `missing_errors_doc` warn + unwrap/expect warn, workspace-centralized)
 - 0 missing documentation warnings (all public items documented, all `# Errors` sections present)
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
@@ -59,6 +59,46 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### Deep Debt Cleanup: Refactors, Bug Fixes & Dead Code Removal — DONE (Wave 95)
+
+`method_gate.rs` smart-refactored 811→425 LOC. Lineage proof signature verification bug fixed (sign/verify message mismatch). Commented-out dead code cleaned in 4 production files. All files under 800-line threshold.
+
+### JH-1: Primal-Native Identity and Ionic Token Infrastructure — DONE (Wave 94)
+
+Ed25519-signed ionic capability tokens (`ionic_token.rs`). 3 new methods: `identity.create`, `auth.issue_ionic`, `auth.verify_ionic`. Full cryptographic token verification in `MethodGate` replacing `bearer_token.is_some()`. Methods 114→117.
+
+### JH-0: MethodGate Pre-Dispatch Authorization — DONE (Wave 93)
+
+Ecosystem-standard method gate adopted. Every JSON-RPC method classified as Public or Protected. `CallerContext` threading through UDS and TCP. 3 auth introspection methods. Methods 111→114.
+
+### Contract Signing IPC Confirmation & Documentation — DONE (Wave 92)
+
+`crypto.sign_contract`/`crypto.verify_contract` confirmed IPC-routable since Wave 42. Documentation gap closed.
+
+### Typed Errors: BondPersistence & SslKeylog — DONE (Wave 91)
+
+`BondPersistenceError` and `SslKeylogError` enums. Zero `Result<_, String>` remaining in persistence or TLS keylog modules.
+
+### Doc/Port Sweep, Debris Cleanup — DONE (Wave 90)
+
+Docs, metrics port consistency (9190 sweep), stale count cleanup.
+
+### `crypto.sign` Contract Fix & `did:key` Derivation — DONE (Wave 89)
+
+`PRIMAL_CONTRACTS.md` Ed25519 section rewritten. `crypto.did_from_key` added. Methods 102→103.
+
+### Doc Cleanup, Port Alignment — DONE (Wave 88)
+
+Root doc refresh and port/debris cleanup.
+
+### Dependency Evolution & Typed Config Errors — DONE (Wave 87)
+
+`crossterm` 0.27→0.29 (eliminates `mio` duplication). 5 `validate()` methods migrated to `ConfigResult<()>`.
+
+### TCP IPC Port Alignment & Discovery Hierarchy Documentation — DONE (Wave 86)
+
+TCP IPC default port aligned with ecosystem. Discovery/schema hierarchy documented.
 
 ### Stale Alias Cleanup, Dep Pruning & Feature Gating — DONE (Wave 85)
 

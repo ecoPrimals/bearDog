@@ -90,6 +90,14 @@
 
 ## Recent Improvements
 
+### Wave 96 — Root Doc Alignment, PRIMAL_CONTRACTS Fix, ROADMAP Catchup (May 8, 2026)
+
+- **Date alignment** — All root docs (README, ARCHITECTURE, CONTEXT, START_HERE, ROADMAP, SECURITY, docs/README) updated May 7 → May 8.
+- **PRIMAL_CONTRACTS.md fixes** — Category numbering corrected (12→13→14 not 13→14→12). Auth section lists all 5 methods (was missing `auth.peer_info`). `auth.peer_info` moved from Identity to Auth. Identity section corrected to 2 methods (`identity.get`, `identity.create`). Transport section expanded: NDJSON framing, BTSP encrypted frames, TCP/named pipes documented.
+- **ROADMAP.md updated** — Waves 86–95 added to "Recently Completed" (was stale at Wave 85). Method count corrected 100+ → 117.
+- **CONTRIBUTING.md reconciled with CI** — Clippy `--all-features` corrected to `--all-targets -- -D warnings`. Test command shows CI gate (`--workspace --lib`) and local full suite separately. Integration/chaos test scope documented.
+- **ARCHITECTURE.md** — Showcase section corrected: `05-mixed-entropy` is a workspace member.
+
 ### Wave 95 — Deep Debt Cleanup: Refactors, Bug Fixes & Dead Code Removal (May 8, 2026)
 
 - **`method_gate.rs` smart refactor (811 → 425 LOC)** — Test suite extracted to `method_gate_tests.rs` via `#[path]` attribute. All 55 gate tests pass. Zero files over 800-line threshold.

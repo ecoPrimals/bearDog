@@ -16,7 +16,7 @@ All contributions must comply with the wateringHole standards:
 - **Edition 2024** — Rust 2024, MSRV 1.93.0 (pinned in `rust-toolchain.toml`)
 - **Pure Rust** — Zero C dependencies in default build (ecoBin v2.0; `serde_yaml` eliminated Wave 56)
 - **`forbid(unsafe_code)`** — Workspace-wide; no exceptions without wateringHole approval
-- **Clippy pedantic + nursery** — Zero warnings (`cargo clippy --workspace --all-features`)
+- **Clippy pedantic + nursery** — Zero warnings (`cargo clippy --workspace --all-targets -- -D warnings`)
 - **All public items documented** — `#![warn(missing_docs)]` on all library crates
 - **No TODO/FIXME/HACK** — Resolve before committing; track in ROADMAP.md instead
 - **< 800 lines per file** — Smart refactoring into domain-driven modules, not arbitrary splits
@@ -28,12 +28,17 @@ All contributions must comply with the wateringHole standards:
 ## Workflow
 
 ```bash
-cargo fmt --all -- --check         # Format check
-cargo clippy --workspace --all-features  # Lint (must be 0 warnings)
-cargo test --workspace             # All tests pass
-cargo doc --workspace --no-deps    # Docs build clean
-cargo deny check                   # Advisories, bans, licenses, sources
+cargo fmt --all -- --check                           # Format check
+cargo clippy --workspace --all-targets -- -D warnings  # Lint (must be 0 warnings)
+cargo test --workspace --lib                          # Library tests (CI gate)
+cargo test --workspace                                # Full suite (local)
+cargo doc --workspace --no-deps                       # Docs build clean
+cargo deny check                                      # Advisories, bans, licenses, sources
 ```
+
+CI runs `--all-targets` (not `--all-features`) and `--workspace --lib` (library
+tests only). Integration, chaos, and fault injection tests under `tests/` are
+run locally before merging.
 
 ## Commit Guidelines
 
