@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+#![cfg(test)]
+
 //! Test-only [`super::manager::HsmProvider`] implementations for enum dispatch.
+//!
+//! This module is gated behind `#[cfg(test)]` both here (inner attribute) and
+//! at the `mod` declaration in `hsm/mod.rs` (outer attribute). None of this
+//! code is compiled into release builds.
 
 use crate::tunnel::hsm::GenerateKeyRequest;
 use crate::tunnel::hsm::manager::HsmProvider;
