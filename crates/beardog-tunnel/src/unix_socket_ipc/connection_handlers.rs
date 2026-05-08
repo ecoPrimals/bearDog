@@ -26,11 +26,11 @@ impl UnixSocketIpcServer {
         first_line: &str,
         stream: Box<dyn PlatformStream>,
     ) -> Result<()> {
-        let caller = CallerContext::from_unix();
+        let mut caller = CallerContext::from_unix();
         let mut buf_stream = BufReader::new(stream);
 
         if let Some(response) = self
-            .handle_one_jsonrpc_request_universal(first_line, &caller)
+            .handle_one_jsonrpc_request_universal(first_line, &mut caller)
             .await?
         {
             buf_stream.get_mut().write_all(response.as_bytes()).await?;
@@ -79,7 +79,7 @@ impl UnixSocketIpcServer {
             }
 
             match self
-                .handle_one_jsonrpc_request_universal(&line, &caller)
+                .handle_one_jsonrpc_request_universal(&line, &mut caller)
                 .await
             {
                 Ok(Some(response)) => {
@@ -166,7 +166,7 @@ impl UnixSocketIpcServer {
         &self,
         stream: Box<dyn PlatformStream>,
     ) -> Result<()> {
-        let caller = CallerContext::from_unix();
+        let mut caller = CallerContext::from_unix();
         let mut buf_stream = BufReader::new(stream);
         let mut line_buf = Vec::with_capacity(1024);
 
@@ -198,7 +198,7 @@ impl UnixSocketIpcServer {
             }
 
             if let Some(response) = self
-                .handle_one_jsonrpc_request_universal(line.as_ref(), &caller)
+                .handle_one_jsonrpc_request_universal(line.as_ref(), &mut caller)
                 .await?
             {
                 buf_stream.get_mut().write_all(response.as_bytes()).await?;
@@ -221,7 +221,7 @@ impl UnixSocketIpcServer {
         mut stream: Box<dyn PlatformStream>,
         mut session: BtspSession,
     ) -> Result<()> {
-        let caller = CallerContext::from_unix();
+        let mut caller = CallerContext::from_unix();
         loop {
             let frame = match btsp_handshake::read_frame(&mut stream).await {
                 Ok(f) => f,
@@ -252,7 +252,7 @@ impl UnixSocketIpcServer {
             }
 
             if let Some(response_str) = self
-                .handle_one_jsonrpc_request_universal(&line, &caller)
+                .handle_one_jsonrpc_request_universal(&line, &mut caller)
                 .await?
             {
                 let encrypted = session
@@ -276,7 +276,7 @@ impl UnixSocketIpcServer {
         mut stream: Box<dyn PlatformStream>,
         session: Phase3Session,
     ) -> Result<()> {
-        let caller = CallerContext::from_unix();
+        let mut caller = CallerContext::from_unix();
         info!("BTSP Phase 3: encrypted frame I/O active");
         loop {
             let frame = match btsp_handshake::read_frame(&mut stream).await {
@@ -308,7 +308,7 @@ impl UnixSocketIpcServer {
             }
 
             if let Some(response_str) = self
-                .handle_one_jsonrpc_request_universal(&line, &caller)
+                .handle_one_jsonrpc_request_universal(&line, &mut caller)
                 .await?
             {
                 let encrypted = session

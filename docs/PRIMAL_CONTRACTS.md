@@ -1,7 +1,7 @@
 # 🔌 BearDog Primal Contracts - JSON-RPC API Specification
 
-**Version**: 1.0.0  
-**Date**: May 7, 2026  
+**Version**: 3.0.0  
+**Date**: May 8, 2026  
 **Status**: Production Stable  
 **Protocol**: JSON-RPC 2.0 over Unix Domain Sockets
 
@@ -34,7 +34,7 @@ BearDog exposes its cryptographic and genetic capabilities through a JSON-RPC 2.
 
 ## 📚 **API CATEGORIES**
 
-BearDog provides **114 JSON-RPC methods** across 13 categories:
+BearDog provides **117 JSON-RPC methods** across 14 categories:
 
 ### **1. Core Cryptography** (20 methods)
 - Signatures: Ed25519, ECDSA (P-256, P-384), RSA
@@ -108,9 +108,14 @@ BearDog provides **114 JSON-RPC methods** across 13 categories:
 - Entropy management
 - Session management
 
-### **13. Auth Introspection** (3 methods — pre-dispatch, JH-0)
-- `auth.check` — caller authentication status
+### **13. Auth & Ionic Token Lifecycle** (5 methods — pre-dispatch, JH-0/JH-1)
+- `auth.check` — caller authentication status (includes validated claims when present)
 - `auth.mode` — enforcement mode (permissive/enforced)
+- `auth.issue_ionic` — issue Ed25519-signed ionic capability token
+- `auth.verify_ionic` — verify ionic token, return claims or error
+
+### **14. Identity** (1 method — pre-dispatch, JH-1)
+- `identity.create` — generate ephemeral Ed25519 caller keypair + DID
 - `auth.peer_info` — peer credential inspection
 
 ### **12. Ionic Bond** (8 methods — IonicBondHandler)
@@ -1476,13 +1481,19 @@ print(response['result']['hash'])
 96. `crypto.sign_contract` - Sign contract terms with Ed25519 identity
 97. `crypto.verify_contract` - Verify contract signature
 
-### **Auth Introspection (3 methods — pre-dispatch, JH-0 MethodGate)**
+### **Auth & Ionic Token Lifecycle (5 methods — pre-dispatch, JH-0/JH-1 MethodGate)**
 
-98. `auth.check` - Caller authentication status
+98. `auth.check` - Caller authentication status (includes validated claims)
 99. `auth.mode` - Current enforcement mode (permissive/enforced)
 100. `auth.peer_info` - Peer credential introspection (uid, pid)
+101. `auth.issue_ionic` - Issue Ed25519-signed ionic capability token
+102. `auth.verify_ionic` - Verify ionic token, return claims or error
 
-### **Total**: **114 JSON-RPC methods** (103 CryptoHandler + 8 IonicBondHandler + 3 auth pre-dispatch)
+### **Identity (1 method — pre-dispatch, JH-1)**
+
+103. `identity.create` - Generate ephemeral Ed25519 caller keypair + DID
+
+### **Total**: **117 JSON-RPC methods** (103 CryptoHandler + 8 IonicBondHandler + 5 auth gate + 1 identity gate)
 
 ═══════════════════════════════════════════════════════════════════
 
@@ -1579,7 +1590,7 @@ BearDog uses **genetic lineage** for authentication:
 
 ═══════════════════════════════════════════════════════════════════
 
-**Document Version**: 2.1.0  
+**Document Version**: 3.0.0  
 **Last Updated**: May 8, 2026  
 **Maintainer**: BearDog Security Primal  
 **License**: Documented interface (implementation MIT-licensed)

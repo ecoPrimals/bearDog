@@ -249,9 +249,15 @@ impl CapabilitiesHandler {
                 },
                 {
                     "type": "auth",
+                    "version": "2.0",
+                    "methods": ["check", "mode", "peer_info", "issue_ionic", "verify_ionic"],
+                    "description": "Method-gate introspection and ionic token lifecycle (JH-0/JH-1) — auth status, enforcement mode, peer credentials, token issuance and verification"
+                },
+                {
+                    "type": "identity",
                     "version": "1.0",
-                    "methods": ["check", "mode", "peer_info"],
-                    "description": "Method-gate introspection (JH-0) — pre-dispatch auth status, enforcement mode, peer credential inspection"
+                    "methods": ["get", "create"],
+                    "description": "Primal identity and ephemeral caller identity creation (JH-1)"
                 }
             ],
             "consumed_capabilities": [],
@@ -285,6 +291,9 @@ impl CapabilitiesHandler {
                 "auth.check":                      { "cpu": "low",    "latency_ms": 0 },
                 "auth.mode":                       { "cpu": "low",    "latency_ms": 0 },
                 "auth.peer_info":                  { "cpu": "low",    "latency_ms": 0 },
+                "auth.issue_ionic":                { "cpu": "low",    "latency_ms": 1 },
+                "auth.verify_ionic":               { "cpu": "low",    "latency_ms": 1 },
+                "identity.create":                 { "cpu": "low",    "latency_ms": 1 },
                 "security.evaluate":               { "cpu": "medium", "latency_ms": 5 },
                 "graph.authorize_modification":    { "cpu": "medium", "latency_ms": 5 },
                 "tls.derive_secrets":              { "cpu": "medium", "latency_ms": 2 },
@@ -318,6 +327,9 @@ impl CapabilitiesHandler {
                     "auth.check",
                     "auth.mode",
                     "auth.peer_info",
+                    "auth.issue_ionic",
+                    "auth.verify_ionic",
+                    "identity.create",
                 ],
                 "note": if self.is_btsp_required() {
                     "Family-scoped socket: BTSP preferred. Cleartext JSON-RPC accepted via first-byte 0x7B bypass for listed methods."
@@ -397,6 +409,9 @@ impl CapabilitiesHandler {
             "auth.check",
             "auth.mode",
             "auth.peer_info",
+            "auth.issue_ionic",
+            "auth.verify_ionic",
+            "identity.create",
         ]
         .iter()
         .map(|s| (*s).to_string())
@@ -583,7 +598,7 @@ mod tests {
         let caps = response["capabilities"]
             .as_array()
             .expect("capabilities should be array in test");
-        assert!(caps.len() >= 19, "Expected at least 19 capabilities");
+        assert!(caps.len() >= 22, "Expected at least 22 capabilities");
 
         let cap_strs: Vec<&str> = caps
             .iter()

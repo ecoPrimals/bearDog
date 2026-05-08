@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 8, 2026 -- Wave 94: JH-1 Primal-Native Identity and Ionic Token Infrastructure
+
+- **Ed25519-signed ionic capability tokens** — New `ionic_token.rs` module: compact `base64(header).base64(payload).base64(signature)` wire format with `IonicTokenHeader` (`alg:EdDSA, typ:ionic, ver:1`), `IonicTokenPayload` (`iss` DID, `sub`, `scope` globs, `iat`, `exp`, `jti`). `issue_ionic_token()` signs with primal's deterministic Ed25519 key; `verify_ionic_token()` checks signature + expiry. `scope_covers_method()` supports `*` (wildcard), `prefix.*` (namespace), and exact patterns. `TokenError` enum: `Malformed`, `InvalidSignature`, `Expired`, `UnsupportedFormat`.
+- **3 new JSON-RPC methods (gate-handled):**
+  - `identity.create` — Generate ephemeral Ed25519 keypair; returns `{did, public_key, secret_key, algorithm}`. For caller identities (not primal identity).
+  - `auth.issue_ionic` — Issue signed ionic token: params `{subject, scope?, ttl_secs?}`; returns `{token, issuer, subject, scope, ttl_secs}`. Default scope `["*"]`, default TTL 3600s.
+  - `auth.verify_ionic` — Verify token: params `{token, method?}`; returns `{valid, scope_ok?, claims?, error?, reason?}`.
+- **Real cryptographic token verification in `MethodGate`** — Replaced `bearer_token.is_some()` with full pipeline: decode 3-part token → Ed25519 signature check against `self.verifying_key` → expiry check → `scope_covers_method()` check. `MethodGate` now stores `verifying_key`, `primal_name`, `node_id`. `CallerContext.validated_claims: Option<IonicTokenPayload>` populated on success. `auth.check` now includes `claims` field when present.
+- **Bearer token extraction from wire** — `_bearer_token` field extracted from JSON-RPC `params` object in UDS `route_jsonrpc()` and TCP NDJSON/BTSP paths before gate check (biomeOS convention from JH-0 handoff).
+- **Capabilities updated** — Auth capability `v2.0` with `["check", "mode", "peer_info", "issue_ionic", "verify_ionic"]`. New identity capability `v1.0` with `["get", "create"]`. Cost estimates, cleartext methods, discover_capabilities entries added.
+- **Method count 114 → 117** (103 CryptoHandler + 8 IonicBondHandler + 5 auth gate + 1 identity gate).
+- **55 new tests** across `ionic_token`, `ionic_token_handlers`, and `method_gate` modules.
+
 ### May 8, 2026 -- Wave 93: JH-0 MethodGate Pre-Dispatch Authorization
 
 - **`MethodGate` pre-dispatch layer** — Ecosystem-standard method gate adopted per `primalSpring/wateringHole/METHOD_GATE_STANDARD.md`. Every JSON-RPC method classified as `Public` (health, identity, capabilities, auth introspection — always allowed) or `Protected` (requires capability token when enforcement active). Default mode: `Permissive` (logs but allows). `BEARDOG_AUTH_MODE=enforced` rejects with `-32001 PERMISSION_DENIED`.

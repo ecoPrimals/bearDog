@@ -35,7 +35,7 @@
 
 - **Crates**: 29 directories (beardog-integration excluded — overstep)
 - **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
-- **JSON-RPC Methods**: 114 — 103 CryptoHandler + 8 IonicBondHandler + 3 auth pre-dispatch (JH-0 MethodGate)
+- **JSON-RPC Methods**: 117 — 103 CryptoHandler + 8 IonicBondHandler + 5 auth gate (JH-0/JH-1) + 1 identity gate (JH-1)
 - **`#[allow(`**: 81 (was 86; all carry `reason`)
 - **`#[expect(`**: 644 (was 646; 2 stale removed)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
@@ -89,6 +89,15 @@
 ---
 
 ## Recent Improvements
+
+### Wave 94 — JH-1 Primal-Native Identity and Ionic Token Infrastructure (May 8, 2026)
+
+- **Ed25519-signed ionic capability tokens** — New `ionic_token.rs` module implements compact `header.payload.signature` token format (mirrors JWT structure with Ed25519 asymmetric signatures for cross-primal verifiability). `issue_ionic_token` / `verify_ionic_token` / `scope_covers_method` with full test coverage.
+- **3 new JSON-RPC methods** — `identity.create` (ephemeral Ed25519 caller keypair + DID), `auth.issue_ionic` (issue signed capability token with subject/scope/TTL), `auth.verify_ionic` (verify token, return claims). All handled at the gate layer pre-dispatch.
+- **Real cryptographic token verification in MethodGate** — `bearer_token.is_some()` presence check replaced with full Ed25519 signature + expiry + scope verification. `MethodGate` now holds `verifying_key` derived from primal identity. `CallerContext.validated_claims` populated on successful verification.
+- **Bearer token extraction from wire** — `_bearer_token` field extracted from JSON-RPC `params` in both UDS and TCP dispatch paths (biomeOS convention).
+- **Capabilities updated** — Auth capability version 2.0 with `issue_ionic`/`verify_ionic`; new identity capability with `create`. Cost estimates, cleartext methods, discover_capabilities all updated.
+- **Method count**: 114 → 117 (2 auth ionic + 1 identity).
 
 ### Wave 93 — JH-0 MethodGate Pre-Dispatch Authorization (May 8, 2026)
 

@@ -169,6 +169,10 @@ pub mod multi_transport_server;
 // Pre-dispatch capability gate for JSON-RPC methods (JH-0 ecosystem standard)
 pub mod method_gate;
 
+// Ed25519-signed ionic capability tokens (JH-1)
+pub mod ionic_token;
+pub mod ionic_token_handlers;
+
 #[cfg(test)]
 mod btsp_handshake_tests;
 #[cfg(test)]

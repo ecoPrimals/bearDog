@@ -103,10 +103,11 @@ impl UnixSocketIpcServer {
             info!("BTSP handshake enforcement disabled (development mode)");
         }
 
-        let method_gate = MethodGate::from_env();
+        let primal_name = std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_owned());
+        let method_gate = MethodGate::from_env(&primal_name, identity.node_id());
         info!(
             mode = method_gate.mode().as_str(),
-            "Method gate initialized (JH-0)"
+            "Method gate initialized (JH-0/JH-1)"
         );
 
         Ok(Self {
@@ -508,9 +509,19 @@ impl UnixSocketIpcServer {
     async fn route_jsonrpc(
         &self,
         request: &JsonRpcRequest,
-        caller: &CallerContext,
+        caller: &mut CallerContext,
     ) -> Option<JsonRpcResponse> {
         debug!(method = %request.method, "JSON-RPC request");
+
+        // JH-1: extract bearer token from _bearer_token param (biomeOS convention)
+        if let Some(token) = request
+            .params
+            .as_ref()
+            .and_then(|p| p.get("_bearer_token"))
+            .and_then(serde_json::Value::as_str)
+        {
+            caller.bearer_token = Some(token.to_owned());
+        }
 
         let id = request.id.clone().unwrap_or(serde_json::Value::Null);
         let is_notification = request.id.is_none();
@@ -529,12 +540,17 @@ impl UnixSocketIpcServer {
             });
         }
 
-        // JH-0: intercept auth introspection methods (handled pre-dispatch)
+        // JH-0/JH-1: intercept gate-handled methods (auth introspection + ionic token lifecycle)
         if is_gate_handled_method(&request.method) {
             if is_notification {
                 return None;
             }
-            if let Some(result) = dispatch_auth_method(&request.method, &self.method_gate, caller) {
+            if let Some(result) = dispatch_auth_method(
+                &request.method,
+                &self.method_gate,
+                caller,
+                request.params.as_ref(),
+            ) {
                 return Some(JsonRpcResponse {
                     jsonrpc: JSONRPC_VERSION.to_string(),
                     result: Some(result),
@@ -544,7 +560,7 @@ impl UnixSocketIpcServer {
             }
         }
 
-        // JH-0: pre-dispatch authorization gate
+        // JH-0/JH-1: pre-dispatch authorization gate (real token verification)
         if let Err(gate_error) = self.method_gate.check(&request.method, caller) {
             if is_notification {
                 return None;
@@ -601,7 +617,7 @@ impl UnixSocketIpcServer {
     pub(super) async fn handle_one_jsonrpc_request_universal(
         &self,
         line: &str,
-        caller: &CallerContext,
+        caller: &mut CallerContext,
     ) -> Result<Option<String>> {
         let request: JsonRpcRequest = match serde_json::from_str(line.trim()) {
             Ok(req) => req,
@@ -633,8 +649,8 @@ impl UnixSocketIpcServer {
     pub async fn handle_jsonrpc_request(&self, request_str: &str) -> Result<JsonRpcResponse> {
         let request: JsonRpcRequest =
             serde_json::from_str(request_str).context("Failed to parse JSON-RPC request")?;
-        let caller = CallerContext::from_unix();
-        self.route_jsonrpc(&request, &caller)
+        let mut caller = CallerContext::from_unix();
+        self.route_jsonrpc(&request, &mut caller)
             .await
             .ok_or_else(|| anyhow::anyhow!("notification — no response expected"))
     }

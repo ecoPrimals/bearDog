@@ -59,10 +59,11 @@ impl TcpIpcServer {
         identity: Arc<PrimalIdentity>,
         security_mode: BtspSecurityMode,
     ) -> Self {
-        let method_gate = Arc::new(MethodGate::from_env());
+        let primal_name = std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_owned());
+        let method_gate = Arc::new(MethodGate::from_env(&primal_name, identity.node_id()));
         info!(
             mode = method_gate.mode().as_str(),
-            "TCP method gate initialized (JH-0)"
+            "TCP method gate initialized (JH-0/JH-1)"
         );
         Self {
             bind_addr,
@@ -141,7 +142,7 @@ impl TcpIpcServer {
             .peer_addr()
             .map_err(|e| BearDogError::system(format!("Failed to get peer address: {e}")))?;
 
-        let caller = caller_context_from_addr(&peer_addr);
+        let mut caller = caller_context_from_addr(&peer_addr);
 
         debug!("Handling connection from: {}", peer_addr);
 
@@ -183,7 +184,7 @@ impl TcpIpcServer {
                                 &registry,
                                 &btsp_provider,
                                 &gate,
-                                &caller,
+                                &mut caller,
                             )
                             .await;
                         }
@@ -262,10 +263,21 @@ impl TcpIpcServer {
                     let params = request.get("params").cloned();
                     let id = request.get("id").cloned();
 
+                    // JH-1: extract bearer token from _bearer_token param
+                    if let Some(token) = params
+                        .as_ref()
+                        .and_then(|p| p.get("_bearer_token"))
+                        .and_then(|v| v.as_str())
+                    {
+                        caller.bearer_token = Some(token.to_owned());
+                    }
+
                     debug!("Request: {} (id: {:?})", method, id);
 
-                    // JH-0: intercept auth introspection methods
-                    if let Some(result) = dispatch_auth_method(method, &gate, &caller) {
+                    // JH-0/JH-1: intercept gate-handled methods
+                    if let Some(result) =
+                        dispatch_auth_method(method, &gate, &caller, params.as_ref())
+                    {
                         let json_response = serde_json::json!({
                             "jsonrpc": "2.0",
                             "result": result,
@@ -277,8 +289,8 @@ impl TcpIpcServer {
                         continue;
                     }
 
-                    // JH-0: pre-dispatch authorization gate
-                    if let Err(gate_err) = gate.check(method, &caller) {
+                    // JH-0/JH-1: pre-dispatch authorization gate (real token verification)
+                    if let Err(gate_err) = gate.check(method, &mut caller) {
                         let json_response = serde_json::json!({
                             "jsonrpc": "2.0",
                             "error": {
@@ -342,7 +354,7 @@ impl TcpIpcServer {
         registry: &Arc<HandlerRegistry>,
         btsp_provider: &Arc<BeardogBtspProvider>,
         gate: &MethodGate,
-        caller: &CallerContext,
+        caller: &mut CallerContext,
     ) -> Result<(), BearDogError> {
         loop {
             let frame = match btsp_handshake::read_frame(stream).await {
@@ -396,8 +408,17 @@ impl TcpIpcServer {
             let params = request.get("params").cloned();
             let id = request.get("id").cloned();
 
-            // JH-0: intercept auth introspection methods
-            if let Some(result) = dispatch_auth_method(method, gate, caller) {
+            // JH-1: extract bearer token from _bearer_token param
+            if let Some(token) = params
+                .as_ref()
+                .and_then(|p| p.get("_bearer_token"))
+                .and_then(|v| v.as_str())
+            {
+                caller.bearer_token = Some(token.to_owned());
+            }
+
+            // JH-0/JH-1: intercept gate-handled methods
+            if let Some(result) = dispatch_auth_method(method, gate, caller, params.as_ref()) {
                 let json_response = serde_json::json!({"jsonrpc":"2.0","result":result,"id":id});
                 let resp_str = serde_json::to_string(&json_response)
                     .map_err(|e| BearDogError::system(format!("Serialize: {e}")))?;
@@ -410,7 +431,7 @@ impl TcpIpcServer {
                 continue;
             }
 
-            // JH-0: pre-dispatch authorization gate
+            // JH-0/JH-1: pre-dispatch authorization gate (real token verification)
             if let Err(gate_err) = gate.check(method, caller) {
                 let json_response = serde_json::json!({
                     "jsonrpc":"2.0",
@@ -472,7 +493,11 @@ mod tests {
     use tokio::net::TcpListener;
 
     fn test_gate() -> Arc<MethodGate> {
-        Arc::new(MethodGate::new(EnforcementMode::Permissive))
+        Arc::new(MethodGate::new(
+            EnforcementMode::Permissive,
+            "beardog",
+            "test-node",
+        ))
     }
 
     #[tokio::test]
