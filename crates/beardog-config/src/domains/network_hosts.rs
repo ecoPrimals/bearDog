@@ -292,7 +292,7 @@ impl NetworkHostsConfig {
     ///
     /// # Errors
     ///
-    /// Returns [`ConfigError::InvalidValue`] when any host is empty or contains
+    /// Returns an error when any host is empty or contains
     /// whitespace/control characters.
     pub fn validate(&self) -> crate::ConfigResult<()> {
         use crate::ConfigError;

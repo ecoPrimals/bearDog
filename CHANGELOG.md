@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 8, 2026 -- Wave 97: Cross-Family Contract Signing & Session Token UX
+
+- **Cross-family contract lifecycle** — New `crypto.contract.propose`, `crypto.contract.countersign`, `crypto.contract.verify` IPC methods implementing multi-party contract signing across family boundaries. Pending contracts tracked in `IonicBondHandler` with TTL expiry and Ed25519 dual-signature verification. Resolves primalSpring audit item "Ionic bond cross-family contract signing (Open)", unblocking hotSpring GAP-HS-005 (GPU lease), healthSpring (dual-tower ionic), and wetSpring (provenance cross-spring).
+- **Types** — `ContractProposeParams`, `ContractProposeResponse`, `ContractCountersignParams`, `ContractCountersignResponse`, `CrossFamilyContract`, `ContractVerifyParams`, `ContractVerifyResponse` added to `beardog-types::ionic_bond`.
+- **`auth.issue_session` (JH-4)** — Simplified token issuance for non-technical researchers. Purpose-driven scoping (`jupyterhub`, `desktop`, `notebook`, `research`, `admin`) with auto-derived scope patterns and TTL. Returns usage hint for environment variable or Bearer header. Gate-handled as public method alongside `auth.issue_ionic`.
+- **Capabilities** — Contract signing capability bumped v1.0 → v2.0 with 5 methods. `auth.issue_session` added to resource manifest, cleartext bypass list, and discover_capabilities. Operation dependencies declared.
+- **Pre-existing doc warnings fixed** — `ConfigError::*` broken rustdoc links in `beardog-config` (4 files: `timeouts_new/core.rs`, `network_ports.rs`, `network_hosts.rs`, `network_addresses.rs`, `paths.rs`). Unresolved `PrimalIdentity::from_env` and `SocketConfig` links in `beardog-tunnel` (2 files: `utils.rs`, `client.rs`).
+- **Tests** — 7 new cross-family contract tests, 7 new `auth.issue_session` tests, 3 new method gate tests. 14,883+ total tests passing, 0 failures.
+- **Modified files**: `ionic_bond.rs` (types), `contract.rs` (handler), `mod.rs` (handler reg), `tests.rs`, `ionic_token_handlers.rs`, `method_gate.rs`, `method_gate_tests.rs`, `capabilities.rs`, `utils.rs`, `client.rs`, 4 beardog-config doc files.
+
 ### May 8, 2026 -- Wave 96: Root Doc Alignment, PRIMAL_CONTRACTS Fix & ROADMAP Catchup
 
 - **Date alignment across 8 root docs** — README, ARCHITECTURE, CONTEXT, START_HERE, ROADMAP, SECURITY, docs/README, CONTRIBUTING all updated from May 7 → May 8. README also adds `JSON-RPC Methods: 117` to status line.

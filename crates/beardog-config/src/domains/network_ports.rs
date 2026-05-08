@@ -310,8 +310,8 @@ impl NetworkPortsConfig {
     ///
     /// # Errors
     ///
-    /// Returns [`ConfigError::InvalidValue`] when a port is `0` or privileged,
-    /// or [`ConfigError::PortConflict`] when two configured ports collide.
+    /// Returns an error when a port is `0` or privileged,
+    /// or when two configured ports collide.
     pub fn validate(&self) -> crate::ConfigResult<()> {
         use crate::ConfigError;
 

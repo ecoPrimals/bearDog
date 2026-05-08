@@ -39,6 +39,7 @@ pub use persistence::{
 pub struct IonicBondHandler {
     proposals: Arc<RwLock<HashMap<String, PendingProposal>>>,
     bonds: Arc<RwLock<HashMap<String, IonicBond>>>,
+    pending_contracts: Arc<RwLock<HashMap<String, contract::PendingContract>>>,
     persistence: Arc<BondPersistenceBackend>,
 }
 
@@ -65,6 +66,7 @@ impl IonicBondHandler {
         Self {
             proposals: Arc::new(RwLock::new(HashMap::new())),
             bonds: Arc::new(RwLock::new(HashMap::new())),
+            pending_contracts: Arc::new(RwLock::new(HashMap::new())),
             persistence: Arc::new(BondPersistenceBackend::InMemory(
                 InMemoryBondPersistence::default(),
             )),
@@ -77,6 +79,7 @@ impl IonicBondHandler {
         Self {
             proposals: Arc::new(RwLock::new(HashMap::new())),
             bonds: Arc::new(RwLock::new(HashMap::new())),
+            pending_contracts: Arc::new(RwLock::new(HashMap::new())),
             persistence,
         }
     }
@@ -93,6 +96,9 @@ impl MethodHandler for IonicBondHandler {
             "crypto.ionic_bond.list",
             "crypto.sign_contract",
             "crypto.verify_contract",
+            "crypto.contract.propose",
+            "crypto.contract.countersign",
+            "crypto.contract.verify",
         ]
     }
 
@@ -111,6 +117,9 @@ impl MethodHandler for IonicBondHandler {
             "crypto.ionic_bond.list" => self.handle_list(params).await,
             "crypto.sign_contract" => self.handle_sign_contract(params, btsp_provider).await,
             "crypto.verify_contract" => Self::handle_verify_contract(params).await,
+            "crypto.contract.propose" => self.handle_contract_propose(params, btsp_provider).await,
+            "crypto.contract.countersign" => self.handle_contract_countersign(params).await,
+            "crypto.contract.verify" => Self::handle_contract_verify(params).await,
             _ => Err(format!("Unknown ionic bond method: {method}")),
         }
     }

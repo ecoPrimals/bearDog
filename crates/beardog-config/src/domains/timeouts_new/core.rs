@@ -97,7 +97,7 @@ impl TimeoutConfig {
     ///
     /// # Errors
     ///
-    /// Returns [`ConfigError::InvalidValue`] when any value is outside the ranges above
+    /// Returns an error when any value is outside the ranges above
     /// (see [`crate::domains::timeouts_new::validation::validate_config`]).
     pub fn validate(&self) -> crate::ConfigResult<()> {
         crate::domains::timeouts::validation::validate_config(self)

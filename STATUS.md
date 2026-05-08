@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant (threshold lowered to 800; `aliases_and_beardog.rs` refactored Wave 75) |
-| **Tests** | 12,610 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,883+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
@@ -89,6 +89,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 97 — Cross-Family Contract Signing & Session Token UX (May 8, 2026)
+
+- **Cross-family contract lifecycle** — New `crypto.contract.propose`, `crypto.contract.countersign`, `crypto.contract.verify` IPC methods for multi-party contract signing across family boundaries. Resolves hotSpring GAP-HS-005 (GPU lease), healthSpring (dual-tower ionic), and wetSpring (provenance cross-spring). Full propose→countersign→verify lifecycle with Ed25519 dual-signature verification.
+- **`auth.issue_session` (JH-4)** — Simplified token issuance for non-technical researchers. Purpose-driven scoping (`jupyterhub`, `desktop`, `notebook`, `research`, `admin`) with auto-derived TTL, scope patterns, and usage hints. No manual token wrangling required. Joint with primalSpring.
+- **Pre-existing doc warnings fixed** — Resolved broken `ConfigError::*` rustdoc links in `beardog-config` (4 files) and unresolved `PrimalIdentity::from_env` / `SocketConfig` links in `beardog-tunnel` (3 files).
+- **Registry expanded** — 384 methods (was 381). Contract signing capability bumped to v2.0.
+- **Test suite** — 14,883+ tests, 0 failures, all quality gates clean.
 
 ### Wave 96 — Root Doc Alignment, PRIMAL_CONTRACTS Fix, ROADMAP Catchup (May 8, 2026)
 

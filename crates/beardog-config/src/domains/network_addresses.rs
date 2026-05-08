@@ -269,7 +269,7 @@ impl NetworkAddressesConfig {
     ///
     /// # Errors
     ///
-    /// Returns [`ConfigError::InvalidValue`] when any host or IP field is empty or unparsable.
+    /// Returns an error when any host or IP field is empty or unparsable.
     pub fn validate(&self) -> crate::ConfigResult<()> {
         use crate::ConfigError;
 

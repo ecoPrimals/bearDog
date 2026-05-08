@@ -194,9 +194,9 @@ impl CapabilitiesHandler {
                 },
                 {
                     "type": "contract_signing",
-                    "version": "1.0",
-                    "methods": ["sign_contract", "verify_contract"],
-                    "description": "Ed25519 contract signing for cross-family trust (IONIC-RUNTIME: propose→accept→seal with signed contracts)"
+                    "version": "2.0",
+                    "methods": ["sign_contract", "verify_contract", "contract.propose", "contract.countersign", "contract.verify"],
+                    "description": "Ed25519 contract signing — single-party (sign_contract) and cross-family multi-party lifecycle (contract.propose→countersign→verify)"
                 },
                 {
                     "type": "lineage",
@@ -283,6 +283,9 @@ impl CapabilitiesHandler {
                 "crypto.ionic_bond.list":          { "cpu": "low",    "latency_ms": 1 },
                 "crypto.sign_contract":            { "cpu": "low",    "latency_ms": 1 },
                 "crypto.verify_contract":          { "cpu": "low",    "latency_ms": 1 },
+                "crypto.contract.propose":         { "cpu": "low",    "latency_ms": 1 },
+                "crypto.contract.countersign":     { "cpu": "low",    "latency_ms": 1 },
+                "crypto.contract.verify":          { "cpu": "low",    "latency_ms": 1 },
                 "crypto.derive_purpose_key":       { "cpu": "low",    "latency_ms": 1 },
                 "crypto.sign_registration":        { "cpu": "low",    "latency_ms": 1 },
                 "lineage.list":                    { "cpu": "low",    "latency_ms": 1 },
@@ -292,6 +295,7 @@ impl CapabilitiesHandler {
                 "auth.mode":                       { "cpu": "low",    "latency_ms": 0 },
                 "auth.peer_info":                  { "cpu": "low",    "latency_ms": 0 },
                 "auth.issue_ionic":                { "cpu": "low",    "latency_ms": 1 },
+                "auth.issue_session":              { "cpu": "low",    "latency_ms": 1 },
                 "auth.verify_ionic":               { "cpu": "low",    "latency_ms": 1 },
                 "identity.create":                 { "cpu": "low",    "latency_ms": 1 },
                 "security.evaluate":               { "cpu": "medium", "latency_ms": 5 },
@@ -306,6 +310,8 @@ impl CapabilitiesHandler {
                 "crypto.ionic_bond.seal":          ["crypto.ionic_bond.accept"],
                 "crypto.ionic_bond.verify":        ["crypto.ionic_bond.accept"],
                 "crypto.ionic_bond.revoke":        ["crypto.ionic_bond.accept"],
+                "crypto.contract.countersign":     ["crypto.contract.propose"],
+                "crypto.contract.verify":          ["crypto.contract.countersign"],
             },
             "protocols": ["json-rpc"],
             "transport": ["uds", "tcp"],
@@ -328,6 +334,7 @@ impl CapabilitiesHandler {
                     "auth.mode",
                     "auth.peer_info",
                     "auth.issue_ionic",
+                    "auth.issue_session",
                     "auth.verify_ionic",
                     "identity.create",
                 ],
@@ -410,8 +417,12 @@ impl CapabilitiesHandler {
             "auth.mode",
             "auth.peer_info",
             "auth.issue_ionic",
+            "auth.issue_session",
             "auth.verify_ionic",
             "identity.create",
+            "crypto.contract.propose",
+            "crypto.contract.countersign",
+            "crypto.contract.verify",
         ]
         .iter()
         .map(|s| (*s).to_string())

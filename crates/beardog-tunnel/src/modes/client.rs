@@ -13,7 +13,7 @@ use tracing::info;
 
 /// Run `BearDog` in client mode.
 ///
-/// Discovers the server endpoint via [`SocketConfig`], then either dispatches
+/// Discovers the server endpoint via `SocketConfig`, then either dispatches
 /// `command` as a JSON-RPC method or displays the help banner.
 ///
 /// # Errors

@@ -109,6 +109,89 @@ pub fn handle_auth_issue_ionic(primal_name: &str, node_id: &str, params: Option<
     })
 }
 
+// ── auth.issue_session (JH-4) ───────────────────────────────────────────
+
+/// Handle `auth.issue_session` — simplified token issuance for non-technical
+/// users (`JupyterHub` spawners, desktop launchers, etc.).
+///
+/// Accepts a minimal `purpose` string and auto-derives scope, subject, and TTL.
+/// The caller never needs to construct scope patterns manually.
+///
+/// # Params (from JSON-RPC `params`)
+///
+/// - `purpose` (string, optional): `"jupyterhub"`, `"desktop"`, `"notebook"`,
+///   `"research"`, or `"admin"`. Defaults to `"research"`.
+/// - `user` (string, optional): user identifier; defaults to `"session-user"`.
+/// - `ttl_hours` (integer, optional): lifetime in hours; defaults per purpose.
+#[must_use]
+pub fn handle_auth_issue_session(
+    primal_name: &str,
+    node_id: &str,
+    params: Option<&Value>,
+) -> Value {
+    let purpose = params
+        .and_then(|p| p.get("purpose"))
+        .and_then(Value::as_str)
+        .unwrap_or("research");
+
+    let user = params
+        .and_then(|p| p.get("user"))
+        .and_then(Value::as_str)
+        .unwrap_or("session-user");
+
+    let (scope, default_ttl_hours): (Vec<&str>, i64) = match purpose {
+        "jupyterhub" | "notebook" => (
+            vec![
+                "crypto.*",
+                "health.*",
+                "capabilities.*",
+                "identity.*",
+                "auth.verify_ionic",
+            ],
+            8,
+        ),
+        "desktop" => (
+            vec![
+                "crypto.*",
+                "health.*",
+                "capabilities.*",
+                "identity.*",
+                "secrets.*",
+            ],
+            24,
+        ),
+        "admin" => (vec!["*"], 1),
+        _ => (
+            vec!["crypto.*", "health.*", "capabilities.*", "identity.*"],
+            8,
+        ),
+    };
+
+    let ttl_hours = params
+        .and_then(|p| p.get("ttl_hours"))
+        .and_then(Value::as_i64)
+        .unwrap_or(default_ttl_hours);
+
+    let ttl_secs = ttl_hours * 3600;
+    let scope_strings: Vec<String> = scope.iter().map(|s| (*s).to_string()).collect();
+
+    let signing_key = derive_primal_signing_key(primal_name, node_id);
+    let issuer_did = primal_did(primal_name, node_id);
+
+    let token = issue_ionic_token(&signing_key, &issuer_did, user, &scope_strings, ttl_secs);
+
+    serde_json::json!({
+        "token": token,
+        "issuer": issuer_did,
+        "subject": user,
+        "purpose": purpose,
+        "scope": scope_strings,
+        "ttl_secs": ttl_secs,
+        "ttl_hours": ttl_hours,
+        "usage": "Set BEARDOG_TOKEN=<token> or pass as Bearer header. Token auto-expires.",
+    })
+}
+
 // ── auth.verify_ionic ───────────────────────────────────────────────────
 
 /// Handle `auth.verify_ionic` — verify a token string and return claims.
@@ -264,5 +347,74 @@ mod tests {
         let b = primal_did(PRIMAL, NODE);
         assert_eq!(a, b);
         assert!(a.starts_with("did:key:z6Mk"));
+    }
+
+    // ── auth.issue_session (JH-4) ──
+
+    #[test]
+    fn issue_session_default_purpose_is_research() {
+        let result = handle_auth_issue_session(PRIMAL, NODE, None);
+        assert_eq!(result["purpose"], "research");
+        assert!(result["token"].as_str().is_some());
+        assert_eq!(result["ttl_hours"], 8);
+        assert_eq!(result["ttl_secs"], 8 * 3600);
+    }
+
+    #[test]
+    fn issue_session_jupyterhub_scopes() {
+        let params = serde_json::json!({ "purpose": "jupyterhub", "user": "dr.who" });
+        let result = handle_auth_issue_session(PRIMAL, NODE, Some(&params));
+        assert_eq!(result["purpose"], "jupyterhub");
+        assert_eq!(result["subject"], "dr.who");
+
+        let scope = result["scope"].as_array().unwrap();
+        assert!(scope.iter().any(|s| s == "crypto.*"));
+        assert!(scope.iter().any(|s| s == "health.*"));
+        assert!(scope.iter().any(|s| s == "capabilities.*"));
+        assert!(scope.iter().any(|s| s == "auth.verify_ionic"));
+    }
+
+    #[test]
+    fn issue_session_admin_short_ttl() {
+        let params = serde_json::json!({ "purpose": "admin" });
+        let result = handle_auth_issue_session(PRIMAL, NODE, Some(&params));
+        assert_eq!(result["scope"], serde_json::json!(["*"]));
+        assert_eq!(result["ttl_hours"], 1);
+    }
+
+    #[test]
+    fn issue_session_desktop_scope() {
+        let params = serde_json::json!({ "purpose": "desktop" });
+        let result = handle_auth_issue_session(PRIMAL, NODE, Some(&params));
+        let scope = result["scope"].as_array().unwrap();
+        assert!(scope.iter().any(|s| s == "secrets.*"));
+        assert_eq!(result["ttl_hours"], 24);
+    }
+
+    #[test]
+    fn issue_session_custom_ttl() {
+        let params = serde_json::json!({ "purpose": "notebook", "ttl_hours": 2 });
+        let result = handle_auth_issue_session(PRIMAL, NODE, Some(&params));
+        assert_eq!(result["ttl_hours"], 2);
+        assert_eq!(result["ttl_secs"], 7200);
+    }
+
+    #[test]
+    fn issue_session_token_verifies() {
+        let params = serde_json::json!({ "purpose": "jupyterhub", "user": "researcher" });
+        let result = handle_auth_issue_session(PRIMAL, NODE, Some(&params));
+        let token = result["token"].as_str().unwrap();
+
+        let vk = derive_primal_verifying_key(PRIMAL, NODE);
+        let verify_params = serde_json::json!({ "token": token });
+        let verify_result = handle_auth_verify_ionic(&vk, Some(&verify_params));
+        assert_eq!(verify_result["valid"], true);
+        assert_eq!(verify_result["claims"]["sub"], "researcher");
+    }
+
+    #[test]
+    fn issue_session_returns_usage_hint() {
+        let result = handle_auth_issue_session(PRIMAL, NODE, None);
+        assert!(result["usage"].as_str().unwrap().contains("BEARDOG_TOKEN"));
     }
 }

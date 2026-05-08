@@ -237,7 +237,8 @@ impl LineageChainManager {
             BearDogError::system(format!("Signing key not found for: {parent_id}"))
         })?;
 
-        let message = Self::relationship_message(parent_id, child_id, child_public_key, established_at);
+        let message =
+            Self::relationship_message(parent_id, child_id, child_public_key, established_at);
         let signature = signing_key.sign(&message);
         Ok(signature.to_bytes().to_vec())
     }

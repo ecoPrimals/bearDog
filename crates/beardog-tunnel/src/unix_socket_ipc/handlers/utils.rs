@@ -58,7 +58,7 @@ pub fn get_primal_name() -> String {
 /// Resolves family id from explicit hints.
 ///
 /// Fallback chain: `BEARDOG_FAMILY_ID` / `FAMILY_ID` → `BIOMEOS_FAMILY` → `"standalone"`
-/// (aligned with [`PrimalIdentity::from_env`]).
+/// (aligned with `PrimalIdentity::from_env`).
 #[must_use]
 pub fn get_family_id_with(h: &IdentityHints) -> String {
     h.family_id
@@ -77,7 +77,7 @@ pub fn get_family_id() -> String {
 /// Resolves node id from explicit hints.
 ///
 /// Fallback chain: `BEARDOG_NODE_ID` / `NODE_ID` → `HOSTNAME` → ephemeral
-/// `standalone-{uuid}` (same as [`PrimalIdentity::from_env`] and [`SocketConfig`]).
+/// `standalone-{uuid}` (same as `PrimalIdentity::from_env` and `SocketConfig`).
 #[must_use]
 pub fn get_node_id_with(h: &IdentityHints) -> String {
     h.node_id

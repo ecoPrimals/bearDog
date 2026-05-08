@@ -308,6 +308,125 @@ pub struct VerifyContractResponse {
     pub error: Option<String>,
 }
 
+// ── Cross-family contract lifecycle (multi-party signing) ────────────
+
+/// Parameters for `crypto.contract.propose` — initiate a cross-family contract.
+///
+/// The proposer signs the contract terms first, then shares the `contract_id`
+/// with counterparties who countersign via `crypto.contract.countersign`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContractProposeParams {
+    /// Identity of the proposing party (tower ID, family ID, etc.).
+    pub proposer: String,
+    /// The contract terms both parties must agree to. Serialized canonically
+    /// and SHA-256 hashed before signing.
+    pub terms: serde_json::Value,
+    /// Optional context label (e.g. `"gpu_lease"`, `"data_federation"`,
+    /// `"dual_tower_ionic"`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context: Option<String>,
+    /// Optional TTL in seconds. After expiry, the contract cannot be countersigned.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ttl_seconds: Option<u64>,
+}
+
+/// Response from `crypto.contract.propose`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContractProposeResponse {
+    /// Unique contract identifier for countersigning.
+    pub contract_id: String,
+    /// SHA-256 hex digest of the canonical terms.
+    pub terms_hash: String,
+    /// Proposer's Ed25519 signature (standard base64).
+    pub proposer_signature: String,
+    /// Proposer's Ed25519 public key (standard base64).
+    pub proposer_public_key: String,
+    /// When the proposal was created (RFC 3339).
+    pub created_at: String,
+    /// When the proposal expires (RFC 3339), if time-bounded.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<String>,
+}
+
+/// Parameters for `crypto.contract.countersign` — second party signs.
+///
+/// The counterparty provides their own signature over the same `terms_hash`.
+/// Both signatures are verified before the contract is sealed.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContractCountersignParams {
+    /// Contract ID from the propose response.
+    pub contract_id: String,
+    /// Identity of the countersigning party.
+    pub countersigner: String,
+    /// Countersigner's Ed25519 signature over the terms hash (standard base64).
+    pub countersigner_signature: String,
+    /// Countersigner's Ed25519 public key (standard base64).
+    pub countersigner_public_key: String,
+}
+
+/// A sealed cross-family contract with both parties' signatures.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CrossFamilyContract {
+    /// Unique contract identifier.
+    pub contract_id: String,
+    /// SHA-256 hex digest of the canonical terms.
+    pub terms_hash: String,
+    /// The original contract terms.
+    pub terms: serde_json::Value,
+    /// Optional context label.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context: Option<String>,
+    /// Proposer identity.
+    pub proposer: String,
+    /// Proposer's Ed25519 signature (standard base64).
+    pub proposer_signature: String,
+    /// Proposer's Ed25519 public key (standard base64).
+    pub proposer_public_key: String,
+    /// Countersigner identity.
+    pub countersigner: String,
+    /// Countersigner's Ed25519 signature (standard base64).
+    pub countersigner_signature: String,
+    /// Countersigner's Ed25519 public key (standard base64).
+    pub countersigner_public_key: String,
+    /// When the contract was sealed (RFC 3339).
+    pub sealed_at: String,
+}
+
+/// Response from `crypto.contract.countersign`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContractCountersignResponse {
+    /// The fully sealed contract with both signatures.
+    pub contract: CrossFamilyContract,
+}
+
+/// Parameters for `crypto.contract.verify` — verify a sealed contract.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContractVerifyParams {
+    /// SHA-256 hex digest of the terms.
+    pub terms_hash: String,
+    /// First party's signature (standard base64).
+    pub proposer_signature: String,
+    /// First party's public key (standard base64).
+    pub proposer_public_key: String,
+    /// Second party's signature (standard base64).
+    pub countersigner_signature: String,
+    /// Second party's public key (standard base64).
+    pub countersigner_public_key: String,
+}
+
+/// Response from `crypto.contract.verify`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContractVerifyResponse {
+    /// Both signatures are cryptographically valid.
+    pub valid: bool,
+    /// Which party's signature failed, if any.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub failed_party: Option<String>,
+    /// Error detail (set only on failure).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

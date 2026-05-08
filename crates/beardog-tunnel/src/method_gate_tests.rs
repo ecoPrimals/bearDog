@@ -74,6 +74,10 @@ fn ionic_auth_methods_are_public() {
         MethodAccessLevel::Public
     );
     assert_eq!(
+        classify_method("auth.issue_session"),
+        MethodAccessLevel::Public
+    );
+    assert_eq!(
         classify_method("auth.verify_ionic"),
         MethodAccessLevel::Public
     );
@@ -161,6 +165,7 @@ fn public_method_always_passes() {
     assert!(gate.check("capabilities.list", &mut caller).is_ok());
     assert!(gate.check("auth.check", &mut caller).is_ok());
     assert!(gate.check("auth.issue_ionic", &mut caller).is_ok());
+    assert!(gate.check("auth.issue_session", &mut caller).is_ok());
     assert!(gate.check("auth.verify_ionic", &mut caller).is_ok());
 }
 
@@ -371,6 +376,19 @@ fn dispatch_routes_ionic_methods() {
 }
 
 #[test]
+fn dispatch_routes_issue_session() {
+    let gate = test_gate(EnforcementMode::Permissive);
+    let caller = CallerContext::loopback();
+    let session_params = serde_json::json!({"purpose": "jupyterhub", "user": "researcher"});
+    let result = dispatch_auth_method("auth.issue_session", &gate, &caller, Some(&session_params));
+    assert!(result.is_some());
+    let val = result.unwrap();
+    assert_eq!(val["purpose"], "jupyterhub");
+    assert_eq!(val["subject"], "researcher");
+    assert!(val["token"].as_str().is_some());
+}
+
+#[test]
 fn dispatch_returns_none_for_non_auth() {
     let gate = test_gate(EnforcementMode::Permissive);
     let caller = CallerContext::loopback();
@@ -383,6 +401,7 @@ fn is_gate_handled_method_correct() {
     assert!(is_gate_handled_method("auth.mode"));
     assert!(is_gate_handled_method("auth.peer_info"));
     assert!(is_gate_handled_method("auth.issue_ionic"));
+    assert!(is_gate_handled_method("auth.issue_session"));
     assert!(is_gate_handled_method("auth.verify_ionic"));
     assert!(is_gate_handled_method("identity.create"));
     assert!(!is_gate_handled_method("crypto.sign"));

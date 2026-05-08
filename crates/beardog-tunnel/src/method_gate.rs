@@ -49,6 +49,7 @@ const PUBLIC_METHODS: &[&str] = &[
     "auth.mode",
     "auth.peer_info",
     "auth.issue_ionic",
+    "auth.issue_session",
     "auth.verify_ionic",
 ];
 
@@ -388,6 +389,7 @@ pub fn is_gate_handled_method(method: &str) -> bool {
             | "auth.mode"
             | "auth.peer_info"
             | "auth.issue_ionic"
+            | "auth.issue_session"
             | "auth.verify_ionic"
             | "identity.create"
     )
@@ -403,7 +405,8 @@ pub fn dispatch_auth_method(
     params: Option<&serde_json::Value>,
 ) -> Option<serde_json::Value> {
     use crate::ionic_token_handlers::{
-        handle_auth_issue_ionic, handle_auth_verify_ionic, handle_identity_create,
+        handle_auth_issue_ionic, handle_auth_issue_session, handle_auth_verify_ionic,
+        handle_identity_create,
     };
     match method {
         "auth.check" => Some(handle_auth_check(caller)),
@@ -411,6 +414,11 @@ pub fn dispatch_auth_method(
         "auth.peer_info" => Some(handle_auth_peer_info(caller)),
         "identity.create" => Some(handle_identity_create()),
         "auth.issue_ionic" => Some(handle_auth_issue_ionic(
+            gate.primal_name(),
+            gate.node_id(),
+            params,
+        )),
+        "auth.issue_session" => Some(handle_auth_issue_session(
             gate.primal_name(),
             gate.node_id(),
             params,
