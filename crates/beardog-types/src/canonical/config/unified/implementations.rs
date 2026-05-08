@@ -261,11 +261,7 @@ impl UnifiedBearDogConfig {
         config.metadata.version.beardog_version = env!("CARGO_PKG_VERSION").to_string();
         config.metadata.environment = Environment::Development;
 
-        // Enable basic monitoring
         config.monitoring.enabled = true;
-        // Updated to use new unified monitoring config structure
-        // config.monitoring.interval_seconds = 30;
-        // config.monitoring.retention_hours = 24;
 
         // Validate migrated configuration
         config.validate()?;

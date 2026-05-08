@@ -70,13 +70,15 @@ struct AlignedBuffer {
     in_use: std::sync::atomic::AtomicBool,
 }
 
-/// Placeholder queue handle carrying only a capacity (implementation pending).
+/// Capacity-only queue handle (no storage backing).
 ///
-/// A full lock-free queue is not yet wired into hot paths; this type keeps the
-/// public shape and capacity contract for callers and tests.
+/// A lock-free MPMC queue implementation is deferred; this type preserves
+/// the `UltimatePerformanceProcessor` field layout and capacity contract.
+/// When a real implementation is wired, `_marker` will be replaced by the
+/// backing ring buffer.
 #[allow(
     dead_code,
-    reason = "pub struct placeholder for future lock-free queue; expect unfulfilled when queue fields are used"
+    reason = "placeholder for future lock-free queue; _marker unused until enqueue/dequeue paths are wired"
 )]
 pub struct LockFreeQueue<T> {
     _marker: PhantomData<T>,

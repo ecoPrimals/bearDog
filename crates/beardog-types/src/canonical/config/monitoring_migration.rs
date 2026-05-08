@@ -333,68 +333,61 @@ impl MonitoringMigrationService {
             unified_config.enabled = enabled_bool;
         }
 
-        // Extract interval settings
-        if let Some(interval) = config.get("interval_seconds")
-            && let Some(_interval_num) = interval.as_u64()
-        {
-            // unified_config.interval_seconds = interval_num; // Field doesn't exist in new structure
-        }
+        // interval_seconds / retention_hours were removed in the unified config;
+        // callers relying on legacy keys get the MonitoringConfig defaults.
     }
 
-    /// Migrate provider monitoring configurations
+    /// Migrate provider monitoring configurations.
+    ///
+    /// Currently a no-op: the unified config uses defaults until
+    /// provider-specific monitoring fields are defined.
     fn migrate_provider_monitoring(
         provider_configs: Vec<HashMap<String, serde_json::Value>>,
         _unified_config: &mut MonitoringConfig,
     ) {
-        // Merge settings from multiple providers
-        for _provider_config in provider_configs {
-            // Extract relevant monitoring settings and apply to unified config
-            // Implementation would merge provider-specific monitoring settings
-        }
+        tracing::debug!(
+            providers = provider_configs.len(),
+            "provider monitoring migration: using unified defaults"
+        );
     }
 
-    // Helper methods for specific component migrations
     fn migrate_metrics_config(
         _metrics_config: HashMap<String, serde_json::Value>,
         _unified_metrics: &mut UnifiedMetricsConfig,
     ) {
-        // Implementation would extract metrics settings
+        tracing::debug!("metrics migration: using unified defaults");
     }
 
     fn migrate_tracing_config(
         _tracing_config: HashMap<String, serde_json::Value>,
         _unified_tracing: &mut UnifiedTracingConfig,
     ) {
-        // Implementation would extract tracing settings
+        tracing::debug!("tracing migration: using unified defaults");
     }
 
     fn migrate_logging_config(
         _logging_config: HashMap<String, serde_json::Value>,
         _unified_logging: &mut UnifiedLoggingConfig,
     ) {
-        // Implementation would extract logging settings
+        tracing::debug!("logging migration: using unified defaults");
     }
 
     fn migrate_health_config(
         _health_config: HashMap<String, serde_json::Value>,
         _unified_health: &mut UnifiedHealthConfig,
     ) {
-        // Implementation would extract health check settings
+        tracing::debug!("health migration: using unified defaults");
     }
 
     fn migrate_alerting_config(
         _alerting_config: HashMap<String, serde_json::Value>,
         _unified_alerting: &mut UnifiedAlertingConfig,
     ) {
-        // Implementation would extract alerting settings
+        tracing::debug!("alerting migration: using unified defaults");
     }
 
-    /// Validate the unified monitoring configuration
-    /// Validates `unified_monitoring_config`
-    const fn validate_unified_monitoring_config(_unified_config: &MonitoringConfig) {
-        // Implementation would validate the unified monitoring configuration
-        // Check for required fields, valid ranges, port conflicts, etc.
-    }
+    /// Validation placeholder — unified config types enforce invariants at construction.
+    const fn validate_unified_monitoring_config(_unified_config: &MonitoringConfig) {}
 
     /// Create a migration report summary
     #[must_use]

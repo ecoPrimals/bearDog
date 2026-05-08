@@ -164,16 +164,15 @@ fn detect_knox_availability(device_info: &AndroidDeviceInfo) -> Result<bool, Bea
     }
 }
 
-/// Checks Android KeyStore for StrongBox capability
+/// Checks Android KeyStore for StrongBox capability.
+///
+/// Requires JNI wiring to `KeyStore.getInstance("AndroidKeyStore")` and
+/// `KeyProperties.SECURITY_LEVEL_STRONGBOX`. Returns `true` optimistically
+/// until the native bridge is available.
 #[cfg(target_os = "android")]
 fn check_android_keystore_strongbox() -> Result<bool, BearDogError> {
-    // Real implementation would use JNI to query:
-    // KeyStore.getInstance("AndroidKeyStore")
-    //   .getEntry("test_key", null)
-    //   .getSecurityLevel() == KeyProperties.SECURITY_LEVEL_STRONGBOX
-
-    debug!("Checking Android KeyStore for StrongBox support");
-    Ok(true) // Placeholder - would be real JNI call
+    debug!("Checking Android KeyStore for StrongBox support (JNI bridge pending)");
+    Ok(true)
 }
 
 /// Returns true if running on Android platform

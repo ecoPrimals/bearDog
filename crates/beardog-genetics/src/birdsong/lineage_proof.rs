@@ -166,23 +166,30 @@ impl LineageProofManager {
                 });
             }
 
-            // Get parent and child nodes for signature verification
-            let _parent_node = chain.nodes.get(parent_id).ok_or_else(|| {
+            let parent_node = chain.nodes.get(parent_id).ok_or_else(|| {
                 BearDogError::system(format!("Parent node not found: {parent_id}"))
             })?;
 
-            let _child_node = chain
+            let child_node = chain
                 .nodes
                 .get(child_id)
                 .ok_or_else(|| BearDogError::system(format!("Child node not found: {child_id}")))?;
 
-            // Verify signature (simplified for now - in production would use full verification)
-            // self.chain_manager.verify_relationship(
-            //     relationship,
-            //     &_parent_node.public_key,
-            //     &_child_node.public_key,
-            // )?;
-            debug!("✅ Verified relationship: {} -> {}", parent_id, child_id);
+            let sig_valid = self.chain_manager.verify_relationship(
+                relationship,
+                &parent_node.public_key,
+                &child_node.public_key,
+            )?;
+            if !sig_valid {
+                return Ok(LineageVerificationResult {
+                    valid: false,
+                    depth: 0,
+                    failure_reason: Some(format!(
+                        "Signature verification failed: {parent_id} -> {child_id}"
+                    )),
+                });
+            }
+            debug!("Verified relationship: {} -> {}", parent_id, child_id);
         }
 
         // Verify Merkle root

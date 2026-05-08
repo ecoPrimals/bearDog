@@ -90,6 +90,13 @@
 
 ## Recent Improvements
 
+### Wave 95 — Deep Debt Cleanup: Refactors, Bug Fixes & Dead Code Removal (May 8, 2026)
+
+- **`method_gate.rs` smart refactor (811 → 425 LOC)** — Test suite extracted to `method_gate_tests.rs` via `#[path]` attribute. All 55 gate tests pass. Zero files over 800-line threshold.
+- **Lineage proof signature verification fixed** — `verify_proof()` previously had its `verify_relationship()` call commented out (sign/verify message mismatch bug). Extracted `relationship_message()` canonical builder shared by sign and verify. 3 previously broken tests now pass (49 total lineage tests green).
+- **Commented-out code cleaned** in 4 production files: `lineage_proof.rs`, `implementations.rs`, `monitoring_migration.rs`, `safe_device_detection.rs`.
+- **`LockFreeQueue` placeholder documented** with clear deferral rationale.
+
 ### Wave 94 — JH-1 Primal-Native Identity and Ionic Token Infrastructure (May 8, 2026)
 
 - **Ed25519-signed ionic capability tokens** — New `ionic_token.rs` module implements compact `header.payload.signature` token format (mirrors JWT structure with Ed25519 asymmetric signatures for cross-primal verifiability). `issue_ionic_token` / `verify_ionic_token` / `scope_covers_method` with full test coverage.

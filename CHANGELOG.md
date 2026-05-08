@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 8, 2026 -- Wave 95: Deep Debt Cleanup — Refactors, Bug Fixes & Dead Code Removal
+
+- **`method_gate.rs` smart refactor (811 → 425 LOC)** — Extracted 389-line test suite to `method_gate_tests.rs` using `#[path]` attribute. Production module well under 800-line threshold. All 55 gate tests pass unchanged.
+- **Lineage proof signature verification fixed (pre-existing bug)** — `verify_proof()` in `lineage_proof.rs` had its `chain_manager.verify_relationship()` call commented out because `sign_relationship` included a timestamp in the signed message that `verify_relationship` omitted. Fix: extracted `relationship_message()` canonical message builder used by both sign and verify, with `established_at` as the shared timestamp source. Verification now performs real Ed25519 signature checks on lineage relationships. 3 previously-broken tests now pass (49 lineage tests green).
+- **Commented-out dead code cleaned in 4 production files:**
+  - `birdsong/lineage_proof.rs` — Replaced 6-line commented-out `verify_relationship` block with real verification and failure-path handling.
+  - `config/unified/implementations.rs` — Removed dead commented `interval_seconds`/`retention_hours` assignments (fields removed in unified config).
+  - `config/monitoring_migration.rs` — Removed phantom `interval_seconds` extraction with dead assignment; replaced 6 empty stub function "would implement" comments with honest `tracing::debug!` logging (functions called from production, intentional no-ops during migration).
+  - `android_strongbox/safe_device_detection.rs` — Moved JNI KeyStore pseudocode from inline comments to doc comment on `check_android_keystore_strongbox` function.
+- **`LockFreeQueue<T>` placeholder** — Improved documentation: doc comment explains capacity-only shape contract and what will change when real queue is wired. `#[allow(dead_code)]` retains `reason` string.
+- **New file**: `method_gate_tests.rs` (389 LOC) — test suite for `method_gate.rs`.
+- **Modified files**: `method_gate.rs`, `lineage_proof.rs`, `lineage_chain.rs`, `implementations.rs`, `monitoring_migration.rs`, `safe_device_detection.rs`, `ultimate_performance.rs`.
+- **Tests**: 55 method_gate + 49 lineage + 32 monitoring_migration = 136 tests verified green.
+- **Clippy**: Clean across all 4 affected crates (`beardog-tunnel`, `beardog-genetics`, `beardog-types`, `beardog-utils`).
+
 ### May 8, 2026 -- Wave 94: JH-1 Primal-Native Identity and Ionic Token Infrastructure
 
 - **Ed25519-signed ionic capability tokens** — New `ionic_token.rs` module: compact `base64(header).base64(payload).base64(signature)` wire format with `IonicTokenHeader` (`alg:EdDSA, typ:ionic, ver:1`), `IonicTokenPayload` (`iss` DID, `sub`, `scope` globs, `iat`, `exp`, `jti`). `issue_ionic_token()` signs with primal's deterministic Ed25519 key; `verify_ionic_token()` checks signature + expiry. `scope_covers_method()` supports `*` (wildcard), `prefix.*` (namespace), and exact patterns. `TokenError` enum: `Malformed`, `InvalidSignature`, `Expired`, `UnsupportedFormat`.

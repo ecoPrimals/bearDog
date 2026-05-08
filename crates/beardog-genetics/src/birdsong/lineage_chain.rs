@@ -178,15 +178,16 @@ impl LineageChainManager {
             metadata: metadata.unwrap_or_default(),
         };
 
-        // Sign the relationship with parent's key
-        let signature = self.sign_relationship(parent_id, &child_id, &public_key)?;
+        let established_at = Utc::now();
+        let signature =
+            self.sign_relationship(parent_id, &child_id, &public_key, established_at)?;
 
         let relationship = LineageRelationship {
             parent_id: parent_id.to_string(),
             child_id: child_id.clone(),
             parent_signature: signature,
-            witness_signatures: Vec::new(), // Can add witnesses later
-            established_at: Utc::now(),
+            witness_signatures: Vec::new(),
+            established_at,
         };
 
         // Add to chain
@@ -219,23 +220,37 @@ impl LineageChainManager {
         Ok(child_node)
     }
 
-    /// Sign a parent-child relationship
+    /// Sign a parent-child relationship.
     ///
-    /// Signs: `parent_id` || `child_id` || `child_public_key` || timestamp
+    /// Message format: `parent_id || child_id || child_public_key || timestamp_ms_le`.
+    /// The same `established_at` must be stored on the [`LineageRelationship`] so
+    /// [`Self::verify_relationship`] can reconstruct the exact signed message.
     fn sign_relationship(
         &self,
         parent_id: &str,
         child_id: &str,
         child_public_key: &[u8],
+        established_at: chrono::DateTime<Utc>,
     ) -> Result<Vec<u8>, BearDogError> {
         let signing_keys = self.signing_keys.read();
         let signing_key = signing_keys.get(parent_id).ok_or_else(|| {
             BearDogError::system(format!("Signing key not found for: {parent_id}"))
         })?;
 
-        // Create message to sign
-        let timestamp = Utc::now().timestamp_millis().to_le_bytes();
-        let message = [
+        let message = Self::relationship_message(parent_id, child_id, child_public_key, established_at);
+        let signature = signing_key.sign(&message);
+        Ok(signature.to_bytes().to_vec())
+    }
+
+    /// Canonical message bytes for a parent-child relationship.
+    fn relationship_message(
+        parent_id: &str,
+        child_id: &str,
+        child_public_key: &[u8],
+        established_at: chrono::DateTime<Utc>,
+    ) -> Vec<u8> {
+        let timestamp = established_at.timestamp_millis().to_le_bytes();
+        [
             parent_id.as_bytes(),
             b"||",
             child_id.as_bytes(),
@@ -244,11 +259,7 @@ impl LineageChainManager {
             b"||",
             &timestamp,
         ]
-        .concat();
-
-        // Sign with Ed25519
-        let signature = signing_key.sign(&message);
-        Ok(signature.to_bytes().to_vec())
+        .concat()
     }
 
     /// Verify a parent-child relationship signature
@@ -282,18 +293,13 @@ impl LineageChainManager {
                 .map_err(|_| BearDogError::system("Invalid signature length".to_string()))?,
         );
 
-        // Reconstruct message (we don't have exact timestamp, so this is approximate)
-        // In production, timestamp would be included in the relationship
-        let message = [
-            relationship.parent_id.as_bytes(),
-            b"||",
-            relationship.child_id.as_bytes(),
-            b"||",
+        let message = Self::relationship_message(
+            &relationship.parent_id,
+            &relationship.child_id,
             child_public_key,
-        ]
-        .concat();
+            relationship.established_at,
+        );
 
-        // Verify signature
         match parent_verifying_key.verify(&message, &signature) {
             Ok(()) => Ok(true),
             Err(e) => {
