@@ -96,6 +96,15 @@ impl JsonRpcError {
     /// This typically indicates a bug or unexpected condition in the server.
     pub const INTERNAL_ERROR: i32 = -32603;
 
+    /// Caller identity could not be established (-32000).
+    pub const UNAUTHORIZED: i32 = -32000;
+
+    /// Caller lacks scope for the requested method (-32001).
+    pub const PERMISSION_DENIED: i32 = -32001;
+
+    /// Primal not yet initialized (-32002).
+    pub const NOT_READY: i32 = -32002;
+
     /// Create a parse error
     pub fn parse_error(message: impl Into<String>) -> Self {
         Self {
@@ -136,6 +145,24 @@ impl JsonRpcError {
     pub fn invalid_request(message: impl Into<String>) -> Self {
         Self {
             code: Self::INVALID_REQUEST,
+            message: message.into(),
+            data: None,
+        }
+    }
+
+    /// Create a permission denied error (method gate, JH-0).
+    pub fn permission_denied(method: &str) -> Self {
+        Self {
+            code: Self::PERMISSION_DENIED,
+            message: format!("permission denied: method '{method}' requires a capability token"),
+            data: Some(serde_json::json!({ "method": method })),
+        }
+    }
+
+    /// Create an unauthorized error (caller identity unknown).
+    pub fn unauthorized(message: impl Into<String>) -> Self {
+        Self {
+            code: Self::UNAUTHORIZED,
             message: message.into(),
             data: None,
         }

@@ -246,6 +246,12 @@ impl CapabilitiesHandler {
                     "version": "1.0",
                     "methods": ["authorize"],
                     "description": "Relay authorization - lineage-gated access control for relay-assisted coordinated punch"
+                },
+                {
+                    "type": "auth",
+                    "version": "1.0",
+                    "methods": ["check", "mode", "peer_info"],
+                    "description": "Method-gate introspection (JH-0) — pre-dispatch auth status, enforcement mode, peer credential inspection"
                 }
             ],
             "consumed_capabilities": [],
@@ -276,6 +282,9 @@ impl CapabilitiesHandler {
                 "lineage.list":                    { "cpu": "low",    "latency_ms": 1 },
                 "lineage.verify":                  { "cpu": "medium", "latency_ms": 2 },
                 "lineage.get":                     { "cpu": "low",    "latency_ms": 1 },
+                "auth.check":                      { "cpu": "low",    "latency_ms": 0 },
+                "auth.mode":                       { "cpu": "low",    "latency_ms": 0 },
+                "auth.peer_info":                  { "cpu": "low",    "latency_ms": 0 },
                 "security.evaluate":               { "cpu": "medium", "latency_ms": 5 },
                 "graph.authorize_modification":    { "cpu": "medium", "latency_ms": 5 },
                 "tls.derive_secrets":              { "cpu": "medium", "latency_ms": 2 },
@@ -306,6 +315,9 @@ impl CapabilitiesHandler {
                     "health.version",
                     "capabilities.list",
                     "identity.get",
+                    "auth.check",
+                    "auth.mode",
+                    "auth.peer_info",
                 ],
                 "note": if self.is_btsp_required() {
                     "Family-scoped socket: BTSP preferred. Cleartext JSON-RPC accepted via first-byte 0x7B bypass for listed methods."
@@ -382,6 +394,9 @@ impl CapabilitiesHandler {
             "consent.issue",
             "ionic_bond.seal",
             "btsp.negotiate",
+            "auth.check",
+            "auth.mode",
+            "auth.peer_info",
         ]
         .iter()
         .map(|s| (*s).to_string())
@@ -568,7 +583,7 @@ mod tests {
         let caps = response["capabilities"]
             .as_array()
             .expect("capabilities should be array in test");
-        assert!(caps.len() >= 16, "Expected at least 16 capabilities");
+        assert!(caps.len() >= 19, "Expected at least 19 capabilities");
 
         let cap_strs: Vec<&str> = caps
             .iter()

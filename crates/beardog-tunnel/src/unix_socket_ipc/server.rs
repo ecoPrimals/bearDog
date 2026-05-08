@@ -17,6 +17,7 @@ use super::{
 };
 use crate::btsp_handshake::{self, BtspSecurityMode};
 use crate::btsp_provider::BeardogBtspProvider;
+use crate::method_gate::{CallerContext, MethodGate, dispatch_auth_method, is_gate_handled_method};
 use crate::platform::{
     PlatformListener, PlatformSocket, PlatformStream, PrefixedStream, Socket, SocketEndpoint,
 };
@@ -54,6 +55,9 @@ pub struct UnixSocketIpcServer {
 
     /// BTSP security mode (resolved at startup, checked per connection).
     security_mode: BtspSecurityMode,
+
+    /// Pre-dispatch authorization gate (JH-0 ecosystem standard).
+    method_gate: MethodGate,
 
     /// Server running state (using `RwLock` for compatibility)
     is_running: Arc<tokio::sync::RwLock<bool>>,
@@ -99,12 +103,19 @@ impl UnixSocketIpcServer {
             info!("BTSP handshake enforcement disabled (development mode)");
         }
 
+        let method_gate = MethodGate::from_env();
+        info!(
+            mode = method_gate.mode().as_str(),
+            "Method gate initialized (JH-0)"
+        );
+
         Ok(Self {
             socket_path,
             ipc_symlinks,
             btsp_provider,
             handler_registry: HandlerRegistry::new(identity),
             security_mode,
+            method_gate,
             is_running: Arc::new(tokio::sync::RwLock::new(false)),
             is_ready: Arc::new(std::sync::atomic::AtomicBool::new(false)),
         })
@@ -489,11 +500,16 @@ impl UnixSocketIpcServer {
         Ok(())
     }
 
-    /// Route a parsed JSON-RPC request through the handler registry.
+    /// Route a parsed JSON-RPC request through the method gate and handler registry.
     ///
     /// Handles version validation, notification semantics (no response when `id`
-    /// is absent per JSON-RPC 2.0 spec section 4.1), and error-code inference.
-    async fn route_jsonrpc(&self, request: &JsonRpcRequest) -> Option<JsonRpcResponse> {
+    /// is absent per JSON-RPC 2.0 spec section 4.1), auth method interception
+    /// (JH-0), pre-dispatch authorization, and error-code inference.
+    async fn route_jsonrpc(
+        &self,
+        request: &JsonRpcRequest,
+        caller: &CallerContext,
+    ) -> Option<JsonRpcResponse> {
         debug!(method = %request.method, "JSON-RPC request");
 
         let id = request.id.clone().unwrap_or(serde_json::Value::Null);
@@ -509,6 +525,34 @@ impl UnixSocketIpcServer {
                 error: Some(JsonRpcError::invalid_request(
                     "Invalid JSON-RPC version (must be 2.0)",
                 )),
+                id,
+            });
+        }
+
+        // JH-0: intercept auth introspection methods (handled pre-dispatch)
+        if is_gate_handled_method(&request.method) {
+            if is_notification {
+                return None;
+            }
+            if let Some(result) = dispatch_auth_method(&request.method, &self.method_gate, caller) {
+                return Some(JsonRpcResponse {
+                    jsonrpc: JSONRPC_VERSION.to_string(),
+                    result: Some(result),
+                    error: None,
+                    id,
+                });
+            }
+        }
+
+        // JH-0: pre-dispatch authorization gate
+        if let Err(gate_error) = self.method_gate.check(&request.method, caller) {
+            if is_notification {
+                return None;
+            }
+            return Some(JsonRpcResponse {
+                jsonrpc: JSONRPC_VERSION.to_string(),
+                result: None,
+                error: Some(gate_error),
                 id,
             });
         }
@@ -557,6 +601,7 @@ impl UnixSocketIpcServer {
     pub(super) async fn handle_one_jsonrpc_request_universal(
         &self,
         line: &str,
+        caller: &CallerContext,
     ) -> Result<Option<String>> {
         let request: JsonRpcRequest = match serde_json::from_str(line.trim()) {
             Ok(req) => req,
@@ -572,20 +617,24 @@ impl UnixSocketIpcServer {
             }
         };
 
-        match self.route_jsonrpc(&request).await {
+        match self.route_jsonrpc(&request, caller).await {
             Some(resp) => Ok(Some(serde_json::to_string(&resp)?)),
             None => Ok(None),
         }
     }
 
-    /// Handle JSON-RPC request (public for testing)
+    /// Handle JSON-RPC request (public for testing).
+    ///
+    /// Uses a default `CallerContext::from_unix()` for backward compatibility
+    /// with tests that don't supply caller context.
     ///
     /// # Errors
     /// Returns error if unable to parse or handle the request
     pub async fn handle_jsonrpc_request(&self, request_str: &str) -> Result<JsonRpcResponse> {
         let request: JsonRpcRequest =
             serde_json::from_str(request_str).context("Failed to parse JSON-RPC request")?;
-        self.route_jsonrpc(&request)
+        let caller = CallerContext::from_unix();
+        self.route_jsonrpc(&request, &caller)
             .await
             .ok_or_else(|| anyhow::anyhow!("notification — no response expected"))
     }

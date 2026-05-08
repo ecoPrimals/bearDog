@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 7, 2026
+**Last Updated**: May 8, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -35,7 +35,7 @@
 
 - **Crates**: 29 directories (beardog-integration excluded — overstep)
 - **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
-- **Crypto Methods**: 111 JSON-RPC methods — 103 CryptoHandler + 8 IonicBondHandler (6 lifecycle + 2 contract signing)
+- **JSON-RPC Methods**: 114 — 103 CryptoHandler + 8 IonicBondHandler + 3 auth pre-dispatch (JH-0 MethodGate)
 - **`#[allow(`**: 81 (was 86; all carry `reason`)
 - **`#[expect(`**: 644 (was 646; 2 stale removed)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
@@ -89,6 +89,15 @@
 ---
 
 ## Recent Improvements
+
+### Wave 93 — JH-0 MethodGate Pre-Dispatch Authorization (May 8, 2026)
+
+- **Ecosystem-standard method gate adopted** — `MethodGate` pre-dispatch layer classifies every JSON-RPC method as `Public` or `Protected` and checks caller authorization before routing. Permissive default (backward-compatible); `BEARDOG_AUTH_MODE=enforced` rejects unauthenticated calls with `-32001 PERMISSION_DENIED`.
+- **3 new auth introspection methods** — `auth.check`, `auth.mode`, `auth.peer_info` handled inline at the dispatch layer (pre-registry), providing caller authentication status, enforcement mode, and peer credential inspection.
+- **Error codes** — `PERMISSION_DENIED` (-32001), `UNAUTHORIZED` (-32000), `NOT_READY` (-32002) added to both `beardog-ipc` and `beardog-tunnel` protocol types with constructor methods.
+- **Wired into both transports** — UDS (`UnixSocketIpcServer`) and TCP (`TcpIpcServer`) servers create `CallerContext` per connection and run gate checks before handler dispatch. TCP distinguishes loopback vs remote peers.
+- **Capabilities updated** — `capabilities.list` and `discover_capabilities` advertise auth methods with cost estimates. BTSP cleartext bypass list updated.
+- **Method count**: 111 → 114 (3 auth pre-dispatch methods).
 
 ### Wave 92 — Contract Signing IPC Confirmation & Documentation (May 7, 2026)
 

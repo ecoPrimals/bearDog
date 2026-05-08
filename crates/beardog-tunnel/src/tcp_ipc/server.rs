@@ -6,6 +6,7 @@
 
 use crate::btsp_handshake::{self, BtspSecurityMode, BtspSession};
 use crate::btsp_provider::BeardogBtspProvider;
+use crate::method_gate::{CallerContext, MethodGate, dispatch_auth_method};
 use crate::unix_socket_ipc::handlers::HandlerRegistry;
 use beardog_errors::BearDogError;
 use beardog_types::primal_identity::PrimalIdentity;
@@ -43,6 +44,9 @@ pub struct TcpIpcServer {
     /// BTSP security mode (resolved at startup, checked per connection).
     security_mode: BtspSecurityMode,
 
+    /// Pre-dispatch authorization gate (JH-0 ecosystem standard).
+    method_gate: Arc<MethodGate>,
+
     /// Actual bound address (after OS assigns port if using :0)
     bound_addr: Arc<RwLock<Option<SocketAddr>>>,
 }
@@ -55,11 +59,17 @@ impl TcpIpcServer {
         identity: Arc<PrimalIdentity>,
         security_mode: BtspSecurityMode,
     ) -> Self {
+        let method_gate = Arc::new(MethodGate::from_env());
+        info!(
+            mode = method_gate.mode().as_str(),
+            "TCP method gate initialized (JH-0)"
+        );
         Self {
             bind_addr,
             btsp_provider,
             handler_registry: HandlerRegistry::new(identity),
             security_mode,
+            method_gate,
             bound_addr: Arc::new(RwLock::new(None)),
         }
     }
@@ -102,10 +112,11 @@ impl TcpIpcServer {
                     let registry = self.handler_registry.clone();
                     let btsp = self.btsp_provider.clone();
                     let sec_mode = self.security_mode.clone();
+                    let gate = self.method_gate.clone();
 
                     tokio::spawn(async move {
                         if let Err(e) =
-                            Self::handle_connection(stream, registry, btsp, sec_mode).await
+                            Self::handle_connection(stream, registry, btsp, sec_mode, gate).await
                         {
                             error!("Connection handler error: {}", e);
                         }
@@ -124,12 +135,15 @@ impl TcpIpcServer {
         registry: Arc<HandlerRegistry>,
         btsp_provider: Arc<BeardogBtspProvider>,
         security_mode: BtspSecurityMode,
+        gate: Arc<MethodGate>,
     ) -> Result<(), BearDogError> {
         let peer_addr = stream
             .peer_addr()
             .map_err(|e| BearDogError::system(format!("Failed to get peer address: {e}")))?;
 
-        debug!("🔌 Handling connection from: {}", peer_addr);
+        let caller = caller_context_from_addr(&peer_addr);
+
+        debug!("Handling connection from: {}", peer_addr);
 
         // ── BTSP production mode with protocol auto-detection ──────────
         //
@@ -152,7 +166,6 @@ impl TcpIpcServer {
                         peer = %peer_addr,
                         "TCP peek: JSON-RPC detected (0x7B) — bypassing BTSP for local composition"
                     );
-                    // Fall through to plain NDJSON handler below
                 }
                 _ => {
                     debug!(peer = %peer_addr, "BTSP production: initiating TCP handshake");
@@ -169,6 +182,8 @@ impl TcpIpcServer {
                                 &mut session,
                                 &registry,
                                 &btsp_provider,
+                                &gate,
+                                &caller,
                             )
                             .await;
                         }
@@ -214,14 +229,13 @@ impl TcpIpcServer {
                     break;
                 }
                 n => {
-                    debug!("📨 Received {} bytes from {}", n, peer_addr);
+                    debug!("Received {} bytes from {}", n, peer_addr);
 
                     let request_str = line.trim();
                     if request_str.is_empty() {
                         continue;
                     }
 
-                    // Parse JSON-RPC request
                     let request: Value = match serde_json::from_str(request_str) {
                         Ok(req) => req,
                         Err(e) => {
@@ -234,7 +248,6 @@ impl TcpIpcServer {
                                 },
                                 "id": null
                             });
-                            // Serialization of json! macro is infallible, but handle gracefully
                             if let Ok(response) = serde_json::to_string(&error_response) {
                                 let response = response + "\n";
                                 if let Err(e) = writer.write_all(response.as_bytes()).await {
@@ -245,19 +258,46 @@ impl TcpIpcServer {
                         }
                     };
 
-                    // Extract method and params
                     let method = request["method"].as_str().unwrap_or("");
                     let params = request.get("params").cloned();
                     let id = request.get("id").cloned();
 
-                    debug!("📥 Request: {} (id: {:?})", method, id);
+                    debug!("Request: {} (id: {:?})", method, id);
 
-                    // Route through handler registry
+                    // JH-0: intercept auth introspection methods
+                    if let Some(result) = dispatch_auth_method(method, &gate, &caller) {
+                        let json_response = serde_json::json!({
+                            "jsonrpc": "2.0",
+                            "result": result,
+                            "id": id
+                        });
+                        if let Ok(s) = serde_json::to_string(&json_response) {
+                            let _ = writer.write_all((s + "\n").as_bytes()).await;
+                        }
+                        continue;
+                    }
+
+                    // JH-0: pre-dispatch authorization gate
+                    if let Err(gate_err) = gate.check(method, &caller) {
+                        let json_response = serde_json::json!({
+                            "jsonrpc": "2.0",
+                            "error": {
+                                "code": gate_err.code,
+                                "message": gate_err.message,
+                                "data": gate_err.data,
+                            },
+                            "id": id
+                        });
+                        if let Ok(s) = serde_json::to_string(&json_response) {
+                            let _ = writer.write_all((s + "\n").as_bytes()).await;
+                        }
+                        continue;
+                    }
+
                     let response = registry
                         .route(method, params.as_ref(), &btsp_provider)
                         .await;
 
-                    // Build JSON-RPC response
                     let json_response = match response {
                         Ok(result) => serde_json::json!({
                             "jsonrpc": "2.0",
@@ -274,7 +314,6 @@ impl TcpIpcServer {
                         }),
                     };
 
-                    // Send response (serialization of json! macro is infallible, but handle gracefully)
                     let response_str = match serde_json::to_string(&json_response) {
                         Ok(s) => s + "\n",
                         Err(e) => {
@@ -287,12 +326,12 @@ impl TcpIpcServer {
                         break;
                     }
 
-                    debug!("📤 Response sent to {}", peer_addr);
+                    debug!("Response sent to {}", peer_addr);
                 }
             }
         }
 
-        debug!("✅ Connection handler finished: {}", peer_addr);
+        debug!("Connection handler finished: {}", peer_addr);
         Ok(())
     }
 
@@ -302,6 +341,8 @@ impl TcpIpcServer {
         session: &mut BtspSession,
         registry: &Arc<HandlerRegistry>,
         btsp_provider: &Arc<BeardogBtspProvider>,
+        gate: &MethodGate,
+        caller: &CallerContext,
     ) -> Result<(), BearDogError> {
         loop {
             let frame = match btsp_handshake::read_frame(stream).await {
@@ -355,6 +396,38 @@ impl TcpIpcServer {
             let params = request.get("params").cloned();
             let id = request.get("id").cloned();
 
+            // JH-0: intercept auth introspection methods
+            if let Some(result) = dispatch_auth_method(method, gate, caller) {
+                let json_response = serde_json::json!({"jsonrpc":"2.0","result":result,"id":id});
+                let resp_str = serde_json::to_string(&json_response)
+                    .map_err(|e| BearDogError::system(format!("Serialize: {e}")))?;
+                let encrypted = session
+                    .encrypt_frame(resp_str.as_bytes())
+                    .map_err(|e| BearDogError::system(format!("BTSP encrypt: {e}")))?;
+                btsp_handshake::write_frame(stream, &encrypted)
+                    .await
+                    .map_err(|e| BearDogError::system(format!("BTSP write: {e}")))?;
+                continue;
+            }
+
+            // JH-0: pre-dispatch authorization gate
+            if let Err(gate_err) = gate.check(method, caller) {
+                let json_response = serde_json::json!({
+                    "jsonrpc":"2.0",
+                    "error":{"code":gate_err.code,"message":gate_err.message,"data":gate_err.data},
+                    "id":id
+                });
+                let resp_str = serde_json::to_string(&json_response)
+                    .map_err(|e| BearDogError::system(format!("Serialize: {e}")))?;
+                let encrypted = session
+                    .encrypt_frame(resp_str.as_bytes())
+                    .map_err(|e| BearDogError::system(format!("BTSP encrypt: {e}")))?;
+                btsp_handshake::write_frame(stream, &encrypted)
+                    .await
+                    .map_err(|e| BearDogError::system(format!("BTSP write: {e}")))?;
+                continue;
+            }
+
             let response = registry.route(method, params.as_ref(), btsp_provider).await;
 
             let json_response = match response {
@@ -378,15 +451,29 @@ impl TcpIpcServer {
     }
 }
 
+/// Create a `CallerContext` based on the TCP peer address.
+fn caller_context_from_addr(addr: &SocketAddr) -> CallerContext {
+    if addr.ip().is_loopback() {
+        CallerContext::loopback()
+    } else {
+        CallerContext::remote()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::method_gate::EnforcementMode;
     use crate::test_helpers::mocks::create_minimal_beardog_provider;
     use crate::unix_socket_ipc::handlers::HandlerRegistry;
     use beardog_types::primal_identity::PrimalIdentity;
     use std::sync::Arc;
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
     use tokio::net::TcpListener;
+
+    fn test_gate() -> Arc<MethodGate> {
+        Arc::new(MethodGate::new(EnforcementMode::Permissive))
+    }
 
     #[tokio::test]
     async fn tcp_ipc_health_ping_roundtrip() {
@@ -400,6 +487,7 @@ mod tests {
         let registry = HandlerRegistry::new(identity);
         let provider = create_minimal_beardog_provider().await;
 
+        let gate = test_gate();
         let server = tokio::spawn(async move {
             let (stream, _) = listener.accept().await.expect("accept health ping client");
             TcpIpcServer::handle_connection(
@@ -407,6 +495,7 @@ mod tests {
                 registry,
                 provider,
                 BtspSecurityMode::Development,
+                gate,
             )
             .await
         });
@@ -453,6 +542,7 @@ mod tests {
         let registry = HandlerRegistry::new(identity);
         let provider = create_minimal_beardog_provider().await;
 
+        let gate = test_gate();
         let server = tokio::spawn(async move {
             let (stream, _) = listener
                 .accept()
@@ -463,6 +553,7 @@ mod tests {
                 registry,
                 provider,
                 BtspSecurityMode::Development,
+                gate,
             )
             .await
         });
@@ -502,6 +593,7 @@ mod tests {
         let registry = HandlerRegistry::new(identity);
         let provider = create_minimal_beardog_provider().await;
 
+        let gate = test_gate();
         let server = tokio::spawn(async move {
             let (stream, _) = listener
                 .accept()
@@ -512,6 +604,7 @@ mod tests {
                 registry,
                 provider,
                 BtspSecurityMode::Development,
+                gate,
             )
             .await
         });

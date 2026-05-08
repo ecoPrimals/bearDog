@@ -34,7 +34,7 @@ BearDog exposes its cryptographic and genetic capabilities through a JSON-RPC 2.
 
 ## 📚 **API CATEGORIES**
 
-BearDog provides **111 JSON-RPC methods** across 12 categories:
+BearDog provides **114 JSON-RPC methods** across 13 categories:
 
 ### **1. Core Cryptography** (20 methods)
 - Signatures: Ed25519, ECDSA (P-256, P-384), RSA
@@ -107,6 +107,11 @@ BearDog provides **111 JSON-RPC methods** across 12 categories:
 - Key storage (StrongBox on Android)
 - Entropy management
 - Session management
+
+### **13. Auth Introspection** (3 methods — pre-dispatch, JH-0)
+- `auth.check` — caller authentication status
+- `auth.mode` — enforcement mode (permissive/enforced)
+- `auth.peer_info` — peer credential inspection
 
 ### **12. Ionic Bond** (8 methods — IonicBondHandler)
 - Lifecycle: propose, accept, seal, verify, revoke, list
@@ -1471,7 +1476,13 @@ print(response['result']['hash'])
 96. `crypto.sign_contract` - Sign contract terms with Ed25519 identity
 97. `crypto.verify_contract` - Verify contract signature
 
-### **Total**: **111 JSON-RPC methods** (103 CryptoHandler + 8 IonicBondHandler)
+### **Auth Introspection (3 methods — pre-dispatch, JH-0 MethodGate)**
+
+98. `auth.check` - Caller authentication status
+99. `auth.mode` - Current enforcement mode (permissive/enforced)
+100. `auth.peer_info` - Peer credential introspection (uid, pid)
+
+### **Total**: **114 JSON-RPC methods** (103 CryptoHandler + 8 IonicBondHandler + 3 auth pre-dispatch)
 
 ═══════════════════════════════════════════════════════════════════
 
@@ -1568,8 +1579,8 @@ BearDog uses **genetic lineage** for authentication:
 
 ═══════════════════════════════════════════════════════════════════
 
-**Document Version**: 2.0.0  
-**Last Updated**: May 7, 2026  
+**Document Version**: 2.1.0  
+**Last Updated**: May 8, 2026  
 **Maintainer**: BearDog Security Primal  
 **License**: Documented interface (implementation MIT-licensed)
 

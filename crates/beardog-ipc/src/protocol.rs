@@ -143,6 +143,15 @@ pub mod error_codes {
     pub const INVALID_PARAMS: i32 = -32602;
     /// Internal error
     pub const INTERNAL_ERROR: i32 = -32603;
+
+    // ── Ecosystem method-gate codes (JH-0) ──────────────────────────
+
+    /// Caller identity could not be established.
+    pub const UNAUTHORIZED: i32 = -32000;
+    /// Caller lacks scope for the requested method.
+    pub const PERMISSION_DENIED: i32 = -32001;
+    /// Primal not yet initialized (still starting).
+    pub const NOT_READY: i32 = -32002;
 }
 
 #[cfg(test)]

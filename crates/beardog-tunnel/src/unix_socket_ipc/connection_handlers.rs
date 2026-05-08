@@ -10,6 +10,7 @@
 
 use super::server::{IPC_READ_TIMEOUT, UnixSocketIpcServer};
 use crate::btsp_handshake::{self, BtspSession, Phase3Session};
+use crate::method_gate::CallerContext;
 use crate::platform::PlatformStream;
 use anyhow::Result;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -25,10 +26,11 @@ impl UnixSocketIpcServer {
         first_line: &str,
         stream: Box<dyn PlatformStream>,
     ) -> Result<()> {
+        let caller = CallerContext::from_unix();
         let mut buf_stream = BufReader::new(stream);
 
         if let Some(response) = self
-            .handle_one_jsonrpc_request_universal(first_line)
+            .handle_one_jsonrpc_request_universal(first_line, &caller)
             .await?
         {
             buf_stream.get_mut().write_all(response.as_bytes()).await?;
@@ -76,7 +78,10 @@ impl UnixSocketIpcServer {
                 continue;
             }
 
-            match self.handle_one_jsonrpc_request_universal(&line).await {
+            match self
+                .handle_one_jsonrpc_request_universal(&line, &caller)
+                .await
+            {
                 Ok(Some(response)) => {
                     if let Err(e) = buf_stream.get_mut().write_all(response.as_bytes()).await {
                         warn!(error = %e, "Failed to write response");
@@ -161,6 +166,7 @@ impl UnixSocketIpcServer {
         &self,
         stream: Box<dyn PlatformStream>,
     ) -> Result<()> {
+        let caller = CallerContext::from_unix();
         let mut buf_stream = BufReader::new(stream);
         let mut line_buf = Vec::with_capacity(1024);
 
@@ -192,7 +198,7 @@ impl UnixSocketIpcServer {
             }
 
             if let Some(response) = self
-                .handle_one_jsonrpc_request_universal(line.as_ref())
+                .handle_one_jsonrpc_request_universal(line.as_ref(), &caller)
                 .await?
             {
                 buf_stream.get_mut().write_all(response.as_bytes()).await?;
@@ -215,6 +221,7 @@ impl UnixSocketIpcServer {
         mut stream: Box<dyn PlatformStream>,
         mut session: BtspSession,
     ) -> Result<()> {
+        let caller = CallerContext::from_unix();
         loop {
             let frame = match btsp_handshake::read_frame(&mut stream).await {
                 Ok(f) => f,
@@ -244,7 +251,10 @@ impl UnixSocketIpcServer {
                 continue;
             }
 
-            if let Some(response_str) = self.handle_one_jsonrpc_request_universal(&line).await? {
+            if let Some(response_str) = self
+                .handle_one_jsonrpc_request_universal(&line, &caller)
+                .await?
+            {
                 let encrypted = session
                     .encrypt_frame(response_str.as_bytes())
                     .map_err(|e| anyhow::anyhow!("BTSP encrypt failed: {e}"))?;
@@ -266,6 +276,7 @@ impl UnixSocketIpcServer {
         mut stream: Box<dyn PlatformStream>,
         session: Phase3Session,
     ) -> Result<()> {
+        let caller = CallerContext::from_unix();
         info!("BTSP Phase 3: encrypted frame I/O active");
         loop {
             let frame = match btsp_handshake::read_frame(&mut stream).await {
@@ -296,7 +307,10 @@ impl UnixSocketIpcServer {
                 continue;
             }
 
-            if let Some(response_str) = self.handle_one_jsonrpc_request_universal(&line).await? {
+            if let Some(response_str) = self
+                .handle_one_jsonrpc_request_universal(&line, &caller)
+                .await?
+            {
                 let encrypted = session
                     .encrypt_frame(response_str.as_bytes())
                     .map_err(|e| anyhow::anyhow!("Phase 3 encrypt failed: {e}"))?;

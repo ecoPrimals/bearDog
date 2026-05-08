@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![recursion_limit = "256"]
 #![forbid(unsafe_code)]
 #![cfg_attr(
     test,
@@ -164,6 +165,9 @@ pub mod graph_security;
 // Multi-Transport Server - Universal IPC (Phase 3: Deep Debt Evolution)
 // Binds ALL available transports simultaneously for universal deployment
 pub mod multi_transport_server;
+
+// Pre-dispatch capability gate for JSON-RPC methods (JH-0 ecosystem standard)
+pub mod method_gate;
 
 #[cfg(test)]
 mod btsp_handshake_tests;

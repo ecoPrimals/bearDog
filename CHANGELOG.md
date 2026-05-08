@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 8, 2026 -- Wave 93: JH-0 MethodGate Pre-Dispatch Authorization
+
+- **`MethodGate` pre-dispatch layer** — Ecosystem-standard method gate adopted per `primalSpring/wateringHole/METHOD_GATE_STANDARD.md`. Every JSON-RPC method classified as `Public` (health, identity, capabilities, auth introspection — always allowed) or `Protected` (requires capability token when enforcement active). Default mode: `Permissive` (logs but allows). `BEARDOG_AUTH_MODE=enforced` rejects with `-32001 PERMISSION_DENIED`.
+- **`CallerContext` threading** — Per-connection caller identity (`bearer_token`, `peer` credentials, `origin` Unix/Loopback/Remote) threaded through both UDS and TCP dispatch paths.
+- **3 auth introspection methods** — `auth.check` (authentication status), `auth.mode` (enforcement mode), `auth.peer_info` (peer credentials) handled pre-dispatch at gate layer. Advertised in `capabilities.list`, `discover_capabilities`, and method index.
+- **Error codes** — `PERMISSION_DENIED` (-32001), `UNAUTHORIZED` (-32000), `NOT_READY` (-32002) added to `beardog-ipc::protocol::error_codes` and `beardog-tunnel::unix_socket_ipc::types::JsonRpcError` with constructor methods.
+- **Method count 111 → 114** (103 CryptoHandler + 8 IonicBondHandler + 3 auth pre-dispatch).
+- **26 new tests** for method classification, gate enforcement, auth handler responses, dispatch routing.
+
 ### May 7, 2026 -- Wave 92: Contract Signing IPC Confirmation & Documentation
 
 - **`crypto.sign_contract` and `crypto.verify_contract` confirmed IPC-routable** — primalSpring Phase 60 audit reported these as "not yet exposed as IPC-routable methods." Investigation confirms they have been registered on `IonicBondHandler::methods()` and dispatched through `HandlerRegistry::route()` since Wave 38/42. The gap was **documentation and discoverability**, not routing.
