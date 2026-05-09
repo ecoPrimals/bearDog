@@ -51,6 +51,7 @@ const PUBLIC_METHODS: &[&str] = &[
     "auth.issue_ionic",
     "auth.issue_session",
     "auth.verify_ionic",
+    "auth.public_key",
 ];
 
 /// Classify a method string into its access level.
@@ -391,6 +392,7 @@ pub fn is_gate_handled_method(method: &str) -> bool {
             | "auth.issue_ionic"
             | "auth.issue_session"
             | "auth.verify_ionic"
+            | "auth.public_key"
             | "identity.create"
     )
 }
@@ -405,8 +407,8 @@ pub fn dispatch_auth_method(
     params: Option<&serde_json::Value>,
 ) -> Option<serde_json::Value> {
     use crate::ionic_token_handlers::{
-        handle_auth_issue_ionic, handle_auth_issue_session, handle_auth_verify_ionic,
-        handle_identity_create,
+        handle_auth_issue_ionic, handle_auth_issue_session, handle_auth_public_key,
+        handle_auth_verify_ionic, handle_identity_create,
     };
     match method {
         "auth.check" => Some(handle_auth_check(caller)),
@@ -424,6 +426,7 @@ pub fn dispatch_auth_method(
             params,
         )),
         "auth.verify_ionic" => Some(handle_auth_verify_ionic(gate.verifying_key(), params)),
+        "auth.public_key" => Some(handle_auth_public_key(gate.primal_name(), gate.node_id())),
         _ => None,
     }
 }

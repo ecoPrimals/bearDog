@@ -105,6 +105,7 @@ pub fn handle_auth_issue_ionic(primal_name: &str, node_id: &str, params: Option<
         "issuer": issuer_did,
         "subject": subject,
         "scope": scope,
+        "scopes": scope,
         "ttl_secs": ttl_secs,
     })
 }
@@ -186,9 +187,35 @@ pub fn handle_auth_issue_session(
         "subject": user,
         "purpose": purpose,
         "scope": scope_strings,
+        "scopes": scope_strings,
         "ttl_secs": ttl_secs,
         "ttl_hours": ttl_hours,
         "usage": "Set BEARDOG_TOKEN=<token> or pass as Bearer header. Token auto-expires.",
+    })
+}
+
+// ── auth.public_key (JH-11) ──────────────────────────────────────────────
+
+/// Handle `auth.public_key` — return the primal's Ed25519 verifying key.
+///
+/// Enables cross-primal token verification (JH-11): any primal can call this
+/// once at startup, cache the public key, and verify ionic tokens locally
+/// using Ed25519 without calling back to the issuing `BearDog`.
+///
+/// Returns the key in multiple formats (base64, hex, DID) so consumers can
+/// use whichever is convenient.
+#[must_use]
+pub fn handle_auth_public_key(primal_name: &str, node_id: &str) -> Value {
+    let sk = derive_primal_signing_key(primal_name, node_id);
+    let vk = sk.verifying_key();
+    let issuer_did = primal_did(primal_name, node_id);
+
+    serde_json::json!({
+        "public_key": B64.encode(vk.as_bytes()),
+        "public_key_hex": hex::encode(vk.as_bytes()),
+        "did": issuer_did,
+        "algorithm": "Ed25519",
+        "usage": "Verify ionic tokens signed by this primal. Cache this key and use ed25519_dalek::VerifyingKey to verify token signatures locally.",
     })
 }
 
@@ -225,6 +252,7 @@ pub fn handle_auth_verify_ionic(verifying_key: &VerifyingKey, params: Option<&Va
                     "iss": payload.iss,
                     "sub": payload.sub,
                     "scope": payload.scope,
+                    "scopes": payload.scope,
                     "iat": payload.iat,
                     "exp": payload.exp,
                     "jti": payload.jti,
@@ -347,6 +375,64 @@ mod tests {
         let b = primal_did(PRIMAL, NODE);
         assert_eq!(a, b);
         assert!(a.starts_with("did:key:z6Mk"));
+    }
+
+    // ── auth.public_key (JH-11) ──
+
+    #[test]
+    fn public_key_returns_valid_ed25519_key() {
+        let result = handle_auth_public_key(PRIMAL, NODE);
+        assert_eq!(result["algorithm"], "Ed25519");
+        assert!(result["did"].as_str().unwrap().starts_with("did:key:z6Mk"));
+        assert!(result["public_key"].as_str().is_some());
+        assert!(result["public_key_hex"].as_str().is_some());
+    }
+
+    #[test]
+    fn public_key_is_deterministic() {
+        let a = handle_auth_public_key(PRIMAL, NODE);
+        let b = handle_auth_public_key(PRIMAL, NODE);
+        assert_eq!(a["public_key"], b["public_key"]);
+        assert_eq!(a["did"], b["did"]);
+    }
+
+    #[test]
+    fn public_key_matches_verify_key() {
+        let pk_result = handle_auth_public_key(PRIMAL, NODE);
+        let pk_b64 = pk_result["public_key"].as_str().unwrap();
+        let pk_bytes = B64.decode(pk_b64).unwrap();
+
+        let vk = derive_primal_verifying_key(PRIMAL, NODE);
+        assert_eq!(pk_bytes.as_slice(), vk.as_bytes());
+    }
+
+    #[test]
+    fn public_key_enables_cross_primal_verification() {
+        let pk_result = handle_auth_public_key(PRIMAL, NODE);
+        let pk_b64 = pk_result["public_key"].as_str().unwrap();
+        let pk_bytes = B64.decode(pk_b64).unwrap();
+
+        let remote_vk = VerifyingKey::from_bytes(pk_bytes.as_slice().try_into().unwrap()).unwrap();
+
+        let params = serde_json::json!({
+            "subject": "remote-primal",
+            "scope": ["crypto.*"],
+            "ttl_secs": 300,
+        });
+        let issue_result = handle_auth_issue_ionic(PRIMAL, NODE, Some(&params));
+        let token = issue_result["token"].as_str().unwrap();
+
+        let verify_params = serde_json::json!({ "token": token, "method": "crypto.sign" });
+        let verify_result = handle_auth_verify_ionic(&remote_vk, Some(&verify_params));
+        assert_eq!(verify_result["valid"], true);
+        assert_eq!(verify_result["scope_ok"], true);
+    }
+
+    #[test]
+    fn public_key_different_primals_differ() {
+        let a = handle_auth_public_key("beardog", "node-1");
+        let b = handle_auth_public_key("primalspring", "node-1");
+        assert_ne!(a["public_key"], b["public_key"]);
     }
 
     // ── auth.issue_session (JH-4) ──

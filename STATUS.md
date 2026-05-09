@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 8, 2026
+**Last Updated**: May 9, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant (threshold lowered to 800; `aliases_and_beardog.rs` refactored Wave 75) |
-| **Tests** | 14,883+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,889+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
@@ -35,7 +35,7 @@
 
 - **Crates**: 29 directories (beardog-integration excluded — overstep)
 - **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
-- **JSON-RPC Methods**: 117 — 103 CryptoHandler + 8 IonicBondHandler + 5 auth gate (JH-0/JH-1) + 1 identity gate (JH-1)
+- **JSON-RPC Methods**: 123 — 103 CryptoHandler + 11 IonicBondHandler + 6 auth gate (JH-0/JH-1/JH-11) + 1 identity gate (JH-1) + 5 bonding aliases (primalSpring compat) — note: 5 bonding aliases are not new handlers, they route to crypto.ionic_bond.*
 - **`#[allow(`**: 81 (was 86; all carry `reason`)
 - **`#[expect(`**: 644 (was 646; 2 stale removed)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS

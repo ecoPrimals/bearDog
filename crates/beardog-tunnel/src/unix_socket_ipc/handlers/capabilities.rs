@@ -249,9 +249,9 @@ impl CapabilitiesHandler {
                 },
                 {
                     "type": "auth",
-                    "version": "2.0",
-                    "methods": ["check", "mode", "peer_info", "issue_ionic", "verify_ionic"],
-                    "description": "Method-gate introspection and ionic token lifecycle (JH-0/JH-1) — auth status, enforcement mode, peer credentials, token issuance and verification"
+                    "version": "3.0",
+                    "methods": ["check", "mode", "peer_info", "issue_ionic", "issue_session", "verify_ionic", "public_key"],
+                    "description": "Method-gate introspection and ionic token lifecycle (JH-0/JH-1/JH-11) — auth status, enforcement mode, peer credentials, token issuance, verification, and public key distribution for cross-primal federation"
                 },
                 {
                     "type": "identity",
@@ -297,6 +297,7 @@ impl CapabilitiesHandler {
                 "auth.issue_ionic":                { "cpu": "low",    "latency_ms": 1 },
                 "auth.issue_session":              { "cpu": "low",    "latency_ms": 1 },
                 "auth.verify_ionic":               { "cpu": "low",    "latency_ms": 1 },
+                "auth.public_key":                 { "cpu": "low",    "latency_ms": 0 },
                 "identity.create":                 { "cpu": "low",    "latency_ms": 1 },
                 "security.evaluate":               { "cpu": "medium", "latency_ms": 5 },
                 "graph.authorize_modification":    { "cpu": "medium", "latency_ms": 5 },
@@ -336,6 +337,7 @@ impl CapabilitiesHandler {
                     "auth.issue_ionic",
                     "auth.issue_session",
                     "auth.verify_ionic",
+                    "auth.public_key",
                     "identity.create",
                 ],
                 "note": if self.is_btsp_required() {
@@ -419,10 +421,16 @@ impl CapabilitiesHandler {
             "auth.issue_ionic",
             "auth.issue_session",
             "auth.verify_ionic",
+            "auth.public_key",
             "identity.create",
             "crypto.contract.propose",
             "crypto.contract.countersign",
             "crypto.contract.verify",
+            "bonding.propose",
+            "bonding.accept",
+            "bonding.status",
+            "bonding.terminate",
+            "bonding.modify_scope",
         ]
         .iter()
         .map(|s| (*s).to_string())

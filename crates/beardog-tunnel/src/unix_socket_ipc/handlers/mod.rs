@@ -323,7 +323,8 @@ impl HandlerRegistry {
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
-        // Backward-compat bridge: bare crypto names → namespaced equivalents.
+        // Backward-compat bridge: bare crypto names → namespaced equivalents,
+        // plus bonding.* aliases used by primalSpring graphs and dispatch.
         let method = match method {
             "x25519_generate_ephemeral" => "crypto.x25519_generate_ephemeral",
             "x25519_derive_secret" => "crypto.x25519_derive_secret",
@@ -333,6 +334,11 @@ impl HandlerRegistry {
             "chacha20_poly1305_decrypt" => "crypto.chacha20_poly1305_decrypt",
             "hmac_sha256" => "crypto.hmac_sha256",
             "blake3_hash" => "crypto.blake3_hash",
+            "bonding.propose" => "crypto.ionic_bond.propose",
+            "bonding.accept" => "crypto.ionic_bond.accept",
+            "bonding.status" => "crypto.ionic_bond.list",
+            "bonding.terminate" => "crypto.ionic_bond.revoke",
+            "bonding.modify_scope" => "crypto.ionic_bond.seal",
             other => other,
         };
 

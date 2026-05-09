@@ -81,6 +81,10 @@ fn ionic_auth_methods_are_public() {
         classify_method("auth.verify_ionic"),
         MethodAccessLevel::Public
     );
+    assert_eq!(
+        classify_method("auth.public_key"),
+        MethodAccessLevel::Public
+    );
 }
 
 #[test]
@@ -167,6 +171,7 @@ fn public_method_always_passes() {
     assert!(gate.check("auth.issue_ionic", &mut caller).is_ok());
     assert!(gate.check("auth.issue_session", &mut caller).is_ok());
     assert!(gate.check("auth.verify_ionic", &mut caller).is_ok());
+    assert!(gate.check("auth.public_key", &mut caller).is_ok());
 }
 
 #[test]
@@ -376,6 +381,19 @@ fn dispatch_routes_ionic_methods() {
 }
 
 #[test]
+fn dispatch_routes_public_key() {
+    let gate = test_gate(EnforcementMode::Permissive);
+    let caller = CallerContext::loopback();
+    let result = dispatch_auth_method("auth.public_key", &gate, &caller, None);
+    assert!(result.is_some());
+    let val = result.unwrap();
+    assert_eq!(val["algorithm"], "Ed25519");
+    assert!(val["did"].as_str().unwrap().starts_with("did:key:z6Mk"));
+    assert!(val["public_key"].as_str().is_some());
+    assert!(val["public_key_hex"].as_str().is_some());
+}
+
+#[test]
 fn dispatch_routes_issue_session() {
     let gate = test_gate(EnforcementMode::Permissive);
     let caller = CallerContext::loopback();
@@ -403,6 +421,7 @@ fn is_gate_handled_method_correct() {
     assert!(is_gate_handled_method("auth.issue_ionic"));
     assert!(is_gate_handled_method("auth.issue_session"));
     assert!(is_gate_handled_method("auth.verify_ionic"));
+    assert!(is_gate_handled_method("auth.public_key"));
     assert!(is_gate_handled_method("identity.create"));
     assert!(!is_gate_handled_method("crypto.sign"));
 }

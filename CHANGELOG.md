@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 9, 2026 -- Wave 99: Token Federation, Bonding Aliases & Scope Compat (primalSpring Later-Term Audit)
+
+- **`auth.public_key` endpoint (JH-11)** — New gate-handled public method returning the primal's Ed25519 verifying key in base64, hex, and DID formats. Enables cross-primal token verification without calling back to the issuing BearDog: any primal can call `auth.public_key` once, cache the key, and verify ionic tokens locally. Resolves primalSpring audit item "Token key distribution (JH-11)" for cross-host and multi-family deployments.
+- **`bonding.*` method aliases** — Five new aliases in `HandlerRegistry::route()` mapping primalSpring's bonding namespace to BearDog's crypto.ionic_bond surface: `bonding.propose` → `crypto.ionic_bond.propose`, `bonding.accept` → `crypto.ionic_bond.accept`, `bonding.status` → `crypto.ionic_bond.list`, `bonding.terminate` → `crypto.ionic_bond.revoke`, `bonding.modify_scope` → `crypto.ionic_bond.seal`. Resolves primalSpring guidestone Layer 5 "method not found" for `bonding.propose`. Aliases also advertised in `discover_capabilities` response.
+- **`scopes` alias in token responses** — `auth.issue_ionic`, `auth.issue_session`, and `auth.verify_ionic` now return both `scope` (original) and `scopes` (alias) as arrays of pattern strings (`*`, `domain.*`, exact). Forward-compatible with primalSpring's `scope_permits_method()` which matches both field names.
+- **Auth capability v2.0 → v3.0** — Methods list expanded to include `issue_session` and `public_key`. Cost estimate for `auth.public_key` added. Cleartext bypass includes `auth.public_key`.
+- **Tests** — 5 new `auth.public_key` tests (determinism, cross-primal verification, key format), 3 updated method gate tests. 14,889+ total tests passing, 0 failures.
+- **Modified files**: `ionic_token_handlers.rs`, `method_gate.rs`, `method_gate_tests.rs`, `handlers/mod.rs` (registry aliases), `capabilities.rs`.
+
 ### May 8, 2026 -- Wave 97: Cross-Family Contract Signing & Session Token UX
 
 - **Cross-family contract lifecycle** — New `crypto.contract.propose`, `crypto.contract.countersign`, `crypto.contract.verify` IPC methods implementing multi-party contract signing across family boundaries. Pending contracts tracked in `IonicBondHandler` with TTL expiry and Ed25519 dual-signature verification. Resolves primalSpring audit item "Ionic bond cross-family contract signing (Open)", unblocking hotSpring GAP-HS-005 (GPU lease), healthSpring (dual-tower ionic), and wetSpring (provenance cross-spring).
