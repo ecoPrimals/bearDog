@@ -75,6 +75,7 @@ arrayref = { workspace = true }
 postcard = { workspace = true }
 zeroize = { workspace = true }
 parking_lot = { workspace = true }
+dashmap = { workspace = true }
 futures = { workspace = true }
 subtle = { workspace = true }  # Constant-time comparisons for Dark Forest challenge-response
 
@@ -85,6 +86,11 @@ ciborium = { workspace = true, optional = true }
 base64 = { workspace = true }  # Aligned with workspace version (0.21 → 0.22 upgrade eliminates dep duplication)
 data-encoding = { workspace = true }  # Base32 encoding for Tor v3 onion addresses
 bs58 = { workspace = true }  # Base58 encoding for did:key derivation
+
+# TLS termination (H2-10 sovereignty — feature-gated)
+rustls = { workspace = true, optional = true }
+tokio-rustls = { workspace = true, optional = true }
+rustls-pemfile = { workspace = true, optional = true }
 
 
 [dev-dependencies]
@@ -115,12 +121,13 @@ solo-v2 = ["dep:ciborium"]
 usb-discovery = ["dep:beardog-hid"]
 ctap2 = ["solo-v2", "dep:beardog-hid"]
 tls-x509 = ["dep:x509-parser"]
+tls-server = ["dep:rustls", "dep:tokio-rustls", "dep:rustls-pemfile"]
 
 # Platform features
 # `ecosystem` removed: no cfg(feature) gate existed in source — dead flag.
 # `android_native` removed: emitted by build.rs on Android targets but
 # never checked via cfg(feature) in Rust source — dead flag.
-default = ["tls-x509"]
+default = ["tls-x509", "tls-server"]
 
 [package.version]
 workspace = true

@@ -36,7 +36,13 @@
 //! ```
 
 pub mod client;
+pub mod rate_limiter;
 pub mod server;
+#[cfg(feature = "tls-server")]
+pub mod tls;
 
 pub use client::TcpIpcClient;
+pub use rate_limiter::{ConnectionRateLimiter, RateLimitConfig};
 pub use server::TcpIpcServer;
+#[cfg(feature = "tls-server")]
+pub use tls::{TlsTerminationConfig, build_tls_acceptor};

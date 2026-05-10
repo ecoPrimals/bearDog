@@ -7,6 +7,7 @@
 use crate::btsp_handshake::{self, BtspSecurityMode, BtspSession};
 use crate::btsp_provider::BeardogBtspProvider;
 use crate::method_gate::{CallerContext, MethodGate, dispatch_auth_method};
+use crate::tcp_ipc::rate_limiter::{ConnectionRateLimiter, RateLimitConfig};
 use crate::unix_socket_ipc::handlers::HandlerRegistry;
 use beardog_errors::BearDogError;
 use beardog_types::primal_identity::PrimalIdentity;
@@ -49,6 +50,13 @@ pub struct TcpIpcServer {
 
     /// Actual bound address (after OS assigns port if using :0)
     bound_addr: Arc<RwLock<Option<SocketAddr>>>,
+
+    /// Per-IP connection rate limiter (H2-11 sovereignty).
+    rate_limiter: Arc<ConnectionRateLimiter>,
+
+    /// TLS acceptor for X.509 termination (H2-10 sovereignty).
+    #[cfg(feature = "tls-server")]
+    tls_acceptor: Option<tokio_rustls::TlsAcceptor>,
 }
 
 impl TcpIpcServer {
@@ -65,6 +73,32 @@ impl TcpIpcServer {
             mode = method_gate.mode().as_str(),
             "TCP method gate initialized (JH-0/JH-1)"
         );
+
+        let rate_limiter = Arc::new(ConnectionRateLimiter::new(RateLimitConfig::from_env()));
+        info!("TCP rate limiter initialized (H2-11 sovereignty)");
+
+        #[cfg(feature = "tls-server")]
+        let tls_acceptor = {
+            use crate::tcp_ipc::tls::{TlsTerminationConfig, build_tls_acceptor};
+            if let Some(tls_config) = TlsTerminationConfig::from_env() {
+                match build_tls_acceptor(&tls_config) {
+                    Ok(acceptor) => {
+                        info!("TLS termination enabled (H2-10 sovereignty)");
+                        Some(acceptor)
+                    }
+                    Err(e) => {
+                        warn!(error = %e, "TLS config present but failed to initialize — running without TLS");
+                        None
+                    }
+                }
+            } else {
+                info!(
+                    "TLS termination not configured (set BEARDOG_TLS_CERT_PATH + BEARDOG_TLS_KEY_PATH to enable)"
+                );
+                None
+            }
+        };
+
         Self {
             bind_addr,
             btsp_provider,
@@ -72,6 +106,9 @@ impl TcpIpcServer {
             security_mode,
             method_gate,
             bound_addr: Arc::new(RwLock::new(None)),
+            rate_limiter,
+            #[cfg(feature = "tls-server")]
+            tls_acceptor,
         }
     }
 
@@ -103,17 +140,73 @@ impl TcpIpcServer {
         info!("✅ TCP IPC server listening: {}", bound_addr);
         info!("   Protocol: JSON-RPC 2.0 over TCP");
         info!("   Platform: Universal (Android, Linux, Windows, iOS)");
+        #[cfg(feature = "tls-server")]
+        if self.tls_acceptor.is_some() {
+            info!("   TLS: Enabled (X.509 termination, H2-10)");
+        }
+        info!("   Rate limiting: Enabled (H2-11)");
+
+        // Periodic rate-limiter pruning (every 5 minutes)
+        let prune_limiter = self.rate_limiter.clone();
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_secs(300));
+            loop {
+                interval.tick().await;
+                prune_limiter.prune_stale();
+            }
+        });
 
         // Accept connections loop
         loop {
             match listener.accept().await {
                 Ok((stream, peer_addr)) => {
+                    // H2-11: rate limit check before any processing
+                    if let Err(reason) = self.rate_limiter.check_connection(&peer_addr.ip()) {
+                        warn!(peer = %peer_addr, reason = %reason, "connection rejected by rate limiter");
+                        drop(stream);
+                        continue;
+                    }
+
+                    self.rate_limiter.on_connect();
                     debug!("📥 New connection from: {}", peer_addr);
 
                     let registry = self.handler_registry.clone();
                     let btsp = self.btsp_provider.clone();
                     let sec_mode = self.security_mode.clone();
                     let gate = self.method_gate.clone();
+                    let limiter = self.rate_limiter.clone();
+
+                    // H2-10: TLS upgrade if acceptor is configured
+                    #[cfg(feature = "tls-server")]
+                    if let Some(ref acceptor) = self.tls_acceptor {
+                        let acceptor = acceptor.clone();
+                        tokio::spawn(async move {
+                            match acceptor.accept(stream).await {
+                                Ok(tls_stream) => {
+                                    let (reader, writer) = tokio::io::split(tls_stream);
+                                    if let Err(e) = Self::handle_plaintext_connection(
+                                        reader,
+                                        writer,
+                                        peer_addr,
+                                        registry,
+                                        btsp,
+                                        &gate,
+                                        &mut CallerContext::remote(),
+                                    )
+                                    .await
+                                    {
+                                        error!("TLS connection handler error: {}", e);
+                                    }
+                                    limiter.on_disconnect();
+                                }
+                                Err(e) => {
+                                    debug!(peer = %peer_addr, error = %e, "TLS handshake failed — falling through to cleartext");
+                                    limiter.on_disconnect();
+                                }
+                            }
+                        });
+                        continue;
+                    }
 
                     tokio::spawn(async move {
                         if let Err(e) =
@@ -121,6 +214,7 @@ impl TcpIpcServer {
                         {
                             error!("Connection handler error: {}", e);
                         }
+                        limiter.on_disconnect();
                     });
                 }
                 Err(e) => {
@@ -198,7 +292,35 @@ impl TcpIpcServer {
         }
 
         // ── Plain NDJSON (development mode or JSON-RPC auto-detected) ──
-        let (reader, mut writer) = stream.into_split();
+        let (reader, writer) = stream.into_split();
+        Self::handle_plaintext_connection(
+            reader,
+            writer,
+            peer_addr,
+            registry,
+            btsp_provider,
+            &gate,
+            &mut caller,
+        )
+        .await
+    }
+
+    /// Handle a plaintext NDJSON connection over any async reader/writer.
+    ///
+    /// Shared by both cleartext TCP and TLS-terminated connections.
+    async fn handle_plaintext_connection<R, W>(
+        reader: R,
+        mut writer: W,
+        peer_addr: SocketAddr,
+        registry: Arc<HandlerRegistry>,
+        btsp_provider: Arc<BeardogBtspProvider>,
+        gate: &MethodGate,
+        caller: &mut CallerContext,
+    ) -> Result<(), BearDogError>
+    where
+        R: tokio::io::AsyncRead + Unpin,
+        W: tokio::io::AsyncWrite + Unpin,
+    {
         let mut reader = BufReader::new(reader);
         let mut line = String::new();
 
@@ -263,7 +385,6 @@ impl TcpIpcServer {
                     let params = request.get("params").cloned();
                     let id = request.get("id").cloned();
 
-                    // JH-1: extract bearer token from _bearer_token param
                     if let Some(token) = params
                         .as_ref()
                         .and_then(|p| p.get("_bearer_token"))
@@ -274,9 +395,8 @@ impl TcpIpcServer {
 
                     debug!("Request: {} (id: {:?})", method, id);
 
-                    // JH-0/JH-1: intercept gate-handled methods
                     if let Some(result) =
-                        dispatch_auth_method(method, &gate, &caller, params.as_ref())
+                        dispatch_auth_method(method, gate, caller, params.as_ref())
                     {
                         let json_response = serde_json::json!({
                             "jsonrpc": "2.0",
@@ -289,8 +409,7 @@ impl TcpIpcServer {
                         continue;
                     }
 
-                    // JH-0/JH-1: pre-dispatch authorization gate (real token verification)
-                    if let Err(gate_err) = gate.check(method, &mut caller) {
+                    if let Err(gate_err) = gate.check(method, caller) {
                         let json_response = serde_json::json!({
                             "jsonrpc": "2.0",
                             "error": {

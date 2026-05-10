@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 10, 2026 -- Wave 100: TLS Termination & Rate Limiting (H2-10/H2-11 Sovereignty)
+
+- **X.509/TLS termination (H2-10)** — New `tls-server` feature in `beardog-tunnel` providing native TLS termination via `rustls` + `tokio-rustls`. The TCP server can now serve HTTPS directly without Cloudflare or any external TLS proxy. Certificate chain and private key loaded from PEM files (`BEARDOG_TLS_CERT_PATH`, `BEARDOG_TLS_KEY_PATH`). Supports PKCS8, PKCS1, and SEC1 key formats. SNI hostname validation via `rustls` built-in support. TLS connections are transparently upgraded before the JSON-RPC handler, sharing the same `handle_plaintext_connection` codepath with cleartext connections.
+- **Connection rate limiting (H2-11)** — New `ConnectionRateLimiter` module providing per-IP sliding-window token bucket rate limiting. Configurable via `BEARDOG_RATE_LIMIT_MAX_CONN` (default 100/min), `BEARDOG_RATE_LIMIT_WINDOW_SECS` (default 60), `BEARDOG_RATE_LIMIT_MAX_TOTAL` (default 1000). Loopback IPs are allowlisted. Stale IP buckets auto-pruned every 5 minutes. Wired into the TCP accept loop — connections are rejected before any TLS/BTSP handshake or JSON-RPC parsing. Uses `DashMap` for lock-free concurrent tracking.
+- **Server refactor** — Extracted `handle_plaintext_connection` as a generic handler over `AsyncRead + AsyncWrite`, shared by cleartext TCP, BTSP auto-detected plaintext, and TLS-terminated connections. Eliminates code duplication in the NDJSON JSON-RPC path.
+- **Dependencies** — `rustls 0.23` (ring backend), `tokio-rustls 0.26`, `rustls-pemfile 2.2` added as workspace deps. Feature-gated behind `tls-server` (default-enabled in `beardog-tunnel`). `dashmap` added to `beardog-tunnel` for rate limiter.
+- **JH-11 confirmation** — Wave 99's `auth.public_key` endpoint confirmed as the key distribution API requested by primalSpring audit. No further BearDog work needed; downstream primals wire `BearDogVerifier` pattern.
+- **Tests** — 7 TLS config tests, 8 rate limiter tests. 14,905+ total tests passing, 0 failures.
+- **Modified files**: `Cargo.toml` (workspace deps), `beardog-tunnel/Cargo.toml` (features + deps), `tcp_ipc/mod.rs`, `tcp_ipc/server.rs` (TLS + rate limit integration), new `tcp_ipc/tls.rs`, new `tcp_ipc/rate_limiter.rs`, `STATUS.md`, `CHANGELOG.md`.
+
 ### May 9, 2026 -- Wave 99: Token Federation, Bonding Aliases & Scope Compat (primalSpring Later-Term Audit)
 
 - **`auth.public_key` endpoint (JH-11)** — New gate-handled public method returning the primal's Ed25519 verifying key in base64, hex, and DID formats. Enables cross-primal token verification without calling back to the issuing BearDog: any primal can call `auth.public_key` once, cache the key, and verify ionic tokens locally. Resolves primalSpring audit item "Token key distribution (JH-11)" for cross-host and multi-family deployments.
