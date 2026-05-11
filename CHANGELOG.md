@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 11, 2026 -- Wave 101: Crypto IPC Surface for barraCuda Delegation
+
+- **`crypto.hkdf_sha256` IPC method** — New standalone HKDF-SHA256 extract-and-expand endpoint. Accepts `ikm` (base64), optional `salt` (base64), optional `info` (base64 or UTF-8), and optional `length` (default 32, max 8160). Returns `{okm, algorithm, length}`. Matches the exact derivation pattern barraCuda uses for BTSP Phase 3 key upgrade (`btsp-v1-phase3` info with client+server nonce salt). Enables any primal to delegate HKDF operations to BearDog instead of embedding `hkdf` crate directly.
+- **`crypto.hmac_verify` IPC method** — New constant-time HMAC-SHA256 verification endpoint. Accepts `key`, `data`, `mac` (all base64), computes HMAC-SHA256, and compares using `subtle::ConstantTimeEq`. Returns `{valid: bool, algorithm}`. Completes the HMAC lifecycle alongside existing `crypto.hmac_sha256` (compute-only). Required for barraCuda's `BTSP_HMAC_PLAIN` frame integrity verification.
+- **Crypto surface now covers barraCuda BTSP needs** — With these additions, BearDog's `crypto.*` IPC surface covers all three operations barraCuda embeds for BTSP framing: AEAD encrypt/decrypt (`crypto.chacha20_poly1305_encrypt`/`decrypt`), HKDF key derivation (`crypto.hkdf_sha256`), and HMAC compute+verify (`crypto.hmac_sha256`/`crypto.hmac_verify`). Unblocks barraCuda crypto dedup per primalSpring stadial gate audit.
+- **Capability manifest updated** — Crypto capability methods list expanded to include `hmac_verify` and `hkdf_sha256`. Cost estimates added (both `cpu: low`, `latency_ms: 1`).
+- **Tests** — 9 new handler tests (HMAC verify: correct/wrong/missing, HKDF: default/custom/salt+info/deterministic/different-salt/missing-ikm/missing-params/barraCuda-pattern-match), 5 new router tests. Crypto method count: 103 → 105. 14,925+ total tests passing, 0 failures.
+- **Modified files**: `crypto/hash.rs` (handlers), `crypto/mod.rs` (re-exports), `crypto_handler/hashing.rs` (routing), `crypto_handler/method_list.rs`, `crypto_handler_tests.rs` (method count), `capabilities.rs`.
+
 ### May 10, 2026 -- Wave 100: TLS Termination & Rate Limiting (H2-10/H2-11 Sovereignty)
 
 - **X.509/TLS termination (H2-10)** — New `tls-server` feature in `beardog-tunnel` providing native TLS termination via `rustls` + `tokio-rustls`. The TCP server can now serve HTTPS directly without Cloudflare or any external TLS proxy. Certificate chain and private key loaded from PEM files (`BEARDOG_TLS_CERT_PATH`, `BEARDOG_TLS_KEY_PATH`). Supports PKCS8, PKCS1, and SEC1 key formats. SNI hostname validation via `rustls` built-in support. TLS connections are transparently upgraded before the JSON-RPC handler, sharing the same `handle_plaintext_connection` codepath with cleartext connections.

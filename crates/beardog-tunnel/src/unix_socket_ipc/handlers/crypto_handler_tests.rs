@@ -31,7 +31,9 @@ fn test_crypto_handler_methods() {
     //   - 1 crypto.public_key (standalone key retrieval)
     //   - 1 crypto.did_from_key (did:key derivation from Ed25519 signing key)
     //   - 1 crypto.derive_public_key (purpose-key Ed25519 public key)
-    assert_eq!(methods.len(), 103);
+    //   - 1 crypto.hmac_verify (constant-time HMAC verification)
+    //   - 1 crypto.hkdf_sha256 (HKDF-SHA256 key derivation)
+    assert_eq!(methods.len(), 105);
 
     // Verify all core crypto methods are present
     assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -116,6 +118,10 @@ fn test_crypto_handler_methods() {
     // Verify dot-separated semantic aliases (BD-01 / Wire Standard L2)
     assert!(methods.contains(&"crypto.ed25519.sign"));
     assert!(methods.contains(&"crypto.ed25519.verify"));
+
+    // HMAC verify + HKDF (Wave 101 — barraCuda crypto dedup surface)
+    assert!(methods.contains(&"crypto.hmac_verify"));
+    assert!(methods.contains(&"crypto.hkdf_sha256"));
 }
 
 #[test]
@@ -123,7 +129,7 @@ fn test_handler_method_count() {
     let handler = CryptoHandler;
     assert_eq!(
         handler.methods().len(),
-        103,
-        "Should have exactly 103 crypto methods (see test_crypto_handler_methods for breakdown)"
+        105,
+        "Should have exactly 105 crypto methods (see test_crypto_handler_methods for breakdown)"
     );
 }

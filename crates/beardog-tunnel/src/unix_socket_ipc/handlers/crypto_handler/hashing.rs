@@ -11,7 +11,8 @@ use crate::unix_socket_ipc::crypto_handlers_hmac::{
     handle_hmac_blake3, handle_hmac_sha384, handle_hmac_sha512,
 };
 use crate::unix_socket_ipc::handlers::crypto::{
-    handle_blake3_hash, handle_hash_for_cipher, handle_hmac_sha256,
+    handle_blake3_hash, handle_hash_for_cipher, handle_hkdf_sha256, handle_hmac_sha256,
+    handle_hmac_verify,
 };
 use tracing::info;
 
@@ -100,6 +101,16 @@ pub async fn route(
             Ok(Some(
                 handle_hmac_blake3(params_ref).map_err(|e| e.to_string())?,
             ))
+        }
+
+        "crypto.hmac_verify" => {
+            info!("🔐 Crypto: hmac_verify (constant-time HMAC verification)");
+            Ok(Some(handle_hmac_verify(params).await?))
+        }
+
+        "crypto.hkdf_sha256" => {
+            info!("🔑 Crypto: hkdf_sha256 (HKDF-SHA256 key derivation)");
+            Ok(Some(handle_hkdf_sha256(params).await?))
         }
 
         "beardog.crypto.sha3_256" => {
@@ -246,5 +257,104 @@ mod tests {
                 .and_then(|v| v.as_str())
                 .is_some_and(|s| s.ends_with(".onion"))
         );
+    }
+
+    #[tokio::test]
+    async fn hashing_route_hmac_verify_valid_mac() {
+        let key = b64(b"my-secret-key");
+        let data = b64(b"hello world");
+        let compute_params = json!({ "key": key, "data": data });
+        let mac_result = route("crypto.hmac_sha256", Some(&compute_params))
+            .await
+            .expect("route")
+            .expect("hmac compute");
+        let mac = mac_result["mac"].as_str().expect("mac field");
+
+        let verify_params = json!({ "key": key, "data": data, "mac": mac });
+        let out = route("crypto.hmac_verify", Some(&verify_params))
+            .await
+            .expect("route")
+            .expect("hmac verify");
+        assert_eq!(out["valid"], true);
+        assert_eq!(out["algorithm"], "HMAC-SHA256");
+    }
+
+    #[tokio::test]
+    async fn hashing_route_hmac_verify_rejects_wrong_mac() {
+        let key = b64(b"my-secret-key");
+        let data = b64(b"hello world");
+        let wrong_mac = b64(&[0u8; 32]);
+        let params = json!({ "key": key, "data": data, "mac": wrong_mac });
+        let out = route("crypto.hmac_verify", Some(&params))
+            .await
+            .expect("route")
+            .expect("hmac verify");
+        assert_eq!(out["valid"], false);
+    }
+
+    #[tokio::test]
+    async fn hashing_route_hmac_verify_missing_mac_errors() {
+        let params = json!({ "key": b64(b"k"), "data": b64(b"d") });
+        let err = route("crypto.hmac_verify", Some(&params))
+            .await
+            .expect_err("missing mac");
+        assert!(err.contains("mac"));
+    }
+
+    #[tokio::test]
+    async fn hashing_route_hkdf_sha256_basic() {
+        let ikm = b64(b"input key material");
+        let params = json!({ "ikm": ikm });
+        let out = route("crypto.hkdf_sha256", Some(&params))
+            .await
+            .expect("route")
+            .expect("hkdf");
+        assert_eq!(out["algorithm"], "HKDF-SHA256");
+        assert_eq!(out["length"], 32);
+        let okm = out["okm"].as_str().expect("okm field");
+        let decoded = base64::engine::general_purpose::STANDARD
+            .decode(okm)
+            .expect("valid base64");
+        assert_eq!(decoded.len(), 32);
+    }
+
+    #[tokio::test]
+    async fn hashing_route_hkdf_sha256_with_salt_and_info() {
+        let ikm = b64(b"shared secret");
+        let salt = b64(b"random salt");
+        let info = b64(b"btsp-v1-phase3");
+        let params = json!({ "ikm": ikm, "salt": salt, "info": info, "length": 64 });
+        let out = route("crypto.hkdf_sha256", Some(&params))
+            .await
+            .expect("route")
+            .expect("hkdf");
+        assert_eq!(out["length"], 64);
+        let decoded = base64::engine::general_purpose::STANDARD
+            .decode(out["okm"].as_str().expect("okm"))
+            .expect("valid base64");
+        assert_eq!(decoded.len(), 64);
+    }
+
+    #[tokio::test]
+    async fn hashing_route_hkdf_sha256_deterministic() {
+        let params = json!({ "ikm": b64(b"key"), "salt": b64(b"s"), "info": b64(b"i") });
+        let out1 = route("crypto.hkdf_sha256", Some(&params))
+            .await
+            .expect("r")
+            .expect("v");
+        let out2 = route("crypto.hkdf_sha256", Some(&params))
+            .await
+            .expect("r")
+            .expect("v");
+        assert_eq!(out1["okm"], out2["okm"]);
+    }
+
+    #[tokio::test]
+    async fn hashing_route_hkdf_sha256_missing_ikm_errors() {
+        let params = json!({ "salt": b64(b"s") });
+        let err = route("crypto.hkdf_sha256", Some(&params))
+            .await
+            .expect_err("missing ikm");
+        assert!(err.contains("ikm"));
     }
 }

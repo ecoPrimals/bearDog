@@ -50,6 +50,9 @@ pub fn crypto_method_names() -> Vec<&'static str> {
         "crypto.hmac_sha384",
         "crypto.hmac_sha512",
         "crypto.hmac_blake3",
+        "crypto.hmac_verify",
+        // Key derivation
+        "crypto.hkdf_sha256",
         // Password hashing
         "crypto.argon2id_hash",
         "crypto.argon2id_verify",

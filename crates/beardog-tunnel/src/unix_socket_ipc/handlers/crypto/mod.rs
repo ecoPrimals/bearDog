@@ -80,7 +80,10 @@ pub use asymmetric::{
 pub use symmetric::{handle_chacha20_poly1305_decrypt, handle_chacha20_poly1305_encrypt};
 
 // Re-export hash handlers for backward compatibility
-pub use hash::{handle_blake3_hash, handle_hash_for_cipher, handle_hmac_sha256};
+pub use hash::{
+    handle_blake3_hash, handle_hash_for_cipher, handle_hkdf_sha256, handle_hmac_sha256,
+    handle_hmac_verify,
+};
 
 // Re-export TLS 1.2 handlers for Tower Atomic pattern (TLS 1.2 crypto atoms for callers)
 pub use tls12::{

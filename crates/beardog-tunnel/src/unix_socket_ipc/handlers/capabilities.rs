@@ -227,9 +227,11 @@ impl CapabilitiesHandler {
                         "chacha20_poly1305_encrypt",
                         "chacha20_poly1305_decrypt",
                         "blake3_hash",
-                        "hmac_sha256"
+                        "hmac_sha256",
+                        "hmac_verify",
+                        "hkdf_sha256"
                     ],
-                    "description": "Pure Rust cryptographic operations for TLS and other primals - Ed25519, X25519, ChaCha20-Poly1305, Blake3, HMAC"
+                    "description": "Pure Rust cryptographic operations for TLS and other primals - Ed25519, X25519, ChaCha20-Poly1305, Blake3, HMAC, HKDF"
                 },
                 {
                     "type": "tls",
@@ -266,6 +268,8 @@ impl CapabilitiesHandler {
                 "crypto.verify_ed25519":           { "cpu": "low",    "latency_ms": 1 },
                 "crypto.blake3_hash":              { "cpu": "low",    "latency_ms": 1 },
                 "crypto.hmac_sha256":              { "cpu": "low",    "latency_ms": 1 },
+                "crypto.hmac_verify":              { "cpu": "low",    "latency_ms": 1 },
+                "crypto.hkdf_sha256":              { "cpu": "low",    "latency_ms": 1 },
                 "crypto.chacha20_poly1305_encrypt": { "cpu": "low",   "latency_ms": 1 },
                 "crypto.chacha20_poly1305_decrypt": { "cpu": "low",   "latency_ms": 1 },
                 "crypto.x25519_generate_ephemeral": { "cpu": "low",   "latency_ms": 1 },
