@@ -229,9 +229,10 @@ impl CapabilitiesHandler {
                         "blake3_hash",
                         "hmac_sha256",
                         "hmac_verify",
-                        "hkdf_sha256"
+                        "hkdf_sha256",
+                        "seed_fingerprint"
                     ],
-                    "description": "Pure Rust cryptographic operations for TLS and other primals - Ed25519, X25519, ChaCha20-Poly1305, Blake3, HMAC, HKDF"
+                    "description": "Pure Rust cryptographic operations for TLS and other primals - Ed25519, X25519, ChaCha20-Poly1305, Blake3, HMAC, HKDF, seed fingerprint"
                 },
                 {
                     "type": "tls",
@@ -270,6 +271,7 @@ impl CapabilitiesHandler {
                 "crypto.hmac_sha256":              { "cpu": "low",    "latency_ms": 1 },
                 "crypto.hmac_verify":              { "cpu": "low",    "latency_ms": 1 },
                 "crypto.hkdf_sha256":              { "cpu": "low",    "latency_ms": 1 },
+                "crypto.seed_fingerprint":         { "cpu": "low",    "latency_ms": 1 },
                 "crypto.chacha20_poly1305_encrypt": { "cpu": "low",   "latency_ms": 1 },
                 "crypto.chacha20_poly1305_decrypt": { "cpu": "low",   "latency_ms": 1 },
                 "crypto.x25519_generate_ephemeral": { "cpu": "low",   "latency_ms": 1 },

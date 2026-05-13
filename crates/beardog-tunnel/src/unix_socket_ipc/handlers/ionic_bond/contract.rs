@@ -42,23 +42,32 @@ impl IonicBondHandler {
         let terms_hash = compute_contract_terms_hash(&sign_params.terms);
         let (signature, public_key) = sign_terms_ed25519(btsp_provider, &terms_hash)?;
 
+        let now = Utc::now();
+        let expires_at = sign_params
+            .ttl_seconds
+            .map(|ttl| (now + chrono::Duration::seconds(ttl.cast_signed())).to_rfc3339());
+
         info!(
             signer = %sign_params.signer,
             context = ?sign_params.context,
             terms_hash = %terms_hash,
-            "Contract signed"
+            ttl_seconds = ?sign_params.ttl_seconds,
+            expires_at = ?expires_at,
+            "Contract signed (ionic lease)"
         );
 
         let resp = SignContractResponse {
             terms_hash,
             signature,
             public_key,
-            signed_at: Utc::now().to_rfc3339(),
+            signed_at: now.to_rfc3339(),
+            expires_at,
         };
         serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
     }
 
     /// Verify a single Ed25519 signature over a contract terms hash.
+    /// When `expires_at` is present, also checks ionic lease expiry.
     pub(super) async fn handle_verify_contract(
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, String> {
@@ -72,13 +81,31 @@ impl IonicBondHandler {
             &verify_params.public_key,
         );
 
+        let lease_expired = verify_params.expires_at.as_ref().and_then(|exp| {
+            chrono::DateTime::parse_from_rfc3339(exp)
+                .ok()
+                .map(|exp_dt| Utc::now() > exp_dt)
+        });
+
         let resp = match result {
-            Ok(()) => VerifyContractResponse {
-                valid: true,
-                error: None,
-            },
+            Ok(()) => {
+                if lease_expired == Some(true) {
+                    VerifyContractResponse {
+                        valid: false,
+                        expired: Some(true),
+                        error: Some("ionic lease expired".to_string()),
+                    }
+                } else {
+                    VerifyContractResponse {
+                        valid: true,
+                        expired: lease_expired,
+                        error: None,
+                    }
+                }
+            }
             Err(e) => VerifyContractResponse {
                 valid: false,
+                expired: lease_expired,
                 error: Some(e),
             },
         };

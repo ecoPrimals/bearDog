@@ -360,6 +360,47 @@ pub async fn handle_purpose_decrypt(params: Option<&Value>) -> Result<Value, Str
     }))
 }
 
+/// Compute a stable, non-reversible fingerprint of the primal's identity seed.
+///
+/// Wire: `crypto.seed_fingerprint`
+///
+/// The fingerprint is `BLAKE3(HMAC-SHA256(family_seed, "seed-fingerprint-v1"))`,
+/// truncated to 16 bytes and hex-encoded. This allows Tower atomic validation
+/// to verify that a primal's seed is consistent without exposing the seed itself.
+///
+/// # Parameters
+///
+/// - `algorithm` (optional): fingerprint hash algorithm, default `"blake3"`
+///
+/// # Returns
+///
+/// - `fingerprint`: hex-encoded seed fingerprint (32 chars)
+/// - `algorithm`: `"BLAKE3-over-HMAC-SHA256"`
+/// - `version`: `"seed-fingerprint-v1"`
+///
+/// # Errors
+///
+/// Returns an error if `FAMILY_SEED` / `BEARDOG_FAMILY_SEED` is not set.
+pub async fn handle_seed_fingerprint(params: Option<&Value>) -> Result<Value, String> {
+    let _ = params;
+
+    let seed = load_family_seed()?;
+
+    let hmac_output = hashing::hmac_sha256(&seed, b"seed-fingerprint-v1")
+        .map_err(|e| format!("HMAC for seed fingerprint failed: {e}"))?;
+
+    let fingerprint_full = blake3::hash(&hmac_output);
+    let fingerprint_hex = hex::encode(&fingerprint_full.as_bytes()[..16]);
+
+    info!("Seed fingerprint computed (32 hex chars)");
+
+    Ok(json!({
+        "fingerprint": fingerprint_hex,
+        "algorithm": "BLAKE3-over-HMAC-SHA256",
+        "version": "seed-fingerprint-v1",
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -615,6 +656,77 @@ mod tests {
             .decode(out["public_key"].as_str().expect("pk"))
             .expect("b64");
         assert_eq!(pk_bytes.len(), 32);
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+    }
+
+    // ── crypto.seed_fingerprint tests ────────────────────────────────────
+
+    #[tokio::test]
+    #[serial]
+    async fn seed_fingerprint_returns_valid_hex() {
+        beardog_errors::process_env::set_var("FAMILY_SEED", "fingerprint-test-seed!!");
+        let out = handle_seed_fingerprint(None).await.expect("fingerprint");
+        let fp = out["fingerprint"].as_str().expect("fingerprint");
+        assert_eq!(fp.len(), 32, "16 bytes = 32 hex chars");
+        assert!(fp.chars().all(|c| c.is_ascii_hexdigit()));
+        assert_eq!(out["algorithm"], "BLAKE3-over-HMAC-SHA256");
+        assert_eq!(out["version"], "seed-fingerprint-v1");
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn seed_fingerprint_is_deterministic() {
+        beardog_errors::process_env::set_var("FAMILY_SEED", "determinism-test-seed!!");
+        let fp1 = handle_seed_fingerprint(None).await.expect("1")["fingerprint"]
+            .as_str()
+            .expect("fp")
+            .to_owned();
+        let fp2 = handle_seed_fingerprint(None).await.expect("2")["fingerprint"]
+            .as_str()
+            .expect("fp")
+            .to_owned();
+        assert_eq!(fp1, fp2);
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn seed_fingerprint_differs_per_seed() {
+        beardog_errors::process_env::set_var("FAMILY_SEED", "seed-alpha-for-test!!!");
+        let fp_a = handle_seed_fingerprint(None).await.expect("a")["fingerprint"]
+            .as_str()
+            .expect("fp")
+            .to_owned();
+        beardog_errors::process_env::set_var("FAMILY_SEED", "seed-bravo-for-test!!!");
+        let fp_b = handle_seed_fingerprint(None).await.expect("b")["fingerprint"]
+            .as_str()
+            .expect("fp")
+            .to_owned();
+        assert_ne!(fp_a, fp_b);
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn seed_fingerprint_fails_without_seed() {
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_SEED");
+        let err = handle_seed_fingerprint(None).await.expect_err("no seed");
+        assert!(err.contains("FAMILY_SEED"));
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn seed_fingerprint_routes_via_aliases() {
+        beardog_errors::process_env::set_var("FAMILY_SEED", "route-fp-test-seed-material!");
+        let out = route("crypto.seed_fingerprint", None)
+            .await
+            .expect("route")
+            .expect("fingerprint via route");
+        assert_eq!(out["algorithm"], "BLAKE3-over-HMAC-SHA256");
+        let fp = out["fingerprint"].as_str().expect("fp");
+        assert_eq!(fp.len(), 32);
         beardog_errors::process_env::remove_var("FAMILY_SEED");
     }
 }

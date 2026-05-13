@@ -950,3 +950,154 @@ async fn cross_family_contract_with_ttl() {
 
     assert_eq!(countersign_result["contract"]["proposer"], "tower_a");
 }
+
+// ── Ionic lease on crypto.sign_contract ──────────────────────────────
+
+#[tokio::test]
+async fn sign_contract_with_ttl_returns_expires_at() {
+    let handler = IonicBondHandler::new();
+    let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+    let params = serde_json::json!({
+        "signer": "tower_a",
+        "terms": {"type": "gpu_lease", "hours": 4},
+        "context": "gpu_lease",
+        "ttl_seconds": 3600
+    });
+
+    let result = handler
+        .handle("crypto.sign_contract", Some(&params), &provider)
+        .await
+        .expect("sign with TTL");
+
+    assert!(
+        result["expires_at"].as_str().is_some(),
+        "expires_at present"
+    );
+    assert!(!result["terms_hash"].as_str().unwrap().is_empty());
+    assert!(!result["signed_at"].as_str().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn sign_contract_without_ttl_has_no_expires_at() {
+    let handler = IonicBondHandler::new();
+    let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+    let params = serde_json::json!({
+        "signer": "tower_a",
+        "terms": {"type": "data_egress", "gb": 10}
+    });
+
+    let result = handler
+        .handle("crypto.sign_contract", Some(&params), &provider)
+        .await
+        .expect("sign without TTL");
+
+    assert!(
+        result.get("expires_at").map_or(true, |v| v.is_null()),
+        "no expires_at without TTL"
+    );
+}
+
+#[tokio::test]
+async fn verify_contract_with_future_expiry_is_valid() {
+    let handler = IonicBondHandler::new();
+    let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+    let params = serde_json::json!({
+        "signer": "tower_a",
+        "terms": {"type": "lease"},
+        "ttl_seconds": 3600
+    });
+
+    let signed = handler
+        .handle("crypto.sign_contract", Some(&params), &provider)
+        .await
+        .expect("sign");
+
+    let verify_params = serde_json::json!({
+        "terms_hash": signed["terms_hash"],
+        "signature": signed["signature"],
+        "public_key": signed["public_key"],
+        "expires_at": signed["expires_at"]
+    });
+
+    let verified = handler
+        .handle("crypto.verify_contract", Some(&verify_params), &provider)
+        .await
+        .expect("verify");
+
+    assert_eq!(verified["valid"], true);
+    assert_eq!(verified["expired"], false);
+}
+
+#[tokio::test]
+async fn verify_contract_with_past_expiry_is_invalid() {
+    let handler = IonicBondHandler::new();
+    let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+    let params = serde_json::json!({
+        "signer": "tower_a",
+        "terms": {"type": "lease"}
+    });
+
+    let signed = handler
+        .handle("crypto.sign_contract", Some(&params), &provider)
+        .await
+        .expect("sign");
+
+    let past = chrono::Utc::now() - chrono::Duration::hours(1);
+    let verify_params = serde_json::json!({
+        "terms_hash": signed["terms_hash"],
+        "signature": signed["signature"],
+        "public_key": signed["public_key"],
+        "expires_at": past.to_rfc3339()
+    });
+
+    let verified = handler
+        .handle("crypto.verify_contract", Some(&verify_params), &provider)
+        .await
+        .expect("verify");
+
+    assert_eq!(verified["valid"], false);
+    assert_eq!(verified["expired"], true);
+    assert!(
+        verified["error"]
+            .as_str()
+            .unwrap()
+            .contains("ionic lease expired")
+    );
+}
+
+#[tokio::test]
+async fn verify_contract_without_expiry_ignores_lease() {
+    let handler = IonicBondHandler::new();
+    let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+    let params = serde_json::json!({
+        "signer": "tower_a",
+        "terms": {"type": "permanent"}
+    });
+
+    let signed = handler
+        .handle("crypto.sign_contract", Some(&params), &provider)
+        .await
+        .expect("sign");
+
+    let verify_params = serde_json::json!({
+        "terms_hash": signed["terms_hash"],
+        "signature": signed["signature"],
+        "public_key": signed["public_key"]
+    });
+
+    let verified = handler
+        .handle("crypto.verify_contract", Some(&verify_params), &provider)
+        .await
+        .expect("verify");
+
+    assert_eq!(verified["valid"], true);
+    assert!(
+        verified.get("expired").map_or(true, |v| v.is_null()),
+        "no expired field without expiry"
+    );
+}

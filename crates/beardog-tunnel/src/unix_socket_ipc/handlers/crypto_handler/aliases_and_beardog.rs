@@ -4,7 +4,7 @@
 
 use super::purpose_key::{
     handle_derive_public_key, handle_derive_purpose_key, handle_purpose_decrypt,
-    handle_purpose_encrypt, handle_sign_registration,
+    handle_purpose_encrypt, handle_seed_fingerprint, handle_sign_registration,
 };
 use crate::unix_socket_ipc::crypto_handlers_hashing::handle_generate_onion_identity;
 use crate::unix_socket_ipc::crypto_handlers_tor::{
@@ -100,6 +100,11 @@ pub async fn route(
         "crypto.derive_public_key" => {
             info!("🔑 Crypto: derive_public_key (purpose-key Ed25519 public key from FAMILY_SEED)");
             Ok(Some(handle_derive_public_key(params).await?))
+        }
+
+        "crypto.seed_fingerprint" => {
+            info!("🔑 Crypto: seed_fingerprint (Tower atomic identity fingerprint)");
+            Ok(Some(handle_seed_fingerprint(params).await?))
         }
 
         "crypto.sign_registration" => {

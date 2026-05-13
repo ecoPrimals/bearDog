@@ -269,6 +269,11 @@ pub struct SignContractParams {
     /// `"data_egress_fence"`, `"ionic_bond"`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub context: Option<String>,
+    /// Optional time-to-live in seconds (ionic lease). When set, the signed
+    /// contract carries an `expires_at` timestamp; `crypto.verify_contract`
+    /// will reject signatures past their lease expiry.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ttl_seconds: Option<u64>,
 }
 
 /// Response from `crypto.sign_contract`.
@@ -282,6 +287,10 @@ pub struct SignContractResponse {
     pub public_key: String,
     /// Signing timestamp (RFC 3339).
     pub signed_at: String,
+    /// Expiry timestamp (RFC 3339) — present when `ttl_seconds` was specified.
+    /// After this time, `crypto.verify_contract` will report the lease as expired.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<String>,
 }
 
 /// Parameters for `crypto.verify_contract`.
@@ -296,13 +305,22 @@ pub struct VerifyContractParams {
     pub signature: String,
     /// Ed25519 public key of the claimed signer (hex-encoded).
     pub public_key: String,
+    /// Optional expiry timestamp (RFC 3339) from the `sign_contract` response.
+    /// When present, the verifier rejects the contract if the lease has expired.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<String>,
 }
 
 /// Response from `crypto.verify_contract`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerifyContractResponse {
-    /// Whether the signature is cryptographically valid.
+    /// Whether the signature is cryptographically valid and the lease (if any)
+    /// has not expired.
     pub valid: bool,
+    /// Whether the contract's ionic lease has expired. Only set when
+    /// `expires_at` was provided in the verify request.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expired: Option<bool>,
     /// Error detail (set only on failure).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 13, 2026 -- Wave 102: Ionic Lease + Seed Fingerprint (Glacial Debt / Tower Atomic)
+
+- **Ionic lease on `crypto.sign_contract`** — `SignContractParams` now accepts optional `ttl_seconds` (u64). When present, `SignContractResponse` includes an `expires_at` RFC 3339 timestamp computed from `signed_at + ttl_seconds`. `crypto.verify_contract` accepts optional `expires_at` and performs lease expiry checking: if the timestamp is in the past, verification returns `{valid: false, expired: true, error: "ionic lease expired"}`. When no `expires_at` is provided, verification behaves as before (pure signature check). Enables GPU lease, data egress fence, and time-bounded trust patterns requested by downstream springs.
+- **`crypto.seed_fingerprint` IPC method** — New method returning a stable, non-reversible fingerprint of the primal's `FAMILY_SEED` / `BEARDOG_FAMILY_SEED` identity material. Uses `BLAKE3(HMAC-SHA256(seed, "seed-fingerprint-v1"))` truncated to 16 bytes (32 hex chars). Enables ludoSpring Tower atomic validation (GAP-16) to verify seed consistency across primals without exposing the seed itself. Registered in `method_list.rs`, routed through `aliases_and_beardog.rs`, advertised in capability manifest.
+- **Purpose-key derivation confirmed complete** — `crypto.derive_purpose_key` and `crypto.derive_public_key` already fully implemented, tested, and routed (HMAC-SHA256-purpose-v1 convention). No additional work needed for H2 niche task.
+- **Capability manifest updated** — Crypto capability methods list expanded to include `seed_fingerprint`. Cost estimate added (`cpu: low`, `latency_ms: 1`).
+- **Tests** — 5 ionic lease tests (TTL present, TTL absent, future expiry valid, past expiry invalid, no expiry ignores lease), 5 seed fingerprint tests (valid hex, deterministic, per-seed differs, missing seed fails, routes via aliases). Crypto method count: 105 → 106. 14,940+ total tests passing, 0 failures.
+- **Modified files**: `beardog-types/src/ionic_bond.rs` (types), `ionic_bond/contract.rs` (lease handler), `ionic_bond/tests.rs` (lease tests), `crypto_handler/purpose_key.rs` (fingerprint handler + tests), `crypto_handler/aliases_and_beardog.rs` (routing), `crypto_handler/method_list.rs`, `crypto_handler_tests.rs` (method count), `capabilities.rs`.
+
 ### May 11, 2026 -- Wave 101: Crypto IPC Surface for barraCuda Delegation
 
 - **`crypto.hkdf_sha256` IPC method** — New standalone HKDF-SHA256 extract-and-expand endpoint. Accepts `ikm` (base64), optional `salt` (base64), optional `info` (base64 or UTF-8), and optional `length` (default 32, max 8160). Returns `{okm, algorithm, length}`. Matches the exact derivation pattern barraCuda uses for BTSP Phase 3 key upgrade (`btsp-v1-phase3` info with client+server nonce salt). Enables any primal to delegate HKDF operations to BearDog instead of embedding `hkdf` crate directly.
