@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 13, 2026
+**Last Updated**: May 15, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -35,7 +35,7 @@
 
 - **Crates**: 29 directories (beardog-integration excluded — overstep)
 - **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
-- **JSON-RPC Methods**: 123 — 103 CryptoHandler + 11 IonicBondHandler + 6 auth gate (JH-0/JH-1/JH-11) + 1 identity gate (JH-1) + 5 bonding aliases (primalSpring compat) — note: 5 bonding aliases are not new handlers, they route to crypto.ionic_bond.*
+- **JSON-RPC Methods**: 126 — 103 CryptoHandler + 11 IonicBondHandler + 6 auth gate (JH-0/JH-1/JH-11) + 1 identity gate (JH-1) + 5 bonding aliases (primalSpring compat) + 3 FIDO2 (UB-2) — note: 5 bonding aliases are not new handlers, they route to crypto.ionic_bond.*
 - **`#[allow(`**: 81 (was 86; all carry `reason`)
 - **`#[expect(`**: 644 (was 646; 2 stale removed)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
@@ -89,6 +89,13 @@
 ---
 
 ## Recent Improvements
+
+### Wave 103 — FIDO2/CTAP2 IPC Surface (May 15, 2026)
+
+- **3 new FIDO2 IPC methods (UB-2)** — `beardog.fido2.discover`, `beardog.fido2.register`, `beardog.fido2.authenticate` expose BearDog's CTAP2 infrastructure as JSON-RPC methods for downstream primals (lithoSpore). Feature-gated behind `ctap2`: discovery returns device list when enabled, register/authenticate delegate to `SoloV2Provider` via `HidCtap2Transport`. Without feature: discovery returns empty, credential ops return clear capability error.
+- **Hardware-attested provenance** — Enables `liveSpore.json` entries to carry hardware-attested signatures via USB security keys (SoloKey, YubiKey, etc.), completing the physical-presence provenance chain for lithoSpore.
+- **New handler registered** — `Fido2Handler` in `MethodHandlerKind` enum with 3 methods, full capability manifest integration (cost estimates for HID latency), 12 new tests.
+- **Methods 123 → 126** (3 `beardog.fido2.*`).
 
 ### Wave 97 — Cross-Family Contract Signing & Session Token UX (May 8, 2026)
 

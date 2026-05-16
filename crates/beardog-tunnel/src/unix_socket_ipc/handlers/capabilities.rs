@@ -261,6 +261,12 @@ impl CapabilitiesHandler {
                     "version": "1.0",
                     "methods": ["get", "create"],
                     "description": "Primal identity and ephemeral caller identity creation (JH-1)"
+                },
+                {
+                    "type": "fido2",
+                    "version": "1.0",
+                    "methods": ["discover", "register", "authenticate"],
+                    "description": "FIDO2/CTAP2 hardware-attested authentication — USB security key credential management and assertion signing for physical-presence provenance (UB-2)"
                 }
             ],
             "consumed_capabilities": [],
@@ -272,6 +278,9 @@ impl CapabilitiesHandler {
                 "crypto.hmac_verify":              { "cpu": "low",    "latency_ms": 1 },
                 "crypto.hkdf_sha256":              { "cpu": "low",    "latency_ms": 1 },
                 "crypto.seed_fingerprint":         { "cpu": "low",    "latency_ms": 1 },
+                "beardog.fido2.discover":           { "cpu": "low",    "latency_ms": 50 },
+                "beardog.fido2.register":           { "cpu": "medium", "latency_ms": 5000 },
+                "beardog.fido2.authenticate":       { "cpu": "medium", "latency_ms": 5000 },
                 "crypto.chacha20_poly1305_encrypt": { "cpu": "low",   "latency_ms": 1 },
                 "crypto.chacha20_poly1305_decrypt": { "cpu": "low",   "latency_ms": 1 },
                 "crypto.x25519_generate_ephemeral": { "cpu": "low",   "latency_ms": 1 },

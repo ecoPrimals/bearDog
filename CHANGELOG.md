@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 15, 2026 -- Wave 103: FIDO2/CTAP2 IPC Surface (UB-2 — Hardware-Attested Authentication)
+
+- **`beardog.fido2.discover` IPC method** — Enumerates connected FIDO2/CTAP2-compliant USB security keys via `beardog-hid` pure Rust HID layer. Returns device path, VID/PID, manufacturer, product name. Feature-gated behind `ctap2`: without the feature, returns empty list with guidance note. Enables downstream primals to probe hardware key availability without embedding HID dependencies.
+- **`beardog.fido2.register` IPC method** — Creates a FIDO2 credential on a USB security key (CTAP2 `MakeCredential`). Requires physical presence (user touch). Accepts `rp_id`, `user_id` (base64), `user_name`, optional `device_path` (auto-selects first FIDO2 device). Delegates to `SoloV2Provider::generate_key_on_device()` via `HidCtap2Transport` with full CTAPHID frame reassembly. Returns `credential_id`, `public_key` (base64), `rp_id`, `user_name`, `key_id`.
+- **`beardog.fido2.authenticate` IPC method** — Gets an assertion from a FIDO2 device (CTAP2 `GetAssertion`). Requires physical presence. Accepts `rp_id`, `credential_id` (base64), `challenge` (base64), optional `device_path`. Delegates to `SoloV2Provider::sign_with_device()`. Returns `signature` (base64), `user_present: true`, `rp_id`, `credential_id`. This is the primary method for hardware-attested witness signatures in `liveSpore.json`.
+- **New handler** — `Fido2Handler` struct registered in `MethodHandlerKind` enum, wired into `HandlerRegistry` Phase 1 construction. Capability manifest includes `fido2` type v1.0 with `[discover, register, authenticate]` methods. Cost estimates: discovery 50ms, register/authenticate 5000ms (human interaction).
+- **Tests** — 12 new tests: method list assertion, discovery response structure, parameter validation (6 missing-param tests for register and authenticate), handler routing, unknown method error.
+- **Methods 123 → 126** (3 `beardog.fido2.*`).
+- **New file**: `handlers/fido2.rs`.
+- **Modified files**: `handlers/mod.rs` (module + enum + registry), `capabilities.rs` (manifest + costs).
+
 ### May 13, 2026 -- Wave 102: Ionic Lease + Seed Fingerprint (Glacial Debt / Tower Atomic)
 
 - **Ionic lease on `crypto.sign_contract`** — `SignContractParams` now accepts optional `ttl_seconds` (u64). When present, `SignContractResponse` includes an `expires_at` RFC 3339 timestamp computed from `signed_at + ttl_seconds`. `crypto.verify_contract` accepts optional `expires_at` and performs lease expiry checking: if the timestamp is in the past, verification returns `{valid: false, expired: true, error: "ionic lease expired"}`. When no `expires_at` is provided, verification behaves as before (pure signature check). Enables GPU lease, data egress fence, and time-bounded trust patterns requested by downstream springs.

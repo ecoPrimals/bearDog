@@ -51,6 +51,7 @@ pub mod crypto; // Refactored crypto handlers module (domain-based organization)
 pub mod crypto_handler; // Crypto RPC handler (routes to crypto module)
 pub mod encryption;
 pub mod federation;
+pub mod fido2;
 pub mod graph_security;
 pub mod health;
 pub mod introspection; // Primal introspection (primal.info, rpc.methods)
@@ -137,6 +138,7 @@ pub enum MethodHandlerKind {
     Beacon(beacon::BeaconHandler),
     Secrets(secrets::SecretsHandler),
     Relay(relay::RelayHandler),
+    Fido2(fido2::Fido2Handler),
     Capabilities(capabilities::CapabilitiesHandler),
     Introspection(introspection::IntrospectionHandler),
 }
@@ -155,6 +157,7 @@ impl MethodHandler for MethodHandlerKind {
             Self::Beacon(h) => h.methods(),
             Self::Secrets(h) => h.methods(),
             Self::Relay(h) => h.methods(),
+            Self::Fido2(h) => h.methods(),
             Self::Capabilities(h) => h.methods(),
             Self::Introspection(h) => h.methods(),
         }
@@ -178,6 +181,7 @@ impl MethodHandler for MethodHandlerKind {
             Self::Beacon(h) => h.handle(method, params, btsp_provider).await,
             Self::Secrets(h) => h.handle(method, params, btsp_provider).await,
             Self::Relay(h) => h.handle(method, params, btsp_provider).await,
+            Self::Fido2(h) => h.handle(method, params, btsp_provider).await,
             Self::Capabilities(h) => h.handle(method, params, btsp_provider).await,
             Self::Introspection(h) => h.handle(method, params, btsp_provider).await,
         }
@@ -259,6 +263,7 @@ impl HandlerRegistry {
                 MethodHandlerKind::Beacon(beacon::BeaconHandler::new()),
                 MethodHandlerKind::Secrets(secrets::SecretsHandler::new(identity.clone())),
                 MethodHandlerKind::Relay(relay::RelayHandler::new(identity.clone())),
+                MethodHandlerKind::Fido2(fido2::Fido2Handler::new()),
             ]),
             method_map: std::sync::OnceLock::new(),
         });
