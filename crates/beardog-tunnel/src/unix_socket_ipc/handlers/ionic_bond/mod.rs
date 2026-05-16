@@ -32,7 +32,7 @@ pub use persistence::{
 /// This is architecturally correct for `BearDog` as the crypto primal:
 /// `BearDog`'s responsibility is cryptographic operations (signing, verifying,
 /// sealing bonds), not durable storage. For production NUCLEUS deployments,
-/// bond persistence should be delegated to `NestGate` (storage primal) via
+/// bond persistence should be delegated to a storage-capable primal via
 /// `storage.store`/`storage.retrieve` capability discovery, or to an
 /// append-only ledger via `loamSpine`. The in-process store is sufficient
 /// for the JSON-RPC surface contract and single-process lifetimes.

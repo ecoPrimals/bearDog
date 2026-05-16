@@ -7,7 +7,7 @@
 //!
 //! - [`InMemoryBondPersistence`] — default; bonds lost on restart.
 //! - [`CapabilityDiscoveryBondPersistence`] — discovers a `bonding.ledger`
-//!   capable provider (NestGate/loamSpine) at runtime and delegates via JSON-RPC.
+//!   capable provider at runtime and delegates via JSON-RPC.
 //! - [`BondPersistenceBackend`] — enum dispatch over the built-in implementations.
 
 use std::future::Future;

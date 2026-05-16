@@ -267,7 +267,7 @@ pub async fn handle_purpose_encrypt(params: Option<&Value>) -> Result<Value, Str
     let cipher = ChaCha20Poly1305::new(&key.into());
     let nonce = ChaCha20Poly1305::generate_nonce(OsRng);
 
-    // AEAD output = ciphertext || tag (standard format, compatible with NestGate envelope)
+    // AEAD output = ciphertext || tag (standard NUCLEUS envelope format)
     let ciphertext = cipher
         .encrypt(&nonce, plaintext.as_ref())
         .map_err(|e| format!("ChaCha20-Poly1305 encryption failed: {e}"))?;

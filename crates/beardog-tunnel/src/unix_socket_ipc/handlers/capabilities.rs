@@ -407,7 +407,7 @@ impl CapabilitiesHandler {
     /// Returns a flat list of capability strings for ecosystem consistency.
     /// This mirrors the conventional `discover_capabilities` format, enabling
     /// uniform capability discovery across all primals. Includes a signed
-    /// attestation so Songbird discovery can verify authenticity.
+    /// attestation so ecosystem discovery can verify authenticity.
     async fn handle_discover_capabilities(&self) -> Result<serde_json::Value, String> {
         info!("🔍 discover_capabilities requested");
 

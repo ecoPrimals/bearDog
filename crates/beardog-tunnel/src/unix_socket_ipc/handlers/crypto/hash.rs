@@ -406,7 +406,10 @@ pub async fn handle_hkdf_sha256(params: Option<&Value>) -> Result<Value, String>
         })
         .unwrap_or_default();
 
-    #[allow(clippy::cast_possible_truncation)]
+    #[allow(
+        clippy::cast_possible_truncation,
+        reason = "HKDF length capped at MAX_HKDF_LENGTH (8160), fits in usize on all targets"
+    )]
     let length = params
         .get("length")
         .and_then(serde_json::Value::as_u64)

@@ -61,7 +61,7 @@ use tracing::{debug, info, warn};
 /// operation names to `BearDog`'s specific method names.
 ///
 /// If `signed_attestation` is provided, each registration payload includes
-/// an Ed25519 signature so the Neural API (and downstream Songbird discovery)
+/// an Ed25519 signature so the Neural API (and downstream ecosystem discovery)
 /// can verify the advertisement is authentic. The attestation should be
 /// produced by the primal's unified identity key.
 ///

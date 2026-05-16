@@ -10,9 +10,9 @@ use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 
-/// Placeholder [`SocketAddr`] for [`Protocol::UnixSocket`] (`Endpoint::address` is unused for UDS).
+/// Sentinel [`SocketAddr`] for [`Protocol::UnixSocket`] (`Endpoint::address` is unused for UDS).
 #[inline]
-fn unix_socket_placeholder_addr() -> SocketAddr {
+fn unix_socket_sentinel_addr() -> SocketAddr {
     SocketAddr::from((Ipv4Addr::UNSPECIFIED, 0))
 }
 
@@ -43,7 +43,7 @@ pub struct Endpoint {
     pub protocol: Protocol,
     /// Socket address (OS-assigned or configured).
     ///
-    /// For [`Protocol::UnixSocket`], this is a placeholder; use [`Self::unix_socket_path`].
+    /// For [`Protocol::UnixSocket`], this is a sentinel value; use [`Self::unix_socket_path`].
     pub address: SocketAddr,
     /// Unix domain socket path when `protocol` is [`Protocol::UnixSocket`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -75,10 +75,10 @@ impl Endpoint {
                     "Empty unix:// path in endpoint".to_string(),
                 ));
             }
-            let placeholder = unix_socket_placeholder_addr();
+            let sentinel = unix_socket_sentinel_addr();
             return Ok(Self {
                 protocol: Protocol::UnixSocket,
-                address: placeholder,
+                address: sentinel,
                 unix_socket_path: Some(path),
             });
         }
@@ -86,10 +86,10 @@ impl Endpoint {
         #[cfg(unix)]
         if trimmed.starts_with('/') {
             let path = PathBuf::from(trimmed);
-            let placeholder = unix_socket_placeholder_addr();
+            let sentinel = unix_socket_sentinel_addr();
             return Ok(Self {
                 protocol: Protocol::UnixSocket,
-                address: placeholder,
+                address: sentinel,
                 unix_socket_path: Some(path),
             });
         }

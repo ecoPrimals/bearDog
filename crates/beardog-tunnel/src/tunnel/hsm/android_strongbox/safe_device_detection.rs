@@ -126,7 +126,7 @@ pub fn check_strongbox_availability() -> Result<bool, BearDogError> {
 
     #[cfg(not(target_os = "android"))]
     {
-        debug!("Mock platform: Simulating StrongBox availability");
+        debug!("Non-Android platform: StrongBox unavailable (host build)");
         Ok(false)
     }
 }
@@ -144,7 +144,7 @@ fn detect_device_info() -> Result<AndroidDeviceInfo, BearDogError> {
 
     #[cfg(not(target_os = "android"))]
     {
-        // Mock implementation for non-Android platforms
+        // Non-Android host: return default device info (no JNI available)
         AndroidDeviceInfo::new()
     }
 }
@@ -159,7 +159,7 @@ fn detect_knox_availability(device_info: &AndroidDeviceInfo) -> Result<bool, Bea
 
     #[cfg(not(target_os = "android"))]
     {
-        debug!("Mock platform: Knox not available");
+        debug!("Non-Android platform: Knox unavailable (host build)");
         Ok(false)
     }
 }

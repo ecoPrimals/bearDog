@@ -239,10 +239,9 @@ impl SoloV2Provider {
     ///
     /// # Note
     ///
-    /// This is a placeholder implementation. Real implementation requires:
-    /// 1. CTAP2 `MakeCredential` command
-    /// 2. PIN verification if required
-    /// 3. User presence check
+    /// With the `ctap2` feature enabled, this sends a real CTAP2 `MakeCredential`
+    /// command via `HidCtap2Transport`. Without the feature, returns a capability error.
+    /// Full PIN/UV verification requires Phase 2 `ClientPIN` protocol.
     /// 4. Credential storage on device
     pub async fn generate_key_on_device(
         &self,
@@ -338,10 +337,9 @@ impl SoloV2Provider {
     ///
     /// # Note
     ///
-    /// This is a placeholder implementation. Real implementation requires:
-    /// 1. CTAP2 authenticatorGetAssertion command
-    /// 2. PIN verification if required
-    /// 3. User presence check
+    /// With the `ctap2` feature enabled, this sends a real CTAP2 `GetAssertion`
+    /// command via `HidCtap2Transport`. Without the feature, returns a capability error.
+    /// Full PIN/UV verification requires Phase 2 `ClientPIN` protocol.
     /// 4. Signature extraction
     pub async fn sign_with_device(
         &self,
