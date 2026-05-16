@@ -1,7 +1,7 @@
 # 🔌 BearDog Primal Contracts - JSON-RPC API Specification
 
 **Version**: 3.0.0  
-**Date**: May 8, 2026  
+**Date**: May 15, 2026  
 **Status**: Production Stable  
 **Protocol**: JSON-RPC 2.0 over Unix Domain Sockets
 
@@ -37,7 +37,7 @@ BearDog exposes its cryptographic and genetic capabilities through a JSON-RPC 2.
 
 ## 📚 **API CATEGORIES**
 
-BearDog provides **117 JSON-RPC methods** across 14 categories:
+BearDog provides **126 JSON-RPC methods** across 15 categories:
 
 ### **1. Core Cryptography** (20 methods)
 - Signatures: Ed25519, ECDSA (P-256, P-384), RSA
@@ -1497,7 +1497,7 @@ print(response['result']['hash'])
 
 103. `identity.create` - Generate ephemeral Ed25519 caller keypair + DID
 
-### **Total**: **117 JSON-RPC methods** (103 CryptoHandler + 8 IonicBondHandler + 5 auth gate + 1 identity gate)
+### **Total**: **126 JSON-RPC methods** (106 CryptoHandler + 11 IonicBondHandler + 6 auth gate + 1 identity gate + 5 bonding aliases + 3 FIDO2)
 
 ═══════════════════════════════════════════════════════════════════
 
@@ -1595,7 +1595,7 @@ BearDog uses **genetic lineage** for authentication:
 ═══════════════════════════════════════════════════════════════════
 
 **Document Version**: 3.0.0  
-**Last Updated**: May 8, 2026  
+**Last Updated**: May 15, 2026  
 **Maintainer**: BearDog Security Primal  
 **License**: Documented interface (implementation MIT-licensed)
 

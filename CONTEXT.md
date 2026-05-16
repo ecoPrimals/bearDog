@@ -2,7 +2,7 @@
 
 # Context — BearDog
 
-**Last Updated**: May 8, 2026
+**Last Updated**: May 15, 2026
 
 ## What This Is
 
@@ -19,14 +19,14 @@ BearDog answers "who is this node?" and "perform this crypto operation safely" f
 - **Version:** 0.9.0
 - **Workspace:** 29 crates (`Cargo.toml` workspace)
 - **MSRV:** 1.93.0 (`rust-toolchain.toml`)
-- **Tests:** 12,610 passing (0 failed; `cargo test --workspace`)
+- **Tests:** 14,940+ passing (0 failed; `cargo test --workspace`)
 - **Coverage:** 90.51% line (llvm-cov, workspace; see [STATUS.md](STATUS.md))
 - **Unsafe:** 0 production blocks (`forbid(unsafe_code)` workspace-wide)
 - **IPC:** JSON-RPC 2.0 over NDJSON via Unix sockets / TCP / named pipes (platform-dependent)
 
 ## Key Capabilities
 
-- **Protocols:** JSON-RPC 2.0 over NDJSON (100+ methods)
+- **Protocols:** JSON-RPC 2.0 over NDJSON (126 methods)
 - **Cryptography:** Ed25519, X25519, ChaCha20-Poly1305, BLAKE3 (plus TLS, Tor, post-quantum, and broader RustCrypto suite as exposed by handlers)
 - **Hardware / identity:** HSM abstraction (software, PKCS#11, StrongBox, etc.), **FIDO2** / HID device discovery (`beardog-hid`)
 - **Witness encoding:** `crypto.verify_ed25519` accepts encoding hints (`base64`, `hex`, `base64url`, `utf8`, `none`) per `ATTESTATION_ENCODING_STANDARD.md` v2.0
