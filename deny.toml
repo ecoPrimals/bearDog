@@ -42,7 +42,6 @@ skip = [
     { crate = "cpufeatures" },  # 0.2 (aes/sha2) + 0.3 (blake3)
     { crate = "getrandom" },
     { crate = "hashbrown" },
-    { crate = "mio" },
     { crate = "rand" },
     { crate = "rand_chacha" },
     { crate = "rand_core" },
@@ -57,7 +56,11 @@ deny = [
     { crate = "async-trait" },
     { crate = "openssl", wrappers = [] },
     { crate = "openssl-sys", wrappers = [] },
-    { crate = "ring", wrappers = [] },
+    # ring is allowed ONLY as wrapped by rustls/tokio-rustls for TLS termination
+    # (H2-10 sovereignty). Direct ring usage remains banned. rustls is the sole
+    # TLS implementation and ring is its crypto backend (no pure-Rust WebPKI
+    # provider exists that meets production TLS requirements).
+    { crate = "ring", wrappers = ["rustls", "rustls-webpki"] },
     { crate = "aws-lc-rs", wrappers = [] },
     { crate = "aws-lc-sys", wrappers = [] },
     { crate = "native-tls", wrappers = [] },

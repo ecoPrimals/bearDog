@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 17, 2026 -- Wave 105: Stadial Gate Readiness (deny.toml Policy Fix & ACME Design)
+
+- **`deny.toml` ring policy reconciled** — `ring` was banned with `wrappers = []` but pulled as `rustls`'s crypto backend (the only production-quality pure-Rust TLS implementation with WebPKI support). Policy updated: `ring` now allowed when wrapped by `rustls` or `rustls-webpki`. Direct `ring` usage remains banned. Stale `mio` skip entry removed (single-version resolved). `cargo deny check bans` passes with zero errors and zero warnings.
+- **ACME TLS integration path documented** — New `specs/ACME_TLS_INTEGRATION_PATH.md` specifies the stadial shadow cutover design for automated certificate lifecycle management. Covers: crate architecture (`beardog-acme`), challenge types (HTTP-01, TLS-ALPN-01, DNS-01), certificate storage (`$BEARDOG_DATA_DIR/acme/`), hot-reload via `Arc<ServerConfig>` swap, renewal strategy (12h check, 30-day-before-expiry renewal), shadow cutover mode (`BEARDOG_TLS_MODE=acme|static|shadow`), future IPC surface (`acme.status`, `acme.trigger_renew`, `acme.list_certs`), and downstream pairing (cellMembrane, projectNUCLEUS). Phase 1 (design) complete; no code changes required at this stage.
+- **Universal standards checklist verified** — Self-audit against Wave 22 stadial gate checklist confirms: health triad (PASS), UDS socket layout (PASS), TCP fallback (PASS), server subcommand with `--port` (PASS), standalone startup (PASS), capabilities.list shape (PASS), identity.get (PASS), BTSP crypto ChaCha20-Poly1305 + HKDF btsp-v1 (PASS), FAMILY_ID + INSECURE guard (PASS), UDS-first default (PASS), deny.toml bans (PASS — now reconciled), edition 2024 (PASS), musl targets (PASS).
+- **Stadial pairing documented** — cellMembrane/projectNUCLEUS (TLS termination cutover), all primals (BTSP negotiation via Tower cluster). No composition gaps.
+- **Modified files**: `deny.toml` (policy + skip cleanup), new `specs/ACME_TLS_INTEGRATION_PATH.md`, `STATUS.md`, `CHANGELOG.md`.
+
 ### May 15, 2026 -- Wave 103: FIDO2/CTAP2 IPC Surface (UB-2 — Hardware-Attested Authentication)
 
 - **`beardog.fido2.discover` IPC method** — Enumerates connected FIDO2/CTAP2-compliant USB security keys via `beardog-hid` pure Rust HID layer. Returns device path, VID/PID, manufacturer, product name. Feature-gated behind `ctap2`: without the feature, returns empty list with guidance note. Enables downstream primals to probe hardware key availability without embedding HID dependencies.

@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 15, 2026
+**Last Updated**: May 17, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -23,7 +23,7 @@
 | **Tests** | 14,940+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
-| **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
+| **cargo deny** | bans pass | 1 advisory ignore (RSA Marvin), `ring` allowed as `rustls`/`rustls-webpki` wrapper |
 | **License** | AGPL-3.0-or-later | SPDX headers on all .rs files |
 | **Architecture** | DI-based | Pure `Default`, `from_env()` at boundaries |
 | **Toolchain** | Pinned | `rust-toolchain.toml` at 1.93.0 |
@@ -69,7 +69,7 @@
 | Standard | Status |
 |----------|--------|
 | Edition 2024 | MSRV 1.93.0, all crates, `rust-toolchain.toml` pinned |
-| Pure Rust (ecoBin) | Zero C deps; blake3 pure feature; sysinfo removed; `ring` eliminated (hickory-resolver 0.24) |
+| Pure Rust (ecoBin) | Zero C deps except `ring` via `rustls` TLS backend (policy-approved wrapper); blake3 pure feature; sysinfo removed |
 | UniBin/ecoBin | Single binary, standalone identity fallback per UniBin v1.1, cross-compilation ready |
 | Dependency Injection | Pure `Default`, `from_env()` at startup, `from_env_provider()` for tests |
 | Zero Hardcoding | 20+ named constants extracted; capability-based discovery everywhere |
@@ -89,6 +89,13 @@
 ---
 
 ## Recent Improvements
+
+### Wave 105 — Stadial Gate Readiness: deny.toml Policy Fix & ACME Design (May 17, 2026)
+
+- **`deny.toml` ring policy fix** — `ring` crate was banned but pulled by `rustls` (TLS backend). Policy reconciled: `ring` now allowed as wrapped by `rustls` and `rustls-webpki` only. Stale `mio` skip removed. `cargo deny check bans` passes clean with zero warnings.
+- **ACME TLS integration path documented** — New `specs/ACME_TLS_INTEGRATION_PATH.md` specifies the stadial shadow cutover design: ACME certificate lifecycle (HTTP-01/TLS-ALPN-01/DNS-01), hot-reload via `Arc` swap, renewal strategy, shadow mode for Cloudflare→BearDog transition. Phase 1 (design) complete; Phases 2-3 deferred to stadial active.
+- **Universal standards checklist verified** — Health triad, UDS socket, TCP fallback, server subcommand, standalone startup, capabilities/identity, BTSP crypto, security mode, edition 2024, musl targets — all confirmed compliant.
+- **Stadial pairing acknowledged** — cellMembrane/projectNUCLEUS (TLS termination), all primals (BTSP negotiation).
 
 ### Wave 103 — FIDO2/CTAP2 IPC Surface (May 15, 2026)
 
