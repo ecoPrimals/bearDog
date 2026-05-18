@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 18, 2026 -- Wave 106: Stale Socket Prevention (SIGTERM + Explicit Cleanup)
+
+- **SIGTERM signal handling added to `MultiTransportServer::start_all`** — The primary production entry point (`beardog server` CLI) now registers both `SIGINT` and `SIGTERM` signal handlers. When either signal arrives, all transport tasks are aborted and all Unix socket servers receive explicit `stop()` calls that remove socket files from disk. Previously, `SIGTERM` (used by systemd, docker, kill) terminated the process without guaranteed socket cleanup, leaving stale `.sock` files that caused `ConnectionRefused` for downstream consumers.
+- **Explicit `stop()` call on all `UnixSocketIpcServer` instances** — Socket file removal and IPC capability symlink cleanup now happen deterministically on shutdown, not just via `Drop` (which may not fire during forced task abort or runtime teardown).
+- **Pre-existing `unlink-before-bind` confirmed at 3 layers** — `SocketConfig::prepare()` (sync `fs::remove_file`), `UnixSocketIpcServer::new()` (async `tokio::fs::remove_file`), and platform `UnixSocket::bind()` / `IOSSocket::bind()` all remove stale sockets before bind. Defense-in-depth: even if a prior crash left a socket, the next startup cleans it before binding.
+- **Cross-platform** — SIGTERM handling is `#[cfg(unix)]`; on non-Unix platforms, only `ctrl_c` applies (correct behavior for Windows named pipes which have no filesystem cleanup concern).
+- **Resolves**: primalSpring stale socket upstream ask (May 18, 2026). wetSpring observed 50+ stale sockets causing ~2s wasted per Barrick clone run. Server-side cleanup eliminates the problem at the source.
+- **Modified files**: `multi_transport_server.rs` (signal handling + explicit stop), `STATUS.md`, `CHANGELOG.md`.
+
 ### May 17, 2026 -- Wave 105: Stadial Gate Readiness (deny.toml Policy Fix & ACME Design)
 
 - **`deny.toml` ring policy reconciled** — `ring` was banned with `wrappers = []` but pulled as `rustls`'s crypto backend (the only production-quality pure-Rust TLS implementation with WebPKI support). Policy updated: `ring` now allowed when wrapped by `rustls` or `rustls-webpki`. Direct `ring` usage remains banned. Stale `mio` skip entry removed (single-version resolved). `cargo deny check bans` passes with zero errors and zero warnings.

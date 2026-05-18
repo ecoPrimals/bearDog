@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 17, 2026
+**Last Updated**: May 18, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -89,6 +89,13 @@
 ---
 
 ## Recent Improvements
+
+### Wave 106 — Stale Socket Prevention: SIGTERM + Explicit Cleanup (May 18, 2026)
+
+- **SIGTERM handling in `MultiTransportServer`** — The main CLI server path (`beardog server`) now catches both SIGINT (Ctrl+C) and SIGTERM (systemd stop, `kill`, docker stop). Previously only SIGINT was handled; SIGTERM termination could leave stale socket files that cost downstream consumers ~100ms per failed connection probe.
+- **Explicit `stop()` on shutdown** — After signal receipt, all `UnixSocketIpcServer` instances receive explicit `stop()` calls (socket file removal + symlink cleanup) before process exit, rather than relying solely on `Drop` semantics which may not fire during task abort.
+- **Pre-existing defense-in-depth confirmed** — BearDog already implements `unlink-before-bind` at 3 layers: `SocketConfig::prepare`, `UnixSocketIpcServer::new`, and `UnixSocket::bind`. No stale socket accumulation on normal startup.
+- Resolves primalSpring upstream ask per `CAPABILITY_BASED_DISCOVERY_STANDARD.md` v1.3.0 §6.
 
 ### Wave 105 — Stadial Gate Readiness: deny.toml Policy Fix & ACME Design (May 17, 2026)
 

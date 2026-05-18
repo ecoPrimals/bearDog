@@ -189,6 +189,9 @@ impl MultiTransportServer {
     ///
     /// Spawns a task for each transport, runs them concurrently.
     /// If any transport fails, others continue running.
+    /// Handles both SIGINT (Ctrl+C) and SIGTERM for graceful shutdown with
+    /// explicit socket cleanup (stale socket prevention per
+    /// `CAPABILITY_BASED_DISCOVERY_STANDARD.md` §6).
     ///
     /// # Errors
     ///
@@ -196,10 +199,13 @@ impl MultiTransportServer {
     pub async fn start_all(self) -> Result<(), BearDogError> {
         info!("🚀 Starting all transports...");
 
+        let mut unix_servers: Vec<Arc<UnixSocketIpcServer>> = Vec::new();
         let mut join_set = JoinSet::new();
+
         for transport in self.transports {
             match transport {
                 BoundTransport::Unix(server) => {
+                    unix_servers.push(Arc::clone(&server));
                     let server_clone = Arc::clone(&server);
                     join_set.spawn(async move {
                         server_clone.start().await.map_err(|e| {
@@ -236,7 +242,6 @@ impl MultiTransportServer {
         info!("Press Ctrl+C to stop");
         info!("");
 
-        // Wait for ALL tasks (runs until Ctrl+C or error)
         let log_join_outcome =
             |result: Result<anyhow::Result<()>, tokio::task::JoinError>| match result {
                 Ok(Ok(())) => {}
@@ -252,14 +257,30 @@ impl MultiTransportServer {
                 }
             };
 
-        tokio::select! {
-            _ = tokio::signal::ctrl_c() => {
-                info!("Ctrl+C received, shutting down transports");
-                join_set.abort_all();
-                while let Some(result) = join_set.join_next().await {
-                    log_join_outcome(result);
+        let shutdown_signal = async {
+            #[cfg(unix)]
+            {
+                use tokio::signal::unix::{SignalKind, signal};
+                let mut sigterm =
+                    signal(SignalKind::terminate()).expect("SIGTERM handler registration");
+                tokio::select! {
+                    _ = tokio::signal::ctrl_c() => {
+                        info!("SIGINT received, shutting down transports");
+                    }
+                    _ = sigterm.recv() => {
+                        info!("SIGTERM received, shutting down transports");
+                    }
                 }
             }
+            #[cfg(not(unix))]
+            {
+                tokio::signal::ctrl_c().await.ok();
+                info!("SIGINT received, shutting down transports");
+            }
+        };
+
+        tokio::select! {
+            () = shutdown_signal => {}
             () = async {
                 while let Some(result) = join_set.join_next().await {
                     log_join_outcome(result);
@@ -267,6 +288,18 @@ impl MultiTransportServer {
             } => ()
         }
 
+        join_set.abort_all();
+        while let Some(result) = join_set.join_next().await {
+            log_join_outcome(result);
+        }
+
+        for server in &unix_servers {
+            if let Err(e) = server.stop().await {
+                warn!(error = %e, "socket cleanup during shutdown");
+            }
+        }
+
+        info!("all transports stopped, socket files cleaned");
         Ok(())
     }
 
