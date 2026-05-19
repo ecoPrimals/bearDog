@@ -282,6 +282,7 @@ beardog-workflows = { path = "crates/beardog-workflows" }
 beardog-compliance = { path = "crates/beardog-compliance" }
 beardog-production = { path = "crates/beardog-production" }
 beardog-node-registry = { path = "crates/beardog-node-registry" }
+beardog-acme = { path = "crates/beardog-acme" }
 
 [package]
 name = "beardog"

@@ -1,0 +1,47 @@
+[package]
+name = "beardog-acme"
+description = "ACME certificate lifecycle client for BearDog TLS sovereignty"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+# Crypto — CSR generation + JWS signing
+ed25519-dalek = { workspace = true }
+base64 = { workspace = true }
+sha2 = { workspace = true }
+rand = { workspace = true }
+
+# HTTP client for ACME directory + order calls
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+
+# TLS — shared with beardog-tunnel for cert loading
+rustls = { workspace = true }
+rustls-pemfile = { workspace = true }
+tokio-rustls = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+
+# Utilities
+chrono = { workspace = true }
+hex = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+url = { workspace = true }
+
+# Internal
+beardog-errors = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+tokio-test = { workspace = true }

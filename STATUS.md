@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 18, 2026
+**Last Updated**: May 19, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -33,7 +33,7 @@
 
 ## Codebase Metrics
 
-- **Crates**: 29 directories (beardog-integration excluded — overstep)
+- **Crates**: 30 directories (beardog-integration excluded — overstep; beardog-acme added Wave 107)
 - **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
 - **JSON-RPC Methods**: 126 — 103 CryptoHandler + 11 IonicBondHandler + 6 auth gate (JH-0/JH-1/JH-11) + 1 identity gate (JH-1) + 5 bonding aliases (primalSpring compat) + 3 FIDO2 (UB-2) — note: 5 bonding aliases are not new handlers, they route to crypto.ionic_bond.*
 - **`#[allow(`**: 81 (was 86; all carry `reason`)
@@ -89,6 +89,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 107 — ACME Phase 2: `beardog-acme` Crate + Shadow Metrics + JupyterHub Design (May 19, 2026)
+
+- **New crate: `beardog-acme`** — Full ACME RFC 8555 client implementing HTTP-01 challenge handling, Ed25519 JWS signing (account registration, order creation), certificate PEM storage at `$BEARDOG_DATA_DIR/acme/`, and hot-reload via `watch` channel + `TlsAcceptor` swap. 35 tests, 0 clippy warnings. Blocks D1 (S1 TLS cutover).
+- **Hot-reload mechanism** — `HotReloadAcceptor`/`HotReloadController` pair enables atomic `TlsAcceptor` swap without server restart. Active connections continue on old cert; new connections get the refreshed cert.
+- **Shadow metrics collector** — `ShadowMetricsCollector` records sovereign vs commercial latency (p50/p95/p99), error rates, requests/sec, and cert rotation success. Daily parity check implements cutover criteria (sovereign p95 ≤ 1.5× commercial p95 for 7 consecutive days).
+- **JupyterHub dual-auth design** — `specs/JUPYTERHUB_DUAL_AUTH_INTEGRATION.md` specifies the D4 deliverable: `BearDogAuthenticator` class for JupyterHub, token→session mapping via `jti`, `BEARDOG_TLS_MODE=shadow` dual-auth config, and metric targets (< 50ms auth latency).
+- **Workspace updated** — `beardog-acme` added to workspace members and dependencies.
 
 ### Wave 106 — Stale Socket Prevention: SIGTERM + Explicit Cleanup (May 18, 2026)
 

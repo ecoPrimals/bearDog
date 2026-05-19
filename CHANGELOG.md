@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 19, 2026 -- Wave 107: ACME Phase 2 — `beardog-acme` Crate + Shadow Metrics + JupyterHub Design
+
+- **New crate: `beardog-acme` (D1 — blocks S1 TLS cutover)** — Implements RFC 8555 ACME client for automated certificate lifecycle. Modules: `account` (Ed25519 keypair generation + persistence), `jws` (JWS Flattened JSON signing per RFC 7515), `challenge` (HTTP-01 solver serving `/.well-known/acme-challenge/` on configurable port), `order` (order lifecycle state machine), `storage` (PEM persistence at `$BEARDOG_DATA_DIR/acme/certs/<domain>/`), `client` (full orchestration: directory discovery → account registration → order → challenge → renewal loop), `hot_reload` (atomic `TlsAcceptor` swap via `watch` channel), `shadow_metrics` (parity measurement). 35 unit tests. Pure Rust, `forbid(unsafe_code)`.
+- **Hot-reload mechanism** — `create_hot_reload_pair()` returns `(HotReloadAcceptor, HotReloadController)`. Controller reloads from cert store or raw PEM; acceptor provides `current()` for the TLS listener and `changed()` for waiting on updates. No server restart required.
+- **Shadow metrics collector (S1)** — `ShadowMetricsCollector` with `record_sovereign_request()` / `record_commercial_request()` tracks latency, errors, requests/sec, and cert rotation success for both sides. `daily_parity_check()` implements cutover criteria: sovereign p95 ≤ 1.5× commercial p95. `run_parity_loop()` checks every 24h and logs `CUTOVER READY` when 7 consecutive days pass.
+- **JupyterHub dual-auth design (D4 — blocks S4 auth shadow)** — New `specs/JUPYTERHUB_DUAL_AUTH_INTEGRATION.md` specifies: `BearDogAuthenticator` (Python class for JupyterHub), ionic token → session mapping via `jti`, `BEARDOG_TLS_MODE=shadow` dual-auth config, metric targets (< 50ms auth latency, > 99.9% refresh reliability), no new IPC methods required (existing `auth.verify_ionic` + `auth.public_key` cover the flow).
+- **Workspace updated** — `beardog-acme` added to `[workspace.dependencies]` and `crates/*` glob. New crate brings workspace to 30 directories.
+- **Quality gates**: `cargo fmt` clean, `cargo clippy` 0 warnings, `cargo doc` clean, `cargo test` 248+ pass (1 pre-existing env-dependent failure unchanged).
+
 ### May 18, 2026 -- Wave 106: Stale Socket Prevention (SIGTERM + Explicit Cleanup)
 
 - **SIGTERM signal handling added to `MultiTransportServer::start_all`** — The primary production entry point (`beardog server` CLI) now registers both `SIGINT` and `SIGTERM` signal handlers. When either signal arrives, all transport tasks are aborted and all Unix socket servers receive explicit `stop()` calls that remove socket files from disk. Previously, `SIGTERM` (used by systemd, docker, kill) terminated the process without guaranteed socket cleanup, leaving stale `.sock` files that caused `ConnectionRefused` for downstream consumers.
