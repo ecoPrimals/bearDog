@@ -147,6 +147,7 @@ pub fn handle_auth_issue_session(
                 "health.*",
                 "capabilities.*",
                 "identity.*",
+                "content.*",
                 "auth.verify_ionic",
             ],
             8,
@@ -157,13 +158,20 @@ pub fn handle_auth_issue_session(
                 "health.*",
                 "capabilities.*",
                 "identity.*",
+                "content.*",
                 "secrets.*",
             ],
             24,
         ),
         "admin" => (vec!["*"], 1),
         _ => (
-            vec!["crypto.*", "health.*", "capabilities.*", "identity.*"],
+            vec![
+                "crypto.*",
+                "health.*",
+                "capabilities.*",
+                "identity.*",
+                "content.*",
+            ],
             8,
         ),
     };
@@ -457,6 +465,7 @@ mod tests {
         assert!(scope.iter().any(|s| s == "crypto.*"));
         assert!(scope.iter().any(|s| s == "health.*"));
         assert!(scope.iter().any(|s| s == "capabilities.*"));
+        assert!(scope.iter().any(|s| s == "content.*"));
         assert!(scope.iter().any(|s| s == "auth.verify_ionic"));
     }
 
@@ -474,6 +483,7 @@ mod tests {
         let result = handle_auth_issue_session(PRIMAL, NODE, Some(&params));
         let scope = result["scope"].as_array().unwrap();
         assert!(scope.iter().any(|s| s == "secrets.*"));
+        assert!(scope.iter().any(|s| s == "content.*"));
         assert_eq!(result["ttl_hours"], 24);
     }
 
@@ -496,6 +506,15 @@ mod tests {
         let verify_result = handle_auth_verify_ionic(&vk, Some(&verify_params));
         assert_eq!(verify_result["valid"], true);
         assert_eq!(verify_result["claims"]["sub"], "researcher");
+    }
+
+    #[test]
+    fn issue_session_default_purpose_includes_content_scope() {
+        let params = serde_json::json!({ "purpose": "research" });
+        let result = handle_auth_issue_session(PRIMAL, NODE, Some(&params));
+        let scope = result["scope"].as_array().unwrap();
+        assert!(scope.iter().any(|s| s == "content.*"));
+        assert!(scope.iter().any(|s| s == "crypto.*"));
     }
 
     #[test]

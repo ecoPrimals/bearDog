@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 20, 2026 -- Wave 108: `content.*` Scope Expansion + Clippy Cleanup
+
+- **`content.*` scope added to `auth.issue_session`** — All purpose categories (`jupyterhub`, `notebook`, `desktop`, `research`/default) now include `content.*` in their scope vectors. This unblocks SP-4 sovereign publish: bearDog-issued session tokens can now authorize `content.put` calls to nestGate under `BEARDOG_AUTH_MODE=enforced`. No changes to `scope_covers_method` or `MethodGate::check` were needed — the glob matcher already handled `content.*` patterns; only the token issuance table was missing the entry.
+- **Pre-existing clippy lint resolved** — `multi_transport_server.rs` SIGTERM handler `expect()` (Wave 106) annotated with `#[expect(clippy::expect_used)]`. `cargo clippy -p beardog-tunnel --lib -- -D warnings` now passes clean.
+- **New test** — `issue_session_default_purpose_includes_content_scope` verifies `content.*` presence in research/default tokens.
+- **Resolves**: primalSpring Wave 31 `content.*` scope expansion (MEDIUM).
+
 ### May 19, 2026 -- Wave 107: ACME Phase 2 — `beardog-acme` Crate + Shadow Metrics + JupyterHub Design
 
 - **New crate: `beardog-acme` (D1 — blocks S1 TLS cutover)** — Implements RFC 8555 ACME client for automated certificate lifecycle. Modules: `account` (Ed25519 keypair generation + persistence), `jws` (JWS Flattened JSON signing per RFC 7515), `challenge` (HTTP-01 solver serving `/.well-known/acme-challenge/` on configurable port), `order` (order lifecycle state machine), `storage` (PEM persistence at `$BEARDOG_DATA_DIR/acme/certs/<domain>/`), `client` (full orchestration: directory discovery → account registration → order → challenge → renewal loop), `hot_reload` (atomic `TlsAcceptor` swap via `watch` channel), `shadow_metrics` (parity measurement). 35 unit tests. Pure Rust, `forbid(unsafe_code)`.

@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 19, 2026
+**Last Updated**: May 20, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -89,6 +89,13 @@
 ---
 
 ## Recent Improvements
+
+### Wave 108 — `content.*` Scope Expansion + Clippy Cleanup (May 20, 2026)
+
+- **`content.*` scope added to session tokens** — `auth.issue_session` now includes `content.*` in scope vectors for all purpose categories (`jupyterhub`, `notebook`, `desktop`, `research`/default). This unblocks SP-4 sovereign publish to nestGate via `content.put` using bearDog-issued session tokens. Previously, session tokens only carried `crypto.*`, `health.*`, `capabilities.*`, and `identity.*` — `content.put` calls would fail under `BEARDOG_AUTH_MODE=enforced`.
+- **Pre-existing clippy warning resolved** — The `expect()` in `multi_transport_server.rs` (SIGTERM handler registration from Wave 106) now has a per-site `#[expect]` annotation. `cargo clippy -p beardog-tunnel --lib -- -D warnings` passes clean.
+- **Resolves**: primalSpring Wave 31 horizon item "content.* scope expansion" (MEDIUM).
+- **ACME Phase 2 status clarified** — The audit listed `beardog-acme` as "implementation pending" but the crate was shipped in Wave 107 (May 19). All HTTP-01, cert storage, hot-reload, and renewal loop are implemented with 35 tests.
 
 ### Wave 107 — ACME Phase 2: `beardog-acme` Crate + Shadow Metrics + JupyterHub Design (May 19, 2026)
 

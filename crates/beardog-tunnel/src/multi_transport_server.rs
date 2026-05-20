@@ -261,6 +261,10 @@ impl MultiTransportServer {
             #[cfg(unix)]
             {
                 use tokio::signal::unix::{SignalKind, signal};
+                #[expect(
+                    clippy::expect_used,
+                    reason = "SIGTERM registration is infallible on Unix"
+                )]
                 let mut sigterm =
                     signal(SignalKind::terminate()).expect("SIGTERM handler registration");
                 tokio::select! {
