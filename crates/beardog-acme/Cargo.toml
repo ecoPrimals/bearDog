@@ -32,6 +32,9 @@ serde_json = { workspace = true }
 # Async runtime
 tokio = { workspace = true }
 
+# X.509 certificate parsing (expiry check for renewal)
+x509-parser = "0.16"
+
 # Utilities
 chrono = { workspace = true }
 hex = { workspace = true }

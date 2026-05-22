@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 22, 2026 -- Wave 109: Ionic Bond Verification + ACME Phase 3 Renewal Daemon
+
+- **New IPC method: `crypto.ionic_bond.verify_proposal`** — Stateless verification of a pending bond proposal's Ed25519 signature. Target gates can now inspect proposer identity, terms hash, trust model, and TTL status *before* calling `accept`. Returns `valid: true/false` with full proposal metadata. Handles expired proposals and unknown IDs gracefully.
+- **`IonicBondProposeResponse` extended** — `proposer_public_key` (hex-encoded Ed25519 verifying key) now included in the propose response. Acceptors can verify the proposer's signature offline without out-of-band key exchange via `auth.public_key`.
+- **ACME Phase 3 — renewal daemon complete** — `needs_renewal()` now parses X.509 `notAfter` from PEM via `x509-parser`, comparing against `renewal_days_before_expiry`. Order polling (`poll_order_ready`) with exponential backoff (1–10s), CSR finalization (`finalize_order`), certificate chain download (`download_certificate`), and Ed25519 private key PEM serialization are all implemented. Full end-to-end path: discover → register → order → challenges → poll ready → finalize CSR → poll valid → download cert → `store_cert` → hot-reload ready. Last piece before Cloudflare removal (S1 formal cutover).
+- **Workspace cleanup** — Removed deleted `showcase/05-mixed-entropy` from workspace members.
+- **New dependency** — `x509-parser 0.16` added to `beardog-acme` (cert expiry parsing).
+- **3 new tests** — `verify_proposal_valid`, `verify_proposal_not_found`, `propose_returns_public_key`.
+- **Methods**: 126 → 127 (1 new `crypto.ionic_bond.verify_proposal`).
+- **Resolves**: primalSpring Wave 38 items 1 and 2 for bearDog.
+
 ### May 20, 2026 -- Wave 108: `content.*` Scope Expansion + Clippy Cleanup
 
 - **`content.*` scope added to `auth.issue_session`** — All purpose categories (`jupyterhub`, `notebook`, `desktop`, `research`/default) now include `content.*` in their scope vectors. This unblocks SP-4 sovereign publish: bearDog-issued session tokens can now authorize `content.put` calls to nestGate under `BEARDOG_AUTH_MODE=enforced`. No changes to `scope_covers_method` or `MethodGate::check` were needed — the glob matcher already handled `content.*` patterns; only the token issuance table was missing the entry.

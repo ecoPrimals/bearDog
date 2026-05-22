@@ -3,7 +3,6 @@ resolver = "2"
 members = [
     "crates/*",
     "benchmarks",
-    "showcase/05-mixed-entropy",
 ]
 exclude = [
     "crates/beardog",

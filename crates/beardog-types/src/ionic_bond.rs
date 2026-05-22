@@ -143,6 +143,8 @@ pub struct IonicBondProposeResponse {
     pub terms_hash: String,
     /// Proposer's Ed25519 signature over the terms.
     pub proposer_signature: String,
+    /// Proposer's Ed25519 public key (hex-encoded) for offline verification.
+    pub proposer_public_key: String,
 }
 
 /// Parameters for `crypto.ionic_bond.accept`.

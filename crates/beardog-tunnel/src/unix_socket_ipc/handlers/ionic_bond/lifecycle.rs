@@ -46,6 +46,8 @@ impl IonicBondHandler {
             "Ionic bond proposed"
         );
 
+        let pk_for_response = proposer_public_key.clone();
+
         self.proposals.write().await.insert(
             proposal_id.clone(),
             PendingProposal {
@@ -62,6 +64,7 @@ impl IonicBondHandler {
             proposal_id,
             terms_hash,
             proposer_signature,
+            proposer_public_key: pk_for_response,
         };
         serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
     }
@@ -279,6 +282,71 @@ impl IonicBondHandler {
                 error: Some(format!("Bond not found: {}", verify_params.bond_id)),
             };
             serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+        }
+    }
+
+    /// Verify a pending proposal's proposer signature without accepting it.
+    ///
+    /// Allows the target to inspect and validate the proposal offline before
+    /// committing to acceptance. Returns the proposal terms and verification
+    /// status.
+    pub(super) async fn handle_verify_proposal(
+        &self,
+        params: Option<&serde_json::Value>,
+    ) -> Result<serde_json::Value, String> {
+        let params_value = params.ok_or("Missing params for crypto.ionic_bond.verify_proposal")?;
+
+        let proposal_id = params_value
+            .get("proposal_id")
+            .and_then(serde_json::Value::as_str)
+            .ok_or("Missing proposal_id")?;
+
+        let proposals = self.proposals.read().await;
+
+        if let Some(proposal) = proposals.get(proposal_id) {
+            let is_expired = proposal
+                .expires_at
+                .as_ref()
+                .and_then(|exp| chrono::DateTime::parse_from_rfc3339(exp).ok())
+                .is_some_and(|exp| Utc::now() > exp);
+
+            let sig_valid = verify_ed25519_signature(
+                &proposal.terms_hash,
+                &proposal.proposer_signature,
+                &proposal.proposer_public_key,
+            )
+            .is_ok();
+
+            let (valid, error) = if is_expired {
+                (false, Some("Proposal has expired".to_string()))
+            } else if !sig_valid {
+                (
+                    false,
+                    Some("Proposer Ed25519 signature verification failed".to_string()),
+                )
+            } else {
+                (true, None)
+            };
+
+            Ok(serde_json::json!({
+                "valid": valid,
+                "proposal_id": proposal_id,
+                "terms_hash": proposal.terms_hash,
+                "proposer": proposal.params.proposer,
+                "target": proposal.params.target,
+                "proposer_signature": proposal.proposer_signature,
+                "proposer_public_key": proposal.proposer_public_key,
+                "trust_model": proposal.params.trust_model,
+                "created_at": proposal.created_at,
+                "expires_at": proposal.expires_at,
+                "error": error,
+            }))
+        } else {
+            Ok(serde_json::json!({
+                "valid": false,
+                "proposal_id": proposal_id,
+                "error": format!("Proposal not found: {proposal_id}"),
+            }))
         }
     }
 

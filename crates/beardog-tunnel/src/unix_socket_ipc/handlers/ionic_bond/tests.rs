@@ -180,16 +180,78 @@ async fn list_filters_by_domain() {
 async fn methods_list() {
     let handler = IonicBondHandler::new();
     let methods = handler.methods();
-    assert_eq!(methods.len(), 11);
+    assert_eq!(methods.len(), 12);
     assert!(methods.contains(&"crypto.ionic_bond.propose"));
     assert!(methods.contains(&"crypto.ionic_bond.accept"));
     assert!(methods.contains(&"crypto.ionic_bond.seal"));
     assert!(methods.contains(&"crypto.ionic_bond.verify"));
+    assert!(methods.contains(&"crypto.ionic_bond.verify_proposal"));
     assert!(methods.contains(&"crypto.sign_contract"));
     assert!(methods.contains(&"crypto.verify_contract"));
     assert!(methods.contains(&"crypto.contract.propose"));
     assert!(methods.contains(&"crypto.contract.countersign"));
     assert!(methods.contains(&"crypto.contract.verify"));
+}
+
+#[tokio::test]
+async fn verify_proposal_valid() {
+    let handler = IonicBondHandler::new();
+    let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+    let (proposal_id, terms_hash) = propose_bond(&handler, &provider, "gate_a", "gate_b").await;
+
+    let params = serde_json::json!({ "proposal_id": proposal_id });
+    let result = handler
+        .handle(
+            "crypto.ionic_bond.verify_proposal",
+            Some(&params),
+            &provider,
+        )
+        .await
+        .expect("verify_proposal");
+
+    assert_eq!(result["valid"], true);
+    assert_eq!(result["proposal_id"], proposal_id);
+    assert_eq!(result["terms_hash"], terms_hash);
+    assert_eq!(result["proposer"], "gate_a");
+    assert_eq!(result["target"], "gate_b");
+    assert!(result["proposer_signature"].as_str().is_some());
+    assert!(result["proposer_public_key"].as_str().is_some());
+    assert!(result["error"].is_null());
+}
+
+#[tokio::test]
+async fn verify_proposal_not_found() {
+    let handler = IonicBondHandler::new();
+    let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+    let params = serde_json::json!({ "proposal_id": "nonexistent" });
+    let result = handler
+        .handle(
+            "crypto.ionic_bond.verify_proposal",
+            Some(&params),
+            &provider,
+        )
+        .await
+        .expect("verify_proposal");
+
+    assert_eq!(result["valid"], false);
+    assert!(result["error"].as_str().unwrap().contains("not found"));
+}
+
+#[tokio::test]
+async fn propose_returns_public_key() {
+    let handler = IonicBondHandler::new();
+    let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+    let params = serde_json::json!({ "proposer": "a", "target": "b" });
+    let result = handler
+        .handle("crypto.ionic_bond.propose", Some(&params), &provider)
+        .await
+        .expect("propose");
+
+    assert!(result["proposer_public_key"].as_str().is_some());
+    assert!(!result["proposer_public_key"].as_str().unwrap().is_empty());
 }
 
 #[tokio::test]
@@ -493,7 +555,7 @@ async fn methods_list_includes_contract_signing() {
     assert!(methods.contains(&"crypto.contract.propose"));
     assert!(methods.contains(&"crypto.contract.countersign"));
     assert!(methods.contains(&"crypto.contract.verify"));
-    assert_eq!(methods.len(), 11);
+    assert_eq!(methods.len(), 12);
 }
 
 #[tokio::test]

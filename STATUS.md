@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 20, 2026
+**Last Updated**: May 22, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -35,7 +35,7 @@
 
 - **Crates**: 30 directories (beardog-integration excluded — overstep; beardog-acme added Wave 107)
 - **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
-- **JSON-RPC Methods**: 126 — 103 CryptoHandler + 11 IonicBondHandler + 6 auth gate (JH-0/JH-1/JH-11) + 1 identity gate (JH-1) + 5 bonding aliases (primalSpring compat) + 3 FIDO2 (UB-2) — note: 5 bonding aliases are not new handlers, they route to crypto.ionic_bond.*
+- **JSON-RPC Methods**: 127 — 103 CryptoHandler + 12 IonicBondHandler + 6 auth gate (JH-0/JH-1/JH-11) + 1 identity gate (JH-1) + 5 bonding aliases (primalSpring compat) + 3 FIDO2 (UB-2) — note: 5 bonding aliases are not new handlers, they route to crypto.ionic_bond.*
 - **`#[allow(`**: 81 (was 86; all carry `reason`)
 - **`#[expect(`**: 644 (was 646; 2 stale removed)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
@@ -89,6 +89,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 109 — Ionic Bond Verification + ACME Phase 3 Renewal Daemon (May 22, 2026)
+
+- **`crypto.ionic_bond.verify_proposal` (new method)** — Allows a target gate to inspect and cryptographically verify a pending bond proposal's Ed25519 signature *before* committing to acceptance. Returns proposal terms, proposer identity, public key, trust model, and TTL status. Handles expired proposals and missing IDs gracefully. 12th IonicBondHandler method (methods: 126 → 127).
+- **`proposer_public_key` returned from `propose`** — `IonicBondProposeResponse` now includes the proposer's Ed25519 public key (hex-encoded), enabling offline verification by acceptors without out-of-band key exchange.
+- **ACME Phase 3 — renewal daemon production-ready** — `needs_renewal` now parses the leaf certificate's `notAfter` date via `x509-parser`, comparing against `renewal_days_before_expiry`. Previously stubbed (`false`), existing certs would never renew. Order polling (`poll_order_ready`) with exponential backoff, CSR finalization (`finalize_order`), certificate chain download (`download_certificate`), and private key PEM serialization are all implemented. The full issuance path now runs: discover → register → order → challenges → poll ready → finalize CSR → poll valid → download cert → store → hot-reload.
+- **Workspace cleanup** — Removed deleted `showcase/05-mixed-entropy` from workspace members (upstream showcase fossilization).
+- **Resolves**: primalSpring Wave 38 items 1 and 2 for bearDog.
 
 ### Wave 108 — `content.*` Scope Expansion + Clippy Cleanup (May 20, 2026)
 

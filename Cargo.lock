@@ -383,6 +383,7 @@ dependencies = [
  "tokio-test",
  "tracing",
  "url",
+ "x509-parser",
 ]
 
 [[package]]
@@ -732,10 +733,6 @@ dependencies = [
  "tokio-test",
  "tracing",
 ]
-
-[[package]]
-name = "beardog-mixed-entropy-showcase"
-version = "0.1.0"
 
 [[package]]
 name = "beardog-monitoring"

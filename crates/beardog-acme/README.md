@@ -30,5 +30,5 @@ or any ACME-compatible CA.
 
 ## Status
 
-- **Phase 2** (current): Core ACME flow — account, HTTP-01, order, storage
-- **Phase 3** (planned): CSR finalization, renewal daemon, hot-reload integration
+- **Phase 2**: Core ACME flow — account, HTTP-01, order, storage
+- **Phase 3** (current): Renewal daemon, cert expiry parsing, order finalization, cert download
