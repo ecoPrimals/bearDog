@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 23, 2026 -- Wave 110: `primal.announce` Self-Announcement to biomeOS
+
+- **`primal.announce` on startup** — bearDog now sends a JSON-RPC `primal.announce` call to biomeOS when starting in server mode. The announce payload follows the biomeOS v3.69+ schema: `capabilities` (`["crypto", "security"]`), `methods` (45 canonical `crypto.*` / `security.*` names), `socket` (own UDS path), `cost_hints`, `latency_estimates`, `signal_tiers` (`["tower"]`), and optional `signed_attestation` (Ed25519). Sent alongside the existing `capability.register` calls for backward compatibility.
+- **New function: `send_primal_announce`** (beardog-ipc) — Push-style JSON-RPC `primal.announce` to any biomeOS socket. Connects, sends NDJSON-framed request, reads response, logs success/error. Non-fatal on failure (standalone operation preserved).
+- **New function: `beardog_announce_method_names`** (beardog-ipc) — Returns `&'static [&'static str]` of 45 canonical dotted method names across `crypto.*` (40) and `security.*` (5). Used by both CLI `handle_server` and tunnel `register_with_discovery_service` paths.
+- **Both server paths wired** — `crates/beardog-cli/src/handlers/server.rs` and `crates/beardog-tunnel/src/modes/server.rs` both send `primal.announce` after Neural API detection.
+- **3 new tests** — `announce_methods_includes_crypto_and_security`, `announce_methods_are_dotted_canonical`, `send_primal_announce_connection_failure`.
+- **Validation**: After this change, `neural_api.routing_weights` should show bearDog as a provider for `crypto.*` calls when biomeOS is running.
+- **Resolves**: primalSpring Wave 43 bearDog item (HIGH priority).
+
 ### May 22, 2026 -- Wave 109: Ionic Bond Verification + ACME Phase 3 Renewal Daemon
 
 - **New IPC method: `crypto.ionic_bond.verify_proposal`** — Stateless verification of a pending bond proposal's Ed25519 signature. Target gates can now inspect proposer identity, terms hash, trust model, and TTL status *before* calling `accept`. Returns `valid: true/false` with full proposal metadata. Handles expired proposals and unknown IDs gracefully.

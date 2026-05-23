@@ -12,7 +12,10 @@
 use crate::ServerArgs;
 use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
-use beardog_ipc::{discover_neural_api_socket, register_with_neural_api};
+use beardog_ipc::{
+    beardog_announce_method_names, discover_neural_api_socket, register_with_neural_api,
+    send_primal_announce,
+};
 use beardog_tunnel::btsp_handshake;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
 use beardog_tunnel::multi_transport_server::MultiTransportServer;
@@ -236,6 +239,8 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
             neural_registration_address(tcp_addr.as_deref(), socket_path.as_str());
 
         let attestation = build_neural_attestation(&primal_name);
+
+        // Legacy capability.register calls (backwards compat)
         match register_with_neural_api(
             &neural_socket,
             &primal_name,
@@ -246,6 +251,24 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         {
             Ok(()) => info!("registered with Neural API"),
             Err(e) => warn!(error = %e, "Neural API registration failed (non-fatal)"),
+        }
+
+        // biomeOS v3.69+ primal.announce (Wave 43 — push-style ecosystem registration)
+        let announce_methods: Vec<String> = beardog_announce_method_names()
+            .iter()
+            .map(|s| String::from(*s))
+            .collect();
+        match send_primal_announce(
+            &neural_socket,
+            &primal_name,
+            &socket_path,
+            &announce_methods,
+            Some(&attestation),
+        )
+        .await
+        {
+            Ok(()) => info!("primal.announce sent to biomeOS"),
+            Err(e) => warn!(error = %e, "primal.announce failed (non-fatal)"),
         }
     } else {
         info!(mode = "standalone", "no Neural API detected");

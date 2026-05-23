@@ -159,6 +159,153 @@ pub async fn register_with_neural_api(
     Ok(())
 }
 
+/// Send a `primal.announce` self-announcement to biomeOS (v3.69+ schema).
+///
+/// This is the push-style ecosystem registration required by Wave 43.
+/// biomeOS uses the announcement to populate routing weights and
+/// utilization tracking for `capability.call` dispatch.
+///
+/// # Arguments
+///
+/// * `biomeos_socket` - Path to biomeOS Neural API Unix socket
+/// * `primal_name` - Primal identifier (e.g., "beardog-nat0")
+/// * `own_socket` - Full path to bearDog's own UDS
+/// * `methods` - All IPC method names this primal serves
+/// * `signed_attestation` - Optional Ed25519 attestation
+///
+/// # Errors
+///
+/// Returns an error when the biomeOS socket is unreachable or the
+/// announce call fails. Callers should treat failure as non-fatal.
+pub async fn send_primal_announce(
+    biomeos_socket: &str,
+    primal_name: &str,
+    own_socket: &str,
+    methods: &[String],
+    signed_attestation: Option<&serde_json::Value>,
+) -> Result<()> {
+    info!(
+        target_socket = biomeos_socket,
+        primal = primal_name,
+        method_count = methods.len(),
+        "sending primal.announce to biomeOS"
+    );
+
+    let mut params = json!({
+        "primal": primal_name,
+        "version": env!("CARGO_PKG_VERSION"),
+        "socket": own_socket,
+        "capabilities": ["crypto", "security"],
+        "methods": methods,
+        "signal_tiers": ["tower"],
+        "cost_hints": {
+            "crypto": 5.0,
+            "security": 10.0
+        },
+        "latency_estimates": {
+            "crypto": 2,
+            "security": 15
+        }
+    });
+
+    if let Some(attestation) = signed_attestation {
+        params["signed_attestation"] = attestation.clone();
+    }
+
+    let request = json!({
+        "jsonrpc": "2.0",
+        "method": "primal.announce",
+        "params": params,
+        "id": 1
+    });
+
+    let request_str = serde_json::to_string(&request)?;
+
+    let mut stream = UnixStream::connect(biomeos_socket)
+        .await
+        .context(format!("Failed to connect to biomeOS at {biomeos_socket}"))?;
+
+    stream.write_all(request_str.as_bytes()).await?;
+    stream.write_all(b"\n").await?;
+
+    let mut response = String::new();
+    stream.read_to_string(&mut response).await?;
+
+    let response_json: serde_json::Value =
+        serde_json::from_str(&response).context("Failed to parse biomeOS announce response")?;
+
+    if let Some(error) = response_json.get("error") {
+        warn!(error = %error, "primal.announce response contained error");
+    } else {
+        info!("primal.announce accepted by biomeOS");
+    }
+
+    Ok(())
+}
+
+/// Canonical `crypto.*` and `security.*` method names bearDog serves.
+///
+/// Used by `primal.announce` and capability advertisements. These are the
+/// dotted canonical names; aliases (`bonding.*`, bare names) are handled
+/// by the handler registry at dispatch time.
+#[must_use]
+pub fn beardog_announce_method_names() -> &'static [&'static str] {
+    &[
+        // Ed25519 / ECDSA
+        "crypto.sign_ed25519",
+        "crypto.verify_ed25519",
+        "crypto.sign_ecdsa_secp256r1",
+        "crypto.verify_ecdsa_secp256r1",
+        // Key exchange
+        "crypto.x25519_generate_ephemeral",
+        "crypto.x25519_derive_secret",
+        "crypto.ecdh_p256_generate_ephemeral",
+        "crypto.ecdh_p256_derive_secret",
+        // AEAD
+        "crypto.chacha20_poly1305_encrypt",
+        "crypto.chacha20_poly1305_decrypt",
+        "crypto.aes256_gcm_encrypt",
+        "crypto.aes256_gcm_decrypt",
+        // Hash / HMAC / KDF
+        "crypto.blake3_hash",
+        "crypto.sha256",
+        "crypto.sha384",
+        "crypto.sha512",
+        "crypto.hmac_sha256",
+        "crypto.hmac_verify",
+        "crypto.hkdf_sha256",
+        "crypto.argon2id_hash",
+        "crypto.argon2id_verify",
+        // Ionic bond lifecycle
+        "crypto.ionic_bond.propose",
+        "crypto.ionic_bond.accept",
+        "crypto.ionic_bond.seal",
+        "crypto.ionic_bond.verify",
+        "crypto.ionic_bond.verify_proposal",
+        "crypto.ionic_bond.revoke",
+        "crypto.ionic_bond.list",
+        // Cross-family contracts
+        "crypto.contract.propose",
+        "crypto.contract.countersign",
+        "crypto.contract.verify",
+        "crypto.sign_contract",
+        "crypto.verify_contract",
+        // Semantic aliases
+        "crypto.sign",
+        "crypto.verify",
+        "crypto.encrypt",
+        "crypto.decrypt",
+        "crypto.hash",
+        "crypto.public_key",
+        // Security
+        "security.evaluate",
+        "security.lineage",
+        "security.verify_consent",
+        "security.issue_consent_token",
+        "security.generate_jwt_secret",
+    ]
+}
+
 /// Register a single capability with Neural API
 async fn register_capability(neural_socket: &str, capability: serde_json::Value) -> Result<()> {
     let cap_name = capability["capability"].as_str().unwrap_or("unknown");

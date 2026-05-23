@@ -128,3 +128,41 @@ fn test_discover_socket_empty_vs_unset() {
     let unset = discover_neural_api_socket_with(None, None);
     assert!(unset.is_none() || unset.is_some());
 }
+
+#[test]
+fn announce_methods_includes_crypto_and_security() {
+    let methods = beardog_announce_method_names();
+    assert!(
+        methods.len() >= 40,
+        "expected at least 40 methods, got {}",
+        methods.len()
+    );
+    assert!(methods.contains(&"crypto.sign_ed25519"));
+    assert!(methods.contains(&"crypto.ionic_bond.propose"));
+    assert!(methods.contains(&"crypto.ionic_bond.verify_proposal"));
+    assert!(methods.contains(&"security.evaluate"));
+    assert!(methods.contains(&"security.generate_jwt_secret"));
+}
+
+#[test]
+fn announce_methods_are_dotted_canonical() {
+    for method in beardog_announce_method_names() {
+        assert!(
+            method.contains('.'),
+            "method {method} is not in dotted canonical form"
+        );
+    }
+}
+
+#[tokio::test]
+async fn send_primal_announce_connection_failure() {
+    let result = send_primal_announce(
+        "/tmp/nonexistent-biomeos-test.sock",
+        "beardog-test",
+        "/tmp/beardog-test.sock",
+        &["crypto.sign_ed25519".to_string()],
+        None,
+    )
+    .await;
+    assert!(result.is_err());
+}

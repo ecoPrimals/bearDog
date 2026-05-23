@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 22, 2026
+**Last Updated**: May 23, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -89,6 +89,13 @@
 ---
 
 ## Recent Improvements
+
+### Wave 110 — `primal.announce` Self-Announcement to biomeOS (May 23, 2026)
+
+- **`primal.announce` on startup** — bearDog now sends a JSON-RPC `primal.announce` call to biomeOS on server startup, registering itself as a tower-tier crypto/security provider. The announce payload includes capabilities (`crypto`, `security`), 45+ canonical method names (`crypto.*`, `security.*`), socket path, cost hints (crypto: 5.0, security: 10.0), latency estimates (crypto: 2ms, security: 15ms), signal tiers (`tower`), and a signed Ed25519 attestation. This enables biomeOS v3.69+ routing weights and utilization tracking for `capability.call` dispatch.
+- **`send_primal_announce` (beardog-ipc)** — New function for push-style ecosystem registration via `primal.announce` JSON-RPC. Shared across both server paths (CLI `handle_server` and tunnel `register_with_discovery_service`).
+- **`beardog_announce_method_names` (beardog-ipc)** — Canonical static list of 45 `crypto.*` and `security.*` dotted method names for announce payloads. Single source of truth for both server paths.
+- **Resolves**: primalSpring Wave 43 bearDog item (HIGH priority — foundation primal, tower tier).
 
 ### Wave 109 — Ionic Bond Verification + ACME Phase 3 Renewal Daemon (May 22, 2026)
 

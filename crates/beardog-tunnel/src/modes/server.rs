@@ -308,7 +308,10 @@ async fn register_with_discovery_service(
     use crate::unix_socket_ipc::handlers::primal_signing::{
         canonical_announcement_message, sign_with_primal_identity,
     };
-    use beardog_ipc::{discover_neural_api_socket, register_with_neural_api};
+    use beardog_ipc::{
+        beardog_announce_method_names, discover_neural_api_socket, register_with_neural_api,
+        send_primal_announce,
+    };
     use beardog_types::primal_identity::PrimalIdentity;
 
     // PHASE 1: Try Neural API (TRUE PRIMAL pattern)
@@ -342,11 +345,33 @@ async fn register_with_discovery_service(
         .await
         {
             Ok(()) => {
-                info!("✅ Registered with Neural API (TRUE PRIMAL)");
+                info!("registered with Neural API (TRUE PRIMAL)");
+            }
+            Err(e) => {
+                warn!(error = %e, "Neural API registration failed");
+            }
+        }
+
+        // biomeOS v3.69+ primal.announce (Wave 43)
+        let announce_methods: Vec<String> = beardog_announce_method_names()
+            .iter()
+            .map(|s| String::from(*s))
+            .collect();
+        match send_primal_announce(
+            &neural_socket,
+            &registration_instance,
+            &socket_path,
+            &announce_methods,
+            Some(&attestation),
+        )
+        .await
+        {
+            Ok(()) => {
+                info!("primal.announce sent to biomeOS");
                 return Ok(());
             }
             Err(e) => {
-                warn!("⚠️  Neural API registration failed: {}", e);
+                warn!(error = %e, "primal.announce failed");
             }
         }
     } else {
