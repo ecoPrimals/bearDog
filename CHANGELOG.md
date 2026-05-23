@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 23, 2026 -- Wave 111: Attestation Field Name Alignment
+
+- **`signed_attestation` → `attestation`** in `primal.announce` payload — biomeOS expects `attestation` as the key for Ed25519 attestation data. Changed in `send_primal_announce` only; legacy `capability.register` retains `signed_attestation` for its own schema.
+- **Resolves**: primalSpring Wave 45 bearDog item (LOW priority).
+
 ### May 23, 2026 -- Wave 110: `primal.announce` Self-Announcement to biomeOS
 
 - **`primal.announce` on startup** — bearDog now sends a JSON-RPC `primal.announce` call to biomeOS when starting in server mode. The announce payload follows the biomeOS v3.69+ schema: `capabilities` (`["crypto", "security"]`), `methods` (45 canonical `crypto.*` / `security.*` names), `socket` (own UDS path), `cost_hints`, `latency_estimates`, `signal_tiers` (`["tower"]`), and optional `signed_attestation` (Ed25519). Sent alongside the existing `capability.register` calls for backward compatibility.

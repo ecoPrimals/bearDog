@@ -209,7 +209,7 @@ pub async fn send_primal_announce(
     });
 
     if let Some(attestation) = signed_attestation {
-        params["signed_attestation"] = attestation.clone();
+        params["attestation"] = attestation.clone();
     }
 
     let request = json!({

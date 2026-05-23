@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 23, 2026
+**Last Updated**: May 23, 2026 (Wave 111)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -89,6 +89,11 @@
 ---
 
 ## Recent Improvements
+
+### Wave 111 — Attestation Field Name Alignment (May 23, 2026)
+
+- **`signed_attestation` → `attestation`** in `primal.announce` payload — biomeOS expects `attestation` as the field name for Ed25519 attestation data. The legacy `capability.register` path retains `signed_attestation` for its own schema. One-line change in `send_primal_announce`.
+- **Resolves**: primalSpring Wave 45 bearDog item (LOW priority).
 
 ### Wave 110 — `primal.announce` Self-Announcement to biomeOS (May 23, 2026)
 
