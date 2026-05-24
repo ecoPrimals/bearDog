@@ -464,6 +464,7 @@ dependencies = [
  "argon2",
  "assert_cmd",
  "base64",
+ "beardog-acme",
  "beardog-config",
  "beardog-core",
  "beardog-errors",

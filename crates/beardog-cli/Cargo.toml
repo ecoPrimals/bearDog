@@ -24,6 +24,7 @@ workspace = true
 [dependencies]
 argon2.workspace = true
 beardog-security = { path = "../beardog-security" }
+beardog-acme = { path = "../beardog-acme" }
 beardog-ipc = { path = "../beardog-ipc" }  # Neural API registration
 chacha20poly1305 = { workspace = true }
 hkdf = { workspace = true }

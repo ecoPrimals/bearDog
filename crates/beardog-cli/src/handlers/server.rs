@@ -277,6 +277,17 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     // Best-effort orchestrator registry registration (non-fatal per PRIMAL IPC Protocol v3.1)
     attempt_orchestrator_registration(&socket_path, tcp_addr.as_deref()).await;
 
+    // ACME renewal daemon (gated by BEARDOG_TLS_MODE=acme)
+    if std::env::var("BEARDOG_TLS_MODE")
+        .ok()
+        .is_some_and(|v| v.eq_ignore_ascii_case("acme"))
+    {
+        match spawn_acme_renewal_daemon() {
+            Ok(()) => info!("ACME renewal daemon spawned"),
+            Err(e) => warn!(error = %e, "ACME daemon init failed (non-fatal)"),
+        }
+    }
+
     // Start all transports (runs until Ctrl+C)
     server.start_all().await?;
 
@@ -306,6 +317,40 @@ async fn attempt_orchestrator_registration(_socket_path: &str, _tcp_addr: Option
     } else {
         info!("registered with ecosystem IPC registry");
     }
+}
+
+/// Spawn the ACME renewal daemon as a background tokio task.
+///
+/// Reads config from `BEARDOG_ACME_DOMAINS`, `BEARDOG_ACME_EMAIL`, etc.
+/// The daemon runs `AcmeClient::run_renewal_loop()` which checks cert
+/// expiry every 12 hours and renews when within 30 days of expiration.
+///
+/// # Errors
+///
+/// Returns an error if `AcmeConfig::from_env()` or `AcmeClient::new()`
+/// fails (e.g., missing `BEARDOG_ACME_DOMAINS`).
+fn spawn_acme_renewal_daemon() -> Result<(), BearDogError> {
+    let config =
+        beardog_acme::AcmeConfig::from_env().map_err(|e| BearDogError::Initialization {
+            message: format!("ACME config: {e}"),
+        })?;
+
+    info!(
+        domains = ?config.domains,
+        renewal_days = config.renewal_days_before_expiry,
+        "initializing ACME renewal daemon"
+    );
+
+    let mut client =
+        beardog_acme::AcmeClient::new(config).map_err(|e| BearDogError::Initialization {
+            message: format!("ACME client: {e}"),
+        })?;
+
+    tokio::spawn(async move {
+        client.run_renewal_loop().await;
+    });
+
+    Ok(())
 }
 
 #[cfg(test)]

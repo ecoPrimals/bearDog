@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 24, 2026 -- Wave 112: ACME Daemon Operationalization + Doc Drift Fix
+
+- **ACME renewal daemon wired into server binary** — When `BEARDOG_TLS_MODE=acme` is set, `beardog server` spawns `AcmeClient::run_renewal_loop()` as a background tokio task before starting transports. Config reads from `BEARDOG_ACME_DOMAINS` (required), `BEARDOG_ACME_EMAIL`, `BEARDOG_ACME_DIRECTORY` (defaults to Let's Encrypt production), `BEARDOG_ACME_CHALLENGE_PORT` (default 80), `BEARDOG_ACME_RENEWAL_DAYS` (default 30). Non-fatal on init failure. When cellMembrane's sovereignty cutover approaches, set the env vars and the daemon handles cert renewal automatically.
+- **Method count doc drift fixed** — README.md (badge line), CONTEXT.md (protocols line), `sporeprint/validation-summary.md` (description + body) updated: 126 → 127 methods, IonicBondHandler 11 → 12.
+- **New dependency** — `beardog-acme` added to `beardog-cli/Cargo.toml`.
+- **Resolves**: primalSpring Wave 47 bearDog items (doc drift + ACME operationalization).
+
 ### May 23, 2026 -- Wave 111: Attestation Field Name Alignment
 
 - **`signed_attestation` → `attestation`** in `primal.announce` payload — biomeOS expects `attestation` as the key for Ed25519 attestation data. Changed in `send_primal_announce` only; legacy `capability.register` retains `signed_attestation` for its own schema.

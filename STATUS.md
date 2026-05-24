@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 23, 2026 (Wave 111)
+**Last Updated**: May 24, 2026 (Wave 112)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -89,6 +89,13 @@
 ---
 
 ## Recent Improvements
+
+### Wave 112 — ACME Daemon Operationalization + Doc Drift Fix (May 24, 2026)
+
+- **ACME renewal daemon wired into server binary** — `beardog server` now spawns the `beardog-acme` renewal loop as a background tokio task when `BEARDOG_TLS_MODE=acme` is set. Reads config from `BEARDOG_ACME_DOMAINS`, `BEARDOG_ACME_EMAIL`, etc. The daemon checks cert expiry every 12 hours and renews when within 30 days of expiration. Non-fatal on init failure (standalone operation preserved).
+- **Method count doc drift fixed** — README.md, CONTEXT.md, and `sporeprint/validation-summary.md` updated from 126 → 127 methods (Wave 109 added `crypto.ionic_bond.verify_proposal`). IonicBondHandler count corrected from 11 → 12.
+- **New dependency** — `beardog-acme` added to `beardog-cli/Cargo.toml`.
+- **Resolves**: primalSpring Wave 47 bearDog items (both).
 
 ### Wave 111 — Attestation Field Name Alignment (May 23, 2026)
 
