@@ -400,9 +400,7 @@ beardog/
 ├── examples/
 │   └── genesis_server.rs              ← NEW (Run genesis API)
 │
-└── showcase/
-    └── 02-ecosystem-integration/
-        └── 02-genesis-bootstrap/      ← NEW
+└── showcase/                               ← Fossilized (Wave 49)
             ├── README.md
             ├── 00-START_GENESIS_SERVER.sh
             ├── 01-establish-genesis-lineage.sh
@@ -427,7 +425,7 @@ beardog/
 - [ ] Implement `GenesisLineageProvider` (mock first)
 - [ ] Implement `GenesisWitnessVerifier` (mock first)
 - [ ] Create genesis API endpoints
-- [ ] Write showcase examples
+- [x] ~~Write showcase examples~~ (showcase fossilized Wave 49)
 - [ ] Integration tests with mocks
 
 ---

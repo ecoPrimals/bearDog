@@ -746,7 +746,7 @@ loop {
 ### Implementation
 - `../../crates/beardog-core/src/ecosystem_integration/` - Core implementation
 - `../../crates/beardog-genetics/` - Genetic algorithms
-- `../../showcase/` - Working demos
+- `../../showcase/` - Fossilized (Wave 49); active patterns in `primalSpring/wateringHole/`
 
 ---
 

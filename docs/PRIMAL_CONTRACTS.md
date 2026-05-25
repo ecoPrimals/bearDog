@@ -37,7 +37,7 @@ BearDog exposes its cryptographic and genetic capabilities through a JSON-RPC 2.
 
 ## 📚 **API CATEGORIES**
 
-BearDog provides **126 JSON-RPC methods** across 15 categories:
+BearDog provides **127 JSON-RPC methods** across 15 categories:
 
 ### **1. Core Cryptography** (20 methods)
 - Signatures: Ed25519, ECDSA (P-256, P-384), RSA
@@ -1497,7 +1497,7 @@ print(response['result']['hash'])
 
 103. `identity.create` - Generate ephemeral Ed25519 caller keypair + DID
 
-### **Total**: **126 JSON-RPC methods** (106 CryptoHandler + 11 IonicBondHandler + 6 auth gate + 1 identity gate + 5 bonding aliases + 3 FIDO2)
+### **Total**: **127 JSON-RPC methods** (103 CryptoHandler + 12 IonicBondHandler + 6 auth gate + 1 identity gate + 5 bonding aliases + 3 FIDO2)
 
 ═══════════════════════════════════════════════════════════════════
 

@@ -45,9 +45,8 @@ showcase-validation-test/
 # CLI receipts (generated during key operations)
 **/receipts/
 
-# Ensure showcase examples are included (not ignored)
-!showcase/
-!showcase/**/*
+# Showcase fossilized (Wave 49) — only README pointer remains
+!showcase/README.md
 
 # Session archives (moved to fossilRecord)
 archive/
@@ -64,7 +63,4 @@ session-reports-*/
 *.swp
 *.swo
 
-# Showcase demo build artifacts
-showcase/**/target/
-showcase/**/Cargo.lock
 cobertura.xml

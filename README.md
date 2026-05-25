@@ -10,7 +10,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 29 | **JSON-RPC Methods**: 127 | **Tests**: 14,940+ | **Coverage**: 90.51% | **Last Updated**: May 15, 2026
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 29 | **JSON-RPC Methods**: 127 | **Tests**: 14,940+ | **Coverage**: 90.51% | **Last Updated**: May 25, 2026
 
 ---
 
@@ -31,7 +31,7 @@ BearDog provides secure cryptographic operations for all primals through the **T
 - **100% Pure Rust** — Zero C dependencies (RustCrypto suite, postcard, hickory-dns)
 - **Rust 2024 Edition** — Modern idioms, MSRV 1.93.0
 - **Fully Concurrent** — Dependency injection architecture, no global mutable state
-- **126 JSON-RPC Methods** — Complete crypto API (BTSP handshake-as-a-service, ionic bond lifecycle, contract signing, lineage queries, consent gate, FIDO2/CTAP2 hardware authentication)
+- **127 JSON-RPC Methods** — Complete crypto API (BTSP handshake-as-a-service, ionic bond lifecycle, contract signing, lineage queries, consent gate, FIDO2/CTAP2 hardware authentication)
 - **Tor v3 Support** — Onion address derivation + ntor handshake + cell crypto
 - **Multi-Family Support** — `--family-id` flag for per-family instances
 - **Secret Storage** — Encrypted secrets with family-scoped keys

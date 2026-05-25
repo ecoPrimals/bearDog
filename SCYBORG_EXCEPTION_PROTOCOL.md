@@ -34,10 +34,11 @@ material remains **AGPL-3.0-or-later** without carve-outs.
 
 ## 3. Showcase and Example Code
 
-**Showcase** and **example** code (e.g. under `showcase/`) **may** be offered
-under a **dual license**: **AGPL-3.0-or-later** plus **MIT** for clearly marked
-educational or demonstration snippets, where files explicitly state both
-licenses. Core libraries and production paths are not dual-licensed by default.
+**Showcase** and **example** code (formerly under `showcase/`, fossilized Wave 49)
+**may** be offered under a **dual license**: **AGPL-3.0-or-later** plus **MIT**
+for clearly marked educational or demonstration snippets, where files explicitly
+state both licenses. Core libraries and production paths are not dual-licensed
+by default.
 
 ---
 

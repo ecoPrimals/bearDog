@@ -2,8 +2,8 @@
 
 # ACME Client Integration Path — Stadial TLS Shadow Cutover
 
-**Date**: May 17, 2026
-**Status**: Design — not yet built
+**Date**: May 17, 2026 (design); implemented Wave 107–112 (May 19–24, 2026)
+**Status**: Implemented — `crates/beardog-acme/` ships full RFC 8555 client
 **Owner**: bearDog (crypto spine)
 **Stadial Pairing**: cellMembrane/projectNUCLEUS (TLS termination)
 

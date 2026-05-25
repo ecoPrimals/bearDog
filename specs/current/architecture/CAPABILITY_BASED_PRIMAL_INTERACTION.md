@@ -387,7 +387,7 @@ impl CapabilityConsumer {
 - [ ] Update API server to use generic capabilities
 - [ ] Remove all "Songbird", "BTSP" hardcoded names
 - [ ] Update documentation to be primal-agnostic
-- [ ] Update showcase demos to use discovery
+- [x] ~~Update showcase demos~~ (showcase fossilized Wave 49)
 
 ### **Phase 4: Backward Compatibility** (Week 2, ~4 hours)
 - [ ] Create compatibility layer (BTSP → SecureTunnel alias)

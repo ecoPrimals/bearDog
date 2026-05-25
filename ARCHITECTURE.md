@@ -2,7 +2,7 @@
 
 # BearDog Architecture
 
-**Last Updated**: May 15, 2026
+**Last Updated**: May 25, 2026
 **Status**: Production Ready
 **Crates**: 29 | **Tests**: 14,940+ | **Coverage**: 90.51% | **MSRV**: 1.93.0
 
@@ -104,12 +104,10 @@ subcommands, per the ecoPrimals UniBin architecture.
 | `beardog-installer` | `beardog-installer` | Deployment tooling: installs, validates, and manages BearDog on target devices | Runs on the host, not on the deployed device; different compilation target and dependency surface |
 | `deploy-pixel8` | `beardog-deploy` | Android Pixel 8 adb-based deployment script | Android-specific cross-compilation helper; not shipped to end users |
 
-### Showcase Demos
+### Showcase Demos (Fossilized)
 
-The `showcase/` directory contains 29 demo binaries illustrating BearDog
-features. Most are excluded from the workspace and built standalone via their
-own `run-demo.sh` scripts. The exception is `showcase/05-mixed-entropy`, which
-is a workspace member (built and tested with `cargo test --workspace`).
+The `showcase/` directory was fossilized as part of Wave 49 ecosystem tightening
+(May 2026). Active patterns live in `primalSpring/wateringHole/`.
 
 ---
 
@@ -250,4 +248,4 @@ Key material derived from family seed. Family A never shares keys with Family B.
 
 ---
 
-**Last Updated**: May 8, 2026
+**Last Updated**: May 25, 2026

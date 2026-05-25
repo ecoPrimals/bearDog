@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: May 15, 2026
+**Updated**: May 25, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -16,7 +16,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 - Rust edition 2024 (MSRV 1.93.0, `rust-toolchain.toml` pinned)
 - 100% Pure Rust (zero C dependencies, RustCrypto suite)
-- 126 JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing, lineage queries, auth gate, ionic tokens, FIDO2/CTAP2, seed fingerprint)
+- 127 JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing, lineage queries, auth gate, ionic tokens, FIDO2/CTAP2, seed fingerprint)
 - 0 clippy warnings (pedantic + nursery + all cast lints warn + `doc_markdown` warn + `missing_errors_doc` warn + unwrap/expect warn, workspace-centralized)
 - 0 missing documentation warnings (all public items documented, all `# Errors` sections present)
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
@@ -307,4 +307,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: May 15, 2026
+**Last Updated**: May 25, 2026

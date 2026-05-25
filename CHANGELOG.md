@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 25, 2026 -- Wave 113b: Root Doc Cleanup & Orphan Purge
+
+- **Root doc dates aligned** — README, CONTEXT, ROADMAP, START_HERE, ARCHITECTURE (both footer dates), SECURITY all updated to May 25, 2026.
+- **Method count drift fixed** — README.md line 34, ROADMAP.md, `docs/PRIMAL_CONTRACTS.md` (line 40 + line 1500): 126 → 127 methods. PRIMAL_CONTRACTS handler breakdown corrected to 103 CryptoHandler + 12 IonicBondHandler.
+- **Stale showcase references cleaned** — Cargo.toml `exclude` list trimmed (8 showcase paths removed, fossilized Wave 49). ARCHITECTURE.md showcase section updated. `.gitignore` showcase rules simplified to just the README pointer. SCYBORG_EXCEPTION_PROTOCOL.md, BEARDOG_ECOSYSTEM_SECURITY_INTEGRATION.md, PHYSICAL_GENESIS_BOOTSTRAP_PLAN.md, CAPABILITY_BASED_PRIMAL_INTERACTION.md all updated.
+- **ACME spec updated** — `specs/ACME_TLS_INTEGRATION_PATH.md` status changed from "Design — not yet built" to "Implemented" (crates/beardog-acme shipped Wave 107–112).
+- **48-file orphan directory deleted** — `crates/beardog-tunnel/src/universal_hsm_discovery/` (616K) was never wired into any module tree. Active equivalent lives at `tunnel/hsm/universal_discovery/`.
+
 ### May 25, 2026 -- Wave 113: Wave 49 Ecosystem Tightening
 
 - **Showcase fossilized** — `showcase/` directory (153 files, 1.5 MB: security harness, ACME proto demos, HSM discovery, BTSP tunnel, key lineage, entropy mixing, audit logging, monitoring, dynamic config, performance profiling, ecosystem integration, advanced features) replaced with a README pointer. Contents preserved as fossil record per Wave 49 ecosystem tightening mandate.
