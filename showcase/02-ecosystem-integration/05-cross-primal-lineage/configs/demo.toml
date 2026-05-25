@@ -1,8 +1,0 @@
-# Cross-Primal Lineage Demo Configuration
-
-# Maximum lineage depth
-max_lineage_depth = 3
-
-# Key expiry (hours)
-key_expiry_hours = 24
-

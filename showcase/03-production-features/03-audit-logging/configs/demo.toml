@@ -1,5 +1,0 @@
-# Audit Logging Demo Configuration
-
-# Log file path
-log_file = "logs/audit.jsonl"
-

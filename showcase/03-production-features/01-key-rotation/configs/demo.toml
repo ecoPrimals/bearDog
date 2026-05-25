@@ -1,8 +1,0 @@
-# Key Rotation Demo Configuration
-
-# Rotation reason
-rotation_reason = "Scheduled 90-day rotation"
-
-# Grace period before revoking old key (seconds)
-grace_period_secs = 3600
-

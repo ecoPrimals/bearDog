@@ -1,5 +1,0 @@
-{
-  "algorithm": "AES-256-GCM",
-  "auth_tag_len": 16,
-  "key_id": "gk_file-encryption_1766672239"
-}

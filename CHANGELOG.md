@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 25, 2026 -- Wave 113: Wave 49 Ecosystem Tightening
+
+- **Showcase fossilized** — `showcase/` directory (153 files, 1.5 MB: security harness, ACME proto demos, HSM discovery, BTSP tunnel, key lineage, entropy mixing, audit logging, monitoring, dynamic config, performance profiling, ecosystem integration, advanced features) replaced with a README pointer. Contents preserved as fossil record per Wave 49 ecosystem tightening mandate.
+- **Deployment patterns verified clean** — No `target/release/beardog` or `which beardog` references in scripts or docs. All binary distribution uses `plasmidBin` depot.
+- **`notify-plasmidbin.yml`** confirmed active in `.github/workflows/`.
+- **No local `wateringHole/` tree** — already clean; all handoffs centralized in `infra/wateringHole/`.
+- **`--security-socket` / sled**: Not applicable to bearDog — single socket via `--socket` / `BEARDOG_SOCKET`; no sled dependency (songbird items).
+- **Resolves**: primalSpring Wave 49 bearDog items (showcase fossilization, pipeline debt verification).
+
 ### May 24, 2026 -- Wave 112: ACME Daemon Operationalization + Doc Drift Fix
 
 - **ACME renewal daemon wired into server binary** — When `BEARDOG_TLS_MODE=acme` is set, `beardog server` spawns `AcmeClient::run_renewal_loop()` as a background tokio task before starting transports. Config reads from `BEARDOG_ACME_DOMAINS` (required), `BEARDOG_ACME_EMAIL`, `BEARDOG_ACME_DIRECTORY` (defaults to Let's Encrypt production), `BEARDOG_ACME_CHALLENGE_PORT` (default 80), `BEARDOG_ACME_RENEWAL_DAYS` (default 30). Non-fatal on init failure. When cellMembrane's sovereignty cutover approaches, set the env vars and the daemon handles cert renewal automatically.
