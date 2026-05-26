@@ -60,11 +60,12 @@ pub enum BoundTransport {
 ///
 /// **Deep Debt Evolution**: From hardcoded single transport to universal multi-bind
 ///
-/// Binds all available transports for maximum compatibility:
-/// - **Tier 1**: Platform-native (Unix/Abstract/NamedPipe)
-/// - **Tier 2**: TCP fallback (universal)
+/// Binds available transports for maximum compatibility:
+/// - **Tier 1**: Platform-native (Unix/Abstract/NamedPipe) — always
+/// - **Tier 2**: TCP — opt-in via `--port`/`--listen` or `BEARDOG_TCP_IPC_PORT`
 ///
 /// Clients automatically use best available transport for their platform.
+/// For UDS-only mode (Tower CNS / exp114), omit TCP flags and env var.
 pub struct MultiTransportServer {
     /// Successfully bound transports
     transports: Vec<BoundTransport>,
@@ -76,8 +77,9 @@ impl MultiTransportServer {
     /// **Deep Debt Principle #5**: Runtime discovery, not compile-time hardcoding
     ///
     /// Tries to bind:
-    /// 1. Platform-native socket (Unix/Abstract/NamedPipe)
-    /// 2. TCP fallback (always attempted)
+    /// 1. Platform-native socket (Unix/Abstract/NamedPipe) — always attempted
+    /// 2. TCP — only when `--port`/`--listen` is specified or `BEARDOG_TCP_IPC_PORT`
+    ///    env var is set. Omit both for UDS-only mode (exp114 Tower CNS).
     ///
     /// Returns error only if NO transports could be bound.
     ///
@@ -136,33 +138,34 @@ impl MultiTransportServer {
         }
 
         // ================================================================
-        // TIER 2: TCP Universal Fallback
+        // TIER 2: TCP (opt-in via --port / --listen / BEARDOG_TCP_IPC_PORT)
         // ================================================================
 
-        // Use config-based port discovery instead of hardcoded value
-        let default_tcp_addr = {
-            use beardog_config::global::BEARDOG_CONFIG;
-            use beardog_types::constants::domains::network::addresses::DEFAULT_LOCALHOST_IPV4_STR;
-            format!(
-                "{}:{}",
-                DEFAULT_LOCALHOST_IPV4_STR, BEARDOG_CONFIG.network.ports.tcp_ipc_port
-            )
+        let effective_tcp_addr = match tcp_addr {
+            Some(addr) => Some(addr.to_string()),
+            None => std::env::var("BEARDOG_TCP_IPC_PORT").ok().map(|port| {
+                use beardog_types::constants::domains::network::addresses::DEFAULT_LOCALHOST_IPV4_STR;
+                format!("{DEFAULT_LOCALHOST_IPV4_STR}:{port}")
+            }),
         };
-        let tcp_address = tcp_addr.unwrap_or(&default_tcp_addr);
 
-        match tcp_address.parse::<SocketAddr>() {
-            Ok(addr) => {
-                let tcp_server =
-                    TcpIpcServer::new(addr, btsp_provider, identity, security_mode.clone());
-                info!("   ✅ Tier 2 (TCP): bound: {}", tcp_address);
-                transports.push(BoundTransport::Tcp(Arc::new(tcp_server)));
+        if let Some(tcp_address) = &effective_tcp_addr {
+            match tcp_address.parse::<SocketAddr>() {
+                Ok(addr) => {
+                    let tcp_server =
+                        TcpIpcServer::new(addr, btsp_provider, identity, security_mode.clone());
+                    info!("   ✅ Tier 2 (TCP): bound: {}", tcp_address);
+                    transports.push(BoundTransport::Tcp(Arc::new(tcp_server)));
+                }
+                Err(e) => {
+                    warn!(
+                        "   ⚠️  Tier 2 (TCP): Invalid address {}: {}",
+                        tcp_address, e
+                    );
+                }
             }
-            Err(e) => {
-                warn!(
-                    "   ⚠️  Tier 2 (TCP): Invalid address {}: {}",
-                    tcp_address, e
-                );
-            }
+        } else {
+            info!("   ℹ️  Tier 2 (TCP): skipped (UDS-only mode)");
         }
 
         // ================================================================

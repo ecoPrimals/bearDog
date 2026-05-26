@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 26, 2026 -- Wave 114: UDS-Only Mode (TCP Drop Prep for exp114)
+
+- **TCP transport now opt-in** — `MultiTransportServer` no longer unconditionally binds TCP on `127.0.0.1:9100`. TCP is started only when `--port`/`--listen` CLI flags are passed or `BEARDOG_TCP_IPC_PORT` env var is set. Without either, bearDog runs UDS-only. All 127 JSON-RPC methods have full parity on UDS — no capability loss.
+- **UDS-only mode for Tower CNS** — Prepares for exp114 (cephalic convergence prototype) where primals run domain-socket-only. `beardog server` with no TCP flags = pure UDS. `beardog server --port 9100` = previous behavior.
+- **Resolves**: primalSpring Wave 53 TCP drop prep item for bearDog.
+
 ### May 25, 2026 -- Wave 113b: Root Doc Cleanup & Orphan Purge
 
 - **Root doc dates aligned** — README, CONTEXT, ROADMAP, START_HERE, ARCHITECTURE (both footer dates), SECURITY all updated to May 25, 2026.
