@@ -64,7 +64,7 @@ pub async fn handle_entropy_collect(
         println!("   - Check if hardware is connected (USB tokens, etc.)");
         println!("   - On Android: adb devices (for StrongBox)");
         println!("   - Install a PKCS#11 provider for software fallback");
-        println!("   - Run setup: scripts/setup-hardware-testing.sh");
+        println!("   - See docs/references/RUN_ENTROPY_TEST.md for setup details");
         return Err(BearDogError::not_found(
             "No HSMs found. Please connect hardware or install a PKCS#11 provider.".to_string(),
         ));

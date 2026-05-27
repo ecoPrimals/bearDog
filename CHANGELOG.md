@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 27, 2026 -- Wave 115b: Root Doc Sync & Debris Purge
+
+- **Root doc dates aligned** — README, CONTEXT, ROADMAP, START_HERE, ARCHITECTURE (both footer dates), SECURITY, docs/README, docs/PRIMAL_CONTRACTS all updated to May 27, 2026.
+- **Method count drift fixed** — `ARCHITECTURE.md` diagram: "100+" → "127". `START_HERE.md`: "100+" → "127".
+- **Test count drift fixed** — `START_HERE.md`: 12,610 → 14,980+. `README.md`, `ARCHITECTURE.md`: 14,940+ → 14,980+.
+- **Orphan modules deleted** — `tunnel/key_manager.rs` (316 LOC) and `tunnel/security_provider.rs` (268 LOC) were not in any `mod` tree. Removed.
+- **Stale script reference fixed** — `entropy/collect.rs` referenced nonexistent `scripts/setup-hardware-testing.sh`; now points to `docs/references/RUN_ENTROPY_TEST.md`.
+- **HTTP-era config templates annotated** — `development.env`, `production.env`, `network-discovery.env.template` get header notes clarifying Unix socket JSON-RPC is the primary transport.
+- **ROADMAP stale narrative cleaned** — Wave 69b summary: removed pre-fossilization showcase references and stale method counts.
+
 ### May 27, 2026 -- Wave 115: Deep Debt Cleanup
 
 - **Orphan modules deleted** — `tunnel/genetic_healing.rs` (434 LOC) and `tunnel/simplified_seed_tunnel.rs` (21 LOC) were never wired into any `mod` tree. Removed.

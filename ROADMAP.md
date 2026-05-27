@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: May 25, 2026
+**Updated**: May 27, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -182,7 +182,7 @@ Aligned `get_node_id_with()` and `get_family_id_with()` fallbacks to match `Prim
 
 ### Deep Debt: Self-Knowledge, Allow-Reasons, Blake3 Pure — DONE (Wave 69b)
 
-Removed `skunkBat` from capabilities wire data. Added structured `reason` to all `#[allow()]`. Aligned 5 showcase `blake3` to `features=["pure"]`. Full audit: 0 unsafe, 0 TODO, 0 other-primal refs in production, 0 ungated mocks, 0 ring/openssl. 101 CryptoHandler + 8 IonicBondHandler methods. 15,000+ tests.
+Removed `skunkBat` from capabilities wire data. Added structured `reason` to all `#[allow()]`. Aligned showcase `blake3` to `features=["pure"]` (showcase fossilized Wave 49). Full audit: 0 unsafe, 0 TODO, 0 other-primal refs in production, 0 ungated mocks, 0 ring/openssl.
 
 ### Lineage Semantic IPC Methods — DONE (Wave 69)
 
@@ -307,4 +307,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: May 25, 2026
+**Last Updated**: May 27, 2026
