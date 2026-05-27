@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 27, 2026 -- Wave 115: Deep Debt Cleanup
+
+- **Orphan modules deleted** — `tunnel/genetic_healing.rs` (434 LOC) and `tunnel/simplified_seed_tunnel.rs` (21 LOC) were never wired into any `mod` tree. Removed.
+- **Empty `key_manager.rs` stub** narrowed to `mod` (private) with clarified doc about reserved purpose.
+- **Ionic bond test split** — `ionic_bond/tests.rs` (1165 LOC monolith) refactored into `tests/{helpers,lifecycle,seal,contract,cross_family}.rs` (5 domain modules, 33 tests preserved).
+- **Stale `#[allow]` replaced** — `benchmarks/src/utils_tests.rs` bare `#[allow(clippy::float_cmp)]` upgraded to `#[expect(…, reason = "…")]`.
+- **Hardcoded primal names cleaned** — Production comments referencing `loamSpine` (ionic_bond handler, handlers mod) and `skunkBat` (ACME shadow_metrics) replaced with capability-agnostic wording.
+- **HSM capability detector documented** — `capability_detector.rs` stub now explains its role and why it returns empty until platform probes are wired.
+
 ### May 26, 2026 -- Wave 114: UDS-Only Mode (TCP Drop Prep for exp114)
 
 - **TCP transport now opt-in** — `MultiTransportServer` no longer unconditionally binds TCP on `127.0.0.1:9100`. TCP is started only when `--port`/`--listen` CLI flags are passed or `BEARDOG_TCP_IPC_PORT` env var is set. Without either, bearDog runs UDS-only. All 127 JSON-RPC methods have full parity on UDS — no capability loss.

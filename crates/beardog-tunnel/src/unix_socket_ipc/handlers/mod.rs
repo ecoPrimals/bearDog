@@ -239,7 +239,7 @@ impl HandlerRegistry {
     ///
     /// Production NUCLEUS deployments should pass a
     /// [`CapabilityDiscoveryBondPersistence`](ionic_bond::CapabilityDiscoveryBondPersistence)
-    /// to persist bonds via loamSpine's `bonding.ledger.*` RPCs.
+    /// to persist bonds via discovered `bonding.ledger.*` RPCs.
     pub fn with_bond_persistence(
         identity: Arc<beardog_types::primal_identity::PrimalIdentity>,
         bond_persistence: Arc<ionic_bond::BondPersistenceBackend>,

@@ -8,7 +8,10 @@ use super::utils::*;
 use std::time::Duration;
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)] // Tests compare exact values
+#[expect(
+    clippy::float_cmp,
+    reason = "benchmark stats assert exact default values"
+)]
 #[test]
 fn test_benchmark_stats_default() {
     let stats = BenchmarkStats::default();

@@ -4,7 +4,7 @@
 //!
 //! Collects side-by-side performance data comparing `BearDog`'s sovereign TLS
 //! (rustls) against the commercial baseline (Cloudflare tunnel). Metrics are
-//! accumulated over a 7-day rolling window and emitted in the `skunkBat` audit
+//! accumulated over a 7-day rolling window and emitted in the provenance audit
 //! format for the provenance trio.
 //!
 //! Cutover criteria: sovereign p95 ≤ 1.5× commercial p95 for 7 consecutive days.
