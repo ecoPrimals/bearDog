@@ -15,6 +15,7 @@
 //! `DEFAULT_MIN_TLS_VERSION_FALLBACK` is a documented last resort when `BEARDOG_MIN_TLS_VERSION`
 //! is unset (see `ZERO_HARDCODING_SPECIFICATION`).
 
+use crate::env_keys;
 use crate::error::ConfigResult;
 use serde::{Deserialize, Serialize};
 
@@ -79,27 +80,27 @@ impl SecurityConfig {
     pub fn from_env() -> Self {
         let defaults = Self::default();
         Self {
-            strict_mode: env_bool("BEARDOG_STRICT_MODE", defaults.strict_mode),
-            require_mtls: env_bool("BEARDOG_REQUIRE_MTLS", defaults.require_mtls),
-            min_tls_version: std::env::var("BEARDOG_MIN_TLS_VERSION")
+            strict_mode: env_bool(env_keys::ENV_STRICT_MODE, defaults.strict_mode),
+            require_mtls: env_bool(env_keys::ENV_REQUIRE_MTLS, defaults.require_mtls),
+            min_tls_version: std::env::var(env_keys::ENV_MIN_TLS_VERSION)
                 .ok()
                 .filter(|s| !s.is_empty())
                 .unwrap_or_else(|| DEFAULT_MIN_TLS_VERSION_FALLBACK.to_string()),
             allow_localhost_bypass: env_bool(
-                "BEARDOG_ALLOW_LOCALHOST_BYPASS",
+                env_keys::ENV_ALLOW_LOCALHOST_BYPASS,
                 defaults.allow_localhost_bypass,
             ),
-            enable_audit_log: env_bool("BEARDOG_ENABLE_AUDIT_LOG", defaults.enable_audit_log),
+            enable_audit_log: env_bool(env_keys::ENV_ENABLE_AUDIT_LOG, defaults.enable_audit_log),
             enable_rate_limiting: env_bool(
-                "BEARDOG_ENABLE_RATE_LIMITING",
+                env_keys::ENV_ENABLE_RATE_LIMITING,
                 defaults.enable_rate_limiting,
             ),
             auto_block_suspicious_ips: env_bool(
-                "BEARDOG_AUTO_BLOCK_SUSPICIOUS_IPS",
+                env_keys::ENV_AUTO_BLOCK_SUSPICIOUS_IPS,
                 defaults.auto_block_suspicious_ips,
             ),
             require_authentication: env_bool(
-                "BEARDOG_REQUIRE_AUTHENTICATION",
+                env_keys::ENV_REQUIRE_AUTHENTICATION,
                 defaults.require_authentication,
             ),
         }

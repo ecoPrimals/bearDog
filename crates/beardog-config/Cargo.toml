@@ -29,9 +29,6 @@ dotenvy = { workspace = true }
 # Path manipulation
 dirs = { workspace = true }
 
-# Validation
-validator = { workspace = true }
-
 # Logging
 tracing = { workspace = true }
 

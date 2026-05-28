@@ -202,7 +202,7 @@ impl ConsolidatedProviderRegistry {
 
     /// Create registry with default configuration
     pub fn default() -> Self {
-        Self::new(RegistryConfig::default())
+        Self::new(ProviderRegistryConfig::default())
     }
 
     /// Register a provider in the consolidated registry

@@ -38,6 +38,3 @@ blake3 = { workspace = true }
 postcard = { workspace = true }
 hex = { workspace = true }
 mdns-sd = { workspace = true, optional = true }
-
-[dev-dependencies]
-tokio-test = { workspace = true }

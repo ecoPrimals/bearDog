@@ -32,6 +32,7 @@
 //! - `BEARDOG_MULTICAST_ADDRESS` - Multicast address for discovery (fallback: see `DEFAULT_MULTICAST_ADDRESS`)
 //! - `BEARDOG_LOCALHOST_IPV4` / `BEARDOG_LOCALHOST_IPV6` / `BEARDOG_WILDCARD_IPV4` - Override standard IP literals used in config (optional)
 
+use crate::env_keys;
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr};
 
@@ -211,20 +212,26 @@ impl NetworkAddressesConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            api_host: std::env::var("BEARDOG_API_HOST").unwrap_or_else(|_| default_api_host()),
-            bind_address: std::env::var("BEARDOG_LISTEN_ADDR")
-                .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
+            api_host: std::env::var(env_keys::ENV_API_HOST).unwrap_or_else(|_| default_api_host()),
+            bind_address: std::env::var(env_keys::ENV_LISTEN_ADDR)
+                .or_else(|_| std::env::var(env_keys::ENV_BIND_ADDRESS))
                 .unwrap_or_else(|_| default_bind_address()),
-            external_host: std::env::var("BEARDOG_EXTERNAL_HOST")
+            external_host: std::env::var(env_keys::ENV_EXTERNAL_HOST)
                 .unwrap_or_else(|_| default_external_host()),
-            multicast_address: std::env::var("BEARDOG_MULTICAST_ADDRESS")
+            multicast_address: std::env::var(env_keys::ENV_MULTICAST_ADDRESS)
                 .unwrap_or_else(|_| default_multicast_address()),
-            localhost_ipv4: parse_ip_env("BEARDOG_LOCALHOST_IPV4", IpAddr::V4(Ipv4Addr::LOCALHOST)),
+            localhost_ipv4: parse_ip_env(
+                env_keys::ENV_LOCALHOST_IPV4,
+                IpAddr::V4(Ipv4Addr::LOCALHOST),
+            ),
             localhost_ipv6: parse_ip_env(
-                "BEARDOG_LOCALHOST_IPV6",
+                env_keys::ENV_LOCALHOST_IPV6,
                 IpAddr::V6(std::net::Ipv6Addr::LOCALHOST),
             ),
-            wildcard_ipv4: parse_ip_env("BEARDOG_WILDCARD_IPV4", IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
+            wildcard_ipv4: parse_ip_env(
+                env_keys::ENV_WILDCARD_IPV4,
+                IpAddr::V4(Ipv4Addr::UNSPECIFIED),
+            ),
         }
     }
 
@@ -247,19 +254,25 @@ impl NetworkAddressesConfig {
     #[must_use]
     pub fn for_production() -> Self {
         Self {
-            api_host: std::env::var("BEARDOG_API_HOST").unwrap_or_else(|_| default_api_host()),
-            bind_address: std::env::var("BEARDOG_BIND_ADDRESS")
+            api_host: std::env::var(env_keys::ENV_API_HOST).unwrap_or_else(|_| default_api_host()),
+            bind_address: std::env::var(env_keys::ENV_BIND_ADDRESS)
                 .unwrap_or_else(|_| WILDCARD_IPV4.to_string()),
-            external_host: std::env::var("BEARDOG_EXTERNAL_HOST")
+            external_host: std::env::var(env_keys::ENV_EXTERNAL_HOST)
                 .unwrap_or_else(|_| default_external_host()),
-            multicast_address: std::env::var("BEARDOG_MULTICAST_ADDRESS")
+            multicast_address: std::env::var(env_keys::ENV_MULTICAST_ADDRESS)
                 .unwrap_or_else(|_| default_multicast_address()),
-            localhost_ipv4: parse_ip_env("BEARDOG_LOCALHOST_IPV4", IpAddr::V4(Ipv4Addr::LOCALHOST)),
+            localhost_ipv4: parse_ip_env(
+                env_keys::ENV_LOCALHOST_IPV4,
+                IpAddr::V4(Ipv4Addr::LOCALHOST),
+            ),
             localhost_ipv6: parse_ip_env(
-                "BEARDOG_LOCALHOST_IPV6",
+                env_keys::ENV_LOCALHOST_IPV6,
                 IpAddr::V6(std::net::Ipv6Addr::LOCALHOST),
             ),
-            wildcard_ipv4: parse_ip_env("BEARDOG_WILDCARD_IPV4", IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
+            wildcard_ipv4: parse_ip_env(
+                env_keys::ENV_WILDCARD_IPV4,
+                IpAddr::V4(Ipv4Addr::UNSPECIFIED),
+            ),
         }
     }
 

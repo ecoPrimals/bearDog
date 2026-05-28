@@ -15,6 +15,7 @@ use crate::domains::network_addresses::NetworkAddressesConfig;
 #[cfg(test)]
 use crate::domains::network_ports::DEFAULT_ADMIN_PORT;
 use crate::domains::network_ports::{DEFAULT_API_PORT, DEFAULT_DISCOVERY_PORT, NetworkPortsConfig};
+use crate::env_keys;
 use crate::error::{ConfigError, ConfigResult};
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr};
@@ -153,12 +154,12 @@ impl ApiConfig {
         let defaults = Self::const_defaults();
 
         Self {
-            bind_address: std::env::var("BEARDOG_API_BIND_ADDRESS")
+            bind_address: std::env::var(env_keys::ENV_API_BIND_ADDRESS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.bind_address),
 
-            port: std::env::var("BEARDOG_API_PORT")
+            port: std::env::var(env_keys::ENV_API_PORT)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.port),
@@ -167,7 +168,7 @@ impl ApiConfig {
             tls_cert_path: None,
             tls_key_path: None,
 
-            max_connections: std::env::var("BEARDOG_API_MAX_CONNECTIONS")
+            max_connections: std::env::var(env_keys::ENV_API_MAX_CONNECTIONS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.max_connections),
@@ -315,18 +316,18 @@ impl ServiceDiscoveryConfig {
         let defaults = Self::const_defaults();
 
         Self {
-            port: std::env::var("BEARDOG_DISCOVERY_PORT")
+            port: std::env::var(env_keys::ENV_DISCOVERY_PORT)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.port),
 
             backends: defaults.backends,
 
-            multicast_address: std::env::var("BEARDOG_MULTICAST_ADDRESS")
+            multicast_address: std::env::var(env_keys::ENV_MULTICAST_ADDRESS)
                 .ok()
                 .unwrap_or(defaults.multicast_address),
 
-            interval_secs: std::env::var("BEARDOG_DISCOVERY_INTERVAL_SECS")
+            interval_secs: std::env::var(env_keys::ENV_DISCOVERY_INTERVAL_SECS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.interval_secs),
@@ -454,17 +455,17 @@ impl AdminConfig {
         let defaults = Self::const_defaults();
 
         Self {
-            bind_address: std::env::var("BEARDOG_ADMIN_BIND_ADDRESS")
+            bind_address: std::env::var(env_keys::ENV_ADMIN_BIND_ADDRESS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.bind_address),
 
-            port: std::env::var("BEARDOG_ADMIN_PORT")
+            port: std::env::var(env_keys::ENV_ADMIN_PORT)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.port),
 
-            enabled: std::env::var("BEARDOG_ADMIN_ENABLED")
+            enabled: std::env::var(env_keys::ENV_ADMIN_ENABLED)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.enabled),

@@ -5,6 +5,7 @@
 //! Provides timeout settings for database connections and pool management.
 
 use super::core::{read_env_timeout_secs, FromEnvironment};
+use crate::env_keys;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -47,24 +48,24 @@ impl FromEnvironment for DatabaseTimeouts {
     fn from_env() -> Self {
         Self {
             pool_idle_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_POOL_IDLE_TIMEOUT_SECS",
+                env_keys::ENV_POOL_IDLE_TIMEOUT_SECS,
                 Self::default().pool_idle_timeout_secs,
             ),
             max_connection_age_secs: read_env_timeout_secs(
-                "BEARDOG_MAX_CONNECTION_AGE_SECS",
+                env_keys::ENV_MAX_CONNECTION_AGE_SECS,
                 Self::default().max_connection_age_secs,
             ),
             discovery_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_DISCOVERY_TIMEOUT_SECS",
+                env_keys::ENV_DISCOVERY_TIMEOUT_SECS,
                 Self::default().discovery_timeout_secs,
             ),
         }
     }
 
     fn try_from_env() -> Option<Self> {
-        if std::env::var("BEARDOG_POOL_IDLE_TIMEOUT_SECS").is_ok()
-            || std::env::var("BEARDOG_MAX_CONNECTION_AGE_SECS").is_ok()
-            || std::env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS").is_ok()
+        if std::env::var(env_keys::ENV_POOL_IDLE_TIMEOUT_SECS).is_ok()
+            || std::env::var(env_keys::ENV_MAX_CONNECTION_AGE_SECS).is_ok()
+            || std::env::var(env_keys::ENV_DISCOVERY_TIMEOUT_SECS).is_ok()
         {
             Some(Self::from_env())
         } else {

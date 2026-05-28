@@ -11,6 +11,7 @@
 //! - **Environment loading** (`from_env()`) - Explicit environment variable reads
 //! - **Flexible construction** (`builder()`) - Testing without env var pollution
 
+use crate::env_keys;
 use crate::error::{ConfigError, ConfigResult};
 use serde::{Deserialize, Serialize};
 
@@ -56,25 +57,25 @@ impl CryptoConfig {
         let defaults = Self::const_defaults();
 
         Self {
-            rsa_key_size: std::env::var("BEARDOG_RSA_KEY_SIZE")
+            rsa_key_size: std::env::var(env_keys::ENV_RSA_KEY_SIZE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.rsa_key_size),
 
-            ec_curve: std::env::var("BEARDOG_EC_CURVE")
+            ec_curve: std::env::var(env_keys::ENV_EC_CURVE)
                 .ok()
                 .unwrap_or(defaults.ec_curve),
 
-            aes_key_size: std::env::var("BEARDOG_AES_KEY_SIZE")
+            aes_key_size: std::env::var(env_keys::ENV_AES_KEY_SIZE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.aes_key_size),
 
-            hash_algorithm: std::env::var("BEARDOG_HASH_ALGORITHM")
+            hash_algorithm: std::env::var(env_keys::ENV_HASH_ALGORITHM)
                 .ok()
                 .unwrap_or(defaults.hash_algorithm),
 
-            pbkdf2_iterations: std::env::var("BEARDOG_PBKDF2_ITERATIONS")
+            pbkdf2_iterations: std::env::var(env_keys::ENV_PBKDF2_ITERATIONS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.pbkdf2_iterations),

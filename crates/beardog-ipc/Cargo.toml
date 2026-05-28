@@ -40,5 +40,4 @@ tracing = { workspace = true }
 default = []
 
 [dev-dependencies]
-tokio-test = { workspace = true }
 rand = { workspace = true }

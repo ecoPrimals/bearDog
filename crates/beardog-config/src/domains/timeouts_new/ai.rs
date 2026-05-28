@@ -5,6 +5,7 @@
 //! Provides timeout settings for AI decision-making and inference operations.
 
 use super::core::{read_env_timeout_millis, read_env_timeout_secs, FromEnvironment};
+use crate::env_keys;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -47,24 +48,24 @@ impl FromEnvironment for AiTimeouts {
     fn from_env() -> Self {
         Self {
             decision_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_DECISION_TIMEOUT_SECS",
+                env_keys::ENV_DECISION_TIMEOUT_SECS,
                 Self::default().decision_timeout_secs,
             ),
             request_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_AI_REQUEST_TIMEOUT_SECS",
+                env_keys::ENV_AI_REQUEST_TIMEOUT_SECS,
                 Self::default().request_timeout_secs,
             ),
             batch_timeout_millis: read_env_timeout_millis(
-                "BEARDOG_AI_BATCH_TIMEOUT_MS",
+                env_keys::ENV_AI_BATCH_TIMEOUT_MS,
                 Self::default().batch_timeout_millis,
             ),
         }
     }
 
     fn try_from_env() -> Option<Self> {
-        if std::env::var("BEARDOG_DECISION_TIMEOUT_SECS").is_ok()
-            || std::env::var("BEARDOG_AI_REQUEST_TIMEOUT_SECS").is_ok()
-            || std::env::var("BEARDOG_AI_BATCH_TIMEOUT_MS").is_ok()
+        if std::env::var(env_keys::ENV_DECISION_TIMEOUT_SECS).is_ok()
+            || std::env::var(env_keys::ENV_AI_REQUEST_TIMEOUT_SECS).is_ok()
+            || std::env::var(env_keys::ENV_AI_BATCH_TIMEOUT_MS).is_ok()
         {
             Some(Self::from_env())
         } else {

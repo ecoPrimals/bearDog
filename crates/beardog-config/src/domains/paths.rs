@@ -2,6 +2,7 @@
 
 //! Path configuration and discovery
 
+use crate::env_keys;
 use crate::error::{ConfigError, ConfigResult};
 use serde::{Deserialize, Serialize};
 use std::env;
@@ -54,17 +55,17 @@ impl PathConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            config_dir: std::env::var("BEARDOG_CONFIG_DIR")
+            config_dir: std::env::var(env_keys::ENV_CONFIG_DIR)
                 .ok()
                 .map_or_else(default_config_dir, PathBuf::from),
-            data_dir: std::env::var("BEARDOG_DATA_DIR")
+            data_dir: std::env::var(env_keys::ENV_DATA_DIR)
                 .ok()
                 .map_or_else(default_data_dir, PathBuf::from),
-            log_dir: std::env::var("BEARDOG_LOG_DIR")
+            log_dir: std::env::var(env_keys::ENV_LOG_DIR)
                 .ok()
                 .map_or_else(default_log_dir, PathBuf::from),
             pkcs11_library_paths: Vec::new(),
-            pkcs11_library: std::env::var("BEARDOG_PKCS11_LIBRARY")
+            pkcs11_library: std::env::var(env_keys::ENV_PKCS11_LIBRARY)
                 .ok()
                 .map(PathBuf::from),
         }
@@ -101,7 +102,7 @@ impl PathConfig {
     pub fn discover_pkcs11_libraries() -> Vec<PathBuf> {
         let mut paths = Vec::new();
 
-        if let Ok(env_paths) = beardog_errors::process_env::var("BEARDOG_PKCS11_SEARCH_PATHS") {
+        if let Ok(env_paths) = beardog_errors::process_env::var(env_keys::ENV_PKCS11_SEARCH_PATHS) {
             for p in env_paths.split(':') {
                 let path = PathBuf::from(p.trim());
                 if path.exists() {

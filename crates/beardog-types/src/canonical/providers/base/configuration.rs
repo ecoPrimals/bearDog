@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use super::performance::PerformanceConfiguration;
+use crate::canonical::config::domains::system::LoggingConfig;
 
 /// Configuration for provider initialization
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -53,7 +54,7 @@ pub struct EnvironmentSettings {
     pub resource_limits: ResourceLimits,
     
     /// Logging configuration
-    pub logging: LoggingConfiguration,
+    pub logging: LoggingConfig,
 }
 
 /// Resource limits for provider operation

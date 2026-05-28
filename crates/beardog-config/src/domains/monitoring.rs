@@ -11,6 +11,7 @@
 //! - **Environment loading** (`from_env()`) - Explicit environment variable reads
 //! - **Flexible construction** (`builder()`) - Testing without env var pollution
 
+use crate::env_keys;
 use crate::error::{ConfigError, ConfigResult};
 use serde::{Deserialize, Serialize};
 
@@ -66,32 +67,32 @@ impl MonitoringConfig {
         let defaults = Self::const_defaults();
 
         Self {
-            log_level: std::env::var("BEARDOG_LOG_LEVEL")
+            log_level: std::env::var(env_keys::ENV_LOG_LEVEL)
                 .ok()
                 .unwrap_or(defaults.log_level),
 
-            log_format: std::env::var("BEARDOG_LOG_FORMAT")
+            log_format: std::env::var(env_keys::ENV_LOG_FORMAT)
                 .ok()
                 .unwrap_or(defaults.log_format),
 
             structured_logging: defaults.structured_logging,
             enable_metrics: defaults.enable_metrics,
 
-            metrics_port: std::env::var("BEARDOG_METRICS_PORT")
+            metrics_port: std::env::var(env_keys::ENV_METRICS_PORT)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.metrics_port),
 
             enable_health_check: defaults.enable_health_check,
 
-            health_check_port: std::env::var("BEARDOG_HEALTH_PORT")
+            health_check_port: std::env::var(env_keys::ENV_HEALTH_PORT)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.health_check_port),
 
             enable_performance_tracking: defaults.enable_performance_tracking,
 
-            tracing_sample_rate: std::env::var("BEARDOG_TRACING_SAMPLE_RATE")
+            tracing_sample_rate: std::env::var(env_keys::ENV_TRACING_SAMPLE_RATE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.tracing_sample_rate),

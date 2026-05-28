@@ -6,6 +6,8 @@ use beardog_errors::{BearDogError, process_env};
 use std::collections::HashSet;
 use std::net::{IpAddr, SocketAddr, TcpListener};
 
+use crate::env_keys;
+
 use super::config::{DiscoveryStrategy, PortDiscoveryConfig};
 
 /// Capability-based port discoverer
@@ -141,8 +143,9 @@ impl PortDiscoverer {
             Ok(ports) => {
                 if !ports.is_empty() {
                     tracing::debug!(
-                        "Merged {} port(s) from BEARDOG_DISCOVERED_PRIMAL_PORTS / mDNS hook",
-                        ports.len()
+                        "Merged {} port(s) from {} / mDNS hook",
+                        ports.len(),
+                        env_keys::ENV_DISCOVERED_PRIMAL_PORTS
                     );
                 }
                 used_ports.extend(ports);
@@ -280,7 +283,7 @@ impl PortDiscoverer {
     /// without extra dependencies.
     async fn query_mdns_primal_ports(&self) -> Result<HashSet<u16>, BearDogError> {
         let mut ports = HashSet::new();
-        if let Ok(s) = process_env::var("BEARDOG_DISCOVERED_PRIMAL_PORTS") {
+        if let Ok(s) = process_env::var(env_keys::ENV_DISCOVERED_PRIMAL_PORTS) {
             for part in s.split(',') {
                 let p = part.trim();
                 if p.is_empty() {
@@ -292,7 +295,8 @@ impl PortDiscoverer {
                     }
                     Err(e) => {
                         tracing::warn!(
-                            "BEARDOG_DISCOVERED_PRIMAL_PORTS: ignored invalid port {:?}: {}",
+                            "{}: ignored invalid port {:?}: {}",
+                            env_keys::ENV_DISCOVERED_PRIMAL_PORTS,
                             p,
                             e
                         );
@@ -328,7 +332,7 @@ impl PortDiscoverer {
     /// Bind address is **configuration-driven**: `BEARDOG_PORT_PROBE_BIND` (IP), else documented
     /// loopback from [`NetworkAddressesConfig`](crate::domains::network_addresses::NetworkAddressesConfig) (same as `BEARDOG_LOCALHOST_IPV4`).
     fn is_port_available(&self, port: u16) -> bool {
-        let ip: IpAddr = process_env::var("BEARDOG_PORT_PROBE_BIND")
+        let ip: IpAddr = process_env::var(env_keys::ENV_PORT_PROBE_BIND)
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or_else(|| {
@@ -421,10 +425,10 @@ mod tests {
     #[test]
     fn is_port_available_respects_beardog_port_probe_bind_env() {
         let _guard = port_discovery_env_lock();
-        process_env::set_var("BEARDOG_PORT_PROBE_BIND", "127.0.0.1");
+        process_env::set_var(env_keys::ENV_PORT_PROBE_BIND, "127.0.0.1");
         let discoverer = PortDiscoverer::with_defaults();
         let high = 59123u16;
         let _ = discoverer.is_port_available(high);
-        process_env::remove_var("BEARDOG_PORT_PROBE_BIND");
+        process_env::remove_var(env_keys::ENV_PORT_PROBE_BIND);
     }
 }

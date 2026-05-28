@@ -27,7 +27,7 @@
 //! ```
 
 use beardog_errors::BearDogError;
-use super::consolidated_registry::{ConsolidatedProviderRegistry, RegistryConfig};
+use super::consolidated_registry::{ConsolidatedProviderRegistry, ProviderRegistryConfig};
 use super::hsm_unified::{HsmUnifiedProvider, AndroidHsmConfig, IosHsmConfig, SoftwareHsmConfig};
 use super::traits::consolidated::{ConsolidatedProvider, ProviderInfo, ProviderType};
 use serde::{Deserialize, Serialize};
@@ -253,7 +253,7 @@ impl EcosystemIntegrator {
 
     /// Create ecosystem integrator with custom configuration
     pub async fn with_config(config: IntegrationConfig) -> Result<Self> {
-        let registry = Arc::new(ConsolidatedProviderRegistry::new(RegistryConfig::default()));
+        let registry = Arc::new(ConsolidatedProviderRegistry::new(ProviderRegistryConfig::default()));
         
         let mut migration_adapters: HashMap<String, Box<dyn MigrationAdapter>> = HashMap::new();
         

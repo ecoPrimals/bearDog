@@ -45,14 +45,13 @@
 pub mod constants; // Protocol constants
 pub mod ctap2; // CTAP2 protocol implementation
 pub mod discovery;
-pub mod multi_credential_provider; // NEW: Multi-credential operations
-mod operations;
+pub mod multi_credential_provider;
 mod provider;
 pub mod types;
 
 pub use constants::*;
+pub use ctap2::types::Ctap2Command;
 pub use discovery::discover_fido2_devices;
 pub use multi_credential_provider::*;
-pub use operations::Ctap2Command;
 pub use provider::Fido2HsmProvider;
 pub use types::*;

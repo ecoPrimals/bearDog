@@ -16,6 +16,10 @@ pub const ENV_CONFIG_DIR: &str = "BEARDOG_CONFIG_DIR";
 pub const ENV_DATA_DIR: &str = "BEARDOG_DATA_DIR";
 /// Override the log directory.
 pub const ENV_LOG_DIR: &str = "BEARDOG_LOG_DIR";
+/// PKCS#11 library path override.
+pub const ENV_PKCS11_LIBRARY: &str = "BEARDOG_PKCS11_LIBRARY";
+/// PKCS#11 search paths (colon-separated).
+pub const ENV_PKCS11_SEARCH_PATHS: &str = "BEARDOG_PKCS11_SEARCH_PATHS";
 
 // ── Network addresses ────────────────────────────────────────────────
 
@@ -33,6 +37,12 @@ pub const ENV_MULTICAST_ADDRESS: &str = "BEARDOG_MULTICAST_ADDRESS";
 pub const ENV_API_BIND_ADDRESS: &str = "BEARDOG_API_BIND_ADDRESS";
 /// Infrastructure host fallback.
 pub const ENV_INFRASTRUCTURE_HOST_FALLBACK: &str = "BEARDOG_INFRASTRUCTURE_HOST_FALLBACK";
+/// Localhost IPv4 address override.
+pub const ENV_LOCALHOST_IPV4: &str = "BEARDOG_LOCALHOST_IPV4";
+/// Localhost IPv6 address override.
+pub const ENV_LOCALHOST_IPV6: &str = "BEARDOG_LOCALHOST_IPV6";
+/// Wildcard IPv4 address override (all interfaces).
+pub const ENV_WILDCARD_IPV4: &str = "BEARDOG_WILDCARD_IPV4";
 
 // ── Network hosts ────────────────────────────────────────────────────
 
@@ -83,6 +93,10 @@ pub const ENV_ADMIN_ENABLED: &str = "BEARDOG_ADMIN_ENABLED";
 pub const ENV_DISCOVERED_PRIMAL_PORTS: &str = "BEARDOG_DISCOVERED_PRIMAL_PORTS";
 /// Port probe bind address.
 pub const ENV_PORT_PROBE_BIND: &str = "BEARDOG_PORT_PROBE_BIND";
+/// Port discovery minimum port (scan range lower bound).
+pub const ENV_PORT_DISCOVERY_MIN: &str = "BEARDOG_PORT_DISCOVERY_MIN";
+/// Port discovery maximum port (scan range upper bound).
+pub const ENV_PORT_DISCOVERY_MAX: &str = "BEARDOG_PORT_DISCOVERY_MAX";
 /// Port discovery timeout (milliseconds).
 pub const ENV_PORT_DISCOVERY_TIMEOUT_MS: &str = "BEARDOG_PORT_DISCOVERY_TIMEOUT_MS";
 /// Ports excluded from discovery.
@@ -144,6 +158,34 @@ pub const ENV_DECISION_TIMEOUT_SECS: &str = "BEARDOG_DECISION_TIMEOUT_SECS";
 pub const ENV_AI_REQUEST_TIMEOUT_SECS: &str = "BEARDOG_AI_REQUEST_TIMEOUT_SECS";
 /// AI batch timeout (milliseconds).
 pub const ENV_AI_BATCH_TIMEOUT_MS: &str = "BEARDOG_AI_BATCH_TIMEOUT_MS";
+/// Connection establishment timeout (seconds).
+pub const ENV_CONNECTION_TIMEOUT_SECS: &str = "BEARDOG_CONNECTION_TIMEOUT_SECS";
+/// Network handshake timeout (seconds).
+pub const ENV_HANDSHAKE_TIMEOUT_SECS: &str = "BEARDOG_HANDSHAKE_TIMEOUT_SECS";
+/// TLS handshake timeout (seconds).
+pub const ENV_TLS_HANDSHAKE_TIMEOUT_SECS: &str = "BEARDOG_TLS_HANDSHAKE_TIMEOUT_SECS";
+/// Keep-alive timeout (seconds).
+pub const ENV_KEEP_ALIVE_TIMEOUT_SECS: &str = "BEARDOG_KEEP_ALIVE_TIMEOUT_SECS";
+/// Idle connection timeout (seconds).
+pub const ENV_IDLE_CONNECTION_TIMEOUT_SECS: &str = "BEARDOG_IDLE_CONNECTION_TIMEOUT_SECS";
+/// Read operation timeout (seconds).
+pub const ENV_READ_TIMEOUT_SECS: &str = "BEARDOG_READ_TIMEOUT_SECS";
+/// Write operation timeout (seconds).
+pub const ENV_WRITE_TIMEOUT_SECS: &str = "BEARDOG_WRITE_TIMEOUT_SECS";
+/// HTTP request timeout (seconds).
+pub const ENV_HTTP_REQUEST_TIMEOUT_SECS: &str = "BEARDOG_HTTP_REQUEST_TIMEOUT_SECS";
+/// HTTP response timeout (seconds).
+pub const ENV_HTTP_RESPONSE_TIMEOUT_SECS: &str = "BEARDOG_HTTP_RESPONSE_TIMEOUT_SECS";
+/// DNS resolution timeout (seconds).
+pub const ENV_DNS_RESOLUTION_TIMEOUT_SECS: &str = "BEARDOG_DNS_RESOLUTION_TIMEOUT_SECS";
+/// Retry timeout (milliseconds).
+pub const ENV_RETRY_TIMEOUT_MILLIS: &str = "BEARDOG_RETRY_TIMEOUT_MILLIS";
+/// Backoff timeout (milliseconds).
+pub const ENV_BACKOFF_TIMEOUT_MILLIS: &str = "BEARDOG_BACKOFF_TIMEOUT_MILLIS";
+/// Ping timeout (seconds).
+pub const ENV_PING_TIMEOUT_SECS: &str = "BEARDOG_PING_TIMEOUT_SECS";
+/// Heartbeat timeout (seconds).
+pub const ENV_HEARTBEAT_TIMEOUT_SECS: &str = "BEARDOG_HEARTBEAT_TIMEOUT_SECS";
 
 // ── Security ─────────────────────────────────────────────────────────
 
@@ -151,6 +193,20 @@ pub const ENV_AI_BATCH_TIMEOUT_MS: &str = "BEARDOG_AI_BATCH_TIMEOUT_MS";
 pub const ENV_MIN_TLS_VERSION: &str = "BEARDOG_MIN_TLS_VERSION";
 /// TLS mode for server startup.
 pub const ENV_TLS_MODE: &str = "BEARDOG_TLS_MODE";
+/// Enable strict security mode.
+pub const ENV_STRICT_MODE: &str = "BEARDOG_STRICT_MODE";
+/// Require mutual TLS for connections.
+pub const ENV_REQUIRE_MTLS: &str = "BEARDOG_REQUIRE_MTLS";
+/// Allow loopback connections without authentication.
+pub const ENV_ALLOW_LOCALHOST_BYPASS: &str = "BEARDOG_ALLOW_LOCALHOST_BYPASS";
+/// Enable security audit logging.
+pub const ENV_ENABLE_AUDIT_LOG: &str = "BEARDOG_ENABLE_AUDIT_LOG";
+/// Enable request rate limiting.
+pub const ENV_ENABLE_RATE_LIMITING: &str = "BEARDOG_ENABLE_RATE_LIMITING";
+/// Automatically block suspicious source IPs.
+pub const ENV_AUTO_BLOCK_SUSPICIOUS_IPS: &str = "BEARDOG_AUTO_BLOCK_SUSPICIOUS_IPS";
+/// Require authentication for all endpoints.
+pub const ENV_REQUIRE_AUTHENTICATION: &str = "BEARDOG_REQUIRE_AUTHENTICATION";
 
 // ── Crypto ───────────────────────────────────────────────────────────
 
@@ -162,6 +218,8 @@ pub const ENV_EC_CURVE: &str = "BEARDOG_EC_CURVE";
 pub const ENV_AES_KEY_SIZE: &str = "BEARDOG_AES_KEY_SIZE";
 /// Hash algorithm name.
 pub const ENV_HASH_ALGORITHM: &str = "BEARDOG_HASH_ALGORITHM";
+/// PBKDF2 iteration count.
+pub const ENV_PBKDF2_ITERATIONS: &str = "BEARDOG_PBKDF2_ITERATIONS";
 
 // ── HSM ──────────────────────────────────────────────────────────────
 
@@ -192,3 +250,41 @@ pub const ENV_ACME_DOMAINS: &str = "BEARDOG_ACME_DOMAINS";
 pub const ENV_ACME_HTTP_PORT: &str = "BEARDOG_ACME_HTTP_PORT";
 /// ACME renewal interval (hours).
 pub const ENV_ACME_RENEWAL_HOURS: &str = "BEARDOG_ACME_RENEWAL_HOURS";
+
+// ── Limits ───────────────────────────────────────────────────────────
+
+/// I/O buffer size in bytes.
+pub const ENV_BUFFER_SIZE: &str = "BEARDOG_BUFFER_SIZE";
+/// Maximum concurrent connections.
+pub const ENV_MAX_CONNECTIONS: &str = "BEARDOG_MAX_CONNECTIONS";
+/// Maximum retry attempts.
+pub const ENV_MAX_RETRIES: &str = "BEARDOG_MAX_RETRIES";
+/// Backoff duration between retries (milliseconds).
+pub const ENV_BACKOFF_MS: &str = "BEARDOG_BACKOFF_MS";
+/// Maximum message size in bytes.
+pub const ENV_MAX_MESSAGE_SIZE: &str = "BEARDOG_MAX_MESSAGE_SIZE";
+/// Queue size for async operations.
+pub const ENV_QUEUE_SIZE: &str = "BEARDOG_QUEUE_SIZE";
+/// Thread pool size (0 = automatic based on CPU count).
+pub const ENV_THREAD_POOL_SIZE: &str = "BEARDOG_THREAD_POOL_SIZE";
+/// Default operation timeout (seconds).
+pub const ENV_OPERATION_TIMEOUT_SECS: &str = "BEARDOG_OPERATION_TIMEOUT_SECS";
+
+// ── Capacity ─────────────────────────────────────────────────────────
+
+/// Default channel buffer size.
+pub const ENV_CHANNEL_BUFFER: &str = "BEARDOG_CHANNEL_BUFFER";
+/// Discovery queue capacity.
+pub const ENV_DISCOVERY_QUEUE_SIZE: &str = "BEARDOG_DISCOVERY_QUEUE_SIZE";
+/// Event bus capacity.
+pub const ENV_EVENT_BUS_CAPACITY: &str = "BEARDOG_EVENT_BUS_CAPACITY";
+/// Minimum idle connections in pool.
+pub const ENV_MIN_IDLE_CONNECTIONS: &str = "BEARDOG_MIN_IDLE_CONNECTIONS";
+/// Connection pool acquire timeout (seconds).
+pub const ENV_CONNECTION_POOL_TIMEOUT_SECS: &str = "BEARDOG_CONNECTION_POOL_TIMEOUT_SECS";
+/// Maximum message size in bytes (capacity domain).
+pub const ENV_MAX_MESSAGE_SIZE_BYTES: &str = "BEARDOG_MAX_MESSAGE_SIZE_BYTES";
+/// Buffer pool capacity.
+pub const ENV_BUFFER_POOL_SIZE: &str = "BEARDOG_BUFFER_POOL_SIZE";
+/// Maximum cache entries.
+pub const ENV_CACHE_MAX_ENTRIES: &str = "BEARDOG_CACHE_MAX_ENTRIES";

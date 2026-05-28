@@ -31,9 +31,6 @@ beardog-errors = { workspace = true }
 # Optional: mDNS discovery
 mdns-sd = { workspace = true, optional = true }
 
-[dev-dependencies]
-tokio-test = { workspace = true }
-
 [features]
 default = ["mdns"]
 mdns = ["mdns-sd"]

@@ -6,6 +6,7 @@
 //! connections, HTTP requests, DNS resolution, retries, and heartbeats.
 
 use super::core::{read_env_timeout_millis, read_env_timeout_secs, FromEnvironment};
+use crate::env_keys;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -140,59 +141,59 @@ impl FromEnvironment for NetworkTimeouts {
         let defaults = Self::default();
         Self {
             connection_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_CONNECTION_TIMEOUT_SECS",
+                env_keys::ENV_CONNECTION_TIMEOUT_SECS,
                 defaults.connection_timeout_secs,
             ),
             handshake_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_HANDSHAKE_TIMEOUT_SECS",
+                env_keys::ENV_HANDSHAKE_TIMEOUT_SECS,
                 defaults.handshake_timeout_secs,
             ),
             tls_handshake_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_TLS_HANDSHAKE_TIMEOUT_SECS",
+                env_keys::ENV_TLS_HANDSHAKE_TIMEOUT_SECS,
                 defaults.tls_handshake_timeout_secs,
             ),
             keep_alive_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_KEEP_ALIVE_TIMEOUT_SECS",
+                env_keys::ENV_KEEP_ALIVE_TIMEOUT_SECS,
                 defaults.keep_alive_timeout_secs,
             ),
             idle_connection_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_IDLE_CONNECTION_TIMEOUT_SECS",
+                env_keys::ENV_IDLE_CONNECTION_TIMEOUT_SECS,
                 defaults.idle_connection_timeout_secs,
             ),
             read_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_READ_TIMEOUT_SECS",
+                env_keys::ENV_READ_TIMEOUT_SECS,
                 defaults.read_timeout_secs,
             ),
             write_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_WRITE_TIMEOUT_SECS",
+                env_keys::ENV_WRITE_TIMEOUT_SECS,
                 defaults.write_timeout_secs,
             ),
             http_request_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_HTTP_REQUEST_TIMEOUT_SECS",
+                env_keys::ENV_HTTP_REQUEST_TIMEOUT_SECS,
                 defaults.http_request_timeout_secs,
             ),
             http_response_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_HTTP_RESPONSE_TIMEOUT_SECS",
+                env_keys::ENV_HTTP_RESPONSE_TIMEOUT_SECS,
                 defaults.http_response_timeout_secs,
             ),
             dns_resolution_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_DNS_RESOLUTION_TIMEOUT_SECS",
+                env_keys::ENV_DNS_RESOLUTION_TIMEOUT_SECS,
                 defaults.dns_resolution_timeout_secs,
             ),
             retry_timeout_millis: read_env_timeout_millis(
-                "BEARDOG_RETRY_TIMEOUT_MILLIS",
+                env_keys::ENV_RETRY_TIMEOUT_MILLIS,
                 defaults.retry_timeout_millis,
             ),
             backoff_timeout_millis: read_env_timeout_millis(
-                "BEARDOG_BACKOFF_TIMEOUT_MILLIS",
+                env_keys::ENV_BACKOFF_TIMEOUT_MILLIS,
                 defaults.backoff_timeout_millis,
             ),
             ping_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_PING_TIMEOUT_SECS",
+                env_keys::ENV_PING_TIMEOUT_SECS,
                 defaults.ping_timeout_secs,
             ),
             heartbeat_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_HEARTBEAT_TIMEOUT_SECS",
+                env_keys::ENV_HEARTBEAT_TIMEOUT_SECS,
                 defaults.heartbeat_timeout_secs,
             ),
         }
@@ -201,20 +202,20 @@ impl FromEnvironment for NetworkTimeouts {
     fn try_from_env() -> Option<Self> {
         // Check if any network timeout env vars are set
         let env_vars = [
-            "BEARDOG_CONNECTION_TIMEOUT_SECS",
-            "BEARDOG_HANDSHAKE_TIMEOUT_SECS",
-            "BEARDOG_TLS_HANDSHAKE_TIMEOUT_SECS",
-            "BEARDOG_KEEP_ALIVE_TIMEOUT_SECS",
-            "BEARDOG_IDLE_CONNECTION_TIMEOUT_SECS",
-            "BEARDOG_READ_TIMEOUT_SECS",
-            "BEARDOG_WRITE_TIMEOUT_SECS",
-            "BEARDOG_HTTP_REQUEST_TIMEOUT_SECS",
-            "BEARDOG_HTTP_RESPONSE_TIMEOUT_SECS",
-            "BEARDOG_DNS_RESOLUTION_TIMEOUT_SECS",
-            "BEARDOG_RETRY_TIMEOUT_MILLIS",
-            "BEARDOG_BACKOFF_TIMEOUT_MILLIS",
-            "BEARDOG_PING_TIMEOUT_SECS",
-            "BEARDOG_HEARTBEAT_TIMEOUT_SECS",
+            env_keys::ENV_CONNECTION_TIMEOUT_SECS,
+            env_keys::ENV_HANDSHAKE_TIMEOUT_SECS,
+            env_keys::ENV_TLS_HANDSHAKE_TIMEOUT_SECS,
+            env_keys::ENV_KEEP_ALIVE_TIMEOUT_SECS,
+            env_keys::ENV_IDLE_CONNECTION_TIMEOUT_SECS,
+            env_keys::ENV_READ_TIMEOUT_SECS,
+            env_keys::ENV_WRITE_TIMEOUT_SECS,
+            env_keys::ENV_HTTP_REQUEST_TIMEOUT_SECS,
+            env_keys::ENV_HTTP_RESPONSE_TIMEOUT_SECS,
+            env_keys::ENV_DNS_RESOLUTION_TIMEOUT_SECS,
+            env_keys::ENV_RETRY_TIMEOUT_MILLIS,
+            env_keys::ENV_BACKOFF_TIMEOUT_MILLIS,
+            env_keys::ENV_PING_TIMEOUT_SECS,
+            env_keys::ENV_HEARTBEAT_TIMEOUT_SECS,
         ];
 
         if env_vars.iter().any(|var| std::env::var(var).is_ok()) {

@@ -31,12 +31,8 @@ mdns-sd = { workspace = true, optional = true }
 # URL parsing
 url = { workspace = true }
 
-# Network utilities
-local-ip-address = { workspace = true }
-
 [dev-dependencies]
 anyhow = { workspace = true }
-tokio-test = { workspace = true }
 tempfile = { workspace = true }
 serde_json = { workspace = true }
 tracing-subscriber = { workspace = true }

@@ -5,6 +5,7 @@
 //! Provides timeout settings for health check operations.
 
 use super::core::{read_env_timeout_secs, FromEnvironment};
+use crate::env_keys;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -33,14 +34,14 @@ impl FromEnvironment for HealthTimeouts {
     fn from_env() -> Self {
         Self {
             check_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_HEALTH_CHECK_TIMEOUT_SECS",
+                env_keys::ENV_HEALTH_CHECK_TIMEOUT_SECS,
                 Self::default().check_timeout_secs,
             ),
         }
     }
 
     fn try_from_env() -> Option<Self> {
-        std::env::var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS")
+        std::env::var(env_keys::ENV_HEALTH_CHECK_TIMEOUT_SECS)
             .ok()
             .map(|_| Self::from_env())
     }

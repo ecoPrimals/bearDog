@@ -132,7 +132,7 @@ hkdf = "0.12"
 hostname = "0.4"
 pbkdf2 = { version = "0.12", features = ["simple"] }
 ciborium = "0.2"
-tokio-test = "0.4"
+
 subtle = "2.5"
 chacha20 = "0.9"
 jni = "0.21"
@@ -168,9 +168,7 @@ scrypt = "0.11"           # Memory-hard KDF - stable version (evolved from RC)
 # xts-mode = "0.5.1"        # AES-XTS mode (disk encryption)
 
 # Networking
-tokio-tungstenite = "0.24"  # WebSocket for BTSP tunnel transport only
 mdns-sd = "0.11"            # mDNS/DNS-SD service discovery (feature-gated)
-tokio-serde = { version = "0.9", features = ["json"] }  # Async serde framing
 
 # TLS termination (H2-10 sovereignty) — `ring` backend for universal platform support
 rustls = { version = "0.23", default-features = false, features = ["ring", "logging", "std", "tls12"] }
@@ -210,11 +208,9 @@ dotenvy = "0.15"
 dirs = "5.0"
 tokio-stream = "0.1"
 getrandom = "0.3"
-local-ip-address = "0.6"
 aes = "0.8"
 ctr = "0.9"
 ahash = "0.8"
-urlencoding = "2.1"
 ecdsa = "0.16"
 x509-parser = "0.16"
 arrayref = "0.3"
@@ -239,12 +235,7 @@ color-eyre = "0.6"
 # Testing
 tempfile = "3.8"
 proptest = "1.4"
-wiremock = "0.6"
-mockito = "1.2"
 criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
-
-# Validation
-validator = { version = "0.20", features = ["derive"] }
 
 # CLI
 clap = { version = "4.4", features = ["derive", "env"] }

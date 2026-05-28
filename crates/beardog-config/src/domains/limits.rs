@@ -28,6 +28,7 @@
 //! let config = LimitsConfig::from_env();
 //! ```
 
+use crate::env_keys;
 use crate::error::ConfigError;
 use serde::{Deserialize, Serialize};
 
@@ -89,15 +90,18 @@ pub struct LimitsConfig {
 impl Default for LimitsConfig {
     fn default() -> Self {
         Self {
-            buffer_size: env_or_default("BEARDOG_BUFFER_SIZE", DEFAULT_BUFFER_SIZE),
-            max_connections: env_or_default("BEARDOG_MAX_CONNECTIONS", DEFAULT_MAX_CONNECTIONS),
-            max_retries: env_or_default("BEARDOG_MAX_RETRIES", DEFAULT_MAX_RETRIES),
-            backoff_ms: env_or_default("BEARDOG_BACKOFF_MS", DEFAULT_BACKOFF_MS),
-            max_message_size: env_or_default("BEARDOG_MAX_MESSAGE_SIZE", DEFAULT_MAX_MESSAGE_SIZE),
-            queue_size: env_or_default("BEARDOG_QUEUE_SIZE", DEFAULT_QUEUE_SIZE),
-            thread_pool_size: env_or_default("BEARDOG_THREAD_POOL_SIZE", 0), // 0 = auto-detect
+            buffer_size: env_or_default(env_keys::ENV_BUFFER_SIZE, DEFAULT_BUFFER_SIZE),
+            max_connections: env_or_default(env_keys::ENV_MAX_CONNECTIONS, DEFAULT_MAX_CONNECTIONS),
+            max_retries: env_or_default(env_keys::ENV_MAX_RETRIES, DEFAULT_MAX_RETRIES),
+            backoff_ms: env_or_default(env_keys::ENV_BACKOFF_MS, DEFAULT_BACKOFF_MS),
+            max_message_size: env_or_default(
+                env_keys::ENV_MAX_MESSAGE_SIZE,
+                DEFAULT_MAX_MESSAGE_SIZE,
+            ),
+            queue_size: env_or_default(env_keys::ENV_QUEUE_SIZE, DEFAULT_QUEUE_SIZE),
+            thread_pool_size: env_or_default(env_keys::ENV_THREAD_POOL_SIZE, 0), // 0 = auto-detect
             operation_timeout_secs: env_or_default(
-                "BEARDOG_OPERATION_TIMEOUT_SECS",
+                env_keys::ENV_OPERATION_TIMEOUT_SECS,
                 DEFAULT_OPERATION_TIMEOUT_SECS,
             ),
         }
@@ -109,15 +113,18 @@ impl LimitsConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            buffer_size: env_or_default("BEARDOG_BUFFER_SIZE", DEFAULT_BUFFER_SIZE),
-            max_connections: env_or_default("BEARDOG_MAX_CONNECTIONS", DEFAULT_MAX_CONNECTIONS),
-            max_retries: env_or_default("BEARDOG_MAX_RETRIES", DEFAULT_MAX_RETRIES),
-            backoff_ms: env_or_default("BEARDOG_BACKOFF_MS", DEFAULT_BACKOFF_MS),
-            max_message_size: env_or_default("BEARDOG_MAX_MESSAGE_SIZE", DEFAULT_MAX_MESSAGE_SIZE),
-            queue_size: env_or_default("BEARDOG_QUEUE_SIZE", DEFAULT_QUEUE_SIZE),
-            thread_pool_size: env_or_default("BEARDOG_THREAD_POOL_SIZE", 0),
+            buffer_size: env_or_default(env_keys::ENV_BUFFER_SIZE, DEFAULT_BUFFER_SIZE),
+            max_connections: env_or_default(env_keys::ENV_MAX_CONNECTIONS, DEFAULT_MAX_CONNECTIONS),
+            max_retries: env_or_default(env_keys::ENV_MAX_RETRIES, DEFAULT_MAX_RETRIES),
+            backoff_ms: env_or_default(env_keys::ENV_BACKOFF_MS, DEFAULT_BACKOFF_MS),
+            max_message_size: env_or_default(
+                env_keys::ENV_MAX_MESSAGE_SIZE,
+                DEFAULT_MAX_MESSAGE_SIZE,
+            ),
+            queue_size: env_or_default(env_keys::ENV_QUEUE_SIZE, DEFAULT_QUEUE_SIZE),
+            thread_pool_size: env_or_default(env_keys::ENV_THREAD_POOL_SIZE, 0),
             operation_timeout_secs: env_or_default(
-                "BEARDOG_OPERATION_TIMEOUT_SECS",
+                env_keys::ENV_OPERATION_TIMEOUT_SECS,
                 DEFAULT_OPERATION_TIMEOUT_SECS,
             ),
         }

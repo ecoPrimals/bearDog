@@ -29,6 +29,7 @@
 //! - `BEARDOG_BUFFER_POOL_SIZE` - Buffer pool capacity (default: 1024)
 //! - `BEARDOG_CACHE_MAX_ENTRIES` - Maximum cache entries (default: 10000)
 
+use crate::env_keys;
 use serde::{Deserialize, Serialize};
 
 /// Capacity configuration for buffers, pools, and limits
@@ -187,47 +188,47 @@ impl CapacityConfig {
     {
         let mut config = Self::default();
 
-        if let Some(val) = env_provider("BEARDOG_CHANNEL_BUFFER")
+        if let Some(val) = env_provider(env_keys::ENV_CHANNEL_BUFFER)
             && let Ok(parsed) = val.parse()
         {
             config.default_channel_buffer = parsed;
         }
-        if let Some(val) = env_provider("BEARDOG_DISCOVERY_QUEUE_SIZE")
+        if let Some(val) = env_provider(env_keys::ENV_DISCOVERY_QUEUE_SIZE)
             && let Ok(parsed) = val.parse()
         {
             config.discovery_queue_size = parsed;
         }
-        if let Some(val) = env_provider("BEARDOG_EVENT_BUS_CAPACITY")
+        if let Some(val) = env_provider(env_keys::ENV_EVENT_BUS_CAPACITY)
             && let Ok(parsed) = val.parse()
         {
             config.event_bus_capacity = parsed;
         }
-        if let Some(val) = env_provider("BEARDOG_MAX_CONNECTIONS")
+        if let Some(val) = env_provider(env_keys::ENV_MAX_CONNECTIONS)
             && let Ok(parsed) = val.parse()
         {
             config.max_connections = parsed;
         }
-        if let Some(val) = env_provider("BEARDOG_MIN_IDLE_CONNECTIONS")
+        if let Some(val) = env_provider(env_keys::ENV_MIN_IDLE_CONNECTIONS)
             && let Ok(parsed) = val.parse()
         {
             config.min_idle_connections = parsed;
         }
-        if let Some(val) = env_provider("BEARDOG_CONNECTION_POOL_TIMEOUT_SECS")
+        if let Some(val) = env_provider(env_keys::ENV_CONNECTION_POOL_TIMEOUT_SECS)
             && let Ok(parsed) = val.parse()
         {
             config.connection_pool_timeout_secs = parsed;
         }
-        if let Some(val) = env_provider("BEARDOG_MAX_MESSAGE_SIZE_BYTES")
+        if let Some(val) = env_provider(env_keys::ENV_MAX_MESSAGE_SIZE_BYTES)
             && let Ok(parsed) = val.parse()
         {
             config.max_message_size_bytes = parsed;
         }
-        if let Some(val) = env_provider("BEARDOG_BUFFER_POOL_SIZE")
+        if let Some(val) = env_provider(env_keys::ENV_BUFFER_POOL_SIZE)
             && let Ok(parsed) = val.parse()
         {
             config.buffer_pool_size = parsed;
         }
-        if let Some(val) = env_provider("BEARDOG_CACHE_MAX_ENTRIES")
+        if let Some(val) = env_provider(env_keys::ENV_CACHE_MAX_ENTRIES)
             && let Ok(parsed) = val.parse()
         {
             config.cache_max_entries = parsed;
@@ -286,9 +287,9 @@ mod tests {
         use std::collections::HashMap;
 
         let mut test_env = HashMap::new();
-        test_env.insert("BEARDOG_CHANNEL_BUFFER", "2000");
-        test_env.insert("BEARDOG_MAX_CONNECTIONS", "200");
-        test_env.insert("BEARDOG_CACHE_MAX_ENTRIES", "50000");
+        test_env.insert(env_keys::ENV_CHANNEL_BUFFER, "2000");
+        test_env.insert(env_keys::ENV_MAX_CONNECTIONS, "200");
+        test_env.insert(env_keys::ENV_CACHE_MAX_ENTRIES, "50000");
 
         let config = CapacityConfig::from_env_provider(|key| {
             test_env.get(key).map(std::string::ToString::to_string)
@@ -309,7 +310,7 @@ mod tests {
         use std::collections::HashMap;
 
         let mut test_env = HashMap::new();
-        test_env.insert("BEARDOG_MAX_CONNECTIONS", "not_a_number");
+        test_env.insert(env_keys::ENV_MAX_CONNECTIONS, "not_a_number");
 
         let config = CapacityConfig::from_env_provider(|key| {
             test_env.get(key).map(std::string::ToString::to_string)

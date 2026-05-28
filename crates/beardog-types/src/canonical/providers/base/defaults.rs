@@ -11,10 +11,10 @@ use super::configuration::{
     AbacConfiguration, AuthenticationConfiguration, AuthenticationMethod,
     AuthorizationConfiguration, AuthorizationMethod, EncryptionAlgorithm,
     EncryptionConfiguration, EnvironmentSettings, KeyDerivationAlgorithm,
-    KeyDerivationConfiguration, KeyManagementConfiguration, KeyProvider,
-    LoggingConfiguration, PolicyDecision, ProviderConfiguration, RbacConfiguration,
-    ResourceLimits, SecurityConfiguration,
+    KeyDerivationConfiguration, KeyManagementConfiguration, KeyProvider, PolicyDecision,
+    ProviderConfiguration, RbacConfiguration, ResourceLimits, SecurityConfiguration,
 };
+use crate::canonical::config::domains::system::LoggingConfig;
 use super::performance::{
     BackoffStrategy, CachingConfiguration, ConnectionPoolConfiguration, EvictionPolicy,
     PerformanceConfiguration, RetryConfiguration, TimeoutConfiguration,
@@ -41,7 +41,7 @@ impl Default for EnvironmentSettings {
             environment: "development".to_string(),
             variables: HashMap::new(),
             resource_limits: ResourceLimits::default(),
-            logging: LoggingConfiguration::default(),
+            logging: LoggingConfig::default(),
         }
     }
 }
@@ -58,7 +58,7 @@ impl Default for ResourceLimits {
     }
 }
 
-impl Default for LoggingConfiguration {
+impl Default for LoggingConfig {
     fn default() -> Self {
         Self {
             level: "info".to_string(),

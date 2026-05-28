@@ -5,6 +5,8 @@
 use beardog_errors::process_env;
 use serde::{Deserialize, Serialize};
 
+use crate::env_keys;
+
 use super::env::parse_u16_env;
 
 /// Port discovery strategy
@@ -68,13 +70,14 @@ impl PortDiscoveryConfig {
     #[must_use]
     pub fn from_env() -> Self {
         let mut base = Self::default();
-        base.min_port = parse_u16_env("BEARDOG_PORT_DISCOVERY_MIN", FALLBACK_PORT_SCAN_MIN);
-        base.max_port = parse_u16_env("BEARDOG_PORT_DISCOVERY_MAX", FALLBACK_PORT_SCAN_MAX);
-        base.discovery_timeout_ms = process_env::var("BEARDOG_PORT_DISCOVERY_TIMEOUT_MS")
+        base.min_port = parse_u16_env(env_keys::ENV_PORT_DISCOVERY_MIN, FALLBACK_PORT_SCAN_MIN);
+        base.max_port = parse_u16_env(env_keys::ENV_PORT_DISCOVERY_MAX, FALLBACK_PORT_SCAN_MAX);
+        base.discovery_timeout_ms = process_env::var(env_keys::ENV_PORT_DISCOVERY_TIMEOUT_MS)
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(FALLBACK_PORT_DISCOVERY_TIMEOUT_MS);
-        base.excluded_ports = if let Ok(s) = process_env::var("BEARDOG_PORT_DISCOVERY_EXCLUDE") {
+        base.excluded_ports = if let Ok(s) = process_env::var(env_keys::ENV_PORT_DISCOVERY_EXCLUDE)
+        {
             s.split(',').filter_map(|p| p.trim().parse().ok()).collect()
         } else {
             default_excluded_ports()

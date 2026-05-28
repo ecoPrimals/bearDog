@@ -30,6 +30,7 @@
 //! println!("API Host: {}", config.api_host);
 //! ```
 
+use crate::env_keys;
 use serde::{Deserialize, Serialize};
 
 // ============================================================================
@@ -249,26 +250,26 @@ impl NetworkHostsConfig {
     /// ```
     #[must_use]
     pub fn from_env() -> Self {
-        let infra = std::env::var("BEARDOG_INFRASTRUCTURE_HOST_FALLBACK")
+        let infra = std::env::var(env_keys::ENV_INFRASTRUCTURE_HOST_FALLBACK)
             .unwrap_or_else(|_| FALLBACK_DEV_INFRASTRUCTURE_HOST.to_string());
 
         Self {
-            api_host: std::env::var("BEARDOG_API_HOST")
+            api_host: std::env::var(env_keys::ENV_API_HOST)
                 .unwrap_or_else(|_| DEFAULT_BIND_HOST.to_string()),
-            client_host: std::env::var("BEARDOG_CLIENT_HOST")
+            client_host: std::env::var(env_keys::ENV_CLIENT_HOST)
                 .unwrap_or_else(|_| DEFAULT_HOST.to_string()),
-            discovery_host: std::env::var("BEARDOG_DISCOVERY_HOST")
+            discovery_host: std::env::var(env_keys::ENV_DISCOVERY_HOST)
                 .unwrap_or_else(|_| DEFAULT_HOST.to_string()),
-            database_host: std::env::var("BEARDOG_DATABASE_HOST")
+            database_host: std::env::var(env_keys::ENV_DATABASE_HOST)
                 .or_else(|_| std::env::var("DATABASE_URL").map(|url| extract_host_from_url(&url)))
                 .unwrap_or_else(|_| infra.clone()),
-            redis_host: std::env::var("BEARDOG_REDIS_HOST")
+            redis_host: std::env::var(env_keys::ENV_REDIS_HOST)
                 .or_else(|_| std::env::var("REDIS_URL").map(|url| extract_host_from_url(&url)))
                 .unwrap_or_else(|_| infra.clone()),
-            metrics_host: std::env::var("BEARDOG_METRICS_HOST")
+            metrics_host: std::env::var(env_keys::ENV_METRICS_HOST)
                 .or_else(|_| std::env::var("GRAFANA_URL").map(|url| extract_host_from_url(&url)))
                 .unwrap_or_else(|_| infra.clone()),
-            external_host: std::env::var("BEARDOG_EXTERNAL_HOST").unwrap_or(infra),
+            external_host: std::env::var(env_keys::ENV_EXTERNAL_HOST).unwrap_or(infra),
         }
     }
 

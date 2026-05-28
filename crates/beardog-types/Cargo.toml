@@ -50,7 +50,6 @@ toml = { workspace = true, optional = true }
 
 [dev-dependencies]
 tokio = { workspace = true }
-tokio-test = { workspace = true }
 criterion = { workspace = true }
 serial_test = { workspace = true }
 tempfile = { workspace = true }

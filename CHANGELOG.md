@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 28, 2026 -- Wave 117: Deep Debt Cleanup — Dependencies, Env Migration, Deprecated Types
+
+- **Deleted dead `beardog-tunnel/src/main.rs`** — Stale 198-line CLI duplicate (not wired as binary target). Removed tunnel-only `clap` and `tracing-subscriber` deps.
+- **Purged 10 unused workspace dependencies** — `tokio-tungstenite`, `tokio-serde`, `mockito`, `wiremock`, `tokio-test` (12 crates), `validator`, `urlencoding`, `local-ip-address`. Cleaned root `[workspace.dependencies]` and all per-crate `Cargo.toml` entries.
+- **Deleted FIDO2 `operations.rs` dead stubs** — Three `requires_capability` stub functions and duplicate `Ctap2Command` enum. Re-exported `Ctap2Command` from canonical `ctap2::types` module.
+- **Env var centralization: 100+ sites migrated** — All 17 domain files in `beardog-config/src/domains/` now use `env_keys::ENV_*` constants instead of inline `"BEARDOG_*"` strings. Added 42 new constants to `env_keys.rs` (paths, network timeouts, security flags, limits, capacity).
+- **Deprecated type cleanup** — `LoggingConfiguration` → `LoggingConfig` in `providers/base/` (configuration.rs + defaults.rs). `RegistryConfig` → `ProviderRegistryConfig` in `ecosystem_integration.rs` and `consolidated_registry.rs`. Removed `BiomeOSPaths` deprecated re-export from `beardog-installer/lib.rs`.
+- **Quality gates** — `cargo fmt`, `cargo clippy -D warnings`, `cargo test --workspace` all pass (14,987 tests, 0 failures).
+
 ### May 28, 2026 -- Wave 116: Env Var Centralization Foundation (Wave 58 Response)
 
 - **`beardog-config::env_keys` module created** — Centralized `BEARDOG_*` env var key constants organized by domain (paths, network, ports, monitoring, health, timeouts, security, crypto, HSM, ACME). 65 constants covering all high-traffic env var names.

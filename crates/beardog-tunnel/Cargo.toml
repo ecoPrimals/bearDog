@@ -33,12 +33,7 @@ tokio = { workspace = true }
 serde = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
-clap = { workspace = true }  # UniBin architecture (ecosystem standard)
 hostname = { workspace = true }
-tracing-subscriber = { workspace = true }
-# tarpc removed (Jan 29, 2026) — JSON-RPC provides comprehensive functionality (8+ handler modules)
-tokio-serde = { workspace = true }
-tokio-tungstenite = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
 tracing = { workspace = true }
@@ -94,7 +89,6 @@ rustls-pemfile = { workspace = true, optional = true }
 
 
 [dev-dependencies]
-tokio-test = { workspace = true }
 futures = { workspace = true }
 rand = { workspace = true }
 serial_test = { workspace = true }

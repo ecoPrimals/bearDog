@@ -34,6 +34,7 @@
 //! - `BEARDOG_PROFILING_PORT` - Profiling / diagnostic HTTP (default: 6060; see `DEFAULT_PROFILING_PORT`)
 
 use crate::domains::network_addresses::DEFAULT_EXTERNAL_HOST;
+use crate::env_keys;
 use serde::{Deserialize, Serialize};
 
 /// Network ports configuration
@@ -110,12 +111,12 @@ pub const DEFAULT_API_PORT_STR: &str = "8080";
 /// Tier order: `BEARDOG_UPA_URL` → `BEARDOG_EXTERNAL_HOST`+`BEARDOG_API_PORT` → compile-time fallback.
 #[must_use]
 pub fn resolve_upa_fallback_base_url() -> String {
-    if let Ok(url) = std::env::var("BEARDOG_UPA_URL") {
+    if let Ok(url) = std::env::var(env_keys::ENV_UPA_URL) {
         return url;
     }
-    let host = std::env::var("BEARDOG_EXTERNAL_HOST")
+    let host = std::env::var(env_keys::ENV_EXTERNAL_HOST)
         .unwrap_or_else(|_| DEFAULT_EXTERNAL_HOST.to_string());
-    let port = std::env::var("BEARDOG_API_PORT")
+    let port = std::env::var(env_keys::ENV_API_PORT)
         .ok()
         .and_then(|s| s.parse::<u16>().ok())
         .unwrap_or(DEFAULT_API_PORT);
@@ -273,31 +274,31 @@ impl NetworkPortsConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            api_port: std::env::var("BEARDOG_API_PORT")
+            api_port: std::env::var(env_keys::ENV_API_PORT)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(DEFAULT_API_PORT),
-            discovery_port: std::env::var("BEARDOG_DISCOVERY_PORT")
+            discovery_port: std::env::var(env_keys::ENV_DISCOVERY_PORT)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(DEFAULT_DISCOVERY_PORT),
-            admin_port: std::env::var("BEARDOG_ADMIN_PORT")
+            admin_port: std::env::var(env_keys::ENV_ADMIN_PORT)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(DEFAULT_ADMIN_PORT),
-            https_port: std::env::var("BEARDOG_HTTPS_PORT")
+            https_port: std::env::var(env_keys::ENV_HTTPS_PORT)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(DEFAULT_HTTPS_PORT),
-            metrics_port: std::env::var("BEARDOG_METRICS_PORT")
+            metrics_port: std::env::var(env_keys::ENV_METRICS_PORT)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(DEFAULT_METRICS_PORT),
-            health_port: std::env::var("BEARDOG_HEALTH_PORT")
+            health_port: std::env::var(env_keys::ENV_HEALTH_PORT)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(DEFAULT_HEALTH_PORT),
-            tcp_ipc_port: std::env::var("BEARDOG_TCP_IPC_PORT")
+            tcp_ipc_port: std::env::var(env_keys::ENV_TCP_IPC_PORT)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(DEFAULT_TCP_IPC_PORT),

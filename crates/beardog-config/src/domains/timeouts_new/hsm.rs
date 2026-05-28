@@ -5,6 +5,7 @@
 //! Provides timeout settings for HSM operations.
 
 use super::core::{read_env_timeout_millis, read_env_timeout_secs, FromEnvironment};
+use crate::env_keys;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -40,19 +41,19 @@ impl FromEnvironment for HsmTimeouts {
     fn from_env() -> Self {
         Self {
             operation_timeout_secs: read_env_timeout_secs(
-                "BEARDOG_HSM_OPERATION_TIMEOUT_SECS",
+                env_keys::ENV_HSM_OPERATION_TIMEOUT_SECS,
                 Self::default().operation_timeout_secs,
             ),
             probe_timeout_millis: read_env_timeout_millis(
-                "BEARDOG_HSM_PROBE_TIMEOUT_MILLIS",
+                env_keys::ENV_HSM_PROBE_TIMEOUT_MILLIS,
                 Self::default().probe_timeout_millis,
             ),
         }
     }
 
     fn try_from_env() -> Option<Self> {
-        if std::env::var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS").is_ok()
-            || std::env::var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS").is_ok()
+        if std::env::var(env_keys::ENV_HSM_OPERATION_TIMEOUT_SECS).is_ok()
+            || std::env::var(env_keys::ENV_HSM_PROBE_TIMEOUT_MILLIS).is_ok()
         {
             Some(Self::from_env())
         } else {
