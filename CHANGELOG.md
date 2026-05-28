@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 28, 2026 -- Wave 116: Env Var Centralization Foundation (Wave 58 Response)
+
+- **`beardog-config::env_keys` module created** — Centralized `BEARDOG_*` env var key constants organized by domain (paths, network, ports, monitoring, health, timeouts, security, crypto, HSM, ACME). 65 constants covering all high-traffic env var names.
+- **`health.rs` fully migrated** — All 12 inline `env::var("BEARDOG_*")` calls in `UnifiedHealthConfig` and sub-configs now use `env_keys::ENV_*` constants.
+- **`multi_transport_server.rs` migrated** — TCP IPC port env read uses `env_keys::ENV_TCP_IPC_PORT`.
+- **NC-3.5 acknowledged as resolved** — `content.*` scope already in session tokens since Wave 108. No further bearDog code changes needed; remaining work is downstream integration.
+- **Migration pattern established** — Callers use `std::env::var(env_keys::ENV_FOO)` instead of `std::env::var("BEARDOG_FOO")`. Remaining ~400+ sites can be migrated incrementally using the same pattern.
+
 ### May 27, 2026 -- Wave 115b: Root Doc Sync & Debris Purge
 
 - **Root doc dates aligned** — README, CONTEXT, ROADMAP, START_HERE, ARCHITECTURE (both footer dates), SECURITY, docs/README, docs/PRIMAL_CONTRACTS all updated to May 27, 2026.

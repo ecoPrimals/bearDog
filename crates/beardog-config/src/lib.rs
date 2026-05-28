@@ -35,6 +35,8 @@
 pub mod defaults;
 pub mod discovery;
 pub mod domains;
+/// Centralized environment variable key constants (`BEARDOG_*`).
+pub mod env_keys;
 pub mod error;
 pub mod global;
 pub mod hierarchy;

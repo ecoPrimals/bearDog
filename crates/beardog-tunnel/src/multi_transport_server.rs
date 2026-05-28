@@ -143,7 +143,7 @@ impl MultiTransportServer {
 
         let effective_tcp_addr = match tcp_addr {
             Some(addr) => Some(addr.to_string()),
-            None => std::env::var("BEARDOG_TCP_IPC_PORT").ok().map(|port| {
+            None => std::env::var(beardog_config::env_keys::ENV_TCP_IPC_PORT).ok().map(|port| {
                 use beardog_types::constants::domains::network::addresses::DEFAULT_LOCALHOST_IPV4_STR;
                 format!("{DEFAULT_LOCALHOST_IPV4_STR}:{port}")
             }),
