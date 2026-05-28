@@ -1,7 +1,7 @@
 # 🔌 BearDog Primal Contracts - JSON-RPC API Specification
 
-**Version**: 3.0.0  
-**Date**: May 15, 2026  
+**Version**: 4.0.0  
+**Date**: May 28, 2026  
 **Status**: Production Stable  
 **Protocol**: JSON-RPC 2.0 over Unix Domain Sockets
 
@@ -28,7 +28,7 @@ BearDog exposes its cryptographic and genetic capabilities through a JSON-RPC 2.
 **TCP** (Android, Windows, cross-host)
 - Discovered via: `~/.config/biomeos/beardog.sock` (contains `tcp:IP:PORT`)
 - Protocol: JSON-RPC 2.0 over NDJSON or BTSP encrypted frames
-- Default port: 9190
+- Default port: 9100 (opt-in via `--port` or `BEARDOG_TCP_IPC_PORT`; 9190 is metrics)
 
 **Named Pipes** (Windows)
 - Protocol: Same JSON-RPC 2.0 over NDJSON
@@ -37,95 +37,90 @@ BearDog exposes its cryptographic and genetic capabilities through a JSON-RPC 2.
 
 ## 📚 **API CATEGORIES**
 
-BearDog provides **127 JSON-RPC methods** across 15 categories:
+BearDog provides **223 dispatchable JSON-RPC methods** (215 via `HandlerRegistry` + 8 pre-dispatch gate methods) organized into 18 handler categories, plus 13 route aliases for backward compatibility.
 
-### **1. Core Cryptography** (20 methods)
-- Signatures: Ed25519, ECDSA (P-256, P-384), RSA
+> **SSOT**: Call `rpc.methods` or `capabilities.list` for the live method inventory.
+
+### **1. Core Cryptography** (106 methods — `CryptoHandler`)
+- Signatures: Ed25519, ECDSA (P-256, P-384), RSA (PKCS#1, PSS)
 - Key Exchange: X25519, ECDH (P-256, P-384)
 - Encryption: ChaCha20-Poly1305, AES-GCM (128, 256)
-- Hashing: BLAKE3, SHA-256, SHA-384, SHA-512
-- Authentication: HMAC-SHA256
+- Hashing: BLAKE3, SHA-256/384/512, SHA-1, SHA3-256
+- HMAC: SHA-256/384/512, BLAKE3, HMAC verify
+- KDF: HKDF-SHA256, Argon2id, PBKDF2-SHA256, bcrypt, scrypt
+- Genetic: lineage derivation, entropy mixing, challenge-response, certificates
+- TLS 1.3: secret derivation, handshake signing, finished verify data
+- TLS 1.2: PRF derivation (`crypto.kdf.tls12_prf`)
+- ECDHE: P-256/P-384 ephemeral generate + compute shared
+- AEAD: TLS-style `crypto.aead.aes_{128,256}_gcm.{encrypt,decrypt}`
+- Tor v3: onion address, ntor handshake, cell encrypt/decrypt, KDF
+- Semantic aliases: `crypto.sign`, `crypto.verify`, `crypto.encrypt`, `crypto.decrypt`, `crypto.hash`, `crypto.hmac`, `crypto.generate_keypair`, `crypto.derive_secret`
+- Lineage queries: `lineage.list`, `lineage.verify`, `lineage.get`
+- Purpose keys: `crypto.derive_purpose_key`, `crypto.derive_public_key`, `crypto.seed_fingerprint`
+- Namespaced: `beardog.crypto.*` (13 methods), `crypto.ed25519.*` (2)
 
-### **2. Genetic Cryptography** (11 methods)
-- Lineage key derivation (family-based)
-- Beacon key derivation (TRUE Dark Forest)
-- Entropy mixing (3-tier: Human/Supervised/Machine)
-- Lineage verification + proof generation
-- Challenge-response authentication
-- Lineage certificate enrollment + verification
-- Device enrollment (parent→child derivation)
+### **2. Ionic Bond** (12 methods — `IonicBondHandler`)
+- Lifecycle: `crypto.ionic_bond.propose`, `.accept`, `.seal`, `.verify`, `.verify_proposal`, `.revoke`, `.list`
+- Contract signing: `crypto.sign_contract`, `crypto.verify_contract`
+- Cross-family contracts: `crypto.contract.propose`, `.countersign`, `.verify`
 
-### **3. TLS/HTTPS Support** (4 methods)
-- Handshake secret derivation (HKDF)
-- Application secret derivation (HKDF)
-- Certificate verification (X.509)
-- Handshake signing (Ed25519)
+### **3. BTSP Tunnel** (36 methods — `BtspHandler`)
+- Semantic surface: `btsp.contact.exchange`, `btsp.tunnel.{establish,encrypt,decrypt,status,close}`
+- Legacy aliases: `btsp.exchange_contacts`, `btsp.establish`, `btsp.encrypt`, `btsp.decrypt`, `btsp.status`, `btsp.close`
+- Server surface: `btsp.server.*`, `btsp.configure_tls`, `btsp.verify_peer`, `btsp.negotiate`, `btsp.tunnel_send_http`
 
-### **4. Tor v3 Onion** (8 methods)
-- Onion address derivation from Ed25519
-- Identity generation (keypair + .onion)
-- ntor handshake (client init, finish, server respond)
-- Cell encryption/decryption (ChaCha20)
-- HKDF-SHA256 key expansion
+### **4. Security** (19 methods — `SecurityHandler`)
+- Trust evaluation, consent management, birdsong verification
+- JWT: `security.generate_jwt_secret`, `security.jwt_secret`
+- Lineage: `security.verify_lineage`, `security.evaluate`, `security.evaluate_trust`
+- Namespaced: `beardog.generate_jwt_secret`, `beardog.jwt_secret`, `trust.*`
 
-### **5. Secret Storage** (4 methods)
-- `secrets.store` — Encrypt and store with family-scoped key
-- `secrets.retrieve` — Decrypt and return secret
-- `secrets.list` — List stored secret names (not values)
-- `secrets.delete` — Remove a stored secret
+### **5. Capabilities & Introspection** (10 + 3 methods — `CapabilitiesHandler` + `IntrospectionHandler`)
+- Discovery: `capabilities.list`, `capability.list`, `discover_capabilities`, `get_capabilities`
+- Identity: `identity.get`, `get_identity`, `primal.capabilities`, `primal.info`
+- Introspection: `rpc.methods`, `whoami`, `identity`
 
-### **6. Beacon (Dark Forest)** (7 methods)
-- `beacon.generate` — Generate beacon seed
-- `beacon.get_id` — Get public beacon ID
-- `beacon.encrypt` — Encrypt with beacon seed
-- `beacon.try_decrypt` — Decrypt with our seed
-- `beacon.try_decrypt_any` — Decrypt with any known beacon
-- `beacon.list_known` — List known beacon IDs
-- `beacon.add_known` — Add known beacon from meeting
+### **6. Health** (7 methods — `HealthHandler`)
+- `health.liveness`, `health.readiness`, `health.check`
+- Legacy: `ping`, `health`, `status`, `check`
 
-### **7. Relay Authorization** (1 method)
+### **7. Beacon (Dark Forest)** (7 methods — `BeaconHandler`)
+- `beacon.generate`, `beacon.get_id`, `beacon.encrypt`, `beacon.try_decrypt`
+- `beacon.try_decrypt_any`, `beacon.list_known`, `beacon.add_known`
+
+### **8. Secret Storage** (4 methods — `SecretsHandler`)
+- `secrets.store`, `secrets.retrieve`, `secrets.list`, `secrets.delete`
+
+### **9. Graph Security** (3 methods — `GraphSecurityHandler`)
+- `graph.validate_template`, `graph.audit_origin`, `graph.authorize_modification`
+
+### **10. FIDO2** (3 methods — `Fido2Handler`)
+- `beardog.fido2.discover`, `beardog.fido2.register`, `beardog.fido2.authenticate`
+
+### **11. Encryption** (2 methods — `EncryptionHandler`)
+- `encryption.encrypt`, `encryption.decrypt`
+
+### **12. Federation** (2 methods — `FederationHandler`)
+- `federation.verify_family_member`, `federation.derive_subfed_key`
+
+### **13. Relay** (1 method — `RelayHandler`)
 - `relay.authorize` — Lineage-gated relay authorization
 
-### **8. Federation** (2 methods)
-- `federation.verify_family_member` — Verify genetic relationship
-- `federation.derive_subfed_key` — Derive sub-federation key
-
-### **9. Password Hashing** (3 methods)
-- Argon2id (OWASP recommended, memory-hard)
-- PBKDF2-SHA256 (legacy compatibility)
-- Constant-time verification
-
-### **10. Security** (6 methods)
-- Trust evaluation, JWT verification, graph security
-
-### **11. Introspection** (6 methods)
-- `discover_capabilities`, `capabilities`, `get_capabilities`
-- `primal.info`, `rpc.methods`, `identity`/`whoami`
-
-### **BTSP (Tunnel)** (6 methods)
-- Contact exchange, tunnel establish/encrypt/decrypt/status/close
-
-### **HSM Management** (11 methods)
-- Key generation (ephemeral, persistent)
-- Key storage (StrongBox on Android)
-- Entropy management
-- Session management
-
-### **12. Ionic Bond** (8 methods — IonicBondHandler)
-- Lifecycle: propose, accept, seal, verify, revoke, list
-- Contract signing: `crypto.sign_contract`, `crypto.verify_contract`
-- Cross-tower/cross-family trust establishment via Ed25519
-
-### **13. Auth & Ionic Token Lifecycle** (5 methods — pre-dispatch, JH-0/JH-1)
-- `auth.check` — caller authentication status (includes validated claims when present)
+### **14. Auth & Ionic Token Lifecycle** (7 methods — pre-dispatch gate, JH-0/JH-1/JH-11)
+- `auth.check` — caller authentication status (includes validated claims)
 - `auth.mode` — enforcement mode (permissive/enforced)
 - `auth.peer_info` — peer credential inspection (SO_PEERCRED on Unix)
 - `auth.issue_ionic` — issue Ed25519-signed ionic capability token
 - `auth.verify_ionic` — verify ionic token, return claims or error
+- `auth.issue_session` — issue scoped session token (TTL-aware, `content.*` scope)
+- `auth.public_key` — return primal's Ed25519 public key
 
-### **14. Identity** (2 methods — pre-dispatch)
-- `identity.get` — primal identity (name, node_id, DID, public key)
+### **15. Identity** (1 method — pre-dispatch gate)
 - `identity.create` — generate ephemeral Ed25519 caller keypair + DID
+
+### **Route Aliases** (13 — remapped before dispatch)
+- 8 bare-name crypto aliases: `sign_ed25519`, `verify_ed25519`, `x25519_*`, `chacha20_poly1305_*`, `hmac_sha256`, `blake3_hash`
+- 5 bonding aliases: `bonding.propose`, `bonding.accept`, `bonding.status`, `bonding.terminate`, `bonding.modify_scope`
 
 ═══════════════════════════════════════════════════════════════════
 
@@ -858,7 +853,7 @@ For workflows like RootPulse commit signing or LoamSpine entry signing:
 
 ═══════════════════════════════════════════════════════════════════
 
-## 🔗 **IONIC BOND** (IonicBondHandler — 8 methods)
+## 🔗 **IONIC BOND** (IonicBondHandler — 12 methods)
 
 Cross-tower and cross-family trust establishment via Ed25519. The
 propose → accept → seal lifecycle creates cryptographically verifiable
@@ -1236,18 +1231,16 @@ BearDog advertises capabilities via Dark Forest beacons:
 | -32601 | Method not found | Unknown method |
 | -32602 | Invalid params | Parameter validation failed |
 | -32603 | Internal error | Crypto operation failed |
-| -32000 | HSM error | Hardware security module error |
-| -32001 | Lineage error | Genetic verification failed |
-| -32002 | Secret not found | Named secret does not exist |
-| -32003 | Relay denied | Relay authorization rejected |
-| -32004 | Beacon error | Beacon operation failed |
+| -32000 | Unauthorized | Caller identity could not be established (invalid/expired token) |
+| -32001 | Permission denied | Caller lacks scope for the requested method (`MethodGate` enforcement) |
+| -32002 | Not ready | Primal not yet initialized |
 
 ### **Best Practices**
 
 1. **Always check `error` field** before accessing `result`
 2. **Handle timeout** (default 30s for crypto operations)
 3. **Retry logic** for transient errors (-32603)
-4. **Don't retry** authentication failures (-32001)
+4. **Don't retry** authentication failures (-32000, -32001)
 
 ═══════════════════════════════════════════════════════════════════
 
@@ -1344,160 +1337,244 @@ print(response['result']['hash'])
 
 ## 📚 **COMPLETE METHOD INDEX**
 
-### **Core Cryptography (20 methods)**
+> **SSOT**: Call `rpc.methods` or `capabilities.list` at runtime for the live inventory.
+> This index documents the primary method surface. Semantic aliases, `beardog.crypto.*`
+> namespaced variants, and legacy bare-name aliases are listed in the category breakdown above.
 
-1. `crypto.sign_ed25519` - Ed25519 signature (params: `message`, `key_id`, `purpose`)
-1a. `crypto.sign` - Semantic alias → `crypto.sign_ed25519`
-1b. `crypto.did_from_key` - Derive `did:key` from Ed25519 signing key (params: `key_id`, `purpose`)
-2. `crypto.verify_ed25519` - Ed25519 verification (params: `message`, `signature`, `public_key`)
-3. `crypto.sign_ecdsa_secp256r1` - ECDSA P-256 signing
-4. `crypto.verify_ecdsa_secp256r1` - ECDSA P-256 verification
-5. `crypto.sign_ecdsa_secp384r1` - ECDSA P-384 signing
-6. `crypto.verify_ecdsa_secp384r1` - ECDSA P-384 verification
-7. `crypto.sign_rsa_pkcs1_sha256` - RSA PKCS#1 signing
-8. `crypto.verify_rsa_pkcs1_sha256` - RSA PKCS#1 verification
-9. `crypto.sign_rsa_pss_sha256` - RSA-PSS signing
-10. `crypto.verify_rsa_pss_sha256` - RSA-PSS verification
-11. `crypto.x25519_generate_ephemeral` - X25519 keypair generation
-12. `crypto.x25519_derive_secret` - X25519 key exchange
-13. `crypto.ecdh_p256_generate` - P-256 ECDH keypair
-14. `crypto.ecdh_p256_derive` - P-256 key exchange
-15. `crypto.chacha20_poly1305_encrypt` - ChaCha20 encryption
-16. `crypto.chacha20_poly1305_decrypt` - ChaCha20 decryption
-17. `crypto.aes256_gcm_encrypt` - AES-256-GCM encryption
-18. `crypto.aes256_gcm_decrypt` - AES-256-GCM decryption
-19. `crypto.blake3_hash` - BLAKE3 hashing
-20. `crypto.hmac_sha256` - HMAC-SHA256
+### **Signatures & Key Exchange (14 methods)**
+
+1. `crypto.ed25519_generate_keypair` — Ed25519 keypair generation
+2. `crypto.sign_ed25519` — Ed25519 signature
+3. `crypto.verify_ed25519` — Ed25519 verification
+4. `crypto.sign_ecdsa_secp256r1` — ECDSA P-256 signing
+5. `crypto.verify_ecdsa_secp256r1` — ECDSA P-256 verification
+6. `crypto.sign_ecdsa_secp384r1` — ECDSA P-384 signing
+7. `crypto.verify_ecdsa_secp384r1` — ECDSA P-384 verification
+8. `crypto.sign_rsa_pkcs1_sha256` — RSA PKCS#1 signing
+9. `crypto.verify_rsa_pkcs1_sha256` — RSA PKCS#1 verification
+10. `crypto.sign_rsa_pss_sha256` — RSA-PSS signing
+11. `crypto.verify_rsa_pss_sha256` — RSA-PSS verification
+12. `crypto.x25519_generate_ephemeral` — X25519 keypair generation
+13. `crypto.x25519_derive_secret` — X25519 key exchange
+14. `crypto.ecdh_p256_generate` — P-256 ECDH keypair
+
+### **ECDH & ECDHE (6 methods)**
+
+15. `crypto.ecdh_p256_derive` — P-256 key exchange
+16. `crypto.ecdh_p384_generate` — P-384 ECDH keypair
+17. `crypto.ecdh_p384_derive` — P-384 key exchange
+18. `crypto.ecdhe.p256.generate` — TLS ephemeral P-256
+19. `crypto.ecdhe.p256.compute_shared` — TLS ephemeral P-256 shared
+20. `crypto.ecdhe.p384.generate` — TLS ephemeral P-384
+
+### **Encryption (10 methods)**
+
+21. `crypto.chacha20_poly1305_encrypt` — ChaCha20-Poly1305 encryption
+22. `crypto.chacha20_poly1305_decrypt` — ChaCha20-Poly1305 decryption
+23. `crypto.aes256_gcm_encrypt` — AES-256-GCM encryption
+24. `crypto.aes256_gcm_decrypt` — AES-256-GCM decryption
+25. `crypto.aes128_gcm_encrypt` — AES-128-GCM encryption
+26. `crypto.aes128_gcm_decrypt` — AES-128-GCM decryption
+27. `crypto.aead.aes_128_gcm.encrypt` — TLS-style AEAD encrypt
+28. `crypto.aead.aes_128_gcm.decrypt` — TLS-style AEAD decrypt
+29. `crypto.aead.aes_256_gcm.encrypt` — TLS-style AEAD encrypt
+30. `crypto.aead.aes_256_gcm.decrypt` — TLS-style AEAD decrypt
+
+### **Hashing & HMAC (14 methods)**
+
+31. `crypto.blake3_hash` — BLAKE3 hashing
+32. `crypto.sha256` — SHA-256
+33. `crypto.sha384` — SHA-384
+34. `crypto.sha512` — SHA-512
+35. `crypto.sha1` — SHA-1 (legacy compat)
+36. `crypto.sha3_256` — SHA3-256
+37. `crypto.hmac_sha256` — HMAC-SHA256
+38. `crypto.hmac_sha384` — HMAC-SHA384
+39. `crypto.hmac_sha512` — HMAC-SHA512
+40. `crypto.hmac_blake3` — HMAC-BLAKE3
+41. `crypto.hmac_verify` — Constant-time HMAC verification
+42. `crypto.hash_for_cipher` — Cipher-appropriate hash
+43. `crypto.hkdf_sha256` — HKDF-SHA256 key derivation
+44. `crypto.hash` — Semantic alias (routes by algorithm)
+
+### **KDF & Password Hashing (6 methods)**
+
+45. `crypto.argon2id_hash` — Argon2id password hashing
+46. `crypto.argon2id_verify` — Argon2id verification
+47. `crypto.pbkdf2_sha256` — PBKDF2 key derivation
+48. `crypto.bcrypt_hash` — bcrypt hashing
+49. `crypto.bcrypt_verify` — bcrypt verification
+50. `crypto.scrypt` — scrypt key derivation
+
+### **TLS 1.3 (5 methods)**
+
+51. `tls.derive_secrets` — Handshake secret derivation
+52. `tls.derive_handshake_secrets` — Explicit handshake secrets
+53. `tls.derive_application_secrets` — Application secret derivation
+54. `tls.compute_finished_verify_data` — Finished message verify data
+55. `tls.sign_handshake` — Handshake signing (Ed25519)
+
+### **TLS 1.2 (1 method)**
+
+56. `crypto.kdf.tls12_prf` — TLS 1.2 PRF derivation
 
 ### **Genetic Cryptography (11 methods)**
 
-21. `genetic.derive_lineage_key` - Lineage-based key derivation
-22. `genetic.derive_lineage_beacon_key` - Beacon key (TRUE Dark Forest)
-23. `genetic.mix_entropy` - Three-tier entropy mixing
-24. `genetic.verify_lineage` - Lineage verification
-25. `genetic.generate_lineage_proof` - Proof generation
-26. `genetic.generate_challenge` - Challenge generation
-27. `genetic.respond_to_challenge` - Challenge response
-28. `genetic.verify_challenge_response` - Response verification
-29. `genetic.enroll_lineage_certificate` - Lineage certificate enrollment
-30. `genetic.verify_lineage_certificate` - Certificate verification
-31. `genetic.enroll_device` - Device enrollment (parent→child)
+57. `genetic.derive_lineage_key` — Lineage-based key derivation
+58. `genetic.derive_lineage_beacon_key` — Beacon key (TRUE Dark Forest)
+59. `genetic.mix_entropy` — Three-tier entropy mixing
+60. `genetic.verify_lineage` — Lineage verification
+61. `genetic.generate_lineage_proof` — Proof generation
+62. `genetic.generate_challenge` — Challenge generation
+63. `genetic.respond_to_challenge` — Challenge response
+64. `genetic.verify_challenge_response` — Response verification
+65. `genetic.sign_lineage_certificate` — Lineage certificate signing
+66. `genetic.verify_lineage_certificate` — Certificate verification
+67. `genetic.derive_device_seed` — Device seed derivation (parent→child)
 
-### **TLS/HTTPS (4 methods)**
+### **Lineage Queries (3 methods)**
 
-32. `tls.derive_secrets` - Handshake secret derivation
-33. `tls.derive_application_secrets` - Application secret derivation
-34. `tls.sign_handshake` - Handshake signing
-35. `tls.verify_certificate` - Certificate verification
+68. `lineage.list` — List lineage entries
+69. `lineage.verify` — Verify lineage chain
+70. `lineage.get` — Get lineage details
 
-### **Tor v3 Onion (8 methods)**
+### **Tor v3 Onion (8 methods — `beardog.crypto.*` namespace)**
 
-36. `tor.derive_onion_address` - Derive .onion from Ed25519
-37. `tor.generate_identity` - Generate keypair + .onion address
-38. `tor.ntor_client_init` - ntor handshake client init
-39. `tor.ntor_server_respond` - ntor handshake server respond
-40. `tor.ntor_client_finish` - ntor handshake client finish
-41. `tor.encrypt_cell` - Cell encryption (ChaCha20)
-42. `tor.decrypt_cell` - Cell decryption (ChaCha20)
-43. `tor.hkdf_expand` - HKDF-SHA256 key expansion
+71. `crypto.derive_onion_address` — Derive .onion from Ed25519
+72. `beardog.crypto.generate_onion_identity` — Generate keypair + .onion
+73. `beardog.crypto.tor_ntor_client_init` — ntor handshake client init
+74. `beardog.crypto.tor_ntor_server_respond` — ntor server respond
+75. `beardog.crypto.tor_ntor_client_finish` — ntor client finish
+76. `beardog.crypto.tor_cell_encrypt` — Cell encryption (ChaCha20)
+77. `beardog.crypto.tor_cell_decrypt` — Cell decryption
+78. `beardog.crypto.tor_kdf` — HKDF-SHA256 key expansion
 
-### **Secret Storage (4 methods)**
+### **Purpose Keys & Semantic Aliases (9 methods)**
 
-44. `secrets.store` - Encrypt and store secret
-45. `secrets.retrieve` - Decrypt and return secret
-46. `secrets.list` - List stored secret names
-47. `secrets.delete` - Remove a stored secret
+79. `crypto.derive_purpose_key` — Purpose-scoped key derivation
+80. `crypto.derive_public_key` — Derive public key from purpose key
+81. `crypto.seed_fingerprint` — Seed fingerprint
+82. `crypto.sign_registration` — Signed registration payload
+83. `crypto.generate_keypair` — Semantic → ed25519_generate_keypair
+84. `crypto.derive_secret` — Semantic → x25519_derive_secret
+85. `crypto.public_key` — Get public key
+86. `crypto.encrypt` — Semantic → chacha20_poly1305_encrypt
+87. `crypto.decrypt` — Semantic → chacha20_poly1305_decrypt
 
-### **Dark Forest Beacon (7 methods)**
+### **Ionic Bond (12 methods — `IonicBondHandler`)**
 
-48. `beacon.generate` - Generate beacon seed
-49. `beacon.get_id` - Get public beacon ID
-50. `beacon.encrypt` - Encrypt with beacon seed
-51. `beacon.try_decrypt` - Decrypt with our seed
-52. `beacon.try_decrypt_any` - Decrypt with any known beacon
-53. `beacon.list_known` - List known beacon IDs
-54. `beacon.add_known` - Add known beacon from meeting
+88. `crypto.ionic_bond.propose` — Propose a cross-domain bond
+89. `crypto.ionic_bond.accept` — Accept a bond proposal (Ed25519)
+90. `crypto.ionic_bond.seal` — Cryptographically seal an active bond
+91. `crypto.ionic_bond.verify` — Verify bond state and signatures
+92. `crypto.ionic_bond.verify_proposal` — Verify unsigned proposal
+93. `crypto.ionic_bond.revoke` — Revoke an active or sealed bond
+94. `crypto.ionic_bond.list` — List bonds (filterable by domain/state)
+95. `crypto.sign_contract` — Sign contract terms with Ed25519
+96. `crypto.verify_contract` — Verify contract signature
+97. `crypto.contract.propose` — Cross-family contract proposal
+98. `crypto.contract.countersign` — Countersign cross-family contract
+99. `crypto.contract.verify` — Verify cross-family contract
 
-### **Relay Authorization (1 method)**
+### **Secret Storage (4 methods — `SecretsHandler`)**
 
-55. `relay.authorize` - Lineage-gated relay authorization
+100. `secrets.store` — Encrypt and store secret
+101. `secrets.retrieve` — Decrypt and return secret
+102. `secrets.list` — List stored secret names
+103. `secrets.delete` — Remove a stored secret
 
-### **Federation (2 methods)**
+### **Dark Forest Beacon (7 methods — `BeaconHandler`)**
 
-56. `federation.verify_family_member` - Verify genetic relationship
-57. `federation.derive_subfed_key` - Derive sub-federation key
+104. `beacon.generate` — Generate beacon seed
+105. `beacon.get_id` — Get public beacon ID
+106. `beacon.encrypt` — Encrypt with beacon seed
+107. `beacon.try_decrypt` — Decrypt with our seed
+108. `beacon.try_decrypt_any` — Decrypt with any known beacon
+109. `beacon.list_known` — List known beacon IDs
+110. `beacon.add_known` — Add known beacon from meeting
 
-### **Password Hashing (3 methods)**
+### **Relay (1 method — `RelayHandler`)**
 
-58. `crypto.argon2id_hash` - Argon2id password hashing
-59. `crypto.argon2id_verify` - Argon2id verification
-60. `crypto.pbkdf2_sha256` - PBKDF2 key derivation
+111. `relay.authorize` — Lineage-gated relay authorization
 
-### **BTSP Tunnel (6 methods)**
+### **Federation (2 methods — `FederationHandler`)**
 
-61. `btsp.exchange_contacts` - Exchange contact information
-62. `btsp.establish` - Establish encrypted tunnel
-63. `btsp.encrypt` - Encrypt tunnel payload
-64. `btsp.decrypt` - Decrypt tunnel payload
-65. `btsp.status` - Tunnel status check
-66. `btsp.close` - Close tunnel
+112. `federation.verify_family_member` — Verify genetic relationship
+113. `federation.derive_subfed_key` — Derive sub-federation key
 
-### **Security (6 methods)**
+### **Security (19 methods — `SecurityHandler`)**
 
-67. `security.evaluate_trust` - Trust evaluation
-68. `security.verify_jwt` - JWT verification
-69. `security.graph_query` - Security graph query
-70. `security.validate_permissions` - Permission validation
-71. `security.check_authorization` - Authorization check
-72. `security.audit_log` - Audit log entry
+114. `security.evaluate_trust` — Trust evaluation
+115. `security.evaluate` — Security evaluation
+116. `security.verify_lineage` — Lineage verification
+117. `security.generate_jwt_secret` — JWT secret generation
+118. `security.jwt_secret` — Get JWT secret
+119. `trust.evaluate` — Trust evaluation (alias)
+120. `trust.evaluate_peer` — Peer trust evaluation
+Plus 12 additional security/consent/birdsong methods (call `rpc.methods` for full list)
 
-### **Introspection (6 methods)**
+### **Graph Security (3 methods — `GraphSecurityHandler`)**
 
-73. `discover_capabilities` - List all capability categories
-74. `capabilities` - Detailed capability information
-75. `get_capabilities` - Flat list of all methods
-76. `primal.info` - Primal metadata
-77. `rpc.methods` - Available RPC methods
-78. `identity` / `whoami` - Node identity
+121. `graph.validate_template` — Validate security graph template
+122. `graph.audit_origin` — Audit origin in security graph
+123. `graph.authorize_modification` — Authorize graph modification
 
-### **HSM Management (11 methods)**
+### **FIDO2 (3 methods — `Fido2Handler`)**
 
-79. `hsm.generate_key` - Key generation
-80. `hsm.import_key` - Key import
-81. `hsm.export_key` - Key export
-82. `hsm.delete_key` - Key deletion
-83. `hsm.list_keys` - List managed keys
-84. `hsm.get_entropy` - Hardware entropy
-85. `hsm.create_session` - HSM session creation
-86. `hsm.close_session` - HSM session teardown
-87. `hsm.sign` - HSM-backed signing
-88. `hsm.verify` - HSM-backed verification
-89. `hsm.status` - HSM health status
+124. `beardog.fido2.discover` — Discover FIDO2 devices
+125. `beardog.fido2.register` — Register FIDO2 credential
+126. `beardog.fido2.authenticate` — Authenticate with FIDO2
 
-### **Ionic Bond (8 methods — IonicBondHandler)**
+### **Health (7 methods — `HealthHandler`)**
 
-90. `crypto.ionic_bond.propose` - Propose a cross-domain bond
-91. `crypto.ionic_bond.accept` - Accept a bond proposal (Ed25519 signature)
-92. `crypto.ionic_bond.seal` - Cryptographically seal an active bond
-93. `crypto.ionic_bond.verify` - Verify bond state and signatures
-94. `crypto.ionic_bond.revoke` - Revoke an active or sealed bond
-95. `crypto.ionic_bond.list` - List bonds (filterable by domain/state)
-96. `crypto.sign_contract` - Sign contract terms with Ed25519 identity
-97. `crypto.verify_contract` - Verify contract signature
+127. `health.liveness` — Liveness probe
+128. `health.readiness` — Readiness probe
+129. `health.check` — Health check
+130. `ping` — Legacy ping
+131. `health` — Legacy health
+132. `status` — Legacy status
+133. `check` — Legacy check
 
-### **Auth & Ionic Token Lifecycle (5 methods — pre-dispatch, JH-0/JH-1 MethodGate)**
+### **Capabilities & Introspection (13 methods — `CapabilitiesHandler` + `IntrospectionHandler`)**
 
-98. `auth.check` - Caller authentication status (includes validated claims)
-99. `auth.mode` - Current enforcement mode (permissive/enforced)
-100. `auth.peer_info` - Peer credential introspection (uid, pid)
-101. `auth.issue_ionic` - Issue Ed25519-signed ionic capability token
-102. `auth.verify_ionic` - Verify ionic token, return claims or error
+134. `capabilities.list` — List all capabilities
+135. `capability.list` — Alias
+136. `discover_capabilities` — Discover capability categories
+137. `get_capabilities` — Get capability details
+138. `identity.get` — Primal identity
+139. `get_identity` — Alias
+140. `primal.capabilities` — Primal capability manifest
+141. `primal.info` — Primal metadata
+142. `rpc.methods` — List available RPC methods
+143. `whoami` — Node identity
+144. `identity` — Node identity alias
 
-### **Identity (1 method — pre-dispatch, JH-1)**
+### **Encryption (2 methods — `EncryptionHandler`)**
 
-103. `identity.create` - Generate ephemeral Ed25519 caller keypair + DID
+145. `encryption.encrypt` — Generic encrypt
+146. `encryption.decrypt` — Generic decrypt
 
-### **Total**: **127 JSON-RPC methods** (103 CryptoHandler + 12 IonicBondHandler + 6 auth gate + 1 identity gate + 5 bonding aliases + 3 FIDO2)
+### **Auth Gate (7 methods — pre-dispatch, `MethodGate`)**
+
+147. `auth.check` — Caller authentication status
+148. `auth.mode` — Enforcement mode (permissive/enforced)
+149. `auth.peer_info` — Peer credential introspection (uid, pid)
+150. `auth.issue_ionic` — Issue Ed25519-signed ionic capability token
+151. `auth.verify_ionic` — Verify ionic token, return claims
+152. `auth.issue_session` — Issue scoped session token (TTL-aware, `content.*` scope)
+153. `auth.public_key` — Return primal's Ed25519 public key
+
+### **Identity Gate (1 method — pre-dispatch)**
+
+154. `identity.create` — Generate ephemeral Ed25519 caller keypair + DID
+
+### **BTSP Tunnel (36 methods — `BtspHandler`)**
+
+155–190. `btsp.contact.exchange`, `btsp.tunnel.{establish,encrypt,decrypt,status,close}`, `btsp.server.*`, `btsp.configure_tls`, `btsp.verify_peer`, `btsp.negotiate`, plus legacy aliases. Call `rpc.methods` for the full BTSP surface.
+
+### **Summary**
+
+**215 registry methods** + **8 pre-dispatch gate methods** = **223 dispatchable method names**, plus **13 route aliases** for backward compatibility. The `CryptoHandler` alone registers 106 methods across signatures, encryption, hashing, KDF, TLS, genetic, Tor, and semantic alias surfaces.
 
 ═══════════════════════════════════════════════════════════════════
 
@@ -1510,26 +1587,7 @@ print(response['result']['hash'])
 - **Minor**: New methods added (backward compatible)
 - **Patch**: Bug fixes, performance improvements
 
-**Version Negotiation**:
-```json
-{
-  "jsonrpc": "2.0",
-  "method": "system.version",
-  "params": {},
-  "id": 1
-}
-
-Response:
-{
-  "jsonrpc": "2.0",
-  "result": {
-    "api_version": "1.0.0",
-    "beardog_version": "0.9.0",
-    "protocol": "json-rpc-2.0"
-  },
-  "id": 1
-}
-```
+**Version Discovery**: Use `primal.info` to retrieve version metadata, or `rpc.methods` for the full method inventory.
 
 ### **Deprecation Policy**
 
@@ -1543,23 +1601,23 @@ Response:
 
 ### **Authentication**
 
-BearDog uses **genetic lineage** for authentication:
-1. Family members share a `.family.seed` file
-2. Challenge-response proves lineage knowledge
-3. No passwords, no tokens
-4. Perfect forward secrecy
+BearDog supports multiple authentication layers (JH-0/JH-1/JH-11):
+1. **Genetic lineage**: Family members share a `.family.seed` file; challenge-response proves knowledge
+2. **Ionic capability tokens**: Ed25519-signed, scoped, TTL-aware tokens issued via `auth.issue_ionic`
+3. **Session tokens**: Scoped session tokens (`content.*`, etc.) via `auth.issue_session`
+4. **`MethodGate` enforcement**: `BEARDOG_AUTH_MODE=enforced` requires valid scope for protected methods
 
 ### **Authorization**
 
-- **Family members**: Full access to all methods
-- **Non-family**: Cannot connect (Dark Forest)
-- **Capabilities**: Self-declared in beacons
+- **Permissive mode** (default): All methods accessible; tokens carry advisory claims
+- **Enforced mode**: Protected methods require valid capability token with matching scope
+- **Capabilities**: Self-declared in beacons and `primal.announce` payloads
 
 ### **Transport Security**
 
-- **Unix sockets**: Kernel-enforced access control
-- **TCP fallback**: localhost only (127.0.0.1)
-- **No TLS wrapper**: Not needed (local IPC)
+- **Unix sockets** (primary): Kernel-enforced access control (`SO_PEERCRED` introspection)
+- **TCP** (opt-in): Via `--port`/`--listen` or `BEARDOG_TCP_IPC_PORT`; default port 9100
+- **BTSP**: Encrypted tunnel transport with Ed25519 mutual authentication
 
 ### **Attack Surface**
 
@@ -1583,18 +1641,20 @@ BearDog uses **genetic lineage** for authentication:
 
 ### **Implementation**
 
-- BearDog source: `primals/bearDog/crates/beardog-tunnel/`
-- Crypto handlers: `src/unix_socket_ipc/handlers/crypto/`
-- Genetic handlers: `src/unix_socket_ipc/crypto_handlers_genetic.rs`
-- Secret handlers: `src/unix_socket_ipc/handlers/secrets.rs`
-- Beacon handlers: `src/unix_socket_ipc/handlers/beacon.rs`
-- Relay handler: `src/unix_socket_ipc/handlers/relay.rs`
-- Capabilities: `src/unix_socket_ipc/handlers/capabilities.rs`
+All handler paths are relative to `crates/beardog-tunnel/`:
+
+- Crypto handlers: `src/unix_socket_ipc/handlers/crypto_handler/`
+- Genetic handlers: `src/unix_socket_ipc/handlers/crypto_handler/genetic.rs`
+- Ionic bond: `src/unix_socket_ipc/handlers/ionic_bond/`
+- BTSP tunnel: `src/btsp_provider/`
+- Security: `src/unix_socket_ipc/handlers/security.rs`
+- FIDO2: `src/unix_socket_ipc/handlers/fido2.rs`
+- Auth gate: `src/unix_socket_ipc/handlers/method_gate.rs`
 - Handler registry: `src/unix_socket_ipc/handlers/mod.rs`
 
 ═══════════════════════════════════════════════════════════════════
 
-**Document Version**: 3.0.0  
+**Document Version**: 4.0.0  
 **Last Updated**: May 28, 2026  
 **Maintainer**: BearDog Security Primal  
 **License**: Documented interface (implementation MIT-licensed)

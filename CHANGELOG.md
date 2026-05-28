@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 28, 2026 -- Wave 118: PRIMAL_CONTRACTS Method Catalog Refresh (Wave 59 Response)
+
+- **`PRIMAL_CONTRACTS.md` v4.0.0** — Complete method catalog overhaul. Total count corrected from 127 to **223 dispatchable methods** (215 registry + 8 pre-dispatch gate). Category breakdown rewritten with all 18 handler categories. Method index rebuilt with exact registered names from code.
+- **TCP port corrected** — `9190` (metrics) → `9100` (`DEFAULT_TCP_IPC_PORT`).
+- **Error codes updated** — Stale lineage/relay/beacon codes replaced with actual `MethodGate` enforcement codes (`-32000` UNAUTHORIZED, `-32001` PERMISSION_DENIED, `-32002` NOT_READY).
+- **Auth model rewritten** — Replaced genetic-lineage-only section with multi-layer auth (genetic + ionic tokens + session tokens + `MethodGate` enforcement).
+- **Ionic bond section** — Updated from 8 to 12 methods (added `verify_proposal`, `crypto.contract.*`).
+- **Implementation paths fixed** — Updated stale handler file paths to match current crate layout.
+- **Wave 59 bearDog items**: env debt RESOLVED (Waves 116-117); NC-3.5 RESOLVED (Wave 108); PRIMAL_CONTRACTS stale → **RESOLVED**.
+
 ### May 28, 2026 -- Wave 117b: Root Doc Sync, Orphan Purge, Config Annotations
 
 - **21 orphan `.rs` files deleted** — 9 in `beardog-genetics` (api, types, handlers, entropy_simple, biome_genetics, peer_to_peer_genetics, zero_copy, simd_optimization, tests — many with corrupted syntax), 5 in `beardog-core` (operations, new_mod, beardog_core, ecosystem_coordination, primal_provider — imports of non-existent modules), 1 in `beardog-core/ai` (ecosystem_coordination), 6 in `beardog-types` (providers, relationships, workflow, security, metrics, genetics — superseded by `*_unified` modules). ~3,500 LOC total dead code removed.
