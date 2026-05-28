@@ -1,4 +1,6 @@
 # BearDog Network Configuration Defaults
+# NOTE: HTTP endpoint references (service_mesh_endpoint, monitoring_endpoint,
+# etc.) predate the Unix socket JSON-RPC transport.  Retained as reference.
 # This file centralizes network configuration to eliminate hardcoded values
 
 [development]

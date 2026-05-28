@@ -1,4 +1,6 @@
 # BearDog Unified Configuration Template
+# NOTE: [network.http], [network.https], [network.cors] sections predate the
+# Unix socket JSON-RPC transport.  Retained as reference / fossil record.
 # Environment-driven configuration eliminating hardcoded values
 # Use environment variables to customize for different deployment environments
 

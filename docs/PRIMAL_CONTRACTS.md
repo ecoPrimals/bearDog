@@ -1595,7 +1595,7 @@ BearDog uses **genetic lineage** for authentication:
 ═══════════════════════════════════════════════════════════════════
 
 **Document Version**: 3.0.0  
-**Last Updated**: May 27, 2026  
+**Last Updated**: May 28, 2026  
 **Maintainer**: BearDog Security Primal  
 **License**: Documented interface (implementation MIT-licensed)
 

@@ -1,4 +1,7 @@
 # BearDog Production Configuration
+# NOTE: HTTP/REST sections below ([api], [api.auth], [api.tls]) are from the
+# pre-UniBin era.  The primary transport is now Unix socket JSON-RPC.
+# Retained as a configuration reference / fossil record.
 # Optimized for enterprise deployment with security and performance
 
 [api]

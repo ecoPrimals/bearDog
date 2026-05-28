@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 27, 2026 (Wave 115)
+**Last Updated**: May 28, 2026 (Wave 117)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant (threshold lowered to 800; `aliases_and_beardog.rs` refactored Wave 75) |
-| **Tests** | 14,940+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,987+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | bans pass | 1 advisory ignore (RSA Marvin), `ring` allowed as `rustls`/`rustls-webpki` wrapper |
@@ -34,7 +34,7 @@
 ## Codebase Metrics
 
 - **Crates**: 30 directories (beardog-integration excluded — overstep; beardog-acme added Wave 107)
-- **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
+- **Rust Files**: 2,115 (crates + src + tests; excludes showcase/examples)
 - **JSON-RPC Methods**: 127 — 103 CryptoHandler + 12 IonicBondHandler + 6 auth gate (JH-0/JH-1/JH-11) + 1 identity gate (JH-1) + 5 bonding aliases (primalSpring compat) + 3 FIDO2 (UB-2) — note: 5 bonding aliases are not new handlers, they route to crypto.ionic_bond.*
 - **`#[allow(`**: 81 (was 86; all carry `reason`)
 - **`#[expect(`**: 644 (was 646; 2 stale removed)
@@ -89,6 +89,22 @@
 ---
 
 ## Recent Improvements
+
+### Wave 117 — Deep Debt: Dependencies, Env Migration, Deprecated Types (May 28, 2026)
+
+- **21 orphan `.rs` files deleted** — 9 in `beardog-genetics`, 6 in `beardog-core`, 6 in `beardog-types` (~3,500 LOC of dead code with corrupted syntax, duplicate structs, and broken imports).
+- **10 unused workspace dependencies purged** — `tokio-tungstenite`, `tokio-serde`, `mockito`, `wiremock`, `tokio-test` (12 crates), `validator`, `urlencoding`, `local-ip-address`, plus `clap`/`tracing-subscriber` from tunnel.
+- **Dead `beardog-tunnel/src/main.rs` deleted** — Stale CLI duplicate not wired as binary target.
+- **FIDO2 `operations.rs` dead stubs deleted** — Re-exported `Ctap2Command` from canonical `ctap2::types`.
+- **Env var centralization: 100+ sites migrated** — All 17 domain files in `beardog-config/src/domains/` now use `env_keys::ENV_*` constants. 42 new constants added.
+- **Deprecated types cleaned** — `LoggingConfiguration` → `LoggingConfig`, `RegistryConfig` → `ProviderRegistryConfig`, `BiomeOSPaths` re-export removed.
+
+### Wave 116 — Env Var Centralization Foundation (May 28, 2026)
+
+- **`beardog-config::env_keys` module created** — 65 centralized `BEARDOG_*` env var key constants organized by domain. Foundation for systematic migration away from inline string literals.
+- **`health.rs` migrated** — All 12 inline `env::var("BEARDOG_*")` calls replaced with `env_keys::ENV_*` constants.
+- **`multi_transport_server.rs` migrated** — TCP IPC port env read centralized.
+- **NC-3.5 acknowledged as resolved** — `content.*` scope already in session tokens since Wave 108.
 
 ### Wave 112 — ACME Daemon Operationalization + Doc Drift Fix (May 24, 2026)
 

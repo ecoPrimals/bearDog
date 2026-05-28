@@ -1,6 +1,8 @@
 # BearDog Environment Configuration Template
 # Copy this file to .env in project root and customize for your environment
 #
+# NOTE: Some HTTP/REST vars (e.g. GRAFANA_URL, discovery methods) predate
+# the Unix socket JSON-RPC transport.  Retained as reference.
 # Created: October 28, 2025
 # Purpose: Environment-driven configuration (eliminating hardcoding)
 

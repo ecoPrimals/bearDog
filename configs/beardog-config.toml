@@ -1,4 +1,6 @@
 # BearDog Configuration File
+# NOTE: HTTP bind addresses and HTTPS service-mesh/storage/AI endpoints below
+# predate the Unix socket JSON-RPC transport.  Retained as reference.
 # This file demonstrates how to eliminate hardcoding throughout the BearDog codebase
 # by using a centralized configuration system.
 

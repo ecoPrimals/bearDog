@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### May 28, 2026 -- Wave 117b: Root Doc Sync, Orphan Purge, Config Annotations
+
+- **21 orphan `.rs` files deleted** — 9 in `beardog-genetics` (api, types, handlers, entropy_simple, biome_genetics, peer_to_peer_genetics, zero_copy, simd_optimization, tests — many with corrupted syntax), 5 in `beardog-core` (operations, new_mod, beardog_core, ecosystem_coordination, primal_provider — imports of non-existent modules), 1 in `beardog-core/ai` (ecosystem_coordination), 6 in `beardog-types` (providers, relationships, workflow, security, metrics, genetics — superseded by `*_unified` modules). ~3,500 LOC total dead code removed.
+- **Root docs synced** — All 9 root markdown files updated: dates → May 28, 2026; tests → 14,987+; Rust files → 2,115. STATUS.md refreshed with Waves 116-117 entries.
+- **HTTP-era config templates annotated** — Added pre-UniBin disclaimers to `production.toml`, `network-defaults.toml`, `beardog-config-template.toml`, `beardog-config.toml`, `env-template.example`.
+
 ### May 28, 2026 -- Wave 117: Deep Debt Cleanup — Dependencies, Env Migration, Deprecated Types
 
 - **Deleted dead `beardog-tunnel/src/main.rs`** — Stale 198-line CLI duplicate (not wired as binary target). Removed tunnel-only `clap` and `tracing-subscriber` deps.

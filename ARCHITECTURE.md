@@ -2,9 +2,9 @@
 
 # BearDog Architecture
 
-**Last Updated**: May 27, 2026
+**Last Updated**: May 28, 2026
 **Status**: Production Ready
-**Crates**: 29 | **Tests**: 14,980+ | **Coverage**: 90.51% | **MSRV**: 1.93.0
+**Crates**: 29 | **Tests**: 14,987+ | **Coverage**: 90.51% | **MSRV**: 1.93.0
 
 ---
 
@@ -248,4 +248,4 @@ Key material derived from family seed. Family A never shares keys with Family B.
 
 ---
 
-**Last Updated**: May 27, 2026
+**Last Updated**: May 28, 2026
