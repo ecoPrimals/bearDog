@@ -55,7 +55,7 @@ impl PlatformStream for AndroidPlatformStream {
         self.0
             .peer_cred()
             .ok()
-            .map(|cred| (cred.uid(), cred.pid().map(|p| p as u32)))
+            .map(|cred| (cred.uid(), cred.pid().map(i32::cast_unsigned)))
     }
 }
 

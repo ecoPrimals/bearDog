@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 1, 2026 -- Wave 119: S4 Auth Config — SO_PEERCRED + MethodGate Centralization (Wave 67 Response)
+
+- **`SO_PEERCRED` extraction enabled** — `auth.peer_info` now returns real `uid`/`pid` from Unix domain sockets. `PlatformStream` trait extended with `peer_credentials()` method (stable since Rust 1.75, was incorrectly marked as unstable). Implemented on `UnixPlatformStream` and `AndroidPlatformStream` via `tokio::net::UnixStream::peer_cred()`. `PrefixedStream` delegates to inner stream. All 4 connection handlers in `connection_handlers.rs` updated to populate `CallerContext` with live peer credentials.
+- **`BEARDOG_AUTH_MODE` centralized** — Inline `"BEARDOG_AUTH_MODE"` string replaced with `beardog_config::env_keys::ENV_AUTH_MODE`. Added to `env_keys.rs` along with `ENV_BTSP_BIRDSONG_KEY_LABEL`, `ENV_BTSP_LINEAGE_ROOT_PREFIX`, `ENV_BTSP_LINEAGE_MAX_DEPTH`. Migrated `domains/btsp.rs` from local duplicate constants to centralized `env_keys::*`.
+- **S4 shadow deployment documented** — Added `BEARDOG_AUTH_MODE` documentation to `ENVIRONMENT_VARIABLES.md` (Security & Trust section). Added "S4 Shadow Validation" example configuration showing minimum env vars for ironGate to consume BTSP auth services during the formal 7-day gate.
+- **Wave 67 bearDog S4 (P0)**: Auth IPC surface complete (`auth.verify_ionic`, `auth.public_key`, `auth.issue_session`, `auth.peer_info`); BTSP transport auth production-ready (env-gated via `FAMILY_ID` + `FAMILY_SEED`); `MethodGate` enforcement opt-in via `BEARDOG_AUTH_MODE=enforced`. ironGate can now begin formal 7-day shadow validation.
+
 ### May 28, 2026 -- Wave 118: PRIMAL_CONTRACTS Method Catalog Refresh (Wave 59 Response)
 
 - **`PRIMAL_CONTRACTS.md` v4.0.0** — Complete method catalog overhaul. Total count corrected from 127 to **223 dispatchable methods** (215 registry + 8 pre-dispatch gate). Category breakdown rewritten with all 18 handler categories. Method index rebuilt with exact registered names from code.

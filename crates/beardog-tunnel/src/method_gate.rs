@@ -71,7 +71,7 @@ pub fn classify_method(method: &str) -> MethodAccessLevel {
 /// Peer credentials extracted from `SO_PEERCRED` on Unix sockets.
 ///
 /// Populated via `tokio::net::UnixStream::peer_cred()` (stable since
-/// Rust 1.75). GID omitted — uid + pid suffice for MethodGate policy.
+/// Rust 1.75). GID omitted — uid + pid suffice for `MethodGate` policy.
 #[derive(Debug, Clone)]
 pub struct PeerCredentials {
     /// Process ID of the caller (if available).
