@@ -223,7 +223,16 @@ pub fn default_socket_path() -> String {
 /// - `web_sys::MessagePort` (WASM)
 ///
 /// All platforms provide async read/write through this unified interface.
-pub trait PlatformStream: AsyncRead + AsyncWrite + Send + Sync + Unpin {}
+pub trait PlatformStream: AsyncRead + AsyncWrite + Send + Sync + Unpin {
+    /// Extract peer credentials from the underlying transport.
+    ///
+    /// On Unix domain sockets this returns `(uid, Option<pid>)` via
+    /// `SO_PEERCRED` / `tokio::net::UnixStream::peer_cred()`.
+    /// All other transports return `None`.
+    fn peer_credentials(&self) -> Option<(u32, Option<u32>)> {
+        None
+    }
+}
 
 /// Stream wrapper that prepends a single consumed byte.
 ///
@@ -278,7 +287,11 @@ impl AsyncWrite for PrefixedStream {
     }
 }
 
-impl PlatformStream for PrefixedStream {}
+impl PlatformStream for PrefixedStream {
+    fn peer_credentials(&self) -> Option<(u32, Option<u32>)> {
+        self.inner.peer_credentials()
+    }
+}
 
 /// Universal platform listener trait (replaces `UnixListener`)
 ///

@@ -391,6 +391,27 @@ export BEARDOG_LOG_FILE=/var/log/beardog/beardog.log
 
 ### Security & Trust
 
+#### `BEARDOG_AUTH_MODE`
+
+**Purpose**: MethodGate enforcement mode for JSON-RPC protected methods.
+When `enforced`, unauthenticated calls to protected methods are rejected
+with `-32001 PERMISSION_DENIED`. When `permissive` (default), violations
+are logged but allowed (backward-compatible).
+
+**Required**: No
+**Default**: `permissive`
+**Options**: `permissive` | `enforced`
+
+```bash
+export BEARDOG_AUTH_MODE=enforced   # S4 shadow / production
+export BEARDOG_AUTH_MODE=permissive # Development (default)
+```
+
+**S4 shadow validation**: ironGate requires `enforced` mode during the
+formal 7-day shadow gate so auth parity can be measured.
+
+---
+
 #### `BEARDOG_TRUST_MODE`
 
 **Purpose**: Trust evaluation strictness
@@ -540,6 +561,34 @@ export BEARDOG_LOG_FILE=/var/log/beardog/tower1.log
 ./beardog server
 ```
 
+### S4 Shadow Validation (ironGate auth gate)
+
+Minimum configuration for bearDog to serve as the S4 auth provider so
+ironGate can run the formal 7-day shadow validation.
+
+```bash
+# ── Production BTSP on the wire ──
+export FAMILY_ID=<your-family>
+export FAMILY_SEED=<32+-byte-seed>
+
+# ── Explicit socket for cross-primal discovery ──
+export BEARDOG_SOCKET=/run/beardog/beardog.sock
+
+# ── Optional: TCP for cross-host (ironGate on different machine) ──
+export BEARDOG_TCP_IPC_PORT=9100
+
+# ── Enforce token auth during shadow period ──
+export BEARDOG_AUTH_MODE=enforced
+
+./beardog server
+```
+
+ironGate validates by calling:
+- `auth.verify_ionic` — Ed25519 token verification
+- `auth.public_key` — cache verifying key for offline validation
+- `auth.issue_session` — issue tokens with `purpose: "jupyterhub"`
+- `auth.peer_info` — peer credential introspection (`SO_PEERCRED`)
+
 ### Dual Towers on Same Machine
 
 **Terminal 1**:
@@ -568,7 +617,7 @@ export NODE_ID=tower2
 | **HSM** | `BEARDOG_HSM_MODE`, `BEARDOG_YUBIKEY_SERIAL`, `BEARDOG_TPM_PATH` | None |
 | **Socket** | `BEARDOG_SOCKET`, `BIOMEOS_SOCKET_PATH`, `BIOMEOS_SOCKET_DIR` | None |
 | **Network** | `BEARDOG_BIND_ADDR`, `BEARDOG_ENDPOINT`, `BEARDOG_HOST`, `BEARDOG_API_PORT`, `BEARDOG_TCP_IPC_PORT`, `BEARDOG_METRICS_PORT` | None |
-| **Security** | `BIOMEOS_INSECURE`, `BEARDOG_TRUST_MODE`, `BEARDOG_MTLS_ENABLED`, `BEARDOG_TLS_CERT`, `BEARDOG_TLS_KEY` | None |
+| **Security** | `BIOMEOS_INSECURE`, `BEARDOG_AUTH_MODE`, `BEARDOG_TRUST_MODE`, `BEARDOG_MTLS_ENABLED`, `BEARDOG_TLS_CERT`, `BEARDOG_TLS_KEY` | None |
 | **Registry** | `PRIMAL_REGISTRY_SOCKET`, `BEARDOG_UPA_URL` | None |
 | **Logging** | `RUST_LOG`, `BEARDOG_LOG_FORMAT`, `BEARDOG_LOG_FILE` | None |
 | **Performance** | `BEARDOG_WORKER_THREADS`, `BEARDOG_CONNECTION_POOL_SIZE`, `BEARDOG_REQUEST_TIMEOUT` | None |

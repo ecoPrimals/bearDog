@@ -14,9 +14,9 @@
 //! - **Enforced**: protected methods without a valid token are rejected
 //!   with `PERMISSION_DENIED` (-32001).
 //!
-//! Caller identity is extracted from `SO_PEERCRED` on Unix sockets once
-//! the Rust API stabilizes. Until then, the gate operates on bearer tokens
-//! and connection origin.
+//! Caller identity is extracted from `SO_PEERCRED` on Unix sockets via
+//! `PlatformStream::peer_credentials()` (stable since Rust 1.75). The
+//! gate combines peer credentials with bearer tokens and connection origin.
 //!
 //! Implements the ecosystem standard defined in
 //! `primalSpring/wateringHole/METHOD_GATE_STANDARD.md`.
@@ -70,9 +70,8 @@ pub fn classify_method(method: &str) -> MethodAccessLevel {
 
 /// Peer credentials extracted from `SO_PEERCRED` on Unix sockets.
 ///
-/// Uses only the stable subset of `std::os::unix::net::UCred`:
-/// `uid` (stable since 1.75) and `pid` (stable `Option<i32>`).
-/// GID is deferred until `peer_credentials_unix_socket` stabilizes.
+/// Populated via `tokio::net::UnixStream::peer_cred()` (stable since
+/// Rust 1.75). GID omitted — uid + pid suffice for MethodGate policy.
 #[derive(Debug, Clone)]
 pub struct PeerCredentials {
     /// Process ID of the caller (if available).
@@ -108,19 +107,25 @@ pub enum ConnectionOrigin {
 }
 
 impl CallerContext {
-    /// Create a caller context for a Unix domain socket connection.
-    ///
-    /// Peer credentials (`SO_PEERCRED`) are not extracted here because
-    /// `std::os::unix::net::UnixStream::peer_cred()` is still behind the
-    /// unstable `peer_credentials_unix_socket` feature gate and the crate
-    /// uses `#![forbid(unsafe_code)]`. Once the API stabilizes (or a safe
-    /// wrapper like `rustix` is adopted), this method will populate
-    /// `PeerCredentials` automatically.
+    /// Create a caller context for a Unix domain socket connection
+    /// without peer credentials (e.g. tests or non-Unix platforms).
     #[must_use]
     pub const fn from_unix() -> Self {
         Self {
             bearer_token: None,
             peer: None,
+            origin: ConnectionOrigin::Unix,
+            validated_claims: None,
+        }
+    }
+
+    /// Create a caller context for a Unix domain socket connection,
+    /// populating `SO_PEERCRED` peer credentials from the transport layer.
+    #[must_use]
+    pub fn from_unix_with_peer(raw: Option<(u32, Option<u32>)>) -> Self {
+        Self {
+            bearer_token: None,
+            peer: raw.map(|(uid, pid)| PeerCredentials { pid, uid }),
             origin: ConnectionOrigin::Unix,
             validated_claims: None,
         }
@@ -163,7 +168,7 @@ impl EnforcementMode {
     /// Defaults to `Permissive` if unset or unrecognized.
     #[must_use]
     pub fn from_env() -> Self {
-        match std::env::var("BEARDOG_AUTH_MODE")
+        match std::env::var(beardog_config::env_keys::ENV_AUTH_MODE)
             .unwrap_or_default()
             .to_lowercase()
             .as_str()
@@ -359,7 +364,7 @@ pub fn handle_auth_check(caller: &CallerContext) -> serde_json::Value {
 pub fn handle_auth_mode(gate: &MethodGate) -> serde_json::Value {
     serde_json::json!({
         "mode": gate.mode().as_str(),
-        "env_var": "BEARDOG_AUTH_MODE",
+        "env_var": beardog_config::env_keys::ENV_AUTH_MODE,
     })
 }
 

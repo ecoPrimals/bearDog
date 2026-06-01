@@ -207,6 +207,14 @@ pub const ENV_ENABLE_RATE_LIMITING: &str = "BEARDOG_ENABLE_RATE_LIMITING";
 pub const ENV_AUTO_BLOCK_SUSPICIOUS_IPS: &str = "BEARDOG_AUTO_BLOCK_SUSPICIOUS_IPS";
 /// Require authentication for all endpoints.
 pub const ENV_REQUIRE_AUTHENTICATION: &str = "BEARDOG_REQUIRE_AUTHENTICATION";
+/// `MethodGate` enforcement mode (`permissive` or `enforced`).
+pub const ENV_AUTH_MODE: &str = "BEARDOG_AUTH_MODE";
+/// BTSP `BirdSong` HSM key label.
+pub const ENV_BTSP_BIRDSONG_KEY_LABEL: &str = "BEARDOG_BTSP_BIRDSONG_KEY_LABEL";
+/// BTSP lineage root prefix.
+pub const ENV_BTSP_LINEAGE_ROOT_PREFIX: &str = "BEARDOG_BTSP_LINEAGE_ROOT_PREFIX";
+/// BTSP maximum lineage depth.
+pub const ENV_BTSP_LINEAGE_MAX_DEPTH: &str = "BEARDOG_BTSP_LINEAGE_MAX_DEPTH";
 
 // ── Crypto ───────────────────────────────────────────────────────────
 

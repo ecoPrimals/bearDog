@@ -34,7 +34,14 @@ pub struct UnixSocket;
 /// Wrapper to make `UnixStream` implement `PlatformStream`
 pub struct UnixPlatformStream(UnixStream);
 
-impl PlatformStream for UnixPlatformStream {}
+impl PlatformStream for UnixPlatformStream {
+    fn peer_credentials(&self) -> Option<(u32, Option<u32>)> {
+        self.0
+            .peer_cred()
+            .ok()
+            .map(|cred| (cred.uid(), cred.pid().map(|p| p as u32)))
+    }
+}
 
 impl AsyncRead for UnixPlatformStream {
     fn poll_read(

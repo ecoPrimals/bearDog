@@ -50,7 +50,14 @@ pub struct AndroidSocket;
 /// Wrapper to make `UnixStream` implement `PlatformStream`
 pub struct AndroidPlatformStream(UnixStream);
 
-impl PlatformStream for AndroidPlatformStream {}
+impl PlatformStream for AndroidPlatformStream {
+    fn peer_credentials(&self) -> Option<(u32, Option<u32>)> {
+        self.0
+            .peer_cred()
+            .ok()
+            .map(|cred| (cred.uid(), cred.pid().map(|p| p as u32)))
+    }
+}
 
 impl AsyncRead for AndroidPlatformStream {
     fn poll_read(

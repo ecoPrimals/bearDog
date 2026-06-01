@@ -26,7 +26,7 @@ impl UnixSocketIpcServer {
         first_line: &str,
         stream: Box<dyn PlatformStream>,
     ) -> Result<()> {
-        let mut caller = CallerContext::from_unix();
+        let mut caller = CallerContext::from_unix_with_peer(stream.peer_credentials());
         let mut buf_stream = BufReader::new(stream);
 
         if let Some(response) = self
@@ -166,7 +166,7 @@ impl UnixSocketIpcServer {
         &self,
         stream: Box<dyn PlatformStream>,
     ) -> Result<()> {
-        let mut caller = CallerContext::from_unix();
+        let mut caller = CallerContext::from_unix_with_peer(stream.peer_credentials());
         let mut buf_stream = BufReader::new(stream);
         let mut line_buf = Vec::with_capacity(1024);
 
@@ -221,7 +221,7 @@ impl UnixSocketIpcServer {
         mut stream: Box<dyn PlatformStream>,
         mut session: BtspSession,
     ) -> Result<()> {
-        let mut caller = CallerContext::from_unix();
+        let mut caller = CallerContext::from_unix_with_peer(stream.peer_credentials());
         loop {
             let frame = match btsp_handshake::read_frame(&mut stream).await {
                 Ok(f) => f,
@@ -276,7 +276,7 @@ impl UnixSocketIpcServer {
         mut stream: Box<dyn PlatformStream>,
         session: Phase3Session,
     ) -> Result<()> {
-        let mut caller = CallerContext::from_unix();
+        let mut caller = CallerContext::from_unix_with_peer(stream.peer_credentials());
         info!("BTSP Phase 3: encrypted frame I/O active");
         loop {
             let frame = match btsp_handshake::read_frame(&mut stream).await {
