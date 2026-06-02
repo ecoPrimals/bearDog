@@ -46,6 +46,7 @@ use super::utils::get_primal_name;
 use crate::btsp_provider::BeardogBtspProvider;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
+use beardog_config::env_keys;
 use beardog_core::crypto_service::algorithms::hashing;
 use beardog_types::primal_identity::PrimalIdentity;
 use chacha20poly1305::{
@@ -200,12 +201,12 @@ impl SecretsHandler {
     ///
     /// Checks `BEARDOG_FAMILY_SEED` then `FAMILY_SEED` (BearDog-prefixed takes precedence).
     fn load_family_seed() -> Result<Vec<u8>, String> {
-        if let Ok(seed) = beardog_errors::process_env::var("BEARDOG_FAMILY_SEED")
+        if let Ok(seed) = beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED_PREFIXED)
             && !seed.is_empty()
         {
             return Ok(seed.into_bytes());
         }
-        if let Ok(seed) = beardog_errors::process_env::var("FAMILY_SEED")
+        if let Ok(seed) = beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED)
             && !seed.is_empty()
         {
             return Ok(seed.into_bytes());

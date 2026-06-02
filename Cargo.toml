@@ -121,7 +121,7 @@ unwrap_used = { level = "warn", priority = 2 }
 
 [workspace.dependencies]
 # Core dependencies
-tokio = { version = "1.35", features = ["full", "tracing"] }
+tokio = { version = "1.35", default-features = false, features = ["tracing"] }
 serde = { version = "1.0", features = ["derive"] }
 serial_test = "3.0"
 serde_json = "1.0"
@@ -301,7 +301,7 @@ beardog-security = { workspace = true }
 beardog-traits = { workspace = true }
 beardog-cli = { workspace = true }
 
-tokio = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 anyhow = { workspace = true }
@@ -313,7 +313,7 @@ thiserror = { workspace = true }
 beardog-hid = { workspace = true, optional = true }
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["test-util"] }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "test-util"] }
 proptest = { workspace = true }
 criterion = { workspace = true }
 rand = { workspace = true }

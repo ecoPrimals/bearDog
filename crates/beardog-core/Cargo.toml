@@ -92,6 +92,7 @@ path = "../beardog-discovery"
 
 [dependencies.tokio]
 workspace = true
+features = ["rt", "macros", "sync", "time", "net", "io-util", "fs", "process"]
 
 [dependencies.serde]
 workspace = true

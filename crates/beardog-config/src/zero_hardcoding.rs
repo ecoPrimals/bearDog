@@ -32,6 +32,7 @@
 //! ```
 
 use crate::domains::network_addresses::WILDCARD_IPV4;
+use crate::env_keys;
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::str::FromStr;
@@ -321,23 +322,23 @@ impl RetryConfig {
     /// - `BEARDOG_RETRY_BACKOFF_MULTIPLIER` - Backoff multiplier (default: 2.0)
     pub fn from_env() -> Self {
         Self {
-            max_attempts: std::env::var("BEARDOG_RETRY_MAX_ATTEMPTS")
+            max_attempts: std::env::var(env_keys::ENV_RETRY_MAX_ATTEMPTS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3),
             initial_backoff: Duration::from_millis(
-                std::env::var("BEARDOG_RETRY_INITIAL_BACKOFF_MS")
+                std::env::var(env_keys::ENV_RETRY_INITIAL_BACKOFF_MS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(100),
             ),
             max_backoff: Duration::from_secs(
-                std::env::var("BEARDOG_RETRY_MAX_BACKOFF_SECS")
+                std::env::var(env_keys::ENV_RETRY_MAX_BACKOFF_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),
             ),
-            backoff_multiplier: std::env::var("BEARDOG_RETRY_BACKOFF_MULTIPLIER")
+            backoff_multiplier: std::env::var(env_keys::ENV_RETRY_BACKOFF_MULTIPLIER)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(2.0),

@@ -4,6 +4,8 @@
 
 use std::time::Duration;
 
+use beardog_config::env_keys;
+
 /// Get default API port from configuration hierarchy
 ///
 /// Respects: CLI > Env > File > Platform > Fallback (8080 in config)
@@ -56,7 +58,7 @@ pub fn default_admin_port() -> u16 {
 /// Consider using `BEARDOG_CONFIG.network.service_ports.debug_port` directly.
 #[must_use]
 pub fn default_debug_port() -> u16 {
-    std::env::var("BEARDOG_DEBUG_PORT")
+    std::env::var(env_keys::ENV_DEBUG_PORT)
         .ok()
         .and_then(|p| p.parse().ok())
         .unwrap_or_else(|| {

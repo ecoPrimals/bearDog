@@ -781,6 +781,7 @@ name = "beardog-production"
 version = "0.9.0"
 dependencies = [
  "base64",
+ "beardog-config",
  "beardog-errors",
  "beardog-security",
  "beardog-types",
@@ -4320,7 +4321,6 @@ dependencies = [
  "bytes",
  "libc",
  "mio",
- "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2 0.6.4",

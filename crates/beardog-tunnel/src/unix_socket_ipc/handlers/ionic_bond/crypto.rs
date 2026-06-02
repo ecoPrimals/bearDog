@@ -2,6 +2,7 @@
 
 use crate::btsp_provider::BeardogBtspProvider;
 use base64::Engine;
+use beardog_config::env_keys;
 use beardog_types::ionic_bond::IonicBondProposeParams;
 use std::sync::Arc;
 
@@ -21,7 +22,8 @@ pub(super) fn sign_terms_ed25519(
     _btsp_provider: &Arc<BeardogBtspProvider>,
     terms_hash: &str,
 ) -> Result<(String, String), String> {
-    let primal_name = std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_string());
+    let primal_name =
+        std::env::var(env_keys::ENV_PRIMAL_NAME).unwrap_or_else(|_| "beardog".to_string());
     let node_id = beardog_types::primal_identity::resolve_node_id_from_env_or_ephemeral(None);
 
     Ok(

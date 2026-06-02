@@ -9,6 +9,7 @@ use crate::btsp_provider::BeardogBtspProvider;
 use crate::method_gate::{CallerContext, MethodGate, dispatch_auth_method};
 use crate::tcp_ipc::rate_limiter::{ConnectionRateLimiter, RateLimitConfig};
 use crate::unix_socket_ipc::handlers::HandlerRegistry;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::primal_identity::PrimalIdentity;
 use serde_json::Value;
@@ -85,7 +86,8 @@ impl TcpIpcServer {
         identity: Arc<PrimalIdentity>,
         security_mode: BtspSecurityMode,
     ) -> Self {
-        let primal_name = std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_owned());
+        let primal_name =
+            std::env::var(env_keys::ENV_PRIMAL_NAME).unwrap_or_else(|_| "beardog".to_owned());
         let method_gate = Arc::new(MethodGate::from_env(&primal_name, identity.node_id()));
         info!(
             mode = method_gate.mode().as_str(),

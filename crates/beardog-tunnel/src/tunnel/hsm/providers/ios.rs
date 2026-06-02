@@ -5,6 +5,7 @@
 //! Universal provider implementation for iOS HSM capabilities,
 //! including Secure Enclave support.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use tracing::{debug, info};
@@ -129,7 +130,7 @@ impl IosUniversalProvider {
 
     /// Simulate Secure Enclave detection based on device model
     fn simulate_secure_enclave_detection(&mut self) -> bool {
-        if let Ok(model) = beardog_errors::process_env::var("IOS_MODEL") {
+        if let Ok(model) = beardog_errors::process_env::var(env_keys::ENV_IOS_MODEL) {
             return self.detect_from_model(&model);
         }
 

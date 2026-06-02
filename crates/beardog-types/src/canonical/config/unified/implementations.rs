@@ -4,6 +4,7 @@
 //!
 //! This module contains the implementation methods for `UnifiedBearDogConfig`.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 
 use super::UnifiedBearDogConfig;
@@ -65,7 +66,7 @@ impl UnifiedBearDogConfig {
         let mut config = Self::default();
 
         // Load from environment variables
-        if let Ok(env) = std::env::var("BEARDOG_ENVIRONMENT") {
+        if let Ok(env) = std::env::var(env_keys::ENV_ENVIRONMENT) {
             config.metadata.environment = match env.as_str() {
                 "testing" => Environment::Testing,
                 "staging" => Environment::Staging,

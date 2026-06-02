@@ -73,6 +73,7 @@
 //! - RFC 8446 (TLS 1.3): <https://www.rfc-editor.org/rfc/rfc8446.html>
 //! - Wireshark TLS Decryption: <https://wiki.wireshark.org/TLS>
 
+use beardog_config::env_keys;
 use std::fs::OpenOptions;
 use std::io::Write;
 use tracing::info;
@@ -205,7 +206,7 @@ pub fn export_to_sslkeylogfile(
     );
 
     // Check if SSLKEYLOGFILE env var is set
-    let keylog_path = match beardog_errors::process_env::var("SSLKEYLOGFILE") {
+    let keylog_path = match beardog_errors::process_env::var(env_keys::ENV_SSLKEYLOGFILE) {
         Ok(path) if !path.is_empty() => {
             info!("   ✅ SSLKEYLOGFILE is set: {}", path);
             path

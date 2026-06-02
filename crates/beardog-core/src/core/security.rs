@@ -16,6 +16,7 @@
 //! Production auth uses Unix socket communication to dedicated auth service.
 
 use super::key_management::{KeyStorage, KeyStore, KeyUsage};
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::config::unified::UnifiedBearDogConfig as BearDogConfig;
 use beardog_types::canonical::providers_unified::traits::base_traits::{
@@ -54,7 +55,7 @@ static KEY_STORE: OnceLock<KeyStore> = OnceLock::new();
 
 fn get_key_store() -> &'static KeyStore {
     KEY_STORE.get_or_init(|| {
-        let storage_dir = beardog_errors::process_env::var("BEARDOG_KEY_STORAGE_DIR")
+        let storage_dir = beardog_errors::process_env::var(env_keys::ENV_KEY_STORAGE_DIR)
             .ok()
             .map(std::path::PathBuf::from);
         KeyStore::new(storage_dir)

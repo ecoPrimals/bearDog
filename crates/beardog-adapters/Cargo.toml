@@ -27,7 +27,7 @@ beardog-types = { path = "../beardog-types" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tracing = { workspace = true }
-tokio = { workspace = true }
+tokio = { workspace = true, features = ["rt", "macros", "time", "sync"] }
 chrono = { workspace = true }
 uuid = { workspace = true }
 semver = { workspace = true }

@@ -34,7 +34,7 @@ tokio = { workspace = true, optional = true, features = ["fs"] }
 
 [dev-dependencies]
 tempfile = { workspace = true }
-tokio = { workspace = true, features = ["full", "test-util"] }
+tokio = { workspace = true, features = ["rt", "macros", "fs", "test-util"] }
 
 [features]
 default = []

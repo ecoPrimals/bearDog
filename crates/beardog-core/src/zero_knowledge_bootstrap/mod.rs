@@ -39,6 +39,7 @@
 //! - **Sovereignty Compliant**: No forced dependencies on specific services
 
 use crate::ecosystem::primal_types::{DiscoveredPrimal, PrimalMetadata, UniversalEndpoint};
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{ServiceCapabilityType, UniversalCapability};
 use beardog_types::canonical::config::domains::bootstrap::UnifiedBootstrapConfig;
@@ -272,16 +273,16 @@ impl BootstrapConfig {
     pub fn from_env() -> Self {
         use beardog_config::global::BEARDOG_CONFIG;
         Self {
-            discovery_timeout_ms: std::env::var("BEARDOG_ZK_DISCOVERY_TIMEOUT_MS")
+            discovery_timeout_ms: std::env::var(env_keys::ENV_ZK_DISCOVERY_TIMEOUT_MS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(30000),
-            max_discovery_attempts: std::env::var("BEARDOG_ZK_MAX_DISCOVERY_ATTEMPTS")
+            max_discovery_attempts: std::env::var(env_keys::ENV_ZK_MAX_DISCOVERY_ATTEMPTS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(10),
             min_capabilities_threshold: 1,
-            listen_interface: std::env::var("BEARDOG_LISTEN_INTERFACE")
+            listen_interface: std::env::var(env_keys::ENV_LISTEN_INTERFACE)
                 .unwrap_or_else(|_| BEARDOG_CONFIG.network.addresses.bind_address.clone()),
             discovery_protocols: vec![
                 DiscoveryProtocol::MulticastDNS,

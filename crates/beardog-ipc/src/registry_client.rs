@@ -38,6 +38,7 @@
 //! Instead of N primal-specific clients, we have 1 universal client that adapts to any registry
 
 use crate::protocol::JSONRPC_VERSION;
+use beardog_config::env_keys;
 use beardog_core::capabilities::{BearDogCapabilities, Capability};
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -53,7 +54,7 @@ use tracing::{debug, error, info, warn};
 /// `{std::env::temp_dir()}/beardog-registry-default.sock` (platform temp dir, not a hardcoded `/tmp`).
 #[must_use]
 fn fallback_registry_unix_socket_path() -> String {
-    std::env::var("BEARDOG_REGISTRY_SOCKET_FALLBACK").unwrap_or_else(|_| {
+    std::env::var(env_keys::ENV_REGISTRY_SOCKET_FALLBACK).unwrap_or_else(|_| {
         std::env::temp_dir()
             .join("beardog-registry-default.sock")
             .to_string_lossy()

@@ -7,6 +7,7 @@
 
 use crate::ecosystem::primal_types::UniversalIntegrationConfig;
 // Removed unused compute client imports - handled by universal adapters
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::ServiceCapabilityType;
 use serde::{Deserialize, Serialize};
@@ -38,13 +39,14 @@ impl SelfIdentityEnvInputs {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            primal_name: std::env::var("PRIMAL_NAME").ok(),
-            beardog_name: std::env::var("BEARDOG_NAME").ok(),
-            hostname: std::env::var("HOSTNAME").ok(),
-            host: std::env::var("HOST").ok(),
-            beardog_endpoint: std::env::var("BEARDOG_ENDPOINT").ok(),
-            self_discovery_endpoint: std::env::var("SELF_DISCOVERY_ENDPOINT").ok(),
-            beardog_advertised_capabilities: std::env::var("BEARDOG_ADVERTISED_CAPABILITIES").ok(),
+            primal_name: std::env::var(env_keys::ENV_PRIMAL_NAME).ok(),
+            beardog_name: std::env::var(env_keys::ENV_NAME).ok(),
+            hostname: std::env::var(env_keys::ENV_HOSTNAME).ok(),
+            host: std::env::var(env_keys::ENV_HOST_UNPREFIXED).ok(),
+            beardog_endpoint: std::env::var(env_keys::ENV_ENDPOINT).ok(),
+            self_discovery_endpoint: std::env::var(env_keys::ENV_SELF_DISCOVERY_ENDPOINT).ok(),
+            beardog_advertised_capabilities: std::env::var(env_keys::ENV_ADVERTISED_CAPABILITIES)
+                .ok(),
         }
     }
 }

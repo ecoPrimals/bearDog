@@ -111,7 +111,7 @@ impl HsmConfig {
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.enable_strongbox),
-            softhsm_config: std::env::var("SOFTHSM2_CONF")
+            softhsm_config: std::env::var(env_keys::ENV_SOFTHSM2_CONF)
                 .ok()
                 .map(PathBuf::from)
                 .or(defaults.softhsm_config),
@@ -340,9 +340,11 @@ mod tests {
     #[test]
     fn test_yubihsm_connector_validation_http() {
         let config = HsmConfig {
-            yubihsm_connector: Some(std::env::var("YUBIHSM_CONNECTOR_URL").unwrap_or_else(|_| {
-                "http://yubihsm-connector.ecosystem.internal:12345".to_string()
-            })),
+            yubihsm_connector: Some(
+                std::env::var(env_keys::ENV_YUBIHSM_CONNECTOR_URL).unwrap_or_else(|_| {
+                    "http://yubihsm-connector.ecosystem.internal:12345".to_string()
+                }),
+            ),
             ..Default::default()
         };
 

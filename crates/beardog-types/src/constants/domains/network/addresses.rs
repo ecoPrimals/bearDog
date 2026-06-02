@@ -17,6 +17,8 @@
 //!    [`default_health_bind_from_env`], or the config APIs first; reference these constants only when
 //!    every other tier is unavailable (e.g. static data in old binaries).
 
+use beardog_config::env_keys;
+
 /// **Fallback** IPv4 loopback literal (IANA); prefer env/config (`BEARDOG_LOCALHOST_IPV4`, etc.).
 pub const DEFAULT_LOCALHOST_IPV4_STR: &str = "127.0.0.1";
 /// **Fallback** IPv6 loopback literal.
@@ -46,7 +48,7 @@ pub fn default_bind_address() -> String {
 /// Bind address from `BEARDOG_BIND_ADDRESS`, falling back to [`WILDCARD_IPV4`].
 #[must_use]
 pub fn default_bind_address_from_env() -> String {
-    std::env::var("BEARDOG_BIND_ADDRESS").unwrap_or_else(|_| WILDCARD_IPV4.to_string())
+    std::env::var(env_keys::ENV_BIND_ADDRESS).unwrap_or_else(|_| WILDCARD_IPV4.to_string())
 }
 
 /// Get default API bind address from environment or construct from defaults
@@ -64,7 +66,7 @@ pub fn default_api_bind() -> String {
 /// API bind from `BEARDOG_API_BIND`, or constructed from [`default_api_bind_from_env`] parts.
 #[must_use]
 pub fn default_api_bind_from_env() -> String {
-    std::env::var("BEARDOG_API_BIND").unwrap_or_else(|_| {
+    std::env::var(env_keys::ENV_API_BIND).unwrap_or_else(|_| {
         format!(
             "{}:{}",
             default_bind_address_from_env(),
@@ -88,7 +90,7 @@ pub fn default_metrics_bind() -> String {
 /// Metrics bind from `BEARDOG_METRICS_BIND`, or constructed from env-aware bind address.
 #[must_use]
 pub fn default_metrics_bind_from_env() -> String {
-    std::env::var("BEARDOG_METRICS_BIND").unwrap_or_else(|_| {
+    std::env::var(env_keys::ENV_METRICS_BIND).unwrap_or_else(|_| {
         format!(
             "{}:{}",
             default_bind_address_from_env(),
@@ -112,7 +114,7 @@ pub fn default_health_bind() -> String {
 /// Health bind from `BEARDOG_HEALTH_BIND`, or constructed from env-aware bind address.
 #[must_use]
 pub fn default_health_bind_from_env() -> String {
-    std::env::var("BEARDOG_HEALTH_BIND").unwrap_or_else(|_| {
+    std::env::var(env_keys::ENV_HEALTH_BIND).unwrap_or_else(|_| {
         format!(
             "{}:{}",
             default_bind_address_from_env(),
@@ -132,7 +134,7 @@ pub fn multicast_address() -> String {
 /// Multicast address from `BEARDOG_MULTICAST_ADDRESS`, falling back to the default multicast group.
 #[must_use]
 pub fn multicast_address_from_env() -> String {
-    std::env::var("BEARDOG_MULTICAST_ADDRESS").unwrap_or_else(|_| "224.0.0.251".to_string())
+    std::env::var(env_keys::ENV_MULTICAST_ADDRESS).unwrap_or_else(|_| "224.0.0.251".to_string())
 }
 
 // Legacy const exports for backward compatibility (deprecated)
@@ -194,7 +196,7 @@ pub fn dns_servers() -> Vec<String> {
 
 /// DNS servers from `BEARDOG_DNS_SERVERS`, falling back to [`dns_servers`].
 pub fn dns_servers_from_env() -> Vec<String> {
-    std::env::var("BEARDOG_DNS_SERVERS").map_or_else(
+    std::env::var(env_keys::ENV_DNS_SERVERS).map_or_else(
         |_| dns_servers(),
         |s| s.split(',').map(str::trim).map(String::from).collect(),
     )

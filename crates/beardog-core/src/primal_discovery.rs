@@ -54,6 +54,7 @@
 //! ```
 
 use crate::self_knowledge::{Endpoint, SimpleCapability};
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::constants::domains::network::ipc_discovery as ipc;
 use beardog_types::constants::domains::system::intervals::PRIMAL_DISCOVERY_CACHE_TTL;
@@ -231,10 +232,11 @@ impl PrimalDiscovery {
         let method = Self::detect_discovery_method()?;
         debug!("Discovery method: {:?}", method);
 
-        let cache_ttl = beardog_errors::process_env::var("DISCOVERY_CACHE_TTL_SECS")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .map_or(PRIMAL_DISCOVERY_CACHE_TTL, Duration::from_secs);
+        let cache_ttl =
+            beardog_errors::process_env::var(env_keys::ENV_DISCOVERY_CACHE_TTL_SECS_UNPREFIXED)
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .map_or(PRIMAL_DISCOVERY_CACHE_TTL, Duration::from_secs);
 
         Ok(Self {
             method,
@@ -246,7 +248,7 @@ impl PrimalDiscovery {
 
     /// Detect discovery method from environment
     fn detect_discovery_method() -> Result<DiscoveryMethod, BearDogError> {
-        match beardog_errors::process_env::var("PRIMAL_DISCOVERY_METHOD")
+        match beardog_errors::process_env::var(env_keys::ENV_PRIMAL_DISCOVERY_METHOD)
             .ok()
             .as_deref()
         {
@@ -260,13 +262,14 @@ impl PrimalDiscovery {
                 Ok(DiscoveryMethod::UniversalPrimalAuthority { registry_addr })
             }
             Some("mdns") => {
-                let service_type = beardog_errors::process_env::var("MDNS_SERVICE_TYPE")
-                    .unwrap_or_else(|_| "_ecoprimal._tcp".to_string());
+                let service_type =
+                    beardog_errors::process_env::var(env_keys::ENV_MDNS_SERVICE_TYPE)
+                        .unwrap_or_else(|_| "_ecoprimal._tcp".to_string());
                 info!("Using mDNS service discovery: {}", service_type);
                 Ok(DiscoveryMethod::Mdns { service_type })
             }
             Some("dns-sd") => {
-                let domain = beardog_errors::process_env::var("DNSSD_DOMAIN")
+                let domain = beardog_errors::process_env::var(env_keys::ENV_DNSSD_DOMAIN)
                     .unwrap_or_else(|_| "local.".to_string());
                 info!("Using DNS-SD discovery in domain: {}", domain);
                 Ok(DiscoveryMethod::DnsSd { domain })

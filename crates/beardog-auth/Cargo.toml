@@ -38,6 +38,7 @@ workspace = true
 
 [dependencies.tokio]
 workspace = true
+features = ["rt", "macros"]
 
 [dependencies.serde]
 workspace = true

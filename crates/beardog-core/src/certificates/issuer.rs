@@ -7,6 +7,7 @@
 
 use super::CommercialExtractionDetector;
 use super::context::RequestContext;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::adapters::{
     AdapterUnlockCertificate, CertificateClassification, ExtractionRisk,
@@ -31,7 +32,7 @@ impl LicenseInputs {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            license_key: std::env::var("BEARDOG_LICENSE_KEY")
+            license_key: std::env::var(env_keys::ENV_LICENSE_KEY)
                 .ok()
                 .filter(|s| !s.is_empty()),
         }

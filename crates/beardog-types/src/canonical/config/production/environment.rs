@@ -3,6 +3,7 @@
 // Production Environment Configuration
 
 use crate::canonical::capabilities::CapabilityType;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -307,31 +308,31 @@ impl EnvironmentType {
     pub fn metrics_collection_interval(&self) -> Duration {
         match self {
             Self::Local => Duration::from_secs(
-                std::env::var("BEARDOG_LOCAL_METRICS_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_LOCAL_METRICS_INTERVAL_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(60),
             ),
             Self::Development => Duration::from_secs(
-                std::env::var("BEARDOG_DEV_METRICS_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_DEV_METRICS_INTERVAL_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),
             ),
             Self::Testing => Duration::from_secs(
-                std::env::var("BEARDOG_TEST_METRICS_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_TEST_METRICS_INTERVAL_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(15),
             ),
             Self::Staging => Duration::from_secs(
-                std::env::var("BEARDOG_STAGING_METRICS_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_STAGING_METRICS_INTERVAL_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(10),
             ),
             Self::Production => Duration::from_secs(
-                std::env::var("BEARDOG_PRODUCTION_METRICS_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_PRODUCTION_METRICS_INTERVAL_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(5),

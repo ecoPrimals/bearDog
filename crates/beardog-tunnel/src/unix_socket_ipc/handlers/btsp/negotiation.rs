@@ -8,6 +8,7 @@
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
+use beardog_config::env_keys;
 use rand::RngCore;
 use serde::Deserialize;
 use tracing::{debug, info, warn};
@@ -172,8 +173,8 @@ fn select_best_cipher(offered: &[String]) -> &'static str {
 
 /// Load the family seed from the environment for handshake key re-derivation.
 fn load_family_seed() -> Result<Vec<u8>, String> {
-    let seed_str = beardog_errors::process_env::var("FAMILY_SEED")
-        .or_else(|_| beardog_errors::process_env::var("BEARDOG_FAMILY_SEED"))
+    let seed_str = beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED)
+        .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED_PREFIXED))
         .map_err(|_| {
             "BTSP Phase 3 requires FAMILY_SEED or BEARDOG_FAMILY_SEED environment variable"
                 .to_string()

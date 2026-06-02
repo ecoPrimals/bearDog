@@ -58,6 +58,7 @@
 use crate::capability_routing::{CapabilityRouter, RequestContext, SelectionStrategy};
 use crate::primal_discovery::{DiscoveredPrimal, DiscoveryQuery, PrimalDiscovery};
 use crate::self_knowledge::{PrimalSelfKnowledge, SimpleCapability};
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -77,7 +78,7 @@ impl UniversalAdapterEnvInputs {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            cache_ttl_secs: std::env::var("UNIVERSAL_ADAPTER_CACHE_TTL_SECS")
+            cache_ttl_secs: std::env::var(env_keys::ENV_UNIVERSAL_ADAPTER_CACHE_TTL_SECS)
                 .ok()
                 .and_then(|s| s.parse().ok()),
         }

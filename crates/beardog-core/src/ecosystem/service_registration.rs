@@ -6,6 +6,7 @@
 // This module provides functionality for the BearDog ecosystem.
 
 use crate::BearDogCore;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
 use serde::{Deserialize, Serialize};
@@ -172,7 +173,7 @@ impl BearDogCore {
         }
 
         // Check for generic discovery endpoints
-        if beardog_errors::process_env::var("ECOSYSTEM_DISCOVERY_ENDPOINT").is_ok() {
+        if beardog_errors::process_env::var(env_keys::ENV_ECOSYSTEM_DISCOVERY_ENDPOINT).is_ok() {
             return true; // Assume capability is discoverable
         }
 

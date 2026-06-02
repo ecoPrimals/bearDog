@@ -2,6 +2,7 @@
 
 //! Logging domain types for [`super::SystemDomainConfig`].
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -160,7 +161,7 @@ impl LoggingConfig {
 
     /// Create `LoggingConfig` from environment variables
     pub fn from_env() -> Self {
-        let level = std::env::var("BEARDOG_LOG_LEVEL")
+        let level = std::env::var(env_keys::ENV_LOG_LEVEL)
             .ok()
             .and_then(|s| match s.to_lowercase().as_str() {
                 "trace" => Some(LogLevel::Trace),

@@ -31,6 +31,9 @@ workspace = true
 [dependencies.beardog-types]
 workspace = true
 
+[dependencies.beardog-config]
+workspace = true
+
 [dependencies.tokio]
 workspace = true
 

@@ -28,6 +28,7 @@
 //! }
 //! ```
 
+use beardog_config::env_keys;
 use std::collections::HashMap;
 use std::time::Duration;
 use tracing::{debug, info};
@@ -185,7 +186,7 @@ impl BearDogFramework {
             .config
             .compute_endpoint
             .clone()
-            .or_else(|| std::env::var("BEARDOG_COMPUTE_ENDPOINT").ok())
+            .or_else(|| std::env::var(env_keys::ENV_COMPUTE_ENDPOINT).ok())
             .ok_or_else(|| {
                 BearDogError::Configuration(
                     "BEARDOG_COMPUTE_ENDPOINT must be configured. \
@@ -199,7 +200,7 @@ impl BearDogFramework {
             .config
             .storage_endpoint
             .clone()
-            .or_else(|| std::env::var("BEARDOG_STORAGE_ENDPOINT").ok())
+            .or_else(|| std::env::var(env_keys::ENV_STORAGE_ENDPOINT).ok())
             .ok_or_else(|| {
                 BearDogError::Configuration(
                     "BEARDOG_STORAGE_ENDPOINT must be configured. \

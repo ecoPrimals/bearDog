@@ -9,6 +9,7 @@ use super::{
     ConfigSource, Environment, LogLevel, ProductionConfig, ProductionConfigManager, Result,
     SecretsManager,
 };
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::fs;
@@ -131,33 +132,33 @@ impl ProductionConfigManager {
     fn load_from_environment(&self, config: &mut ProductionConfig) -> Result<()> {
         debug!("Loading configuration from environment variables");
 
-        if let Ok(port) = beardog_errors::process_env::var("BEARDOG_PORT") {
+        if let Ok(port) = beardog_errors::process_env::var(env_keys::ENV_PORT) {
             config.application.port = port
                 .parse()
                 .map_err(|_| BearDogError::validation("Invalid BEARDOG_PORT value"))?;
         }
 
-        if let Ok(bind_address) = beardog_errors::process_env::var("BEARDOG_BIND_ADDRESS") {
+        if let Ok(bind_address) = beardog_errors::process_env::var(env_keys::ENV_BIND_ADDRESS) {
             config.application.bind_address = bind_address;
         }
 
-        if let Ok(worker_threads) = beardog_errors::process_env::var("BEARDOG_WORKER_THREADS") {
+        if let Ok(worker_threads) = beardog_errors::process_env::var(env_keys::ENV_WORKER_THREADS) {
             config.application.worker_threads = worker_threads
                 .parse()
                 .map_err(|_| BearDogError::validation("Invalid BEARDOG_WORKER_THREADS value"))?;
         }
 
-        if let Ok(db_host) = beardog_errors::process_env::var("BEARDOG_DB_HOST") {
+        if let Ok(db_host) = beardog_errors::process_env::var(env_keys::ENV_DB_HOST) {
             config.database.primary.host = db_host;
         }
 
-        if let Ok(db_port) = beardog_errors::process_env::var("BEARDOG_DB_PORT") {
+        if let Ok(db_port) = beardog_errors::process_env::var(env_keys::ENV_DB_PORT) {
             config.database.primary.port = db_port
                 .parse()
                 .map_err(|_| BearDogError::validation("Invalid BEARDOG_DB_PORT value"))?;
         }
 
-        if let Ok(log_level) = beardog_errors::process_env::var("BEARDOG_LOG_LEVEL") {
+        if let Ok(log_level) = beardog_errors::process_env::var(env_keys::ENV_LOG_LEVEL) {
             config.logging.level = match log_level.to_lowercase().as_str() {
                 "trace" => LogLevel::Trace,
                 "debug" => LogLevel::Debug,
@@ -310,8 +311,9 @@ impl ProductionConfigManager {
         });
 
         if matches!(environment, Environment::Production) {
-            if let Ok(vault_endpoint) = beardog_errors::process_env::var("VAULT_ENDPOINT")
-                && let Ok(vault_token) = beardog_errors::process_env::var("VAULT_TOKEN")
+            if let Ok(vault_endpoint) =
+                beardog_errors::process_env::var(env_keys::ENV_VAULT_ENDPOINT)
+                && let Ok(vault_token) = beardog_errors::process_env::var(env_keys::ENV_VAULT_TOKEN)
             {
                 sources.push(ConfigSource::UniversalSecretsManagement {
                     endpoint: vault_endpoint,
@@ -324,9 +326,9 @@ impl ProductionConfigManager {
                 });
             }
 
-            if beardog_errors::process_env::var("KUBERNETES_SERVICE_HOST").is_ok() {
+            if beardog_errors::process_env::var(env_keys::ENV_KUBERNETES_SERVICE_HOST).is_ok() {
                 sources.push(ConfigSource::UniversalContainerSecrets {
-                    namespace: beardog_errors::process_env::var("KUBERNETES_NAMESPACE")
+                    namespace: beardog_errors::process_env::var(env_keys::ENV_KUBERNETES_NAMESPACE)
                         .unwrap_or_else(|_| "default".to_string()),
                     provider_type: "kubernetes".to_string(),
                 });

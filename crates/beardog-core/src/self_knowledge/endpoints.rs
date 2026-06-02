@@ -6,6 +6,7 @@ use std::net::{Ipv4Addr, SocketAddr, ToSocketAddrs};
 use std::path::PathBuf;
 
 use beardog_config::domains::network_addresses::NetworkAddressesConfig;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
@@ -30,8 +31,8 @@ impl EndpointInputs {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            beardog_listen_addr: std::env::var("BEARDOG_LISTEN_ADDR").ok(),
-            beardog_port: std::env::var("BEARDOG_PORT").ok(),
+            beardog_listen_addr: std::env::var(env_keys::ENV_LISTEN_ADDR).ok(),
+            beardog_port: std::env::var(env_keys::ENV_PORT).ok(),
         }
     }
 }

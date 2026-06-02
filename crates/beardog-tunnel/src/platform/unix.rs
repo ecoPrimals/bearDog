@@ -21,6 +21,7 @@
 use super::{
     PlatformListener, PlatformListenerBackend, PlatformSocket, PlatformStream, SocketEndpoint,
 };
+use beardog_config::env_keys;
 use beardog_types::constants::domains::network::ipc_discovery as ipc_layout;
 use std::pin::Pin;
 use std::task::{Context, Poll};
@@ -109,8 +110,8 @@ impl UnixListenHints {
     /// Read `BEARDOG_SOCKET` and `XDG_RUNTIME_DIR`.
     pub fn from_env() -> Self {
         Self {
-            beardog_socket: beardog_errors::process_env::var("BEARDOG_SOCKET").ok(),
-            xdg_runtime_dir: beardog_errors::process_env::var("XDG_RUNTIME_DIR").ok(),
+            beardog_socket: beardog_errors::process_env::var(env_keys::ENV_SOCKET).ok(),
+            xdg_runtime_dir: beardog_errors::process_env::var(env_keys::ENV_XDG_RUNTIME_DIR).ok(),
             ipc_namespace: beardog_errors::process_env::var(ipc_layout::ENV_BIOMEOS_IPC_NAMESPACE)
                 .ok(),
         }

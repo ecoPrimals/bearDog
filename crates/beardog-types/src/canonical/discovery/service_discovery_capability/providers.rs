@@ -6,6 +6,7 @@ use crate::constants::domains::network::addresses::LOCALHOST_IPV4;
 use crate::constants::domains::network::config::LOCALHOST_NAME;
 use crate::constants::localhost::LOCALHOST_V4;
 use beardog_config::domains::network_ports::DEFAULT_API_PORT_STR;
+use beardog_config::env_keys;
 use std::collections::HashMap;
 
 use crate::canonical::capabilities::ServiceCapabilityType;
@@ -119,11 +120,11 @@ impl DnsHttpDiscovery {
         // For now, check if it's already an IP or localhost
         if name == LOCALHOST_NAME || name == LOCALHOST_IPV4 {
             // Use canonical network configuration instead of hardcoding
-            let default_port = std::env::var("BEARDOG_DEFAULT_SERVICE_PORT")
-                .or_else(|_| std::env::var("BEARDOG_API_PORT"))
+            let default_port = std::env::var(env_keys::ENV_DEFAULT_SERVICE_PORT)
+                .or_else(|_| std::env::var(env_keys::ENV_API_PORT))
                 .unwrap_or_else(|_| DEFAULT_API_PORT_STR.to_string());
-            let host = std::env::var("BEARDOG_API_HOST")
-                .or_else(|_| std::env::var("BEARDOG_LOCALHOST"))
+            let host = std::env::var(env_keys::ENV_API_HOST)
+                .or_else(|_| std::env::var(env_keys::ENV_LOCALHOST))
                 .unwrap_or_else(|_| LOCALHOST_V4.to_string());
             return Ok(vec![format!("http://{}:{}", host, default_port)]);
         }

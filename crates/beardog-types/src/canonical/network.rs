@@ -6,6 +6,7 @@
 use crate::canonical::traits::TimeoutPolicy;
 use crate::constants::domains::network::addresses::WILDCARD_IPV4;
 use beardog_config::domains::network_ports::DEFAULT_API_PORT;
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -221,10 +222,10 @@ impl NetworkConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            bind_address: std::env::var("BEARDOG_NETWORK_BIND_ADDRESS")
-                .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
+            bind_address: std::env::var(env_keys::ENV_NETWORK_BIND_ADDRESS)
+                .or_else(|_| std::env::var(env_keys::ENV_BIND_ADDRESS))
                 .unwrap_or_else(|_| WILDCARD_IPV4.to_string()),
-            port: std::env::var("BEARDOG_NETWORK_PORT")
+            port: std::env::var(env_keys::ENV_NETWORK_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_API_PORT),

@@ -55,6 +55,8 @@ pub mod types;
 
 pub mod protocol_router;
 
+use beardog_config::env_keys;
+
 pub use client::OrchestratorRegistryClient;
 pub use dispatch::{DispatchOutcome, IpcErrorPhase};
 pub use error::{IpcError, IpcResult};
@@ -99,7 +101,7 @@ pub const DISCOVERY_SOCKET_FALLBACK: &str = "/primal/discovery";
 #[must_use]
 pub fn discovery_socket_dev_fallback_path() -> String {
     let name = "beardog-discovery";
-    if let Ok(dir) = std::env::var("BEARDOG_DEV_DISCOVERY_SOCKET_DIR") {
+    if let Ok(dir) = std::env::var(env_keys::ENV_DEV_DISCOVERY_SOCKET_DIR) {
         return std::path::PathBuf::from(dir)
             .join(name)
             .to_string_lossy()
@@ -146,10 +148,10 @@ impl IpcSocketDiscoveryOptions {
     pub fn from_env() -> Self {
         let ttl = beardog_discovery::DEFAULT_ENV_DISCOVERY_TTL_SECS;
         Self {
-            ipc_socket: beardog_errors::process_env::var("IPC_SOCKET").ok(),
-            discovery_socket: beardog_errors::process_env::var("DISCOVERY_SOCKET").ok(),
+            ipc_socket: beardog_errors::process_env::var(env_keys::ENV_IPC_SOCKET).ok(),
+            discovery_socket: beardog_errors::process_env::var(env_keys::ENV_DISCOVERY_SOCKET).ok(),
             beardog_dev_discovery_socket: beardog_errors::process_env::var(
-                "BEARDOG_DEV_DISCOVERY_SOCKET",
+                env_keys::ENV_DEV_DISCOVERY_SOCKET,
             )
             .ok(),
             ipc_capability_services:

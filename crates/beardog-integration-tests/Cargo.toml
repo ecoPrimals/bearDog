@@ -54,6 +54,7 @@ path = "../beardog-utils"
 
 [dependencies.tokio]
 workspace = true
+features = ["rt", "rt-multi-thread", "macros", "sync", "time"]
 
 [dependencies.serde]
 workspace = true

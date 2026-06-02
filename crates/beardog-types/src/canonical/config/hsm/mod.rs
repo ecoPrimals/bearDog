@@ -6,6 +6,7 @@
 //! serde-friendly tree with validation hooks ([`HsmConfigValidation`](crate::canonical::config::hsm::HsmConfigValidation)).
 
 use crate::canonical::traits::RetryStrategy;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -117,12 +118,12 @@ impl Default for UnifiedHsmConfig {
         Self {
             enabled: true,
             default_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_HSM_DEFAULT_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_HSM_DEFAULT_TIMEOUT_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(30),
             ),
-            connection_pool_size: std::env::var("BEARDOG_HSM_CONNECTION_POOL_SIZE")
+            connection_pool_size: std::env::var(env_keys::ENV_HSM_CONNECTION_POOL_SIZE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(10),
@@ -171,18 +172,18 @@ impl Default for HsmRetryPolicy {
     fn default() -> Self {
         Self {
             enabled: true,
-            max_retries: std::env::var("BEARDOG_HSM_MAX_RETRIES")
+            max_retries: std::env::var(env_keys::ENV_HSM_MAX_RETRIES)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3),
             initial_delay: Duration::from_millis(
-                std::env::var("BEARDOG_HSM_RETRY_INITIAL_DELAY_MS")
+                std::env::var(env_keys::ENV_HSM_RETRY_INITIAL_DELAY_MS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(100),
             ),
             max_delay: Duration::from_secs(
-                std::env::var("BEARDOG_HSM_RETRY_MAX_DELAY_SECS")
+                std::env::var(env_keys::ENV_HSM_RETRY_MAX_DELAY_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),

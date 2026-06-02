@@ -23,6 +23,7 @@
 // - **Performance Optimized**: Efficient configuration loading and validation
 
 use crate::constants::domains::network::addresses::WILDCARD_IPV4;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -215,10 +216,10 @@ impl Default for PrometheusExporterConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            endpoint: std::env::var("BEARDOG_PROMETHEUS_ENDPOINT")
-                .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
+            endpoint: std::env::var(env_keys::ENV_PROMETHEUS_ENDPOINT)
+                .or_else(|_| std::env::var(env_keys::ENV_BIND_ADDRESS))
                 .unwrap_or_else(|_| WILDCARD_IPV4.to_string()), // Standard bind-to-all-interfaces
-            port: std::env::var("BEARDOG_PROMETHEUS_PORT")
+            port: std::env::var(env_keys::ENV_PROMETHEUS_PORT)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(beardog_config::domains::network_ports::DEFAULT_METRICS_PORT),
@@ -251,8 +252,8 @@ impl Default for GrafanaExporterConfig {
 
         Self {
             enabled: false,
-            url: std::env::var("BEARDOG_GRAFANA_URL")
-                .or_else(|_| std::env::var("GRAFANA_URL"))
+            url: std::env::var(env_keys::ENV_GRAFANA_URL)
+                .or_else(|_| std::env::var(env_keys::ENV_GRAFANA_URL_UNPREFIXED))
                 .unwrap_or_else(|_| {
                     format!(
                         "http://{}:{}",
@@ -290,8 +291,8 @@ impl Default for JaegerExporterConfig {
 
         Self {
             enabled: false,
-            endpoint: std::env::var("BEARDOG_JAEGER_ENDPOINT")
-                .or_else(|_| std::env::var("JAEGER_ENDPOINT"))
+            endpoint: std::env::var(env_keys::ENV_JAEGER_ENDPOINT)
+                .or_else(|_| std::env::var(env_keys::ENV_JAEGER_ENDPOINT_UNPREFIXED))
                 .unwrap_or_else(|_| {
                     format!(
                         "http://{}:{}/api/traces",

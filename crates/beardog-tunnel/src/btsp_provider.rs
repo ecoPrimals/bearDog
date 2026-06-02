@@ -42,6 +42,7 @@ use tracing::{debug, info, warn};
 
 use crate::tunnel::hsm::manager::HsmManager;
 use beardog_capabilities::traits::PeerEndpoint;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_genetics::birdsong::types::BirdSongEncryptRequest;
 use beardog_genetics::birdsong::{BirdSongManager, LineageHint};
@@ -364,10 +365,10 @@ impl BeardogBtspProvider {
         // This can be expanded to multi-hop lineage traversal later
 
         // Get our family from environment (primal self-knowledge)
-        let our_family = beardog_errors::process_env::var("FAMILY_ID")
-            .or_else(|_| beardog_errors::process_env::var("BEARDOG_FAMILY_ID"))
+        let our_family = beardog_errors::process_env::var(env_keys::ENV_FAMILY_ID)
+            .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_FAMILY_ID_PREFIXED))
             .unwrap_or_else(|_| {
-                beardog_errors::process_env::var("BEARDOG_FAMILY_UNKNOWN_LABEL")
+                beardog_errors::process_env::var(env_keys::ENV_FAMILY_UNKNOWN_LABEL)
                     .unwrap_or_else(|_| "unknown".to_string())
             });
 
@@ -514,9 +515,9 @@ impl BeardogBtspProvider {
     /// for the pure priority logic.
     fn get_discovery_socket_paths() -> Vec<String> {
         Self::build_discovery_socket_paths(
-            beardog_errors::process_env::var("IPC_SOCKET").ok(),
-            beardog_errors::process_env::var("DISCOVERY_SOCKET").ok(),
-            beardog_errors::process_env::var("BEARDOG_DEV_DISCOVERY_SOCKET").ok(),
+            beardog_errors::process_env::var(env_keys::ENV_IPC_SOCKET).ok(),
+            beardog_errors::process_env::var(env_keys::ENV_DISCOVERY_SOCKET).ok(),
+            beardog_errors::process_env::var(env_keys::ENV_DEV_DISCOVERY_SOCKET).ok(),
         )
     }
 

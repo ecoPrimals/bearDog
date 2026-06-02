@@ -1115,3 +1115,224 @@ pub const ENV_HAS_APPLE_SILICON: &str = "HAS_APPLE_SILICON";
 
 /// Legacy Neural API socket path override.
 pub const ENV_NEURAL_API_LEGACY_SOCKET: &str = "BEARDOG_NEURAL_API_LEGACY_SOCKET";
+
+// ── Application / runtime ──────────────────────────────────────────────
+
+/// Primary listen port.
+pub const ENV_PORT: &str = "BEARDOG_PORT";
+/// Worker thread pool size.
+pub const ENV_WORKER_THREADS: &str = "BEARDOG_WORKER_THREADS";
+/// Database host override.
+pub const ENV_DB_HOST: &str = "BEARDOG_DB_HOST";
+/// Database port override.
+pub const ENV_DB_PORT: &str = "BEARDOG_DB_PORT";
+/// Application version string.
+pub const ENV_APP_VERSION: &str = "BEARDOG_APP_VERSION";
+/// Instance identifier.
+pub const ENV_INSTANCE_ID: &str = "BEARDOG_INSTANCE_ID";
+/// Service display name override.
+pub const ENV_NAME: &str = "BEARDOG_NAME";
+/// Self-advertised endpoint URL.
+pub const ENV_ENDPOINT: &str = "BEARDOG_ENDPOINT";
+/// Self-discovery endpoint URL (unprefixed).
+pub const ENV_SELF_DISCOVERY_ENDPOINT: &str = "SELF_DISCOVERY_ENDPOINT";
+/// Comma-separated advertised capability list.
+pub const ENV_ADVERTISED_CAPABILITIES: &str = "BEARDOG_ADVERTISED_CAPABILITIES";
+/// Generic host override (unprefixed).
+pub const ENV_HOST_UNPREFIXED: &str = "HOST";
+/// Fallback family label when family ID is unset.
+pub const ENV_FAMILY_UNKNOWN_LABEL: &str = "BEARDOG_FAMILY_UNKNOWN_LABEL";
+/// License key for certificate issuance.
+pub const ENV_LICENSE_KEY: &str = "BEARDOG_LICENSE_KEY";
+/// Genesis mode selector.
+pub const ENV_GENESIS_MODE: &str = "BEARDOG_GENESIS_MODE";
+/// Local Unix socket directory for CLI clients.
+pub const ENV_LOCAL_SOCKET_DIR: &str = "BEARDOG_LOCAL_SOCKET_DIR";
+
+// ── Network bind (combined host:port) ────────────────────────────────────
+
+/// API bind address (combined host:port).
+pub const ENV_API_BIND: &str = "BEARDOG_API_BIND";
+/// Metrics bind address (combined host:port).
+pub const ENV_METRICS_BIND: &str = "BEARDOG_METRICS_BIND";
+/// Health check bind address (combined host:port).
+pub const ENV_HEALTH_BIND: &str = "BEARDOG_HEALTH_BIND";
+/// Comma-separated DNS server list.
+pub const ENV_DNS_SERVERS: &str = "BEARDOG_DNS_SERVERS";
+/// Network bind address override.
+pub const ENV_NETWORK_BIND_ADDRESS: &str = "BEARDOG_NETWORK_BIND_ADDRESS";
+/// Network port override.
+pub const ENV_NETWORK_PORT: &str = "BEARDOG_NETWORK_PORT";
+/// Default service port for discovery fallbacks.
+pub const ENV_DEFAULT_SERVICE_PORT: &str = "BEARDOG_DEFAULT_SERVICE_PORT";
+/// Redis connection URL (unprefixed).
+pub const ENV_REDIS_URL: &str = "REDIS_URL";
+
+// ── Monitoring endpoints ─────────────────────────────────────────────────
+
+/// Prometheus scrape endpoint host/address.
+pub const ENV_PROMETHEUS_ENDPOINT: &str = "BEARDOG_PROMETHEUS_ENDPOINT";
+/// Prometheus scrape port.
+pub const ENV_PROMETHEUS_PORT: &str = "BEARDOG_PROMETHEUS_PORT";
+/// Grafana dashboard URL.
+pub const ENV_GRAFANA_URL: &str = "BEARDOG_GRAFANA_URL";
+/// Grafana dashboard URL (unprefixed alias).
+pub const ENV_GRAFANA_URL_UNPREFIXED: &str = "GRAFANA_URL";
+/// Jaeger collector endpoint URL.
+pub const ENV_JAEGER_ENDPOINT: &str = "BEARDOG_JAEGER_ENDPOINT";
+/// Jaeger collector endpoint URL (unprefixed alias).
+pub const ENV_JAEGER_ENDPOINT_UNPREFIXED: &str = "JAEGER_ENDPOINT";
+/// Local environment metrics collection interval (seconds).
+pub const ENV_LOCAL_METRICS_INTERVAL_SECS: &str = "BEARDOG_LOCAL_METRICS_INTERVAL_SECS";
+/// Development metrics collection interval (seconds).
+pub const ENV_DEV_METRICS_INTERVAL_SECS: &str = "BEARDOG_DEV_METRICS_INTERVAL_SECS";
+/// Testing metrics collection interval (seconds).
+pub const ENV_TEST_METRICS_INTERVAL_SECS: &str = "BEARDOG_TEST_METRICS_INTERVAL_SECS";
+/// Staging metrics collection interval (seconds).
+pub const ENV_STAGING_METRICS_INTERVAL_SECS: &str = "BEARDOG_STAGING_METRICS_INTERVAL_SECS";
+/// Production metrics collection interval (seconds).
+pub const ENV_PRODUCTION_METRICS_INTERVAL_SECS: &str = "BEARDOG_PRODUCTION_METRICS_INTERVAL_SECS";
+
+// ── HSM config (runtime tuning) ────────────────────────────────────────
+
+/// Default HSM operation timeout (seconds).
+pub const ENV_HSM_DEFAULT_TIMEOUT_SECS: &str = "BEARDOG_HSM_DEFAULT_TIMEOUT_SECS";
+/// HSM connection pool size.
+pub const ENV_HSM_CONNECTION_POOL_SIZE: &str = "BEARDOG_HSM_CONNECTION_POOL_SIZE";
+/// HSM max retry attempts.
+pub const ENV_HSM_MAX_RETRIES: &str = "BEARDOG_HSM_MAX_RETRIES";
+/// HSM retry initial delay (milliseconds).
+pub const ENV_HSM_RETRY_INITIAL_DELAY_MS: &str = "BEARDOG_HSM_RETRY_INITIAL_DELAY_MS";
+/// HSM retry maximum delay (seconds).
+pub const ENV_HSM_RETRY_MAX_DELAY_SECS: &str = "BEARDOG_HSM_RETRY_MAX_DELAY_SECS";
+/// HSM operational mode.
+pub const ENV_HSM_MODE: &str = "BEARDOG_HSM_MODE";
+/// HSM auto-initialization flag.
+pub const ENV_HSM_AUTO_INIT: &str = "BEARDOG_HSM_AUTO_INIT";
+/// Colon-separated HSM library search paths.
+pub const ENV_HSM_LIBRARY_PATHS: &str = "BEARDOG_HSM_LIBRARY_PATHS";
+/// HSM audit log directory.
+pub const ENV_AUDIT_DIR: &str = "BEARDOG_AUDIT_DIR";
+/// `SoftHSM2` configuration file path.
+pub const ENV_SOFTHSM2_CONF: &str = "SOFTHSM2_CONF";
+/// `YubiHSM` connector URL (unprefixed alias).
+pub const ENV_YUBIHSM_CONNECTOR_URL: &str = "YUBIHSM_CONNECTOR_URL";
+
+// ── Provider registry ──────────────────────────────────────────────────
+
+/// Provider registry maximum entries.
+pub const ENV_PROVIDER_REGISTRY_MAX_PROVIDERS: &str = "BEARDOG_PROVIDER_REGISTRY_MAX_PROVIDERS";
+/// Provider health check interval (seconds).
+pub const ENV_PROVIDER_HEALTH_CHECK_INTERVAL_SECS: &str =
+    "BEARDOG_PROVIDER_HEALTH_CHECK_INTERVAL_SECS";
+/// Provider operation timeout (seconds).
+pub const ENV_PROVIDER_TIMEOUT_SECS: &str = "BEARDOG_PROVIDER_TIMEOUT_SECS";
+/// Provider migration timeout (seconds).
+pub const ENV_PROVIDER_MIGRATION_TIMEOUT_SECS: &str = "BEARDOG_PROVIDER_MIGRATION_TIMEOUT_SECS";
+/// Adapter cache duration (seconds).
+pub const ENV_ADAPTER_CACHE_DURATION_SECS: &str = "BEARDOG_ADAPTER_CACHE_DURATION_SECS";
+/// Cache cleanup interval (seconds).
+pub const ENV_CACHE_CLEANUP_INTERVAL_SECS: &str = "BEARDOG_CACHE_CLEANUP_INTERVAL_SECS";
+/// Universal adapter cache TTL (seconds, unprefixed).
+pub const ENV_UNIVERSAL_ADAPTER_CACHE_TTL_SECS: &str = "UNIVERSAL_ADAPTER_CACHE_TTL_SECS";
+
+// ── IPC (unprefixed aliases) ─────────────────────────────────────────────
+
+/// Primal IPC socket path (unprefixed).
+pub const ENV_IPC_SOCKET: &str = "IPC_SOCKET";
+/// Discovery socket path (unprefixed).
+pub const ENV_DISCOVERY_SOCKET: &str = "DISCOVERY_SOCKET";
+/// Development discovery socket path override.
+pub const ENV_DEV_DISCOVERY_SOCKET: &str = "BEARDOG_DEV_DISCOVERY_SOCKET";
+/// Development discovery socket directory override.
+pub const ENV_DEV_DISCOVERY_SOCKET_DIR: &str = "BEARDOG_DEV_DISCOVERY_SOCKET_DIR";
+/// biomeOS IPC namespace override.
+pub const ENV_BIOMEOS_IPC_NAMESPACE: &str = "BIOMEOS_IPC_NAMESPACE";
+/// TLS key log file path (Wireshark debugging).
+pub const ENV_SSLKEYLOGFILE: &str = "SSLKEYLOGFILE";
+
+// ── Kubernetes ───────────────────────────────────────────────────────────
+
+/// `BearDog` Kubernetes namespace override.
+pub const ENV_K8S_NAMESPACE: &str = "BEARDOG_K8S_NAMESPACE";
+/// `BearDog` Kubernetes API server URL override.
+pub const ENV_K8S_API_SERVER: &str = "BEARDOG_K8S_API_SERVER";
+/// In-cluster Kubernetes API host (unprefixed).
+pub const ENV_KUBERNETES_SERVICE_HOST: &str = "KUBERNETES_SERVICE_HOST";
+/// In-cluster Kubernetes API port (unprefixed).
+pub const ENV_KUBERNETES_SERVICE_PORT: &str = "KUBERNETES_SERVICE_PORT";
+/// Kubeconfig file path (unprefixed).
+pub const ENV_KUBECONFIG: &str = "KUBECONFIG";
+/// Kubernetes pod namespace (unprefixed).
+pub const ENV_KUBERNETES_NAMESPACE: &str = "KUBERNETES_NAMESPACE";
+
+// ── Vault / secrets ──────────────────────────────────────────────────────
+
+/// `HashiCorp` Vault endpoint URL.
+pub const ENV_VAULT_ENDPOINT: &str = "VAULT_ENDPOINT";
+/// `HashiCorp` Vault authentication token.
+pub const ENV_VAULT_TOKEN: &str = "VAULT_TOKEN";
+
+// ── Primal discovery (unprefixed) ────────────────────────────────────────
+
+/// Primal discovery method selector.
+pub const ENV_PRIMAL_DISCOVERY_METHOD: &str = "PRIMAL_DISCOVERY_METHOD";
+/// mDNS service type for discovery.
+pub const ENV_MDNS_SERVICE_TYPE: &str = "MDNS_SERVICE_TYPE";
+/// DNS-SD discovery domain.
+pub const ENV_DNSSD_DOMAIN: &str = "DNSSD_DOMAIN";
+/// Discovery cache TTL (seconds, unprefixed).
+pub const ENV_DISCOVERY_CACHE_TTL_SECS_UNPREFIXED: &str = "DISCOVERY_CACHE_TTL_SECS";
+
+// ── Zero-knowledge bootstrap ─────────────────────────────────────────────
+
+/// Zero-knowledge discovery timeout (milliseconds).
+pub const ENV_ZK_DISCOVERY_TIMEOUT_MS: &str = "BEARDOG_ZK_DISCOVERY_TIMEOUT_MS";
+/// Zero-knowledge max discovery attempts.
+pub const ENV_ZK_MAX_DISCOVERY_ATTEMPTS: &str = "BEARDOG_ZK_MAX_DISCOVERY_ATTEMPTS";
+/// Network listen interface override.
+pub const ENV_LISTEN_INTERFACE: &str = "BEARDOG_LISTEN_INTERFACE";
+/// Zero-knowledge max cache TTL (milliseconds).
+pub const ENV_ZK_MAX_CACHE_TTL_MS: &str = "BEARDOG_ZK_MAX_CACHE_TTL_MS";
+/// Zero-knowledge max concurrent tasks.
+pub const ENV_ZK_MAX_CONCURRENT_TASKS: &str = "BEARDOG_ZK_MAX_CONCURRENT_TASKS";
+/// Zero-knowledge target discovery time (milliseconds).
+pub const ENV_ZK_TARGET_DISCOVERY_TIME_MS: &str = "BEARDOG_ZK_TARGET_DISCOVERY_TIME_MS";
+/// Enable zero-knowledge profiling.
+pub const ENV_ZK_ENABLE_PROFILING: &str = "BEARDOG_ZK_ENABLE_PROFILING";
+/// Identity cache TTL (seconds).
+pub const ENV_IDENTITY_CACHE_TTL_SECS: &str = "BEARDOG_IDENTITY_CACHE_TTL_SECS";
+/// Capability health check interval (seconds).
+pub const ENV_CAPABILITY_HEALTH_CHECK_INTERVAL_SECS: &str =
+    "BEARDOG_CAPABILITY_HEALTH_CHECK_INTERVAL_SECS";
+/// Capability health check timeout (seconds).
+pub const ENV_CAPABILITY_HEALTH_CHECK_TIMEOUT_SECS: &str =
+    "BEARDOG_CAPABILITY_HEALTH_CHECK_TIMEOUT_SECS";
+
+// ── Retry policy (zero-hardcoding) ───────────────────────────────────────
+
+/// Maximum retry attempts.
+pub const ENV_RETRY_MAX_ATTEMPTS: &str = "BEARDOG_RETRY_MAX_ATTEMPTS";
+/// Initial retry backoff (milliseconds).
+pub const ENV_RETRY_INITIAL_BACKOFF_MS: &str = "BEARDOG_RETRY_INITIAL_BACKOFF_MS";
+/// Maximum retry backoff (seconds).
+pub const ENV_RETRY_MAX_BACKOFF_SECS: &str = "BEARDOG_RETRY_MAX_BACKOFF_SECS";
+/// Retry backoff multiplier.
+pub const ENV_RETRY_BACKOFF_MULTIPLIER: &str = "BEARDOG_RETRY_BACKOFF_MULTIPLIER";
+
+// ── External cloud auth detection ────────────────────────────────────────
+
+/// AWS access key ID (unprefixed).
+pub const ENV_AWS_ACCESS_KEY_ID: &str = "AWS_ACCESS_KEY_ID";
+/// Azure client ID (unprefixed).
+pub const ENV_AZURE_CLIENT_ID: &str = "AZURE_CLIENT_ID";
+/// Google application credentials path (unprefixed).
+pub const ENV_GOOGLE_APPLICATION_CREDENTIALS: &str = "GOOGLE_APPLICATION_CREDENTIALS";
+
+/// Registry socket path fallback override.
+pub const ENV_REGISTRY_SOCKET_FALLBACK: &str = "BEARDOG_REGISTRY_SOCKET_FALLBACK";
+
+// ── iOS device (extended) ────────────────────────────────────────────────
+
+/// iOS device model identifier (unprefixed).
+pub const ENV_IOS_MODEL: &str = "IOS_MODEL";

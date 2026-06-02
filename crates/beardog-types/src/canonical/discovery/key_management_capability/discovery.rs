@@ -3,6 +3,7 @@
 use super::key_management_backend::KeyManagementBackend;
 use super::software_hsm_provider::SoftwareHsmProvider;
 use super::types::KmsError;
+use beardog_config::env_keys;
 use std::sync::Arc;
 
 /// Auto-detect and create the best available KMS implementation
@@ -77,11 +78,11 @@ async fn discover_kms_services() -> Result<Vec<KmsDiscoveryResult>, KmsError> {
 /// Detect cloud KMS via metadata endpoint (vendor-agnostic)
 async fn detect_cloud_kms_via_metadata() -> Result<KmsDiscoveryResult, KmsError> {
     // Check for cloud credentials (pattern-based, not vendor-specific)
-    let auth_type = if std::env::var("AWS_ACCESS_KEY_ID").is_ok() {
+    let auth_type = if std::env::var(env_keys::ENV_AWS_ACCESS_KEY_ID).is_ok() {
         "access_key"
-    } else if std::env::var("AZURE_CLIENT_ID").is_ok() {
+    } else if std::env::var(env_keys::ENV_AZURE_CLIENT_ID).is_ok() {
         "service_principal"
-    } else if std::env::var("GOOGLE_APPLICATION_CREDENTIALS").is_ok() {
+    } else if std::env::var(env_keys::ENV_GOOGLE_APPLICATION_CREDENTIALS).is_ok() {
         "service_account"
     } else {
         return Err(KmsError::ProviderUnavailable {

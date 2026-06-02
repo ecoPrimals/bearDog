@@ -36,7 +36,7 @@ impl CertificateStore {
     pub fn from_env() -> Result<Self, AcmeError> {
         let base = if let Ok(data_dir) = std::env::var(env_keys::ENV_DATA_DIR) {
             PathBuf::from(data_dir).join("acme")
-        } else if let Ok(home) = std::env::var("HOME") {
+        } else if let Ok(home) = std::env::var(env_keys::ENV_HOME) {
             PathBuf::from(home).join(".beardog").join("acme")
         } else {
             PathBuf::from("/tmp/beardog-acme")

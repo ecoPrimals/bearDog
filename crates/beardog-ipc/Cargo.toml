@@ -21,7 +21,7 @@ beardog-errors = { path = "../beardog-errors" }
 beardog-types = { path = "../beardog-types" }
 
 # Core async runtime
-tokio = { workspace = true, features = ["net", "io-util", "time", "sync"] }
+tokio = { workspace = true, features = ["rt", "macros", "net", "io-util", "sync", "time", "fs"] }
 
 # Serialization
 serde = { workspace = true }

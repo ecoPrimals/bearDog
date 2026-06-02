@@ -5,6 +5,7 @@
 //! Core system configuration including logging, threading, resource management,
 //! and application lifecycle settings.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -55,9 +56,9 @@ impl ApplicationConfig {
     pub fn with_defaults() -> Self {
         Self {
             name: Self::DEFAULT_NAME.to_string(),
-            version: std::env::var("BEARDOG_APP_VERSION")
+            version: std::env::var(env_keys::ENV_APP_VERSION)
                 .unwrap_or_else(|_| env!("CARGO_PKG_VERSION").to_string()),
-            instance_id: std::env::var("BEARDOG_INSTANCE_ID")
+            instance_id: std::env::var(env_keys::ENV_INSTANCE_ID)
                 .unwrap_or_else(|_| format!("instance-{}", std::process::id())),
             description: Self::DEFAULT_DESCRIPTION.to_string(),
             features: HashMap::new(),
@@ -326,12 +327,12 @@ impl SystemDomainConfig {
         let mut config = Self::default();
 
         // Load environment type
-        if let Ok(env_type) = std::env::var("BEARDOG_ENVIRONMENT") {
+        if let Ok(env_type) = std::env::var(env_keys::ENV_ENVIRONMENT) {
             config.environment.environment_type = env_type;
         }
 
         // Load logging configuration
-        if let Ok(log_level) = std::env::var("BEARDOG_LOG_LEVEL") {
+        if let Ok(log_level) = std::env::var(env_keys::ENV_LOG_LEVEL) {
             config.logging.level = match log_level.to_lowercase().as_str() {
                 "trace" => LogLevel::Trace,
                 "debug" => LogLevel::Debug,
@@ -342,7 +343,7 @@ impl SystemDomainConfig {
             };
         }
 
-        if let Ok(log_format) = std::env::var("BEARDOG_LOG_FORMAT") {
+        if let Ok(log_format) = std::env::var(env_keys::ENV_LOG_FORMAT) {
             config.logging.format = match log_format.to_lowercase().as_str() {
                 "json" => LogFormat::Json,
                 "text" => LogFormat::Text,
@@ -353,14 +354,14 @@ impl SystemDomainConfig {
         }
 
         // Load threading configuration
-        if let Ok(worker_threads) = std::env::var("BEARDOG_WORKER_THREADS") {
+        if let Ok(worker_threads) = std::env::var(env_keys::ENV_WORKER_THREADS) {
             config.threading.worker_threads = worker_threads
                 .parse()
                 .map_err(|_| BearDogError::validation("Invalid BEARDOG_WORKER_THREADS value"))?;
         }
 
         // Load resource limits
-        if let Ok(max_connections) = std::env::var("BEARDOG_MAX_CONNECTIONS") {
+        if let Ok(max_connections) = std::env::var(env_keys::ENV_MAX_CONNECTIONS) {
             config.resources.max_connections = max_connections
                 .parse()
                 .map_err(|_| BearDogError::validation("Invalid BEARDOG_MAX_CONNECTIONS value"))?;

@@ -261,13 +261,20 @@ impl NetworkHostsConfig {
             discovery_host: std::env::var(env_keys::ENV_DISCOVERY_HOST)
                 .unwrap_or_else(|_| DEFAULT_HOST.to_string()),
             database_host: std::env::var(env_keys::ENV_DATABASE_HOST)
-                .or_else(|_| std::env::var("DATABASE_URL").map(|url| extract_host_from_url(&url)))
+                .or_else(|_| {
+                    std::env::var(env_keys::ENV_DATABASE_URL).map(|url| extract_host_from_url(&url))
+                })
                 .unwrap_or_else(|_| infra.clone()),
             redis_host: std::env::var(env_keys::ENV_REDIS_HOST)
-                .or_else(|_| std::env::var("REDIS_URL").map(|url| extract_host_from_url(&url)))
+                .or_else(|_| {
+                    std::env::var(env_keys::ENV_REDIS_URL).map(|url| extract_host_from_url(&url))
+                })
                 .unwrap_or_else(|_| infra.clone()),
             metrics_host: std::env::var(env_keys::ENV_METRICS_HOST)
-                .or_else(|_| std::env::var("GRAFANA_URL").map(|url| extract_host_from_url(&url)))
+                .or_else(|_| {
+                    std::env::var(env_keys::ENV_GRAFANA_URL_UNPREFIXED)
+                        .map(|url| extract_host_from_url(&url))
+                })
                 .unwrap_or_else(|_| infra.clone()),
             external_host: std::env::var(env_keys::ENV_EXTERNAL_HOST).unwrap_or(infra),
         }

@@ -4,6 +4,7 @@
 
 use crate::canonical::capabilities::ServiceCapabilityType;
 use crate::canonical::types::ids::{RegistrationId, ServiceInstanceId};
+use beardog_config::env_keys;
 
 use super::core::{
     DiscoveryCapabilities, DiscoveryError, DiscoveryHealthStatus, ServiceDescriptor,
@@ -58,7 +59,7 @@ impl KubernetesDiscovery {
         }
 
         Ok(Self {
-            namespace: std::env::var("BEARDOG_K8S_NAMESPACE").ok(),
+            namespace: std::env::var(env_keys::ENV_K8S_NAMESPACE).ok(),
             in_cluster,
         })
     }
@@ -73,8 +74,8 @@ impl KubernetesDiscovery {
         }
 
         // Check for Kubernetes service environment variables
-        if std::env::var("KUBERNETES_SERVICE_HOST").is_ok()
-            && std::env::var("KUBERNETES_SERVICE_PORT").is_ok()
+        if std::env::var(env_keys::ENV_KUBERNETES_SERVICE_HOST).is_ok()
+            && std::env::var(env_keys::ENV_KUBERNETES_SERVICE_PORT).is_ok()
         {
             return true;
         }
@@ -85,12 +86,12 @@ impl KubernetesDiscovery {
     /// Check if kubeconfig is available
     fn has_kubeconfig() -> bool {
         // Check KUBECONFIG env var
-        if let Ok(kubeconfig) = std::env::var("KUBECONFIG") {
+        if let Ok(kubeconfig) = std::env::var(env_keys::ENV_KUBECONFIG) {
             return std::path::Path::new(&kubeconfig).exists();
         }
 
         // Check default location ~/.kube/config
-        if let Ok(home) = std::env::var("HOME") {
+        if let Ok(home) = std::env::var(env_keys::ENV_HOME) {
             let default_config = std::path::Path::new(&home).join(".kube").join("config");
             return default_config.exists();
         }
@@ -102,13 +103,13 @@ impl KubernetesDiscovery {
     fn get_api_server_url(&self) -> Result<String, DiscoveryError> {
         if self.in_cluster {
             // In-cluster: use service environment variables
-            let host = std::env::var("KUBERNETES_SERVICE_HOST").map_err(|_| {
+            let host = std::env::var(env_keys::ENV_KUBERNETES_SERVICE_HOST).map_err(|_| {
                 DiscoveryError::BackendUnavailable {
                     provider: "kubernetes".to_string(),
                     reason: "KUBERNETES_SERVICE_HOST not set".to_string(),
                 }
             })?;
-            let port = std::env::var("KUBERNETES_SERVICE_PORT").map_err(|_| {
+            let port = std::env::var(env_keys::ENV_KUBERNETES_SERVICE_PORT).map_err(|_| {
                 DiscoveryError::BackendUnavailable {
                     provider: "kubernetes".to_string(),
                     reason: "KUBERNETES_SERVICE_PORT not set".to_string(),
@@ -118,10 +119,10 @@ impl KubernetesDiscovery {
         } else {
             // Out-of-cluster: parse from kubeconfig (simplified - real impl would parse YAML)
             // For now, use environment variable override
-            std::env::var("BEARDOG_K8S_API_SERVER")
+            std::env::var(env_keys::ENV_K8S_API_SERVER)
                 .or_else(|_| {
-                    std::env::var("KUBERNETES_SERVICE_HOST").map(|host| {
-                        let port = std::env::var("KUBERNETES_SERVICE_PORT")
+                    std::env::var(env_keys::ENV_KUBERNETES_SERVICE_HOST).map(|host| {
+                        let port = std::env::var(env_keys::ENV_KUBERNETES_SERVICE_PORT)
                             .unwrap_or_else(|_| "6443".to_string());
                         format!("https://{host}:{port}")
                     })

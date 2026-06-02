@@ -14,7 +14,7 @@ workspace = true
 
 [dependencies]
 # Async runtime
-tokio = { workspace = true }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "fs", "sync", "time"] }
 
 # Error handling
 anyhow = { workspace = true }

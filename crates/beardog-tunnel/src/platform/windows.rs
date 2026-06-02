@@ -38,6 +38,7 @@
 //! Ready for testing on Windows (x86_64, ARM64)
 
 use super::{PlatformListenerBackend, PlatformSocket, SocketEndpoint};
+use beardog_config::env_keys;
 use beardog_types::constants::domains::network::ipc_discovery as ipc_layout;
 use tracing::{debug, info, warn};
 
@@ -46,8 +47,9 @@ pub struct WindowsSocket;
 
 impl PlatformSocket for WindowsSocket {
     fn create_endpoint(primal_name: &str) -> std::io::Result<SocketEndpoint> {
-        let beardog_pipe = beardog_errors::process_env::var("BEARDOG_PIPE").ok();
-        let biomeos_pipe_dir = beardog_errors::process_env::var("BIOMEOS_PIPE_DIR").ok();
+        let beardog_pipe = beardog_errors::process_env::var(env_keys::ENV_PIPE).ok();
+        let biomeos_pipe_dir =
+            beardog_errors::process_env::var(env_keys::ENV_BIOMEOS_PIPE_DIR).ok();
         create_endpoint_with(
             primal_name,
             beardog_pipe.as_deref(),

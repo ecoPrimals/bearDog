@@ -26,6 +26,7 @@
 //! integrator.execute_migration_plan(migration_plan).await?;
 //! ```
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use super::consolidated_registry::{ConsolidatedProviderRegistry, ProviderRegistryConfig};
 use super::hsm_unified::{HsmUnifiedProvider, AndroidHsmConfig, IosHsmConfig, SoftwareHsmConfig};
@@ -71,7 +72,7 @@ impl Default for IntegrationConfig {
         Self {
             auto_discovery: true,
             gradual_migration: true,
-            migration_timeout_secs: std::env::var("BEARDOG_PROVIDER_MIGRATION_TIMEOUT_SECS")
+            migration_timeout_secs: std::env::var(env_keys::ENV_PROVIDER_MIGRATION_TIMEOUT_SECS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(300), // 5 minutes default

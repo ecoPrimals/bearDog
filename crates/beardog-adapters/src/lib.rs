@@ -62,6 +62,7 @@ mod adapter_coverage_expansion_tests;
 #[path = "tests/lib_coverage_tests.rs"]
 mod lib_coverage_tests;
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -237,7 +238,7 @@ impl UniversalAdapter {
             if let Some((cached_response, cached_time)) = self.cache.get(&cache_key) {
                 // Cache valid for 5 minutes
                 let cache_duration_secs =
-                    beardog_errors::process_env::var("BEARDOG_ADAPTER_CACHE_DURATION_SECS")
+                    beardog_errors::process_env::var(env_keys::ENV_ADAPTER_CACHE_DURATION_SECS)
                         .ok()
                         .and_then(|s| s.parse().ok())
                         .unwrap_or(300); // 5 minutes default

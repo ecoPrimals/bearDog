@@ -31,6 +31,7 @@ mod failover_tests;
 mod health_tests;
 #[cfg(test)]
 mod tests;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::hsm::{DefaultHsmFailoverManager, DefaultHsmHealthMonitor};
 use std::collections::HashMap;
@@ -98,10 +99,10 @@ impl HsmAutoInitConfig {
     /// Create config from environment variables (for production use)
     pub fn from_env() -> Self {
         Self {
-            mode: beardog_errors::process_env::var("BEARDOG_HSM_MODE")
+            mode: beardog_errors::process_env::var(env_keys::ENV_HSM_MODE)
                 .unwrap_or_else(|_| "software".to_string())
                 .to_lowercase(),
-            auto_init: beardog_errors::process_env::var("BEARDOG_HSM_AUTO_INIT")
+            auto_init: beardog_errors::process_env::var(env_keys::ENV_HSM_AUTO_INIT)
                 .unwrap_or_else(|_| "true".to_string())
                 .parse::<bool>()
                 .unwrap_or(true),

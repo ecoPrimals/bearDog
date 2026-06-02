@@ -18,7 +18,7 @@ workspace = true
 beardog-tower-atomic = { workspace = true }
 
 # Async runtime
-tokio = { workspace = true, features = ["full"] }
+tokio = { workspace = true, features = ["rt", "macros", "net", "io-util", "sync"] }
 
 # Serialization
 serde = { workspace = true }

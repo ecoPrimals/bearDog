@@ -31,7 +31,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 # Async runtime
-tokio = { workspace = true }
+tokio = { workspace = true, features = ["rt", "macros", "net", "io-util", "sync", "time"] }
 
 # X.509 certificate parsing (expiry check for renewal)
 x509-parser = { workspace = true }

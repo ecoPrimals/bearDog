@@ -4,6 +4,7 @@
 
 use super::super::types::{AuditLogEntry, AuditLogFilter, AuditLogger, OperationResult};
 use super::storage::PersistentAuditStorage;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use std::collections::VecDeque;
@@ -97,7 +98,7 @@ impl DefaultAuditLogger {
     /// falling back to the system temp directory so beardog never crashes
     /// writing to a read-only CWD (e.g. Android `/data/local/tmp`).
     pub async fn new() -> Result<Self, BearDogError> {
-        let dir = std::env::var("BEARDOG_AUDIT_DIR").map_or_else(
+        let dir = std::env::var(env_keys::ENV_AUDIT_DIR).map_or_else(
             |_| std::env::temp_dir().join("beardog"),
             std::path::PathBuf::from,
         );

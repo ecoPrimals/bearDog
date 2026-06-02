@@ -21,6 +21,7 @@
 //! - **Performance Optimized**: Zero-cost provider resolution and dispatch
 //! - **Maintainability**: Single location for all provider management logic
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use super::traits::consolidated::{ConsolidatedProvider, ProviderInfo, ProviderHealth, ProviderType, HealthStatus};
 use serde::{Deserialize, Serialize};
@@ -157,16 +158,16 @@ pub type RegistryConfig = ProviderRegistryConfig;
 impl Default for ProviderRegistryConfig {
     fn default() -> Self {
         Self {
-            max_providers: std::env::var("BEARDOG_PROVIDER_REGISTRY_MAX_PROVIDERS")
+            max_providers: std::env::var(env_keys::ENV_PROVIDER_REGISTRY_MAX_PROVIDERS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(100),
-            health_check_interval_secs: std::env::var("BEARDOG_PROVIDER_HEALTH_CHECK_INTERVAL_SECS")
+            health_check_interval_secs: std::env::var(env_keys::ENV_PROVIDER_HEALTH_CHECK_INTERVAL_SECS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(30),
             enable_auto_discovery: true,
-            provider_timeout_secs: std::env::var("BEARDOG_PROVIDER_TIMEOUT_SECS")
+            provider_timeout_secs: std::env::var(env_keys::ENV_PROVIDER_TIMEOUT_SECS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(30),
