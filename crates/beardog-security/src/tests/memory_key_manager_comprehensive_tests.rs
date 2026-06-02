@@ -246,18 +246,21 @@ mod tests {
         manager.delete_key(&key_id).unwrap();
     }
 
-    /// Test 14: List keys returns empty vec (simplified implementation)
+    /// Test 14: List keys enumerates stored key IDs
     #[test]
     fn test_list_keys() {
         let config = MemoryKeyConfig::default();
         let manager = MemoryKeyManager::new(config).unwrap();
 
-        let _key1 = manager.generate_key().unwrap();
-        let _key2 = manager.generate_key().unwrap();
+        let key1 = manager.generate_key().unwrap();
+        let key2 = manager.generate_key().unwrap();
 
-        // Current implementation returns empty vec
         let keys = manager.list_keys().unwrap();
-        assert!(keys.is_empty());
+        assert_eq!(keys.len(), 2);
+        let ids: Vec<&str> = keys.iter().map(|k| k.id.as_str()).collect();
+        assert!(ids.contains(&key1.as_str()));
+        assert!(ids.contains(&key2.as_str()));
+        assert!(keys.iter().all(|k| k.key_type == "AES-256"));
     }
 
     /// Test 15: Concurrent key generation (thread safety)

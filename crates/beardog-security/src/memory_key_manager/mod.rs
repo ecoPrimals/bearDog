@@ -131,8 +131,25 @@ impl MemoryKeyManager {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    pub const fn list_keys(&self) -> Result<Vec<KeyMetadata>, BearDogError> {
-        Ok(vec![]) // Simplified implementation
+    pub fn list_keys(&self) -> Result<Vec<KeyMetadata>, BearDogError> {
+        let keys = self
+            .keys
+            .lock()
+            .map_err(|_| BearDogError::internal("Failed to acquire lock".to_string()))?;
+
+        let mut listed: Vec<KeyMetadata> = keys
+            .iter()
+            .map(|(id, payload)| KeyMetadata {
+                id: id.clone(),
+                created_at: chrono::DateTime::UNIX_EPOCH,
+                key_type: match payload.len() {
+                    32 => "AES-256".to_string(),
+                    _ => "symmetric".to_string(),
+                },
+            })
+            .collect();
+        listed.sort_by(|a, b| a.id.cmp(&b.id));
+        Ok(listed)
     }
 
     /// Generate random key data

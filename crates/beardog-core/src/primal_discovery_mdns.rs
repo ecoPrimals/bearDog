@@ -57,6 +57,22 @@ impl MdnsDiscoveryClient {
         self
     }
 
+    /// Normalize a DNS-SD service type to a fully-qualified browse name.
+    #[must_use]
+    pub fn normalize_service_type(service_type: &str) -> String {
+        let st = service_type.trim();
+        if st.is_empty() {
+            return BEARDOG_SERVICE_TYPE.to_string();
+        }
+        if st.ends_with('.') {
+            return st.to_string();
+        }
+        if st.contains("._tcp") || st.contains("._udp") {
+            return format!("{st}.local.");
+        }
+        format!("_{st}._tcp.local.")
+    }
+
     /// Discover primals with specific capability
     ///
     /// Browses for `BearDog` services on local network and filters by capability.
@@ -68,28 +84,74 @@ impl MdnsDiscoveryClient {
         &self,
         capability: &str,
     ) -> Result<Vec<MdnsDiscoveredPrimal>, BearDogError> {
-        use mdns_sd::{ServiceDaemon, ServiceEvent};
+        self.discover_by_capability_on(BEARDOG_SERVICE_TYPE, capability)
+            .await
+    }
 
+    /// Discover primals advertising a capability on a specific mDNS service type.
+    #[cfg(feature = "mdns")]
+    pub async fn discover_by_capability_on(
+        &self,
+        service_type: &str,
+        capability: &str,
+    ) -> Result<Vec<MdnsDiscoveredPrimal>, BearDogError> {
         info!(
-            "🔍 Discovering primals via mDNS with capability: {}",
-            capability
+            "🔍 Discovering primals via mDNS with capability: {} on {}",
+            capability,
+            Self::normalize_service_type(service_type)
         );
 
-        // Create mDNS daemon
+        let all = self
+            .browse_service_type(&Self::normalize_service_type(service_type))
+            .await?;
+        Ok(all
+            .into_iter()
+            .filter(|p| {
+                p.capabilities
+                    .iter()
+                    .any(|c| c.eq_ignore_ascii_case(capability))
+            })
+            .collect())
+    }
+
+    /// Discover all primals (no capability filter)
+    ///
+    /// # Errors
+    /// Returns error if mDNS browsing fails
+    #[cfg(feature = "mdns")]
+    pub async fn discover_all(&self) -> Result<Vec<MdnsDiscoveredPrimal>, BearDogError> {
+        self.discover_on_service_type(BEARDOG_SERVICE_TYPE).await
+    }
+
+    /// Discover all primals advertising on the given mDNS service type.
+    #[cfg(feature = "mdns")]
+    pub async fn discover_on_service_type(
+        &self,
+        service_type: &str,
+    ) -> Result<Vec<MdnsDiscoveredPrimal>, BearDogError> {
+        let normalized = Self::normalize_service_type(service_type);
+        info!("🔍 Discovering primals via mDNS on {}", normalized);
+        self.browse_service_type(&normalized).await
+    }
+
+    #[cfg(feature = "mdns")]
+    async fn browse_service_type(
+        &self,
+        service_type: &str,
+    ) -> Result<Vec<MdnsDiscoveredPrimal>, BearDogError> {
+        use mdns_sd::{ServiceDaemon, ServiceEvent};
+
         let mdns = ServiceDaemon::new()
             .map_err(|e| BearDogError::network(format!("Failed to create mDNS daemon: {e}")))?;
 
-        // Browse for BearDog services
         let receiver = mdns
-            .browse(BEARDOG_SERVICE_TYPE)
+            .browse(service_type)
             .map_err(|e| BearDogError::network(format!("Failed to browse mDNS services: {e}")))?;
 
         let mut discovered = Vec::new();
         let start = tokio::time::Instant::now();
 
-        // Listen for service discoveries with timeout
         while start.elapsed() < self.timeout {
-            // Use tokio timeout to avoid blocking forever
             match tokio::time::timeout(Duration::from_millis(100), async {
                 receiver.recv_async().await
             })
@@ -103,7 +165,6 @@ impl MdnsDiscoveryClient {
                             info.get_addresses()
                         );
 
-                        // Parse capabilities from TXT records
                         let txt_properties: std::collections::HashMap<String, String> = info
                             .get_properties()
                             .iter()
@@ -120,33 +181,31 @@ impl MdnsDiscoveryClient {
                         let capabilities: Vec<String> = capabilities_str
                             .split(',')
                             .map(str::trim)
+                            .filter(|s| !s.is_empty())
                             .map(ToString::to_string)
                             .collect();
 
-                        // Filter by requested capability
-                        if capabilities.iter().any(|c| c == capability) {
-                            let primal = MdnsDiscoveredPrimal {
-                                instance_name: info.get_hostname().to_string(),
-                                addresses: info.get_addresses().iter().copied().collect(),
-                                port: info.get_port(),
-                                capabilities,
-                                version: txt_properties.get("version").cloned(),
-                                primal_type: txt_properties.get("primal").cloned(),
-                            };
+                        let primal = MdnsDiscoveredPrimal {
+                            instance_name: info.get_hostname().to_string(),
+                            addresses: info.get_addresses().iter().copied().collect(),
+                            port: info.get_port(),
+                            capabilities,
+                            version: txt_properties.get("version").cloned(),
+                            primal_type: txt_properties.get("primal").cloned(),
+                        };
 
-                            info!(
-                                "✅ Discovered primal: {} at {}:{}",
-                                primal.instance_name,
-                                primal
-                                    .addresses
-                                    .first()
-                                    .map(ToString::to_string)
-                                    .unwrap_or_default(),
-                                primal.port
-                            );
+                        info!(
+                            "✅ Discovered primal: {} at {}:{}",
+                            primal.instance_name,
+                            primal
+                                .addresses
+                                .first()
+                                .map(ToString::to_string)
+                                .unwrap_or_default(),
+                            primal.port
+                        );
 
-                            discovered.push(primal);
-                        }
+                        discovered.push(primal);
                     }
                     ServiceEvent::SearchStopped(_) => {
                         debug!("mDNS search stopped");
@@ -158,80 +217,7 @@ impl MdnsDiscoveryClient {
                     warn!("mDNS receive error: {e}");
                     break;
                 }
-                Err(_) => {
-                    // Timeout - continue listening
-                }
-            }
-        }
-
-        // Shutdown mDNS daemon
-        if let Err(e) = mdns.shutdown() {
-            warn!("Failed to shutdown mDNS daemon cleanly: {e}");
-        }
-
-        info!(
-            "🔍 mDNS discovery complete: found {} primals",
-            discovered.len()
-        );
-        Ok(discovered)
-    }
-
-    /// Discover all primals (no capability filter)
-    ///
-    /// # Errors
-    /// Returns error if mDNS browsing fails
-    #[cfg(feature = "mdns")]
-    pub async fn discover_all(&self) -> Result<Vec<MdnsDiscoveredPrimal>, BearDogError> {
-        use mdns_sd::{ServiceDaemon, ServiceEvent};
-
-        info!("🔍 Discovering all primals via mDNS");
-
-        let mdns = ServiceDaemon::new()
-            .map_err(|e| BearDogError::network(format!("Failed to create mDNS daemon: {e}")))?;
-
-        let receiver = mdns
-            .browse(BEARDOG_SERVICE_TYPE)
-            .map_err(|e| BearDogError::network(format!("Failed to browse mDNS services: {e}")))?;
-
-        let mut discovered = Vec::new();
-        let start = tokio::time::Instant::now();
-
-        while start.elapsed() < self.timeout {
-            if let Ok(Ok(ServiceEvent::ServiceResolved(info))) =
-                tokio::time::timeout(Duration::from_millis(100), async {
-                    receiver.recv_async().await
-                })
-                .await
-            {
-                let txt_properties: std::collections::HashMap<String, String> = info
-                    .get_properties()
-                    .iter()
-                    .map(|prop| {
-                        let key = prop.key();
-                        let val = prop.val_str();
-                        (key.to_string(), val.to_string())
-                    })
-                    .collect();
-
-                let capabilities_str = txt_properties
-                    .get("capabilities")
-                    .map_or("", String::as_str);
-                let capabilities: Vec<String> = capabilities_str
-                    .split(',')
-                    .map(str::trim)
-                    .map(ToString::to_string)
-                    .collect();
-
-                let primal = MdnsDiscoveredPrimal {
-                    instance_name: info.get_hostname().to_string(),
-                    addresses: info.get_addresses().iter().copied().collect(),
-                    port: info.get_port(),
-                    capabilities,
-                    version: txt_properties.get("version").cloned(),
-                    primal_type: txt_properties.get("primal").cloned(),
-                };
-
-                discovered.push(primal);
+                Err(_) => {}
             }
         }
 

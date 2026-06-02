@@ -257,11 +257,15 @@ impl AndroidStrongBoxHsm {
     pub(super) fn validate_key_access(&self, key_id: &str) -> Result<(), BearDogError> {
         debug!("🔒 Validating access for key: {}", key_id);
 
-        // Check if key exists in keystore
-        // Note: key_exists is async, but we're in a sync function
-        // For now, assume key might exist (would need async refactor to check properly)
-        if false {
-            // Placeholder: would need async check
+        // Check if key exists in keystore via async transport (sync callers use block_on)
+        let keystore = Arc::clone(&self.keystore);
+        let key_id_owned = key_id.to_string();
+        let exists = tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current()
+                .block_on(async move { keystore.key_exists(&key_id_owned).await })
+        })?;
+
+        if !exists {
             warn!("❌ Access denied: key not found: {}", key_id);
             return Err(BearDogError::not_found(format!(
                 "Key not found: {}",

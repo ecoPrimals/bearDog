@@ -29,7 +29,7 @@ beardog-traits = { path = "../beardog-traits" }
 beardog-ipc = { path = "../beardog-ipc" }  # Songbird IPC client (Primal IPC Protocol)
 
 # External dependencies
-tokio = { workspace = true, features = ["rt", "macros", "net", "io-util", "sync", "time", "fs", "signal"] }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "net", "io-util", "sync", "time", "fs", "signal"] }
 serde = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }

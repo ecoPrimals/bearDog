@@ -286,9 +286,8 @@ impl NetworkUtils {
     ///
     /// # Errors
     /// Returns an error if the system fails to enumerate network interfaces or if access is denied.
-    pub const fn get_network_interfaces() -> Result<Vec<NetworkInterface>, BearDogError> {
-        // Implementation would enumerate network interfaces
-        Ok(vec![])
+    pub fn get_network_interfaces() -> Result<Vec<NetworkInterface>, BearDogError> {
+        enumerate_network_interfaces()
     }
 
     /// Check if port is available
@@ -371,6 +370,130 @@ pub struct NetworkInterface {
     pub mtu: Option<u32>,
 }
 
+#[cfg(target_os = "linux")]
+fn enumerate_network_interfaces() -> Result<Vec<NetworkInterface>, BearDogError> {
+    use std::fs;
+    use std::net::IpAddr;
+    use std::path::Path;
+
+    let net_dir = Path::new("/sys/class/net");
+    let entries = fs::read_dir(net_dir).map_err(|e| {
+        BearDogError::system(format!(
+            "Failed to read network interfaces from {}: {e}", net_dir.display()
+        ))
+    })?;
+
+    let mut interfaces = Vec::new();
+
+    for entry in entries.filter_map(Result::ok) {
+        let path = entry.path();
+        let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
+            continue;
+        };
+
+        let is_loopback = name == "lo";
+        let is_up = fs::read_to_string(path.join("operstate"))
+            .map(|s| s.trim() == "up" || s.trim() == "unknown")
+            .unwrap_or(false);
+
+        let mtu = fs::read_to_string(path.join("mtu"))
+            .ok()
+            .and_then(|s| s.trim().parse().ok());
+
+        let mut addresses = Vec::new();
+        collect_interface_addresses(name, &mut addresses);
+
+        if is_loopback && addresses.is_empty() {
+            addresses.push(IpAddr::V4(std::net::Ipv4Addr::LOCALHOST));
+            addresses.push(IpAddr::V6(std::net::Ipv6Addr::LOCALHOST));
+        }
+
+        interfaces.push(NetworkInterface {
+            name: name.to_string(),
+            addresses,
+            is_up,
+            is_loopback,
+            mtu,
+        });
+    }
+
+    Ok(interfaces)
+}
+
+#[cfg(target_os = "linux")]
+fn collect_interface_addresses(name: &str, out: &mut Vec<std::net::IpAddr>) {
+    use std::fs;
+    use std::net::{IpAddr, Ipv4Addr};
+
+    if let Ok(content) = fs::read_to_string("/proc/net/if_inet6") {
+        for line in content.lines().skip(1) {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() < 6 {
+                continue;
+            }
+            let ifname = parts.last().copied().unwrap_or("");
+            if ifname != name {
+                continue;
+            }
+            if let Ok(v6) = parse_ipv6_hex(parts[0]) {
+                out.push(IpAddr::V6(v6));
+            }
+        }
+    }
+
+    if let Ok(route) = fs::read_to_string("/proc/net/route") {
+        for line in route.lines().skip(1) {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() < 4 || parts[0] != name {
+                continue;
+            }
+            if let Ok(ip) = parse_ipv4_hex(parts[1])
+                && ip != Ipv4Addr::UNSPECIFIED
+                && !out.contains(&IpAddr::V4(ip))
+            {
+                out.push(IpAddr::V4(ip));
+            }
+        }
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn parse_ipv4_hex(hex: &str) -> Result<std::net::Ipv4Addr, std::num::ParseIntError> {
+    let val = u32::from_str_radix(hex, 16)?;
+    Ok(std::net::Ipv4Addr::from(val.to_le_bytes()))
+}
+
+#[cfg(target_os = "linux")]
+fn parse_ipv6_hex(hex: &str) -> Result<std::net::Ipv6Addr, std::num::ParseIntError> {
+    if hex.len() != 32 {
+        return match u8::from_str_radix("zz", 16) {
+            Err(e) => Err(e),
+            Ok(_) => unreachable!(),
+        };
+    }
+    let mut bytes = [0u8; 16];
+    for (i, byte) in bytes.iter_mut().enumerate() {
+        *byte = u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16)?;
+    }
+    Ok(std::net::Ipv6Addr::from(bytes))
+}
+
+#[cfg(not(target_os = "linux"))]
+fn enumerate_network_interfaces() -> Result<Vec<NetworkInterface>, BearDogError> {
+    use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+
+    Ok(vec![NetworkInterface {
+        name: "lo".to_string(),
+        addresses: vec![
+            IpAddr::V4(Ipv4Addr::LOCALHOST),
+            IpAddr::V6(Ipv6Addr::LOCALHOST),
+        ],
+        is_up: true,
+        is_loopback: true,
+        mtu: None,
+    }])
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -451,7 +574,15 @@ mod tests {
     fn network_utils_get_interfaces() {
         let r = NetworkUtils::get_network_interfaces();
         assert!(r.is_ok());
-        assert!(r.expect("interfaces").is_empty());
+        let interfaces = r.expect("interfaces");
+        assert!(
+            !interfaces.is_empty(),
+            "expected at least one network interface"
+        );
+        assert!(
+            interfaces.iter().any(|i| i.is_loopback),
+            "expected a loopback interface"
+        );
     }
 
     #[tokio::test]

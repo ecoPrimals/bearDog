@@ -177,7 +177,7 @@ async fn test_discover_biomeos_runtime_socket_scan() {
 fn test_parse_capabilities_str_accepts_all_variants_and_unknown() {
     let s =
         "SecureTunneling, GeneticLineage, Cryptography, HsmIntegration, Discovery, UnknownThing";
-    let caps = PrimalDiscovery::parse_capabilities_str(s, "PRIMAL_TEST_CAPABILITIES");
+    let caps = parse_capabilities_str(s, "PRIMAL_TEST_CAPABILITIES");
     assert_eq!(caps.len(), 5);
     assert!(caps.contains(&SimpleCapability::SecureTunneling));
     assert!(caps.contains(&SimpleCapability::Discovery));
