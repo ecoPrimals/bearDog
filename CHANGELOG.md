@@ -9,6 +9,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 2, 2026 -- Wave 128: Env Migration Complete, Dependency Consolidation
+
+#### Changed
+- Env key centralization complete: 370+ inline env var strings migrated to `env_keys::` constants across 96 production files (waves 6-7)
+- `env_keys.rs` now holds 803+ constants covering all bearDog env vars
+- Only 3 external system vars (`ANDROID_NDK_HOME`/`NDK_HOME`) remain as intentional inline strings
+- Removed `base64-url` crate (replaced with `base64::URL_SAFE_NO_PAD`)
+- Replaced `crossbeam` meta-crate with `crossbeam-queue` (only `ArrayQueue`/`SegQueue` used)
+- Added `beardog-config` dependency to `beardog-genetics`, `beardog-monitoring`, `beardog-utils`, `beardog-tower-atomic`, `beardog-deploy`
+- Fixed doc test imports for `env_keys` in `beardog-tower-atomic`, `beardog-types`
+
+### Jun 2, 2026 -- Wave 127: Stub Evolution, DNS-SD Wiring, File Splits, Safety Hygiene
+
+#### Changed
+- Fixed dead `if false` branch in `validate_key_access` with real keystore existence check
+- Fixed `memory_key_manager::list_keys()` to enumerate stored keys
+- Implemented `get_network_interfaces()` for Linux via `/sys/class/net`
+- Wired DNS-SD/mDNS integration in `primal_discovery` via `MdnsDiscoveryClient`
+- Split `tcp_ipc/server.rs` (814L), `btsp_provider.rs` (791L), `primal_discovery.rs` (779L) into focused submodules
+- Added `#![forbid(unsafe_code)]` to `beardog-deploy`, `beardog-installer`, benchmarks
+
+### Jun 2, 2026 -- Wave 126: Tokio Feature Trimming, Env Migration Wave 5
+
+#### Changed
+- Trimmed `tokio` from `features = ["full"]` to per-crate minimal feature sets
+- Centralized ~90 raw env var strings across 40+ files (wave 5)
+- Added explicit tokio feature overrides for all 18 workspace crates
+
+### Jun 2, 2026 -- Wave 125: Ring Elimination
+
+#### Changed
+- Switched TLS crypto backend from `ring` to `aws-lc-rs` for `rustls`, `tokio-rustls`, `rcgen`
+- Banned `ring` in `deny.toml`; `aws-lc-rs`/`aws-lc-sys` allowed wrapped by rustls/rcgen
+- Changed `reqwest` to `rustls-tls-webpki-roots-no-provider` with explicit provider init
+
+### Jun 2, 2026 -- Wave 124: Root Doc Sync, Debris Cleanup
+
+#### Changed
+- Updated method count 127 → 223 across README, STATUS, ARCHITECTURE, START_HERE, CONTEXT
+- Removed false post-quantum claims and hickory-dns references
+- Aligned `.env.example` variable names with `env_keys.rs`
+- Deleted disabled `hardware_pkcs11_tests.rs`; rewrote tunnel integration test README
+- Archived 16 Wave 67 handoffs and 3 impulses
+
 ### Jun 2, 2026 -- Wave 123: Env Migration Wave 4, Dependency Evolution, Cert Stack Upgrade
 
 #### Changed
