@@ -3,7 +3,7 @@
 //! TLS termination layer for `BearDog` TCP server (H2-10 sovereignty).
 //!
 //! Provides X.509/TLS termination using `rustls` so `BearDog` can serve HTTPS
-//! directly without Cloudflare or any external TLS proxy. The `ring` crypto
+//! directly without Cloudflare or any external TLS proxy. The `aws-lc-rs` crypto
 //! backend is used for universal platform support.
 //!
 //! # Certificate Loading

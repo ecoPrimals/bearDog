@@ -26,6 +26,24 @@ use std::time::Duration;
 use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
 
+/// Install the workspace `aws-lc-rs` rustls crypto provider (required for reqwest's
+/// `rustls-tls-*-no-provider` feature).
+fn ensure_rustls_crypto_provider() {
+    static INSTALL: std::sync::Once = std::sync::Once::new();
+    INSTALL.call_once(|| {
+        // Ok if another caller already installed the workspace provider.
+        let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+    });
+}
+
+fn build_http_client() -> Result<Client, AcmeError> {
+    ensure_rustls_crypto_provider();
+    Client::builder()
+        .timeout(Duration::from_secs(30))
+        .build()
+        .map_err(|e| AcmeError::Config(format!("HTTP client: {e}")))
+}
+
 /// ACME client configuration.
 #[derive(Debug, Clone)]
 pub struct AcmeConfig {
@@ -128,10 +146,7 @@ impl AcmeClient {
 
         Ok(Self {
             config,
-            http: Client::builder()
-                .timeout(Duration::from_secs(30))
-                .build()
-                .map_err(|e| AcmeError::Config(format!("HTTP client: {e}")))?,
+            http: build_http_client()?,
             store,
             account: Arc::new(RwLock::new(account)),
             solver: Http01Solver::new(),
@@ -146,10 +161,7 @@ impl AcmeClient {
 
         Ok(Self {
             config,
-            http: Client::builder()
-                .timeout(Duration::from_secs(30))
-                .build()
-                .map_err(|e| AcmeError::Config(format!("HTTP client: {e}")))?,
+            http: build_http_client()?,
             store,
             account: Arc::new(RwLock::new(account)),
             solver: Http01Solver::new(),

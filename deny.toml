@@ -56,13 +56,10 @@ deny = [
     { crate = "async-trait" },
     { crate = "openssl", wrappers = [] },
     { crate = "openssl-sys", wrappers = [] },
-    # ring is allowed ONLY as wrapped by rustls/tokio-rustls for TLS termination
-    # (H2-10 sovereignty). Direct ring usage remains banned. rustls is the sole
-    # TLS implementation and ring is its crypto backend (no pure-Rust WebPKI
-    # provider exists that meets production TLS requirements).
-    { crate = "ring", wrappers = ["rustls", "rustls-webpki"] },
-    { crate = "aws-lc-rs", wrappers = [] },
-    { crate = "aws-lc-sys", wrappers = [] },
+    # ring eliminated — aws-lc-rs is the TLS crypto backend via rustls (Wave 125)
+    { crate = "ring", wrappers = [] },
+    { crate = "aws-lc-rs", wrappers = ["rustls", "rustls-webpki", "rcgen"] },
+    { crate = "aws-lc-sys", wrappers = ["aws-lc-rs"] },
     { crate = "native-tls", wrappers = [] },
     { crate = "libsodium-sys", wrappers = [] },
     { crate = "hidapi", wrappers = [] },

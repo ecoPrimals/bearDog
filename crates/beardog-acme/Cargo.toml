@@ -19,7 +19,7 @@ sha2 = { workspace = true }
 rand = { workspace = true }
 
 # HTTP client for ACME directory + order calls
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls-webpki-roots-no-provider", "json"] }
 
 # TLS — shared with beardog-tunnel for cert loading
 rustls = { workspace = true }
