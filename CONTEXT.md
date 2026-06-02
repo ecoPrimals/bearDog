@@ -2,7 +2,7 @@
 
 # Context — BearDog
 
-**Last Updated**: May 28, 2026
+**Last Updated**: Jun 2, 2026
 
 ## What This Is
 
@@ -26,12 +26,12 @@ BearDog answers "who is this node?" and "perform this crypto operation safely" f
 
 ## Key Capabilities
 
-- **Protocols:** JSON-RPC 2.0 over NDJSON (127 methods)
-- **Cryptography:** Ed25519, X25519, ChaCha20-Poly1305, BLAKE3 (plus TLS, Tor, post-quantum, and broader RustCrypto suite as exposed by handlers)
+- **Protocols:** JSON-RPC 2.0 over NDJSON (223 dispatchable methods)
+- **Cryptography:** Ed25519, X25519, ChaCha20-Poly1305, BLAKE3 (plus TLS, Tor, and broader RustCrypto suite as exposed by handlers)
 - **Hardware / identity:** HSM abstraction (software, PKCS#11, StrongBox, etc.), **FIDO2** / HID device discovery (`beardog-hid`)
 - **Witness encoding:** `crypto.verify_ed25519` accepts encoding hints (`base64`, `hex`, `base64url`, `utf8`, `none`) per `ATTESTATION_ENCODING_STANDARD.md` v2.0
 
-Method domains include `crypto.*`, `tls.*`, `tor.*`, `genetic.*`, `secrets.*`, `beacon.*`, `relay.*`, `btsp.*`, `quantum.*`, and introspection (`discover_capabilities`, `primal.info`, `rpc.methods`). See [README.md](README.md) and [STATUS.md](STATUS.md) for detail.
+Method domains include `crypto.*`, `tls.*`, `tor.*`, `genetic.*`, `secrets.*`, `beacon.*`, `relay.*`, `btsp.*`, and introspection (`discover_capabilities`, `primal.info`, `rpc.methods`). See [README.md](README.md) and [STATUS.md](STATUS.md) for detail.
 
 ## What This Does NOT Do
 

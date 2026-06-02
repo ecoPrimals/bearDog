@@ -39,7 +39,7 @@ cargo run --release --bin beardog -- server
 ./beardog server --family-id bravo    # Creates beardog-bravo.sock
 ```
 
-**TCP (Android/Windows/cross-device)**:
+**TCP (Android/Windows/cross-device — opt-in via `--port`/`--listen`/`BEARDOG_TCP_IPC_PORT`)**:
 
 ```bash
 ./beardog server --listen 127.0.0.1:9100
@@ -89,7 +89,7 @@ Each family gets its own BearDog instance with independently derived key materia
 
 ### JSON-RPC Methods
 
-BearDog exposes 127 methods organized by domain:
+BearDog exposes 223 dispatchable methods organized by domain:
 
 | Namespace | Examples |
 |-----------|----------|
@@ -99,7 +99,6 @@ BearDog exposes 127 methods organized by domain:
 | `genetic.*` | `genetic.derive_lineage_key`, `genetic.mix_entropy` |
 | `secrets.*` | `secrets.store`, `secrets.retrieve`, `secrets.list`, `secrets.delete` |
 | `btsp.*` | `btsp.configure_tls`, `btsp.verify_peer` |
-| `quantum.*` | `quantum.generate_kem_keypair`, `quantum.sign`, `quantum.verify` |
 
 Introspection: `discover_capabilities`, `primal.info`, `rpc.methods`
 
@@ -168,4 +167,4 @@ cargo build --release                # Build
 
 ---
 
-**Last Updated**: May 28, 2026
+**Last Updated**: Jun 2, 2026

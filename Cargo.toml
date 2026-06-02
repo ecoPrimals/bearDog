@@ -266,6 +266,7 @@ beardog-acme = { path = "crates/beardog-acme" }
 
 [package]
 name = "beardog"
+readme = "README.md"
 description = "Zero-trust, sovereign cryptographic workflow orchestrator with hardware security module integration"
 keywords = ["cryptography", "hsm", "security", "workflow", "sovereignty"]
 categories = ["cryptography", "authentication", "network-programming"]

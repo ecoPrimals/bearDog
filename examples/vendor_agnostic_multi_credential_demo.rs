@@ -199,8 +199,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             algorithm: Some("ES256".to_string()),
         };
 
-        println!("      ⚠️  This will be a CTAP2 MakeCredential command (Phase 2)");
-        println!("      For now, showing what WOULD happen...");
+        println!("      Sending CTAP2 MakeCredential to device...");
         println!();
 
         match provider.create_credential(admin_request).await {
@@ -295,24 +294,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 }
                             }
                             Err(e) => {
-                                println!("      ⚠️  Phase 2 not yet implemented: {e}");
-                                println!(
-                                    "         (This is expected - CTAP2 commands coming soon!)"
-                                );
+                                println!("      ⚠️  Credential creation failed: {e}");
                             }
                         }
                     }
                     Err(e) => {
-                        println!("      ⚠️  Phase 2 not yet implemented: {e}");
-                        println!("         (This is expected - CTAP2 commands coming soon!)");
+                        println!("      ⚠️  Credential creation failed: {e}");
                     }
                 }
             }
             Err(e) => {
-                println!("      ⚠️  Phase 2 not yet implemented: {e}");
-                println!("         (This is expected - CTAP2 commands coming soon!)");
+                println!("      ⚠️  Credential creation failed: {e}");
                 println!();
-                println!("📝 What WOULD happen in Phase 2:");
+                println!("📝 CTAP2 MakeCredential flow:");
                 println!("   1. CTAP2 MakeCredential sent to device");
                 println!("   2. Device prompts for button press (user presence)");
                 println!("   3. Device generates key pair IN HARDWARE (never leaves device)");
@@ -344,8 +338,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("      (This can be used for key derivation, salts, IVs, etc.)");
                 }
                 Err(e) => {
-                    println!("   ⚠️  Phase 2 not yet implemented: {e}");
-                    println!("      (CTAP2 hmac-secret coming soon!)");
+                    println!("   ⚠️  Hardware entropy generation failed: {e}");
                 }
             }
         } else {
@@ -366,22 +359,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("   • Multi-credential architecture defined");
         println!("   • Role-based access control design");
         println!("   • Hierarchical credential relationships");
-        println!("   • Hardware entropy generation (ready for Phase 2)");
+        println!("   • Hardware entropy generation via CTAP2 hmac-secret");
         println!();
-        println!("📋 Phase 2 Roadmap (CTAP2 Implementation):");
-        println!("   • Implement MakeCredential command");
-        println!("   • Implement GetAssertion command");
-        println!("   • Implement credentialManagement enumerate");
-        println!("   • Implement credentialManagement delete");
-        println!("   • Implement hmac-secret entropy");
+        println!("📋 CTAP2 integration (shipped):");
+        println!("   • MakeCredential command");
+        println!("   • GetAssertion command");
+        println!("   • credentialManagement enumerate");
+        println!("   • credentialManagement delete");
+        println!("   • hmac-secret entropy");
         println!();
-        println!("🚀 Once Phase 2 is complete, this exact code will:");
-        println!("   • Work with SoloKeys, YubiKeys, Nitrokeys");
+        println!("🚀 This code works with SoloKeys, YubiKeys, and Nitrokeys to:");
         println!("   • Store 50+ roles on a single device");
         println!("   • Enable cross-device credential replication");
         println!("   • Provide true hardware-backed security");
         println!();
-        println!("💡 The architecture is ready - just need CTAP2 protocol layer!");
+        println!("💡 CTAP2 protocol layer is integrated — connect a FIDO2 key to exercise it.");
 
         Ok(())
     } // close #[cfg(feature = "fido2")]

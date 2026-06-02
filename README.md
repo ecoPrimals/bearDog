@@ -10,7 +10,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 29 | **JSON-RPC Methods**: 127 | **Tests**: 14,987+ | **Coverage**: 90.51% | **Last Updated**: May 28, 2026
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 29 | **JSON-RPC Methods**: 223 | **Tests**: 14,987+ | **Coverage**: 90.51% | **Last Updated**: Jun 2, 2026
 
 ---
 
@@ -28,10 +28,10 @@ BearDog provides secure cryptographic operations for all primals through the **T
 
 ### Key Features
 
-- **100% Pure Rust** — Zero C dependencies (RustCrypto suite, postcard, hickory-dns)
+- **100% Pure Rust** — Zero C dependencies (RustCrypto suite, postcard, mdns-sd for LAN discovery)
 - **Rust 2024 Edition** — Modern idioms, MSRV 1.93.0
 - **Fully Concurrent** — Dependency injection architecture, no global mutable state
-- **127 JSON-RPC Methods** — Complete crypto API (BTSP handshake-as-a-service, ionic bond lifecycle, contract signing, lineage queries, consent gate, FIDO2/CTAP2 hardware authentication)
+- **223 JSON-RPC Methods** — Complete crypto API (BTSP handshake-as-a-service, ionic bond lifecycle, contract signing, lineage queries, consent gate, FIDO2/CTAP2 hardware authentication)
 - **Tor v3 Support** — Onion address derivation + ntor handshake + cell crypto
 - **Multi-Family Support** — `--family-id` flag for per-family instances
 - **Secret Storage** — Encrypted secrets with family-scoped keys
@@ -39,7 +39,6 @@ BearDog provides secure cryptographic operations for all primals through the **T
 - **Universal IPC** — Multi-transport, platform-agnostic
 - **HSM Integration** — Hardware, software, mobile backends
 - **Dark Forest Beacon** — Zero metadata leakage discovery
-- **Quantum-Resistant** — Post-quantum crypto module (ML-KEM, ML-DSA, SPHINCS+)
 
 ---
 
@@ -73,9 +72,11 @@ cargo run --release --bin beardog -- server
 # Custom socket path
 ./beardog server --socket /custom/path.sock
 
-# TCP transport (Android, Windows, cross-device)
+# TCP transport (Android, Windows, cross-device) — opt-in via --port/--listen/BEARDOG_TCP_IPC_PORT
 ./beardog server --listen 0.0.0.0:9100
 ```
+
+TCP is opt-in via `--port`/`--listen`/`BEARDOG_TCP_IPC_PORT`. Without those, BearDog runs UDS-only.
 
 ---
 
@@ -110,7 +111,6 @@ BearDog auto-detects the platform and binds appropriate transports.
 | **Passwords** | Argon2id, bcrypt, scrypt |
 | **Tor** | Onion address, ntor handshake, cell crypto |
 | **Secrets** | Encrypted storage with family-scoped keys |
-| **Post-Quantum** | Kyber (ML-KEM), Dilithium (ML-DSA), SPHINCS+ |
 
 ### JSON-RPC Method Categories
 
@@ -123,7 +123,6 @@ secrets.*      - Store, retrieve, list, delete encrypted secrets
 relay.*        - Lineage-gated relay authorization (coordinated punch)
 beacon.*       - Dark Forest beacon generation, encryption, meeting exchange
 btsp.*         - Secure tunnel configuration (Phase 1–3: handshake, key exchange, encrypted framing with ChaCha20-Poly1305)
-quantum.*      - Post-quantum cryptographic operations
 ```
 
 ### Introspection

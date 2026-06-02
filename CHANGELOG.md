@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 2, 2026 -- Wave 123: Env Migration Wave 4, Dependency Evolution, Cert Stack Upgrade
+
+#### Changed
+- Centralized ~200 raw env var strings across 20 production files (beardog-types, beardog-core, beardog-tunnel HSM, beardog-ipc) to `env_keys::` constants
+- Replaced unmaintained `rustls-pemfile` (RUSTSEC-2025-0134) with `rustls-pki-types` `PemObject` API
+- Upgraded `x509-parser` 0.16 → 0.18 and `rcgen` 0.13 → 0.14
+- Unified `beardog-acme` x509-parser to workspace dependency
+
+### Jun 2, 2026 -- Wave 122: ACME CSR Evolution, Android Mock Honesty, Env Migration Wave 3
+
+#### Changed
+- Replaced ACME CSR placeholder with proper PKCS#10 DER generation via `rcgen` (ECDSA P-256)
+- Android `MemoryKeystoreTransport` now reports honest capabilities (`strongbox_available: false`, `hardware_backed: false`)
+- Added runtime `tracing::warn!` on Android stub keystore paths
+- Centralized ~130 raw env var strings (network_discovery, security, network, runtime_config, self_discovery)
+- Proper PKCS#8 PEM export via `cert_private_key_pem()`
+
+### Jun 2, 2026 -- Wave 121: Env Migration Wave 2, Quantum Stub Removal, Test Refactoring
+
+#### Changed
+- Centralized ~30 raw env var strings across btsp_handshake, socket_config, handlers/utils, modes/server, platform
+- Made `neural-api.sock` filename configurable via `BEARDOG_NEURAL_API_SOCKET_NAME`
+- Removed dead quantum discovery stubs (`create_quantum_entanglement`, `quantum_anneal_selection`, `OptimizationCriterion`)
+- Split `crypto_operations_comprehensive_tests.rs` (866L) into 8 focused test modules
+- Split `security_edge_cases.rs` (880L) into 12 focused test modules
+
 ### Jun 2, 2026 -- Wave 120: Deep Debt Cleanup — Deps, Timeouts, Env Centralization, Deprecated Removal
 
 - **Pruned 3 unused workspace dependencies** — Removed `dotenvy` (beardog-config), `tokio-stream` (beardog-security), `arrayref` (beardog-tunnel) from both workspace `[dependencies]` and per-crate `Cargo.toml` manifests. Zero source references confirmed before removal.

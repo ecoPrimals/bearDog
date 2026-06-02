@@ -3,8 +3,8 @@
 # Environment Variables Reference
 
 **Version**: 0.9.0
-**Date**: May 4, 2026
-**Status**: Complete Reference
+**Date**: Jun 2, 2026
+**Status**: Common Environment Variables
 
 ---
 
@@ -41,7 +41,7 @@ BearDog starts with family isolation, BTSP enforcement, and deterministic socket
 
 ---
 
-## Complete Reference
+## Common Variables
 
 ### Identity Variables
 
@@ -164,14 +164,14 @@ export BEARDOG_YUBIKEY_SERIAL=12345678
 
 ---
 
-#### `BEARDOG_TPM_PATH`
+#### `BEARDOG_TPM_DEVICE`
 
 **Purpose**: TPM device path
 **Required**: No
 **Default**: `/dev/tpm0` or `/dev/tpmrm0`
 
 ```bash
-export BEARDOG_TPM_PATH=/dev/tpmrm0
+export BEARDOG_TPM_DEVICE=/dev/tpmrm0
 ```
 
 ---
@@ -434,8 +434,8 @@ export BEARDOG_TRUST_MODE=lenient   # Testing
 
 ```bash
 export BEARDOG_MTLS_ENABLED=true
-export BEARDOG_TLS_CERT=/etc/beardog/certs/server.crt
-export BEARDOG_TLS_KEY=/etc/beardog/certs/server.key
+export BEARDOG_TLS_CERT_PATH=/etc/beardog/certs/server.crt
+export BEARDOG_TLS_KEY_PATH=/etc/beardog/certs/server.key
 ```
 
 ---
@@ -466,14 +466,38 @@ export BEARDOG_CONNECTION_POOL_SIZE=200
 
 ---
 
-#### `BEARDOG_REQUEST_TIMEOUT`
+#### `BEARDOG_REQUEST_TIMEOUT_SECS`
 
 **Purpose**: Request timeout in seconds
 **Required**: No
 **Default**: `30`
 
 ```bash
-export BEARDOG_REQUEST_TIMEOUT=60
+export BEARDOG_REQUEST_TIMEOUT_SECS=60
+```
+
+---
+
+#### Wave 120 Timeout Variables
+
+Wave 120 introduced granular I/O timeouts for connection lifecycle control:
+
+#### `BEARDOG_READ_TIMEOUT_SECS`
+
+**Purpose**: Read operation timeout in seconds
+**Required**: No
+
+```bash
+export BEARDOG_READ_TIMEOUT_SECS=30
+```
+
+#### `BEARDOG_HANDSHAKE_TIMEOUT_SECS`
+
+**Purpose**: Network handshake timeout in seconds
+**Required**: No
+
+```bash
+export BEARDOG_HANDSHAKE_TIMEOUT_SECS=10
 ```
 
 ---
@@ -517,6 +541,48 @@ export BEARDOG_METRICS_ENABLED=false
 
 ---
 
+### ACME / Automatic TLS
+
+#### `BEARDOG_TLS_MODE`
+
+**Purpose**: TLS provisioning mode for server startup
+**Required**: No
+**Default**: `manual`
+**Options**: `manual` | `acme`
+
+```bash
+export BEARDOG_TLS_MODE=acme
+```
+
+#### `BEARDOG_ACME_DIRECTORY`
+
+**Purpose**: ACME directory URL (e.g. Let's Encrypt)
+**Required**: When `BEARDOG_TLS_MODE=acme`
+
+```bash
+export BEARDOG_ACME_DIRECTORY=https://acme-v02.api.letsencrypt.org/directory
+```
+
+#### `BEARDOG_ACME_EMAIL`
+
+**Purpose**: ACME account contact email
+**Required**: When `BEARDOG_TLS_MODE=acme`
+
+```bash
+export BEARDOG_ACME_EMAIL=admin@example.com
+```
+
+#### `BEARDOG_ACME_DOMAINS`
+
+**Purpose**: Comma-separated domain names for certificate issuance
+**Required**: When `BEARDOG_TLS_MODE=acme`
+
+```bash
+export BEARDOG_ACME_DOMAINS=beardog.example.com,api.beardog.example.com
+```
+
+---
+
 ## Example Configurations
 
 ### Standalone (no env vars)
@@ -552,8 +618,8 @@ export BEARDOG_HSM_MODE=yubikey
 export BEARDOG_BIND_ADDR=
 export BEARDOG_TRUST_MODE=strict
 export BEARDOG_MTLS_ENABLED=true
-export BEARDOG_TLS_CERT=/etc/beardog/certs/server.crt
-export BEARDOG_TLS_KEY=/etc/beardog/certs/server.key
+export BEARDOG_TLS_CERT_PATH=/etc/beardog/certs/server.crt
+export BEARDOG_TLS_KEY_PATH=/etc/beardog/certs/server.key
 export RUST_LOG=info
 export BEARDOG_LOG_FORMAT=json
 export BEARDOG_LOG_FILE=/var/log/beardog/tower1.log
@@ -614,16 +680,17 @@ export NODE_ID=tower2
 | Category | Variables | Required |
 |----------|-----------|----------|
 | **Identity** | `FAMILY_ID`, `BEARDOG_FAMILY_ID`, `NODE_ID`, `BEARDOG_NODE_ID`, `FAMILY_SEED`, `BEARDOG_FAMILY_SEED`, `PRIMAL_NAME` | None (standalone mode) |
-| **HSM** | `BEARDOG_HSM_MODE`, `BEARDOG_YUBIKEY_SERIAL`, `BEARDOG_TPM_PATH` | None |
+| **HSM** | `BEARDOG_HSM_MODE`, `BEARDOG_YUBIKEY_SERIAL`, `BEARDOG_TPM_DEVICE` | None |
 | **Socket** | `BEARDOG_SOCKET`, `BIOMEOS_SOCKET_PATH`, `BIOMEOS_SOCKET_DIR` | None |
 | **Network** | `BEARDOG_BIND_ADDR`, `BEARDOG_ENDPOINT`, `BEARDOG_HOST`, `BEARDOG_API_PORT`, `BEARDOG_TCP_IPC_PORT`, `BEARDOG_METRICS_PORT` | None |
-| **Security** | `BIOMEOS_INSECURE`, `BEARDOG_AUTH_MODE`, `BEARDOG_TRUST_MODE`, `BEARDOG_MTLS_ENABLED`, `BEARDOG_TLS_CERT`, `BEARDOG_TLS_KEY` | None |
+| **Security** | `BIOMEOS_INSECURE`, `BEARDOG_AUTH_MODE`, `BEARDOG_TRUST_MODE`, `BEARDOG_MTLS_ENABLED`, `BEARDOG_TLS_CERT_PATH`, `BEARDOG_TLS_KEY_PATH` | None |
 | **Registry** | `PRIMAL_REGISTRY_SOCKET`, `BEARDOG_UPA_URL` | None |
 | **Logging** | `RUST_LOG`, `BEARDOG_LOG_FORMAT`, `BEARDOG_LOG_FILE` | None |
-| **Performance** | `BEARDOG_WORKER_THREADS`, `BEARDOG_CONNECTION_POOL_SIZE`, `BEARDOG_REQUEST_TIMEOUT` | None |
+| **Performance** | `BEARDOG_WORKER_THREADS`, `BEARDOG_CONNECTION_POOL_SIZE`, `BEARDOG_REQUEST_TIMEOUT_SECS`, `BEARDOG_READ_TIMEOUT_SECS`, `BEARDOG_HANDSHAKE_TIMEOUT_SECS` | None |
+| **ACME** | `BEARDOG_TLS_MODE`, `BEARDOG_ACME_DIRECTORY`, `BEARDOG_ACME_EMAIL`, `BEARDOG_ACME_DOMAINS` | None |
 | **Development** | `BEARDOG_DEV_MODE`, `BEARDOG_API_DOCS_ENABLED`, `BEARDOG_METRICS_ENABLED` | None |
 
-**Total**: 32 environment variables — all optional. Standalone mode works with zero env vars.
+Selected subset — see `crates/beardog-config/src/env_keys.rs` for the full centralized registry (~280+ constants). All variables documented here are optional; standalone mode works with zero env vars.
 
 ---
 
@@ -652,6 +719,6 @@ Every tier is valid. BearDog is not required to support all tiers. Tier 3 (UDS c
 
 ---
 
-_Last Updated: May 7, 2026_
+_Last Updated: Jun 2, 2026_
 _Version: 0.9.0_
 _Status: Production Ready_

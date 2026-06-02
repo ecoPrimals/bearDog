@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: May 28, 2026 (Wave 117)
+**Last Updated**: Jun 2, 2026 (Wave 123)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -35,7 +35,7 @@
 
 - **Crates**: 30 directories (beardog-integration excluded — overstep; beardog-acme added Wave 107)
 - **Rust Files**: 2,115 (crates + src + tests; excludes showcase/examples)
-- **JSON-RPC Methods**: 127 — 103 CryptoHandler + 12 IonicBondHandler + 6 auth gate (JH-0/JH-1/JH-11) + 1 identity gate (JH-1) + 5 bonding aliases (primalSpring compat) + 3 FIDO2 (UB-2) — note: 5 bonding aliases are not new handlers, they route to crypto.ionic_bond.*
+- **JSON-RPC Methods**: 223 dispatchable (215 registry + 8 pre-dispatch gate) — see `docs/PRIMAL_CONTRACTS.md` v4.0.0 for category breakdown
 - **`#[allow(`**: 81 (was 86; all carry `reason`)
 - **`#[expect(`**: 644 (was 646; 2 stale removed)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
@@ -89,6 +89,45 @@
 ---
 
 ## Recent Improvements
+
+### Wave 123 — Env Migration Wave 4, Dependency Evolution, Cert Stack Upgrade (Jun 2, 2026)
+
+- **~200 env var strings centralized** — beardog-types, beardog-core, beardog-tunnel HSM, beardog-ipc migrated to `env_keys::` constants.
+- **`rustls-pemfile` replaced** — RUSTSEC-2025-0134 addressed via `rustls-pki-types` `PemObject` API.
+- **Cert stack upgraded** — `x509-parser` 0.16 → 0.18, `rcgen` 0.13 → 0.14; `beardog-acme` unified to workspace `x509-parser`.
+
+### Wave 122 — ACME CSR Evolution, Android Mock Honesty, Env Migration Wave 3 (Jun 2, 2026)
+
+- **Proper ACME CSR** — PKCS#10 DER generation via `rcgen` (ECDSA P-256); PKCS#8 PEM export via `cert_private_key_pem()`.
+- **Android keystore honesty** — `MemoryKeystoreTransport` reports `strongbox_available: false`, `hardware_backed: false`; `tracing::warn!` on stub paths.
+- **~130 env var strings centralized** — network_discovery, security, network, runtime_config, self_discovery domains.
+
+### Wave 121 — Env Migration Wave 2, Quantum Stub Removal, Test Refactoring (Jun 2, 2026)
+
+- **~30 env var strings centralized** — btsp_handshake, socket_config, handlers/utils, modes/server, platform.
+- **`BEARDOG_NEURAL_API_SOCKET_NAME`** — configurable `neural-api.sock` filename.
+- **Dead quantum stubs removed** — `create_quantum_entanglement`, `quantum_anneal_selection`, `OptimizationCriterion`.
+- **Test splits** — `crypto_operations_comprehensive_tests.rs` (866L) → 8 modules; `security_edge_cases.rs` (880L) → 12 modules.
+
+### Wave 120 — Deep Debt Cleanup: Deps, Timeouts, Env Centralization (Jun 2, 2026)
+
+- **3 unused workspace dependencies pruned** — `dotenvy`, `tokio-stream`, `arrayref`.
+- **Timeout centralization** — IPC/TCP read and handshake timeouts env-driven via `BEARDOG_READ_TIMEOUT_SECS` and `BEARDOG_HANDSHAKE_TIMEOUT_SECS`.
+- **Env key migration (ACME + tunnel)** — 13 raw strings → `env_keys::ENV_*`; ACME naming drift fixed.
+- **`#![forbid(unsafe_code)]` on CLI binary** — all 29 library crates + 2 binary roots now forbid unsafe.
+- **Deprecated `monitoring_unified` re-exports removed** from beardog-types.
+
+### Wave 119 — S4 Auth Config: SO_PEERCRED + MethodGate Centralization (Jun 1, 2026)
+
+- **`SO_PEERCRED` extraction enabled** — `auth.peer_info` returns real `uid`/`pid` from Unix domain sockets via `PlatformStream::peer_credentials()`.
+- **`BEARDOG_AUTH_MODE` centralized** — inline string replaced with `env_keys::ENV_AUTH_MODE`; BTSP env keys migrated.
+- **S4 shadow deployment documented** — `ENVIRONMENT_VARIABLES.md` updated; ironGate can begin formal 7-day shadow validation.
+
+### Wave 118 — PRIMAL_CONTRACTS Method Catalog Refresh (May 28, 2026)
+
+- **`PRIMAL_CONTRACTS.md` v4.0.0** — method count corrected to **223 dispatchable methods** (215 registry + 8 pre-dispatch gate); 18 handler categories; method index rebuilt from code.
+- **TCP port corrected** — `9190` (metrics) → `9100` (`DEFAULT_TCP_IPC_PORT`).
+- **Error codes and auth model updated** — MethodGate enforcement codes; multi-layer auth (genetic + ionic + session + MethodGate).
 
 ### Wave 117 — Deep Debt: Dependencies, Env Migration, Deprecated Types (May 28, 2026)
 

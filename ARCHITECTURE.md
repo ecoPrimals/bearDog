@@ -2,7 +2,7 @@
 
 # BearDog Architecture
 
-**Last Updated**: May 28, 2026
+**Last Updated**: Jun 2, 2026
 **Status**: Production Ready
 **Crates**: 29 | **Tests**: 14,987+ | **Coverage**: 90.51% | **MSRV**: 1.93.0
 
@@ -17,7 +17,7 @@ BearDog provides **crypto atoms** to the ecoPrimals ecosystem. Every primal dele
 │  Any Primal │ ←─ JSON-RPC ────→ │  BearDog    │
 │ (Protocol)  │    Unix Socket     │  (Crypto)   │
 └─────────────┘                    └─────────────┘
-     Zero crypto code                 127 JSON-RPC methods
+     Zero crypto code                 223 JSON-RPC methods
 ```
 
 **Principles**:
@@ -35,8 +35,8 @@ BearDog provides **crypto atoms** to the ecoPrimals ecosystem. Every primal dele
 | Crate | Purpose |
 |-------|---------|
 | `beardog` | Binary entry point, CLI, server |
-| `beardog-core` | Core crypto handlers, JSON-RPC dispatch |
-| `beardog-tunnel` | BTSP secure tunnel protocol, TLS crypto |
+| `beardog-core` | Core crypto handlers, capability routing |
+| `beardog-tunnel` | BTSP secure tunnel protocol, TLS crypto, JSON-RPC dispatch (`unix_socket_ipc/handlers/`) |
 | `beardog-ipc` | Unix socket / TCP / named pipe transport |
 | `beardog-cli` | Command-line interface |
 | `beardog-client` | Client library for other primals |
@@ -58,6 +58,7 @@ BearDog provides **crypto atoms** to the ecoPrimals ecosystem. Every primal dele
 | `beardog-genetics` | Genetic entropy, lineage key derivation |
 | `beardog-hid` | Hardware device discovery (FIDO2, HID) |
 | `beardog-auth` | Authentication and authorization |
+| `beardog-acme` | ACME RFC 8555 client, cert storage, hot-reload |
 | `beardog-threat` | Threat detection and ML-based analysis |
 
 ### Infrastructure
@@ -248,4 +249,4 @@ Key material derived from family seed. Family A never shares keys with Family B.
 
 ---
 
-**Last Updated**: May 28, 2026
+**Last Updated**: Jun 2, 2026

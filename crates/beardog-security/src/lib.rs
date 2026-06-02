@@ -93,9 +93,6 @@ pub mod genesis;
 /// - **SPHINCS+** - Stateless hash-based signatures
 pub mod quantum_crypto;
 
-// DISABLED: Module files are corrupted with syntax errors and need reconstruction
-// See MODULE_STRUCTURE_ISSUES.md for details
-
 // Comprehensive test modules
 #[cfg(test)]
 mod tests;
