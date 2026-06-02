@@ -10,6 +10,7 @@
 //! - **Tier 2**: TCP (Android, Windows, cross-device) - universal fallback
 
 use crate::ServerArgs;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
 use beardog_ipc::{
@@ -278,7 +279,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     attempt_orchestrator_registration(&socket_path, tcp_addr.as_deref()).await;
 
     // ACME renewal daemon (gated by BEARDOG_TLS_MODE=acme)
-    if std::env::var("BEARDOG_TLS_MODE")
+    if std::env::var(env_keys::ENV_TLS_MODE)
         .ok()
         .is_some_and(|v| v.eq_ignore_ascii_case("acme"))
     {

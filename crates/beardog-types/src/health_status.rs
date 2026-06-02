@@ -146,10 +146,6 @@ impl HealthStatus {
     }
 }
 
-// Re-export canonical health types when available
-// Note: Using unified canonical monitoring for health functionality
-pub use crate::canonical::monitoring_unified::*;
-
 #[cfg(test)]
 mod tests {
     use super::*;

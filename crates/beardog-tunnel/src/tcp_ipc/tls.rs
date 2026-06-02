@@ -18,6 +18,7 @@
 //! Server Name Indication is supported: the acceptor validates the client's
 //! requested hostname against the loaded certificate's subject names.
 
+use beardog_config::env_keys;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
@@ -77,8 +78,8 @@ impl TlsTerminationConfig {
     /// Returns an error description if only one of the two env vars is set.
     #[must_use]
     pub fn from_env() -> Option<Self> {
-        let cert = std::env::var("BEARDOG_TLS_CERT_PATH").ok();
-        let key = std::env::var("BEARDOG_TLS_KEY_PATH").ok();
+        let cert = std::env::var(env_keys::ENV_TLS_CERT_PATH).ok();
+        let key = std::env::var(env_keys::ENV_TLS_KEY_PATH).ok();
 
         match (cert, key) {
             (Some(cert_path), Some(key_path)) => Some(Self {

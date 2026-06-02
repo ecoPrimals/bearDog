@@ -2,6 +2,8 @@
 
 //! Certificate storage — filesystem persistence for PEM certificates and keys.
 
+use beardog_config::env_keys;
+
 use crate::error::AcmeError;
 use std::path::{Path, PathBuf};
 use tracing::info;
@@ -32,7 +34,7 @@ impl CertificateStore {
     ///
     /// Returns an error if the resolved directory cannot be created.
     pub fn from_env() -> Result<Self, AcmeError> {
-        let base = if let Ok(data_dir) = std::env::var("BEARDOG_DATA_DIR") {
+        let base = if let Ok(data_dir) = std::env::var(env_keys::ENV_DATA_DIR) {
             PathBuf::from(data_dir).join("acme")
         } else if let Ok(home) = std::env::var("HOME") {
             PathBuf::from(home).join(".beardog").join("acme")

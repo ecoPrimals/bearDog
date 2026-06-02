@@ -23,6 +23,16 @@ use beardog_errors::BearDogError;
 use rand::RngCore;
 use tracing::{debug, warn};
 
+static BTSP_JSONLINE_READ_TIMEOUT: std::sync::LazyLock<std::time::Duration> =
+    std::sync::LazyLock::new(|| {
+        std::time::Duration::from_secs(
+            std::env::var(beardog_config::env_keys::ENV_HANDSHAKE_TIMEOUT_SECS)
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30),
+        )
+    });
+
 /// Run the server side of the BTSP handshake on `stream`.
 ///
 /// On success returns a [`BtspSession`] ready for encrypted frame I/O.
@@ -318,7 +328,7 @@ async fn read_jsonline<S: tokio::io::AsyncRead + Unpin>(
     stream: &mut S,
 ) -> Result<Vec<u8>, BearDogError> {
     use tokio::io::AsyncReadExt;
-    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(30);
+    let deadline = tokio::time::Instant::now() + *BTSP_JSONLINE_READ_TIMEOUT;
     let mut buf = Vec::with_capacity(4096);
     let mut byte = [0u8; 1];
     loop {

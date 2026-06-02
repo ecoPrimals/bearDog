@@ -10,6 +10,8 @@
 //! 5. Certificate download (§7.4.2)
 //! 6. Renewal scheduling
 
+use beardog_config::env_keys;
+
 use crate::account::AcmeAccount;
 use crate::challenge::{ChallengeToken, Http01Solver};
 use crate::error::AcmeError;
@@ -53,32 +55,33 @@ impl AcmeConfig {
     ///
     /// Returns an error if required variables are missing.
     pub fn from_env() -> Result<Self, AcmeError> {
-        let directory_url = std::env::var("BEARDOG_ACME_DIRECTORY")
+        let directory_url = std::env::var(env_keys::ENV_ACME_DIRECTORY)
             .unwrap_or_else(|_| crate::directories::LETS_ENCRYPT_PRODUCTION.to_string());
 
-        let domains: Vec<String> = std::env::var("BEARDOG_ACME_DOMAINS")
-            .map_err(|_| AcmeError::Config("BEARDOG_ACME_DOMAINS not set".to_string()))?
+        let domains: Vec<String> = std::env::var(env_keys::ENV_ACME_DOMAINS)
+            .map_err(|_| AcmeError::Config(format!("{} not set", env_keys::ENV_ACME_DOMAINS)))?
             .split(',')
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
             .collect();
 
         if domains.is_empty() {
-            return Err(AcmeError::Config(
-                "BEARDOG_ACME_DOMAINS must contain at least one domain".to_string(),
-            ));
+            return Err(AcmeError::Config(format!(
+                "{} must contain at least one domain",
+                env_keys::ENV_ACME_DOMAINS
+            )));
         }
 
-        let contacts: Vec<String> = std::env::var("BEARDOG_ACME_EMAIL")
+        let contacts: Vec<String> = std::env::var(env_keys::ENV_ACME_EMAIL)
             .map(|e| vec![format!("mailto:{e}")])
             .unwrap_or_default();
 
-        let challenge_port = std::env::var("BEARDOG_ACME_CHALLENGE_PORT")
+        let challenge_port = std::env::var(env_keys::ENV_ACME_CHALLENGE_PORT)
             .ok()
             .and_then(|p| p.parse().ok())
             .unwrap_or(80);
 
-        let renewal_days = std::env::var("BEARDOG_ACME_RENEWAL_DAYS")
+        let renewal_days = std::env::var(env_keys::ENV_ACME_RENEWAL_DAYS)
             .ok()
             .and_then(|d| d.parse().ok())
             .unwrap_or(30);

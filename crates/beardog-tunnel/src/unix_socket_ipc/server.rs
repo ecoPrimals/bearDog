@@ -37,7 +37,25 @@ use tracing::{debug, error, info, warn};
 /// Prevents indefinite blocking when a client connects but never sends a
 /// newline (e.g. raw `nc` probes, `curl` health checks). On timeout the
 /// connection is closed and the task freed.
-pub(super) const IPC_READ_TIMEOUT: Duration = Duration::from_secs(30);
+pub(super) static IPC_READ_TIMEOUT: std::sync::LazyLock<Duration> =
+    std::sync::LazyLock::new(|| {
+        Duration::from_secs(
+            std::env::var(beardog_config::env_keys::ENV_READ_TIMEOUT_SECS)
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30),
+        )
+    });
+
+/// Timeout for the initial protocol-detection peek on UDS connections.
+static IPC_PEEK_TIMEOUT: std::sync::LazyLock<Duration> = std::sync::LazyLock::new(|| {
+    Duration::from_secs(
+        std::env::var(beardog_config::env_keys::ENV_HANDSHAKE_TIMEOUT_SECS)
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(5),
+    )
+});
 
 /// Unix socket IPC server for inter-primal communication
 pub struct UnixSocketIpcServer {
@@ -338,9 +356,7 @@ impl UnixSocketIpcServer {
                 // use a 4-byte big-endian length prefix. PrefixedStream puts the
                 // consumed byte back for whichever handler wins.
                 let mut peek = [0u8; 1];
-                match tokio::time::timeout(Duration::from_secs(5), stream.read_exact(&mut peek))
-                    .await
-                {
+                match tokio::time::timeout(*IPC_PEEK_TIMEOUT, stream.read_exact(&mut peek)).await {
                     Ok(Ok(1)) if peek[0] == b'{' => {
                         debug!(
                             "UDS peek: JSON-RPC detected (0x7B) — bypassing BTSP for local composition"
@@ -403,7 +419,7 @@ impl UnixSocketIpcServer {
             let mut buffer = Vec::with_capacity(1024);
 
             let read_result =
-                tokio::time::timeout(IPC_READ_TIMEOUT, buf_stream.read_until(b'\n', &mut buffer))
+                tokio::time::timeout(*IPC_READ_TIMEOUT, buf_stream.read_until(b'\n', &mut buffer))
                     .await;
 
             match read_result {

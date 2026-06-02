@@ -43,6 +43,7 @@ thiserror = { workspace = true }
 url = { workspace = true }
 
 # Internal
+beardog-config = { workspace = true }
 beardog-errors = { workspace = true }
 
 [dev-dependencies]

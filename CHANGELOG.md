@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 2, 2026 -- Wave 120: Deep Debt Cleanup — Deps, Timeouts, Env Centralization, Deprecated Removal
+
+- **Pruned 3 unused workspace dependencies** — Removed `dotenvy` (beardog-config), `tokio-stream` (beardog-security), `arrayref` (beardog-tunnel) from both workspace `[dependencies]` and per-crate `Cargo.toml` manifests. Zero source references confirmed before removal.
+- **Timeout centralization** — Replaced 5 hardcoded `Duration::from_secs(N)` constants in tunnel IPC with `LazyLock`-based env-driven values: `IPC_READ_TIMEOUT` and `TCP_READ_TIMEOUT` use `BEARDOG_READ_TIMEOUT_SECS` (default 30s); `IPC_PEEK_TIMEOUT`, `TCP_HANDSHAKE_DETECT_TIMEOUT`, and `BTSP_JSONLINE_READ_TIMEOUT` use `BEARDOG_HANDSHAKE_TIMEOUT_SECS` (defaults 5s/30s). All configurable at runtime without recompilation.
+- **Env key migration (ACME + tunnel)** — Migrated 13 raw `"BEARDOG_*"` string literals to `env_keys::ENV_*` constants across `beardog-acme` (5 keys), `beardog-cli` (1), `beardog-tunnel/tls` (2), `beardog-tunnel/rate_limiter` (3). Fixed ACME naming drift: `ENV_ACME_HTTP_PORT` → `ENV_ACME_CHALLENGE_PORT`, `ENV_ACME_RENEWAL_HOURS` → `ENV_ACME_RENEWAL_DAYS` to match production usage. Added 5 new constants to `env_keys.rs`.
+- **`#![forbid(unsafe_code)]` on CLI binary** — Added to `beardog-cli/src/main.rs` for defense-in-depth. All 29 library crates + 2 binary roots now forbid unsafe.
+- **Deprecated `monitoring_unified` re-exports removed** — Cleaned `metrics.rs` and `health_status.rs` in `beardog-types` of stale `pub use` lines pulling deprecated monitoring types. No callers depended on these paths.
+
 ### Jun 1, 2026 -- Wave 119: S4 Auth Config — SO_PEERCRED + MethodGate Centralization (Wave 67 Response)
 
 - **`SO_PEERCRED` extraction enabled** — `auth.peer_info` now returns real `uid`/`pid` from Unix domain sockets. `PlatformStream` trait extended with `peer_credentials()` method (stable since Rust 1.75, was incorrectly marked as unstable). Implemented on `UnixPlatformStream` and `AndroidPlatformStream` via `tokio::net::UnixStream::peer_cred()`. `PrefixedStream` delegates to inner stream. All 4 connection handlers in `connection_handlers.rs` updated to populate `CallerContext` with live peer credentials.

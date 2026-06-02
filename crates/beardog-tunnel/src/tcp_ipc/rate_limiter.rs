@@ -8,6 +8,7 @@
 //! Uses a sliding-window token bucket per IP address. Stale entries are pruned
 //! periodically to bound memory usage.
 
+use beardog_config::env_keys;
 use dashmap::DashMap;
 use std::net::IpAddr;
 use std::sync::Arc;
@@ -45,17 +46,17 @@ impl RateLimitConfig {
     /// Load config from environment variables with sane defaults.
     #[must_use]
     pub fn from_env() -> Self {
-        let max_conn = std::env::var("BEARDOG_RATE_LIMIT_MAX_CONN")
+        let max_conn = std::env::var(env_keys::ENV_RATE_LIMIT_MAX_CONN)
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(100);
 
-        let window_secs = std::env::var("BEARDOG_RATE_LIMIT_WINDOW_SECS")
+        let window_secs = std::env::var(env_keys::ENV_RATE_LIMIT_WINDOW_SECS)
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(60);
 
-        let max_total = std::env::var("BEARDOG_RATE_LIMIT_MAX_TOTAL")
+        let max_total = std::env::var(env_keys::ENV_RATE_LIMIT_MAX_TOTAL)
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(1000);

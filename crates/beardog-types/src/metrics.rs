@@ -399,10 +399,6 @@ impl Default for ResponseTimeMetrics {
     }
 }
 
-// Re-export canonical metrics types when available
-// Note: Using unified canonical monitoring for metrics functionality
-pub use crate::canonical::monitoring_unified::{AlertingConfig, MetricsConfig};
-
 #[cfg(test)]
 mod tests {
     // SPDX-License-Identifier: AGPL-3.0-or-later

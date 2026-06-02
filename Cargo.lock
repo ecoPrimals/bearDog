@@ -355,6 +355,7 @@ name = "beardog-acme"
 version = "0.9.0"
 dependencies = [
  "base64",
+ "beardog-config",
  "beardog-errors",
  "chrono",
  "ed25519-dalek",
@@ -523,7 +524,6 @@ version = "0.9.0"
 dependencies = [
  "beardog-errors",
  "dirs",
- "dotenvy",
  "serde",
  "serde_json",
  "tempfile",
@@ -817,7 +817,6 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.18",
  "tokio",
- "tokio-stream",
  "tracing",
  "uuid",
  "zeroize",
@@ -875,7 +874,6 @@ dependencies = [
  "aes-gcm",
  "anyhow",
  "argon2",
- "arrayref",
  "base64",
  "bcrypt",
  "beardog-auth",
@@ -1779,12 +1777,6 @@ checksum = "d4b8a88685455ed29a21542a33abd9cb6510b6b129abadabdcef0f4c55bc8f61"
 dependencies = [
  "litrs",
 ]
-
-[[package]]
-name = "dotenvy"
-version = "0.15.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
 
 [[package]]
 name = "ecdsa"
@@ -4368,17 +4360,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1729aa945f29d91ba541258c8df89027d5792d85a8841fb65e8bf0f4ede4ef61"
 dependencies = [
  "rustls",
- "tokio",
-]
-
-[[package]]
-name = "tokio-stream"
-version = "0.1.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32da49809aab5c3bc678af03902d4ccddea2a87d028d86392a4b1560c6906c70"
-dependencies = [
- "futures-core",
- "pin-project-lite",
  "tokio",
 ]
 

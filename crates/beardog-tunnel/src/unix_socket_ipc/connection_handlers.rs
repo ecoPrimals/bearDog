@@ -49,7 +49,7 @@ impl UnixSocketIpcServer {
             line_buf.clear();
 
             let read_result = tokio::time::timeout(
-                IPC_READ_TIMEOUT,
+                *IPC_READ_TIMEOUT,
                 buf_stream.read_until(b'\n', &mut line_buf),
             )
             .await;
@@ -174,7 +174,7 @@ impl UnixSocketIpcServer {
             line_buf.clear();
 
             let read_result = tokio::time::timeout(
-                IPC_READ_TIMEOUT,
+                *IPC_READ_TIMEOUT,
                 buf_stream.read_until(b'\n', &mut line_buf),
             )
             .await;

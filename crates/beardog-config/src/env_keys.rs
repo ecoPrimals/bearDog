@@ -193,6 +193,10 @@ pub const ENV_HEARTBEAT_TIMEOUT_SECS: &str = "BEARDOG_HEARTBEAT_TIMEOUT_SECS";
 pub const ENV_MIN_TLS_VERSION: &str = "BEARDOG_MIN_TLS_VERSION";
 /// TLS mode for server startup.
 pub const ENV_TLS_MODE: &str = "BEARDOG_TLS_MODE";
+/// PEM certificate chain path for TLS termination.
+pub const ENV_TLS_CERT_PATH: &str = "BEARDOG_TLS_CERT_PATH";
+/// PEM private key path for TLS termination.
+pub const ENV_TLS_KEY_PATH: &str = "BEARDOG_TLS_KEY_PATH";
 /// Enable strict security mode.
 pub const ENV_STRICT_MODE: &str = "BEARDOG_STRICT_MODE";
 /// Require mutual TLS for connections.
@@ -203,6 +207,12 @@ pub const ENV_ALLOW_LOCALHOST_BYPASS: &str = "BEARDOG_ALLOW_LOCALHOST_BYPASS";
 pub const ENV_ENABLE_AUDIT_LOG: &str = "BEARDOG_ENABLE_AUDIT_LOG";
 /// Enable request rate limiting.
 pub const ENV_ENABLE_RATE_LIMITING: &str = "BEARDOG_ENABLE_RATE_LIMITING";
+/// Per-IP max connections per rate-limit window.
+pub const ENV_RATE_LIMIT_MAX_CONN: &str = "BEARDOG_RATE_LIMIT_MAX_CONN";
+/// Rate-limit sliding window duration (seconds).
+pub const ENV_RATE_LIMIT_WINDOW_SECS: &str = "BEARDOG_RATE_LIMIT_WINDOW_SECS";
+/// Global max concurrent connections before rate limiting rejects.
+pub const ENV_RATE_LIMIT_MAX_TOTAL: &str = "BEARDOG_RATE_LIMIT_MAX_TOTAL";
 /// Automatically block suspicious source IPs.
 pub const ENV_AUTO_BLOCK_SUSPICIOUS_IPS: &str = "BEARDOG_AUTO_BLOCK_SUSPICIOUS_IPS";
 /// Require authentication for all endpoints.
@@ -255,9 +265,9 @@ pub const ENV_ACME_EMAIL: &str = "BEARDOG_ACME_EMAIL";
 /// ACME domains (comma-separated).
 pub const ENV_ACME_DOMAINS: &str = "BEARDOG_ACME_DOMAINS";
 /// ACME HTTP-01 challenge bind port.
-pub const ENV_ACME_HTTP_PORT: &str = "BEARDOG_ACME_HTTP_PORT";
-/// ACME renewal interval (hours).
-pub const ENV_ACME_RENEWAL_HOURS: &str = "BEARDOG_ACME_RENEWAL_HOURS";
+pub const ENV_ACME_CHALLENGE_PORT: &str = "BEARDOG_ACME_CHALLENGE_PORT";
+/// Days before certificate expiry to trigger ACME renewal.
+pub const ENV_ACME_RENEWAL_DAYS: &str = "BEARDOG_ACME_RENEWAL_DAYS";
 
 // ── Limits ───────────────────────────────────────────────────────────
 
