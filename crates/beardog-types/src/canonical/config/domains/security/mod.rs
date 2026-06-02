@@ -24,6 +24,7 @@
 //! - `AuthConfig` (beardog-auth)
 //! - Plus additional scattered security configurations
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -118,21 +119,21 @@ impl ConsolidatedSecurityConfiguration {
     /// Create default authorization configuration from environment
     fn default_authorization() -> AuthorizationConfiguration {
         AuthorizationConfiguration {
-            enable_rbac: std::env::var("BEARDOG_AUTHZ_RBAC_ENABLED")
+            enable_rbac: std::env::var(env_keys::ENV_AUTHZ_RBAC_ENABLED)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            enable_abac: std::env::var("BEARDOG_AUTHZ_ABAC_ENABLED")
+            enable_abac: std::env::var(env_keys::ENV_AUTHZ_ABAC_ENABLED)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            default_role: std::env::var("BEARDOG_AUTHZ_DEFAULT_ROLE")
+            default_role: std::env::var(env_keys::ENV_AUTHZ_DEFAULT_ROLE)
                 .unwrap_or_else(|_| "user".to_string()),
-            permission_cache_timeout: std::env::var("BEARDOG_AUTHZ_CACHE_TIMEOUT_SECS")
+            permission_cache_timeout: std::env::var(env_keys::ENV_AUTHZ_CACHE_TIMEOUT_SECS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(300),
-            enable_capability_auth: std::env::var("BEARDOG_AUTHZ_CAPABILITY_ENABLED")
+            enable_capability_auth: std::env::var(env_keys::ENV_AUTHZ_CAPABILITY_ENABLED)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
@@ -147,33 +148,35 @@ impl ConsolidatedSecurityConfiguration {
             default_membership_level: "learning_participant".to_string(),
             auto_evolution: AutoEvolutionConfiguration::default(),
             legacy_integration: LegacyIntegrationConfiguration {
-                enable_legacy_integration: std::env::var("BEARDOG_LEGACY_INTEGRATION_ENABLED")
+                enable_legacy_integration: std::env::var(env_keys::ENV_LEGACY_INTEGRATION_ENABLED)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(false),
-                legacy_timeout_seconds: std::env::var("BEARDOG_LEGACY_TIMEOUT_SECS")
+                legacy_timeout_seconds: std::env::var(env_keys::ENV_LEGACY_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),
                 legacy_auth_methods: vec!["basic".to_string()],
-                migration_deadline: std::env::var("BEARDOG_LEGACY_MIGRATION_DEADLINE")
+                migration_deadline: std::env::var(env_keys::ENV_LEGACY_MIGRATION_DEADLINE)
                     .ok()
                     .or_else(|| Some("2025-12-31".to_string())),
             },
             health_monitoring: HealthMonitoringConfiguration {
-                enable_monitoring: std::env::var("BEARDOG_HEALTH_MONITORING_ENABLED")
+                enable_monitoring: std::env::var(env_keys::ENV_HEALTH_MONITORING_ENABLED)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(true),
-                check_interval_seconds: std::env::var("BEARDOG_HEALTH_CHECK_INTERVAL_SECS")
+                check_interval_seconds: std::env::var(env_keys::ENV_HEALTH_CHECK_INTERVAL_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(60),
                 alert_thresholds: HashMap::new(),
-                enable_auto_remediation: std::env::var("BEARDOG_HEALTH_AUTO_REMEDIATION_ENABLED")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(true),
+                enable_auto_remediation: std::env::var(
+                    env_keys::ENV_HEALTH_AUTO_REMEDIATION_ENABLED,
+                )
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(true),
             },
         }
     }
@@ -187,22 +190,26 @@ impl ConsolidatedSecurityConfiguration {
     /// Create default monitoring configuration from environment
     fn default_monitoring() -> SecurityMonitoringConfiguration {
         SecurityMonitoringConfiguration {
-            enable_monitoring: std::env::var("BEARDOG_SECURITY_MONITORING_ENABLED")
+            enable_monitoring: std::env::var(env_keys::ENV_SECURITY_MONITORING_ENABLED)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            monitoring_interval_seconds: std::env::var("BEARDOG_SECURITY_MONITORING_INTERVAL_SECS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(60),
+            monitoring_interval_seconds: std::env::var(
+                env_keys::ENV_SECURITY_MONITORING_INTERVAL_SECS,
+            )
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(60),
             alerts: SecurityAlertConfiguration {
                 enabled: true,
                 channels: vec!["log".to_string()],
                 severity_levels: HashMap::new(),
-                rate_limit_per_hour: std::env::var("BEARDOG_SECURITY_ALERT_RATE_LIMIT_PER_HOUR")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(100),
+                rate_limit_per_hour: std::env::var(
+                    env_keys::ENV_SECURITY_ALERT_RATE_LIMIT_PER_HOUR,
+                )
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(100),
             },
             metrics_enabled: true,
             siem_integration: None,
@@ -216,29 +223,29 @@ impl ConsolidatedSecurityConfiguration {
             algorithm: "weighted_average".to_string(),
             trust_factors: HashMap::new(),
             trust_decay: TrustDecayConfiguration {
-                enabled: std::env::var("BEARDOG_TRUST_DECAY_ENABLED")
+                enabled: std::env::var(env_keys::ENV_TRUST_DECAY_ENABLED)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(true),
-                decay_rate: std::env::var("BEARDOG_TRUST_DECAY_RATE")
+                decay_rate: std::env::var(env_keys::ENV_TRUST_DECAY_RATE)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(0.01),
-                decay_interval_seconds: std::env::var("BEARDOG_TRUST_DECAY_INTERVAL_SECS")
+                decay_interval_seconds: std::env::var(env_keys::ENV_TRUST_DECAY_INTERVAL_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(3600),
-                minimum_trust: std::env::var("BEARDOG_TRUST_MINIMUM")
+                minimum_trust: std::env::var(env_keys::ENV_TRUST_MINIMUM)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(0.1),
             },
             evaluation: EvaluationConfiguration {
-                algorithm: std::env::var("BEARDOG_TRUST_EVAL_ALGORITHM")
+                algorithm: std::env::var(env_keys::ENV_TRUST_EVAL_ALGORITHM)
                     .unwrap_or_else(|_| "multi_criteria".to_string()),
                 criteria: vec!["history".to_string(), "behavior".to_string()],
                 weights: HashMap::new(),
-                timeout_seconds: std::env::var("BEARDOG_TRUST_EVAL_TIMEOUT_SECS")
+                timeout_seconds: std::env::var(env_keys::ENV_TRUST_EVAL_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),
@@ -251,32 +258,34 @@ impl ConsolidatedSecurityConfiguration {
         SecurityComplianceConfiguration {
             standards: vec!["SOX".to_string(), "GDPR".to_string()],
             validation: ComplianceValidationConfiguration {
-                enabled: std::env::var("BEARDOG_COMPLIANCE_VALIDATION_ENABLED")
+                enabled: std::env::var(env_keys::ENV_COMPLIANCE_VALIDATION_ENABLED)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(true),
                 validation_frequency_hours: std::env::var(
-                    "BEARDOG_COMPLIANCE_VALIDATION_FREQUENCY_HOURS",
+                    env_keys::ENV_COMPLIANCE_VALIDATION_FREQUENCY_HOURS,
                 )
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(24),
-                strictness_level: std::env::var("BEARDOG_COMPLIANCE_STRICTNESS")
+                strictness_level: std::env::var(env_keys::ENV_COMPLIANCE_STRICTNESS)
                     .unwrap_or_else(|_| "high".to_string()),
-                auto_remediation: std::env::var("BEARDOG_COMPLIANCE_AUTO_REMEDIATION")
+                auto_remediation: std::env::var(env_keys::ENV_COMPLIANCE_AUTO_REMEDIATION)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(true),
             },
             reporting: ComplianceReportingConfiguration {
-                enabled: std::env::var("BEARDOG_COMPLIANCE_REPORTING_ENABLED")
+                enabled: std::env::var(env_keys::ENV_COMPLIANCE_REPORTING_ENABLED)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(true),
-                report_frequency_days: std::env::var("BEARDOG_COMPLIANCE_REPORT_FREQUENCY_DAYS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(30),
+                report_frequency_days: std::env::var(
+                    env_keys::ENV_COMPLIANCE_REPORT_FREQUENCY_DAYS,
+                )
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30),
                 report_formats: vec!["json".to_string()],
                 recipients: vec![],
             },
@@ -291,18 +300,18 @@ impl ConsolidatedSecurityConfiguration {
             residency_requirements: vec!["user_controlled".to_string()],
             transfer_rules: vec![],
             validation: SovereigntyValidationConfiguration {
-                enabled: std::env::var("BEARDOG_SOVEREIGNTY_VALIDATION_ENABLED")
+                enabled: std::env::var(env_keys::ENV_SOVEREIGNTY_VALIDATION_ENABLED)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(true),
                 validation_frequency_hours: std::env::var(
-                    "BEARDOG_SOVEREIGNTY_VALIDATION_FREQUENCY_HOURS",
+                    env_keys::ENV_SOVEREIGNTY_VALIDATION_FREQUENCY_HOURS,
                 )
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(24),
                 criteria: vec!["data_residency".to_string(), "user_consent".to_string()],
-                enforcement_level: std::env::var("BEARDOG_SOVEREIGNTY_ENFORCEMENT")
+                enforcement_level: std::env::var(env_keys::ENV_SOVEREIGNTY_ENFORCEMENT)
                     .unwrap_or_else(|_| "strict".to_string()),
             },
         }
@@ -317,7 +326,7 @@ impl Default for ConsolidatedSecurityConfiguration {
             access_control: Self::default_access_control(),
             encryption: Self::default_encryption(),
             key_management: KeyManagementConfiguration {
-                rotation_interval_seconds: std::env::var("BEARDOG_KEY_ROTATION_INTERVAL_SECS")
+                rotation_interval_seconds: std::env::var(env_keys::ENV_KEY_ROTATION_INTERVAL_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(86400), // 24 hours
@@ -350,12 +359,14 @@ impl Default for ConsolidatedSecurityConfiguration {
                 genetics_integration: GeneticsIntegrationConfiguration {
                     enabled: true,
                     genetic_factors: vec!["trust".to_string(), "behavior".to_string()],
-                    integration_strength: std::env::var("BEARDOG_GENETICS_INTEGRATION_STRENGTH")
-                        .ok()
-                        .and_then(|v| v.parse().ok())
-                        .unwrap_or(0.7),
+                    integration_strength: std::env::var(
+                        env_keys::ENV_GENETICS_INTEGRATION_STRENGTH,
+                    )
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(0.7),
                     validation_timeout_seconds: std::env::var(
-                        "BEARDOG_GENETICS_VALIDATION_TIMEOUT_SECS",
+                        env_keys::ENV_GENETICS_VALIDATION_TIMEOUT_SECS,
                     )
                     .ok()
                     .and_then(|s| s.parse().ok())
@@ -425,11 +436,11 @@ impl ConsolidatedSecurityConfiguration {
         config.authentication.session_timeout_seconds = 86400; // 24 hours
         config.authentication.max_login_attempts =
             crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u32;
-        config.rate_limiting.max_requests = std::env::var("BEARDOG_RATE_LIMITING_MAX_REQUESTS")
+        config.rate_limiting.max_requests = std::env::var(env_keys::ENV_RATE_LIMITING_MAX_REQUESTS)
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(10000);
-        config.audit.retention_days = std::env::var("BEARDOG_DEV_AUDIT_RETENTION_DAYS")
+        config.audit.retention_days = std::env::var(env_keys::ENV_DEV_AUDIT_RETENTION_DAYS)
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(30);
@@ -447,7 +458,7 @@ impl ConsolidatedSecurityConfiguration {
         config.authentication.max_login_attempts = 3;
         config.rate_limiting.max_requests =
             crate::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE as u64;
-        config.audit.retention_days = std::env::var("BEARDOG_PRODUCTION_AUDIT_RETENTION_DAYS")
+        config.audit.retention_days = std::env::var(env_keys::ENV_PRODUCTION_AUDIT_RETENTION_DAYS)
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(2555); // 7 years

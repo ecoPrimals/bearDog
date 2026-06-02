@@ -63,6 +63,14 @@ impl AndroidStrongBoxHsm {
         let keystore = Arc::new(AndroidKeystore::with_platform_keystore_transport(
             config.clone(),
         )?);
+
+        if !keystore.is_strongbox_available() {
+            warn!(
+                "StrongBox requested but keystore transport is not hardware-backed — \
+                 keys will not use StrongBox until real Keymaster JNI is wired"
+            );
+        }
+
         let attestation_service = Arc::new(
             AndroidAttestationService::with_platform_attestation_transport(
                 AttestationLevel::StrongBox,

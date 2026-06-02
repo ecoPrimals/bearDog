@@ -42,8 +42,8 @@ fn test_android_keystore_creation() -> Result<(), Box<dyn std::error::Error>> {
     let config = AndroidHsmConfig::default();
     let keystore = AndroidKeystore::with_stub_transport(config)?;
 
-    assert!(keystore.capabilities.strongbox_available);
-    assert!(keystore.capabilities.hardware_backed_keystore);
+    assert!(!keystore.capabilities.strongbox_available);
+    assert!(!keystore.capabilities.hardware_backed_keystore);
     Ok(())
 }
 

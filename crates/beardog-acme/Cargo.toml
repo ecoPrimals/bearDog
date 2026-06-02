@@ -13,6 +13,7 @@ workspace = true
 [dependencies]
 # Crypto — CSR generation + JWS signing
 ed25519-dalek = { workspace = true }
+rcgen = { workspace = true }
 base64 = { workspace = true }
 sha2 = { workspace = true }
 rand = { workspace = true }

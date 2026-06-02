@@ -68,12 +68,24 @@ pub trait KeystoreTransport: Send + Sync {
 /// Enum dispatch for [`KeystoreTransport`].
 #[derive(Debug)]
 pub enum KeystoreTransportBackend {
-    /// Non-Android hosts: deterministic in-memory port (no JNI).
+    /// Non-Android hosts: in-memory stub — keys are **not** hardware-backed.
     #[cfg(not(target_os = "android"))]
     Stub(MemoryKeystoreTransport),
     /// Android: Keystore JNI adapter (in-memory until Keymaster JNI is wired).
     #[cfg(target_os = "android")]
     AndroidJni(MemoryKeystoreTransport),
+}
+
+impl KeystoreTransportBackend {
+    /// Whether this transport delegates to hardware-backed Android Keystore / Keymaster.
+    pub fn is_hardware_backed(&self) -> bool {
+        match self {
+            #[cfg(not(target_os = "android"))]
+            Self::Stub(_) => false,
+            #[cfg(target_os = "android")]
+            Self::AndroidJni(_) => false, // Until real JNI is wired
+        }
+    }
 }
 
 impl KeystoreTransport for KeystoreTransportBackend {
@@ -301,12 +313,24 @@ pub trait AttestationTransport: Send + Sync {
 /// Enum dispatch for [`AttestationTransport`].
 #[derive(Debug)]
 pub enum AttestationTransportBackend {
-    /// Non-Android hosts: no-op stand-in (no JNI).
+    /// Non-Android hosts: no-op stub — attestation is **not** hardware-backed.
     #[cfg(not(target_os = "android"))]
     Stub(StubAttestationTransport),
     /// Android: attestation JNI port (no-op until Key Attestation JNI is wired).
     #[cfg(target_os = "android")]
     AndroidJni(AndroidJniAttestationTransport),
+}
+
+impl AttestationTransportBackend {
+    /// Whether this transport provides hardware-backed key attestation.
+    pub fn is_hardware_backed(&self) -> bool {
+        match self {
+            #[cfg(not(target_os = "android"))]
+            Self::Stub(_) => false,
+            #[cfg(target_os = "android")]
+            Self::AndroidJni(_) => false, // Until real JNI is wired
+        }
+    }
 }
 
 impl AttestationTransport for AttestationTransportBackend {

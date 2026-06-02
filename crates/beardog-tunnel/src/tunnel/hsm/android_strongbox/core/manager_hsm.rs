@@ -170,7 +170,7 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
                 Ok(ManagerKeyInfo {
                     key_id: key_id.clone(),
                     key_type: format!("{:?}", cached.key_type), // Convert KeyType enum to String
-                    is_hardware_backed: true, // StrongBox is always hardware-backed
+                    is_hardware_backed: this.keystore.is_hardware_backed_keystore(),
                 })
             } else {
                 Err(BearDogError::not_found(format!(

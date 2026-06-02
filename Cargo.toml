@@ -211,6 +211,7 @@ ctr = "0.9"
 ahash = "0.8"
 ecdsa = "0.16"
 x509-parser = "0.16"
+rcgen = { version = "0.13", default-features = false, features = ["ring", "pem"] }
 data-encoding = "2.5"
 path-absolutize = "3.0"
 console = "0.15"

@@ -32,6 +32,7 @@
 //! - `BEARDOG_GRPC_PORT` - gRPC port (default: 50051)
 //! - `BEARDOG_ENABLE_TLS` - Enable TLS (default: true)
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 
 /// Runtime network configuration with environment variable overrides
@@ -212,56 +213,56 @@ impl Default for RuntimeNetworkConfig {
         let default_redis_port = DEFAULT_REDIS_PORT;
 
         Self {
-            discovery_endpoint: std::env::var("BEARDOG_DISCOVERY_ENDPOINT").unwrap_or_else(|_| {
-                format!("http://{default_api_host}:{default_api_port}/discover")
-            }),
-            api_host: std::env::var("BEARDOG_API_HOST")
+            discovery_endpoint: std::env::var(env_keys::ENV_DISCOVERY_ENDPOINT).unwrap_or_else(
+                |_| format!("http://{default_api_host}:{default_api_port}/discover"),
+            ),
+            api_host: std::env::var(env_keys::ENV_API_HOST)
                 .unwrap_or_else(|_| default_api_host.to_string()),
-            api_port: std::env::var("BEARDOG_API_PORT")
+            api_port: std::env::var(env_keys::ENV_API_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(default_api_port),
-            metrics_port: std::env::var("BEARDOG_METRICS_PORT")
+            metrics_port: std::env::var(env_keys::ENV_METRICS_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(default_metrics_port),
-            health_port: std::env::var("BEARDOG_HEALTH_PORT")
+            health_port: std::env::var(env_keys::ENV_HEALTH_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(default_health_port),
-            ws_port: std::env::var("BEARDOG_WS_PORT")
+            ws_port: std::env::var(env_keys::ENV_WS_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(default_ws_port),
-            grpc_port: std::env::var("BEARDOG_GRPC_PORT")
+            grpc_port: std::env::var(env_keys::ENV_GRPC_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(default_grpc_port),
-            admin_port: std::env::var("BEARDOG_ADMIN_PORT")
+            admin_port: std::env::var(env_keys::ENV_ADMIN_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(default_admin_port),
-            database_port: std::env::var("BEARDOG_DATABASE_PORT")
+            database_port: std::env::var(env_keys::ENV_DATABASE_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(default_database_port),
-            consul_port: std::env::var("BEARDOG_CONSUL_PORT")
+            consul_port: std::env::var(env_keys::ENV_CONSUL_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(default_consul_port),
-            redis_port: std::env::var("BEARDOG_REDIS_PORT")
+            redis_port: std::env::var(env_keys::ENV_REDIS_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(default_redis_port),
-            timeout_seconds: std::env::var("BEARDOG_TIMEOUT_SECONDS")
+            timeout_seconds: std::env::var(env_keys::ENV_TIMEOUT_SECONDS)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(DEFAULT_TIMEOUT_SECONDS),
-            max_connections: std::env::var("BEARDOG_MAX_CONNECTIONS")
+            max_connections: std::env::var(env_keys::ENV_MAX_CONNECTIONS)
                 .ok()
                 .and_then(|m| m.parse().ok())
                 .unwrap_or(DEFAULT_MAX_CONNECTIONS),
-            enable_tls: std::env::var("BEARDOG_ENABLE_TLS")
+            enable_tls: std::env::var(env_keys::ENV_ENABLE_TLS)
                 .ok()
                 .and_then(|e| e.parse().ok())
                 .unwrap_or(true),
@@ -397,13 +398,13 @@ pub struct RuntimeHsmConfig {
 impl Default for RuntimeHsmConfig {
     fn default() -> Self {
         Self {
-            pkcs11_library_path: std::env::var("BEARDOG_PKCS11_LIBRARY")
+            pkcs11_library_path: std::env::var(env_keys::ENV_PKCS11_LIBRARY)
                 .unwrap_or_else(|_| "/usr/lib/softhsm/libsofthsm2.so".to_string()),
-            tpm_device_path: std::env::var("BEARDOG_TPM_DEVICE")
+            tpm_device_path: std::env::var(env_keys::ENV_TPM_DEVICE)
                 .unwrap_or_else(|_| "/dev/tpm0".to_string()),
-            software_hsm_storage: std::env::var("BEARDOG_HSM_STORAGE")
+            software_hsm_storage: std::env::var(env_keys::ENV_HSM_STORAGE)
                 .unwrap_or_else(|_| "/var/lib/beardog/hsm".to_string()),
-            enable_hardware_hsm: std::env::var("BEARDOG_ENABLE_HARDWARE_HSM")
+            enable_hardware_hsm: std::env::var(env_keys::ENV_ENABLE_HARDWARE_HSM)
                 .ok()
                 .and_then(|e| e.parse().ok())
                 .unwrap_or(false),
@@ -508,7 +509,7 @@ impl Default for RuntimeConfig {
         Self {
             network: RuntimeNetworkConfig::default(),
             hsm: RuntimeHsmConfig::default(),
-            environment: std::env::var("BEARDOG_ENVIRONMENT")
+            environment: std::env::var(env_keys::ENV_ENVIRONMENT)
                 .unwrap_or_else(|_| "development".to_string()),
         }
     }

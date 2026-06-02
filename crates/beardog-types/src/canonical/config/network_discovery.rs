@@ -5,6 +5,7 @@
 //! Eliminates hardcoded network endpoints by providing dynamic service discovery
 //! and environment-based configuration for all network resources.
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -285,80 +286,80 @@ impl ServiceEndpointConfig {
     /// Create compute service endpoint configuration
     pub fn compute() -> Self {
         Self {
-            primary: std::env::var("BEARDOG_COMPUTE_ENDPOINT").ok(),
-            backups: Self::parse_backup_endpoints("BEARDOG_COMPUTE_BACKUPS"),
+            primary: std::env::var(env_keys::ENV_COMPUTE_ENDPOINT).ok(),
+            backups: Self::parse_backup_endpoints(env_keys::ENV_COMPUTE_BACKUPS),
             ports: ServicePortMapping {
-                service: Self::parse_port("BEARDOG_COMPUTE_PORT", crate::constants::domains::network::defaults::default_api_port()),
-                health: Self::parse_port("BEARDOG_COMPUTE_HEALTH_PORT", crate::constants::domains::network::defaults::default_health_port()),
-                metrics: Self::parse_port("BEARDOG_COMPUTE_METRICS_PORT", crate::constants::domains::network::defaults::default_metrics_port()),
-                admin: Self::parse_port("BEARDOG_COMPUTE_ADMIN_PORT", 8082),
+                service: Self::parse_port(env_keys::ENV_COMPUTE_PORT, crate::constants::domains::network::defaults::default_api_port()),
+                health: Self::parse_port(env_keys::ENV_COMPUTE_HEALTH_PORT, crate::constants::domains::network::defaults::default_health_port()),
+                metrics: Self::parse_port(env_keys::ENV_COMPUTE_METRICS_PORT, crate::constants::domains::network::defaults::default_metrics_port()),
+                admin: Self::parse_port(env_keys::ENV_COMPUTE_ADMIN_PORT, 8082),
             },
-            health_check: std::env::var("BEARDOG_COMPUTE_HEALTH_ENDPOINT").ok(),
-            metrics: std::env::var("BEARDOG_COMPUTE_METRICS_ENDPOINT").ok(),
+            health_check: std::env::var(env_keys::ENV_COMPUTE_HEALTH_ENDPOINT).ok(),
+            metrics: std::env::var(env_keys::ENV_COMPUTE_METRICS_ENDPOINT).ok(),
         }
     }
     
     /// Create storage service endpoint configuration
     pub fn storage() -> Self {
         Self {
-            primary: std::env::var("BEARDOG_STORAGE_ENDPOINT").ok(),
-            backups: Self::parse_backup_endpoints("BEARDOG_STORAGE_BACKUPS"),
+            primary: std::env::var(env_keys::ENV_STORAGE_ENDPOINT).ok(),
+            backups: Self::parse_backup_endpoints(env_keys::ENV_STORAGE_BACKUPS),
             ports: ServicePortMapping {
-                service: Self::parse_port("BEARDOG_STORAGE_PORT", 8084),
-                health: Self::parse_port("BEARDOG_STORAGE_HEALTH_PORT", 8085),
-                metrics: Self::parse_port("BEARDOG_STORAGE_METRICS_PORT", 9091),
-                admin: Self::parse_port("BEARDOG_STORAGE_ADMIN_PORT", 8086),
+                service: Self::parse_port(env_keys::ENV_STORAGE_PORT, 8084),
+                health: Self::parse_port(env_keys::ENV_STORAGE_HEALTH_PORT, 8085),
+                metrics: Self::parse_port(env_keys::ENV_STORAGE_METRICS_PORT, 9091),
+                admin: Self::parse_port(env_keys::ENV_STORAGE_ADMIN_PORT, 8086),
             },
-            health_check: std::env::var("BEARDOG_STORAGE_HEALTH_ENDPOINT").ok(),
-            metrics: std::env::var("BEARDOG_STORAGE_METRICS_ENDPOINT").ok(),
+            health_check: std::env::var(env_keys::ENV_STORAGE_HEALTH_ENDPOINT).ok(),
+            metrics: std::env::var(env_keys::ENV_STORAGE_METRICS_ENDPOINT).ok(),
         }
     }
     
     /// Create intelligence service endpoint configuration
     pub fn intelligence() -> Self {
         Self {
-            primary: std::env::var("BEARDOG_AI_ENDPOINT").ok(),
-            backups: Self::parse_backup_endpoints("BEARDOG_AI_BACKUPS"),
+            primary: std::env::var(env_keys::ENV_AI_ENDPOINT).ok(),
+            backups: Self::parse_backup_endpoints(env_keys::ENV_AI_BACKUPS),
             ports: ServicePortMapping {
-                service: Self::parse_port("BEARDOG_AI_PORT", 8083),
-                health: Self::parse_port("BEARDOG_AI_HEALTH_PORT", 8087),
-                metrics: Self::parse_port("BEARDOG_AI_METRICS_PORT", 9092),
-                admin: Self::parse_port("BEARDOG_AI_ADMIN_PORT", 8088),
+                service: Self::parse_port(env_keys::ENV_AI_PORT, 8083),
+                health: Self::parse_port(env_keys::ENV_AI_HEALTH_PORT, 8087),
+                metrics: Self::parse_port(env_keys::ENV_AI_METRICS_PORT, 9092),
+                admin: Self::parse_port(env_keys::ENV_AI_ADMIN_PORT, 8088),
             },
-            health_check: std::env::var("BEARDOG_AI_HEALTH_ENDPOINT").ok(),
-            metrics: std::env::var("BEARDOG_AI_METRICS_ENDPOINT").ok(),
+            health_check: std::env::var(env_keys::ENV_AI_HEALTH_ENDPOINT).ok(),
+            metrics: std::env::var(env_keys::ENV_AI_METRICS_ENDPOINT).ok(),
         }
     }
     
     /// Create service mesh endpoint configuration
     pub fn mesh() -> Self {
         Self {
-            primary: std::env::var("BEARDOG_MESH_ENDPOINT").ok(),
-            backups: Self::parse_backup_endpoints("BEARDOG_MESH_BACKUPS"),
+            primary: std::env::var(env_keys::ENV_MESH_ENDPOINT).ok(),
+            backups: Self::parse_backup_endpoints(env_keys::ENV_MESH_BACKUPS),
             ports: ServicePortMapping {
-                service: Self::parse_port("BEARDOG_MESH_PORT", 8082),
-                health: Self::parse_port("BEARDOG_MESH_HEALTH_PORT", 8089),
-                metrics: Self::parse_port("BEARDOG_MESH_METRICS_PORT", 9093),
-                admin: Self::parse_port("BEARDOG_MESH_ADMIN_PORT", 8090),
+                service: Self::parse_port(env_keys::ENV_MESH_PORT, 8082),
+                health: Self::parse_port(env_keys::ENV_MESH_HEALTH_PORT, 8089),
+                metrics: Self::parse_port(env_keys::ENV_MESH_METRICS_PORT, 9093),
+                admin: Self::parse_port(env_keys::ENV_MESH_ADMIN_PORT, 8090),
             },
-            health_check: std::env::var("BEARDOG_MESH_HEALTH_ENDPOINT").ok(),
-            metrics: std::env::var("BEARDOG_MESH_METRICS_ENDPOINT").ok(),
+            health_check: std::env::var(env_keys::ENV_MESH_HEALTH_ENDPOINT).ok(),
+            metrics: std::env::var(env_keys::ENV_MESH_METRICS_ENDPOINT).ok(),
         }
     }
     
     /// Create discovery service endpoint configuration
     pub fn discovery() -> Self {
         Self {
-            primary: std::env::var("BEARDOG_DISCOVERY_ENDPOINT").ok(),
-            backups: Self::parse_backup_endpoints("BEARDOG_DISCOVERY_BACKUPS"),
+            primary: std::env::var(env_keys::ENV_DISCOVERY_ENDPOINT).ok(),
+            backups: Self::parse_backup_endpoints(env_keys::ENV_DISCOVERY_BACKUPS),
             ports: ServicePortMapping {
-                service: Self::parse_port("BEARDOG_DISCOVERY_PORT", crate::constants::domains::network::defaults::default_health_port()),
-                health: Self::parse_port("BEARDOG_DISCOVERY_HEALTH_PORT", 8091),
-                metrics: Self::parse_port("BEARDOG_DISCOVERY_METRICS_PORT", 9094),
-                admin: Self::parse_port("BEARDOG_DISCOVERY_ADMIN_PORT", 8092),
+                service: Self::parse_port(env_keys::ENV_DISCOVERY_PORT, crate::constants::domains::network::defaults::default_health_port()),
+                health: Self::parse_port(env_keys::ENV_DISCOVERY_HEALTH_PORT, 8091),
+                metrics: Self::parse_port(env_keys::ENV_DISCOVERY_METRICS_PORT, 9094),
+                admin: Self::parse_port(env_keys::ENV_DISCOVERY_ADMIN_PORT, 8092),
             },
-            health_check: std::env::var("BEARDOG_DISCOVERY_HEALTH_ENDPOINT").ok(),
-            metrics: std::env::var("BEARDOG_DISCOVERY_METRICS_ENDPOINT").ok(),
+            health_check: std::env::var(env_keys::ENV_DISCOVERY_HEALTH_ENDPOINT).ok(),
+            metrics: std::env::var(env_keys::ENV_DISCOVERY_METRICS_ENDPOINT).ok(),
         }
     }
     
@@ -391,8 +392,8 @@ impl ServiceEndpointConfig {
 impl Default for DatabaseEndpointConfig {
     fn default() -> Self {
         Self {
-            url: std::env::var("DATABASE_URL")
-                .or_else(|_| std::env::var("BEARDOG_DATABASE_URL"))
+            url: std::env::var(env_keys::ENV_DATABASE_URL)
+                .or_else(|_| std::env::var(env_keys::ENV_DATABASE_URL_PREFIXED))
                 .ok(),
             pool_config: DatabasePoolConfig::default(),
             ssl_config: DatabaseSslConfig::default(),
@@ -403,22 +404,22 @@ impl Default for DatabaseEndpointConfig {
 impl Default for DatabasePoolConfig {
     fn default() -> Self {
         Self {
-            max_connections: std::env::var("DB_MAX_CONNECTIONS")
+            max_connections: std::env::var(env_keys::ENV_DB_MAX_CONNECTIONS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(beardog_types::constants::domains::system::defaults::DEFAULT_POOL_SIZE),
-            min_connections: std::env::var("DB_MIN_CONNECTIONS")
+            min_connections: std::env::var(env_keys::ENV_DB_MIN_CONNECTIONS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1),
             connection_timeout: Duration::from_secs(
-                std::env::var("DB_CONNECTION_TIMEOUT")
+                std::env::var(env_keys::ENV_DB_CONNECTION_TIMEOUT)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30)
             ),
             idle_timeout: Duration::from_secs(
-                std::env::var("DB_IDLE_TIMEOUT")
+                std::env::var(env_keys::ENV_DB_IDLE_TIMEOUT)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(600)
@@ -430,14 +431,14 @@ impl Default for DatabasePoolConfig {
 impl Default for DatabaseSslConfig {
     fn default() -> Self {
         Self {
-            enabled: std::env::var("DB_SSL_ENABLED")
+            enabled: std::env::var(env_keys::ENV_DB_SSL_ENABLED)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(false),
-            mode: std::env::var("DB_SSL_MODE")
+            mode: std::env::var(env_keys::ENV_DB_SSL_MODE)
                 .unwrap_or_else(|_|"prefer".to_string()),
-            cert_path: std::env::var("DB_SSL_CERT").ok(),
-            key_path: std::env::var("DB_SSL_KEY").ok(),
+            cert_path: std::env::var(env_keys::ENV_DB_SSL_CERT).ok(),
+            key_path: std::env::var(env_keys::ENV_DB_SSL_KEY).ok(),
         }
     }
 }
@@ -450,7 +451,7 @@ impl Default for FallbackNetworkConfig {
         // Compute service port range
         port_ranges.insert("compute".to_string(), PortRange {
             start: api_port,
-            end: std::env::var("BEARDOG_COMPUTE_PORT_END")
+            end: std::env::var(env_keys::ENV_COMPUTE_PORT_END)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(8089),
@@ -459,15 +460,15 @@ impl Default for FallbackNetworkConfig {
         
         // Storage service port range
         port_ranges.insert("storage".to_string(), PortRange {
-            start: std::env::var("BEARDOG_STORAGE_PORT_START")
+            start: std::env::var(env_keys::ENV_STORAGE_PORT_START)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(8090),
-            end: std::env::var("BEARDOG_STORAGE_PORT_END")
+            end: std::env::var(env_keys::ENV_STORAGE_PORT_END)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(8099),
-            default: std::env::var("BEARDOG_STORAGE_PORT")
+            default: std::env::var(env_keys::ENV_STORAGE_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(8090),
@@ -475,27 +476,27 @@ impl Default for FallbackNetworkConfig {
         
         // Intelligence service port range
         port_ranges.insert("intelligence".to_string(), PortRange {
-            start: std::env::var("BEARDOG_INTELLIGENCE_PORT_START")
+            start: std::env::var(env_keys::ENV_INTELLIGENCE_PORT_START)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(8100),
-            end: std::env::var("BEARDOG_INTELLIGENCE_PORT_END")
+            end: std::env::var(env_keys::ENV_INTELLIGENCE_PORT_END)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(8109),
-            default: std::env::var("BEARDOG_INTELLIGENCE_PORT")
+            default: std::env::var(env_keys::ENV_INTELLIGENCE_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(8100),
         });
         
         Self {
-            default_host: std::env::var("BEARDOG_DEFAULT_HOST")
+            default_host: std::env::var(env_keys::ENV_DEFAULT_HOST)
                 .unwrap_or_else(|_|beardog_types::constants::domains::network::config::default_service_host().to_string()),
-            default_protocol: std::env::var("BEARDOG_DEFAULT_PROTOCOL")
+            default_protocol: std::env::var(env_keys::ENV_DEFAULT_PROTOCOL)
                 .unwrap_or_else(|_|"http".to_string()),
             port_ranges,
-            enable_localhost_fallback: std::env::var("BEARDOG_ENABLE_LOCALHOST_FALLBACK")
+            enable_localhost_fallback: std::env::var(env_keys::ENV_ENABLE_LOCALHOST_FALLBACK)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
@@ -538,11 +539,11 @@ impl Default for CircuitBreakerConfig {
 impl Default for NetworkSecurityConfig {
     fn default() -> Self {
         Self {
-            tls_enabled: std::env::var("BEARDOG_TLS_ENABLED")
+            tls_enabled: std::env::var(env_keys::ENV_TLS_ENABLED)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            verify_certificates: std::env::var("BEARDOG_VERIFY_CERTS")
+            verify_certificates: std::env::var(env_keys::ENV_VERIFY_CERTS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
@@ -560,9 +561,9 @@ impl Default for NetworkSecurityConfig {
 impl Default for CertificatePaths {
     fn default() -> Self {
         Self {
-            ca_cert: std::env::var("BEARDOG_CA_CERT").ok(),
-            client_cert: std::env::var("BEARDOG_CLIENT_CERT").ok(),
-            client_key: std::env::var("BEARDOG_CLIENT_KEY").ok(),
+            ca_cert: std::env::var(env_keys::ENV_CA_CERT).ok(),
+            client_cert: std::env::var(env_keys::ENV_CLIENT_CERT).ok(),
+            client_key: std::env::var(env_keys::ENV_CLIENT_KEY).ok(),
         }
     }
 }

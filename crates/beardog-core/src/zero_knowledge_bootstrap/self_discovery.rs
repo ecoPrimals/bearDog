@@ -8,6 +8,7 @@
 
 use crate::ecosystem::primal_types::{PrimalMetadata, UniversalEndpoint};
 use crate::zero_knowledge_bootstrap::SelfIdentity;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::ServiceCapabilityType;
 use serde::{Deserialize, Serialize};
@@ -29,12 +30,12 @@ impl PrimalIdEnvInputs {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            hostname: std::env::var("HOSTNAME")
+            hostname: std::env::var(env_keys::ENV_HOSTNAME)
                 .ok()
-                .or_else(|| std::env::var("COMPUTERNAME").ok()),
-            primal_type: std::env::var("PRIMAL_TYPE")
+                .or_else(|| std::env::var(env_keys::ENV_COMPUTERNAME).ok()),
+            primal_type: std::env::var(env_keys::ENV_PRIMAL_TYPE)
                 .ok()
-                .or_else(|| std::env::var("SERVICE_TYPE").ok()),
+                .or_else(|| std::env::var(env_keys::ENV_SERVICE_TYPE).ok()),
         }
     }
 }
@@ -64,20 +65,20 @@ impl SelfDiscoveryEnvInputs {
     pub fn from_env() -> Self {
         Self {
             primal_id: PrimalIdEnvInputs::from_env(),
-            primal_name: std::env::var("PRIMAL_NAME").ok(),
-            service_name: std::env::var("SERVICE_NAME").ok(),
-            beardog_display_name: std::env::var("BEARDOG_DISPLAY_NAME").ok(),
-            localhost_override: std::env::var("BEARDOG_LOCALHOST").ok(),
-            network_host_override: std::env::var("BEARDOG_HOST")
+            primal_name: std::env::var(env_keys::ENV_PRIMAL_NAME).ok(),
+            service_name: std::env::var(env_keys::ENV_SERVICE_NAME).ok(),
+            beardog_display_name: std::env::var(env_keys::ENV_DISPLAY_NAME).ok(),
+            localhost_override: std::env::var(env_keys::ENV_LOCALHOST).ok(),
+            network_host_override: std::env::var(env_keys::ENV_HOST)
                 .ok()
-                .or_else(|| std::env::var("BEARDOG_BIND_ADDRESS").ok()),
-            mesh_port_override: std::env::var("BEARDOG_MESH_PORT")
-                .ok()
-                .and_then(|p| p.parse().ok()),
-            admin_port_override: std::env::var("BEARDOG_ADMIN_PORT")
+                .or_else(|| std::env::var(env_keys::ENV_BIND_ADDRESS).ok()),
+            mesh_port_override: std::env::var(env_keys::ENV_MESH_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok()),
-            mesh_bind_address_override: std::env::var("BEARDOG_MESH_BIND_ADDRESS").ok(),
+            admin_port_override: std::env::var(env_keys::ENV_ADMIN_PORT)
+                .ok()
+                .and_then(|p| p.parse().ok()),
+            mesh_bind_address_override: std::env::var(env_keys::ENV_MESH_BIND_ADDRESS).ok(),
         }
     }
 }

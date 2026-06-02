@@ -139,6 +139,24 @@ impl AcmeClient {
         })
     }
 
+    /// Test-only constructor with an explicit certificate store path.
+    #[cfg(test)]
+    fn new_with_store(config: AcmeConfig, store: CertificateStore) -> Result<Self, AcmeError> {
+        let account = AcmeAccount::generate(config.contacts.clone());
+
+        Ok(Self {
+            config,
+            http: Client::builder()
+                .timeout(Duration::from_secs(30))
+                .build()
+                .map_err(|e| AcmeError::Config(format!("HTTP client: {e}")))?,
+            store,
+            account: Arc::new(RwLock::new(account)),
+            solver: Http01Solver::new(),
+            directory: None,
+        })
+    }
+
     /// Discover the ACME directory endpoints.
     ///
     /// # Errors
@@ -624,12 +642,7 @@ impl AcmeClient {
             .as_deref()
             .ok_or_else(|| AcmeError::AccountKey("not registered".to_string()))?;
 
-        // Generate a fresh Ed25519 key pair for the certificate
-        let cert_secret: [u8; 32] = rand::random();
-        let cert_key = ed25519_dalek::SigningKey::from_bytes(&cert_secret);
-        let cert_pubkey = cert_key.verifying_key();
-
-        let csr_der = self.build_csr(&cert_key, &cert_pubkey)?;
+        let (csr_der, cert_key_pair) = self.build_csr()?;
         let csr_b64 = jws::base64url(&csr_der);
 
         let nonce = self.get_nonce().await?;
@@ -663,20 +676,18 @@ impl AcmeClient {
 
         let cert_pem = self.download_certificate(&final_order).await?;
 
-        // Serialize the private key as PKCS8 PEM
-        let key_pem = self.ed25519_private_key_pem(&cert_key);
+        // Serialize the certificate private key as PKCS#8 PEM (ECDSA P-256).
+        let key_pem = self.cert_private_key_pem(&cert_key_pair);
 
         Ok((cert_pem, key_pem))
     }
 
-    /// Build a minimal CSR (Certificate Signing Request) for the configured
-    /// domains using the given Ed25519 key pair.
-    fn build_csr(
-        &self,
-        signing_key: &ed25519_dalek::SigningKey,
-        _verifying_key: &ed25519_dalek::VerifyingKey,
-    ) -> Result<Vec<u8>, AcmeError> {
-        use ed25519_dalek::Signer;
+    /// Build a PKCS#10 CSR (RFC 2986) for the configured domains.
+    ///
+    /// Returns DER-encoded CSR bytes and the ECDSA P-256 key pair used to sign
+    /// the request. The account key (Ed25519, used for JWS) is separate.
+    fn build_csr(&self) -> Result<(Vec<u8>, rcgen::KeyPair), AcmeError> {
+        use rcgen::{CertificateParams, DnType, KeyPair};
 
         let primary_domain = self
             .config
@@ -684,31 +695,26 @@ impl AcmeClient {
             .first()
             .ok_or_else(|| AcmeError::Config("no domains configured".to_string()))?;
 
-        // RFC 2986 PKCS#10 CSR — minimal Ed25519
-        // For production, this would use `rcgen`. For now, we build a minimal
-        // DER-encoded CSR with the subject CN and SANs.
-        // The ACME server validates the CSR signature over the domains.
+        let mut params = CertificateParams::new(self.config.domains.clone())
+            .map_err(|e| AcmeError::CertParse(format!("failed to build CSR parameters: {e}")))?;
+        params
+            .distinguished_name
+            .push(DnType::CommonName, primary_domain.clone());
 
-        let subject = format!("CN={primary_domain}");
-        let message = format!("csr:{subject}:{}", self.config.domains.join(","));
-        let signature = signing_key.sign(message.as_bytes());
+        // ECDSA P-256 — widely supported by ACME CAs (including Let's Encrypt).
+        let key_pair = KeyPair::generate()
+            .map_err(|e| AcmeError::CertParse(format!("failed to generate CSR key pair: {e}")))?;
 
-        // Return the signed message as a placeholder CSR DER.
-        // A real implementation would use `rcgen::CertificateSigningRequestParams`.
-        let mut csr = Vec::new();
-        csr.extend_from_slice(subject.as_bytes());
-        csr.push(0);
-        csr.extend_from_slice(&signature.to_bytes());
-        csr.extend_from_slice(signing_key.verifying_key().as_bytes());
+        let csr = params
+            .serialize_request(&key_pair)
+            .map_err(|e| AcmeError::CertParse(format!("failed to serialize CSR: {e}")))?;
 
-        Ok(csr)
+        Ok((csr.der().as_ref().to_vec(), key_pair))
     }
 
-    /// Serialize an Ed25519 signing key as a minimal PEM private key.
-    fn ed25519_private_key_pem(&self, key: &ed25519_dalek::SigningKey) -> String {
-        let key_bytes = key.to_bytes();
-        let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, key_bytes);
-        format!("-----BEGIN PRIVATE KEY-----\n{b64}\n-----END PRIVATE KEY-----\n")
+    /// Serialize a certificate key pair as PKCS#8 PEM.
+    fn cert_private_key_pem(&self, key_pair: &rcgen::KeyPair) -> String {
+        key_pair.serialize_pem()
     }
 
     /// Download the certificate chain from the order's certificate URL.
@@ -780,5 +786,62 @@ mod tests {
     fn order_status_parsing() {
         let status: OrderStatus = serde_json::from_str(r#""ready""#).expect("parse");
         assert_eq!(status, OrderStatus::Ready);
+    }
+
+    #[test]
+    fn build_csr_produces_valid_pkcs10() {
+        use tempfile::TempDir;
+        use x509_parser::certification_request::X509CertificationRequest;
+        use x509_parser::extensions::{GeneralName, ParsedExtension};
+        use x509_parser::prelude::FromDer;
+
+        let data_dir = TempDir::new().expect("tempdir");
+        let store = CertificateStore::new(data_dir.path()).expect("store");
+
+        let config = AcmeConfig {
+            directory_url: crate::directories::LETS_ENCRYPT_STAGING.to_string(),
+            domains: vec![
+                "primary.example.com".to_string(),
+                "alt.example.org".to_string(),
+            ],
+            contacts: vec!["mailto:test@example.com".to_string()],
+            challenge_port: 8080,
+            renewal_days_before_expiry: 30,
+            check_interval: Duration::from_secs(3600),
+        };
+
+        let client = AcmeClient::new_with_store(config, store).expect("client");
+        let (csr_der, key_pair) = client.build_csr().expect("csr");
+
+        let (_, csr) = X509CertificationRequest::from_der(&csr_der).expect("parse PKCS#10 CSR");
+
+        let cn: Vec<_> = csr
+            .certification_request_info
+            .subject
+            .iter_common_name()
+            .map(|attr| attr.as_str().expect("CN is UTF-8"))
+            .collect();
+        assert_eq!(cn, vec!["primary.example.com"]);
+
+        let mut dns_names = Vec::new();
+        for ext in csr.requested_extensions().expect("extensionRequest") {
+            if let ParsedExtension::SubjectAlternativeName(san) = ext {
+                for name in &san.general_names {
+                    if let GeneralName::DNSName(d) = name {
+                        dns_names.push(*d);
+                    }
+                }
+            }
+        }
+        dns_names.sort_unstable();
+        let mut expected = vec!["alt.example.org", "primary.example.com"];
+        expected.sort_unstable();
+        assert_eq!(dns_names, expected);
+
+        assert!(
+            key_pair
+                .serialize_pem()
+                .starts_with("-----BEGIN PRIVATE KEY-----")
+        );
     }
 }

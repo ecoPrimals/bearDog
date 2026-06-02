@@ -55,6 +55,7 @@
 //! - `BEARDOG_CONNECTION_TIMEOUT_MS` - Connection timeout (default: 5000)
 //! - `BEARDOG_KEEPALIVE_TIMEOUT_S` - Keep-alive timeout (default: 60)
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -113,8 +114,8 @@ impl Default for NetworkConfig {
     note = "Use BEARDOG_CONFIG.network.api.bind_address directly"
 )]
 pub fn default_service_host() -> String {
-    std::env::var("BEARDOG_SERVICE_HOST").unwrap_or_else(|_| {
-        std::env::var("BEARDOG_HOST").unwrap_or_else(|_| {
+    std::env::var(env_keys::ENV_SERVICE_HOST).unwrap_or_else(|_| {
+        std::env::var(env_keys::ENV_HOST).unwrap_or_else(|_| {
             // Use config system instead of hardcoded constant
             use beardog_config::global::BEARDOG_CONFIG;
             BEARDOG_CONFIG.network.api.bind_address.to_string()
@@ -213,63 +214,63 @@ impl Default for ServicePorts {
         };
 
         Self {
-            api_port: std::env::var("BEARDOG_API_PORT")
+            api_port: std::env::var(env_keys::ENV_API_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_API_PORT),
-            admin_port: std::env::var("BEARDOG_ADMIN_PORT")
+            admin_port: std::env::var(env_keys::ENV_ADMIN_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_ADMIN_PORT),
-            debug_port: std::env::var("BEARDOG_DEBUG_PORT")
+            debug_port: std::env::var(env_keys::ENV_DEBUG_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_DEBUG_PORT),
-            metrics_port: std::env::var("BEARDOG_METRICS_PORT")
+            metrics_port: std::env::var(env_keys::ENV_METRICS_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_METRICS_PORT),
-            websocket_port: std::env::var("BEARDOG_WS_PORT")
+            websocket_port: std::env::var(env_keys::ENV_WS_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_WEBSOCKET_PORT),
-            health_port: std::env::var("BEARDOG_HEALTH_PORT")
+            health_port: std::env::var(env_keys::ENV_HEALTH_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_HEALTH_PORT),
-            compute_port: std::env::var("BEARDOG_COMPUTE_PORT")
+            compute_port: std::env::var(env_keys::ENV_COMPUTE_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_COMPUTE_PORT),
-            mesh_port: std::env::var("BEARDOG_MESH_PORT")
+            mesh_port: std::env::var(env_keys::ENV_MESH_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_MESH_PORT),
-            ai_port: std::env::var("BEARDOG_AI_PORT")
+            ai_port: std::env::var(env_keys::ENV_AI_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_AI_PORT),
-            storage_port: std::env::var("BEARDOG_STORAGE_PORT")
+            storage_port: std::env::var(env_keys::ENV_STORAGE_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_STORAGE_PORT),
-            security_port: std::env::var("BEARDOG_SECURITY_PORT")
+            security_port: std::env::var(env_keys::ENV_SECURITY_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_SECURITY_PORT),
-            database_port: std::env::var("BEARDOG_DATABASE_PORT")
+            database_port: std::env::var(env_keys::ENV_DATABASE_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_DATABASE_PORT),
-            grafana_port: std::env::var("BEARDOG_GRAFANA_PORT")
+            grafana_port: std::env::var(env_keys::ENV_GRAFANA_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_GRAFANA_PORT),
-            jaeger_port: std::env::var("BEARDOG_JAEGER_PORT")
+            jaeger_port: std::env::var(env_keys::ENV_JAEGER_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_JAEGER_PORT),
-            discovery_port: std::env::var("BEARDOG_DISCOVERY_PORT")
+            discovery_port: std::env::var(env_keys::ENV_DISCOVERY_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_DISCOVERY_PORT),
@@ -316,15 +317,15 @@ pub struct NetworkTimeouts {
 impl Default for NetworkTimeouts {
     fn default() -> Self {
         Self {
-            request_timeout_ms: std::env::var("BEARDOG_REQUEST_TIMEOUT_MS")
+            request_timeout_ms: std::env::var(env_keys::ENV_REQUEST_TIMEOUT_MS)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(30000),
-            connection_timeout_ms: std::env::var("BEARDOG_CONNECTION_TIMEOUT_MS")
+            connection_timeout_ms: std::env::var(env_keys::ENV_CONNECTION_TIMEOUT_MS)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(5000),
-            keepalive_timeout_s: std::env::var("BEARDOG_KEEPALIVE_TIMEOUT_S")
+            keepalive_timeout_s: std::env::var(env_keys::ENV_KEEPALIVE_TIMEOUT_S)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(60),
@@ -358,16 +359,16 @@ impl Default for ServiceEndpoints {
         let ports = ServicePorts::default();
 
         Self {
-            capabilities_url: std::env::var("BEARDOG_CAPABILITIES_URL").unwrap_or_else(|_| {
+            capabilities_url: std::env::var(env_keys::ENV_CAPABILITIES_URL).unwrap_or_else(|_| {
                 format!("http://{}:{}/api/v1/capabilities", host, ports.api_port)
             }),
-            health_url: std::env::var("BEARDOG_HEALTH_URL")
+            health_url: std::env::var(env_keys::ENV_HEALTH_URL)
                 .unwrap_or_else(|_| format!("http://{}:{}/health", host, ports.health_port)),
-            metrics_url: std::env::var("BEARDOG_METRICS_URL")
+            metrics_url: std::env::var(env_keys::ENV_METRICS_URL)
                 .unwrap_or_else(|_| format!("http://{}:{}/metrics", host, ports.metrics_port)),
-            admin_url: std::env::var("BEARDOG_ADMIN_URL")
+            admin_url: std::env::var(env_keys::ENV_ADMIN_URL)
                 .unwrap_or_else(|_| format!("http://{}:{}/admin", host, ports.admin_port)),
-            websocket_url: std::env::var("BEARDOG_WEBSOCKET_URL")
+            websocket_url: std::env::var(env_keys::ENV_WEBSOCKET_URL)
                 .unwrap_or_else(|_| format!("ws://{}:{}/ws", host, ports.websocket_port)),
         }
     }

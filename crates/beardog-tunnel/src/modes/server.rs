@@ -540,6 +540,7 @@ mod banner_tests {
 #[cfg(test)]
 mod neural_registration_tests {
     use super::NeuralRegistrationParams;
+    use beardog_config::env_keys;
     use beardog_types::primal_identity::PrimalIdentity;
 
     #[test]
@@ -619,6 +620,7 @@ mod neural_registration_tests {
 #[cfg(test)]
 mod tests {
     use super::{NeuralRegistrationParams, family_id_preview_from_seed};
+    use beardog_config::env_keys;
     use beardog_types::primal_identity::PrimalIdentity;
 
     #[test]

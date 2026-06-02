@@ -212,11 +212,12 @@ impl AndroidKeystore {
         config: AndroidHsmConfig,
         transport: Arc<KeystoreTransportBackend>,
     ) -> Result<Self, BearDogError> {
+        let hardware_backed = transport.is_hardware_backed();
         let capabilities = AndroidDeviceCapabilities {
-            strongbox_available: true,
-            key_attestation_available: true,
-            hardware_backed_keystore: true,
-            verified_boot: true,
+            strongbox_available: hardware_backed && config.strongbox_enabled,
+            key_attestation_available: hardware_backed,
+            hardware_backed_keystore: hardware_backed,
+            verified_boot: hardware_backed,
         };
 
         Ok(Self {
@@ -237,6 +238,10 @@ impl AndroidKeystore {
     ) -> Result<Self, BearDogError> {
         #[cfg(target_os = "android")]
         {
+            tracing::warn!(
+                "Android keystore using in-memory stub — keys are NOT hardware-backed. \
+                 Wire real Keymaster JNI for production security."
+            );
             Self::new(
                 config,
                 Arc::new(KeystoreTransportBackend::AndroidJni(
@@ -409,8 +414,13 @@ impl AndroidKeystore {
     }
 
     /// Check if `StrongBox` is available on this device
-    pub const fn is_strongbox_available(&self) -> bool {
+    pub fn is_strongbox_available(&self) -> bool {
         self.capabilities.strongbox_available
+    }
+
+    /// Whether keys are stored in a hardware-backed keystore (TEE / `StrongBox`).
+    pub fn is_hardware_backed_keystore(&self) -> bool {
+        self.capabilities.hardware_backed_keystore
     }
 
     /// Generate random bytes using hardware RNG
@@ -517,6 +527,10 @@ impl AndroidAttestationService {
     pub fn with_platform_attestation_transport(attestation_level: AttestationLevel) -> Self {
         #[cfg(target_os = "android")]
         {
+            tracing::warn!(
+                "Android attestation using in-memory stub — attestations are NOT hardware-backed. \
+                 Wire real Key Attestation JNI for production security."
+            );
             Self::new(
                 attestation_level,
                 Arc::new(AttestationTransportBackend::AndroidJni(
