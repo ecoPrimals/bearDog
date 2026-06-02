@@ -14,6 +14,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use super::MonitoringConfigValidation;
+use beardog_config::env_keys;
 
 /// Core monitoring configuration that applies to all monitoring domains
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -55,16 +56,16 @@ impl Default for CoreMonitoringConfig {
             version: "4.0.0".to_string(),
             instance_id: "beardog-instance".to_string(),
             tags: HashMap::new(),
-            sampling_rate: std::env::var("BEARDOG_MONITORING_SAMPLING_RATE")
+            sampling_rate: std::env::var(env_keys::ENV_MONITORING_SAMPLING_RATE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(1.0),
-            buffer_size: std::env::var("BEARDOG_MONITORING_BUFFER_SIZE")
+            buffer_size: std::env::var(env_keys::ENV_MONITORING_BUFFER_SIZE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(1000),
             flush_interval: Duration::from_secs(
-                std::env::var("BEARDOG_MONITORING_FLUSH_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_MONITORING_FLUSH_INTERVAL_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(30),
@@ -328,21 +329,21 @@ impl Default for RetentionPolicy {
         Self {
             enabled: true,
             max_age: Duration::from_secs(
-                std::env::var("BEARDOG_RETENTION_MAX_AGE_SECS")
+                std::env::var(env_keys::ENV_RETENTION_MAX_AGE_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(time::SECONDS_PER_DAY * 30), // 30 days
             ),
-            max_size: std::env::var("BEARDOG_RETENTION_MAX_SIZE_BYTES")
+            max_size: std::env::var(env_keys::ENV_RETENTION_MAX_SIZE_BYTES)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1024 * 1024 * 1024), // 1GB
-            max_count: std::env::var("BEARDOG_RETENTION_MAX_COUNT")
+            max_count: std::env::var(env_keys::ENV_RETENTION_MAX_COUNT)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1_000_000),
             cleanup_interval: Duration::from_secs(
-                std::env::var("BEARDOG_RETENTION_CLEANUP_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_RETENTION_CLEANUP_INTERVAL_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(time::SECONDS_PER_HOUR), // 1 hour
@@ -405,18 +406,18 @@ impl Default for BatchConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            batch_size: std::env::var("BEARDOG_BATCH_SIZE")
+            batch_size: std::env::var(env_keys::ENV_BATCH_SIZE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(100),
             flush_interval: Duration::from_secs(
-                std::env::var("BEARDOG_BATCH_FLUSH_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_BATCH_FLUSH_INTERVAL_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),
             ),
             max_wait_time: Duration::from_secs(
-                std::env::var("BEARDOG_BATCH_MAX_WAIT_TIME_SECS")
+                std::env::var(env_keys::ENV_BATCH_MAX_WAIT_TIME_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(60),
@@ -450,23 +451,23 @@ impl Default for RetryPolicy {
     fn default() -> Self {
         Self {
             enabled: true,
-            max_retries: std::env::var("BEARDOG_RETRY_POLICY_MAX_RETRIES")
+            max_retries: std::env::var(env_keys::ENV_RETRY_POLICY_MAX_RETRIES)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3),
             initial_delay: Duration::from_millis(
-                std::env::var("BEARDOG_RETRY_INITIAL_DELAY_MS")
+                std::env::var(env_keys::ENV_RETRY_INITIAL_DELAY_MS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(100),
             ),
             max_delay: Duration::from_secs(
-                std::env::var("BEARDOG_RETRY_MAX_DELAY_SECS")
+                std::env::var(env_keys::ENV_RETRY_MAX_DELAY_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),
             ),
-            backoff_multiplier: std::env::var("BEARDOG_MONITORING_BACKOFF_MULTIPLIER")
+            backoff_multiplier: std::env::var(env_keys::ENV_MONITORING_BACKOFF_MULTIPLIER)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(2.0),

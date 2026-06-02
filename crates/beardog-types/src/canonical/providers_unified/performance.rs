@@ -6,6 +6,7 @@ use crate::canonical::traits::CacheStrategy;
 use crate::constants::buffers;
 use crate::constants::defaults;
 use crate::constants::time;
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -352,7 +353,7 @@ impl PerformanceConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            max_concurrent_requests: std::env::var("BEARDOG_PROVIDER_MAX_CONCURRENT_REQUESTS")
+            max_concurrent_requests: std::env::var(env_keys::ENV_PROVIDER_MAX_CONCURRENT_REQUESTS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(100),
@@ -370,12 +371,12 @@ impl CachingConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            max_entries: std::env::var("BEARDOG_PROVIDER_CACHE_MAX_ENTRIES")
+            max_entries: std::env::var(env_keys::ENV_PROVIDER_CACHE_MAX_ENTRIES)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(defaults::DEFAULT_MAX_ENTRIES),
             ttl: Duration::from_secs(
-                std::env::var("BEARDOG_PROVIDER_CACHE_TTL_SECS")
+                std::env::var(env_keys::ENV_PROVIDER_CACHE_TTL_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(time::SECONDS_PER_HOUR),
@@ -390,11 +391,11 @@ impl CompressionConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            level: std::env::var("BEARDOG_COMPRESSION_LEVEL")
+            level: std::env::var(env_keys::ENV_COMPRESSION_LEVEL)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(6),
-            min_size: std::env::var("BEARDOG_COMPRESSION_MIN_SIZE")
+            min_size: std::env::var(env_keys::ENV_COMPRESSION_MIN_SIZE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(1024),
@@ -408,15 +409,15 @@ impl BufferConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            read_buffer_size: std::env::var("BEARDOG_READ_BUFFER_SIZE")
+            read_buffer_size: std::env::var(env_keys::ENV_READ_BUFFER_SIZE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(buffers::DEFAULT_SIZE),
-            write_buffer_size: std::env::var("BEARDOG_WRITE_BUFFER_SIZE")
+            write_buffer_size: std::env::var(env_keys::ENV_WRITE_BUFFER_SIZE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(buffers::DEFAULT_SIZE),
-            pool_size: std::env::var("BEARDOG_BUFFER_POOL_SIZE")
+            pool_size: std::env::var(env_keys::ENV_BUFFER_POOL_SIZE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(100),
@@ -430,7 +431,7 @@ impl PerformanceMonitoringConfig {
     pub fn from_env() -> Self {
         Self {
             metrics_interval: Duration::from_secs(
-                std::env::var("BEARDOG_PROVIDER_METRICS_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_PROVIDER_METRICS_INTERVAL_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(60),
@@ -447,24 +448,24 @@ impl PerformanceThresholds {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            max_response_time_ms: std::env::var("BEARDOG_PROVIDER_MAX_RESPONSE_TIME_MS")
+            max_response_time_ms: std::env::var(env_keys::ENV_PROVIDER_MAX_RESPONSE_TIME_MS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(defaults::DEFAULT_MAX_RESPONSE_TIME_MS),
-            max_error_rate: std::env::var("BEARDOG_PROVIDER_MAX_ERROR_RATE")
+            max_error_rate: std::env::var(env_keys::ENV_PROVIDER_MAX_ERROR_RATE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(5.0),
-            max_cpu_usage: std::env::var("BEARDOG_PROVIDER_MAX_CPU_USAGE")
+            max_cpu_usage: std::env::var(env_keys::ENV_PROVIDER_MAX_CPU_USAGE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(80.0),
-            max_memory_usage: std::env::var("BEARDOG_PROVIDER_MAX_MEMORY_USAGE")
+            max_memory_usage: std::env::var(env_keys::ENV_PROVIDER_MAX_MEMORY_USAGE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(1_000_000_000),
             max_concurrent_connections: std::env::var(
-                "BEARDOG_PROVIDER_MAX_CONCURRENT_CONNECTIONS",
+                env_keys::ENV_PROVIDER_MAX_CONCURRENT_CONNECTIONS,
             )
             .ok()
             .and_then(|v| v.parse().ok())
@@ -479,12 +480,12 @@ impl PerformanceAlertingConfig {
     pub fn from_env() -> Self {
         Self {
             cooldown_period: Duration::from_secs(
-                std::env::var("BEARDOG_PROVIDER_ALERT_COOLDOWN_SECS")
+                std::env::var(env_keys::ENV_PROVIDER_ALERT_COOLDOWN_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(300),
             ),
-            escalation_threshold: std::env::var("BEARDOG_PROVIDER_ALERT_ESCALATION_THRESHOLD")
+            escalation_threshold: std::env::var(env_keys::ENV_PROVIDER_ALERT_ESCALATION_THRESHOLD)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(3),

@@ -23,6 +23,7 @@
 //! - ✅ **Pure Rust**: Zero external dependencies
 
 use anyhow::{Context, Result};
+use beardog_config::env_keys;
 use beardog_core::self_knowledge::{
     IdentityInputs, PrimalIdentity, discovered_simple_capabilities,
 };
@@ -222,8 +223,8 @@ pub fn get_unix_socket_paths_with(hints: &UnixSocketPathHints) -> Vec<PathBuf> {
     let stem = hints
         .primal_socket_stem
         .clone()
-        .or_else(|| beardog_errors::process_env::var("PRIMAL_NAME").ok())
-        .or_else(|| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME").ok())
+        .or_else(|| beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME).ok())
+        .or_else(|| beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME_PREFIXED).ok())
         .unwrap_or_else(|| PrimalIdentity::from_inputs(&IdentityInputs::from_env()).name);
 
     let subdir =
@@ -259,8 +260,8 @@ pub fn get_unix_socket_paths_with(hints: &UnixSocketPathHints) -> Vec<PathBuf> {
 /// **Zero Hardcoding**: Uses XDG Base Directory specification
 fn get_unix_socket_paths() -> Vec<PathBuf> {
     get_unix_socket_paths_with(&UnixSocketPathHints {
-        beardog_socket: beardog_errors::process_env::var("BEARDOG_SOCKET").ok(),
-        xdg_runtime_dir: beardog_errors::process_env::var("XDG_RUNTIME_DIR").ok(),
+        beardog_socket: beardog_errors::process_env::var(env_keys::ENV_SOCKET).ok(),
+        xdg_runtime_dir: beardog_errors::process_env::var(env_keys::ENV_XDG_RUNTIME_DIR).ok(),
         ipc_namespace: beardog_errors::process_env::var(ipc_layout::ENV_BIOMEOS_IPC_NAMESPACE).ok(),
         primal_socket_stem: None,
     })
@@ -330,8 +331,8 @@ pub fn get_tcp_discovery_file_candidates_with(hints: &TcpDiscoveryPathHints) -> 
 /// Get TCP discovery file path candidates (XDG-compliant)
 fn get_tcp_discovery_file_candidates() -> Vec<String> {
     get_tcp_discovery_file_candidates_with(&TcpDiscoveryPathHints {
-        xdg_runtime_dir: beardog_errors::process_env::var("XDG_RUNTIME_DIR").ok(),
-        home: beardog_errors::process_env::var("HOME").ok(),
+        xdg_runtime_dir: beardog_errors::process_env::var(env_keys::ENV_XDG_RUNTIME_DIR).ok(),
+        home: beardog_errors::process_env::var(env_keys::ENV_HOME).ok(),
     })
 }
 

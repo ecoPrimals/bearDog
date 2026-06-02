@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::constants::time;
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -26,7 +27,7 @@ impl Default for HsmTierManagementConfig {
             enabled: true,
             auto_tier_assignment: true,
             tier_evaluation_interval: Duration::from_secs(
-                std::env::var("BEARDOG_HSM_TIER_EVALUATION_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_HSM_TIER_EVALUATION_INTERVAL_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(300),
@@ -274,22 +275,22 @@ impl Default for HsmHealthCheckConfig {
         Self {
             enabled: true,
             check_interval: Duration::from_secs(
-                std::env::var("BEARDOG_HSM_HEALTH_CHECK_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_HSM_HEALTH_CHECK_INTERVAL_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(30),
             ),
             timeout: Duration::from_secs(
-                std::env::var("BEARDOG_HSM_HEALTH_CHECK_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_HSM_HEALTH_CHECK_TIMEOUT_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(10),
             ),
-            failure_threshold: std::env::var("BEARDOG_HSM_HEALTH_FAILURE_THRESHOLD")
+            failure_threshold: std::env::var(env_keys::ENV_HSM_HEALTH_FAILURE_THRESHOLD)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(3),
-            recovery_threshold: std::env::var("BEARDOG_HSM_HEALTH_RECOVERY_THRESHOLD")
+            recovery_threshold: std::env::var(env_keys::ENV_HSM_HEALTH_RECOVERY_THRESHOLD)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(2),
@@ -411,14 +412,14 @@ impl Default for FailoverConfig {
             enabled: true,
             automatic_failover: true,
             failover_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_HSM_FAILOVER_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_HSM_FAILOVER_TIMEOUT_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(30),
             ),
             failback_enabled: true,
             failback_delay: Duration::from_secs(
-                std::env::var("BEARDOG_HSM_FAILBACK_DELAY_SECS")
+                std::env::var(env_keys::ENV_HSM_FAILBACK_DELAY_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(60),
@@ -450,12 +451,12 @@ impl Default for SessionManagementConfig {
         Self {
             enabled: true,
             session_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_HSM_SESSION_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_HSM_SESSION_TIMEOUT_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(time::SECONDS_PER_HOUR),
             ),
-            max_concurrent_sessions: std::env::var("BEARDOG_HSM_MAX_CONCURRENT_SESSIONS")
+            max_concurrent_sessions: std::env::var(env_keys::ENV_HSM_MAX_CONCURRENT_SESSIONS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(100),
@@ -493,13 +494,13 @@ impl Default for HsmBackupConfig {
         Self {
             enabled: true,
             backup_interval: Duration::from_secs(
-                std::env::var("BEARDOG_HSM_BACKUP_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_HSM_BACKUP_INTERVAL_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(time::SECONDS_PER_DAY), // 24 hours default
             ),
             retention_period: Duration::from_secs(
-                std::env::var("BEARDOG_HSM_BACKUP_RETENTION_SECS")
+                std::env::var(env_keys::ENV_HSM_BACKUP_RETENTION_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(time::SECONDS_PER_DAY * 30), // 30 days default

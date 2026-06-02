@@ -10,6 +10,7 @@
 )]
 
 use crate::constants::time;
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
@@ -102,19 +103,19 @@ pub struct ConnectionConfig {
 impl Default for ConnectionConfig {
     fn default() -> Self {
         Self {
-            timeout_ms: std::env::var("BEARDOG_HSM_CONNECTION_TIMEOUT_MS")
+            timeout_ms: std::env::var(env_keys::ENV_HSM_CONNECTION_TIMEOUT_MS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(30_000),
-            max_retries: std::env::var("BEARDOG_HSM_CONNECTION_MAX_RETRIES")
+            max_retries: std::env::var(env_keys::ENV_HSM_CONNECTION_MAX_RETRIES)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3),
-            retry_delay_ms: std::env::var("BEARDOG_HSM_CONNECTION_RETRY_DELAY_MS")
+            retry_delay_ms: std::env::var(env_keys::ENV_HSM_CONNECTION_RETRY_DELAY_MS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1000),
-            keep_alive_seconds: std::env::var("BEARDOG_HSM_KEEP_ALIVE_SECS")
+            keep_alive_seconds: std::env::var(env_keys::ENV_HSM_KEEP_ALIVE_SECS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .or(Some(300)),
@@ -148,7 +149,7 @@ impl Default for SecurityConfig {
             strict_mode: true,
             key_validation: "strict".to_string(),
             session_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_HSM_SESSION_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_HSM_SESSION_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(time::SECONDS_PER_HOUR),
@@ -230,7 +231,7 @@ impl Default for HsmConfig {
             security: SecurityConfig::default(),
             auth_method: AuthMethod::default(),
             operation_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_HSM_OPERATION_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),
@@ -263,7 +264,7 @@ impl Default for SoftwareHsmConfig {
     fn default() -> Self {
         use crate::constants::domains::system::defaults;
 
-        let storage_path = std::env::var("BEARDOG_HSM_STORAGE_PATH")
+        let storage_path = std::env::var(env_keys::ENV_HSM_STORAGE_PATH)
             .unwrap_or_else(|_| format!("{}/hsm", defaults::resolve_temp_dir()));
 
         Self {
@@ -344,9 +345,9 @@ impl Default for NetworkHsmConfig {
 
         Self {
             base: HsmConfig::default(),
-            server_address: std::env::var("BEARDOG_HSM_SERVER")
+            server_address: std::env::var(env_keys::ENV_HSM_SERVER)
                 .unwrap_or_else(|_| network_config.default_host.clone()),
-            port: std::env::var("BEARDOG_HSM_PORT")
+            port: std::env::var(env_keys::ENV_HSM_PORT)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(9000),

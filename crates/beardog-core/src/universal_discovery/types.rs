@@ -2,6 +2,7 @@
 
 //! Core types for universal discovery (protocols, config, events, statistics).
 
+use beardog_config::env_keys;
 use beardog_types::canonical::HealthStatus;
 use beardog_types::canonical::config::network::NetworkConfig;
 use beardog_types::constants::domains::network::ports::DEFAULT_CONSUL_HTTP_PORT;
@@ -225,21 +226,21 @@ impl UniversalDiscoveryConfig {
     /// Build configuration from process environment (`std::env::var`).
     #[must_use]
     pub fn from_env() -> Self {
-        let primal_type = std::env::var("PRIMAL_TYPE")
-            .or_else(|_| std::env::var("SERVICE_TYPE"))
+        let primal_type = std::env::var(env_keys::ENV_PRIMAL_TYPE)
+            .or_else(|_| std::env::var(env_keys::ENV_SERVICE_TYPE))
             .unwrap_or_else(|_| "primal".to_string());
 
         let network_config = NetworkConfig::default();
-        let http_endpoint = std::env::var("SERVICE_REGISTRY_ENDPOINT")
-            .or_else(|_| std::env::var("DISCOVERY_SERVICE_ENDPOINT"))
-            .or_else(|_| std::env::var("BEARDOG_CONSUL_ENDPOINT"))
-            .or_else(|_| std::env::var("CONSUL_HTTP_ADDR"))
+        let http_endpoint = std::env::var(env_keys::ENV_SERVICE_REGISTRY_ENDPOINT_UNPREFIXED)
+            .or_else(|_| std::env::var(env_keys::ENV_DISCOVERY_SERVICE_ENDPOINT))
+            .or_else(|_| std::env::var(env_keys::ENV_CONSUL_ENDPOINT))
+            .or_else(|_| std::env::var(env_keys::ENV_CONSUL_HTTP_ADDR))
             .unwrap_or_else(|_| {
-                let registry_host = std::env::var("SERVICE_REGISTRY_HOST")
-                    .or_else(|_| std::env::var("CONSUL_HOST"))
+                let registry_host = std::env::var(env_keys::ENV_SERVICE_REGISTRY_HOST)
+                    .or_else(|_| std::env::var(env_keys::ENV_CONSUL_HOST))
                     .unwrap_or_else(|_| network_config.default_host.clone());
-                let registry_port = std::env::var("SERVICE_REGISTRY_PORT")
-                    .or_else(|_| std::env::var("CONSUL_PORT"))
+                let registry_port = std::env::var(env_keys::ENV_SERVICE_REGISTRY_PORT)
+                    .or_else(|_| std::env::var(env_keys::ENV_CONSUL_PORT_UNPREFIXED))
                     .ok()
                     .and_then(|p| p.parse::<u16>().ok())
                     .unwrap_or(DEFAULT_CONSUL_HTTP_PORT);

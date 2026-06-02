@@ -5,6 +5,7 @@
 //! This module provides a memory-safe interface to Android StrongBox hardware security.
 //! All operations are designed to avoid unchecked memory patterns while maintaining security guarantees.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use tracing::info;
 use types::VerifiedBootState;
@@ -82,26 +83,32 @@ pub async fn safe_get_android_device_info() -> Result<AndroidDeviceInfo, BearDog
     info!("📱 Safe Android device detection starting");
 
     let device_info = AndroidDeviceInfo {
-        manufacturer: beardog_errors::process_env::var("ANDROID_MANUFACTURER")
+        manufacturer: beardog_errors::process_env::var(env_keys::ENV_ANDROID_MANUFACTURER)
             .unwrap_or_else(|_| "Unknown".to_string()),
-        model: beardog_errors::process_env::var("ANDROID_MODEL")
+        model: beardog_errors::process_env::var(env_keys::ENV_ANDROID_MODEL)
             .unwrap_or_else(|_| "Android Device".to_string()),
-        device: beardog_errors::process_env::var("ANDROID_DEVICE")
+        device: beardog_errors::process_env::var(env_keys::ENV_ANDROID_DEVICE)
             .unwrap_or_else(|_| "unknown".to_string()),
-        hardware: beardog_errors::process_env::var("ANDROID_HARDWARE").ok(),
-        board: beardog_errors::process_env::var("ANDROID_BOARD").ok(),
-        brand: beardog_errors::process_env::var("ANDROID_BRAND").ok(),
-        android_version: beardog_errors::process_env::var("ANDROID_VERSION")
+        hardware: beardog_errors::process_env::var(env_keys::ENV_ANDROID_HARDWARE).ok(),
+        board: beardog_errors::process_env::var(env_keys::ENV_ANDROID_BOARD).ok(),
+        brand: beardog_errors::process_env::var(env_keys::ENV_ANDROID_BRAND).ok(),
+        android_version: beardog_errors::process_env::var(env_keys::ENV_ANDROID_VERSION)
             .unwrap_or_else(|_| "Unknown".to_string()),
-        api_level: beardog_errors::process_env::var("ANDROID_API_LEVEL")
+        api_level: beardog_errors::process_env::var(env_keys::ENV_ANDROID_API_LEVEL)
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(29),
-        security_patch: beardog_errors::process_env::var("ANDROID_SECURITY_PATCH").ok(),
-        security_patch_level: beardog_errors::process_env::var("ANDROID_SECURITY_PATCH")
-            .unwrap_or_else(|_| "unknown".to_string()),
-        strongbox_version: beardog_errors::process_env::var("ANDROID_STRONGBOX_VERSION").ok(),
-        titan_m_version: beardog_errors::process_env::var("ANDROID_TITAN_M_VERSION").ok(),
+        security_patch: beardog_errors::process_env::var(env_keys::ENV_ANDROID_SECURITY_PATCH).ok(),
+        security_patch_level: beardog_errors::process_env::var(
+            env_keys::ENV_ANDROID_SECURITY_PATCH,
+        )
+        .unwrap_or_else(|_| "unknown".to_string()),
+        strongbox_version: beardog_errors::process_env::var(
+            env_keys::ENV_ANDROID_STRONGBOX_VERSION,
+        )
+        .ok(),
+        titan_m_version: beardog_errors::process_env::var(env_keys::ENV_ANDROID_TITAN_M_VERSION)
+            .ok(),
         verified_boot_state: VerifiedBootState::Unverified, // Runtime discovery
     };
 

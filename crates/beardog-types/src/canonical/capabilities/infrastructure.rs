@@ -14,6 +14,7 @@ use crate::constants::defaults;
 
 use super::compliance_discovery::ComplianceCapabilities;
 use super::discovery::{SecurityCapabilities, SecurityLevel};
+use beardog_config::env_keys;
 
 /// Network capabilities and connectivity options
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -39,7 +40,7 @@ impl Default for NetworkCapabilities {
                 "HTTPS".to_string(),
                 "WebSocket".to_string(),
             ],
-            max_bandwidth: std::env::var("BEARDOG_MAX_BANDWIDTH_MBPS")
+            max_bandwidth: std::env::var(env_keys::ENV_MAX_BANDWIDTH_MBPS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(1000.0),
@@ -74,7 +75,7 @@ impl Default for StorageCapabilities {
     fn default() -> Self {
         Self {
             storage_types: vec!["SSD".to_string(), "NVMe".to_string(), "Cloud".to_string()],
-            max_capacity: std::env::var("BEARDOG_STORAGE_MAX_CAPACITY")
+            max_capacity: std::env::var(env_keys::ENV_STORAGE_MAX_CAPACITY)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults::DEFAULT_MAX_ENTRIES as f64),
@@ -105,11 +106,11 @@ impl Default for ComputeCapabilities {
     fn default() -> Self {
         Self {
             cpu_architectures: vec!["x86_64".to_string(), "ARM64".to_string()],
-            core_count: std::env::var("BEARDOG_DEFAULT_CORE_COUNT")
+            core_count: std::env::var(env_keys::ENV_DEFAULT_CORE_COUNT)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(8),
-            memory_gb: std::env::var("BEARDOG_DEFAULT_MEMORY_GB")
+            memory_gb: std::env::var(env_keys::ENV_DEFAULT_MEMORY_GB)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(32.0),
@@ -141,11 +142,11 @@ impl Default for PerformanceCapabilities {
     )]
     fn default() -> Self {
         Self {
-            max_ops_per_second: std::env::var("BEARDOG_PERF_MAX_OPS_PER_SECOND")
+            max_ops_per_second: std::env::var(env_keys::ENV_PERF_MAX_OPS_PER_SECOND)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(defaults::DEFAULT_MAX_ENTRIES as f64),
-            avg_response_time_ms: std::env::var("BEARDOG_PERF_AVG_RESPONSE_TIME_MS")
+            avg_response_time_ms: std::env::var(env_keys::ENV_PERF_AVG_RESPONSE_TIME_MS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(50.0),
@@ -175,7 +176,7 @@ pub struct EnvironmentalCapabilities {
 impl Default for EnvironmentalCapabilities {
     fn default() -> Self {
         Self {
-            power_consumption_watts: std::env::var("BEARDOG_POWER_CONSUMPTION_WATTS")
+            power_consumption_watts: std::env::var(env_keys::ENV_POWER_CONSUMPTION_WATTS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(500.0),
@@ -330,11 +331,11 @@ impl Default for HumanEntropyCapabilities {
                 "keyboard".to_string(),
                 "touch".to_string(),
             ],
-            min_interaction_time_ms: std::env::var("BEARDOG_MIN_INTERACTION_TIME_MS")
+            min_interaction_time_ms: std::env::var(env_keys::ENV_MIN_INTERACTION_TIME_MS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(100),
-            max_interaction_time_ms: std::env::var("BEARDOG_MAX_INTERACTION_TIME_MS")
+            max_interaction_time_ms: std::env::var(env_keys::ENV_MAX_INTERACTION_TIME_MS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(30000),

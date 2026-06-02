@@ -7,6 +7,7 @@
 
 use crate::constants::domains::network::limits::MAX_CONNECTIONS;
 use crate::constants::time;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -162,21 +163,21 @@ impl NetworkResourceConfig {
     /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
     pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            max_connections: get("BEARDOG_PROD_MAX_CONNECTIONS")
+            max_connections: get(env_keys::ENV_PROD_MAX_CONNECTIONS)
                 .and_then(|c| c.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_CONNECTIONS),
             connection_timeout: Duration::from_secs(
-                get("BEARDOG_PROD_CONNECTION_TIMEOUT_SECS")
+                get(env_keys::ENV_PROD_CONNECTION_TIMEOUT_SECS)
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_CONNECTION_TIMEOUT_SECS),
             ),
             read_timeout: Duration::from_secs(
-                get("BEARDOG_PROD_READ_TIMEOUT_SECS")
+                get(env_keys::ENV_PROD_READ_TIMEOUT_SECS)
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_READ_TIMEOUT_SECS),
             ),
             write_timeout: Duration::from_secs(
-                get("BEARDOG_PROD_WRITE_TIMEOUT_SECS")
+                get(env_keys::ENV_PROD_WRITE_TIMEOUT_SECS)
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_WRITE_TIMEOUT_SECS),
             ),
@@ -262,18 +263,18 @@ impl StorageResourceConfig {
     /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
     pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            max_disk_usage_percent: get("BEARDOG_MAX_DISK_USAGE_PERCENT")
+            max_disk_usage_percent: get(env_keys::ENV_MAX_DISK_USAGE_PERCENT)
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_DISK_USAGE_PERCENT),
             temp_dir_cleanup_interval: Duration::from_secs(
-                get("BEARDOG_TEMP_CLEANUP_INTERVAL_SECS")
+                get(env_keys::ENV_TEMP_CLEANUP_INTERVAL_SECS)
                     .and_then(|i| i.parse().ok())
                     .unwrap_or(Self::DEFAULT_TEMP_CLEANUP_INTERVAL_SECS),
             ),
-            log_rotation_size_mb: get("BEARDOG_LOG_ROTATION_SIZE_MB")
+            log_rotation_size_mb: get(env_keys::ENV_LOG_ROTATION_SIZE_MB)
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_LOG_ROTATION_SIZE_MB),
-            log_retention_days: get("BEARDOG_LOG_RETENTION_DAYS")
+            log_retention_days: get(env_keys::ENV_LOG_RETENTION_DAYS)
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_LOG_RETENTION_DAYS),
         }
@@ -322,19 +323,19 @@ impl ConnectionConfig {
     /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
     pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            pool_size: get("BEARDOG_CONNECTION_POOL_SIZE")
+            pool_size: get(env_keys::ENV_CONNECTION_POOL_SIZE)
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_POOL_SIZE),
-            max_idle_connections: get("BEARDOG_MAX_IDLE_CONNECTIONS")
+            max_idle_connections: get(env_keys::ENV_MAX_IDLE_CONNECTIONS)
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_IDLE_CONNECTIONS),
             connection_lifetime: Duration::from_secs(
-                get("BEARDOG_CONNECTION_LIFETIME_SECS")
+                get(env_keys::ENV_CONNECTION_LIFETIME_SECS)
                     .and_then(|l| l.parse().ok())
                     .unwrap_or(Self::DEFAULT_CONNECTION_LIFETIME_SECS),
             ),
             health_check_interval: Duration::from_secs(
-                get("BEARDOG_CONNECTION_HEALTH_CHECK_INTERVAL_SECS")
+                get(env_keys::ENV_CONNECTION_HEALTH_CHECK_INTERVAL_SECS)
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_HEALTH_CHECK_INTERVAL_SECS),
             ),
@@ -359,9 +360,9 @@ impl GcTuningConfig {
 
     /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
     pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
-        let target_pause_ms = get("BEARDOG_GC_TARGET_PAUSE_MS").and_then(|s| s.parse().ok());
+        let target_pause_ms = get(env_keys::ENV_GC_TARGET_PAUSE_MS).and_then(|s| s.parse().ok());
         let throughput_target_percent =
-            get("BEARDOG_GC_THROUGHPUT_TARGET_PERCENT").and_then(|s| s.parse().ok());
+            get(env_keys::ENV_GC_THROUGHPUT_TARGET_PERCENT).and_then(|s| s.parse().ok());
 
         Self {
             strategy: GcStrategy::Default,
@@ -420,12 +421,12 @@ impl ResourceManagementConfig {
                 ..Default::default()
             },
             network: NetworkResourceConfig {
-                max_connections: std::env::var("BEARDOG_PROD_PRODUCTION_MAX_CONNECTIONS")
+                max_connections: std::env::var(env_keys::ENV_PROD_PRODUCTION_MAX_CONNECTIONS)
                     .ok()
                     .and_then(|c| c.parse().ok())
                     .unwrap_or(MAX_CONNECTIONS),
                 connection_timeout: Duration::from_secs(
-                    std::env::var("BEARDOG_PROD_PRODUCTION_CONNECTION_TIMEOUT_SECS")
+                    std::env::var(env_keys::ENV_PROD_PRODUCTION_CONNECTION_TIMEOUT_SECS)
                         .ok()
                         .and_then(|s| s.parse().ok())
                         .unwrap_or(10),
@@ -434,43 +435,45 @@ impl ResourceManagementConfig {
             },
             storage: StorageResourceConfig {
                 max_disk_usage_percent: std::env::var(
-                    "BEARDOG_PROD_PRODUCTION_MAX_DISK_USAGE_PERCENT",
+                    env_keys::ENV_PROD_PRODUCTION_MAX_DISK_USAGE_PERCENT,
                 )
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(70.0),
                 temp_dir_cleanup_interval: Duration::from_secs(
-                    std::env::var("BEARDOG_PROD_PRODUCTION_TEMP_CLEANUP_INTERVAL_SECS")
+                    std::env::var(env_keys::ENV_PROD_PRODUCTION_TEMP_CLEANUP_INTERVAL_SECS)
                         .ok()
                         .and_then(|s| s.parse().ok())
                         .unwrap_or(1800), // 30 minutes
                 ),
-                log_rotation_size_mb: std::env::var("BEARDOG_PRODUCTION_LOG_ROTATION_SIZE_MB")
+                log_rotation_size_mb: std::env::var(env_keys::ENV_PRODUCTION_LOG_ROTATION_SIZE_MB)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(500),
-                log_retention_days: std::env::var("BEARDOG_PROD_PRODUCTION_LOG_RETENTION_DAYS")
+                log_retention_days: std::env::var(env_keys::ENV_PROD_PRODUCTION_LOG_RETENTION_DAYS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(90),
             },
             connections: ConnectionConfig {
-                pool_size: std::env::var("BEARDOG_PROD_PRODUCTION_POOL_SIZE")
+                pool_size: std::env::var(env_keys::ENV_PROD_PRODUCTION_POOL_SIZE)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(50),
-                max_idle_connections: std::env::var("BEARDOG_PROD_PRODUCTION_MAX_IDLE_CONNECTIONS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(25),
+                max_idle_connections: std::env::var(
+                    env_keys::ENV_PROD_PRODUCTION_MAX_IDLE_CONNECTIONS,
+                )
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(25),
                 connection_lifetime: Duration::from_secs(
-                    std::env::var("BEARDOG_PROD_PRODUCTION_CONNECTION_LIFETIME_SECS")
+                    std::env::var(env_keys::ENV_PROD_PRODUCTION_CONNECTION_LIFETIME_SECS)
                         .ok()
                         .and_then(|s| s.parse().ok())
                         .unwrap_or(time::SECONDS_PER_HOUR), // 1 hour
                 ),
                 health_check_interval: Duration::from_secs(
-                    std::env::var("BEARDOG_PROD_PRODUCTION_HEALTH_CHECK_INTERVAL_SECS")
+                    std::env::var(env_keys::ENV_PROD_PRODUCTION_HEALTH_CHECK_INTERVAL_SECS)
                         .ok()
                         .and_then(|s| s.parse().ok())
                         .unwrap_or(30), // 30 seconds

@@ -11,7 +11,7 @@ use crate::error::AcmeError;
 use crate::storage::CertificateStore;
 use rustls::ServerConfig;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
-use std::io::BufReader;
+use rustls_pki_types::pem::PemObject;
 use std::sync::Arc;
 use tokio::sync::watch;
 use tokio_rustls::TlsAcceptor;
@@ -122,10 +122,9 @@ fn build_acceptor_from_pem(
 
 /// Parse PEM certificate chain from a string.
 fn load_certs_from_pem(pem: &str) -> Result<Vec<CertificateDer<'static>>, AcmeError> {
-    let mut reader = BufReader::new(pem.as_bytes());
-    let certs: Vec<CertificateDer<'static>> = rustls_pemfile::certs(&mut reader)
-        .filter_map(Result::ok)
-        .collect();
+    let certs: Vec<CertificateDer<'static>> = CertificateDer::pem_slice_iter(pem.as_bytes())
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| AcmeError::CertParse(format!("certificate PEM: {e}")))?;
 
     if certs.is_empty() {
         return Err(AcmeError::CertParse("no certificates in PEM".to_string()));
@@ -135,18 +134,8 @@ fn load_certs_from_pem(pem: &str) -> Result<Vec<CertificateDer<'static>>, AcmeEr
 
 /// Parse a private key from PEM string (PKCS8, PKCS1, or SEC1).
 fn load_key_from_pem(pem: &str) -> Result<PrivateKeyDer<'static>, AcmeError> {
-    let mut reader = BufReader::new(pem.as_bytes());
-
-    for item in rustls_pemfile::read_all(&mut reader).flatten() {
-        match item {
-            rustls_pemfile::Item::Pkcs8Key(key) => return Ok(PrivateKeyDer::Pkcs8(key)),
-            rustls_pemfile::Item::Pkcs1Key(key) => return Ok(PrivateKeyDer::Pkcs1(key)),
-            rustls_pemfile::Item::Sec1Key(key) => return Ok(PrivateKeyDer::Sec1(key)),
-            _ => {}
-        }
-    }
-
-    Err(AcmeError::CertParse("no private key in PEM".to_string()))
+    PrivateKeyDer::from_pem_slice(pem.as_bytes())
+        .map_err(|e| AcmeError::CertParse(format!("private key PEM: {e}")))
 }
 
 #[cfg(test)]

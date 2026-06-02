@@ -63,6 +63,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 use crate::canonical::config::r#trait::BearDogConfig;
+use beardog_config::env_keys;
 
 /// Unified Bootstrap Configuration - Zero-Knowledge Bootstrap Settings
 ///
@@ -218,15 +219,15 @@ impl CoreBootstrapConfig {
     /// - `BEARDOG_MIN_CAPABILITIES`: Min capabilities threshold (default: 3)
     pub fn from_env() -> Self {
         Self {
-            discovery_timeout_ms: std::env::var("BEARDOG_DISCOVERY_TIMEOUT_MS")
+            discovery_timeout_ms: std::env::var(env_keys::ENV_DISCOVERY_TIMEOUT_MS)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(Self::DEFAULT_DISCOVERY_TIMEOUT_MS),
-            max_discovery_attempts: std::env::var("BEARDOG_MAX_DISCOVERY_ATTEMPTS")
+            max_discovery_attempts: std::env::var(env_keys::ENV_MAX_DISCOVERY_ATTEMPTS)
                 .ok()
                 .and_then(|a| a.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_DISCOVERY_ATTEMPTS),
-            min_capabilities_threshold: std::env::var("BEARDOG_MIN_CAPABILITIES")
+            min_capabilities_threshold: std::env::var(env_keys::ENV_MIN_CAPABILITIES)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(Self::DEFAULT_MIN_CAPABILITIES_THRESHOLD),
@@ -372,14 +373,14 @@ impl InfantPatternConfig {
             min_observations: Self::DEFAULT_MIN_OBSERVATIONS,
             confidence_threshold: Self::DEFAULT_CONFIDENCE_THRESHOLD,
             pattern_max_age: Duration::from_secs(
-                get("BEARDOG_PATTERN_MAX_AGE_SECS")
+                get(env_keys::ENV_PATTERN_MAX_AGE_SECS)
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_PATTERN_MAX_AGE_SECS),
             ),
             learning_rate: Self::DEFAULT_LEARNING_RATE,
             enable_continuous_learning: true,
             consolidation_interval: Duration::from_secs(
-                get("BEARDOG_PATTERN_CONSOLIDATION_INTERVAL_SECS")
+                get(env_keys::ENV_PATTERN_CONSOLIDATION_INTERVAL_SECS)
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_CONSOLIDATION_INTERVAL_SECS),
             ),
@@ -459,23 +460,23 @@ pub struct ProtocolTimeouts {
 impl Default for ProtocolTimeouts {
     fn default() -> Self {
         Self {
-            mdns_timeout_ms: std::env::var("BEARDOG_MDNS_TIMEOUT_MS")
+            mdns_timeout_ms: std::env::var(env_keys::ENV_MDNS_TIMEOUT_MS)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(5000),
-            http_timeout_ms: std::env::var("BEARDOG_HTTP_TIMEOUT_MS")
+            http_timeout_ms: std::env::var(env_keys::ENV_HTTP_TIMEOUT_MS)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(10000),
-            env_timeout_ms: std::env::var("BEARDOG_ENV_TIMEOUT_MS")
+            env_timeout_ms: std::env::var(env_keys::ENV_ENV_TIMEOUT_MS)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(1000),
-            mesh_timeout_ms: std::env::var("BEARDOG_MESH_TIMEOUT_MS")
+            mesh_timeout_ms: std::env::var(env_keys::ENV_MESH_TIMEOUT_MS)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(15000),
-            container_timeout_ms: std::env::var("BEARDOG_CONTAINER_TIMEOUT_MS")
+            container_timeout_ms: std::env::var(env_keys::ENV_CONTAINER_TIMEOUT_MS)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(10000),
@@ -534,12 +535,12 @@ impl BootstrapNetworkConfig {
         Self {
             listen_interface: crate::constants::domains::network::addresses::default_bind_address(),
             multicast_group: crate::constants::domains::network::addresses::multicast_address(),
-            discovery_port: std::env::var("BEARDOG_BOOTSTRAP_DISCOVERY_PORT")
+            discovery_port: std::env::var(env_keys::ENV_BOOTSTRAP_DISCOVERY_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(Self::DEFAULT_DISCOVERY_PORT),
             enable_ipv6: true,
-            buffer_size: std::env::var("BEARDOG_BOOTSTRAP_BUFFER_SIZE")
+            buffer_size: std::env::var(env_keys::ENV_BOOTSTRAP_BUFFER_SIZE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_BUFFER_SIZE),
@@ -600,7 +601,7 @@ impl BootstrapPerformanceConfig {
         Self {
             enable_caching: true,
             cache_duration: Duration::from_secs(
-                std::env::var("BEARDOG_BOOTSTRAP_CACHE_DURATION_SECS")
+                std::env::var(env_keys::ENV_BOOTSTRAP_CACHE_DURATION_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_CACHE_DURATION_SECS),

@@ -23,7 +23,7 @@ reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"
 
 # TLS — shared with beardog-tunnel for cert loading
 rustls = { workspace = true }
-rustls-pemfile = { workspace = true }
+rustls-pki-types = { workspace = true }
 tokio-rustls = { workspace = true }
 
 # Serialization
@@ -34,7 +34,7 @@ serde_json = { workspace = true }
 tokio = { workspace = true }
 
 # X.509 certificate parsing (expiry check for renewal)
-x509-parser = "0.16"
+x509-parser = { workspace = true }
 
 # Utilities
 chrono = { workspace = true }

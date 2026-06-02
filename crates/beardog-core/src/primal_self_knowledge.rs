@@ -66,6 +66,7 @@
 //! ```
 
 use beardog_config::domains::network_ports::DEFAULT_API_PORT;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::discovery::{
     SecurityService, UniversalCapabilityType, UniversalServiceDescriptor,
@@ -106,19 +107,19 @@ impl PrimalIdentityEnvInputs {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            beardog_primal_name: std::env::var("BEARDOG_PRIMAL_NAME").ok(),
-            beardog_primal_type: std::env::var("BEARDOG_PRIMAL_TYPE").ok(),
-            capability_hsm: std::env::var("BEARDOG_CAPABILITY_HSM").is_ok(),
-            capability_encryption: std::env::var("BEARDOG_CAPABILITY_ENCRYPTION").is_ok(),
-            capability_auth: std::env::var("BEARDOG_CAPABILITY_AUTH").is_ok(),
-            beardog_api_host: std::env::var("BEARDOG_API_HOST").ok(),
-            beardog_api_port: std::env::var("BEARDOG_API_PORT")
+            beardog_primal_name: std::env::var(env_keys::ENV_PRIMAL_NAME_PREFIXED).ok(),
+            beardog_primal_type: std::env::var(env_keys::ENV_PRIMAL_TYPE_PREFIXED).ok(),
+            capability_hsm: std::env::var(env_keys::ENV_CAPABILITY_HSM).is_ok(),
+            capability_encryption: std::env::var(env_keys::ENV_CAPABILITY_ENCRYPTION).is_ok(),
+            capability_auth: std::env::var(env_keys::ENV_CAPABILITY_AUTH).is_ok(),
+            beardog_api_host: std::env::var(env_keys::ENV_API_HOST).ok(),
+            beardog_api_port: std::env::var(env_keys::ENV_API_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok()),
-            beardog_grpc_port: std::env::var("BEARDOG_GRPC_PORT")
+            beardog_grpc_port: std::env::var(env_keys::ENV_GRPC_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok()),
-            beardog_grpc_host: std::env::var("BEARDOG_GRPC_HOST").ok(),
+            beardog_grpc_host: std::env::var(env_keys::ENV_GRPC_HOST).ok(),
         }
     }
 }
@@ -137,8 +138,8 @@ impl PrimalDiscoveryRuntimeInputs {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            service_registry_url: std::env::var("BEARDOG_SERVICE_REGISTRY_URL").ok(),
-            mdns_announce: std::env::var("BEARDOG_MDNS_ANNOUNCE").is_ok(),
+            service_registry_url: std::env::var(env_keys::ENV_SERVICE_REGISTRY_URL).ok(),
+            mdns_announce: std::env::var(env_keys::ENV_MDNS_ANNOUNCE).is_ok(),
         }
     }
 }
@@ -392,7 +393,7 @@ impl PrimalDiscovery {
                         } else {
                             Endpoint {
                                 protocol: Protocol::Http,
-                                host: std::env::var("BEARDOG_DISCOVERY_HOST_FALLBACK")
+                                host: std::env::var(env_keys::ENV_DISCOVERY_HOST_FALLBACK)
                                     .unwrap_or_else(|_| {
                                         beardog_config::domains::network_addresses::DEFAULT_EXTERNAL_HOST
                                             .to_string()

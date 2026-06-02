@@ -6,6 +6,7 @@
 
 use super::super::SecurityLevel;
 use crate::tunnel::hsm::types::{Algorithm, HsmKey, KeyType};
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_utils::utils::safe_memory_enhanced::{GlobalBufferPools, SafePinnedBuffer};
 use std::collections::HashMap;
@@ -520,15 +521,15 @@ impl SafeAndroidKeystore {
     pub fn detect_device_info_safe() -> Result<AndroidDeviceInfo, BearDogError> {
         debug!("📱 Detecting Android device info safely");
 
-        let model = beardog_errors::process_env::var("ANDROID_MODEL")
+        let model = beardog_errors::process_env::var(env_keys::ENV_ANDROID_MODEL)
             .unwrap_or_else(|_| "Android Device".to_string());
 
-        let api_level = beardog_errors::process_env::var("ANDROID_API_LEVEL")
+        let api_level = beardog_errors::process_env::var(env_keys::ENV_ANDROID_API_LEVEL)
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(30);
 
-        let security_patch = beardog_errors::process_env::var("ANDROID_SECURITY_PATCH")
+        let security_patch = beardog_errors::process_env::var(env_keys::ENV_ANDROID_SECURITY_PATCH)
             .unwrap_or_else(|_| "2024-01-01".to_string());
 
         let strongbox_version = Self::detect_strongbox_version_safe()?;
@@ -569,7 +570,7 @@ impl SafeAndroidKeystore {
     fn detect_strongbox_version_safe() -> Result<Option<String>, BearDogError> {
         debug!("🛡️ Safely detecting StrongBox version");
 
-        if beardog_errors::process_env::var("ANDROID_STRONGBOX_AVAILABLE").is_ok() {
+        if beardog_errors::process_env::var(env_keys::ENV_ANDROID_STRONGBOX_AVAILABLE).is_ok() {
             Ok(Some("StrongBox-1.0".to_string()))
         } else {
             Ok(None)
@@ -585,7 +586,7 @@ impl SafeAndroidKeystore {
     fn detect_titan_m_version_safe() -> Result<Option<String>, BearDogError> {
         debug!("🔒 Safely detecting Titan M version");
 
-        if beardog_errors::process_env::var("ANDROID_TITAN_M_AVAILABLE").is_ok() {
+        if beardog_errors::process_env::var(env_keys::ENV_ANDROID_TITAN_M_AVAILABLE).is_ok() {
             Ok(Some("Titan M v1".to_string()))
         } else {
             Ok(None)
@@ -651,9 +652,9 @@ impl SafeMobileHardwareProvider<StrongBoxAvailable> {
 
         debug!("🔍 Detecting StrongBox availability safely");
 
-        let strongbox_available = beardog_errors::process_env::var("ANDROID_STRONGBOX_AVAILABLE")
-            .is_ok()
-            || Self::check_strongbox_with_safe_api()?;
+        let strongbox_available =
+            beardog_errors::process_env::var(env_keys::ENV_ANDROID_STRONGBOX_AVAILABLE).is_ok()
+                || Self::check_strongbox_with_safe_api()?;
 
         if strongbox_available {
             let capability = StrongBoxAvailable;
@@ -667,7 +668,7 @@ impl SafeMobileHardwareProvider<StrongBoxAvailable> {
 
     fn check_strongbox_with_safe_api() -> Result<bool, BearDogError> {
         debug!("🛡️ Checking StrongBox with safe API");
-        Ok(beardog_errors::process_env::var("STRONGBOX_MOCK_AVAILABLE").is_ok())
+        Ok(beardog_errors::process_env::var(env_keys::ENV_STRONGBOX_MOCK_AVAILABLE).is_ok())
     }
 }
 

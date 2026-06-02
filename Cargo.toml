@@ -173,7 +173,7 @@ mdns-sd = "0.11"            # mDNS/DNS-SD service discovery (feature-gated)
 # TLS termination (H2-10 sovereignty) — `ring` backend for universal platform support
 rustls = { version = "0.23", default-features = false, features = ["ring", "logging", "std", "tls12"] }
 tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "logging", "tls12"] }
-rustls-pemfile = "2.2"
+rustls-pki-types = { version = "1", features = ["std"] }
 
 # Serialization formats
 
@@ -210,8 +210,8 @@ aes = "0.8"
 ctr = "0.9"
 ahash = "0.8"
 ecdsa = "0.16"
-x509-parser = "0.16"
-rcgen = { version = "0.13", default-features = false, features = ["ring", "pem"] }
+x509-parser = "0.18"
+rcgen = { version = "0.14", default-features = false, features = ["ring", "pem"] }
 data-encoding = "2.5"
 path-absolutize = "3.0"
 console = "0.15"

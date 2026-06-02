@@ -19,13 +19,12 @@
 //! requested hostname against the loaded certificate's subject names.
 
 use beardog_config::env_keys;
-use std::fs::File;
-use std::io::BufReader;
 use std::path::Path;
 use std::sync::Arc;
 
 use rustls::ServerConfig;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
+use rustls_pki_types::pem::{Error as PemError, PemObject};
 use tokio_rustls::TlsAcceptor;
 use tracing::{info, warn};
 
@@ -105,13 +104,10 @@ impl TlsTerminationConfig {
 ///
 /// Returns `TlsConfigError` if the file cannot be opened or contains no certs.
 fn load_certs(path: &str) -> Result<Vec<CertificateDer<'static>>, TlsConfigError> {
-    let file =
-        File::open(Path::new(path)).map_err(|e| TlsConfigError::CertFileError(e.to_string()))?;
-    let mut reader = BufReader::new(file);
-
-    let certs: Vec<CertificateDer<'static>> = rustls_pemfile::certs(&mut reader)
-        .filter_map(Result::ok)
-        .collect();
+    let certs: Vec<CertificateDer<'static>> = CertificateDer::pem_file_iter(Path::new(path))
+        .map_err(|e| TlsConfigError::CertFileError(e.to_string()))?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| TlsConfigError::CertFileError(e.to_string()))?;
 
     if certs.is_empty() {
         return Err(TlsConfigError::NoCertificates);
@@ -128,20 +124,11 @@ fn load_certs(path: &str) -> Result<Vec<CertificateDer<'static>>, TlsConfigError
 ///
 /// Returns `TlsConfigError` if the file cannot be opened or contains no key.
 fn load_private_key(path: &str) -> Result<PrivateKeyDer<'static>, TlsConfigError> {
-    let file =
-        File::open(Path::new(path)).map_err(|e| TlsConfigError::KeyFileError(e.to_string()))?;
-    let mut reader = BufReader::new(file);
-
-    for item in rustls_pemfile::read_all(&mut reader).flatten() {
-        match item {
-            rustls_pemfile::Item::Pkcs8Key(key) => return Ok(PrivateKeyDer::Pkcs8(key)),
-            rustls_pemfile::Item::Pkcs1Key(key) => return Ok(PrivateKeyDer::Pkcs1(key)),
-            rustls_pemfile::Item::Sec1Key(key) => return Ok(PrivateKeyDer::Sec1(key)),
-            _ => {}
-        }
-    }
-
-    Err(TlsConfigError::NoPrivateKey)
+    PrivateKeyDer::from_pem_file(Path::new(path)).map_err(|e| match e {
+        PemError::NoItemsFound => TlsConfigError::NoPrivateKey,
+        PemError::Io(err) => TlsConfigError::KeyFileError(err.to_string()),
+        err => TlsConfigError::KeyFileError(err.to_string()),
+    })
 }
 
 /// Build a `TlsAcceptor` from the given config.

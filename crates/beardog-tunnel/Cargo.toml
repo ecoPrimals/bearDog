@@ -84,7 +84,7 @@ bs58 = { workspace = true }  # Base58 encoding for did:key derivation
 # TLS termination (H2-10 sovereignty — feature-gated)
 rustls = { workspace = true, optional = true }
 tokio-rustls = { workspace = true, optional = true }
-rustls-pemfile = { workspace = true, optional = true }
+rustls-pki-types = { workspace = true, optional = true }
 
 
 [dev-dependencies]
@@ -114,7 +114,7 @@ solo-v2 = ["dep:ciborium"]
 usb-discovery = ["dep:beardog-hid"]
 ctap2 = ["solo-v2", "dep:beardog-hid"]
 tls-x509 = ["dep:x509-parser"]
-tls-server = ["dep:rustls", "dep:tokio-rustls", "dep:rustls-pemfile"]
+tls-server = ["dep:rustls", "dep:tokio-rustls", "dep:rustls-pki-types"]
 
 # Platform features
 # `ecosystem` removed: no cfg(feature) gate existed in source — dead flag.

@@ -5,6 +5,7 @@
 // This module provides system-level constants consolidated from the large unified.rs file.
 // It includes version information, compile-time constants, performance limits, and system defaults.
 
+use beardog_config::env_keys;
 use std::time::Duration;
 
 /// Released component versions, protocol versions, and build target metadata.
@@ -55,6 +56,7 @@ pub mod versions {
 /// **SYSTEM DEFAULTS** - Default system configuration values
 pub mod defaults {
     use super::Duration;
+    use beardog_config::env_keys;
 
     /// Memory and buffer defaults
     /// Default buffer size in bytes (4KB)
@@ -110,10 +112,10 @@ pub mod defaults {
     /// Tier order: `BEARDOG_CONFIG_DIR` env → `XDG_CONFIG_HOME/beardog` → `/etc/beardog`.
     #[must_use]
     pub fn resolve_config_dir() -> String {
-        std::env::var("BEARDOG_CONFIG_DIR")
+        std::env::var(env_keys::ENV_CONFIG_DIR)
             .ok()
             .or_else(|| {
-                std::env::var("XDG_CONFIG_HOME")
+                std::env::var(env_keys::ENV_XDG_CONFIG_HOME)
                     .ok()
                     .map(|xdg| format!("{xdg}/beardog"))
             })
@@ -123,10 +125,10 @@ pub mod defaults {
     /// Resolve the data directory from XDG / env / FHS fallback.
     #[must_use]
     pub fn resolve_data_dir() -> String {
-        std::env::var("BEARDOG_DATA_DIR")
+        std::env::var(env_keys::ENV_DATA_DIR)
             .ok()
             .or_else(|| {
-                std::env::var("XDG_DATA_HOME")
+                std::env::var(env_keys::ENV_XDG_DATA_HOME)
                     .ok()
                     .map(|xdg| format!("{xdg}/beardog"))
             })
@@ -136,16 +138,16 @@ pub mod defaults {
     /// Resolve the log directory from env / FHS fallback.
     #[must_use]
     pub fn resolve_log_dir() -> String {
-        std::env::var("BEARDOG_LOG_DIR").unwrap_or_else(|_| "/var/log/beardog".to_string())
+        std::env::var(env_keys::ENV_LOG_DIR).unwrap_or_else(|_| "/var/log/beardog".to_string())
     }
 
     /// Resolve the cache directory from XDG / env / FHS fallback.
     #[must_use]
     pub fn resolve_cache_dir() -> String {
-        std::env::var("BEARDOG_CACHE_DIR")
+        std::env::var(env_keys::ENV_CACHE_DIR)
             .ok()
             .or_else(|| {
-                std::env::var("XDG_CACHE_HOME")
+                std::env::var(env_keys::ENV_XDG_CACHE_HOME)
                     .ok()
                     .map(|xdg| format!("{xdg}/beardog"))
             })
@@ -155,7 +157,7 @@ pub mod defaults {
     /// Resolve the temp directory from env / XDG runtime / system fallback.
     #[must_use]
     pub fn resolve_temp_dir() -> String {
-        std::env::var("BEARDOG_TEMP_DIR").unwrap_or_else(|_| {
+        std::env::var(env_keys::ENV_TEMP_DIR).unwrap_or_else(|_| {
             let base = std::env::temp_dir();
             format!("{}/beardog", base.display())
         })
@@ -164,7 +166,7 @@ pub mod defaults {
     /// Resolve the IPC socket path from env / XDG runtime / temp fallback.
     #[must_use]
     pub fn resolve_socket_path() -> String {
-        std::env::var("BEARDOG_SOCKET").unwrap_or_else(|_| {
+        std::env::var(env_keys::ENV_SOCKET).unwrap_or_else(|_| {
             let base = std::env::temp_dir();
             format!("{}/beardog.sock", base.display())
         })
@@ -173,7 +175,7 @@ pub mod defaults {
     /// Resolve the IPC port file path from env / temp fallback.
     #[must_use]
     pub fn resolve_ipc_port_file() -> String {
-        std::env::var("BEARDOG_IPC_PORT_FILE").unwrap_or_else(|_| {
+        std::env::var(env_keys::ENV_IPC_PORT_FILE).unwrap_or_else(|_| {
             let base = std::env::temp_dir();
             format!("{}/beardog-ipc-port", base.display())
         })
@@ -182,10 +184,10 @@ pub mod defaults {
     /// Resolve the software key storage directory from env / XDG / temp fallback.
     #[must_use]
     pub fn resolve_key_storage_dir() -> String {
-        std::env::var("BEARDOG_KEY_STORAGE_DIR")
+        std::env::var(env_keys::ENV_KEY_STORAGE_DIR)
             .ok()
             .or_else(|| {
-                std::env::var("XDG_DATA_HOME")
+                std::env::var(env_keys::ENV_XDG_DATA_HOME)
                     .ok()
                     .map(|xdg| format!("{xdg}/beardog/keys"))
             })
@@ -605,9 +607,9 @@ impl Default for ConstantRegistry {
         Self {
             version_info: VersionInfo {
                 beardog_version: versions::BEARDOG_VERSION.to_string(),
-                build_timestamp: std::env::var("BUILD_TIMESTAMP")
+                build_timestamp: std::env::var(env_keys::ENV_BUILD_TIMESTAMP)
                     .unwrap_or_else(|_| "unknown".to_string()),
-                git_commit: std::env::var("GIT_COMMIT").ok(),
+                git_commit: std::env::var(env_keys::ENV_GIT_COMMIT).ok(),
             },
             performance_tuning: PerformanceTuning {
                 worker_threads: defaults::DEFAULT_THREAD_POOL_SIZE,

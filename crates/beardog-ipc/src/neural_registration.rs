@@ -41,6 +41,7 @@
 //! breaking consumers.
 
 use anyhow::{Context, Result};
+use beardog_config::env_keys;
 use beardog_types::constants::domains::network::ipc_discovery::{
     BEARDOG_CAPABILITY_DOMAIN, resolve_biomeos_ipc_subdir_from_optional,
 };
@@ -398,9 +399,11 @@ pub fn discover_neural_api_socket_with(
     discover_neural_api_socket_from_inputs(&NeuralApiDiscoveryInputs {
         neural_api_socket,
         neurals_socket,
-        biomeos_socket_dir: std::env::var("BIOMEOS_SOCKET_DIR").ok(),
-        xdg_runtime_dir: std::env::var("XDG_RUNTIME_DIR").ok(),
-        uid: std::env::var("UID").ok().and_then(|s| s.parse().ok()),
+        biomeos_socket_dir: std::env::var(env_keys::ENV_BIOMEOS_SOCKET_DIR).ok(),
+        xdg_runtime_dir: std::env::var(env_keys::ENV_XDG_RUNTIME_DIR).ok(),
+        uid: std::env::var(env_keys::ENV_UID)
+            .ok()
+            .and_then(|s| s.parse().ok()),
     })
 }
 
@@ -472,8 +475,8 @@ pub fn discover_neural_api_socket_from_inputs(inputs: &NeuralApiDiscoveryInputs)
 
     // Tier 4: /run/user/{uid}/<ecosystem-namespace>/
     let uid = inputs.uid.unwrap_or_else(|| {
-        std::env::var("UID")
-            .or_else(|_| std::env::var("EUID"))
+        std::env::var(env_keys::ENV_UID)
+            .or_else(|_| std::env::var(env_keys::ENV_EUID))
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(1000)
@@ -490,7 +493,7 @@ pub fn discover_neural_api_socket_from_inputs(inputs: &NeuralApiDiscoveryInputs)
         tmp.join(&ecosystem_ns).join(&socket_name),
         tmp.join(&socket_name),
     ];
-    if let Ok(extra) = std::env::var("BEARDOG_NEURAL_API_LEGACY_SOCKET")
+    if let Ok(extra) = std::env::var(env_keys::ENV_NEURAL_API_LEGACY_SOCKET)
         && !extra.is_empty()
     {
         fallback_paths.push(std::path::PathBuf::from(extra));

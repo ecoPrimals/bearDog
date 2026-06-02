@@ -2,6 +2,8 @@
 
 //! Environment-driven configuration for [`super::EcosystemListener`].
 
+use beardog_config::env_keys;
+
 /// Injected configuration for [`super::EcosystemListener`] (poll intervals and HTTP discovery targets).
 #[derive(Debug, Clone)]
 #[expect(
@@ -47,41 +49,44 @@ impl EcosystemListenerEnvInputs {
     pub fn from_env() -> Self {
         use beardog_types::canonical::config::network::NetworkConfig;
         let network_config = NetworkConfig::default();
-        let discovery_base_port = std::env::var("BEARDOG_DISCOVERY_PORT")
+        let discovery_base_port = std::env::var(env_keys::ENV_DISCOVERY_PORT)
             .ok()
             .and_then(|p| p.parse().ok())
             .unwrap_or(network_config.service_ports.api_port);
         Self {
-            mdns_poll_interval_secs: std::env::var("BEARDOG_MDNS_POLL_INTERVAL_SECS")
+            mdns_poll_interval_secs: std::env::var(env_keys::ENV_MDNS_POLL_INTERVAL_SECS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(5),
             http_discovery_poll_interval_secs: std::env::var(
-                "BEARDOG_HTTP_DISCOVERY_POLL_INTERVAL_SECS",
+                env_keys::ENV_HTTP_DISCOVERY_POLL_INTERVAL_SECS,
             )
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(10),
-            env_check_interval_secs: std::env::var("BEARDOG_ENV_CHECK_INTERVAL_SECS")
+            env_check_interval_secs: std::env::var(env_keys::ENV_ENV_CHECK_INTERVAL_SECS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(15),
-            mesh_discovery_interval_secs: std::env::var("BEARDOG_MESH_DISCOVERY_INTERVAL_SECS")
+            mesh_discovery_interval_secs: std::env::var(env_keys::ENV_MESH_DISCOVERY_INTERVAL_SECS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(20),
-            mdns_discovery_enabled: std::env::var("BEARDOG_MDNS_DISCOVERY")
+            mdns_discovery_enabled: std::env::var(env_keys::ENV_MDNS_DISCOVERY)
                 .unwrap_or_else(|_| "false".to_string())
                 == "true",
             discovery_base_port,
-            beardog_discovery_endpoint: std::env::var("BEARDOG_DISCOVERY_ENDPOINT").ok(),
-            ecosystem_discovery_endpoint: std::env::var("ECOSYSTEM_DISCOVERY_ENDPOINT").ok(),
-            discovery_host: std::env::var("DISCOVERY_HOST").ok(),
-            local_discovery_endpoint: std::env::var("LOCAL_DISCOVERY_ENDPOINT").ok(),
-            http_discovery_timeout_secs: std::env::var("BEARDOG_ECOSYSTEM_LISTENER_INTERVAL_SECS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(5),
+            beardog_discovery_endpoint: std::env::var(env_keys::ENV_DISCOVERY_ENDPOINT).ok(),
+            ecosystem_discovery_endpoint: std::env::var(env_keys::ENV_ECOSYSTEM_DISCOVERY_ENDPOINT)
+                .ok(),
+            discovery_host: std::env::var(env_keys::ENV_DISCOVERY_HOST_UNPREFIXED).ok(),
+            local_discovery_endpoint: std::env::var(env_keys::ENV_LOCAL_DISCOVERY_ENDPOINT).ok(),
+            http_discovery_timeout_secs: std::env::var(
+                env_keys::ENV_ECOSYSTEM_LISTENER_INTERVAL_SECS,
+            )
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(5),
         }
     }
 

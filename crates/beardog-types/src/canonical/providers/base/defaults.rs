@@ -8,6 +8,7 @@ use crate::canonical::traits::{CacheStrategy, TimeoutPolicy};
 use crate::constants::time;
 
 use super::configuration::{
+use beardog_config::env_keys;
     AbacConfiguration, AuthenticationConfiguration, AuthenticationMethod,
     AuthorizationConfiguration, AuthorizationMethod, EncryptionAlgorithm,
     EncryptionConfiguration, EnvironmentSettings, KeyDerivationAlgorithm,
@@ -87,7 +88,7 @@ impl Default for AuthenticationConfiguration {
         Self {
             method: AuthenticationMethod::ApiKey,
             parameters: HashMap::new(),
-            session_timeout: std::env::var("BEARDOG_PROVIDER_SESSION_TIMEOUT_SECS")
+            session_timeout: std::env::var(env_keys::ENV_PROVIDER_SESSION_TIMEOUT_SECS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(time::SECONDS_PER_HOUR), // 1 hour
@@ -141,7 +142,7 @@ impl Default for KeyManagementConfiguration {
     fn default() -> Self {
         Self {
             provider: KeyProvider::Local,
-            rotation_interval: std::env::var("BEARDOG_PROVIDER_KEY_ROTATION_INTERVAL_SECS")
+            rotation_interval: std::env::var(env_keys::ENV_PROVIDER_KEY_ROTATION_INTERVAL_SECS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(time::SECONDS_PER_DAY), // 24 hours
@@ -154,11 +155,11 @@ impl Default for KeyDerivationConfiguration {
     fn default() -> Self {
         Self {
             algorithm: KeyDerivationAlgorithm::Pbkdf2,
-            iterations: std::env::var("BEARDOG_KEY_DERIVATION_ITERATIONS")
+            iterations: std::env::var(env_keys::ENV_KEY_DERIVATION_ITERATIONS)
                 .ok()
                 .and_then(|i| i.parse().ok())
                 .unwrap_or(100000), // PBKDF2 recommended iterations
-            salt_length: std::env::var("BEARDOG_KEY_DERIVATION_SALT_LENGTH")
+            salt_length: std::env::var(env_keys::ENV_KEY_DERIVATION_SALT_LENGTH)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(32),
@@ -180,16 +181,16 @@ impl Default for PerformanceConfiguration {
 impl Default for ConnectionPoolConfiguration {
     fn default() -> Self {
         Self {
-            min_size: std::env::var("BEARDOG_CONNECTION_POOL_MIN_SIZE")
+            min_size: std::env::var(env_keys::ENV_CONNECTION_POOL_MIN_SIZE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1),
             max_size: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u32,
-            connection_timeout: std::env::var("BEARDOG_POOL_CONNECTION_TIMEOUT")
+            connection_timeout: std::env::var(env_keys::ENV_POOL_CONNECTION_TIMEOUT)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(30), // 30 seconds default
-            idle_timeout: std::env::var("BEARDOG_POOL_IDLE_TIMEOUT")
+            idle_timeout: std::env::var(env_keys::ENV_POOL_IDLE_TIMEOUT)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(300), // 5 minutes default
@@ -202,7 +203,7 @@ impl Default for CachingConfiguration {
         Self {
             enabled: true,
             max_size: crate::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE as u64,
-            ttl: std::env::var("BEARDOG_CACHE_TTL_SECS")
+            ttl: std::env::var(env_keys::ENV_CACHE_TTL_SECS)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(time::SECONDS_PER_HOUR), // 1 hour default
@@ -267,16 +268,16 @@ impl CacheStrategy for CachingConfiguration {
 impl Default for TimeoutConfiguration {
     fn default() -> Self {
         Self {
-            request_timeout: std::env::var("BEARDOG_REQUEST_TIMEOUT_SECS")
+            request_timeout: std::env::var(env_keys::ENV_REQUEST_TIMEOUT_SECS)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(30), // 30 seconds default
             connection_timeout: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE,
-            read_timeout: std::env::var("BEARDOG_READ_TIMEOUT_SECS")
+            read_timeout: std::env::var(env_keys::ENV_READ_TIMEOUT_SECS)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(30), // 30 seconds default
-            write_timeout: std::env::var("BEARDOG_WRITE_TIMEOUT_SECS")
+            write_timeout: std::env::var(env_keys::ENV_WRITE_TIMEOUT_SECS)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(30), // 30 seconds default
@@ -355,12 +356,12 @@ impl TimeoutPolicy for TimeoutConfiguration {
 impl Default for RetryConfiguration {
     fn default() -> Self {
         Self {
-            max_retries: std::env::var("BEARDOG_MAX_RETRIES")
+            max_retries: std::env::var(env_keys::ENV_MAX_RETRIES)
                 .ok()
                 .and_then(|r| r.parse().ok())
                 .unwrap_or(3), // 3 retries default
             base_delay_ms: crate::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE as u64,
-            max_delay_ms: std::env::var("BEARDOG_MAX_RETRY_DELAY_MS")
+            max_delay_ms: std::env::var(env_keys::ENV_MAX_RETRY_DELAY_MS)
                 .ok()
                 .and_then(|d| d.parse().ok())
                 .unwrap_or(10000), // 10 seconds default

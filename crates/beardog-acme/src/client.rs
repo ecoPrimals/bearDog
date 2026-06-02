@@ -485,11 +485,11 @@ impl AcmeClient {
     fn needs_renewal(&self, pem: &str) -> bool {
         use x509_parser::prelude::{FromDer, X509Certificate};
 
-        let mut reader = std::io::BufReader::new(pem.as_bytes());
-        let certs: Vec<rustls::pki_types::CertificateDer<'static>> =
-            rustls_pemfile::certs(&mut reader)
-                .filter_map(Result::ok)
-                .collect();
+        use rustls_pki_types::{CertificateDer, pem::PemObject};
+
+        let certs: Vec<CertificateDer<'static>> = CertificateDer::pem_slice_iter(pem.as_bytes())
+            .filter_map(Result::ok)
+            .collect();
 
         let Some(leaf_der) = certs.first() else {
             warn!("no certificate in PEM — triggering renewal");
