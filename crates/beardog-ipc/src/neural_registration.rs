@@ -195,16 +195,20 @@ pub async fn send_primal_announce(
         "primal": primal_name,
         "version": env!("CARGO_PKG_VERSION"),
         "socket": own_socket,
-        "capabilities": ["crypto", "security"],
+        "capabilities": ["crypto", "security", "auth", "btsp"],
         "methods": methods,
         "signal_tiers": ["tower"],
         "cost_hints": {
             "crypto": 5.0,
-            "security": 10.0
+            "security": 10.0,
+            "auth": 1.0,
+            "btsp": 3.0
         },
         "latency_estimates": {
             "crypto": 2,
-            "security": 15
+            "security": 15,
+            "auth": 1,
+            "btsp": 5
         }
     });
 
@@ -303,6 +307,18 @@ pub fn beardog_announce_method_names() -> &'static [&'static str] {
         "security.verify_consent",
         "security.issue_consent_token",
         "security.generate_jwt_secret",
+        // Auth (MethodGate pre-dispatch)
+        "auth.check",
+        "auth.mode",
+        "auth.peer_info",
+        "auth.issue_ionic",
+        "auth.issue_session",
+        "auth.verify_ionic",
+        "auth.public_key",
+        // BTSP
+        "btsp.negotiate",
+        "btsp.capabilities",
+        "btsp.server.create_session",
     ]
 }
 
