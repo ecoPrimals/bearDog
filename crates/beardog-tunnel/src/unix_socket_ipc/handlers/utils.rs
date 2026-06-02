@@ -9,6 +9,8 @@
 //! Identity values can be injected via [`IdentityHints`] for tests; production code uses
 //! [`IdentityHints::from_env`] or the `_from_env` convenience wrappers.
 
+use beardog_config::env_keys;
+
 /// Identity strings for self-knowledge helpers (no I/O in [`Default`]).
 #[derive(Debug, Clone, Default)]
 pub struct IdentityHints {
@@ -28,15 +30,15 @@ impl IdentityHints {
     /// Load from [`beardog_errors::process_env`].
     pub fn from_env() -> Self {
         Self {
-            primal_name: beardog_errors::process_env::var("PRIMAL_NAME").ok(),
-            family_id: beardog_errors::process_env::var("BEARDOG_FAMILY_ID")
+            primal_name: beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME).ok(),
+            family_id: beardog_errors::process_env::var(env_keys::ENV_FAMILY_ID_PREFIXED)
                 .ok()
-                .or_else(|| beardog_errors::process_env::var("FAMILY_ID").ok()),
-            biomeos_family: beardog_errors::process_env::var("BIOMEOS_FAMILY").ok(),
-            node_id: beardog_errors::process_env::var("BEARDOG_NODE_ID")
+                .or_else(|| beardog_errors::process_env::var(env_keys::ENV_FAMILY_ID).ok()),
+            biomeos_family: beardog_errors::process_env::var(env_keys::ENV_BIOMEOS_FAMILY).ok(),
+            node_id: beardog_errors::process_env::var(env_keys::ENV_NODE_ID_PREFIXED)
                 .ok()
-                .or_else(|| beardog_errors::process_env::var("NODE_ID").ok()),
-            hostname: beardog_errors::process_env::var("HOSTNAME").ok(),
+                .or_else(|| beardog_errors::process_env::var(env_keys::ENV_NODE_ID).ok()),
+            hostname: beardog_errors::process_env::var(env_keys::ENV_HOSTNAME).ok(),
         }
     }
 }

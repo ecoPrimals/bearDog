@@ -306,3 +306,68 @@ pub const ENV_MAX_MESSAGE_SIZE_BYTES: &str = "BEARDOG_MAX_MESSAGE_SIZE_BYTES";
 pub const ENV_BUFFER_POOL_SIZE: &str = "BEARDOG_BUFFER_POOL_SIZE";
 /// Maximum cache entries.
 pub const ENV_CACHE_MAX_ENTRIES: &str = "BEARDOG_CACHE_MAX_ENTRIES";
+
+// ── Identity ─────────────────────────────────────────────────────────
+
+/// Ecosystem family identifier (unprefixed).
+pub const ENV_FAMILY_ID: &str = "FAMILY_ID";
+/// BearDog-prefixed family identifier.
+pub const ENV_FAMILY_ID_PREFIXED: &str = "BEARDOG_FAMILY_ID";
+/// Ecosystem family seed (unprefixed).
+pub const ENV_FAMILY_SEED: &str = "FAMILY_SEED";
+/// BearDog-prefixed family seed.
+pub const ENV_FAMILY_SEED_PREFIXED: &str = "BEARDOG_FAMILY_SEED";
+/// Ecosystem node identifier (unprefixed).
+pub const ENV_NODE_ID: &str = "NODE_ID";
+/// BearDog-prefixed node identifier.
+pub const ENV_NODE_ID_PREFIXED: &str = "BEARDOG_NODE_ID";
+/// Primal name for IPC path resolution (unprefixed).
+pub const ENV_PRIMAL_NAME: &str = "PRIMAL_NAME";
+/// BearDog-prefixed primal name override.
+pub const ENV_PRIMAL_NAME_PREFIXED: &str = "BEARDOG_PRIMAL_NAME";
+/// Primal type / role (unprefixed).
+pub const ENV_PRIMAL_TYPE: &str = "PRIMAL_TYPE";
+/// BearDog-prefixed primal type override.
+pub const ENV_PRIMAL_TYPE_PREFIXED: &str = "BEARDOG_PRIMAL_TYPE";
+/// Orchestrator identifier override.
+pub const ENV_ORCHESTRATOR_ID: &str = "BEARDOG_ORCHESTRATOR_ID";
+/// System hostname.
+pub const ENV_HOSTNAME: &str = "HOSTNAME";
+/// Real user id (Unix).
+pub const ENV_UID: &str = "UID";
+/// Effective user id (Unix).
+pub const ENV_EUID: &str = "EUID";
+
+// ── Socket / IPC ─────────────────────────────────────────────────────
+
+/// Primal-specific Unix socket path (tier 1).
+pub const ENV_SOCKET: &str = "BEARDOG_SOCKET";
+/// Override root for tier-5 temp socket fallback.
+pub const ENV_SOCKET_TMP_DIR: &str = "BEARDOG_SOCKET_TMP_DIR";
+/// Comma-separated IPC capability domain stems for symlink creation.
+pub const ENV_IPC_CAPABILITY_STEMS: &str = "BEARDOG_IPC_CAPABILITY_STEMS";
+/// Windows named pipe path override.
+pub const ENV_PIPE: &str = "BEARDOG_PIPE";
+/// Neural registration instance override.
+pub const ENV_NEURAL_REGISTRATION_INSTANCE: &str = "BEARDOG_NEURAL_REGISTRATION_INSTANCE";
+/// Neural API socket path.
+pub const ENV_NEURAL_API_SOCKET: &str = "NEURAL_API_SOCKET";
+/// Legacy alias for [`ENV_NEURALS_SOCKET`] (typo-tolerant `NEURALS_SOCKET` env var).
+pub const ENV_NEURAL_API_SOCKET_LEGACY: &str = "NEURALS_SOCKET";
+/// Neurals socket path.
+pub const ENV_NEURALS_SOCKET: &str = "NEURALS_SOCKET";
+/// Override the Neural API socket filename (default: `neural-api.sock`).
+pub const ENV_NEURAL_API_SOCKET_NAME: &str = "BEARDOG_NEURAL_API_SOCKET_NAME";
+
+// ── Ecosystem (biomeOS) ──────────────────────────────────────────────
+
+/// Disable BTSP production security (`1` or `true`).
+pub const ENV_BIOMEOS_INSECURE: &str = "BIOMEOS_INSECURE";
+/// biomeOS family label.
+pub const ENV_BIOMEOS_FAMILY: &str = "BIOMEOS_FAMILY";
+/// Generic orchestrator socket path (tier 2).
+pub const ENV_BIOMEOS_SOCKET_PATH: &str = "BIOMEOS_SOCKET_PATH";
+/// Generic orchestrator socket directory (tier 2).
+pub const ENV_BIOMEOS_SOCKET_DIR: &str = "BIOMEOS_SOCKET_DIR";
+/// Windows biomeOS named pipe directory.
+pub const ENV_BIOMEOS_PIPE_DIR: &str = "BIOMEOS_PIPE_DIR";

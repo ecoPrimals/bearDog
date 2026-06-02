@@ -420,37 +420,6 @@ impl QuantumDiscoveryEngine {
         );
         Ok(out)
     }
-
-    /// Quantum entanglement graph over capability relationships — not implemented.
-    ///
-    /// # Errors
-    ///
-    /// Always returns a not-implemented error.
-    pub fn create_quantum_entanglement(
-        &mut self,
-        _capability_a: CapabilityType,
-        _capability_b: CapabilityType,
-        _entanglement_type: EntanglementType,
-    ) -> Result<QuantumEntanglement> {
-        Err(BearDogError::not_implemented(
-            "Quantum entanglement graph (historical correlations / dependency analysis)",
-        ))
-    }
-
-    /// Quantum annealing over candidate capabilities — not implemented.
-    ///
-    /// # Errors
-    ///
-    /// Always returns a not-implemented error.
-    pub fn quantum_anneal_selection(
-        &self,
-        _candidates: Vec<UniversalCapability>,
-        _optimization_criteria: Vec<OptimizationCriterion>,
-    ) -> Result<Vec<UniversalCapability>> {
-        Err(BearDogError::not_implemented(
-            "Quantum annealing selection over discovered capabilities",
-        ))
-    }
 }
 
 /// Map a discovered primal endpoint into a canonical [`UniversalCapability`].
@@ -510,26 +479,6 @@ impl Default for QuantumCapabilitySpace {
     fn default() -> Self {
         Self::new()
     }
-}
-
-#[derive(Debug, Clone)]
-pub enum OptimizationCriterion {
-    /// Minimize response latency
-    MinimizeLatency,
-
-    /// Maximize throughput
-    MaximizeThroughput,
-
-    /// Minimize cost
-    MinimizeCost,
-
-    /// Maximize reliability
-    MaximizeReliability,
-
-    MaximizeSecurity,
-
-    /// Custom optimization function
-    Custom(String),
 }
 
 #[cfg(test)]

@@ -22,11 +22,11 @@ fn test_discover_neural_api_socket_from_neurals_env() {
 fn test_discover_neural_api_socket_priority() {
     let mut env_vars = std::collections::HashMap::new();
     env_vars.insert(
-        "NEURAL_API_SOCKET".to_string(),
+        beardog_config::env_keys::ENV_NEURAL_API_SOCKET.to_string(),
         "/tmp/priority.sock".to_string(),
     );
     env_vars.insert(
-        "NEURALS_SOCKET".to_string(),
+        beardog_config::env_keys::ENV_NEURAL_API_SOCKET_LEGACY.to_string(),
         "/tmp/fallback.sock".to_string(),
     );
     let result = discover_neural_api_socket_with_env(&env_vars);

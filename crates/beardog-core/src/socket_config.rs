@@ -41,6 +41,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::self_knowledge::SimpleCapability;
+use beardog_config::env_keys;
 use beardog_types::constants::domains::network::ipc_discovery::BIOMEOS_RUNTIME_SOCKET_SUBDIR;
 use beardog_types::primal_identity::resolve_node_id_from_env_or_ephemeral;
 use tracing::warn;
@@ -116,27 +117,27 @@ impl SocketPathInputs {
     /// Read configuration from the process environment (read-only, thread-safe `std::env::var`).
     #[must_use]
     pub fn from_env() -> Self {
-        let family_id = std::env::var("BEARDOG_FAMILY_ID")
+        let family_id = std::env::var(env_keys::ENV_FAMILY_ID_PREFIXED)
             .ok()
-            .or_else(|| std::env::var("FAMILY_ID").ok());
-        let node_id = std::env::var("BEARDOG_NODE_ID")
+            .or_else(|| std::env::var(env_keys::ENV_FAMILY_ID).ok());
+        let node_id = std::env::var(env_keys::ENV_NODE_ID_PREFIXED)
             .ok()
-            .or_else(|| std::env::var("NODE_ID").ok());
-        let uid = std::env::var("UID")
+            .or_else(|| std::env::var(env_keys::ENV_NODE_ID).ok());
+        let uid = std::env::var(env_keys::ENV_UID)
             .ok()
-            .or_else(|| std::env::var("EUID").ok())
+            .or_else(|| std::env::var(env_keys::ENV_EUID).ok())
             .and_then(|s| s.parse().ok())
             .or_else(resolve_uid_from_proc)
             .unwrap_or(1000);
-        let biomeos_insecure = std::env::var("BIOMEOS_INSECURE")
+        let biomeos_insecure = std::env::var(env_keys::ENV_BIOMEOS_INSECURE)
             .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
             .unwrap_or(false);
 
         Self {
-            beardog_socket: std::env::var("BEARDOG_SOCKET").ok(),
-            biomeos_socket_path: std::env::var("BIOMEOS_SOCKET_PATH").ok(),
-            biomeos_socket_dir: std::env::var("BIOMEOS_SOCKET_DIR").ok(),
-            primal_name: std::env::var("PRIMAL_NAME").ok(),
+            beardog_socket: std::env::var(env_keys::ENV_SOCKET).ok(),
+            biomeos_socket_path: std::env::var(env_keys::ENV_BIOMEOS_SOCKET_PATH).ok(),
+            biomeos_socket_dir: std::env::var(env_keys::ENV_BIOMEOS_SOCKET_DIR).ok(),
+            primal_name: std::env::var(env_keys::ENV_PRIMAL_NAME).ok(),
             family_id,
             node_id,
             uid,
@@ -309,7 +310,7 @@ impl SocketConfig {
         }
 
         // Tier 5: platform temp dir fallback (`BEARDOG_SOCKET_TMP_DIR` overrides root)
-        let tmp_root = std::env::var("BEARDOG_SOCKET_TMP_DIR")
+        let tmp_root = std::env::var(env_keys::ENV_SOCKET_TMP_DIR)
             .map_or_else(|_| std::env::temp_dir(), PathBuf::from);
         let tmp_path = tmp_root
             .join(format!("{primal_name}-{family_id}-{node_id}.sock"))
@@ -602,7 +603,7 @@ fn sort_ipc_capability_stems(stems: &mut [String]) {
 /// Resolve capability domain stems for symlink creation: env override first, else derived from `caps`.
 #[must_use]
 pub fn ipc_capability_domain_stems_resolved(caps: &[SimpleCapability]) -> Vec<String> {
-    if let Ok(raw) = std::env::var("BEARDOG_IPC_CAPABILITY_STEMS") {
+    if let Ok(raw) = std::env::var(env_keys::ENV_IPC_CAPABILITY_STEMS) {
         let mut stems: Vec<String> = raw
             .split(',')
             .map(str::trim)

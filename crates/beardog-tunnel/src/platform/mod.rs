@@ -53,6 +53,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
+use beardog_config::env_keys;
 use beardog_types::constants::domains::config::system::DEFAULT_SYSTEM_NAME;
 use beardog_types::constants::domains::network::ipc_discovery;
 
@@ -114,7 +115,7 @@ impl SocketEndpoint {
 #[cfg(target_os = "android")]
 pub fn default_socket_endpoint() -> SocketEndpoint {
     default_socket_endpoint_for_primal(
-        beardog_errors::process_env::var("PRIMAL_NAME")
+        beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME)
             .ok()
             .as_deref(),
     )
@@ -125,8 +126,8 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
 pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEndpoint {
     let primal_name = primal_name
         .map(str::to_string)
-        .or_else(|| beardog_errors::process_env::var("PRIMAL_NAME").ok())
-        .or_else(|| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME").ok())
+        .or_else(|| beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME).ok())
+        .or_else(|| beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME_PREFIXED).ok())
         .unwrap_or_else(|| DEFAULT_SYSTEM_NAME.to_string());
     let ns = beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional(None);
     SocketEndpoint::Abstract(format!("@{ns}_{primal_name}"))
@@ -143,8 +144,8 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
 pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEndpoint {
     let primal_name = primal_name
         .map(str::to_string)
-        .or_else(|| beardog_errors::process_env::var("PRIMAL_NAME").ok())
-        .or_else(|| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME").ok())
+        .or_else(|| beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME).ok())
+        .or_else(|| beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME_PREFIXED).ok())
         .unwrap_or_else(|| DEFAULT_SYSTEM_NAME.to_string());
     SocketEndpoint::Filesystem(
         ipc_discovery::biomeos_ipc_socket_dir_from_env().join(format!("{primal_name}.sock")),
@@ -155,7 +156,7 @@ pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEn
 #[cfg(all(unix, not(target_os = "android")))]
 pub fn default_socket_endpoint_from_env() -> SocketEndpoint {
     default_socket_endpoint_for_primal(
-        beardog_errors::process_env::var("PRIMAL_NAME")
+        beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME)
             .ok()
             .as_deref(),
     )
@@ -163,15 +164,15 @@ pub fn default_socket_endpoint_from_env() -> SocketEndpoint {
 
 #[cfg(windows)]
 pub fn default_socket_endpoint() -> SocketEndpoint {
-    let primal_name = beardog_errors::process_env::var("PRIMAL_NAME")
-        .or_else(|_| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME"))
+    let primal_name = beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME)
+        .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME_PREFIXED))
         .unwrap_or_else(|_| DEFAULT_SYSTEM_NAME.to_string());
     windows::create_endpoint_with(
         &primal_name,
-        beardog_errors::process_env::var("BEARDOG_PIPE")
+        beardog_errors::process_env::var(env_keys::ENV_PIPE)
             .ok()
             .as_deref(),
-        beardog_errors::process_env::var("BIOMEOS_PIPE_DIR")
+        beardog_errors::process_env::var(env_keys::ENV_BIOMEOS_PIPE_DIR)
             .ok()
             .as_deref(),
     )
@@ -193,8 +194,8 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
 pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEndpoint {
     let primal_name = primal_name
         .map(str::to_string)
-        .or_else(|| beardog_errors::process_env::var("PRIMAL_NAME").ok())
-        .or_else(|| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME").ok())
+        .or_else(|| beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME).ok())
+        .or_else(|| beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME_PREFIXED).ok())
         .unwrap_or_else(|| DEFAULT_SYSTEM_NAME.to_string());
     SocketEndpoint::InProcess(primal_name)
 }
@@ -202,7 +203,7 @@ pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEn
 #[cfg(target_family = "wasm")]
 pub fn default_socket_endpoint_from_env() -> SocketEndpoint {
     default_socket_endpoint_for_primal(
-        beardog_errors::process_env::var("PRIMAL_NAME")
+        beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME)
             .ok()
             .as_deref(),
     )

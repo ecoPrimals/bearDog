@@ -8,6 +8,7 @@ use crate::btsp_provider::BeardogBtspProvider;
 use crate::tunnel::hsm::HsmManager;
 use crate::tunnel::hsm::manager::HsmAutoInitConfig;
 use crate::unix_socket_ipc::UnixSocketIpcServer;
+use beardog_config::env_keys;
 use beardog_core::self_knowledge::{PrimalSelfKnowledge, ipc_registry_capability_strings};
 use beardog_core::socket_config::{IpcCapabilitySymlinksConfig, SocketConfig};
 use beardog_errors::BearDogError;
@@ -33,11 +34,14 @@ impl NeuralRegistrationParams {
     pub fn from_env() -> Self {
         Self {
             instance_override: beardog_errors::process_env::var(
-                "BEARDOG_NEURAL_REGISTRATION_INSTANCE",
+                env_keys::ENV_NEURAL_REGISTRATION_INSTANCE,
             )
             .ok(),
-            primal_type: beardog_errors::process_env::var("PRIMAL_TYPE").ok(),
-            beardog_primal_type: beardog_errors::process_env::var("BEARDOG_PRIMAL_TYPE").ok(),
+            primal_type: beardog_errors::process_env::var(env_keys::ENV_PRIMAL_TYPE).ok(),
+            beardog_primal_type: beardog_errors::process_env::var(
+                env_keys::ENV_PRIMAL_TYPE_PREFIXED,
+            )
+            .ok(),
         }
     }
 
@@ -79,13 +83,13 @@ pub async fn run(
 ) -> anyhow::Result<()> {
     // Override environment with CLI args if provided
     if let Some(socket_path) = &socket {
-        beardog_errors::process_env::set_var("BEARDOG_SOCKET", socket_path);
+        beardog_errors::process_env::set_var(env_keys::ENV_SOCKET, socket_path);
     }
     if let Some(fam_id) = &family_id {
-        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", fam_id);
+        beardog_errors::process_env::set_var(env_keys::ENV_FAMILY_ID_PREFIXED, fam_id);
     }
     if let Some(orch_id) = &orchestrator_id {
-        beardog_errors::process_env::set_var("BEARDOG_ORCHESTRATOR_ID", orch_id);
+        beardog_errors::process_env::set_var(env_keys::ENV_ORCHESTRATOR_ID, orch_id);
     }
 
     // Step 0: Discover Self-Knowledge (Zero Hardcoded Identity)
@@ -121,7 +125,7 @@ pub async fn run(
     info!("✅ Genetic Engine initialized\n");
 
     // Step 3: Load Family Seed (if provided)
-    if let Ok(family_seed) = beardog_errors::process_env::var("BEARDOG_FAMILY_SEED") {
+    if let Ok(family_seed) = beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED_PREFIXED) {
         info!("👨‍👩‍👧‍👦 Family lineage seed detected");
         let family_id = family_id_preview_from_seed(&family_seed);
         info!("   Family ID: {}", family_id);
@@ -597,13 +601,13 @@ mod neural_registration_tests {
 
     #[test]
     fn neural_registration_params_from_env_reads_overrides() {
-        beardog_errors::process_env::set_var("BEARDOG_NEURAL_REGISTRATION_INSTANCE", "inst-x");
-        beardog_errors::process_env::set_var("PRIMAL_TYPE", "compute");
-        beardog_errors::process_env::set_var("BEARDOG_PRIMAL_TYPE", "ignored");
+        beardog_errors::process_env::set_var(env_keys::ENV_NEURAL_REGISTRATION_INSTANCE, "inst-x");
+        beardog_errors::process_env::set_var(env_keys::ENV_PRIMAL_TYPE, "compute");
+        beardog_errors::process_env::set_var(env_keys::ENV_PRIMAL_TYPE_PREFIXED, "ignored");
         let p = NeuralRegistrationParams::from_env();
-        beardog_errors::process_env::remove_var("BEARDOG_NEURAL_REGISTRATION_INSTANCE");
-        beardog_errors::process_env::remove_var("PRIMAL_TYPE");
-        beardog_errors::process_env::remove_var("BEARDOG_PRIMAL_TYPE");
+        beardog_errors::process_env::remove_var(env_keys::ENV_NEURAL_REGISTRATION_INSTANCE);
+        beardog_errors::process_env::remove_var(env_keys::ENV_PRIMAL_TYPE);
+        beardog_errors::process_env::remove_var(env_keys::ENV_PRIMAL_TYPE_PREFIXED);
         assert_eq!(p.instance_override, Some("inst-x".to_string()));
         assert_eq!(p.primal_type, Some("compute".to_string()));
         assert_eq!(p.beardog_primal_type, Some("ignored".to_string()));
@@ -675,10 +679,10 @@ mod tests {
     #[tokio::test]
     async fn register_with_discovery_service_runs_without_neural_when_env_empty() {
         use beardog_core::socket_config::{SocketConfig, SocketPathInputs};
-        let prev_neural = beardog_errors::process_env::var("NEURAL_API_SOCKET").ok();
-        let prev_neurals = beardog_errors::process_env::var("NEURALS_SOCKET").ok();
-        beardog_errors::process_env::set_var("NEURAL_API_SOCKET", "");
-        beardog_errors::process_env::remove_var("NEURALS_SOCKET");
+        let prev_neural = beardog_errors::process_env::var(env_keys::ENV_NEURAL_API_SOCKET).ok();
+        let prev_neurals = beardog_errors::process_env::var(env_keys::ENV_NEURALS_SOCKET).ok();
+        beardog_errors::process_env::set_var(env_keys::ENV_NEURAL_API_SOCKET, "");
+        beardog_errors::process_env::remove_var(env_keys::ENV_NEURALS_SOCKET);
 
         let socket_config = SocketConfig::from_inputs(&SocketPathInputs {
             beardog_socket: Some("/tmp/beardog-discovery-mock.sock".to_string()),
@@ -690,12 +694,12 @@ mod tests {
             super::register_with_discovery_service(&socket_config, &neural_registration).await;
 
         match prev_neural {
-            Some(v) => beardog_errors::process_env::set_var("NEURAL_API_SOCKET", v),
-            None => beardog_errors::process_env::remove_var("NEURAL_API_SOCKET"),
+            Some(v) => beardog_errors::process_env::set_var(env_keys::ENV_NEURAL_API_SOCKET, v),
+            None => beardog_errors::process_env::remove_var(env_keys::ENV_NEURAL_API_SOCKET),
         }
         match prev_neurals {
-            Some(v) => beardog_errors::process_env::set_var("NEURALS_SOCKET", v),
-            None => beardog_errors::process_env::remove_var("NEURALS_SOCKET"),
+            Some(v) => beardog_errors::process_env::set_var(env_keys::ENV_NEURALS_SOCKET, v),
+            None => beardog_errors::process_env::remove_var(env_keys::ENV_NEURALS_SOCKET),
         }
 
         assert!(
@@ -707,8 +711,8 @@ mod tests {
     #[tokio::test]
     async fn register_with_discovery_service_uses_registration_instance_from_params() {
         use beardog_core::socket_config::{SocketConfig, SocketPathInputs};
-        let prev_neural = beardog_errors::process_env::var("NEURAL_API_SOCKET").ok();
-        beardog_errors::process_env::set_var("NEURAL_API_SOCKET", "");
+        let prev_neural = beardog_errors::process_env::var(env_keys::ENV_NEURAL_API_SOCKET).ok();
+        beardog_errors::process_env::set_var(env_keys::ENV_NEURAL_API_SOCKET, "");
 
         let socket_config = SocketConfig::from_inputs(&SocketPathInputs {
             beardog_socket: Some("/tmp/beardog-reg-id.sock".to_string()),
@@ -723,8 +727,8 @@ mod tests {
         let _ = super::register_with_discovery_service(&socket_config, &neural_registration).await;
 
         match prev_neural {
-            Some(v) => beardog_errors::process_env::set_var("NEURAL_API_SOCKET", v),
-            None => beardog_errors::process_env::remove_var("NEURAL_API_SOCKET"),
+            Some(v) => beardog_errors::process_env::set_var(env_keys::ENV_NEURAL_API_SOCKET, v),
+            None => beardog_errors::process_env::remove_var(env_keys::ENV_NEURAL_API_SOCKET),
         }
     }
 

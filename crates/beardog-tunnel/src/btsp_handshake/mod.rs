@@ -19,6 +19,7 @@ pub use session::{BtspCipher, BtspSession, Phase3Session};
 pub use session_store::BtspSessionStore;
 pub use types::{ChallengeResponse, ClientHello, HandshakeComplete, HandshakeError, ServerHello};
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use zeroize::Zeroize;
 
@@ -74,10 +75,10 @@ impl Drop for FamilySeed {
 ///
 /// Returns an error when both `FAMILY_ID` and `BIOMEOS_INSECURE=1` are set.
 pub fn resolve_security_mode() -> Result<BtspSecurityMode, BearDogError> {
-    let family_id = beardog_errors::process_env::var("FAMILY_ID")
+    let family_id = beardog_errors::process_env::var(env_keys::ENV_FAMILY_ID)
         .ok()
-        .or_else(|| beardog_errors::process_env::var("BEARDOG_FAMILY_ID").ok());
-    let insecure = beardog_errors::process_env::var("BIOMEOS_INSECURE")
+        .or_else(|| beardog_errors::process_env::var(env_keys::ENV_FAMILY_ID_PREFIXED).ok());
+    let insecure = beardog_errors::process_env::var(env_keys::ENV_BIOMEOS_INSECURE)
         .ok()
         .is_some_and(|v| v == "1");
 
@@ -109,13 +110,14 @@ pub fn resolve_security_mode() -> Result<BtspSecurityMode, BearDogError> {
 /// 2. `BEARDOG_FAMILY_SEED` env var (raw bytes)
 /// 3. `.family.seed` file in the current directory
 fn load_family_seed() -> Result<Vec<u8>, BearDogError> {
-    if let Ok(seed) = beardog_errors::process_env::var("FAMILY_SEED").map(String::into_bytes)
+    if let Ok(seed) =
+        beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED).map(String::into_bytes)
         && !seed.is_empty()
     {
         return Ok(seed);
     }
     if let Ok(seed) =
-        beardog_errors::process_env::var("BEARDOG_FAMILY_SEED").map(String::into_bytes)
+        beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED_PREFIXED).map(String::into_bytes)
         && !seed.is_empty()
     {
         return Ok(seed);

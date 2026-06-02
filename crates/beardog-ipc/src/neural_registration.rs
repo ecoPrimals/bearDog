@@ -370,9 +370,9 @@ async fn register_capability(neural_socket: &str, capability: serde_json::Value)
 pub struct NeuralApiDiscoveryInputs {
     /// `NEURAL_API_SOCKET` env var (highest priority, explicit override).
     pub neural_api_socket: Option<String>,
-    /// `NEURALS_SOCKET` env var (alias).
+    /// `NEURALS_SOCKET` env var (legacy alias).
     pub neurals_socket: Option<String>,
-    /// `BIOMEOS_SOCKET_DIR` (orchestrator-managed directory; joins `neural-api.sock`).
+    /// `BIOMEOS_SOCKET_DIR` (orchestrator-managed directory; joins configured socket filename).
     pub biomeos_socket_dir: Option<String>,
     /// `XDG_RUNTIME_DIR` for Tier 3 resolution.
     pub xdg_runtime_dir: Option<String>,
@@ -384,10 +384,10 @@ pub struct NeuralApiDiscoveryInputs {
 ///
 /// Resolution order:
 /// 1. `NEURAL_API_SOCKET` / `NEURALS_SOCKET` env var (explicit override)
-/// 2. `BIOMEOS_SOCKET_DIR/neural-api.sock` (orchestrator-managed directory)
-/// 3. `XDG_RUNTIME_DIR/<ecosystem-namespace>/neural-api.sock` (namespace via `resolve_biomeos_ipc_subdir_from_optional` in `beardog-types`)
-/// 4. `/run/user/{uid}/<ecosystem-namespace>/neural-api.sock`
-/// 5. Platform temp dir: `{temp}/<ecosystem-namespace>/neural-api.sock`, `{temp}/neural-api.sock`, optional `BEARDOG_NEURAL_API_LEGACY_SOCKET`
+/// 2. `BIOMEOS_SOCKET_DIR/<socket-name>` (orchestrator-managed directory; default `neural-api.sock`)
+/// 3. `XDG_RUNTIME_DIR/<ecosystem-namespace>/<socket-name>` (namespace via `resolve_biomeos_ipc_subdir_from_optional` in `beardog-types`)
+/// 4. `/run/user/{uid}/<ecosystem-namespace>/<socket-name>`
+/// 5. Platform temp dir: `{temp}/<ecosystem-namespace>/<socket-name>`, `{temp}/<socket-name>`, optional `BEARDOG_NEURAL_API_LEGACY_SOCKET`
 ///
 /// An empty string in an env field disables auto-registration for that slot (returns `None`).
 #[must_use]
@@ -409,30 +409,46 @@ pub fn discover_neural_api_socket_with(
 pub fn discover_neural_api_socket_from_inputs(inputs: &NeuralApiDiscoveryInputs) -> Option<String> {
     use std::path::Path;
 
+    let socket_name = std::env::var(beardog_config::env_keys::ENV_NEURAL_API_SOCKET_NAME)
+        .unwrap_or_else(|_| "neural-api.sock".to_string());
     let ecosystem_ns = resolve_biomeos_ipc_subdir_from_optional(None);
 
     // Tier 1: explicit env override
     if let Some(ref socket) = inputs.neural_api_socket {
         if socket.is_empty() {
-            debug!("NEURAL_API_SOCKET is empty - auto-registration disabled");
+            debug!(
+                "{} is empty - auto-registration disabled",
+                beardog_config::env_keys::ENV_NEURAL_API_SOCKET
+            );
             return None;
         }
-        info!("🔍 Using NEURAL_API_SOCKET: {} (Tier 1)", socket);
+        info!(
+            "🔍 Using {}: {} (Tier 1)",
+            beardog_config::env_keys::ENV_NEURAL_API_SOCKET,
+            socket
+        );
         return Some(socket.clone());
     }
 
     if let Some(ref socket) = inputs.neurals_socket {
         if socket.is_empty() {
-            debug!("NEURALS_SOCKET is empty - auto-registration disabled");
+            debug!(
+                "{} is empty - auto-registration disabled",
+                beardog_config::env_keys::ENV_NEURAL_API_SOCKET_LEGACY
+            );
             return None;
         }
-        info!("🔍 Using NEURALS_SOCKET: {} (Tier 1)", socket);
+        info!(
+            "🔍 Using {}: {} (Tier 1)",
+            beardog_config::env_keys::ENV_NEURAL_API_SOCKET_LEGACY,
+            socket
+        );
         return Some(socket.clone());
     }
 
     // Tier 2: orchestrator-managed directory
     if let Some(ref dir) = inputs.biomeos_socket_dir {
-        let path = format!("{dir}/neural-api.sock");
+        let path = format!("{dir}/{socket_name}");
         if Path::new(&path).exists() {
             info!(
                 "🔍 Found Neural API via BIOMEOS_SOCKET_DIR (Tier 2): {}",
@@ -444,7 +460,7 @@ pub fn discover_neural_api_socket_from_inputs(inputs: &NeuralApiDiscoveryInputs)
 
     // Tier 3: XDG runtime directory
     if let Some(ref xdg) = inputs.xdg_runtime_dir {
-        let path = format!("{xdg}/{ecosystem_ns}/neural-api.sock");
+        let path = format!("{xdg}/{ecosystem_ns}/{socket_name}");
         if Path::new(&path).exists() {
             info!(
                 "🔍 Found Neural API via XDG/ecosystem namespace (Tier 3): {}",
@@ -462,7 +478,7 @@ pub fn discover_neural_api_socket_from_inputs(inputs: &NeuralApiDiscoveryInputs)
             .and_then(|s| s.parse().ok())
             .unwrap_or(1000)
     });
-    let run_path = format!("/run/user/{uid}/{ecosystem_ns}/neural-api.sock");
+    let run_path = format!("/run/user/{uid}/{ecosystem_ns}/{socket_name}");
     if Path::new(&run_path).exists() {
         info!("🔍 Found Neural API via /run/user (Tier 4): {}", run_path);
         return Some(run_path);
@@ -471,8 +487,8 @@ pub fn discover_neural_api_socket_from_inputs(inputs: &NeuralApiDiscoveryInputs)
     // Tier 5: platform temp dir + optional legacy path (no fixed peer names)
     let tmp = std::env::temp_dir();
     let mut fallback_paths: Vec<std::path::PathBuf> = vec![
-        tmp.join(&ecosystem_ns).join("neural-api.sock"),
-        tmp.join("neural-api.sock"),
+        tmp.join(&ecosystem_ns).join(&socket_name),
+        tmp.join(&socket_name),
     ];
     if let Ok(extra) = std::env::var("BEARDOG_NEURAL_API_LEGACY_SOCKET")
         && !extra.is_empty()
@@ -502,8 +518,9 @@ pub fn discover_neural_api_socket_from_inputs(inputs: &NeuralApiDiscoveryInputs)
 /// An empty env value disables auto-registration (returns `None`).
 pub fn discover_neural_api_socket() -> Option<String> {
     discover_neural_api_socket_with(
-        beardog_errors::process_env::var("NEURAL_API_SOCKET").ok(),
-        beardog_errors::process_env::var("NEURALS_SOCKET").ok(),
+        beardog_errors::process_env::var(beardog_config::env_keys::ENV_NEURAL_API_SOCKET).ok(),
+        beardog_errors::process_env::var(beardog_config::env_keys::ENV_NEURAL_API_SOCKET_LEGACY)
+            .ok(),
     )
 }
 
@@ -517,8 +534,12 @@ pub fn discover_neural_api_socket_with_env(
     env_vars: &std::collections::HashMap<String, String>,
 ) -> Option<String> {
     discover_neural_api_socket_with(
-        env_vars.get("NEURAL_API_SOCKET").cloned(),
-        env_vars.get("NEURALS_SOCKET").cloned(),
+        env_vars
+            .get(beardog_config::env_keys::ENV_NEURAL_API_SOCKET)
+            .cloned(),
+        env_vars
+            .get(beardog_config::env_keys::ENV_NEURAL_API_SOCKET_LEGACY)
+            .cloned(),
     )
 }
 
