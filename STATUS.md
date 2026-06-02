@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: Jun 2, 2026 (Wave 123)
+**Last Updated**: Jun 2, 2026 (Wave 128)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,10 +20,10 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant (threshold lowered to 800; `aliases_and_beardog.rs` refactored Wave 75) |
-| **Tests** | 14,987+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,988+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
-| **cargo deny** | bans pass | 1 advisory ignore (RSA Marvin), `ring` allowed as `rustls`/`rustls-webpki` wrapper |
+| **cargo deny** | bans pass | 1 advisory ignore (RSA Marvin), `ring` banned in `deny.toml`; TLS backend is `aws-lc-rs` |
 | **License** | AGPL-3.0-or-later | SPDX headers on all .rs files |
 | **Architecture** | DI-based | Pure `Default`, `from_env()` at boundaries |
 | **Toolchain** | Pinned | `rust-toolchain.toml` at 1.93.0 |
@@ -69,7 +69,7 @@
 | Standard | Status |
 |----------|--------|
 | Edition 2024 | MSRV 1.93.0, all crates, `rust-toolchain.toml` pinned |
-| Pure Rust (ecoBin) | Zero C deps except `ring` via `rustls` TLS backend (policy-approved wrapper); blake3 pure feature; sysinfo removed |
+| Pure Rust (ecoBin) | Zero C deps; `ring` banned in `deny.toml`; TLS backend is `aws-lc-rs` via `rustls`; blake3 pure feature; sysinfo removed |
 | UniBin/ecoBin | Single binary, standalone identity fallback per UniBin v1.1, cross-compilation ready |
 | Dependency Injection | Pure `Default`, `from_env()` at startup, `from_env_provider()` for tests |
 | Zero Hardcoding | 20+ named constants extracted; capability-based discovery everywhere |
@@ -89,6 +89,34 @@
 ---
 
 ## Recent Improvements
+
+### Wave 128 — Env Migration Complete, Dependency Consolidation (Jun 2, 2026)
+
+- **Env key centralization complete** — 803+ constants in `env_keys.rs`; env migration waves 1–5 finished across the workspace.
+- **Dependency consolidation** — Workspace deps aligned; `beardog-config` dependency added to crates that read env at boundaries.
+
+### Wave 127 — Stub Evolution, DNS-SD Wiring, File Splits, Safety Hygiene (Jun 2, 2026)
+
+- **Stub evolution** — Production stubs hardened with honest capability errors and accurate logging.
+- **DNS-SD wiring** — Discovery paths connected; stale feature gates cleaned.
+- **File splits** — Large modules refactored to stay under 800 LOC threshold.
+- **Safety hygiene** — `#[allow]`/`#[expect]` reason metadata and lint compliance tightened.
+
+### Wave 126 — Tokio Feature Trimming, Env Migration Wave 5 (Jun 2, 2026)
+
+- **Tokio feature trimming** — Unused tokio features removed from workspace manifests.
+- **Env migration wave 5** — ~90 raw env var strings centralized across 40+ production files.
+
+### Wave 125 — Ring Elimination (Jun 2, 2026)
+
+- **TLS backend switched to `aws-lc-rs`** — `rustls`, `tokio-rustls`, and `rcgen` no longer pull `ring`.
+- **`ring` banned in `deny.toml`** — Direct and transitive `ring` usage blocked; `aws-lc-rs`/`aws-lc-sys` allowed when wrapped by rustls/rcgen.
+
+### Wave 124 — Root Doc Sync, Debris Cleanup, Fossil Hygiene (Jun 2, 2026)
+
+- **Root doc sync** — STATUS, README, and related root markdown aligned to current metrics and wave history.
+- **Debris cleanup** — Stale artifacts, broken links, and orphan references removed.
+- **Fossil hygiene** — Archived content pointers updated; non-workspace showcase fossil record clarified.
 
 ### Wave 123 — Env Migration Wave 4, Dependency Evolution, Cert Stack Upgrade (Jun 2, 2026)
 

@@ -1,6 +1,6 @@
 +++
 title = "bearDog Validation Summary"
-description = "Zero-trust sovereign cryptographic orchestrator — 14,987+ tests, 30 crates, 223 IPC methods, ACME auto-cert, FIDO2/CTAP2, BTSP P3 AEAD"
+description = "Zero-trust sovereign cryptographic orchestrator — 14,988+ tests, 30 crates, 223 IPC methods, ACME auto-cert, FIDO2/CTAP2, BTSP P3 AEAD"
 date = 2026-06-02
 
 [taxonomies]
@@ -10,7 +10,7 @@ springs = []
 
 ## Status
 
-- **14,987+ tests** passing (workspace), 0 failures
+- **14,988+ tests** passing (workspace), 0 failures
 - **30 crates** in workspace (`beardog-integration` excluded — overstep)
 - **223 JSON-RPC methods** — 215 registry + 8 pre-dispatch gate (see `docs/PRIMAL_CONTRACTS.md` v4.0.0)
 - **v0.9.0** — edition 2024, MSRV 1.93.0
@@ -37,7 +37,7 @@ springs = []
 
 - **DI-based** — pure `Default`, `from_env()` at boundaries
 - **Self-knowledge only** — discovers other primals at runtime via capability resolution
-- **Multi-transport** — UDS (primary), TCP (fallback), WebSocket (tunnel)
+- **Multi-transport** — UDS (primary), TCP (fallback), WebSocket (WASM stub)
 - **Signal handling** — SIGINT + SIGTERM with explicit socket cleanup
 - **Stale socket prevention** — `unlink-before-bind` at 3 layers + explicit `stop()` on shutdown
 
