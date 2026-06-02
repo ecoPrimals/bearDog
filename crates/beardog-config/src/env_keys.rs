@@ -12,10 +12,14 @@
 
 /// Override the configuration directory.
 pub const ENV_CONFIG_DIR: &str = "BEARDOG_CONFIG_DIR";
+/// Explicit configuration file path.
+pub const ENV_CONFIG_PATH: &str = "BEARDOG_CONFIG_PATH";
 /// Override the data directory.
 pub const ENV_DATA_DIR: &str = "BEARDOG_DATA_DIR";
 /// Override the log directory.
 pub const ENV_LOG_DIR: &str = "BEARDOG_LOG_DIR";
+/// Base directory for `BearDog` data and config layout.
+pub const ENV_BASE_DIR: &str = "BEARDOG_BASE_DIR";
 /// PKCS#11 library path override.
 pub const ENV_PKCS11_LIBRARY: &str = "BEARDOG_PKCS11_LIBRARY";
 /// PKCS#11 search paths (colon-separated).
@@ -29,6 +33,8 @@ pub const ENV_API_HOST: &str = "BEARDOG_API_HOST";
 pub const ENV_LISTEN_ADDR: &str = "BEARDOG_LISTEN_ADDR";
 /// Bind address (canonical form).
 pub const ENV_BIND_ADDRESS: &str = "BEARDOG_BIND_ADDRESS";
+/// Network probe target address for non-loopback interface detection.
+pub const ENV_NETWORK_PROBE_TARGET: &str = "BEARDOG_NETWORK_PROBE_TARGET";
 /// External host for public-facing URLs.
 pub const ENV_EXTERNAL_HOST: &str = "BEARDOG_EXTERNAL_HOST";
 /// Multicast address for discovery.
@@ -162,6 +168,12 @@ pub const ENV_DISCOVERY_ADMIN_PORT: &str = "BEARDOG_DISCOVERY_ADMIN_PORT";
 
 /// Maximum API connections.
 pub const ENV_API_MAX_CONNECTIONS: &str = "BEARDOG_API_MAX_CONNECTIONS";
+/// Production max connections override.
+pub const ENV_PRODUCTION_MAX_CONNECTIONS: &str = "BEARDOG_PRODUCTION_MAX_CONNECTIONS";
+/// Production per-IP requests-per-minute rate limit.
+pub const ENV_PRODUCTION_PER_IP_RPM: &str = "BEARDOG_PRODUCTION_PER_IP_RPM";
+/// TCP listen backlog size.
+pub const ENV_SERVER_BACKLOG_SIZE: &str = "BEARDOG_SERVER_BACKLOG_SIZE";
 /// Discovery interval (seconds).
 pub const ENV_DISCOVERY_INTERVAL_SECS: &str = "BEARDOG_DISCOVERY_INTERVAL_SECS";
 /// Admin bind address.
@@ -253,6 +265,10 @@ pub const ENV_DB_SSL_MODE: &str = "DB_SSL_MODE";
 pub const ENV_DB_SSL_CERT: &str = "DB_SSL_CERT";
 /// Database SSL private key path.
 pub const ENV_DB_SSL_KEY: &str = "DB_SSL_KEY";
+/// Database connection establishment timeout (seconds, canonical config).
+pub const ENV_DB_CONNECTION_TIMEOUT_SECS: &str = "BEARDOG_DB_CONNECTION_TIMEOUT_SECS";
+/// Database query execution timeout (seconds).
+pub const ENV_DB_QUERY_TIMEOUT_SECS: &str = "BEARDOG_DB_QUERY_TIMEOUT_SECS";
 
 // ── Port discovery ───────────────────────────────────────────────────
 
@@ -471,6 +487,52 @@ pub const ENV_RATE_LIMITING_MAX_REQUESTS: &str = "BEARDOG_RATE_LIMITING_MAX_REQU
 pub const ENV_DEV_AUDIT_RETENTION_DAYS: &str = "BEARDOG_DEV_AUDIT_RETENTION_DAYS";
 /// Production audit log retention (days).
 pub const ENV_PRODUCTION_AUDIT_RETENTION_DAYS: &str = "BEARDOG_PRODUCTION_AUDIT_RETENTION_DAYS";
+/// JWT signing secret.
+pub const ENV_JWT_SECRET: &str = "BEARDOG_JWT_SECRET";
+/// JWT access token expiration (seconds).
+pub const ENV_JWT_EXPIRY_SECS: &str = "BEARDOG_JWT_EXPIRY_SECS";
+/// Enable JWT refresh tokens.
+pub const ENV_JWT_ENABLE_REFRESH: &str = "BEARDOG_JWT_ENABLE_REFRESH";
+/// JWT refresh token expiration (seconds).
+pub const ENV_JWT_REFRESH_EXPIRY_SECS: &str = "BEARDOG_JWT_REFRESH_EXPIRY_SECS";
+/// `OAuth2` client identifier.
+pub const ENV_OAUTH_CLIENT_ID: &str = "BEARDOG_OAUTH_CLIENT_ID";
+/// `OAuth2` client secret.
+pub const ENV_OAUTH_CLIENT_SECRET: &str = "BEARDOG_OAUTH_CLIENT_SECRET";
+/// `OAuth2` redirect URI.
+pub const ENV_OAUTH_REDIRECT_URI: &str = "BEARDOG_OAUTH_REDIRECT_URI";
+/// OAuth callback URL override.
+pub const ENV_AUTH_CALLBACK: &str = "BEARDOG_AUTH_CALLBACK";
+/// Authenticated session timeout (seconds).
+pub const ENV_AUTH_SESSION_TIMEOUT_SECS: &str = "BEARDOG_AUTH_SESSION_TIMEOUT_SECS";
+/// Behavioral verification mode selector.
+pub const ENV_BEHAVIORAL_VERIFICATION: &str = "BEARDOG_BEHAVIORAL_VERIFICATION";
+/// Genetic evolution activation threshold.
+pub const ENV_EVOLUTION_THRESHOLD: &str = "BEARDOG_EVOLUTION_THRESHOLD";
+/// Genetic evolution interval (seconds).
+pub const ENV_EVOLUTION_INTERVAL_SECS: &str = "BEARDOG_EVOLUTION_INTERVAL_SECS";
+/// Genetic renewal mutation rate (0.0–1.0).
+pub const ENV_GENETIC_RENEWAL_MUTATION_RATE: &str = "BEARDOG_GENETIC_RENEWAL_MUTATION_RATE";
+/// Genetic renewal crossover rate (0.0–1.0).
+pub const ENV_GENETIC_RENEWAL_CROSSOVER_RATE: &str = "BEARDOG_GENETIC_RENEWAL_CROSSOVER_RATE";
+/// Genetic renewal selection pressure (0.0–1.0).
+pub const ENV_GENETIC_RENEWAL_SELECTION_PRESSURE: &str =
+    "BEARDOG_GENETIC_RENEWAL_SELECTION_PRESSURE";
+/// Genetic renewal frequency (hours).
+pub const ENV_GENETIC_RENEWAL_FREQUENCY_HOURS: &str = "BEARDOG_GENETIC_RENEWAL_FREQUENCY_HOURS";
+/// Production rate-limit max requests per minute.
+pub const ENV_PROD_RATE_LIMIT_MAX_REQUESTS_PER_MIN: &str =
+    "BEARDOG_PROD_RATE_LIMIT_MAX_REQUESTS_PER_MIN";
+/// Production rate-limit burst capacity.
+pub const ENV_PROD_RATE_LIMIT_BURST_CAPACITY: &str = "BEARDOG_PROD_RATE_LIMIT_BURST_CAPACITY";
+/// Production rate-limit window (seconds).
+pub const ENV_PROD_RATE_LIMIT_WINDOW_SECS: &str = "BEARDOG_PROD_RATE_LIMIT_WINDOW_SECS";
+/// Development compliance audit retention (days).
+pub const ENV_COMPLIANCE_DEV_AUDIT_RETENTION_DAYS: &str =
+    "BEARDOG_COMPLIANCE_DEV_AUDIT_RETENTION_DAYS";
+/// Development compliance audit frequency (hours).
+pub const ENV_COMPLIANCE_DEV_AUDIT_FREQUENCY_HOURS: &str =
+    "BEARDOG_COMPLIANCE_DEV_AUDIT_FREQUENCY_HOURS";
 
 // ── Crypto ───────────────────────────────────────────────────────────
 
@@ -507,6 +569,21 @@ pub const ENV_TPM_DEVICE: &str = "BEARDOG_TPM_DEVICE";
 pub const ENV_HSM_STORAGE: &str = "BEARDOG_HSM_STORAGE";
 /// Enable hardware HSM at runtime.
 pub const ENV_ENABLE_HARDWARE_HSM: &str = "BEARDOG_ENABLE_HARDWARE_HSM";
+/// Maximum HSM key slots.
+pub const ENV_HSM_MAX_KEYS: &str = "BEARDOG_HSM_MAX_KEYS";
+/// Maximum HSM operations per second.
+pub const ENV_HSM_MAX_OPS_PER_SEC: &str = "BEARDOG_HSM_MAX_OPS_PER_SEC";
+/// HSM connection pool size.
+pub const ENV_HSM_POOL_SIZE: &str = "BEARDOG_HSM_POOL_SIZE";
+/// HSM batch operation size.
+pub const ENV_HSM_BATCH_SIZE: &str = "BEARDOG_HSM_BATCH_SIZE";
+/// HSM operation cache size.
+pub const ENV_HSM_CACHE_SIZE: &str = "BEARDOG_HSM_CACHE_SIZE";
+/// Hardware HSM connection timeout (seconds).
+pub const ENV_HSM_HARDWARE_CONNECTION_TIMEOUT_SECS: &str =
+    "BEARDOG_HSM_HARDWARE_CONNECTION_TIMEOUT_SECS";
+/// Hardware HSM connection max retries.
+pub const ENV_HSM_HARDWARE_MAX_RETRIES: &str = "BEARDOG_HSM_HARDWARE_MAX_RETRIES";
 
 // ── ACME ─────────────────────────────────────────────────────────────
 
@@ -558,6 +635,10 @@ pub const ENV_MAX_MESSAGE_SIZE_BYTES: &str = "BEARDOG_MAX_MESSAGE_SIZE_BYTES";
 pub const ENV_BUFFER_POOL_SIZE: &str = "BEARDOG_BUFFER_POOL_SIZE";
 /// Maximum cache entries.
 pub const ENV_CACHE_MAX_ENTRIES: &str = "BEARDOG_CACHE_MAX_ENTRIES";
+/// General-purpose cache size (entries or MB depending on context).
+pub const ENV_CACHE_SIZE: &str = "BEARDOG_CACHE_SIZE";
+/// General-purpose cache TTL (seconds or duration string depending on context).
+pub const ENV_CACHE_TTL: &str = "BEARDOG_CACHE_TTL";
 
 // ── Identity ─────────────────────────────────────────────────────────
 
@@ -595,6 +676,10 @@ pub const ENV_SERVICE_NAME: &str = "SERVICE_NAME";
 pub const ENV_DISPLAY_NAME: &str = "BEARDOG_DISPLAY_NAME";
 /// Deployment environment (`development`, `staging`, `production`).
 pub const ENV_ENVIRONMENT: &str = "BEARDOG_ENVIRONMENT";
+/// Runtime environment alias (`BEARDOG_ENV`).
+pub const ENV_ENV: &str = "BEARDOG_ENV";
+/// Deployment identifier (unprefixed).
+pub const ENV_DEPLOYMENT_ID: &str = "DEPLOYMENT_ID";
 /// Real user id (Unix).
 pub const ENV_UID: &str = "UID";
 /// Effective user id (Unix).
@@ -646,6 +731,8 @@ pub const ENV_XDG_CACHE_HOME: &str = "XDG_CACHE_HOME";
 pub const ENV_XDG_RUNTIME_DIR: &str = "XDG_RUNTIME_DIR";
 /// User home directory (unprefixed).
 pub const ENV_HOME: &str = "HOME";
+/// Windows application data directory (unprefixed).
+pub const ENV_APPDATA: &str = "APPDATA";
 /// Override the cache directory.
 pub const ENV_CACHE_DIR: &str = "BEARDOG_CACHE_DIR";
 /// Override the temp directory.
@@ -712,6 +799,18 @@ pub const ENV_DISCOVERY_ENCRYPTION_REQUIRED: &str = "BEARDOG_DISCOVERY_ENCRYPTIO
 pub const ENV_DISCOVERY_HOST_FALLBACK: &str = "BEARDOG_DISCOVERY_HOST_FALLBACK";
 /// Announce this node via mDNS.
 pub const ENV_MDNS_ANNOUNCE: &str = "BEARDOG_MDNS_ANNOUNCE";
+/// Legacy unprefixed discovery service URL.
+pub const ENV_DISCOVERY_URL: &str = "DISCOVERY_URL";
+/// Comma-separated discovery endpoint list.
+pub const ENV_DISCOVERY_ENDPOINTS: &str = "BEARDOG_DISCOVERY_ENDPOINTS";
+/// Maximum discovery retry attempts.
+pub const ENV_DISCOVERY_MAX_ATTEMPTS: &str = "BEARDOG_DISCOVERY_MAX_ATTEMPTS";
+/// Capability registry endpoint URL.
+pub const ENV_CAPABILITY_REGISTRY: &str = "BEARDOG_CAPABILITY_REGISTRY";
+/// Node discovery service port.
+pub const ENV_NODE_DISCOVERY_PORT: &str = "BEARDOG_NODE_DISCOVERY_PORT";
+/// Cluster coordination port.
+pub const ENV_CLUSTER_PORT: &str = "BEARDOG_CLUSTER_PORT";
 
 // ── Service registry / Consul ────────────────────────────────────────
 
@@ -836,6 +935,12 @@ pub const ENV_CACHE_TTL_SECS: &str = "BEARDOG_CACHE_TTL_SECS";
 pub const ENV_REQUEST_TIMEOUT_SECS: &str = "BEARDOG_REQUEST_TIMEOUT_SECS";
 /// Maximum retry delay (milliseconds).
 pub const ENV_MAX_RETRY_DELAY_MS: &str = "BEARDOG_MAX_RETRY_DELAY_MS";
+/// Performance keep-alive interval (seconds).
+pub const ENV_PERFORMANCE_KEEP_ALIVE_SECS: &str = "BEARDOG_PERFORMANCE_KEEP_ALIVE_SECS";
+/// Performance request timeout (seconds).
+pub const ENV_PERFORMANCE_REQUEST_TIMEOUT_SECS: &str = "BEARDOG_PERFORMANCE_REQUEST_TIMEOUT_SECS";
+/// Load balancing algorithm selector.
+pub const ENV_LOAD_BALANCING_ALGORITHM: &str = "BEARDOG_LOAD_BALANCING_ALGORITHM";
 
 // ── Monitoring (extended) ────────────────────────────────────────────
 
@@ -867,6 +972,42 @@ pub const ENV_RETRY_INITIAL_DELAY_MS: &str = "BEARDOG_RETRY_INITIAL_DELAY_MS";
 pub const ENV_RETRY_MAX_DELAY_SECS: &str = "BEARDOG_RETRY_MAX_DELAY_SECS";
 /// Monitoring backoff multiplier.
 pub const ENV_MONITORING_BACKOFF_MULTIPLIER: &str = "BEARDOG_MONITORING_BACKOFF_MULTIPLIER";
+/// Enable monitoring subsystem.
+pub const ENV_MONITORING_ENABLED: &str = "BEARDOG_MONITORING_ENABLED";
+/// Monitoring collection interval (seconds).
+pub const ENV_MONITORING_INTERVAL: &str = "BEARDOG_MONITORING_INTERVAL";
+/// Metrics smoothing factor (0.0–1.0).
+pub const ENV_METRICS_SMOOTHING_FACTOR: &str = "BEARDOG_METRICS_SMOOTHING_FACTOR";
+/// Histogram maximum bucket count.
+pub const ENV_HISTOGRAM_MAX_BUCKETS: &str = "BEARDOG_HISTOGRAM_MAX_BUCKETS";
+/// Metrics collection buffer size.
+pub const ENV_METRICS_BUFFER_SIZE: &str = "BEARDOG_METRICS_BUFFER_SIZE";
+/// Metrics collection thread count.
+pub const ENV_METRICS_COLLECTION_THREADS: &str = "BEARDOG_METRICS_COLLECTION_THREADS";
+/// Maximum consecutive metrics collection errors before backoff.
+pub const ENV_METRICS_MAX_COLLECTION_ERRORS: &str = "BEARDOG_METRICS_MAX_COLLECTION_ERRORS";
+/// Metrics statistical confidence interval.
+pub const ENV_METRICS_CONFIDENCE_INTERVAL: &str = "BEARDOG_METRICS_CONFIDENCE_INTERVAL";
+/// Anomaly detection sensitivity (0.0–1.0).
+pub const ENV_ANOMALY_DETECTION_SENSITIVITY: &str = "BEARDOG_ANOMALY_DETECTION_SENSITIVITY";
+/// Minimum data points required for anomaly detection.
+pub const ENV_ANOMALY_MIN_DATA_POINTS: &str = "BEARDOG_ANOMALY_MIN_DATA_POINTS";
+/// Metrics trend detection threshold.
+pub const ENV_METRICS_TREND_THRESHOLD: &str = "BEARDOG_METRICS_TREND_THRESHOLD";
+/// Metric export batch size.
+pub const ENV_METRIC_EXPORT_BATCH_SIZE: &str = "BEARDOG_METRIC_EXPORT_BATCH_SIZE";
+/// Alert rule evaluation interval (seconds).
+pub const ENV_ALERT_EVALUATION_INTERVAL_SECS: &str = "BEARDOG_ALERT_EVALUATION_INTERVAL_SECS";
+/// Alert notification delivery timeout (seconds).
+pub const ENV_ALERT_NOTIFICATION_TIMEOUT_SECS: &str = "BEARDOG_ALERT_NOTIFICATION_TIMEOUT_SECS";
+/// Maximum alerts emitted per minute.
+pub const ENV_MAX_ALERTS_PER_MINUTE: &str = "BEARDOG_MAX_ALERTS_PER_MINUTE";
+/// Alert firing threshold.
+pub const ENV_ALERT_THRESHOLD: &str = "BEARDOG_ALERT_THRESHOLD";
+/// Trend analysis window (seconds).
+pub const ENV_TREND_ANALYSIS_PERIOD_SECS: &str = "BEARDOG_TREND_ANALYSIS_PERIOD_SECS";
+/// Prediction horizon (seconds).
+pub const ENV_PREDICTION_HORIZON_SECS: &str = "BEARDOG_PREDICTION_HORIZON_SECS";
 
 // ── HSM (extended) ───────────────────────────────────────────────────
 
@@ -943,6 +1084,8 @@ pub const ENV_API_TEST_RETRY_DELAY_MS: &str = "BEARDOG_API_TEST_RETRY_DELAY_MS";
 pub const ENV_PROD_TEST_HEALTH_TIMEOUT_SECS: &str = "BEARDOG_PROD_TEST_HEALTH_TIMEOUT_SECS";
 /// Canary deployment traffic percentage.
 pub const ENV_CANARY_PERCENTAGE: &str = "BEARDOG_CANARY_PERCENTAGE";
+/// Test-only env var for source resolution tests.
+pub const ENV_TEST_VAR_UNIQUE_XYZ_NOT_SET: &str = "BEARDOG_TEST_VAR_UNIQUE_XYZ_NOT_SET";
 
 // ── AI / training ────────────────────────────────────────────────────
 
@@ -952,6 +1095,8 @@ pub const ENV_AI_TRAINING_BATCH_SIZE: &str = "BEARDOG_AI_TRAINING_BATCH_SIZE";
 pub const ENV_AI_LEARNING_RATE: &str = "BEARDOG_AI_LEARNING_RATE";
 /// AI training epochs.
 pub const ENV_AI_EPOCHS: &str = "BEARDOG_AI_EPOCHS";
+/// AI training epochs (training-config profile).
+pub const ENV_AI_TRAINING_EPOCHS: &str = "BEARDOG_AI_TRAINING_EPOCHS";
 /// AI validation split ratio.
 pub const ENV_AI_VALIDATION_SPLIT: &str = "BEARDOG_AI_VALIDATION_SPLIT";
 /// AI early stopping patience (epochs).
@@ -970,6 +1115,58 @@ pub const ENV_AI_EARLY_STOPPING_PATIENCE_EPOCHS: &str = "BEARDOG_AI_EARLY_STOPPI
 pub const ENV_AI_EARLY_STOPPING_MIN_DELTA: &str = "BEARDOG_AI_EARLY_STOPPING_MIN_DELTA";
 /// AI checkpoint frequency in epochs.
 pub const ENV_AI_CHECKPOINT_FREQUENCY_EPOCHS: &str = "BEARDOG_AI_CHECKPOINT_FREQUENCY_EPOCHS";
+/// AI human oversight level.
+pub const ENV_AI_HUMAN_OVERSIGHT_LEVEL: &str = "BEARDOG_AI_HUMAN_OVERSIGHT_LEVEL";
+/// AI auto-decision confidence threshold.
+pub const ENV_AI_AUTO_DECISION_THRESHOLD: &str = "BEARDOG_AI_AUTO_DECISION_THRESHOLD";
+/// AI inference/training batch size.
+pub const ENV_AI_BATCH_SIZE: &str = "BEARDOG_AI_BATCH_SIZE";
+/// AI maximum acceptable latency (milliseconds).
+pub const ENV_AI_MAX_LATENCY_MS: &str = "BEARDOG_AI_MAX_LATENCY_MS";
+/// AI inference cache size (MB).
+pub const ENV_AI_CACHE_SIZE_MB: &str = "BEARDOG_AI_CACHE_SIZE_MB";
+/// AI inference cache size (bytes).
+pub const ENV_AI_CACHE_SIZE_BYTES: &str = "BEARDOG_AI_CACHE_SIZE_BYTES";
+/// AI decision confidence threshold.
+pub const ENV_AI_CONFIDENCE_THRESHOLD: &str = "BEARDOG_AI_CONFIDENCE_THRESHOLD";
+/// AI worker thread / CPU count.
+pub const ENV_AI_CPU_THREADS: &str = "BEARDOG_AI_CPU_THREADS";
+/// AI memory limit (MB).
+pub const ENV_AI_MEMORY_LIMIT_MB: &str = "BEARDOG_AI_MEMORY_LIMIT_MB";
+/// AI mini-batch size for training.
+pub const ENV_AI_MINI_BATCH_SIZE: &str = "BEARDOG_AI_MINI_BATCH_SIZE";
+/// AI fine-tuning initial learning rate.
+pub const ENV_AI_FINETUNING_INITIAL_LR: &str = "BEARDOG_AI_FINETUNING_INITIAL_LR";
+/// AI fine-tuning epoch count.
+pub const ENV_AI_FINETUNING_EPOCHS: &str = "BEARDOG_AI_FINETUNING_EPOCHS";
+/// AI inner-loop optimization steps.
+pub const ENV_AI_INNER_LOOP_STEPS: &str = "BEARDOG_AI_INNER_LOOP_STEPS";
+/// AI inner-loop learning rate.
+pub const ENV_AI_INNER_LOOP_LR: &str = "BEARDOG_AI_INNER_LOOP_LR";
+/// AI outer-loop optimization steps.
+pub const ENV_AI_OUTER_LOOP_STEPS: &str = "BEARDOG_AI_OUTER_LOOP_STEPS";
+/// AI outer-loop learning rate.
+pub const ENV_AI_OUTER_LOOP_LR: &str = "BEARDOG_AI_OUTER_LOOP_LR";
+/// AI hyperparameter search max trials.
+pub const ENV_AI_HYPERPARAMETER_MAX_TRIALS: &str = "BEARDOG_AI_HYPERPARAMETER_MAX_TRIALS";
+/// AI human-input wait timeout (seconds).
+pub const ENV_AI_HUMAN_INPUT_TIMEOUT_SECS: &str = "BEARDOG_AI_HUMAN_INPUT_TIMEOUT_SECS";
+/// AI inference timeout (seconds).
+pub const ENV_AI_INFERENCE_TIMEOUT_SECS: &str = "BEARDOG_AI_INFERENCE_TIMEOUT_SECS";
+/// AI maximum inference batch size.
+pub const ENV_AI_MAX_BATCH_SIZE: &str = "BEARDOG_AI_MAX_BATCH_SIZE";
+/// AI neural network dropout rate.
+pub const ENV_AI_NEURAL_DROPOUT_RATE: &str = "BEARDOG_AI_NEURAL_DROPOUT_RATE";
+/// AI L1 regularization coefficient.
+pub const ENV_AI_REGULARIZATION_L1: &str = "BEARDOG_AI_REGULARIZATION_L1";
+/// AI L2 regularization coefficient.
+pub const ENV_AI_REGULARIZATION_L2: &str = "BEARDOG_AI_REGULARIZATION_L2";
+/// AI regularization dropout rate.
+pub const ENV_AI_REGULARIZATION_DROPOUT: &str = "BEARDOG_AI_REGULARIZATION_DROPOUT";
+/// AI optimizer learning rate.
+pub const ENV_AI_OPTIMIZER_LEARNING_RATE: &str = "BEARDOG_AI_OPTIMIZER_LEARNING_RATE";
+/// AI worker pool size.
+pub const ENV_AI_NUM_WORKERS: &str = "BEARDOG_AI_NUM_WORKERS";
 
 // ── Infrastructure / capabilities ──────────────────────────────────────
 
@@ -1167,6 +1364,10 @@ pub const ENV_NETWORK_PORT: &str = "BEARDOG_NETWORK_PORT";
 pub const ENV_DEFAULT_SERVICE_PORT: &str = "BEARDOG_DEFAULT_SERVICE_PORT";
 /// Redis connection URL (unprefixed).
 pub const ENV_REDIS_URL: &str = "REDIS_URL";
+/// BearDog-prefixed Redis connection URL override.
+pub const ENV_REDIS_URL_PREFIXED: &str = "BEARDOG_REDIS_URL";
+/// Redis port (unprefixed).
+pub const ENV_REDIS_PORT_UNPREFIXED: &str = "REDIS_PORT";
 
 // ── Monitoring endpoints ─────────────────────────────────────────────────
 
@@ -1231,6 +1432,60 @@ pub const ENV_PROVIDER_TIMEOUT_SECS: &str = "BEARDOG_PROVIDER_TIMEOUT_SECS";
 pub const ENV_PROVIDER_MIGRATION_TIMEOUT_SECS: &str = "BEARDOG_PROVIDER_MIGRATION_TIMEOUT_SECS";
 /// Adapter cache duration (seconds).
 pub const ENV_ADAPTER_CACHE_DURATION_SECS: &str = "BEARDOG_ADAPTER_CACHE_DURATION_SECS";
+/// Adapter instance identifier.
+pub const ENV_ADAPTER_ID: &str = "BEARDOG_ADAPTER_ID";
+/// Adapter maximum concurrent connections.
+pub const ENV_ADAPTER_MAX_CONNECTIONS: &str = "BEARDOG_ADAPTER_MAX_CONNECTIONS";
+/// Adapter connection timeout (seconds).
+pub const ENV_ADAPTER_CONNECTION_TIMEOUT_SECS: &str = "BEARDOG_ADAPTER_CONNECTION_TIMEOUT_SECS";
+/// Adapter global operation timeout (seconds).
+pub const ENV_ADAPTER_TIMEOUT_SECS: &str = "BEARDOG_ADAPTER_TIMEOUT_SECS";
+/// Comma-separated adapter discovery endpoints.
+pub const ENV_ADAPTER_DISCOVERY_ENDPOINTS: &str = "BEARDOG_ADAPTER_DISCOVERY_ENDPOINTS";
+/// Enable adapter performance optimization.
+pub const ENV_ADAPTER_OPTIMIZATION_ENABLED: &str = "BEARDOG_ADAPTER_OPTIMIZATION_ENABLED";
+/// Adapter optimization level (0–9).
+pub const ENV_ADAPTER_OPTIMIZATION_LEVEL: &str = "BEARDOG_ADAPTER_OPTIMIZATION_LEVEL";
+/// Enable SIMD for adapter processing.
+pub const ENV_ADAPTER_SIMD_ENABLED: &str = "BEARDOG_ADAPTER_SIMD_ENABLED";
+/// Adapter optimization buffer size (bytes).
+pub const ENV_OPTIMIZATION_BUFFER_SIZE: &str = "BEARDOG_OPTIMIZATION_BUFFER_SIZE";
+/// Adapter chain maximum length.
+pub const ENV_ADAPTER_MAX_CHAIN_LENGTH: &str = "BEARDOG_ADAPTER_MAX_CHAIN_LENGTH";
+/// Adapter chain processing timeout (seconds).
+pub const ENV_ADAPTER_PROCESSING_TIMEOUT_SECS: &str = "BEARDOG_ADAPTER_PROCESSING_TIMEOUT_SECS";
+/// Adapter chain maximum worker count.
+pub const ENV_ADAPTER_MAX_WORKERS: &str = "BEARDOG_ADAPTER_MAX_WORKERS";
+/// Adapter chain step timeout (seconds).
+pub const ENV_ADAPTER_STEP_TIMEOUT_SECS: &str = "BEARDOG_ADAPTER_STEP_TIMEOUT_SECS";
+/// Adapter chain step max retry attempts.
+pub const ENV_ADAPTER_STEP_MAX_ATTEMPTS: &str = "BEARDOG_ADAPTER_STEP_MAX_ATTEMPTS";
+/// Enable adapter chain step validation.
+pub const ENV_ADAPTER_STEP_VALIDATION_ENABLED: &str = "BEARDOG_ADAPTER_STEP_VALIDATION_ENABLED";
+/// Adapter retry max attempts.
+pub const ENV_ADAPTER_RETRY_MAX_ATTEMPTS: &str = "BEARDOG_ADAPTER_RETRY_MAX_ATTEMPTS";
+/// Adapter retry initial delay (milliseconds).
+pub const ENV_ADAPTER_RETRY_INITIAL_DELAY_MS: &str = "BEARDOG_ADAPTER_RETRY_INITIAL_DELAY_MS";
+/// Adapter retry maximum delay (seconds).
+pub const ENV_ADAPTER_RETRY_MAX_DELAY_SECS: &str = "BEARDOG_ADAPTER_RETRY_MAX_DELAY_SECS";
+/// Adapter retry backoff multiplier.
+pub const ENV_ADAPTER_RETRY_BACKOFF_MULTIPLIER: &str = "BEARDOG_ADAPTER_RETRY_BACKOFF_MULTIPLIER";
+/// Adapter metrics collection interval (seconds).
+pub const ENV_ADAPTER_METRICS_INTERVAL_SECS: &str = "BEARDOG_ADAPTER_METRICS_INTERVAL_SECS";
+/// Adapter metrics retention period (seconds).
+pub const ENV_ADAPTER_RETENTION_PERIOD_SECS: &str = "BEARDOG_ADAPTER_RETENTION_PERIOD_SECS";
+/// Adapter circuit breaker failure threshold.
+pub const ENV_ADAPTER_CIRCUIT_BREAKER_THRESHOLD: &str = "BEARDOG_ADAPTER_CIRCUIT_BREAKER_THRESHOLD";
+/// Service mesh protocol (`http`, `grpc`, etc.).
+pub const ENV_MESH_PROTOCOL: &str = "BEARDOG_MESH_PROTOCOL";
+/// Service mesh discovery port.
+pub const ENV_MESH_DISCOVERY_PORT: &str = "BEARDOG_MESH_DISCOVERY_PORT";
+/// Service mesh discovery timeout (seconds).
+pub const ENV_MESH_DISCOVERY_TIMEOUT_SECS: &str = "BEARDOG_MESH_DISCOVERY_TIMEOUT_SECS";
+/// Handoff retry max attempts.
+pub const ENV_HANDOFF_RETRY_MAX_ATTEMPTS: &str = "BEARDOG_HANDOFF_RETRY_MAX_ATTEMPTS";
+/// Handoff retry timeout (seconds).
+pub const ENV_HANDOFF_RETRY_TIMEOUT_SECS: &str = "BEARDOG_HANDOFF_RETRY_TIMEOUT_SECS";
 /// Cache cleanup interval (seconds).
 pub const ENV_CACHE_CLEANUP_INTERVAL_SECS: &str = "BEARDOG_CACHE_CLEANUP_INTERVAL_SECS";
 /// Universal adapter cache TTL (seconds, unprefixed).
@@ -1320,10 +1575,53 @@ pub const ENV_RETRY_MAX_BACKOFF_SECS: &str = "BEARDOG_RETRY_MAX_BACKOFF_SECS";
 /// Retry backoff multiplier.
 pub const ENV_RETRY_BACKOFF_MULTIPLIER: &str = "BEARDOG_RETRY_BACKOFF_MULTIPLIER";
 
+// ── Workflow ─────────────────────────────────────────────────────────────
+
+/// Enable workflow engine.
+pub const ENV_WORKFLOW_ENABLED: &str = "BEARDOG_WORKFLOW_ENABLED";
+/// Workflow worker pool size.
+pub const ENV_WORKFLOW_WORKER_POOL_SIZE: &str = "BEARDOG_WORKFLOW_WORKER_POOL_SIZE";
+/// Workflow queue capacity.
+pub const ENV_WORKFLOW_QUEUE_CAPACITY: &str = "BEARDOG_WORKFLOW_QUEUE_CAPACITY";
+/// Workflow maximum concurrent executions.
+pub const ENV_WORKFLOW_MAX_CONCURRENT: &str = "BEARDOG_WORKFLOW_MAX_CONCURRENT";
+/// Enable workflow persistence.
+pub const ENV_WORKFLOW_PERSISTENCE_ENABLED: &str = "BEARDOG_WORKFLOW_PERSISTENCE_ENABLED";
+/// Workflow persistence backend selector.
+pub const ENV_WORKFLOW_PERSISTENCE_BACKEND: &str = "BEARDOG_WORKFLOW_PERSISTENCE_BACKEND";
+/// Workflow message TTL (seconds).
+pub const ENV_WORKFLOW_MESSAGE_TTL_SECS: &str = "BEARDOG_WORKFLOW_MESSAGE_TTL_SECS";
+/// Workflow default timeout (seconds).
+pub const ENV_WORKFLOW_TIMEOUT_DEFAULT_SECS: &str = "BEARDOG_WORKFLOW_TIMEOUT_DEFAULT_SECS";
+/// Workflow maximum timeout (seconds).
+pub const ENV_WORKFLOW_TIMEOUT_MAXIMUM_SECS: &str = "BEARDOG_WORKFLOW_TIMEOUT_MAXIMUM_SECS";
+/// Workflow connection timeout (seconds).
+pub const ENV_WORKFLOW_TIMEOUT_CONNECTION_SECS: &str = "BEARDOG_WORKFLOW_TIMEOUT_CONNECTION_SECS";
+/// Workflow read timeout (seconds).
+pub const ENV_WORKFLOW_TIMEOUT_READ_SECS: &str = "BEARDOG_WORKFLOW_TIMEOUT_READ_SECS";
+/// Workflow retry max attempts.
+pub const ENV_WORKFLOW_RETRY_MAX_ATTEMPTS: &str = "BEARDOG_WORKFLOW_RETRY_MAX_ATTEMPTS";
+/// Workflow persistence database URL.
+pub const ENV_WORKFLOW_DB_URL: &str = "BEARDOG_WORKFLOW_DB_URL";
+/// Workflow persistence database pool size.
+pub const ENV_WORKFLOW_DB_POOL_SIZE: &str = "BEARDOG_WORKFLOW_DB_POOL_SIZE";
+/// Workflow persistence database timeout (seconds).
+pub const ENV_WORKFLOW_DB_TIMEOUT_SECS: &str = "BEARDOG_WORKFLOW_DB_TIMEOUT_SECS";
+/// Workflow record retention period (seconds).
+pub const ENV_WORKFLOW_RETENTION_PERIOD_SECS: &str = "BEARDOG_WORKFLOW_RETENTION_PERIOD_SECS";
+/// Workflow cleanup interval (seconds).
+pub const ENV_WORKFLOW_CLEANUP_INTERVAL_SECS: &str = "BEARDOG_WORKFLOW_CLEANUP_INTERVAL_SECS";
+
 // ── External cloud auth detection ────────────────────────────────────────
 
 /// AWS access key ID (unprefixed).
 pub const ENV_AWS_ACCESS_KEY_ID: &str = "AWS_ACCESS_KEY_ID";
+/// AWS deployment region (unprefixed).
+pub const ENV_AWS_REGION: &str = "AWS_REGION";
+/// Google OAuth client secret (unprefixed).
+pub const ENV_GOOGLE_CLIENT_SECRET: &str = "GOOGLE_CLIENT_SECRET";
+/// GitHub OAuth client secret (unprefixed).
+pub const ENV_GITHUB_CLIENT_SECRET: &str = "GITHUB_CLIENT_SECRET";
 /// Azure client ID (unprefixed).
 pub const ENV_AZURE_CLIENT_ID: &str = "AZURE_CLIENT_ID";
 /// Google application credentials path (unprefixed).
@@ -1336,3 +1634,200 @@ pub const ENV_REGISTRY_SOCKET_FALLBACK: &str = "BEARDOG_REGISTRY_SOCKET_FALLBACK
 
 /// iOS device model identifier (unprefixed).
 pub const ENV_IOS_MODEL: &str = "IOS_MODEL";
+
+// ── Universal discovery (network tuning) ───────────────────────────────
+
+/// Discovery bind address override.
+pub const ENV_DISCOVERY_BIND_ADDRESS: &str = "BEARDOG_DISCOVERY_BIND_ADDRESS";
+/// Discovery multicast port.
+pub const ENV_DISCOVERY_MULTICAST_PORT: &str = "BEARDOG_DISCOVERY_MULTICAST_PORT";
+/// Discovery port range lower bound.
+pub const ENV_DISCOVERY_PORT_START: &str = "BEARDOG_DISCOVERY_PORT_START";
+/// Discovery port range upper bound.
+pub const ENV_DISCOVERY_PORT_END: &str = "BEARDOG_DISCOVERY_PORT_END";
+/// Discovery maximum UDP packet size (bytes).
+pub const ENV_DISCOVERY_MAX_PACKET_SIZE: &str = "BEARDOG_DISCOVERY_MAX_PACKET_SIZE";
+/// Discovery socket read timeout (milliseconds).
+pub const ENV_DISCOVERY_READ_TIMEOUT_MS: &str = "BEARDOG_DISCOVERY_READ_TIMEOUT_MS";
+/// Enable IPv6 for discovery traffic.
+pub const ENV_DISCOVERY_ENABLE_IPV6: &str = "BEARDOG_DISCOVERY_ENABLE_IPV6";
+/// Network interface for discovery binding.
+pub const ENV_DISCOVERY_INTERFACE: &str = "BEARDOG_DISCOVERY_INTERFACE";
+/// Host portion of bind address (without port).
+pub const ENV_BIND_HOST: &str = "BEARDOG_BIND_HOST";
+/// Maximum registered discovery services.
+pub const ENV_MAX_SERVICES: &str = "BEARDOG_MAX_SERVICES";
+
+// ── Ecosystem integration ────────────────────────────────────────────────
+
+/// Ecosystem integration endpoint URL.
+pub const ENV_ECOSYSTEM_ENDPOINT: &str = "BEARDOG_ECOSYSTEM_ENDPOINT";
+/// Ecosystem base URL (unprefixed alias).
+pub const ENV_ECOSYSTEM_BASE_URL: &str = "ECOSYSTEM_BASE_URL";
+/// Storage replication factor.
+pub const ENV_REPLICATION_FACTOR: &str = "BEARDOG_REPLICATION_FACTOR";
+/// Storage backup interval (seconds).
+pub const ENV_BACKUP_INTERVAL_SECS: &str = "BEARDOG_BACKUP_INTERVAL_SECS";
+/// Storage cache maximum entries.
+pub const ENV_STORAGE_CACHE_MAX_ENTRIES: &str = "BEARDOG_STORAGE_CACHE_MAX_ENTRIES";
+
+// ── AI / hybrid intelligence (runtime) ───────────────────────────────────
+
+/// AI model registry endpoint URL.
+pub const ENV_AI_REGISTRY_ENDPOINT: &str = "BEARDOG_AI_REGISTRY_ENDPOINT";
+/// AI deployment CPU allocation.
+pub const ENV_AI_RESOURCE_CPU: &str = "BEARDOG_AI_RESOURCE_CPU";
+/// AI deployment memory allocation (MB).
+pub const ENV_AI_RESOURCE_MEMORY_MB: &str = "BEARDOG_AI_RESOURCE_MEMORY_MB";
+/// AI deployment GPU allocation.
+pub const ENV_AI_RESOURCE_GPU: &str = "BEARDOG_AI_RESOURCE_GPU";
+/// AI deployment storage allocation (GB).
+pub const ENV_AI_RESOURCE_STORAGE_GB: &str = "BEARDOG_AI_RESOURCE_STORAGE_GB";
+/// Enable online learning mode.
+pub const ENV_AI_ONLINE_LEARNING_ENABLED: &str = "BEARDOG_AI_ONLINE_LEARNING_ENABLED";
+/// Online learning rate.
+pub const ENV_AI_ONLINE_LEARNING_RATE: &str = "BEARDOG_AI_ONLINE_LEARNING_RATE";
+/// Online learning batch size.
+pub const ENV_AI_ONLINE_BATCH_SIZE: &str = "BEARDOG_AI_ONLINE_BATCH_SIZE";
+/// Adaptive learning rate.
+pub const ENV_AI_ADAPTIVE_LEARNING_RATE: &str = "BEARDOG_AI_ADAPTIVE_LEARNING_RATE";
+/// Adaptive learning batch size.
+pub const ENV_AI_ADAPTIVE_BATCH_SIZE: &str = "BEARDOG_AI_ADAPTIVE_BATCH_SIZE";
+/// AI memory buffer size (samples).
+pub const ENV_AI_MEMORY_BUFFER_SIZE: &str = "BEARDOG_AI_MEMORY_BUFFER_SIZE";
+/// Learning model update frequency (seconds).
+pub const ENV_LEARNING_UPDATE_FREQUENCY_SECS: &str = "BEARDOG_LEARNING_UPDATE_FREQUENCY_SECS";
+/// AI metrics collection interval (seconds).
+pub const ENV_AI_METRICS_INTERVAL_SECS: &str = "BEARDOG_AI_METRICS_INTERVAL_SECS";
+/// AI serving max concurrent requests.
+pub const ENV_AI_SERVING_MAX_CONCURRENT_REQUESTS: &str =
+    "BEARDOG_AI_SERVING_MAX_CONCURRENT_REQUESTS";
+/// AI routing request timeout (seconds).
+pub const ENV_AI_ROUTING_REQUEST_TIMEOUT_SECS: &str = "BEARDOG_AI_ROUTING_REQUEST_TIMEOUT_SECS";
+/// AI inference batch size.
+pub const ENV_AI_INFERENCE_BATCH_SIZE: &str = "BEARDOG_AI_INFERENCE_BATCH_SIZE";
+/// AI max inference time (milliseconds).
+pub const ENV_AI_MAX_INFERENCE_TIME_MS: &str = "BEARDOG_AI_MAX_INFERENCE_TIME_MS";
+/// AI integration endpoint URL.
+pub const ENV_AI_INTEGRATION_ENDPOINT: &str = "BEARDOG_AI_INTEGRATION_ENDPOINT";
+
+// ── Universal compute client ─────────────────────────────────────────────
+
+/// Compute client request timeout (milliseconds).
+pub const ENV_COMPUTE_REQUEST_TIMEOUT_MS: &str = "BEARDOG_COMPUTE_REQUEST_TIMEOUT_MS";
+/// Compute service discovery timeout (milliseconds).
+pub const ENV_COMPUTE_DISCOVERY_TIMEOUT_MS: &str = "BEARDOG_COMPUTE_DISCOVERY_TIMEOUT_MS";
+/// Compute endpoint cache duration (milliseconds).
+pub const ENV_COMPUTE_CACHE_DURATION_MS: &str = "BEARDOG_COMPUTE_CACHE_DURATION_MS";
+
+// ── Performance optimizer ────────────────────────────────────────────────
+
+/// Optimizer max concurrent connections.
+pub const ENV_OPTIMIZER_MAX_CONNECTIONS: &str = "BEARDOG_OPTIMIZER_MAX_CONNECTIONS";
+/// Optimizer connection timeout (seconds).
+pub const ENV_OPTIMIZER_CONNECTION_TIMEOUT_SECS: &str = "BEARDOG_OPTIMIZER_CONNECTION_TIMEOUT_SECS";
+/// Optimizer cache TTL (seconds).
+pub const ENV_OPTIMIZER_CACHE_TTL_SECS: &str = "BEARDOG_OPTIMIZER_CACHE_TTL_SECS";
+/// Optimizer rate limit (requests per second).
+pub const ENV_OPTIMIZER_RATE_LIMIT: &str = "BEARDOG_OPTIMIZER_RATE_LIMIT";
+/// Optimizer health check interval (seconds).
+pub const ENV_OPTIMIZER_HEALTH_CHECK_INTERVAL_SECS: &str =
+    "BEARDOG_OPTIMIZER_HEALTH_CHECK_INTERVAL_SECS";
+
+// ── Crypto service ───────────────────────────────────────────────────────
+
+/// Crypto service display name.
+pub const ENV_CRYPTO_SERVICE_NAME: &str = "BEARDOG_CRYPTO_SERVICE_NAME";
+/// Enable HSM integration in crypto service.
+pub const ENV_CRYPTO_HSM_ENABLED: &str = "BEARDOG_CRYPTO_HSM_ENABLED";
+/// Enable genetics integration in crypto service.
+pub const ENV_CRYPTO_GENETIC_ENABLED: &str = "BEARDOG_CRYPTO_GENETIC_ENABLED";
+/// Crypto service max data size (bytes).
+pub const ENV_CRYPTO_MAX_DATA_SIZE: &str = "BEARDOG_CRYPTO_MAX_DATA_SIZE";
+/// Enable crypto service audit logging.
+pub const ENV_CRYPTO_AUDIT_ENABLED: &str = "BEARDOG_CRYPTO_AUDIT_ENABLED";
+/// RSA key generation mode.
+pub const ENV_RSA_KEY_MODE: &str = "BEARDOG_RSA_KEY_MODE";
+/// Application master encryption key.
+pub const ENV_MASTER_KEY: &str = "BEARDOG_MASTER_KEY";
+/// HSM master encryption key.
+pub const ENV_HSM_MASTER_KEY: &str = "BEARDOG_HSM_MASTER_KEY";
+
+// ── Genetics constraints ─────────────────────────────────────────────────
+
+/// Entropy quality threshold (0.0–1.0).
+pub const ENV_ENTROPY_QUALITY_THRESHOLD: &str = "BEARDOG_ENTROPY_QUALITY_THRESHOLD";
+/// Multisig enforcement mode.
+pub const ENV_MULTISIG_MODE: &str = "BEARDOG_MULTISIG_MODE";
+/// Multisig signature threshold.
+pub const ENV_MULTISIG_THRESHOLD: &str = "BEARDOG_MULTISIG_THRESHOLD";
+/// Behavioral verification mode.
+pub const ENV_BEHAVIORAL_MODE: &str = "BEARDOG_BEHAVIORAL_MODE";
+/// Physical attestation mode.
+pub const ENV_ATTESTATION_MODE: &str = "BEARDOG_ATTESTATION_MODE";
+/// Genetic algorithm population size.
+pub const ENV_GENETICS_POPULATION_SIZE: &str = "BEARDOG_GENETICS_POPULATION_SIZE";
+/// Genetic algorithm mutation rate.
+pub const ENV_GENETICS_MUTATION_RATE: &str = "BEARDOG_GENETICS_MUTATION_RATE";
+/// Genetic algorithm crossover rate.
+pub const ENV_GENETICS_CROSSOVER_RATE: &str = "BEARDOG_GENETICS_CROSSOVER_RATE";
+/// Genetic algorithm elitism percentage.
+pub const ENV_GENETICS_ELITISM_PERCENTAGE: &str = "BEARDOG_GENETICS_ELITISM_PERCENTAGE";
+/// Genetic algorithm max generations.
+pub const ENV_GENETICS_MAX_GENERATIONS: &str = "BEARDOG_GENETICS_MAX_GENERATIONS";
+/// Genetic algorithm fitness threshold.
+pub const ENV_GENETICS_FITNESS_THRESHOLD: &str = "BEARDOG_GENETICS_FITNESS_THRESHOLD";
+/// Enable adaptive genetic algorithm parameters.
+pub const ENV_GENETICS_ADAPTIVE_PARAMETERS: &str = "BEARDOG_GENETICS_ADAPTIVE_PARAMETERS";
+
+// ── Tunnel ─────────────────────────────────────────────────────────────
+
+/// Tunnel key storage path override.
+pub const ENV_TUNNEL_KEY_STORAGE_PATH: &str = "BEARDOG_TUNNEL_KEY_STORAGE_PATH";
+/// Gaming anti-cheat capability flag.
+pub const ENV_GAMING_ANTI_CHEAT_CAPABILITY: &str = "BEARDOG_GAMING_ANTI_CHEAT_CAPABILITY";
+
+// ── iOS HSM (runtime detection) ──────────────────────────────────────────
+
+/// Touch ID availability flag.
+pub const ENV_IOS_TOUCH_ID_AVAILABLE: &str = "IOS_TOUCH_ID_AVAILABLE";
+/// Face ID availability flag.
+pub const ENV_IOS_FACE_ID_AVAILABLE: &str = "IOS_FACE_ID_AVAILABLE";
+/// Secure Enclave availability flag.
+pub const ENV_IOS_SECURE_ENCLAVE_AVAILABLE: &str = "IOS_SECURE_ENCLAVE_AVAILABLE";
+/// Biometric authentication availability flag.
+pub const ENV_IOS_BIOMETRIC_AVAILABLE: &str = "IOS_BIOMETRIC_AVAILABLE";
+/// iOS device type identifier.
+pub const ENV_IOS_DEVICE_TYPE: &str = "IOS_DEVICE_TYPE";
+/// Generic device type identifier.
+pub const ENV_DEVICE_TYPE: &str = "DEVICE_TYPE";
+/// Android `StrongBox` feature flag (short form).
+pub const ENV_ANDROID_STRONGBOX: &str = "ANDROID_STRONGBOX";
+/// `StrongBox` availability flag (generic).
+pub const ENV_STRONGBOX_AVAILABLE: &str = "STRONGBOX_AVAILABLE";
+/// Android package name for deployment.
+pub const ENV_PACKAGE_NAME: &str = "BEARDOG_PACKAGE_NAME";
+/// Logcat follow timeout (seconds) for Android deployment.
+pub const ENV_LOGCAT_FOLLOW_SECS: &str = "BEARDOG_LOGCAT_FOLLOW_SECS";
+
+// ── Monitoring (health / metrics) ────────────────────────────────────────
+
+/// Cache service host for health checks.
+pub const ENV_CACHE_HOST: &str = "BEARDOG_CACHE_HOST";
+/// External API URL for health checks.
+pub const ENV_EXTERNAL_API_URL: &str = "BEARDOG_EXTERNAL_API_URL";
+/// HSM provider name for health checks.
+pub const ENV_HSM_PROVIDER: &str = "BEARDOG_HSM_PROVIDER";
+/// Metrics collection interval (seconds).
+pub const ENV_METRICS_COLLECTION_INTERVAL_SECS: &str = "BEARDOG_METRICS_COLLECTION_INTERVAL_SECS";
+/// Metrics history buffer size.
+pub const ENV_METRICS_HISTORY_SIZE: &str = "BEARDOG_METRICS_HISTORY_SIZE";
+/// Metrics analysis window (seconds).
+pub const ENV_ANALYSIS_WINDOW_SECS: &str = "BEARDOG_ANALYSIS_WINDOW_SECS";
+
+// ── Build / toolchain ────────────────────────────────────────────────────
+
+/// Cargo compilation target triple.
+pub const ENV_TARGET: &str = "TARGET";
+/// Tower Atomic peer socket path.
+pub const ENV_TOWER_ATOMIC_PEER: &str = "TOWER_ATOMIC_PEER";

@@ -7,6 +7,7 @@
 //!
 //! The `safe_secure_enclave_replacement` submodule remains disabled until its syntax issues are fixed.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::providers_unified::traits::UnifiedProvider as PlatformProvider;
 use tracing::info;
@@ -91,13 +92,13 @@ pub async fn safe_get_ios_device_info() -> Result<IOSDeviceInfo, BearDogError> {
     info!("📱 Safe iOS device detection starting");
 
     let device_info = IOSDeviceInfo {
-        device_model: beardog_errors::process_env::var("IOS_DEVICE_MODEL")
+        device_model: beardog_errors::process_env::var(env_keys::ENV_IOS_DEVICE_MODEL)
             .unwrap_or_else(|_| "iOS Device".to_string()),
-        ios_version: beardog_errors::process_env::var("IOS_VERSION").unwrap_or_else(|_| "Unknown".to_string()),
-        secure_enclave_available: beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE")
+        ios_version: beardog_errors::process_env::var(env_keys::ENV_IOS_VERSION).unwrap_or_else(|_| "Unknown".to_string()),
+        secure_enclave_available: beardog_errors::process_env::var(env_keys::ENV_IOS_SECURE_ENCLAVE_AVAILABLE)
             .map(|v| v == "true")
             .unwrap_or(false),
-        biometric_available: beardog_errors::process_env::var("IOS_BIOMETRIC_AVAILABLE")
+        biometric_available: beardog_errors::process_env::var(env_keys::ENV_IOS_BIOMETRIC_AVAILABLE)
             .map(|v| v == "true")
             .unwrap_or(false),
     };

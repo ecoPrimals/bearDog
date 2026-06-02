@@ -22,6 +22,7 @@
 //! - Plus additional scattered network configurations
 
 use crate::constants::domains::network::limits::MAX_CONNECTIONS;
+use beardog_config::env_keys;
 use beardog_errors::{BearDogError, ConfigurationErrorCategory};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -155,7 +156,7 @@ impl ConsolidatedNetworkConfiguration {
         let mut config = Self::default();
 
         // Strict settings for production
-        config.server.max_connections = std::env::var("BEARDOG_PRODUCTION_MAX_CONNECTIONS")
+        config.server.max_connections = std::env::var(env_keys::ENV_PRODUCTION_MAX_CONNECTIONS)
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(MAX_CONNECTIONS);
@@ -167,7 +168,7 @@ impl ConsolidatedNetworkConfiguration {
             .as_millis() as u64;
         config.rate_limiting.global_rps = Some(global_rps);
         config.rate_limiting.per_ip_rpm = Some(
-            std::env::var("BEARDOG_PRODUCTION_PER_IP_RPM")
+            std::env::var(env_keys::ENV_PRODUCTION_PER_IP_RPM)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(100),

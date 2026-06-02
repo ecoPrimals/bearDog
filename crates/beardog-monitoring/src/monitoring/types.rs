@@ -4,6 +4,7 @@
 //
 // This module provides functionality for the BearDog ecosystem.
 
+use beardog_config::env_keys;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -320,11 +321,11 @@ impl Default for PrometheusConfig {
         Self {
             enabled: true,
             endpoint: "/metrics".to_string(),
-            port: beardog_errors::process_env::var("BEARDOG_PROMETHEUS_PORT")
+            port: beardog_errors::process_env::var(env_keys::ENV_PROMETHEUS_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(9090), // Prometheus standard port
-            prefix: beardog_errors::process_env::var("PRIMAL_NAME")
+            prefix: beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME)
                 .unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
         }
     }

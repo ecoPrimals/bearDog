@@ -4,6 +4,7 @@
 //
 // This module provides iOS Secure Enclave functionality for the BearDog ecosystem.
 
+use beardog_config::env_keys;
 use crate::tunnel::hsm::types::canonical::KeyMetadata;
 use crate::tunnel::hsm::types::{HsmKey, KeyHealthStatus, KeyMaterial, KeyType};
 use beardog_errors::BearDogError;
@@ -56,7 +57,7 @@ impl SafeSecureEnclave {
 
     /// Gets iOS version
     fn get_ios_version() -> f32 {
-        beardog_errors::process_env::var("IOS_VERSION")
+        beardog_errors::process_env::var(env_keys::ENV_IOS_VERSION)
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(9.0) // Safe default
@@ -64,8 +65,8 @@ impl SafeSecureEnclave {
 
     /// Gets device type
     fn get_device_type() -> String {
-        beardog_errors::process_env::var("IOS_DEVICE_TYPE")
-            .or_else(|_| beardog_errors::process_env::var("DEVICE_TYPE"))
+        beardog_errors::process_env::var(env_keys::ENV_IOS_DEVICE_TYPE)
+            .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_DEVICE_TYPE))
             .unwrap_or_else(|_| "Unknown".to_string())
     }
 

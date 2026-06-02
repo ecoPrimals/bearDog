@@ -72,7 +72,7 @@ use serde::{Deserialize, Serialize};
 /// ```rust
 /// use beardog_types::production::types::EnvironmentLevel;
 ///
-/// let env = std::env::var("BEARDOG_ENV")
+/// let env = std::env::var(beardog_config::env_keys::ENV_ENV)
 ///     .unwrap_or_else(|_| "development".to_string());
 ///
 /// let level = match env.to_lowercase().as_str() {

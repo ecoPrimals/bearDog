@@ -2,6 +2,7 @@
 
 //! Service mesh and handoff configuration
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Duration;
@@ -104,16 +105,16 @@ impl Default for MeshDiscoveryConfig {
     fn default() -> Self {
         Self {
             protocol: Arc::from(
-                std::env::var("BEARDOG_MESH_PROTOCOL")
+                std::env::var(env_keys::ENV_MESH_PROTOCOL)
                     .unwrap_or_else(|_| "https".to_string())
                     .as_str(),
             ),
-            port: std::env::var("BEARDOG_MESH_DISCOVERY_PORT")
+            port: std::env::var(env_keys::ENV_MESH_DISCOVERY_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(8443),
             timeout: Duration::from_secs(
-                std::env::var("BEARDOG_MESH_DISCOVERY_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_MESH_DISCOVERY_TIMEOUT_SECS)
                     .ok()
                     .and_then(|t| t.parse().ok())
                     .unwrap_or(5),
@@ -126,21 +127,23 @@ impl Default for MeshDiscoveryConfig {
 impl Default for HandoffRetryConfig {
     fn default() -> Self {
         Self {
-            max_attempts: std::env::var("BEARDOG_HANDOFF_RETRY_MAX_ATTEMPTS")
+            max_attempts: std::env::var(env_keys::ENV_HANDOFF_RETRY_MAX_ATTEMPTS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3),
             timeout: Duration::from_secs(
-                std::env::var("BEARDOG_HANDOFF_RETRY_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_HANDOFF_RETRY_TIMEOUT_SECS)
                     .ok()
                     .and_then(|t| t.parse().ok())
                     .unwrap_or(10),
             ),
             circuit_breaker_enabled: true,
-            circuit_breaker_threshold: std::env::var("BEARDOG_ADAPTER_CIRCUIT_BREAKER_THRESHOLD")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(5),
+            circuit_breaker_threshold: std::env::var(
+                env_keys::ENV_ADAPTER_CIRCUIT_BREAKER_THRESHOLD,
+            )
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(5),
         }
     }
 }
@@ -161,13 +164,13 @@ impl Default for HealthMonitorConfig {
     fn default() -> Self {
         Self {
             check_interval: Duration::from_secs(
-                std::env::var("BEARDOG_HEALTH_CHECK_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_HEALTH_CHECK_INTERVAL_SECS)
                     .ok()
                     .and_then(|t| t.parse().ok())
                     .unwrap_or(30),
             ),
             check_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_HEALTH_CHECK_TIMEOUT_SECS)
                     .ok()
                     .and_then(|t| t.parse().ok())
                     .unwrap_or(5),

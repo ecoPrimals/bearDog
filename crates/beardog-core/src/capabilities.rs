@@ -9,6 +9,7 @@
 //! - Does NOT know which specific primals exist or depend on it
 //! - biomeOS handles routing based on capabilities
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -182,8 +183,8 @@ impl BearDogCapabilities {
         metadata.insert("protocol".to_string(), "jsonrpc-2.0".to_string());
 
         // Self-knowledge pattern: discover primal name from environment
-        let primal_name = beardog_errors::process_env::var("PRIMAL_NAME")
-            .or_else(|_| beardog_errors::process_env::var("BEARDOG_NAME"))
+        let primal_name = beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME)
+            .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_NAME))
             .unwrap_or_else(|_| "beardog".to_string());
 
         let socket_path = ipc_discovery::biomeos_ipc_socket_dir_from_env()
@@ -290,8 +291,8 @@ mod tests {
 
     /// Helper to get expected primal name from environment or default
     fn expected_primal_name() -> String {
-        beardog_errors::process_env::var("PRIMAL_NAME")
-            .or_else(|_| beardog_errors::process_env::var("BEARDOG_NAME"))
+        beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME)
+            .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_NAME))
             .unwrap_or_else(|_| "beardog".to_string())
     }
 

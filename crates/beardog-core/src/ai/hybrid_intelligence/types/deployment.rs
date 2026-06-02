@@ -2,6 +2,7 @@
 
 //! Deployment strategies, resource requirements, and health-check type aliases.
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 
 /// Deployment configuration for model rollout strategies
@@ -74,18 +75,18 @@ impl ResourceRequirements {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            cpu: std::env::var("BEARDOG_AI_RESOURCE_CPU")
+            cpu: std::env::var(env_keys::ENV_AI_RESOURCE_CPU)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1.0),
-            memory: std::env::var("BEARDOG_AI_RESOURCE_MEMORY_MB")
+            memory: std::env::var(env_keys::ENV_AI_RESOURCE_MEMORY_MB)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1024),
-            gpu: std::env::var("BEARDOG_AI_RESOURCE_GPU")
+            gpu: std::env::var(env_keys::ENV_AI_RESOURCE_GPU)
                 .ok()
                 .and_then(|s| s.parse().ok()),
-            storage: std::env::var("BEARDOG_AI_RESOURCE_STORAGE_GB")
+            storage: std::env::var(env_keys::ENV_AI_RESOURCE_STORAGE_GB)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(10),

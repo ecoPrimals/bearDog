@@ -4,6 +4,8 @@
 //!
 //! Provides safe interfaces for biometric authentication (Touch ID/Face ID) on iOS
 
+#[cfg(target_os = "ios")]
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use tracing::{info, warn};
 
@@ -82,14 +84,14 @@ impl SafeBiometricAuthenticator {
             // LAContext().canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics)
 
             // Check environment variables for testing
-            if beardog_errors::process_env::var("IOS_TOUCH_ID_AVAILABLE")
+            if beardog_errors::process_env::var(env_keys::ENV_IOS_TOUCH_ID_AVAILABLE)
                 .map(|v| v == "true")
                 .unwrap_or(false)
             {
                 types.push(BiometricType::TouchId);
             }
 
-            if beardog_errors::process_env::var("IOS_FACE_ID_AVAILABLE")
+            if beardog_errors::process_env::var(env_keys::ENV_IOS_FACE_ID_AVAILABLE)
                 .map(|v| v == "true")
                 .unwrap_or(false)
             {

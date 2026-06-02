@@ -6,6 +6,7 @@
 //! knowledge and gradually learning about the ecosystem through observation
 //! and interaction, similar to how an infant learns about the world.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::capabilities::CapabilityType as Capability;
 use std::collections::HashMap;
@@ -118,7 +119,7 @@ impl Default for InfantPatternConfig {
             min_observations: 5,
             confidence_threshold: 0.7,
             pattern_max_age: Duration::from_secs(
-                beardog_errors::process_env::var("BEARDOG_PATTERN_MAX_AGE_SECS")
+                beardog_errors::process_env::var(env_keys::ENV_PATTERN_MAX_AGE_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(3600) // 1 hour default

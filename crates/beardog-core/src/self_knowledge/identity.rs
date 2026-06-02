@@ -2,6 +2,7 @@
 
 //! Primal identity resolution (discovered from environment, never hardcoded).
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 
 /// Inputs for resolving a primal's identity (pure data, no env reads).
@@ -22,10 +23,10 @@ impl IdentityInputs {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            primal_name: std::env::var("PRIMAL_NAME").ok(),
-            beardog_name: std::env::var("BEARDOG_NAME").ok(),
-            hostname: std::env::var("HOSTNAME").ok(),
-            host: std::env::var("HOST").ok(),
+            primal_name: std::env::var(env_keys::ENV_PRIMAL_NAME).ok(),
+            beardog_name: std::env::var(env_keys::ENV_NAME).ok(),
+            hostname: std::env::var(env_keys::ENV_HOSTNAME).ok(),
+            host: std::env::var(env_keys::ENV_HOST_UNPREFIXED).ok(),
         }
     }
 }

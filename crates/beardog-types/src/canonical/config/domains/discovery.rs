@@ -18,6 +18,7 @@
 //! This consolidates 8 fragmented `DiscoveryConfig` definitions into a single canonical source.
 //! See `DISCOVERY_CONFIG_CONSOLIDATION_PLAN.md` for details.
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -214,26 +215,26 @@ impl DiscoveryConfig {
         let mut config = Self::default();
 
         // Enabled
-        if let Ok(val) = std::env::var("BEARDOG_DISCOVERY_ENABLED") {
+        if let Ok(val) = std::env::var(env_keys::ENV_DISCOVERY_ENABLED) {
             config.enabled = val.to_lowercase() == "true";
         }
 
         // Timeout
-        if let Ok(val) = std::env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS")
+        if let Ok(val) = std::env::var(env_keys::ENV_DISCOVERY_TIMEOUT_SECS)
             && let Ok(secs) = val.parse::<u64>()
         {
             config.timeout = Duration::from_secs(secs);
         }
 
         // Max attempts
-        if let Ok(val) = std::env::var("BEARDOG_DISCOVERY_MAX_ATTEMPTS")
+        if let Ok(val) = std::env::var(env_keys::ENV_DISCOVERY_MAX_ATTEMPTS)
             && let Ok(attempts) = val.parse::<u32>()
         {
             config.max_attempts = attempts;
         }
 
         // Cache enabled
-        if let Ok(val) = std::env::var("BEARDOG_DISCOVERY_CACHE_ENABLED") {
+        if let Ok(val) = std::env::var(env_keys::ENV_DISCOVERY_CACHE_ENABLED) {
             config.cache_enabled = val.to_lowercase() == "true";
         }
 
@@ -241,17 +242,17 @@ impl DiscoveryConfig {
         let mut endpoints = vec![];
 
         // Single endpoint
-        if let Ok(endpoint) = std::env::var("BEARDOG_DISCOVERY_ENDPOINT") {
+        if let Ok(endpoint) = std::env::var(env_keys::ENV_DISCOVERY_ENDPOINT) {
             endpoints.push(endpoint);
         }
 
         // Capability registry
-        if let Ok(endpoint) = std::env::var("BEARDOG_CAPABILITY_REGISTRY") {
+        if let Ok(endpoint) = std::env::var(env_keys::ENV_CAPABILITY_REGISTRY) {
             endpoints.push(endpoint);
         }
 
         // Comma-separated list
-        if let Ok(list) = std::env::var("BEARDOG_DISCOVERY_ENDPOINTS") {
+        if let Ok(list) = std::env::var(env_keys::ENV_DISCOVERY_ENDPOINTS) {
             for endpoint in list.split(',') {
                 let trimmed = endpoint.trim();
                 if !trimmed.is_empty() {

@@ -9,6 +9,7 @@ use super::types::{
     DecisionResult, IntelligenceEvent, IntelligenceEventType, IntelligenceMetrics,
     PredictionResult, SystemStatus,
 };
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
 use chrono::Utc;
@@ -437,7 +438,7 @@ impl HybridIntelligenceSystem {
 
         tokio::spawn(async move {
             let interval_secs =
-                beardog_errors::process_env::var("BEARDOG_AI_METRICS_INTERVAL_SECS")
+                beardog_errors::process_env::var(env_keys::ENV_AI_METRICS_INTERVAL_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(60);

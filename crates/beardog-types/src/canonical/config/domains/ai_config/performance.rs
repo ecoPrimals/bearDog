@@ -4,6 +4,7 @@
 //!
 //! AI performance optimization and security settings.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -66,11 +67,11 @@ impl Default for AiPerformanceConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            cpu_threads: std::env::var("BEARDOG_AI_CPU_THREADS")
+            cpu_threads: std::env::var(env_keys::ENV_AI_CPU_THREADS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(4), // Default to 4 threads
-            memory_limit_mb: std::env::var("BEARDOG_AI_MEMORY_LIMIT_MB")
+            memory_limit_mb: std::env::var(env_keys::ENV_AI_MEMORY_LIMIT_MB)
                 .ok()
                 .and_then(|m| m.parse().ok())
                 .unwrap_or(4096), // 4GB default
@@ -151,7 +152,7 @@ impl AiPerformanceConfigBuilder {
             enabled: self.enabled,
             cpu_threads: self.cpu_threads.unwrap_or(4),
             memory_limit_mb: self.memory_limit_mb.unwrap_or(
-                std::env::var("BEARDOG_AI_MEMORY_LIMIT_MB")
+                std::env::var(env_keys::ENV_AI_MEMORY_LIMIT_MB)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(4096)

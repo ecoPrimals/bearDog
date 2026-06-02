@@ -5,6 +5,7 @@
 // Provides safe Rust interface to Android StrongBox hardware security module.
 // This implementation prioritizes safety and error handling over raw performance.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::KeyType;
 use serde::{Deserialize, Serialize};
@@ -68,7 +69,7 @@ impl SafeAndroidStrongBoxWrapper {
     /// Check if StrongBox is available on this device
     fn check_strongbox_availability() -> bool {
         // Check environment variable for mock availability
-        beardog_errors::process_env::var("STRONGBOX_AVAILABLE")
+        beardog_errors::process_env::var(env_keys::ENV_STRONGBOX_AVAILABLE)
             .unwrap_or_else(|_| "false".to_string())
             == "true"
     }

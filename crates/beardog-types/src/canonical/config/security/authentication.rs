@@ -5,6 +5,7 @@
 //! Canonical authentication configuration for JWT, OAuth, API keys, and identity providers.
 //! Provides comprehensive authentication mechanisms for the BearDog security ecosystem.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -320,7 +321,7 @@ impl CanonicalAuthenticationConfig {
     pub fn production() -> Self {
         Self {
             jwt_secret: Arc::from(
-                std::env::var("BEARDOG_JWT_SECRET")
+                std::env::var(env_keys::ENV_JWT_SECRET)
                     .unwrap_or_else(|_| "MUST_SET_IN_PRODUCTION".to_string())
                     .as_str(),
             ),
@@ -328,17 +329,17 @@ impl CanonicalAuthenticationConfig {
             jwt_refresh_expiration_seconds: 604_800, // 7 days
             enable_oauth: true,
             oauth_client_id: Arc::from(
-                std::env::var("BEARDOG_OAUTH_CLIENT_ID")
+                std::env::var(env_keys::ENV_OAUTH_CLIENT_ID)
                     .unwrap_or_default()
                     .as_str(),
             ),
             oauth_client_secret: Arc::from(
-                std::env::var("BEARDOG_OAUTH_CLIENT_SECRET")
+                std::env::var(env_keys::ENV_OAUTH_CLIENT_SECRET)
                     .unwrap_or_default()
                     .as_str(),
             ),
             oauth_redirect_uri: Arc::from(
-                std::env::var("BEARDOG_OAUTH_REDIRECT_URI")
+                std::env::var(env_keys::ENV_OAUTH_REDIRECT_URI)
                     .unwrap_or_default()
                     .as_str(),
             ),
@@ -427,11 +428,12 @@ impl CanonicalAuthenticationConfig {
 ///
 /// ```rust
 /// use beardog_types::canonical::config::security::authentication::IdentityProviderConfig;
+/// use beardog_config::env_keys;
 ///
 /// let google = IdentityProviderConfig {
 ///     provider_type: "google".to_string().into(),
 ///     client_id: "your-client-id.apps.googleusercontent.com".to_string().into(),
-///     client_secret: std::env::var("GOOGLE_CLIENT_SECRET").unwrap_or_default().into(),
+///     client_secret: std::env::var(env_keys::ENV_GOOGLE_CLIENT_SECRET).unwrap_or_default().into(),
 ///     auth_endpoint: "https://accounts.google.com/o/oauth2/v2/auth".to_string().into(),
 ///     token_endpoint: "https://oauth2.googleapis.com/token".to_string().into(),
 ///     userinfo_endpoint: "https://openidconnect.googleapis.com/v1/userinfo".to_string().into(),
@@ -444,11 +446,12 @@ impl CanonicalAuthenticationConfig {
 ///
 /// ```rust
 /// use beardog_types::canonical::config::security::authentication::IdentityProviderConfig;
+/// use beardog_config::env_keys;
 ///
 /// let github = IdentityProviderConfig {
 ///     provider_type: "github".to_string().into(),
 ///     client_id: "your-github-client-id".to_string().into(),
-///     client_secret: std::env::var("GITHUB_CLIENT_SECRET").unwrap_or_default().into(),
+///     client_secret: std::env::var(env_keys::ENV_GITHUB_CLIENT_SECRET).unwrap_or_default().into(),
 ///     auth_endpoint: "https://github.com/login/oauth/authorize".to_string().into(),
 ///     token_endpoint: "https://github.com/login/oauth/access_token".to_string().into(),
 ///     userinfo_endpoint: "https://api.github.com/user".to_string().into(),

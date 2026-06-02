@@ -32,6 +32,7 @@
 //! gaming_config.gaming.max_latency_ms = 30;
 //! ```
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -172,7 +173,7 @@ impl SecurityConfig {
     /// Merge `BEARDOG_TUNNEL_KEY_STORAGE_PATH` when set.
     pub fn from_env() -> Self {
         let mut s = Self::default();
-        if let Ok(p) = beardog_errors::process_env::var("BEARDOG_TUNNEL_KEY_STORAGE_PATH") {
+        if let Ok(p) = beardog_errors::process_env::var(env_keys::ENV_TUNNEL_KEY_STORAGE_PATH) {
             s.key_storage_path = p;
         }
         s
@@ -223,7 +224,8 @@ impl GamingConfig {
     /// Merge `BEARDOG_GAMING_ANTI_CHEAT_CAPABILITY` when set.
     pub fn from_env() -> Self {
         let mut g = Self::default();
-        if let Ok(v) = beardog_errors::process_env::var("BEARDOG_GAMING_ANTI_CHEAT_CAPABILITY") {
+        if let Ok(v) = beardog_errors::process_env::var(env_keys::ENV_GAMING_ANTI_CHEAT_CAPABILITY)
+        {
             g.anti_cheat_provider = v;
         }
         g

@@ -3,7 +3,7 @@
 // Safe memory pools for BearDog
 // Provides thread-safe memory management without unchecked memory patterns
 
-use crossbeam::queue::ArrayQueue;
+use crossbeam_queue::ArrayQueue;
 use std::sync::{Arc, Mutex};
 
 /// Fixed-capacity [`ArrayQueue`] of boxed `T` with mutex-protected [`PoolStats`].

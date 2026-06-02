@@ -4,6 +4,7 @@
 //
 // This module provides functionality for the BearDog ecosystem.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
@@ -165,7 +166,7 @@ impl HumanEntropyConfig {
     /// Load `quality_threshold` from `BEARDOG_ENTROPY_QUALITY_THRESHOLD` when set (default `0.8`).
     pub fn from_env() -> Self {
         Self {
-            quality_threshold: std::env::var("BEARDOG_ENTROPY_QUALITY_THRESHOLD")
+            quality_threshold: std::env::var(env_keys::ENV_ENTROPY_QUALITY_THRESHOLD)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(0.8),

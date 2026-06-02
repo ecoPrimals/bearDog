@@ -3,6 +3,7 @@
 //! Data types for advanced genetic algorithms (configuration, individuals, fitness, optimization).
 
 use crate::genetics::entropy_hierarchy::{EntropyClass, MachineEntropySource, MachineSourceType};
+use beardog_config::env_keys;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -102,32 +103,32 @@ impl EvolutionConfig {
     /// Load evolution parameters from `BEARDOG_GENETICS_*` environment variables (see source for names).
     pub fn from_env() -> Self {
         Self {
-            population_size: std::env::var("BEARDOG_GENETICS_POPULATION_SIZE")
+            population_size: std::env::var(env_keys::ENV_GENETICS_POPULATION_SIZE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(100),
-            mutation_rate: std::env::var("BEARDOG_GENETICS_MUTATION_RATE")
+            mutation_rate: std::env::var(env_keys::ENV_GENETICS_MUTATION_RATE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(0.05),
-            crossover_rate: std::env::var("BEARDOG_GENETICS_CROSSOVER_RATE")
+            crossover_rate: std::env::var(env_keys::ENV_GENETICS_CROSSOVER_RATE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(0.8),
-            elitism_percentage: std::env::var("BEARDOG_GENETICS_ELITISM_PERCENTAGE")
+            elitism_percentage: std::env::var(env_keys::ENV_GENETICS_ELITISM_PERCENTAGE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(0.1),
-            max_generations: std::env::var("BEARDOG_GENETICS_MAX_GENERATIONS")
+            max_generations: std::env::var(env_keys::ENV_GENETICS_MAX_GENERATIONS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(1000),
-            fitness_threshold: std::env::var("BEARDOG_GENETICS_FITNESS_THRESHOLD")
+            fitness_threshold: std::env::var(env_keys::ENV_GENETICS_FITNESS_THRESHOLD)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(0.95),
             diversity_preservation: true,
-            adaptive_parameters: std::env::var("BEARDOG_GENETICS_ADAPTIVE_PARAMETERS")
+            adaptive_parameters: std::env::var(env_keys::ENV_GENETICS_ADAPTIVE_PARAMETERS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(true),

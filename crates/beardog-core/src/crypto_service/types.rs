@@ -5,6 +5,7 @@
 //! This module contains all internal types used by the crypto service,
 //! separated from the public trait API for better organization.
 
+use beardog_config::env_keys;
 use std::sync::atomic::AtomicU64;
 use std::time::SystemTime;
 
@@ -107,29 +108,30 @@ impl CryptoServiceConfig {
         let mut config = Self::default();
 
         // Service name
-        if let Ok(name) = beardog_errors::process_env::var("BEARDOG_CRYPTO_SERVICE_NAME") {
+        if let Ok(name) = beardog_errors::process_env::var(env_keys::ENV_CRYPTO_SERVICE_NAME) {
             config.service_name = name;
         }
 
         // HSM enabled
-        if let Ok(enabled) = beardog_errors::process_env::var("BEARDOG_CRYPTO_HSM_ENABLED") {
+        if let Ok(enabled) = beardog_errors::process_env::var(env_keys::ENV_CRYPTO_HSM_ENABLED) {
             config.hsm_enabled = enabled.parse().unwrap_or(false);
         }
 
         // Genetic enabled
-        if let Ok(enabled) = beardog_errors::process_env::var("BEARDOG_CRYPTO_GENETIC_ENABLED") {
+        if let Ok(enabled) = beardog_errors::process_env::var(env_keys::ENV_CRYPTO_GENETIC_ENABLED)
+        {
             config.genetic_enabled = enabled.parse().unwrap_or(true);
         }
 
         // Max data size
-        if let Ok(size) = beardog_errors::process_env::var("BEARDOG_CRYPTO_MAX_DATA_SIZE")
+        if let Ok(size) = beardog_errors::process_env::var(env_keys::ENV_CRYPTO_MAX_DATA_SIZE)
             && let Ok(parsed) = size.parse()
         {
             config.max_data_size = parsed;
         }
 
         // Audit enabled
-        if let Ok(enabled) = beardog_errors::process_env::var("BEARDOG_CRYPTO_AUDIT_ENABLED") {
+        if let Ok(enabled) = beardog_errors::process_env::var(env_keys::ENV_CRYPTO_AUDIT_ENABLED) {
             config.audit_enabled = enabled.parse().unwrap_or(true);
         }
 

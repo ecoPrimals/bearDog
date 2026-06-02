@@ -2,6 +2,7 @@
 
 //! Database Domain Configuration
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -254,7 +255,7 @@ impl DatabaseDomainConfig {
     pub fn from_env() -> Result<Self, BearDogError> {
         let mut config = Self::default();
 
-        if let Ok(url) = std::env::var("DATABASE_URL") {
+        if let Ok(url) = std::env::var(env_keys::ENV_DATABASE_URL) {
             config.primary.url = url;
         }
 

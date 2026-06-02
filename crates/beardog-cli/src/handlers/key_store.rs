@@ -2,6 +2,7 @@
 
 //! Local JSON key store under `~/.beardog/keys` (CLI testing and development).
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -79,7 +80,7 @@ pub fn get_keys_dir_for_home(home: impl AsRef<std::path::Path>) -> Result<PathBu
 ///
 /// Returns an error if the `HOME` environment variable is not set.
 pub fn home_dir_for_keys() -> Result<PathBuf, BearDogError> {
-    beardog_errors::process_env::var("HOME")
+    beardog_errors::process_env::var(env_keys::ENV_HOME)
         .map_err(|_| BearDogError::system("HOME environment variable not set".to_string()))
         .map(PathBuf::from)
 }

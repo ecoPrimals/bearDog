@@ -30,6 +30,7 @@
 //! 3. Secure defaults from `BearDogConfig::default()`
 
 use crate::BearDogConfig;
+use crate::env_keys;
 use std::sync::{Arc, LazyLock};
 use tracing::{info, warn};
 
@@ -72,7 +73,7 @@ pub static BEARDOG_CONFIG: LazyLock<Arc<BearDogConfig>> = LazyLock::new(|| {
 /// 3. Defaults
 fn load_global_config() -> BearDogConfig {
     // Try loading from explicit config file path
-    if let Ok(config_path) = std::env::var("BEARDOG_CONFIG_PATH") {
+    if let Ok(config_path) = std::env::var(env_keys::ENV_CONFIG_PATH) {
         info!("📂 Loading configuration from: {}", config_path);
 
         match BearDogConfig::from_file(&config_path) {

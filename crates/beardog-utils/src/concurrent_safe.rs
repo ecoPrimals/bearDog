@@ -304,13 +304,13 @@ where
     }
 }
 
-/// Safe concurrent queue using crossbeam
+/// Safe concurrent queue using crossbeam-queue
 #[derive(Debug)]
 pub struct SafeConcurrentQueue<T>
 where
     T: Send + Sync,
 {
-    inner: crossbeam::queue::SegQueue<T>,
+    inner: crossbeam_queue::SegQueue<T>,
     stats: SafeConcurrentStats,
 }
 
@@ -324,7 +324,7 @@ where
         info!("🛡️ Creating SafeConcurrentQueue - safe Rust only");
 
         Self {
-            inner: crossbeam::queue::SegQueue::new(),
+            inner: crossbeam_queue::SegQueue::new(),
             stats: SafeConcurrentStats::default(),
         }
     }

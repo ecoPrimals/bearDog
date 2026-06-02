@@ -3,6 +3,7 @@
 //! Structured capability matrices advertised by HSM devices (crypto, performance, APIs).
 
 use crate::constants::defaults;
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 
 /// HSM hardware capabilities
@@ -130,7 +131,7 @@ impl Default for KeyManagementCapabilities {
     fn default() -> Self {
         Self {
             max_keys: Some(
-                std::env::var("BEARDOG_HSM_MAX_KEYS")
+                std::env::var(env_keys::ENV_HSM_MAX_KEYS)
                     .ok()
                     .and_then(|k| k.parse().ok())
                     .unwrap_or_else(|| {
@@ -268,7 +269,7 @@ pub struct PerformanceCapabilities {
 impl Default for PerformanceCapabilities {
     fn default() -> Self {
         Self {
-            max_operations_per_second: std::env::var("BEARDOG_HSM_MAX_OPS_PER_SEC")
+            max_operations_per_second: std::env::var(env_keys::ENV_HSM_MAX_OPS_PER_SEC)
                 .ok()
                 .and_then(|o| o.parse().ok())
                 .unwrap_or_else(|| {

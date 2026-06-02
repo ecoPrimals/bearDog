@@ -3,6 +3,7 @@
 //! Chain processing and retry configuration
 
 use crate::canonical::traits::RetryStrategy;
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -92,12 +93,12 @@ impl ChainConfig {
     /// Create `ChainConfig` from environment variables
     pub fn from_env() -> Self {
         Self {
-            max_chain_length: std::env::var("BEARDOG_ADAPTER_MAX_CHAIN_LENGTH")
+            max_chain_length: std::env::var(env_keys::ENV_ADAPTER_MAX_CHAIN_LENGTH)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_CHAIN_LENGTH),
             processing_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_ADAPTER_PROCESSING_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_ADAPTER_PROCESSING_TIMEOUT_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(Self::DEFAULT_PROCESSING_TIMEOUT_SECS),
@@ -105,7 +106,7 @@ impl ChainConfig {
             step: StepConfig::default(),
             retry: RetryConfig::default(),
             parallel_enabled: true,
-            max_workers: std::env::var("BEARDOG_ADAPTER_MAX_WORKERS")
+            max_workers: std::env::var(env_keys::ENV_ADAPTER_MAX_WORKERS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_WORKERS),
@@ -123,16 +124,16 @@ impl Default for StepConfig {
     fn default() -> Self {
         Self {
             timeout: Duration::from_secs(
-                std::env::var("BEARDOG_ADAPTER_STEP_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_ADAPTER_STEP_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),
             ),
-            max_attempts: std::env::var("BEARDOG_ADAPTER_STEP_MAX_ATTEMPTS")
+            max_attempts: std::env::var(env_keys::ENV_ADAPTER_STEP_MAX_ATTEMPTS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3),
-            validation_enabled: std::env::var("BEARDOG_ADAPTER_STEP_VALIDATION_ENABLED")
+            validation_enabled: std::env::var(env_keys::ENV_ADAPTER_STEP_VALIDATION_ENABLED)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
@@ -144,23 +145,23 @@ impl Default for StepConfig {
 impl Default for RetryConfig {
     fn default() -> Self {
         Self {
-            max_attempts: std::env::var("BEARDOG_ADAPTER_RETRY_MAX_ATTEMPTS")
+            max_attempts: std::env::var(env_keys::ENV_ADAPTER_RETRY_MAX_ATTEMPTS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3),
             initial_delay: Duration::from_millis(
-                std::env::var("BEARDOG_ADAPTER_RETRY_INITIAL_DELAY_MS")
+                std::env::var(env_keys::ENV_ADAPTER_RETRY_INITIAL_DELAY_MS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(100),
             ),
             max_delay: Duration::from_secs(
-                std::env::var("BEARDOG_ADAPTER_RETRY_MAX_DELAY_SECS")
+                std::env::var(env_keys::ENV_ADAPTER_RETRY_MAX_DELAY_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),
             ),
-            backoff_multiplier: std::env::var("BEARDOG_ADAPTER_RETRY_BACKOFF_MULTIPLIER")
+            backoff_multiplier: std::env::var(env_keys::ENV_ADAPTER_RETRY_BACKOFF_MULTIPLIER)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(2.0),

@@ -5,6 +5,7 @@
 //! This module provides encryption, key management, and cryptographic provider
 //! configuration structures for the `BearDog` security system.
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -129,21 +130,21 @@ impl Default for GeneticRenewalConfiguration {
         let mut genetic_parameters = HashMap::new();
         genetic_parameters.insert(
             "mutation_rate".to_string(),
-            std::env::var("BEARDOG_GENETIC_RENEWAL_MUTATION_RATE")
+            std::env::var(env_keys::ENV_GENETIC_RENEWAL_MUTATION_RATE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.1),
         );
         genetic_parameters.insert(
             "crossover_rate".to_string(),
-            std::env::var("BEARDOG_GENETIC_RENEWAL_CROSSOVER_RATE")
+            std::env::var(env_keys::ENV_GENETIC_RENEWAL_CROSSOVER_RATE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.8),
         );
         genetic_parameters.insert(
             "selection_pressure".to_string(),
-            std::env::var("BEARDOG_GENETIC_RENEWAL_SELECTION_PRESSURE")
+            std::env::var(env_keys::ENV_GENETIC_RENEWAL_SELECTION_PRESSURE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.7),
@@ -157,7 +158,7 @@ impl Default for GeneticRenewalConfiguration {
                 "usage_based".to_string(),
                 "threat_based".to_string(),
             ],
-            renewal_frequency_hours: std::env::var("BEARDOG_GENETIC_RENEWAL_FREQUENCY_HOURS")
+            renewal_frequency_hours: std::env::var(env_keys::ENV_GENETIC_RENEWAL_FREQUENCY_HOURS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(168), // Weekly

@@ -5,6 +5,7 @@ use aes_gcm::{
     aead::generic_array::GenericArray,
     aead::{Aead, KeyInit},
 };
+use beardog_config::env_keys;
 use hkdf::Hkdf;
 use sha2::Sha256;
 use std::collections::HashMap;
@@ -275,7 +276,7 @@ impl DefaultEncryptionKey {
     /// Derive key from `BEARDOG_HSM_MASTER_KEY` env var or generate random (dev/test).
     /// Production deployments MUST set `BEARDOG_HSM_MASTER_KEY` for deterministic key derivation.
     pub fn from_env() -> Result<Self, BearDogError> {
-        if let Ok(master) = beardog_errors::process_env::var("BEARDOG_HSM_MASTER_KEY") {
+        if let Ok(master) = beardog_errors::process_env::var(env_keys::ENV_HSM_MASTER_KEY) {
             Self::from_master_secret(master.as_bytes())
         } else {
             warn!("BEARDOG_HSM_MASTER_KEY not set; using random key (dev/test only)");

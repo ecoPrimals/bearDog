@@ -3,6 +3,7 @@
 // Cache Management Module
 
 use super::types::{CacheEntry, CacheEvictionPolicy};
+use beardog_config::env_keys;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -196,7 +197,7 @@ impl Default for CacheConfig {
     fn default() -> Self {
         Self {
             max_size_bytes: 1024 * 1024 * 1024, // 1GB
-            max_entries: beardog_errors::process_env::var("BEARDOG_STORAGE_CACHE_MAX_ENTRIES")
+            max_entries: beardog_errors::process_env::var(env_keys::ENV_STORAGE_CACHE_MAX_ENTRIES)
                 .ok()
                 .and_then(|e| e.parse().ok())
                 .unwrap_or(10000), // 10K entries default

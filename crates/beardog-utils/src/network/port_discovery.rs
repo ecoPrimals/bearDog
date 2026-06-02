@@ -11,6 +11,7 @@
 //! - Configuration precedence
 //! - Platform constraints
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use std::net::TcpListener;
 use tracing::{debug, info};
@@ -138,7 +139,7 @@ async fn try_environment_port(
     }
 
     // Try generic BEARDOG_PORT as fallback
-    if let Ok(port_str) = beardog_errors::process_env::var("BEARDOG_PORT") {
+    if let Ok(port_str) = beardog_errors::process_env::var(env_keys::ENV_PORT) {
         if let Ok(port) = port_str.parse::<u16>() {
             debug!("Found generic port {} from BEARDOG_PORT", port);
             

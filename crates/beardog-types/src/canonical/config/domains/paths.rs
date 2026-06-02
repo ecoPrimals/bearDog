@@ -5,6 +5,7 @@
 //! Centralized path configuration to eliminate hardcoded paths throughout the codebase.
 //! This module provides environment-aware defaults and configuration-driven path management.
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
@@ -111,24 +112,24 @@ impl PathConfig {
     fn base_dir_from_env() -> PathBuf {
         if cfg!(test) {
             std::env::temp_dir().join("beardog-test")
-        } else if let Ok(base) = std::env::var("BEARDOG_BASE_DIR") {
+        } else if let Ok(base) = std::env::var(env_keys::ENV_BASE_DIR) {
             PathBuf::from(base)
         } else if cfg!(target_os = "linux") {
-            if let Ok(data_home) = std::env::var("XDG_DATA_HOME") {
+            if let Ok(data_home) = std::env::var(env_keys::ENV_XDG_DATA_HOME) {
                 PathBuf::from(data_home).join("beardog")
-            } else if let Ok(home) = std::env::var("HOME") {
+            } else if let Ok(home) = std::env::var(env_keys::ENV_HOME) {
                 PathBuf::from(home).join(".local/share/beardog")
             } else {
                 PathBuf::from("/var/lib/beardog")
             }
         } else if cfg!(target_os = "macos") {
-            if let Ok(home) = std::env::var("HOME") {
+            if let Ok(home) = std::env::var(env_keys::ENV_HOME) {
                 PathBuf::from(home).join("Library/Application Support/BearDog")
             } else {
                 PathBuf::from("/Library/Application Support/BearDog")
             }
         } else if cfg!(target_os = "windows") {
-            if let Ok(appdata) = std::env::var("APPDATA") {
+            if let Ok(appdata) = std::env::var(env_keys::ENV_APPDATA) {
                 PathBuf::from(appdata).join("BearDog")
             } else {
                 PathBuf::from("C:\\ProgramData\\BearDog")
@@ -176,10 +177,10 @@ impl PathConfig {
 
     fn default_cache_dir_from_base(base: &Path) -> PathBuf {
         if cfg!(target_os = "linux") {
-            if let Ok(cache_home) = std::env::var("XDG_CACHE_HOME") {
+            if let Ok(cache_home) = std::env::var(env_keys::ENV_XDG_CACHE_HOME) {
                 return PathBuf::from(cache_home).join("beardog");
             }
-            if let Ok(home) = std::env::var("HOME") {
+            if let Ok(home) = std::env::var(env_keys::ENV_HOME) {
                 return PathBuf::from(home).join(".cache/beardog");
             }
         }

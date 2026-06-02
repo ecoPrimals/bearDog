@@ -166,6 +166,7 @@ pub type DatabaseConfig = CanonicalDatabaseConfig;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use beardog_config::env_keys;
 
     #[test]
     fn test_database_config_default() {
@@ -182,13 +183,13 @@ mod tests {
             connection_string: "postgresql://localhost:5432/beardog".to_string(),
             max_connections: 10,
             connection_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_DB_CONNECTION_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_DB_CONNECTION_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(5),
             ),
             query_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_DB_QUERY_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_DB_QUERY_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),

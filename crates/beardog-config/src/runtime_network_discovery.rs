@@ -11,6 +11,7 @@
 //! - Graceful fallback when discovery fails
 
 use crate::domains::network_ports::DEFAULT_API_PORT;
+use crate::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener};
@@ -121,7 +122,7 @@ impl NetworkDiscovery {
         }
 
         // Check environment variable override
-        if let Ok(host) = std::env::var("BEARDOG_BIND_ADDRESS")
+        if let Ok(host) = std::env::var(env_keys::ENV_BIND_ADDRESS)
             && let Ok(addr) = host.parse::<IpAddr>()
         {
             addresses.insert(0, addr); // Prioritize env var
@@ -151,7 +152,7 @@ impl NetworkDiscovery {
 
         // UDP connect to any routable address to discover local IP (no data sent).
         // Configurable via BEARDOG_NETWORK_PROBE_TARGET for air-gapped or custom environments.
-        let probe_target = std::env::var("BEARDOG_NETWORK_PROBE_TARGET")
+        let probe_target = std::env::var(env_keys::ENV_NETWORK_PROBE_TARGET)
             .unwrap_or_else(|_| "198.51.100.1:80".to_string());
         socket
             .connect(&probe_target)

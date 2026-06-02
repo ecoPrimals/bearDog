@@ -6,6 +6,7 @@
 // Implements zero-copy patterns, connection pooling, and intelligent caching.
 
 // Removed unused UniversalComputeClient import - handled by capability discovery
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 // Removed unused capability types - using service discovery patterns
 use beardog_types::canonical::HealthStatus;
@@ -487,31 +488,35 @@ impl EcosystemOptimizerConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            max_connections: beardog_errors::process_env::var("BEARDOG_OPTIMIZER_MAX_CONNECTIONS")
-                .ok()
-                .and_then(|v| v.parse().ok())
-                .unwrap_or(100),
+            max_connections: beardog_errors::process_env::var(
+                env_keys::ENV_OPTIMIZER_MAX_CONNECTIONS,
+            )
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(100),
             connection_timeout: Duration::from_secs(
-                beardog_errors::process_env::var("BEARDOG_OPTIMIZER_CONNECTION_TIMEOUT_SECS")
+                beardog_errors::process_env::var(env_keys::ENV_OPTIMIZER_CONNECTION_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),
             ),
             cache_ttl: Duration::from_secs(
-                beardog_errors::process_env::var("BEARDOG_OPTIMIZER_CACHE_TTL_SECS")
+                beardog_errors::process_env::var(env_keys::ENV_OPTIMIZER_CACHE_TTL_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(300),
             ),
-            rate_limit: beardog_errors::process_env::var("BEARDOG_OPTIMIZER_RATE_LIMIT")
+            rate_limit: beardog_errors::process_env::var(env_keys::ENV_OPTIMIZER_RATE_LIMIT)
                 .ok()
                 .and_then(|r| r.parse().ok())
                 .unwrap_or(1000),
             health_check_interval: Duration::from_secs(
-                beardog_errors::process_env::var("BEARDOG_OPTIMIZER_HEALTH_CHECK_INTERVAL_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(60),
+                beardog_errors::process_env::var(
+                    env_keys::ENV_OPTIMIZER_HEALTH_CHECK_INTERVAL_SECS,
+                )
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(60),
             ),
         }
     }

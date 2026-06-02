@@ -4,6 +4,7 @@
 //!
 //! Modern, type-safe configuration for human-AI collaboration with builder pattern.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use super::types::{ConfidenceThreshold, OversightLevel};
 use beardog_errors::BearDogError;
@@ -92,7 +93,7 @@ impl Default for HybridIntelligenceConfig {
             auto_decision_threshold: ConfidenceThreshold::high(),
             feedback_learning: true,
             human_input_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_AI_HUMAN_INPUT_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_AI_HUMAN_INPUT_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30)
@@ -121,7 +122,7 @@ impl Default for HybridIntelligenceConfigBuilder {
             auto_decision_threshold: ConfidenceThreshold::high(),
             feedback_learning: true,
             human_input_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_AI_HUMAN_INPUT_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_AI_HUMAN_INPUT_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30)

@@ -21,12 +21,13 @@
 //!
 //! ```rust,no_run
 //! use beardog_tower_atomic::Client;
+//! use beardog_config::env_keys;
 //! use serde_json::json;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     // Peer is chosen by operator (env / capability discovery), not by hardcoded primal name.
-//!     let peer_socket_name = std::env::var("TOWER_ATOMIC_PEER").unwrap_or_default();
+//!     let peer_socket_name = std::env::var(env_keys::ENV_TOWER_ATOMIC_PEER).unwrap_or_default();
 //!     let mut peer = Client::connect(&peer_socket_name).await?;
 //!
 //!     let response = peer.call("http.get", json!({
@@ -97,10 +98,11 @@ impl Client {
     ///
     /// ```rust,no_run
     /// use beardog_tower_atomic::Client;
+    /// use beardog_config::env_keys;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let peer = Client::connect(&std::env::var("TOWER_ATOMIC_PEER").unwrap_or_default()).await?;
+    ///     let peer = Client::connect(&std::env::var(env_keys::ENV_TOWER_ATOMIC_PEER).unwrap_or_default()).await?;
     ///     Ok(())
     /// }
     /// ```
@@ -163,11 +165,12 @@ impl Client {
     ///
     /// ```rust,no_run
     /// use beardog_tower_atomic::Client;
+    /// use beardog_config::env_keys;
     /// use serde_json::json;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let mut peer = Client::connect(&std::env::var("TOWER_ATOMIC_PEER").unwrap_or_default()).await?;
+    ///     let mut peer = Client::connect(&std::env::var(env_keys::ENV_TOWER_ATOMIC_PEER).unwrap_or_default()).await?;
     ///
     ///     let response = peer.call("http.get", json!({
     ///         "url": "https://api.example.com"

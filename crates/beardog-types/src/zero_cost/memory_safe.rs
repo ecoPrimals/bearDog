@@ -5,7 +5,7 @@
 // This module provides memory-efficient operations without unchecked memory patterns,
 // using safe Rust patterns and high-performance data structures.
 
-use crossbeam::queue::SegQueue;
+use crossbeam_queue::SegQueue;
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;

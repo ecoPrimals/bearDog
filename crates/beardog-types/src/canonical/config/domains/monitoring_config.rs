@@ -8,6 +8,7 @@
 //! This module contains all monitoring-related configuration types, extracted from
 //! the large `consolidated_domains.rs` file for better maintainability.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -408,7 +409,7 @@ impl Default for TrendAnalysisConfig {
         Self {
             enabled: true,
             analysis_period: Duration::from_secs(
-                std::env::var("BEARDOG_TREND_ANALYSIS_PERIOD_SECS")
+                std::env::var(env_keys::ENV_TREND_ANALYSIS_PERIOD_SECS)
                     .ok()
                     .and_then(|p| p.parse().ok())
                     .unwrap_or(time::SECONDS_PER_DAY), // 1 day default
@@ -416,7 +417,7 @@ impl Default for TrendAnalysisConfig {
             indicators: vec!["cpu_trend".to_string(), "memory_trend".to_string()],
             forecasting_models: vec!["arima".to_string(), "linear_trend".to_string()],
             prediction_horizon: Duration::from_secs(
-                std::env::var("BEARDOG_PREDICTION_HORIZON_SECS")
+                std::env::var(env_keys::ENV_PREDICTION_HORIZON_SECS)
                     .ok()
                     .and_then(|h| h.parse().ok())
                     .unwrap_or(time::SECONDS_PER_HOUR), // 1 hour default
@@ -525,7 +526,7 @@ impl Default for AlertConfig {
         Self {
             name: "default_alert".to_string(),
             condition: "cpu > 80%".to_string(),
-            threshold: std::env::var("BEARDOG_ALERT_THRESHOLD")
+            threshold: std::env::var(env_keys::ENV_ALERT_THRESHOLD)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(80.0),
@@ -634,17 +635,17 @@ impl BearDogConfig for ConsolidatedMonitoringConfig {
     fn from_env() -> Result<Self, BearDogError> {
         let mut config = Self::default();
 
-        if let Ok(enabled) = std::env::var("BEARDOG_MONITORING_ENABLED") {
+        if let Ok(enabled) = std::env::var(env_keys::ENV_MONITORING_ENABLED) {
             config.enabled = enabled.parse().unwrap_or(true);
         }
 
-        if let Ok(interval) = std::env::var("BEARDOG_MONITORING_INTERVAL")
+        if let Ok(interval) = std::env::var(env_keys::ENV_MONITORING_INTERVAL)
             && let Ok(secs) = interval.parse::<u64>()
         {
             config.metrics.interval = Duration::from_secs(secs);
         }
 
-        if let Ok(buffer_size) = std::env::var("BEARDOG_MONITORING_BUFFER_SIZE") {
+        if let Ok(buffer_size) = std::env::var(env_keys::ENV_MONITORING_BUFFER_SIZE) {
             config.metrics.buffer_size = buffer_size.parse().unwrap_or(1000);
         }
 

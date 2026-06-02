@@ -2,6 +2,7 @@
 
 //! Model registry, versioning, and authentication types.
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -101,7 +102,7 @@ impl AIRegistryConfig {
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
         Self {
             registry_type: RegistryType::Local,
-            endpoint: std::env::var("BEARDOG_AI_REGISTRY_ENDPOINT").unwrap_or_else(|_| {
+            endpoint: std::env::var(env_keys::ENV_AI_REGISTRY_ENDPOINT).unwrap_or_else(|_| {
                 format!(
                     "{}:{}",
                     network_config.default_host, network_config.service_ports.ai_port

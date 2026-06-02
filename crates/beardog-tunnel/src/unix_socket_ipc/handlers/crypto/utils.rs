@@ -15,6 +15,7 @@
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
+use beardog_config::env_keys;
 use beardog_core::crypto_service::algorithms::hashing;
 use beardog_errors::BearDogError;
 use rand::RngCore;
@@ -63,20 +64,21 @@ pub(super) fn derive_key_from_id(key_id: &str, purpose: &str) -> Result<[u8; 32]
 
     static EPHEMERAL_KEY: OnceLock<String> = OnceLock::new();
 
-    let master_key = beardog_errors::process_env::var("BEARDOG_MASTER_KEY").unwrap_or_else(|_| {
-        EPHEMERAL_KEY
-            .get_or_init(|| {
-                let mut buf = [0u8; 32];
-                rand::rng().fill_bytes(&mut buf);
-                let hex = hex::encode(buf);
-                tracing::warn!(
-                    "BEARDOG_MASTER_KEY not set — using ephemeral random key. \
+    let master_key =
+        beardog_errors::process_env::var(env_keys::ENV_MASTER_KEY).unwrap_or_else(|_| {
+            EPHEMERAL_KEY
+                .get_or_init(|| {
+                    let mut buf = [0u8; 32];
+                    rand::rng().fill_bytes(&mut buf);
+                    let hex = hex::encode(buf);
+                    tracing::warn!(
+                        "BEARDOG_MASTER_KEY not set — using ephemeral random key. \
                          Keys will not survive restarts. Set BEARDOG_MASTER_KEY for persistence."
-                );
-                hex
-            })
-            .clone()
-    });
+                    );
+                    hex
+                })
+                .clone()
+        });
 
     // Derive key using BLAKE3 KDF
     let context = format!("beardog_crypto_v1:{key_id}:{purpose}");

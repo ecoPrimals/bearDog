@@ -10,6 +10,7 @@
 //! - `beardog-security/src/orchestration/compliance_orchestration.rs::ComplianceOrchestrationConfig`
 //! - `beardog-security/src/sovereignty/compliance_sovereignty.rs::ComplianceSovereigntyConfig`
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
@@ -248,12 +249,13 @@ impl ConsolidatedComplianceConfiguration {
     /// Create development configuration
     pub fn development() -> Self {
         let mut config = Self::default();
-        config.audit_retention_days = std::env::var("BEARDOG_COMPLIANCE_DEV_AUDIT_RETENTION_DAYS")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(30); // Shorter for development
+        config.audit_retention_days =
+            std::env::var(env_keys::ENV_COMPLIANCE_DEV_AUDIT_RETENTION_DAYS)
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(30); // Shorter for development
         config.audit_frequency_hours =
-            std::env::var("BEARDOG_COMPLIANCE_DEV_AUDIT_FREQUENCY_HOURS")
+            std::env::var(env_keys::ENV_COMPLIANCE_DEV_AUDIT_FREQUENCY_HOURS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(24); // Daily audits in dev

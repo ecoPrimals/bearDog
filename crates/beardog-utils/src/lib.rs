@@ -69,7 +69,7 @@ pub mod optimization;
 // Safe implementations - production ready
 /// Pre-allocated byte buffers with accounting suitable for hot paths.
 pub mod buffer_pools_safe;
-/// Concurrency primitives and patterns built on `parking_lot` / `crossbeam`.
+/// Concurrency primitives and patterns built on `parking_lot` / `crossbeam-queue`.
 pub mod concurrent_safe;
 /// Generic memory pools for reusable allocations without per-call heap churn.
 pub mod memory_pools_safe;

@@ -9,6 +9,7 @@ use crate::constraints::types::{
     BehavioralConstraint, DataAccessConstraint, KeyOperation, LifetimeConstraint, ScopeConstraint,
     SignedConstraints,
 };
+use beardog_config::env_keys;
 use chrono::Utc;
 
 /// Multisig and behavioral enforcement policy (configuration or [`Self::from_env`]).
@@ -36,13 +37,13 @@ impl ConstraintEnforcementPolicy {
     /// Reads `BEARDOG_MULTISIG_MODE`, `BEARDOG_MULTISIG_THRESHOLD`, and `BEARDOG_BEHAVIORAL_MODE`.
     pub fn from_env() -> Self {
         Self {
-            multisig_mode: std::env::var("BEARDOG_MULTISIG_MODE")
+            multisig_mode: std::env::var(env_keys::ENV_MULTISIG_MODE)
                 .unwrap_or_else(|_| "threshold".to_string())
                 .to_lowercase(),
-            multisig_threshold: std::env::var("BEARDOG_MULTISIG_THRESHOLD")
+            multisig_threshold: std::env::var(env_keys::ENV_MULTISIG_THRESHOLD)
                 .ok()
                 .and_then(|s| s.parse().ok()),
-            behavioral_mode: std::env::var("BEARDOG_BEHAVIORAL_MODE")
+            behavioral_mode: std::env::var(env_keys::ENV_BEHAVIORAL_MODE)
                 .unwrap_or_else(|_| "relaxed".to_string())
                 .to_lowercase(),
         }

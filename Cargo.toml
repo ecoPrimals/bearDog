@@ -197,7 +197,7 @@ bcrypt = "0.18"  # Legacy password hashing - Phase 7
 # JWT: Implemented using RustCrypto (hmac + sha2 + base64) - 100% Pure Rust!
 
 # Concurrent data structures
-crossbeam = "0.8"
+crossbeam-queue = "0.3"
 dashmap = "5.5"
 
 # Utilities
@@ -219,7 +219,6 @@ indicatif = "0.17"
 rpassword = "7.3"
 whoami = "1.6"
 directories = "5"
-base64-url = "3.0"
 bs58 = "0.5"  # Base58 encoding for did:key multibase (Ed25519 → did:key:z6Mk...)
 
 # Dev-only

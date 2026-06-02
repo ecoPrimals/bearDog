@@ -2,6 +2,7 @@
 
 //! Genesis lineage provider - establishes cryptographic lineage during physical ceremonies
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use parking_lot::RwLock;
 use std::collections::HashMap;
@@ -69,7 +70,7 @@ impl GenesisLineageProvider {
 
     /// Set [`Self::genesis_mode`] from `BEARDOG_GENESIS_MODE` (default `permissioned` when unset).
     pub fn with_genesis_mode_from_env(mut self) -> Self {
-        self.genesis_mode = std::env::var("BEARDOG_GENESIS_MODE")
+        self.genesis_mode = std::env::var(env_keys::ENV_GENESIS_MODE)
             .unwrap_or_else(|_| "permissioned".to_string())
             .to_lowercase();
         self
@@ -346,7 +347,7 @@ impl GenesisLineageProvider {
         &self,
         witness: &GenesisWitness,
     ) -> Result<(), BearDogError> {
-        let mode = std::env::var("BEARDOG_GENESIS_MODE")
+        let mode = std::env::var(env_keys::ENV_GENESIS_MODE)
             .unwrap_or_else(|_| "permissioned".to_string())
             .to_lowercase();
         self.verify_witness_authority(witness, &mode)

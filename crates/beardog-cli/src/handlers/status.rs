@@ -2,6 +2,7 @@
 
 //! Status, version, and capability summary for the CLI.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 
 /// Build information structure
@@ -31,7 +32,7 @@ pub fn format_version(version: &str) -> String {
 pub fn get_build_info() -> BuildInfo {
     BuildInfo {
         version: format_version(env!("CARGO_PKG_VERSION")),
-        target: beardog_errors::process_env::var("TARGET")
+        target: beardog_errors::process_env::var(env_keys::ENV_TARGET)
             .unwrap_or_else(|_| "unknown".to_string()),
         profile: if cfg!(debug_assertions) {
             "debug".to_string()

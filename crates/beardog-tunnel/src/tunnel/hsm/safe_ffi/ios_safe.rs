@@ -7,6 +7,7 @@
 
 use super::traits::PlatformSecurityProvider;
 use crate::tunnel::hsm::types::{HsmKey, KeyType};
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use tracing::info;
@@ -41,7 +42,7 @@ impl SafeIosProvider {
 
     /// Checks if Secure Enclave is available on this device
     fn check_secure_enclave_availability() -> bool {
-        beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE")
+        beardog_errors::process_env::var(env_keys::ENV_IOS_SECURE_ENCLAVE_AVAILABLE)
             .map(|v| v == "true")
             .unwrap_or(false)
     }
@@ -335,7 +336,8 @@ mod tests {
     #[test]
     #[serial]
     fn ios_secure_enclave_env_true_enables_hardware_flag() {
-        let prev = beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").ok();
+        let prev =
+            beardog_errors::process_env::var(env_keys::ENV_IOS_SECURE_ENCLAVE_AVAILABLE).ok();
         beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", "true");
         let provider = SafeIosProvider::new().expect("SafeIosProvider::new with SE env");
         assert!(provider.is_hardware_backed());
@@ -348,7 +350,8 @@ mod tests {
     #[test]
     #[serial]
     fn generate_key_returns_not_implemented_when_se_env_true() {
-        let prev = beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").ok();
+        let prev =
+            beardog_errors::process_env::var(env_keys::ENV_IOS_SECURE_ENCLAVE_AVAILABLE).ok();
         beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", "true");
         let provider = SafeIosProvider::new().expect("provider");
         let err = provider
@@ -364,7 +367,8 @@ mod tests {
     #[test]
     #[serial]
     fn sign_and_verify_return_not_implemented_when_se_env_true() {
-        let prev = beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").ok();
+        let prev =
+            beardog_errors::process_env::var(env_keys::ENV_IOS_SECURE_ENCLAVE_AVAILABLE).ok();
         beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", "true");
         let provider = SafeIosProvider::new().expect("provider");
         let err = provider
@@ -384,7 +388,8 @@ mod tests {
     #[test]
     #[serial]
     fn verify_signature_returns_not_implemented_for_short_signature_when_se_env_true() {
-        let prev = beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").ok();
+        let prev =
+            beardog_errors::process_env::var(env_keys::ENV_IOS_SECURE_ENCLAVE_AVAILABLE).ok();
         beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", "true");
         let provider = SafeIosProvider::new().expect("provider");
         let err = provider
@@ -415,7 +420,8 @@ mod tests {
     #[test]
     #[serial]
     fn env_false_explicit_disables_hardware() {
-        let prev = beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").ok();
+        let prev =
+            beardog_errors::process_env::var(env_keys::ENV_IOS_SECURE_ENCLAVE_AVAILABLE).ok();
         beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", "false");
         let provider = SafeIosProvider::new().expect("provider");
         assert!(!provider.is_hardware_backed());

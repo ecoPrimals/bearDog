@@ -5,6 +5,7 @@
 // This module provides comprehensive types for ecosystem integration,
 // including service discovery, compute orchestration, and HSM management.
 
+use beardog_config::env_keys;
 use beardog_types::canonical::HealthStatus;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -130,10 +131,10 @@ impl Default for EcosystemNode {
             id: Uuid::new_v4(),
             name: "unnamed-node".to_string(),
             node_type: NodeType::Service,
-            endpoint: std::env::var("BEARDOG_ECOSYSTEM_ENDPOINT")
+            endpoint: std::env::var(env_keys::ENV_ECOSYSTEM_ENDPOINT)
                 .ok()
-                .or_else(|| std::env::var("BEARDOG_ENDPOINT").ok())
-                .or_else(|| std::env::var("ECOSYSTEM_BASE_URL").ok()),
+                .or_else(|| std::env::var(env_keys::ENV_ENDPOINT).ok())
+                .or_else(|| std::env::var(env_keys::ENV_ECOSYSTEM_BASE_URL).ok()),
             health_status: HealthStatus::Healthy,
             capabilities: vec!["security".to_string(), "hsm".to_string()],
             metadata: HashMap::new(),

@@ -2,6 +2,7 @@
 
 //! Higher-level zero-copy manager with [`std::sync::Weak`]-backed string cache and [`OptimizedString`](crate::zero_copy_optimized::OptimizedString)/[`OptimizedBytes`](crate::zero_copy_optimized::OptimizedBytes) views.
 
+use beardog_config::env_keys;
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::fmt;
@@ -167,7 +168,7 @@ impl ZeroCopyManager {
         let now = Instant::now();
 
         let cleanup_interval_secs =
-            beardog_errors::process_env::var("BEARDOG_CACHE_CLEANUP_INTERVAL_SECS")
+            beardog_errors::process_env::var(env_keys::ENV_CACHE_CLEANUP_INTERVAL_SECS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(300);

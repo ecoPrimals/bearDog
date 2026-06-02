@@ -5,6 +5,7 @@
 //! This module provides authentication, authorization, consensus, and access control
 //! configuration structures for the `BearDog` security system.
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -152,11 +153,11 @@ impl Default for AutoEvolutionConfiguration {
     fn default() -> Self {
         Self {
             enable_auto_evolution: true,
-            evolution_threshold: std::env::var("BEARDOG_EVOLUTION_THRESHOLD")
+            evolution_threshold: std::env::var(env_keys::ENV_EVOLUTION_THRESHOLD)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.8),
-            evolution_interval_seconds: std::env::var("BEARDOG_EVOLUTION_INTERVAL_SECS")
+            evolution_interval_seconds: std::env::var(env_keys::ENV_EVOLUTION_INTERVAL_SECS)
                 .ok()
                 .and_then(|i| i.parse().ok())
                 .unwrap_or(3600), // 1 hour default

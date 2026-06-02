@@ -2,6 +2,7 @@
 
 //! Top-level hybrid intelligence pipeline configuration (training, inference, models, learning).
 
+use beardog_config::env_keys;
 use std::collections::HashMap;
 use std::time::Duration;
 
@@ -69,15 +70,15 @@ impl TrainingConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            batch_size: std::env::var("BEARDOG_AI_TRAINING_BATCH_SIZE")
+            batch_size: std::env::var(env_keys::ENV_AI_TRAINING_BATCH_SIZE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(32),
-            epochs: std::env::var("BEARDOG_AI_TRAINING_EPOCHS")
+            epochs: std::env::var(env_keys::ENV_AI_TRAINING_EPOCHS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(100),
-            learning_rate: std::env::var("BEARDOG_AI_LEARNING_RATE")
+            learning_rate: std::env::var(env_keys::ENV_AI_LEARNING_RATE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(0.001),
@@ -121,11 +122,11 @@ impl InferenceConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            batch_size: std::env::var("BEARDOG_AI_INFERENCE_BATCH_SIZE")
+            batch_size: std::env::var(env_keys::ENV_AI_INFERENCE_BATCH_SIZE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(1),
-            max_inference_time_ms: std::env::var("BEARDOG_AI_MAX_INFERENCE_TIME_MS")
+            max_inference_time_ms: std::env::var(env_keys::ENV_AI_MAX_INFERENCE_TIME_MS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(1000),

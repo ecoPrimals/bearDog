@@ -4,6 +4,8 @@
 //
 // Consolidates hardware HSM configurations from beardog-tunnel and other locations.
 
+use beardog_config::env_keys;
+
 use super::HsmConfigValidation;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -123,16 +125,16 @@ impl Default for HsmConnectionConfig {
     fn default() -> Self {
         Self {
             timeout: Duration::from_secs(
-                std::env::var("BEARDOG_HSM_HARDWARE_CONNECTION_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_HSM_HARDWARE_CONNECTION_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),
             ),
-            max_retries: std::env::var("BEARDOG_HSM_HARDWARE_MAX_RETRIES")
+            max_retries: std::env::var(env_keys::ENV_HSM_HARDWARE_MAX_RETRIES)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3),
-            pool_size: std::env::var("BEARDOG_HSM_POOL_SIZE")
+            pool_size: std::env::var(env_keys::ENV_HSM_POOL_SIZE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(10),
@@ -272,13 +274,13 @@ impl Default for HsmPerformanceConfig {
     fn default() -> Self {
         Self {
             max_operations_per_second: None,
-            batch_size: std::env::var("BEARDOG_HSM_BATCH_SIZE")
+            batch_size: std::env::var(env_keys::ENV_HSM_BATCH_SIZE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(10),
             concurrent_operations: 4,
             cache_enabled: true,
-            cache_size: std::env::var("BEARDOG_HSM_CACHE_SIZE")
+            cache_size: std::env::var(env_keys::ENV_HSM_CACHE_SIZE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1000), // 1000 entries default

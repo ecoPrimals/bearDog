@@ -5,6 +5,7 @@
 //! Comprehensive health checks for BearDog system.
 
 use crate::DoctorArgs;
+use beardog_config::env_keys;
 use beardog_errors::{BearDogError, SystemErrorCategory};
 use beardog_types::constants::domains::network::ipc_discovery;
 use beardog_types::constants::domains::system::defaults;
@@ -14,13 +15,13 @@ use tracing::info;
 /// Discover socket path using self-knowledge pattern.
 fn discover_socket_path() -> String {
     // Check environment variable first
-    if let Ok(path) = beardog_errors::process_env::var("BEARDOG_SOCKET") {
+    if let Ok(path) = beardog_errors::process_env::var(env_keys::ENV_SOCKET) {
         return path;
     }
 
     // Use primal name pattern
-    let primal_name = beardog_errors::process_env::var("PRIMAL_NAME")
-        .or_else(|_| beardog_errors::process_env::var("BEARDOG_NAME"))
+    let primal_name = beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME)
+        .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_NAME))
         .unwrap_or_else(|_| "beardog".to_string());
 
     ipc_discovery::biomeos_ipc_socket_dir_from_env()

@@ -287,13 +287,14 @@ impl ConfigSource for CompositeConfigSource {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use beardog_config::env_keys;
 
     #[test]
     fn test_env_source_reads_actual_env() {
         let source = EnvConfigSource::new();
         assert_eq!(
             source.get("BEARDOG_TEST_VAR_UNIQUE_XYZ_NOT_SET"),
-            std::env::var("BEARDOG_TEST_VAR_UNIQUE_XYZ_NOT_SET").ok()
+            std::env::var(env_keys::ENV_TEST_VAR_UNIQUE_XYZ_NOT_SET).ok()
         );
     }
 

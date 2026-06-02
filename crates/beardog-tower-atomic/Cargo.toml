@@ -21,6 +21,7 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 beardog-types = { workspace = true }
 beardog-errors = { workspace = true }
+beardog-config = { workspace = true }
 
 [dev-dependencies]
 tracing-subscriber = { workspace = true }

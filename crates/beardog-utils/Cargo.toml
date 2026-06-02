@@ -34,11 +34,12 @@ hkdf = { workspace = true }
 hex = { workspace = true }
 thiserror = { workspace = true }
 beardog-errors = { workspace = true }
+beardog-config = { workspace = true }
 beardog-types = { workspace = true }
 
 # Safe concurrent data structures
 dashmap = { workspace = true }
-crossbeam = { workspace = true }
+crossbeam-queue = { workspace = true }
 
 [features]
 test-utils = []

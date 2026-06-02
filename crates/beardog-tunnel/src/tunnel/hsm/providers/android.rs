@@ -5,6 +5,7 @@
 //! Universal provider implementation for Android HSM capabilities,
 //! including `StrongBox` and TEE support.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use tracing::{debug, info};
@@ -118,7 +119,7 @@ impl AndroidUniversalProvider {
 
     /// Simulate `StrongBox` detection based on device model
     fn simulate_strongbox_detection(&mut self) -> bool {
-        if let Ok(model) = beardog_errors::process_env::var("ANDROID_MODEL") {
+        if let Ok(model) = beardog_errors::process_env::var(env_keys::ENV_ANDROID_MODEL) {
             self.device_metadata
                 .insert("device_model".to_string(), model.clone());
 

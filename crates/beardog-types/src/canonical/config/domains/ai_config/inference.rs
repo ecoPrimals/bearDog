@@ -4,6 +4,7 @@
 //!
 //! Type-safe ML model inference and serving configuration with builder pattern.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -81,18 +82,18 @@ impl Default for InferenceConfig {
         Self {
             enabled: false,
             endpoints: Vec::new(),
-            max_batch_size: std::env::var("BEARDOG_AI_MAX_BATCH_SIZE")
+            max_batch_size: std::env::var(env_keys::ENV_AI_MAX_BATCH_SIZE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(32),
             timeout: Duration::from_secs(
-                std::env::var("BEARDOG_AI_INFERENCE_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_AI_INFERENCE_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30)
             ),
             enable_caching: true,
-            cache_size_limit: std::env::var("BEARDOG_AI_CACHE_SIZE_BYTES")
+            cache_size_limit: std::env::var(env_keys::ENV_AI_CACHE_SIZE_BYTES)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1024 * 1024 * 1024), // 1GB

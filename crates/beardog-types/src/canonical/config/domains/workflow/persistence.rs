@@ -5,6 +5,7 @@
 //! Configuration for workflow persistence, storage, retention, and archival.
 
 use super::retry::RetryConfig;
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Duration;
@@ -105,16 +106,16 @@ impl Default for ConnectionConfig {
     fn default() -> Self {
         Self {
             url: Arc::from(
-                std::env::var("BEARDOG_WORKFLOW_DB_URL")
+                std::env::var(env_keys::ENV_WORKFLOW_DB_URL)
                     .unwrap_or_else(|_| "sqlite://workflows.db".to_string())
                     .as_str(),
             ),
-            pool_size: std::env::var("BEARDOG_WORKFLOW_DB_POOL_SIZE")
+            pool_size: std::env::var(env_keys::ENV_WORKFLOW_DB_POOL_SIZE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(10),
             timeout: Duration::from_secs(
-                std::env::var("BEARDOG_WORKFLOW_DB_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_WORKFLOW_DB_TIMEOUT_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(30),
@@ -128,13 +129,13 @@ impl Default for RetentionConfig {
     fn default() -> Self {
         Self {
             period: Duration::from_secs(
-                std::env::var("BEARDOG_WORKFLOW_RETENTION_PERIOD_SECS")
+                std::env::var(env_keys::ENV_WORKFLOW_RETENTION_PERIOD_SECS)
                     .ok()
                     .and_then(|p| p.parse().ok())
                     .unwrap_or(86400 * 30), // 30 days default
             ),
             cleanup_interval: Duration::from_secs(
-                std::env::var("BEARDOG_WORKFLOW_CLEANUP_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_WORKFLOW_CLEANUP_INTERVAL_SECS)
                     .ok()
                     .and_then(|i| i.parse().ok())
                     .unwrap_or(3600), // 1 hour default

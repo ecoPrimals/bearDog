@@ -53,6 +53,7 @@
 //! # }
 //! ```
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -560,7 +561,7 @@ impl KeyConstraints {
 
     fn verify_behavior(&self, operation: &KeyOperation) -> Result<(), BearDogError> {
         // Get behavioral verification mode from environment
-        let behavioral_mode = std::env::var("BEARDOG_BEHAVIORAL_VERIFICATION")
+        let behavioral_mode = std::env::var(env_keys::ENV_BEHAVIORAL_VERIFICATION)
             .unwrap_or_else(|_| "advisory".to_string())
             .to_lowercase();
 

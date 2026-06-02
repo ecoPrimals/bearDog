@@ -5,6 +5,7 @@
 use super::PhysicalChannelType;
 use super::TrustLevel;
 use super::core::PhysicalChannelProof;
+use beardog_config::env_keys;
 
 impl PhysicalChannelProof {
     /// Get trust level for this proof
@@ -29,7 +30,7 @@ impl PhysicalChannelProof {
     ///
     /// Propagates errors from [`Self::verify_with_attestation_mode`].
     pub fn verify_from_env(&self) -> Result<bool, beardog_errors::BearDogError> {
-        let mode = std::env::var("BEARDOG_ATTESTATION_MODE")
+        let mode = std::env::var(env_keys::ENV_ATTESTATION_MODE)
             .unwrap_or_else(|_| "software".to_string())
             .to_lowercase();
         self.verify_with_attestation_mode(&mode)

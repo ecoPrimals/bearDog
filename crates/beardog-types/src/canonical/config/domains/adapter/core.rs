@@ -2,6 +2,7 @@
 
 //! Core adapter configuration types and implementations
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -125,17 +126,17 @@ impl CoreAdapterConfig {
     pub fn from_env() -> Self {
         Self {
             adapter_id: Arc::from(
-                std::env::var("BEARDOG_ADAPTER_ID")
+                std::env::var(env_keys::ENV_ADAPTER_ID)
                     .unwrap_or_else(|_| Self::DEFAULT_ADAPTER_ID.to_string())
                     .as_str(),
             ),
             adapter_type: AdapterType::Universal,
-            max_connections: std::env::var("BEARDOG_ADAPTER_MAX_CONNECTIONS")
+            max_connections: std::env::var(env_keys::ENV_ADAPTER_MAX_CONNECTIONS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_CONNECTIONS),
             connection_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_ADAPTER_CONNECTION_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_ADAPTER_CONNECTION_TIMEOUT_SECS)
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(Self::DEFAULT_CONNECTION_TIMEOUT_SECS),
@@ -155,20 +156,20 @@ impl Default for CoreAdapterConfig {
 impl Default for OptimizationConfig {
     fn default() -> Self {
         Self {
-            enabled: std::env::var("BEARDOG_ADAPTER_OPTIMIZATION_ENABLED")
+            enabled: std::env::var(env_keys::ENV_ADAPTER_OPTIMIZATION_ENABLED)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            level: std::env::var("BEARDOG_ADAPTER_OPTIMIZATION_LEVEL")
+            level: std::env::var(env_keys::ENV_ADAPTER_OPTIMIZATION_LEVEL)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3),
-            simd_enabled: std::env::var("BEARDOG_ADAPTER_SIMD_ENABLED")
+            simd_enabled: std::env::var(env_keys::ENV_ADAPTER_SIMD_ENABLED)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
             zero_copy_enabled: true,
-            buffer_size: std::env::var("BEARDOG_OPTIMIZATION_BUFFER_SIZE")
+            buffer_size: std::env::var(env_keys::ENV_OPTIMIZATION_BUFFER_SIZE)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(8192),

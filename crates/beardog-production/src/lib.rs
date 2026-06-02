@@ -48,7 +48,7 @@ pub mod config {
         }
         #[cfg(not(test))]
         {
-            std::env::var("BEARDOG_MASTER_KEY").is_ok_and(|v| v.len() >= 32)
+            std::env::var(beardog_config::env_keys::ENV_MASTER_KEY).is_ok_and(|v| v.len() >= 32)
         }
     }
 

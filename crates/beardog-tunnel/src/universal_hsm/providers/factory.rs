@@ -6,6 +6,7 @@
 //! the unified configuration system. It integrates with the HSM discovery system
 //! to automatically select the best available HSM.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::config::hsm::UnifiedHsmConfig;
 use std::sync::Arc;
@@ -257,7 +258,7 @@ impl ProviderFactory {
                 }
 
                 // Verify AWS credentials are configured
-                if beardog_errors::process_env::var("AWS_ACCESS_KEY_ID").is_err() {
+                if beardog_errors::process_env::var(env_keys::ENV_AWS_ACCESS_KEY_ID).is_err() {
                     warn!("AWS credentials not found in environment");
                     return Err(BearDogError::business(
                         "AWS credentials not configured (AWS_ACCESS_KEY_ID missing)".to_string(),
@@ -276,7 +277,7 @@ impl ProviderFactory {
                 }
 
                 // Verify Azure credentials are configured
-                if beardog_errors::process_env::var("AZURE_CLIENT_ID").is_err() {
+                if beardog_errors::process_env::var(env_keys::ENV_AZURE_CLIENT_ID).is_err() {
                     warn!("Azure credentials not found in environment");
                     return Err(BearDogError::business(
                         "Azure credentials not configured (AZURE_CLIENT_ID missing)".to_string(),
@@ -295,7 +296,7 @@ impl ProviderFactory {
                 }
 
                 // Verify GCP credentials are configured
-                if beardog_errors::process_env::var("GOOGLE_APPLICATION_CREDENTIALS").is_err() {
+                if beardog_errors::process_env::var(env_keys::ENV_GOOGLE_APPLICATION_CREDENTIALS).is_err() {
                     warn!("GCP credentials not found in environment");
                     return Err(BearDogError::business(
                         "GCP credentials not configured (GOOGLE_APPLICATION_CREDENTIALS missing)".to_string(),

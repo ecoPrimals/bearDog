@@ -5,6 +5,7 @@
 //! This module contains configuration types for various learning algorithms
 //! including online learning, transfer learning, meta-learning, and ensembles.
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 
 /// Online learning configuration
@@ -26,7 +27,7 @@ impl Default for OnlineLearningConfig {
             enabled: false,
             adaptation_type: LearningRateAdaptationType::Constant,
             update_frequency: UpdateFrequency::PerBatch,
-            mini_batch_size: std::env::var("BEARDOG_AI_MINI_BATCH_SIZE")
+            mini_batch_size: std::env::var(env_keys::ENV_AI_MINI_BATCH_SIZE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(32),
@@ -83,11 +84,11 @@ pub struct FineTuningConfig {
 impl Default for FineTuningConfig {
     fn default() -> Self {
         Self {
-            initial_learning_rate: std::env::var("BEARDOG_AI_FINETUNING_INITIAL_LR")
+            initial_learning_rate: std::env::var(env_keys::ENV_AI_FINETUNING_INITIAL_LR)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.0001),
-            epochs: std::env::var("BEARDOG_AI_FINETUNING_EPOCHS")
+            epochs: std::env::var(env_keys::ENV_AI_FINETUNING_EPOCHS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(10),
@@ -143,11 +144,11 @@ pub struct InnerLoopConfig {
 impl Default for InnerLoopConfig {
     fn default() -> Self {
         Self {
-            steps: std::env::var("BEARDOG_AI_INNER_LOOP_STEPS")
+            steps: std::env::var(env_keys::ENV_AI_INNER_LOOP_STEPS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(5),
-            learning_rate: std::env::var("BEARDOG_AI_INNER_LOOP_LR")
+            learning_rate: std::env::var(env_keys::ENV_AI_INNER_LOOP_LR)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.01),
@@ -167,11 +168,11 @@ pub struct OuterLoopConfig {
 impl Default for OuterLoopConfig {
     fn default() -> Self {
         Self {
-            steps: std::env::var("BEARDOG_AI_OUTER_LOOP_STEPS")
+            steps: std::env::var(env_keys::ENV_AI_OUTER_LOOP_STEPS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(100),
-            learning_rate: std::env::var("BEARDOG_AI_OUTER_LOOP_LR")
+            learning_rate: std::env::var(env_keys::ENV_AI_OUTER_LOOP_LR)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.001),
@@ -229,7 +230,7 @@ impl Default for HyperparameterOptimizationConfig {
         Self {
             enabled: false,
             method: HyperparameterOptimizationMethod::GridSearch,
-            max_trials: std::env::var("BEARDOG_AI_HYPERPARAMETER_MAX_TRIALS")
+            max_trials: std::env::var(env_keys::ENV_AI_HYPERPARAMETER_MAX_TRIALS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(100),

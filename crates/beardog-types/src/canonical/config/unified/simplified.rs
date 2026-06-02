@@ -11,6 +11,7 @@
 //! providing 10x faster clone operations and 30% memory reduction.
 
 use crate::constants::time;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -262,17 +263,17 @@ impl SimplifiedBearDogConfig {
     pub fn from_env() -> Result<Self, BearDogError> {
         let mut config = Self::default();
 
-        if let Ok(port) = std::env::var("BEARDOG_PORT")
+        if let Ok(port) = std::env::var(env_keys::ENV_PORT)
             && let Ok(port_num) = port.parse::<u16>()
         {
             config.network.port = port_num;
         }
 
-        if let Ok(log_level) = std::env::var("BEARDOG_LOG_LEVEL") {
+        if let Ok(log_level) = std::env::var(env_keys::ENV_LOG_LEVEL) {
             config.monitoring.log_level = Arc::from(log_level.as_str());
         }
 
-        if let Ok(environment) = std::env::var("BEARDOG_ENVIRONMENT") {
+        if let Ok(environment) = std::env::var(env_keys::ENV_ENVIRONMENT) {
             config.environment = Arc::from(environment.as_str());
         }
 

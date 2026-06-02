@@ -24,6 +24,9 @@ workspace = true
 [dependencies.beardog-errors]
 workspace = true
 
+[dependencies.beardog-config]
+workspace = true
+
 [dependencies.beardog-types]
 workspace = true
 

@@ -3,6 +3,7 @@
 use super::UnifiedConfigUtils;
 use super::shared_manager::SHARED_CONFIG_MANAGER;
 use super::types::{ConfigPerformanceMetrics, SharedConfigStats};
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Serialize, de::DeserializeOwned};
 use std::fs;
@@ -173,7 +174,7 @@ impl UnifiedConfigUtils {
 
         // Skip `dirs::config_dir()` to avoid extra deps; HOME-based path below covers common cases.
         // Fallback: use HOME env var
-        if let Ok(home) = std::env::var("HOME") {
+        if let Ok(home) = std::env::var(env_keys::ENV_HOME) {
             paths.push(
                 PathBuf::from(home)
                     .join(".config")

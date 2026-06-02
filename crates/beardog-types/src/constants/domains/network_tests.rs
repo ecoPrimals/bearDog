@@ -4,6 +4,8 @@
 //!
 //! Comprehensive tests for all network constants, ports, timeouts, and limits.
 
+use beardog_config::env_keys;
+
 use super::*;
 
 // Config module tests
@@ -35,7 +37,7 @@ fn test_default_database_url() {
     assert!(
         url.contains("beardog")
             || url.contains("postgresql")
-            || std::env::var("DATABASE_URL").is_ok()
+            || std::env::var(env_keys::ENV_DATABASE_URL).is_ok()
     );
 }
 

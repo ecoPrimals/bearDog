@@ -3,6 +3,7 @@
 //! Primal discovery via Unix socket paths
 
 use crate::error::{Error, Result};
+use beardog_config::env_keys;
 use beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional;
 use std::path::PathBuf;
 use tracing::{debug, warn};
@@ -29,12 +30,14 @@ impl DiscoverSocketEnv {
     #[must_use]
     pub fn from_process_env() -> Self {
         Self {
-            xdg_runtime_dir: beardog_errors::process_env::var("XDG_RUNTIME_DIR").ok(),
-            biomeos_socket_dir: beardog_errors::process_env::var("BIOMEOS_SOCKET_DIR").ok(),
-            uid: beardog_errors::process_env::var("UID")
+            xdg_runtime_dir: beardog_errors::process_env::var(env_keys::ENV_XDG_RUNTIME_DIR).ok(),
+            biomeos_socket_dir: beardog_errors::process_env::var(env_keys::ENV_BIOMEOS_SOCKET_DIR)
+                .ok(),
+            uid: beardog_errors::process_env::var(env_keys::ENV_UID)
                 .ok()
                 .and_then(|s| s.parse().ok()),
-            ipc_namespace: beardog_errors::process_env::var("BIOMEOS_IPC_NAMESPACE").ok(),
+            ipc_namespace: beardog_errors::process_env::var(env_keys::ENV_BIOMEOS_IPC_NAMESPACE)
+                .ok(),
         }
     }
 }

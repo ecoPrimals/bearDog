@@ -3,6 +3,7 @@
 //! Security and monitoring configuration for adapters
 
 use super::core::AuthLevel;
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -68,7 +69,7 @@ impl Default for AdapterMonitoringConfig {
         Self {
             enabled: true,
             metrics_interval: Duration::from_secs(
-                std::env::var("BEARDOG_ADAPTER_METRICS_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_ADAPTER_METRICS_INTERVAL_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(60),
@@ -77,7 +78,7 @@ impl Default for AdapterMonitoringConfig {
             error_metrics: true,
             usage_metrics: true,
             retention_period: Duration::from_secs(
-                std::env::var("BEARDOG_ADAPTER_RETENTION_PERIOD_SECS")
+                std::env::var(env_keys::ENV_ADAPTER_RETENTION_PERIOD_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(86400), // 24 hours

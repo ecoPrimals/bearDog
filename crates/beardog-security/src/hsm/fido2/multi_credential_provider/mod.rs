@@ -14,6 +14,8 @@ mod tests;
 
 pub use config::Fido2ProviderConfig;
 
+use base64::Engine;
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use beardog_errors::BearDogError;
 use beardog_traits::unified::hsm_multi_credential::{CredentialInfo, CredentialRequest};
 use std::collections::HashMap;
@@ -79,12 +81,13 @@ impl Fido2MultiCredentialProvider {
     /// Convert FIDO2 credential ID (bytes) to universal string ID
     fn credential_id_to_string(id: &[u8]) -> String {
         // Use base64url encoding for credential IDs
-        base64_url::encode(id)
+        URL_SAFE_NO_PAD.encode(id)
     }
 
     /// Convert universal string ID back to FIDO2 credential ID (bytes)
     fn string_to_credential_id(id: &str) -> Result<Vec<u8>, BearDogError> {
-        base64_url::decode(id)
+        URL_SAFE_NO_PAD
+            .decode(id)
             .map_err(|e| BearDogError::system(format!("Invalid credential ID format: {e}")))
     }
 

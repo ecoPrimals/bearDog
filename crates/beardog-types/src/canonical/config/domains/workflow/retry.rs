@@ -5,6 +5,7 @@
 //! Retry policies and exponential backoff configuration for workflows.
 
 use crate::canonical::traits::RetryStrategy;
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -99,22 +100,22 @@ impl RetryStrategy for RetryConfig {
 impl Default for RetryConfig {
     fn default() -> Self {
         Self {
-            max_attempts: std::env::var("BEARDOG_WORKFLOW_RETRY_MAX_ATTEMPTS")
+            max_attempts: std::env::var(env_keys::ENV_WORKFLOW_RETRY_MAX_ATTEMPTS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3),
             initial_delay: Duration::from_millis(
-                std::env::var("BEARDOG_RETRY_INITIAL_DELAY_MS")
+                std::env::var(env_keys::ENV_RETRY_INITIAL_DELAY_MS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(100),
             ),
-            backoff_multiplier: std::env::var("BEARDOG_RETRY_BACKOFF_MULTIPLIER")
+            backoff_multiplier: std::env::var(env_keys::ENV_RETRY_BACKOFF_MULTIPLIER)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(2.0),
             max_delay: Duration::from_secs(
-                std::env::var("BEARDOG_RETRY_MAX_DELAY_SECS")
+                std::env::var(env_keys::ENV_RETRY_MAX_DELAY_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),

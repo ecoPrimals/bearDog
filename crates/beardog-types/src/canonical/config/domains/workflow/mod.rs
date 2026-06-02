@@ -23,6 +23,7 @@
 //! config.validate()?;
 //! ```
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -205,27 +206,27 @@ impl BearDogConfig for ConsolidatedWorkflowConfig {
     fn from_env() -> Result<Self, BearDogError> {
         let mut config = Self::default();
 
-        if let Ok(enabled) = std::env::var("BEARDOG_WORKFLOW_ENABLED") {
+        if let Ok(enabled) = std::env::var(env_keys::ENV_WORKFLOW_ENABLED) {
             config.enabled = enabled.parse().unwrap_or(true);
         }
 
-        if let Ok(worker_pool_size) = std::env::var("BEARDOG_WORKFLOW_WORKER_POOL_SIZE") {
+        if let Ok(worker_pool_size) = std::env::var(env_keys::ENV_WORKFLOW_WORKER_POOL_SIZE) {
             config.engine.worker_pool_size = worker_pool_size.parse().unwrap_or(10);
         }
 
-        if let Ok(queue_capacity) = std::env::var("BEARDOG_WORKFLOW_QUEUE_CAPACITY") {
+        if let Ok(queue_capacity) = std::env::var(env_keys::ENV_WORKFLOW_QUEUE_CAPACITY) {
             config.engine.queue.capacity = queue_capacity.parse().unwrap_or(1000);
         }
 
-        if let Ok(max_concurrent) = std::env::var("BEARDOG_WORKFLOW_MAX_CONCURRENT") {
+        if let Ok(max_concurrent) = std::env::var(env_keys::ENV_WORKFLOW_MAX_CONCURRENT) {
             config.scheduling.max_concurrent = max_concurrent.parse().unwrap_or(5);
         }
 
-        if let Ok(persistence_enabled) = std::env::var("BEARDOG_WORKFLOW_PERSISTENCE_ENABLED") {
+        if let Ok(persistence_enabled) = std::env::var(env_keys::ENV_WORKFLOW_PERSISTENCE_ENABLED) {
             config.persistence.enabled = persistence_enabled.parse().unwrap_or(true);
         }
 
-        if let Ok(backend) = std::env::var("BEARDOG_WORKFLOW_PERSISTENCE_BACKEND") {
+        if let Ok(backend) = std::env::var(env_keys::ENV_WORKFLOW_PERSISTENCE_BACKEND) {
             config.persistence.backend = Arc::from(backend.as_str());
         }
 

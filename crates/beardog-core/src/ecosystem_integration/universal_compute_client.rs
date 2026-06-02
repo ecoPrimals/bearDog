@@ -8,6 +8,7 @@
 //
 // PRINCIPLE: BearDog only knows itself - discovers compute providers dynamically
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{CapabilityType, UniversalCapability};
 use serde::{Deserialize, Serialize};
@@ -256,7 +257,7 @@ impl UniversalComputeConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            request_timeout_ms: std::env::var("BEARDOG_COMPUTE_REQUEST_TIMEOUT_MS")
+            request_timeout_ms: std::env::var(env_keys::ENV_COMPUTE_REQUEST_TIMEOUT_MS)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(30000),
@@ -287,11 +288,11 @@ impl ComputeDiscoveryConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            discovery_timeout_ms: std::env::var("BEARDOG_COMPUTE_DISCOVERY_TIMEOUT_MS")
+            discovery_timeout_ms: std::env::var(env_keys::ENV_COMPUTE_DISCOVERY_TIMEOUT_MS)
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(5000),
-            cache_duration_ms: std::env::var("BEARDOG_COMPUTE_CACHE_DURATION_MS")
+            cache_duration_ms: std::env::var(env_keys::ENV_COMPUTE_CACHE_DURATION_MS)
                 .ok()
                 .and_then(|d| d.parse().ok())
                 .unwrap_or(300_000),

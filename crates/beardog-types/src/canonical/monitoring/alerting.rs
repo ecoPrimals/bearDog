@@ -4,6 +4,7 @@
 //
 // This module consolidates all alerting configuration patterns from across the codebase.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -49,18 +50,18 @@ impl Default for UnifiedAlertingConfig {
         Self {
             enabled: true,
             evaluation_interval: Duration::from_secs(
-                std::env::var("BEARDOG_ALERT_EVALUATION_INTERVAL_SECS")
+                std::env::var(env_keys::ENV_ALERT_EVALUATION_INTERVAL_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(60),
             ),
             notification_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_ALERT_NOTIFICATION_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_ALERT_NOTIFICATION_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),
             ),
-            max_alerts_per_minute: std::env::var("BEARDOG_MAX_ALERTS_PER_MINUTE")
+            max_alerts_per_minute: std::env::var(env_keys::ENV_MAX_ALERTS_PER_MINUTE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(10),

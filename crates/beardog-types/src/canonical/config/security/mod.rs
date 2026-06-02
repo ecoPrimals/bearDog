@@ -16,6 +16,7 @@
 // - **Session**: Session management, timeouts, security policies
 // - **MFA**: Multi-factor authentication configuration
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
@@ -224,15 +225,17 @@ impl RateLimitingConfig {
     pub fn production() -> Self {
         Self {
             enabled: true,
-            max_requests_per_minute: std::env::var("BEARDOG_PROD_RATE_LIMIT_MAX_REQUESTS_PER_MIN")
-                .ok()
-                .and_then(|v| v.parse().ok())
-                .unwrap_or(1000),
-            burst_capacity: std::env::var("BEARDOG_PROD_RATE_LIMIT_BURST_CAPACITY")
+            max_requests_per_minute: std::env::var(
+                env_keys::ENV_PROD_RATE_LIMIT_MAX_REQUESTS_PER_MIN,
+            )
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(1000),
+            burst_capacity: std::env::var(env_keys::ENV_PROD_RATE_LIMIT_BURST_CAPACITY)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(50),
-            window_seconds: std::env::var("BEARDOG_PROD_RATE_LIMIT_WINDOW_SECS")
+            window_seconds: std::env::var(env_keys::ENV_PROD_RATE_LIMIT_WINDOW_SECS)
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(60),

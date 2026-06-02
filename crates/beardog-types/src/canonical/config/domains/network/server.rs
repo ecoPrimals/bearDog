@@ -4,6 +4,7 @@
 //!
 //! This module contains server-side network configuration structs and implementations.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
@@ -50,7 +51,7 @@ impl Default for ServerConfiguration {
             port: crate::constants::domains::network::defaults::default_api_port(),
             enable_ipv6: true,
             max_connections: crate::constants::domains::system::defaults::DEFAULT_MAX_CONNECTIONS,
-            backlog_size: std::env::var("BEARDOG_SERVER_BACKLOG_SIZE")
+            backlog_size: std::env::var(env_keys::ENV_SERVER_BACKLOG_SIZE)
                 .ok()
                 .and_then(|b| b.parse().ok())
                 .unwrap_or(1024), // 1024 connections default

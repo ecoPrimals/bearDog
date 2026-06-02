@@ -3,6 +3,7 @@
 // Configuration for Ecosystem Storage System
 
 use super::types::{CacheEvictionPolicy, StorageType};
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -67,14 +68,16 @@ impl Default for EcosystemStorageConfig {
             .unwrap_or(1024 * 1024 * 1024), // 1GB default
             enable_compression: true,
             enable_encryption: true,
-            replication_factor: beardog_errors::process_env::var("BEARDOG_REPLICATION_FACTOR")
+            replication_factor: beardog_errors::process_env::var(env_keys::ENV_REPLICATION_FACTOR)
                 .ok()
                 .and_then(|r| r.parse().ok())
                 .unwrap_or(3),
-            backup_interval_secs: beardog_errors::process_env::var("BEARDOG_BACKUP_INTERVAL_SECS")
-                .ok()
-                .and_then(|i| i.parse().ok())
-                .unwrap_or(3600), // 1 hour default
+            backup_interval_secs: beardog_errors::process_env::var(
+                env_keys::ENV_BACKUP_INTERVAL_SECS,
+            )
+            .ok()
+            .and_then(|i| i.parse().ok())
+            .unwrap_or(3600), // 1 hour default
             cache_eviction_policy: CacheEvictionPolicy::Lru,
             storage_type: StorageType::LocalFilesystem,
         }

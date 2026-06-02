@@ -5,6 +5,7 @@
 //! Configuration for workflow execution engines, queues, and timeouts.
 
 use crate::canonical::traits::TimeoutPolicy;
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Duration;
@@ -160,12 +161,12 @@ impl Default for QueueConfig {
     fn default() -> Self {
         Self {
             queue_type: Arc::from("memory"),
-            capacity: std::env::var("BEARDOG_WORKFLOW_QUEUE_CAPACITY")
+            capacity: std::env::var(env_keys::ENV_WORKFLOW_QUEUE_CAPACITY)
                 .ok()
                 .and_then(|c| c.parse().ok())
                 .unwrap_or(1000), // 1000 messages default
             message_ttl: Duration::from_secs(
-                std::env::var("BEARDOG_WORKFLOW_MESSAGE_TTL_SECS")
+                std::env::var(env_keys::ENV_WORKFLOW_MESSAGE_TTL_SECS)
                     .ok()
                     .and_then(|t| t.parse().ok())
                     .unwrap_or(3600), // 1 hour default
@@ -179,25 +180,25 @@ impl Default for TimeoutConfig {
     fn default() -> Self {
         Self {
             default: Duration::from_secs(
-                std::env::var("BEARDOG_WORKFLOW_TIMEOUT_DEFAULT_SECS")
+                std::env::var(env_keys::ENV_WORKFLOW_TIMEOUT_DEFAULT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),
             ),
             maximum: Duration::from_secs(
-                std::env::var("BEARDOG_WORKFLOW_TIMEOUT_MAXIMUM_SECS")
+                std::env::var(env_keys::ENV_WORKFLOW_TIMEOUT_MAXIMUM_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(300), // 5 minutes
             ),
             connection: Duration::from_secs(
-                std::env::var("BEARDOG_WORKFLOW_TIMEOUT_CONNECTION_SECS")
+                std::env::var(env_keys::ENV_WORKFLOW_TIMEOUT_CONNECTION_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(10),
             ),
             read: Duration::from_secs(
-                std::env::var("BEARDOG_WORKFLOW_TIMEOUT_READ_SECS")
+                std::env::var(env_keys::ENV_WORKFLOW_TIMEOUT_READ_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(60),

@@ -4,6 +4,7 @@
 //!
 //! Comprehensive JWT configuration including token generation, validation, and refresh tokens.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
@@ -57,17 +58,17 @@ impl JwtConfig {
     /// - `BEARDOG_JWT_REFRESH_EXPIRY_SECS` - Refresh token expiration (default: 604800)
     pub fn from_env() -> Self {
         Self {
-            jwt_secret: std::env::var("BEARDOG_JWT_SECRET")
+            jwt_secret: std::env::var(env_keys::ENV_JWT_SECRET)
                 .unwrap_or_else(|_| Self::development_secret()),
-            expiration_seconds: std::env::var("BEARDOG_JWT_EXPIRY_SECS")
+            expiration_seconds: std::env::var(env_keys::ENV_JWT_EXPIRY_SECS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3600), // 1 hour
-            enable_refresh: std::env::var("BEARDOG_JWT_ENABLE_REFRESH")
+            enable_refresh: std::env::var(env_keys::ENV_JWT_ENABLE_REFRESH)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            refresh_expiration_seconds: std::env::var("BEARDOG_JWT_REFRESH_EXPIRY_SECS")
+            refresh_expiration_seconds: std::env::var(env_keys::ENV_JWT_REFRESH_EXPIRY_SECS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(604800), // 7 days

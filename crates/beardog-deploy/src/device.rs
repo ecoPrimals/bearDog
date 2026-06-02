@@ -6,6 +6,7 @@
 // device discovery, status monitoring, and deployment operations for Android and iOS devices.
 // All operations maintain sovereignty compliance and zero hardcoded assumptions.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -99,7 +100,7 @@ impl Default for DeviceManager {
 
 impl DeviceManager {
     fn logcat_follow_timeout() -> Duration {
-        std::env::var("BEARDOG_LOGCAT_FOLLOW_SECS")
+        std::env::var(env_keys::ENV_LOGCAT_FOLLOW_SECS)
             .ok()
             .and_then(|s| s.parse::<u64>().ok())
             .map_or_else(|| Duration::from_secs(300), Duration::from_secs)
@@ -346,7 +347,7 @@ impl DeviceManager {
         // Launch app using adb shell am start
         // Assuming package name is com.beardog.app (should be configurable)
         let package_name =
-            std::env::var("BEARDOG_PACKAGE_NAME").unwrap_or_else(|_| "com.beardog.app".to_string());
+            std::env::var(env_keys::ENV_PACKAGE_NAME).unwrap_or_else(|_| "com.beardog.app".to_string());
         let main_activity = format!("{package_name}/MainActivity");
 
         let mut owned: Vec<String> = vec![

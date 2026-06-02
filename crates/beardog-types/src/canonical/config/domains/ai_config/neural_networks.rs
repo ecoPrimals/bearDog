@@ -5,6 +5,7 @@
 //! This module contains all neural network architecture types including
 //! detailed layer configurations, activation functions, and network structures.
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 
 /// **NEURAL NETWORK CONFIGURATION** - Network architecture settings
@@ -38,7 +39,7 @@ impl Default for NeuralNetworkConfig {
             architecture: NetworkArchitecture::Feedforward,
             hidden_layers: vec![128, 64],
             activation: ActivationFunction::Relu,
-            dropout_rate: std::env::var("BEARDOG_AI_NEURAL_DROPOUT_RATE")
+            dropout_rate: std::env::var(env_keys::ENV_AI_NEURAL_DROPOUT_RATE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.2),
@@ -533,15 +534,15 @@ pub struct RegularizationConfig {
 impl Default for RegularizationConfig {
     fn default() -> Self {
         Self {
-            l1: std::env::var("BEARDOG_AI_REGULARIZATION_L1")
+            l1: std::env::var(env_keys::ENV_AI_REGULARIZATION_L1)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.0),
-            l2: std::env::var("BEARDOG_AI_REGULARIZATION_L2")
+            l2: std::env::var(env_keys::ENV_AI_REGULARIZATION_L2)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.001),
-            dropout: std::env::var("BEARDOG_AI_REGULARIZATION_DROPOUT")
+            dropout: std::env::var(env_keys::ENV_AI_REGULARIZATION_DROPOUT)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.2),
@@ -564,7 +565,7 @@ impl Default for OptimizerConfig {
     fn default() -> Self {
         Self {
             optimizer_type: OptimizerType::Adam,
-            learning_rate: std::env::var("BEARDOG_AI_OPTIMIZER_LEARNING_RATE")
+            learning_rate: std::env::var(env_keys::ENV_AI_OPTIMIZER_LEARNING_RATE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.001),

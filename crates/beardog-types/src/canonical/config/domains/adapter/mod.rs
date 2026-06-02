@@ -13,6 +13,7 @@
 //! - [`vendor`] - Vendor-specific adapter configuration
 //! - [`security`] - Security and monitoring configuration
 
+use beardog_config::env_keys;
 pub mod chain;
 pub mod core;
 pub mod security;
@@ -138,24 +139,24 @@ impl BearDogConfig for UnifiedAdapterConfig {
         let mut config = Self::default();
 
         // Load from environment variables with BEARDOG_ADAPTER_ prefix
-        if let Ok(adapter_id) = std::env::var("BEARDOG_ADAPTER_ID") {
+        if let Ok(adapter_id) = std::env::var(env_keys::ENV_ADAPTER_ID) {
             config.core.adapter_id = Arc::from(adapter_id.as_str());
         }
 
-        if let Ok(max_conn) = std::env::var("BEARDOG_ADAPTER_MAX_CONNECTIONS") {
+        if let Ok(max_conn) = std::env::var(env_keys::ENV_ADAPTER_MAX_CONNECTIONS) {
             config.core.max_connections = max_conn
                 .parse()
                 .map_err(|_| BearDogError::configuration("Invalid max_connections value"))?;
         }
 
-        if let Ok(timeout) = std::env::var("BEARDOG_ADAPTER_TIMEOUT_SECS") {
+        if let Ok(timeout) = std::env::var(env_keys::ENV_ADAPTER_TIMEOUT_SECS) {
             let secs: u64 = timeout
                 .parse()
                 .map_err(|_| BearDogError::configuration("Invalid timeout value"))?;
             config.core.connection_timeout = Duration::from_secs(secs);
         }
 
-        if let Ok(endpoints) = std::env::var("BEARDOG_ADAPTER_DISCOVERY_ENDPOINTS") {
+        if let Ok(endpoints) = std::env::var(env_keys::ENV_ADAPTER_DISCOVERY_ENDPOINTS) {
             config.discovery.endpoints =
                 endpoints.split(',').map(|s| s.trim().to_string()).collect();
         }

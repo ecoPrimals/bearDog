@@ -8,6 +8,7 @@
 //! **Migration Note**: This replaces the monolithic `ai_config_original.rs` (1756 lines)
 //! with a clean modular structure following the 1000-line coding standard.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -85,11 +86,11 @@ impl Default for HybridIntelligenceConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            human_oversight_level: std::env::var("BEARDOG_AI_HUMAN_OVERSIGHT_LEVEL")
+            human_oversight_level: std::env::var(env_keys::ENV_AI_HUMAN_OVERSIGHT_LEVEL)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.5),
-            auto_decision_threshold: std::env::var("BEARDOG_AI_AUTO_DECISION_THRESHOLD")
+            auto_decision_threshold: std::env::var(env_keys::ENV_AI_AUTO_DECISION_THRESHOLD)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.9),
@@ -126,16 +127,16 @@ impl Default for InferenceConfig {
         Self {
             enabled: true,
             endpoints: vec![],
-            batch_size: std::env::var("BEARDOG_AI_BATCH_SIZE")
+            batch_size: std::env::var(env_keys::ENV_AI_BATCH_SIZE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(32),
-            max_latency_ms: std::env::var("BEARDOG_AI_MAX_LATENCY_MS")
+            max_latency_ms: std::env::var(env_keys::ENV_AI_MAX_LATENCY_MS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(100),
             enable_caching: true,
-            cache_size_mb: std::env::var("BEARDOG_AI_CACHE_SIZE_MB")
+            cache_size_mb: std::env::var(env_keys::ENV_AI_CACHE_SIZE_MB)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1024),

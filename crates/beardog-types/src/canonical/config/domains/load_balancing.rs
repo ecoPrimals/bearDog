@@ -26,6 +26,7 @@
 //! };
 //! ```
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -115,7 +116,7 @@ impl LoadBalancingAlgorithm {
 
     /// Create LoadBalancingAlgorithm from environment variables
     pub fn from_env() -> Self {
-        std::env::var("BEARDOG_LOAD_BALANCING_ALGORITHM")
+        std::env::var(env_keys::ENV_LOAD_BALANCING_ALGORITHM)
             .ok()
             .and_then(|s| match s.to_lowercase().as_str() {
                 "roundrobin" | "round_robin" => Some(Self::RoundRobin),

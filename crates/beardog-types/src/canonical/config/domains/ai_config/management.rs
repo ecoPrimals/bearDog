@@ -5,6 +5,7 @@
 //! This module contains configuration types for AI model management,
 //! performance optimization, and security settings.
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 
 /// Decision engine configuration
@@ -23,7 +24,7 @@ impl Default for DecisionEngineConfig {
         Self {
             enabled: false,
             strategy: DecisionStrategy::ConsensusVoting,
-            confidence_threshold: std::env::var("BEARDOG_AI_CONFIDENCE_THRESHOLD")
+            confidence_threshold: std::env::var(env_keys::ENV_AI_CONFIDENCE_THRESHOLD)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.8),
@@ -95,7 +96,7 @@ impl Default for AiPerformanceConfig {
         Self {
             enabled: true,
             use_gpu: false,
-            num_workers: std::env::var("BEARDOG_AI_NUM_WORKERS")
+            num_workers: std::env::var(env_keys::ENV_AI_NUM_WORKERS)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(4),

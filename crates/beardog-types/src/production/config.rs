@@ -47,6 +47,7 @@
 
 use super::types::EnvironmentLevel;
 use crate::production::{health, metrics, monitoring, observability, optimization, telemetry};
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 
 // ============================================================================
@@ -189,13 +190,14 @@ pub struct ProductionConfig {
 /// ## With Environment Variables
 /// ```rust,no_run
 /// use beardog_types::production::config::ProductionCoreConfig;
+/// use beardog_config::env_keys;
 ///
 /// let core = ProductionCoreConfig {
-///     service_name: std::env::var("SERVICE_NAME")
+///     service_name: std::env::var(env_keys::ENV_SERVICE_NAME)
 ///         .unwrap_or_else(|_| "beardog".to_string()),
-///     deployment_id: std::env::var("DEPLOYMENT_ID")
+///     deployment_id: std::env::var(env_keys::ENV_DEPLOYMENT_ID)
 ///         .unwrap_or_else(|_| uuid::Uuid::new_v4().to_string()),
-///     region: std::env::var("AWS_REGION")
+///     region: std::env::var(env_keys::ENV_AWS_REGION)
 ///         .unwrap_or_else(|_| "local".to_string()),
 ///     ..Default::default()
 /// };
@@ -240,7 +242,8 @@ impl ProductionCoreConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            node_id: std::env::var("HOSTNAME").unwrap_or_else(|_| "unknown".to_string()),
+            node_id: std::env::var(env_keys::ENV_HOSTNAME)
+                .unwrap_or_else(|_| "unknown".to_string()),
             ..Default::default()
         }
     }

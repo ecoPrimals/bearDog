@@ -95,10 +95,6 @@ optional = true
 workspace = true
 optional = true
 
-[dependencies.base64-url]
-workspace = true
-optional = true
-
 # Android-specific dependencies (target-conditional)
 [target.'cfg(target_os = "android")'.dependencies]
 ndk-context = "0.1"
@@ -110,4 +106,4 @@ proptest = { workspace = true }
 tempfile = { workspace = true }
 
 [features]
-fido2 = ["dep:beardog-hid", "dep:ciborium", "dep:base64-url"]
+fido2 = ["dep:beardog-hid", "dep:ciborium"]

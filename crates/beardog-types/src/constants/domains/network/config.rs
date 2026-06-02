@@ -5,6 +5,7 @@
 pub use super::addresses::{
     DEFAULT_LOCALHOST_IPV4_STR as LOCALHOST_IPV4, DEFAULT_LOCALHOST_IPV6_STR as LOCALHOST_IPV6,
 };
+use beardog_config::env_keys;
 
 /// **Fallback** localhost hostname (override with `BEARDOG_EXTERNAL_HOST` / config).
 pub const DEFAULT_LOCALHOST_NAME_STR: &str = "localhost";
@@ -52,8 +53,8 @@ pub fn default_database_url() -> String {
 
 /// `DATABASE_URL` / `BEARDOG_DATABASE_URL`, falling back to [`default_database_url`].
 pub fn default_database_url_from_env() -> String {
-    std::env::var("DATABASE_URL")
-        .or_else(|_| std::env::var("BEARDOG_DATABASE_URL"))
+    std::env::var(env_keys::ENV_DATABASE_URL)
+        .or_else(|_| std::env::var(env_keys::ENV_DATABASE_URL_PREFIXED))
         .unwrap_or_else(|_| default_database_url())
 }
 
@@ -68,8 +69,8 @@ pub fn default_discovery_endpoint() -> String {
 
 /// Discovery endpoint from env (`BEARDOG_DISCOVERY_ENDPOINT` / `DISCOVERY_URL`), falling back to [`default_discovery_endpoint`].
 pub fn default_discovery_endpoint_from_env() -> String {
-    std::env::var("BEARDOG_DISCOVERY_ENDPOINT")
-        .or_else(|_| std::env::var("DISCOVERY_URL"))
+    std::env::var(env_keys::ENV_DISCOVERY_ENDPOINT)
+        .or_else(|_| std::env::var(env_keys::ENV_DISCOVERY_URL))
         .unwrap_or_else(|_| default_discovery_endpoint())
 }
 
@@ -84,7 +85,7 @@ pub fn default_compute_endpoint() -> String {
 
 /// Compute endpoint from `BEARDOG_COMPUTE_ENDPOINT`, falling back to [`default_compute_endpoint`].
 pub fn default_compute_endpoint_from_env() -> String {
-    std::env::var("BEARDOG_COMPUTE_ENDPOINT").unwrap_or_else(|_| default_compute_endpoint())
+    std::env::var(env_keys::ENV_COMPUTE_ENDPOINT).unwrap_or_else(|_| default_compute_endpoint())
 }
 
 /// Default storage URL (no environment reads).
@@ -98,7 +99,7 @@ pub fn default_storage_endpoint() -> String {
 
 /// Storage endpoint from `BEARDOG_STORAGE_ENDPOINT`, falling back to [`default_storage_endpoint`].
 pub fn default_storage_endpoint_from_env() -> String {
-    std::env::var("BEARDOG_STORAGE_ENDPOINT").unwrap_or_else(|_| default_storage_endpoint())
+    std::env::var(env_keys::ENV_STORAGE_ENDPOINT).unwrap_or_else(|_| default_storage_endpoint())
 }
 
 #[cfg(test)]

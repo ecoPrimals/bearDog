@@ -86,6 +86,7 @@
 //! - **Enterprise Ready**: LDAP and SAML integration
 //! - **Type Safety**: Strongly typed provider configuration
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -139,7 +140,7 @@ impl Default for CanonicalAuthConfig {
             enabled: true,
             providers: vec![AuthProvider::Local],
             session_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_AUTH_SESSION_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_AUTH_SESSION_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(3600),

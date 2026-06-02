@@ -2,6 +2,7 @@
 
 //! Inference serving, caching, load balancing, and cache eviction types.
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -60,12 +61,14 @@ impl ServingConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            max_concurrent_requests: std::env::var("BEARDOG_AI_SERVING_MAX_CONCURRENT_REQUESTS")
-                .ok()
-                .and_then(|v| v.parse().ok())
-                .unwrap_or(100),
+            max_concurrent_requests: std::env::var(
+                env_keys::ENV_AI_SERVING_MAX_CONCURRENT_REQUESTS,
+            )
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(100),
             request_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_AI_ROUTING_REQUEST_TIMEOUT_SECS")
+                std::env::var(env_keys::ENV_AI_ROUTING_REQUEST_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),

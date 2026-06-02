@@ -5,6 +5,7 @@
 //! Interactive client for connecting to BearDog server.
 
 use crate::ClientArgs;
+use beardog_config::env_keys;
 use beardog_errors::{
     ApiErrorCategory, BearDogError, BusinessErrorCategory, NetworkErrorCategory,
     SystemErrorCategory,
@@ -17,7 +18,7 @@ use tokio::net::UnixStream;
 use tracing::{error, info};
 
 fn default_local_socket_parent_dir() -> std::path::PathBuf {
-    beardog_errors::process_env::var("BEARDOG_LOCAL_SOCKET_DIR")
+    beardog_errors::process_env::var(env_keys::ENV_LOCAL_SOCKET_DIR)
         .map_or_else(|_| std::env::temp_dir(), std::path::PathBuf::from)
 }
 

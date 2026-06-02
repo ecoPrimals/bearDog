@@ -37,6 +37,9 @@ workspace = true
 workspace = true
 features = [ "rt", "rt-multi-thread", "process", "fs", "time", "io-util", "macros",]
 
+[dependencies.beardog-config]
+path = "../beardog-config"
+
 [dependencies.beardog-errors]
 path = "../beardog-errors"
 

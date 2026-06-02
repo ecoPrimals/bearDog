@@ -92,6 +92,8 @@ pub mod ai {
 
 /// Network configuration constants
 pub mod network {
+    use beardog_config::env_keys;
+
     /// Default health check endpoint
     pub const DEFAULT_HEALTH_ENDPOINT: &str = "/health";
 
@@ -106,7 +108,7 @@ pub mod network {
 
     /// Get default auth callback URI (environment-aware)
     pub fn default_auth_callback() -> String {
-        std::env::var("BEARDOG_AUTH_CALLBACK").unwrap_or_else(|_| {
+        std::env::var(env_keys::ENV_AUTH_CALLBACK).unwrap_or_else(|_| {
             let network_config = crate::canonical::config::network::NetworkConfig::default();
             format!(
                 "http://{}:{}/auth/callback",
@@ -121,6 +123,8 @@ pub mod network {
 
 /// Storage and database constants
 pub mod storage {
+    use beardog_config::env_keys;
+
     /// Memory backend
     pub const MEMORY_BACKEND: &str = "memory";
 
@@ -141,11 +145,11 @@ pub mod storage {
 
     /// Get default Redis URL (environment-aware)
     pub fn default_redis_url() -> String {
-        std::env::var("REDIS_URL")
-            .or_else(|_| std::env::var("BEARDOG_REDIS_URL"))
+        std::env::var(env_keys::ENV_REDIS_URL)
+            .or_else(|_| std::env::var(env_keys::ENV_REDIS_URL_PREFIXED))
             .unwrap_or_else(|_| {
                 let network_config = crate::canonical::config::network::NetworkConfig::default();
-                let redis_port = std::env::var("REDIS_PORT")
+                let redis_port = std::env::var(env_keys::ENV_REDIS_PORT_UNPREFIXED)
                     .ok()
                     .and_then(|p| p.parse().ok())
                     .unwrap_or(6379);
