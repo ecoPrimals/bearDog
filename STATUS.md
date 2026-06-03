@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: Jun 2, 2026 (Wave 128)
+**Last Updated**: Jun 3, 2026 (Wave 134)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant (threshold lowered to 800; `aliases_and_beardog.rs` refactored Wave 75) |
-| **Tests** | 14,988+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,974+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | bans pass | 1 advisory ignore (RSA Marvin), `ring` banned in `deny.toml`; TLS backend is `aws-lc-rs` |
@@ -33,7 +33,7 @@
 
 ## Codebase Metrics
 
-- **Crates**: 30 directories (beardog-integration excluded — overstep; beardog-acme added Wave 107)
+- **Crates**: 29 workspace members (beardog-integration, beardog-deploy, crates/beardog excluded)
 - **Rust Files**: 2,115 (crates + src + tests; excludes showcase/examples)
 - **JSON-RPC Methods**: 223 dispatchable (215 registry + 8 pre-dispatch gate) — see `docs/PRIMAL_CONTRACTS.md` v4.0.0 for category breakdown
 - **`#[allow(`**: 81 (was 86; all carry `reason`)
@@ -42,7 +42,7 @@
 
 ---
 
-## Per-Crate Coverage (April 12, 2026, llvm-cov)
+## Per-Crate Coverage (April 12, 2026, llvm-cov; excludes listed separately)
 
 | Crate | Line Coverage | Notes |
 |-------|---------------|-------|
@@ -58,8 +58,8 @@
 | beardog-installer | ~84% | CLI, deployment, validator, binary, BiomeOS |
 | beardog-cli | ~83% | UniBin `--port`, entropy, key mix, client, daemon |
 | beardog-tunnel | ~83% | NDJSON framing, structured tracing, IPC, BTSP |
-| beardog-deploy | ~82% | command runner, android, builder, device coverage |
-| beardog-integration | new | Tower Atomic UPA client, heartbeat, connection tracking |
+| beardog-deploy | excluded | Android deploy — biomeOS owns deployment |
+| beardog-integration | excluded | HTTP REST — songbird owns transport |
 | **Overall** | **90.51%** | llvm-cov workspace — 90% target met |
 
 ---
@@ -72,7 +72,7 @@
 | Pure Rust (ecoBin) | Zero C deps; `ring` banned in `deny.toml`; TLS backend is `aws-lc-rs` via `rustls`; blake3 pure feature; sysinfo removed |
 | UniBin/ecoBin | Single binary, standalone identity fallback per UniBin v1.1, cross-compilation ready |
 | Dependency Injection | Pure `Default`, `from_env()` at startup, `from_env_provider()` for tests |
-| Zero Hardcoding | 20+ named constants extracted; capability-based discovery everywhere |
+| Zero Hardcoding | 850+ env_keys constants; capability-based discovery everywhere |
 | Self-Knowledge | Primals discover peers at runtime via capability registry |
 | JSON-RPC | Primary IPC protocol with NDJSON framing and batch support |
 | AGPL-3.0-or-later | License verified; SPDX headers on all .rs files |
@@ -89,6 +89,37 @@
 ---
 
 ## Recent Improvements
+
+### Wave 134 — ACME Smart Refactor, Stub Evolution, Dead Dep Removal (Jun 3, 2026)
+
+- **ACME client smart refactor** — `client.rs` (860 lines) split into 4 cohesive modules by lifecycle phase (`config`, `mod`, `renewal`, `issuance`). All 36 tests preserved.
+- **Production stub evolution** — Silent no-ops now emit `warn!` when registry URL configured but client unimplemented.
+- **Dead dependency removal** — `hostname` removed from `beardog-tunnel` and root binary (zero usage).
+
+### Wave 133 — Deep Debt Audit, Env Migration Wave 5+, Safety Fixes (Jun 3, 2026)
+
+- **Full codebase audit** — All 2,134 .rs files audited for debt. Zero `unsafe`, `todo!()`, `unimplemented!()`, production `.unwrap()`.
+- **Env migration Wave 5+** — ~35 more env literals centralized across 10 files. 850+ total env_keys constants.
+- **Windows .expect() removed** — `platform/mod.rs` uses graceful fallback instead of panicking.
+- **iOS XPC hardcoding fixed** — Derives from `ENV_PRIMAL_NAME` at runtime (self-knowledge pattern).
+- **ring confirmed absent** — `cargo tree -i ring --target all` empty. deny.toml ban effective.
+
+### Wave 132 — AI Type Migration, Mobile Feature Gate (Jun 3, 2026)
+
+- **AI type redesign** — Moved 1,104 lines from `beardog-core` to `beardog-types` (core_learning, core_neural_networks). Deprecated modules now thin re-exports.
+- **Mobile feature flag** — `feature = "mobile"` gates Android/iOS HSM paths in `beardog-security`, mirroring FIDO2 pattern.
+
+### Wave 131 — auth.verify_ionic Scopes Fix, Gap Analysis (Jun 3, 2026)
+
+- **auth.verify_ionic fix** — Top-level `scopes` array always present in response (empty `[]` on error, actual scopes on success). Unblocks primalSpring SecurityVerifier.
+- **health.liveness confirmed** — Already implemented (stale -32601 report).
+- **Android type stack confirmed** — Already cfg-gated (false positive).
+
+### Wave 129–130 — grapheneGate Keystore, Quantum Gate, Deprecated Purge (Jun 2–3, 2026)
+
+- **grapheneGate keystore architecture** — `KeystoreTransport` trait with Stub/AndroidJni/AndroidKeymaster backends. Pixel 8a device detection.
+- **quantum_crypto feature-gated** — Prevents false PQC claims on public API.
+- **3 deprecated modules deleted** — -369 lines, zero external callers.
 
 ### Wave 128 — Env Migration Complete, Dependency Consolidation (Jun 2, 2026)
 

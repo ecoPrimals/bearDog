@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: May 28, 2026
+**Updated**: Jun 3, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -15,14 +15,14 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ### Completed
 
 - Rust edition 2024 (MSRV 1.93.0, `rust-toolchain.toml` pinned)
-- 100% Pure Rust (zero C dependencies, RustCrypto suite)
-- 127 JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing, lineage queries, auth gate, ionic tokens, FIDO2/CTAP2, seed fingerprint)
+- 100% Pure Rust crypto intent (`aws-lc-rs` via `rustls` is C FFI; tracking `rustls-rustcrypto` for Phase 2)
+- 223 JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing, lineage queries, auth gate, ionic tokens, FIDO2/CTAP2, seed fingerprint, universal discovery, threat analysis, ecosystem integration)
 - 0 clippy warnings (pedantic + nursery + all cast lints warn + `doc_markdown` warn + `missing_errors_doc` warn + unwrap/expect warn, workspace-centralized)
 - 0 missing documentation warnings (all public items documented, all `# Errors` sections present)
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 800 lines of code (production)
-- 14,987+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
+- 14,974+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
 - 90.51% line coverage (llvm-cov workspace) — target 90% met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - `#[serial]` minimized — 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent
@@ -59,6 +59,34 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### ACME Smart Refactor + Stub Evolution — DONE (Wave 134)
+
+`client.rs` (860 lines) refactored into 4 lifecycle-phase modules. Production stubs evolved with `warn!` logging. Dead `hostname` deps removed.
+
+### Deep Debt Audit + Env Migration Wave 5+ — DONE (Wave 133)
+
+Full 2,134-file audit. ~35 env literals centralized. Windows `.expect()` removed. iOS XPC hardcoding fixed. ring confirmed absent from all targets.
+
+### AI Type Migration + Mobile Feature Gate — DONE (Wave 132)
+
+1,104 lines of AI types moved from `beardog-core` to `beardog-types`. `feature = "mobile"` gates Android/iOS HSM paths.
+
+### auth.verify_ionic Scopes Fix — DONE (Wave 131)
+
+Top-level `scopes` array always present in verify response. Unblocks primalSpring SecurityVerifier Enforced mode.
+
+### grapheneGate Keystore Architecture — DONE (Wave 129)
+
+`KeystoreTransport` trait with Stub/AndroidJni/AndroidKeymaster backends. Pixel 8a device detection. `BEARDOG_KEYSTORE_BACKEND` env switch.
+
+### ring Elimination — DONE (Wave 125)
+
+`ring` → `aws-lc-rs` complete. `deny.toml` bans ring. Zero ring in dependency graph.
+
+### Env Migration Complete — DONE (Waves 121–128)
+
+803+ environment variable constants centralized in `env_keys.rs`. Zero inline `BEARDOG_*` strings in production code.
 
 ### Deep Debt Cleanup: Refactors, Bug Fixes & Dead Code Removal — DONE (Wave 95)
 
