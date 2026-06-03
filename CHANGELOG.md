@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 3, 2026 -- Wave 130: Feature-gate quantum_crypto, Delete Deprecated Modules
+
+#### Changed
+- `quantum_crypto` module gated behind `feature = "quantum-crypto"` (disabled by default)
+- Deleted `monitoring_unified/` (7 files) -- replaced by `canonical/monitoring/`
+- Deleted `timeout_unified.rs` -- aliases inlined to `timeout.rs`
+- Deleted `providers_unified/discovery.rs` -- re-export inlined to `mod.rs`
+- Deep debt audit: zero `.unwrap()` in production code (all in `#[cfg(test)]`)
+
 ### Jun 2, 2026 -- Wave 129: grapheneGate Keystore Design, Pure-Rust Crypto Horizon
 
 #### Changed
