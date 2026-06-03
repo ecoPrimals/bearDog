@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 3, 2026 -- Wave 131: auth.verify_ionic Scopes Fix + Wave 73 Gap Analysis
+
+#### Fixed
+- `auth.verify_ionic` now always includes `scopes` array at top level of response
+  (empty `[]` on error/invalid, actual scopes on success) -- unblocks primalSpring
+  SecurityVerifier Enforced mode
+
+#### Confirmed (No Code Change Needed)
+- `health.liveness` already registered and returning `{"status":"alive"}` -- primalSpring
+  report of -32601 is stale
+- Android type stack (`HsmEntropyOrchestrator` -> `StrongBoxMultiCredentialProvider`)
+  already `#[cfg(target_os = "android")]` gated -- no compile-time coupling on desktop
+- AI deprecated modules (`learning.rs`, `neural_networks.rs`) have incompatible type
+  shapes vs canonical `beardog_types::ai_config` (struct vs enum, different fields,
+  missing types) -- NOT a simple import swap, requires type system redesign
+- S4 auth monitoring: 7-day gate active (ends ~Jun 9), no issues reported
+
 ### Jun 3, 2026 -- Wave 130: Feature-gate quantum_crypto, Delete Deprecated Modules
 
 #### Changed

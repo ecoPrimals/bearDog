@@ -240,6 +240,7 @@ pub fn handle_auth_verify_ionic(verifying_key: &VerifyingKey, params: Option<&Va
     let Some(token_str) = params.and_then(|p| p.get("token")).and_then(Value::as_str) else {
         return serde_json::json!({
             "valid": false,
+            "scopes": [],
             "error": "missing required parameter: token",
         });
     };
@@ -256,6 +257,7 @@ pub fn handle_auth_verify_ionic(verifying_key: &VerifyingKey, params: Option<&Va
             serde_json::json!({
                 "valid": true,
                 "scope_ok": scope_ok,
+                "scopes": payload.scope,
                 "claims": {
                     "iss": payload.iss,
                     "sub": payload.sub,
@@ -276,6 +278,7 @@ pub fn handle_auth_verify_ionic(verifying_key: &VerifyingKey, params: Option<&Va
             };
             serde_json::json!({
                 "valid": false,
+                "scopes": [],
                 "error": e.to_string(),
                 "reason": reason,
             })
@@ -328,6 +331,11 @@ mod tests {
             verify_result["claims"]["scope"],
             serde_json::json!(["crypto.*", "health.*"])
         );
+        assert_eq!(
+            verify_result["scopes"],
+            serde_json::json!(["crypto.*", "health.*"]),
+            "scopes must be at top level for SecurityVerifier Enforced mode"
+        );
     }
 
     #[test]
@@ -359,6 +367,11 @@ mod tests {
         let vk = derive_primal_verifying_key(PRIMAL, NODE);
         let result = handle_auth_verify_ionic(&vk, Some(&serde_json::json!({})));
         assert_eq!(result["valid"], false);
+        assert_eq!(
+            result["scopes"],
+            serde_json::json!([]),
+            "scopes must always be present, even on error"
+        );
     }
 
     #[test]
@@ -368,6 +381,11 @@ mod tests {
         let result = handle_auth_verify_ionic(&vk, Some(&params));
         assert_eq!(result["valid"], false);
         assert_eq!(result["reason"], "malformed");
+        assert_eq!(
+            result["scopes"],
+            serde_json::json!([]),
+            "scopes must always be present, even on invalid token"
+        );
     }
 
     #[test]
