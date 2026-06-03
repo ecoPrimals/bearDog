@@ -173,6 +173,9 @@ pub mod method_gate;
 pub mod ionic_token;
 pub mod ionic_token_handlers;
 
+// Cross-gate trusted issuer registry (Wave 135: covalent mesh trust)
+pub mod trusted_issuer_registry;
+
 #[cfg(test)]
 mod btsp_handshake_tests;
 #[cfg(test)]

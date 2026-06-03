@@ -9,7 +9,12 @@
 //! - `auth.issue_ionic` — issue a signed ionic capability token
 //! - `auth.verify_ionic` — verify a token string, return claims or error
 
-use crate::ionic_token::{TokenError, issue_ionic_token, scope_covers_method, verify_ionic_token};
+use crate::ionic_token::{
+    GateIdentity, TokenError, issue_ionic_token, issue_ionic_token_with_gate, scope_covers_method,
+};
+use crate::trusted_issuer_registry::{
+    CrossGateVerifyResult, TrustedIssuerRegistry, verify_with_registry,
+};
 use crate::unix_socket_ipc::handlers::primal_signing::derive_primal_signing_key;
 use base64::Engine;
 use ed25519_dalek::{SigningKey, VerifyingKey};
@@ -71,8 +76,25 @@ pub fn handle_identity_create() -> Value {
 /// - `subject` (string, required): who the token is for
 /// - `scope` (array of strings, optional): method patterns; defaults to `["*"]`
 /// - `ttl_secs` (integer, optional): lifetime in seconds; defaults to 3600
+/// - `include_gate_id` (bool, optional): embed `gate_id` + `family_id` in
+///   the token for cross-gate verification (default: true when `FAMILY_ID`
+///   is set, false otherwise)
 #[must_use]
 pub fn handle_auth_issue_ionic(primal_name: &str, node_id: &str, params: Option<&Value>) -> Value {
+    handle_auth_issue_ionic_with_identity(primal_name, node_id, None, params)
+}
+
+/// Issue an ionic token with optional explicit gate identity.
+///
+/// When `family_id` is `Some`, cross-gate claims (`gate_id`, `family_id`)
+/// are embedded in the token payload.
+#[must_use]
+pub fn handle_auth_issue_ionic_with_identity(
+    primal_name: &str,
+    node_id: &str,
+    family_id: Option<&str>,
+    params: Option<&Value>,
+) -> Value {
     let subject = params
         .and_then(|p| p.get("subject"))
         .and_then(Value::as_str)
@@ -98,7 +120,33 @@ pub fn handle_auth_issue_ionic(primal_name: &str, node_id: &str, params: Option<
     let signing_key = derive_primal_signing_key(primal_name, node_id);
     let issuer_did = primal_did(primal_name, node_id);
 
-    let token = issue_ionic_token(&signing_key, &issuer_did, subject, &scope, ttl_secs);
+    // Resolve gate identity: explicit param > env > None
+    let include_gate = params
+        .and_then(|p| p.get("include_gate_id"))
+        .and_then(Value::as_bool);
+
+    let gate = if include_gate == Some(false) {
+        None
+    } else {
+        let fid = family_id.map(String::from).or_else(|| {
+            std::env::var(beardog_config::env_keys::ENV_FAMILY_ID)
+                .ok()
+                .filter(|v| !v.is_empty() && v != "default" && v != "standalone")
+        });
+        fid.map(|f| GateIdentity {
+            node_id: node_id.to_owned(),
+            family_id: f,
+        })
+    };
+
+    let token = issue_ionic_token_with_gate(
+        &signing_key,
+        &issuer_did,
+        subject,
+        &scope,
+        ttl_secs,
+        gate.as_ref(),
+    );
 
     serde_json::json!({
         "token": token,
@@ -231,12 +279,23 @@ pub fn handle_auth_public_key(primal_name: &str, node_id: &str) -> Value {
 
 /// Handle `auth.verify_ionic` — verify a token string and return claims.
 ///
+/// Supports cross-gate verification via three key sources (tried in order):
+/// 1. Local gate key (default, fast path)
+/// 2. Trusted issuer registry (remote gates registered via `auth.trust_issuer`)
+/// 3. Ad-hoc `issuer_key` param (base64 Ed25519 public key)
+///
 /// # Params (from JSON-RPC `params`)
 ///
 /// - `token` (string, required): the compact ionic token string
 /// - `method` (string, optional): if provided, also checks scope coverage
+/// - `issuer_key` (string, optional): base64-encoded Ed25519 public key for
+///   ad-hoc cross-gate verification
 #[must_use]
-pub fn handle_auth_verify_ionic(verifying_key: &VerifyingKey, params: Option<&Value>) -> Value {
+pub fn handle_auth_verify_ionic(
+    verifying_key: &VerifyingKey,
+    registry: Option<&TrustedIssuerRegistry>,
+    params: Option<&Value>,
+) -> Value {
     let Some(token_str) = params.and_then(|p| p.get("token")).and_then(Value::as_str) else {
         return serde_json::json!({
             "valid": false,
@@ -247,29 +306,52 @@ pub fn handle_auth_verify_ionic(verifying_key: &VerifyingKey, params: Option<&Va
 
     let method = params.and_then(|p| p.get("method")).and_then(Value::as_str);
 
-    match verify_ionic_token(token_str, verifying_key) {
-        Ok(payload) => {
-            let scope_ok = match method {
-                Some(m) => scope_covers_method(&payload.scope, m),
-                None => true,
-            };
+    // Parse optional ad-hoc issuer key
+    let adhoc_key = params
+        .and_then(|p| p.get("issuer_key"))
+        .and_then(Value::as_str)
+        .and_then(|b64| B64.decode(b64).ok())
+        .and_then(|bytes| <[u8; 32]>::try_from(bytes.as_slice()).ok())
+        .and_then(|arr| VerifyingKey::from_bytes(&arr).ok());
 
-            serde_json::json!({
-                "valid": true,
-                "scope_ok": scope_ok,
-                "scopes": payload.scope,
-                "claims": {
-                    "iss": payload.iss,
-                    "sub": payload.sub,
-                    "scope": payload.scope,
-                    "scopes": payload.scope,
-                    "iat": payload.iat,
-                    "exp": payload.exp,
-                    "jti": payload.jti,
-                },
-            })
+    let empty_registry = TrustedIssuerRegistry::new();
+    let reg = registry.unwrap_or(&empty_registry);
+
+    match verify_with_registry(token_str, verifying_key, reg, adhoc_key.as_ref()) {
+        CrossGateVerifyResult::LocalVerified(payload) => {
+            build_verify_success(&payload, method, "local")
         }
-        Err(e) => {
+        CrossGateVerifyResult::RemoteVerified {
+            payload,
+            issuer_info,
+        } => {
+            let mut result = build_verify_success(&payload, method, "remote");
+            if let Some(obj) = result.as_object_mut() {
+                obj.insert(
+                    "issuer_gate_id".to_owned(),
+                    issuer_info
+                        .gate_id
+                        .as_deref()
+                        .map_or(Value::Null, |s| Value::String(s.to_owned())),
+                );
+                obj.insert(
+                    "issuer_family_id".to_owned(),
+                    issuer_info
+                        .family_id
+                        .as_deref()
+                        .map_or(Value::Null, |s| Value::String(s.to_owned())),
+                );
+                obj.insert(
+                    "trust_method".to_owned(),
+                    Value::String(issuer_info.trust_method.as_str().to_owned()),
+                );
+            }
+            result
+        }
+        CrossGateVerifyResult::AdHocVerified(payload) => {
+            build_verify_success(&payload, method, "adhoc")
+        }
+        CrossGateVerifyResult::Failed(e) => {
             let reason = match &e {
                 TokenError::Malformed(_) => "malformed",
                 TokenError::InvalidSignature => "invalid_signature",
@@ -284,6 +366,141 @@ pub fn handle_auth_verify_ionic(verifying_key: &VerifyingKey, params: Option<&Va
             })
         }
     }
+}
+
+/// Build the success response for `auth.verify_ionic`.
+fn build_verify_success(
+    payload: &crate::ionic_token::IonicTokenPayload,
+    method: Option<&str>,
+    verification_source: &str,
+) -> Value {
+    let scope_ok = match method {
+        Some(m) => scope_covers_method(&payload.scope, m),
+        None => true,
+    };
+
+    let mut claims = serde_json::json!({
+        "iss": payload.iss,
+        "sub": payload.sub,
+        "scope": payload.scope,
+        "scopes": payload.scope,
+        "iat": payload.iat,
+        "exp": payload.exp,
+        "jti": payload.jti,
+    });
+
+    // Include cross-gate claims when present
+    if let Some(ref gate_id) = payload.gate_id {
+        claims["gate_id"] = Value::String(gate_id.clone());
+    }
+    if let Some(ref family_id) = payload.family_id {
+        claims["family_id"] = Value::String(family_id.clone());
+    }
+
+    serde_json::json!({
+        "valid": true,
+        "scope_ok": scope_ok,
+        "scopes": payload.scope,
+        "claims": claims,
+        "verification_source": verification_source,
+    })
+}
+
+// ── auth.trust_issuer ──────────────────────────────────────────────────
+
+/// Handle `auth.trust_issuer` — register a remote gate's public key as trusted.
+///
+/// # Params
+///
+/// - `public_key` (string, required): base64-encoded Ed25519 public key
+/// - `did` (string, required): issuer DID (`did:key:z6Mk...`)
+/// - `gate_id` (string, optional): remote gate's `NODE_ID`
+/// - `family_id` (string, optional): remote gate's `FAMILY_ID`
+/// - `trust_method` (string, optional): `"family_seed"` | `"contract_exchange"` | `"manual"`
+#[must_use]
+pub fn handle_auth_trust_issuer(registry: &TrustedIssuerRegistry, params: Option<&Value>) -> Value {
+    let Some(pk_b64) = params
+        .and_then(|p| p.get("public_key"))
+        .and_then(Value::as_str)
+    else {
+        return serde_json::json!({ "registered": false, "error": "missing required parameter: public_key" });
+    };
+    let Some(did) = params.and_then(|p| p.get("did")).and_then(Value::as_str) else {
+        return serde_json::json!({ "registered": false, "error": "missing required parameter: did" });
+    };
+
+    let pk_bytes = match B64.decode(pk_b64) {
+        Ok(b) => b,
+        Err(e) => {
+            return serde_json::json!({ "registered": false, "error": format!("invalid base64: {e}") });
+        }
+    };
+    let arr: [u8; 32] = match pk_bytes.try_into() {
+        Ok(a) => a,
+        Err(_) => {
+            return serde_json::json!({ "registered": false, "error": "public_key must be 32 bytes" });
+        }
+    };
+    let vk = match VerifyingKey::from_bytes(&arr) {
+        Ok(k) => k,
+        Err(e) => {
+            return serde_json::json!({ "registered": false, "error": format!("invalid Ed25519 key: {e}") });
+        }
+    };
+
+    let gate_id = params
+        .and_then(|p| p.get("gate_id"))
+        .and_then(Value::as_str)
+        .map(String::from);
+    let family_id = params
+        .and_then(|p| p.get("family_id"))
+        .and_then(Value::as_str)
+        .map(String::from);
+
+    let method = match params
+        .and_then(|p| p.get("trust_method"))
+        .and_then(Value::as_str)
+    {
+        Some("family_seed") => crate::trusted_issuer_registry::TrustMethod::FamilySeed,
+        Some("contract_exchange") => crate::trusted_issuer_registry::TrustMethod::ContractExchange,
+        _ => crate::trusted_issuer_registry::TrustMethod::Manual,
+    };
+
+    let newly_registered = registry.register(did, vk, gate_id.clone(), family_id.clone(), method);
+
+    serde_json::json!({
+        "registered": newly_registered,
+        "did": did,
+        "gate_id": gate_id,
+        "family_id": family_id,
+        "trust_method": method.as_str(),
+        "total_trusted_issuers": registry.len(),
+    })
+}
+
+// ── auth.trusted_issuers ───────────────────────────────────────────────
+
+/// Handle `auth.trusted_issuers` — list all registered trusted issuers.
+#[must_use]
+pub fn handle_auth_trusted_issuers(registry: &TrustedIssuerRegistry) -> Value {
+    let issuers: Vec<Value> = registry
+        .list()
+        .into_iter()
+        .map(|info| {
+            serde_json::json!({
+                "did": info.did,
+                "gate_id": info.gate_id,
+                "family_id": info.family_id,
+                "trust_method": info.trust_method.as_str(),
+                "registered_at": info.registered_at,
+            })
+        })
+        .collect();
+
+    serde_json::json!({
+        "issuers": issuers,
+        "count": issuers.len(),
+    })
 }
 
 #[cfg(test)]
@@ -323,7 +540,7 @@ mod tests {
 
         let vk = derive_primal_verifying_key(PRIMAL, NODE);
         let verify_params = serde_json::json!({ "token": token });
-        let verify_result = handle_auth_verify_ionic(&vk, Some(&verify_params));
+        let verify_result = handle_auth_verify_ionic(&vk, None, Some(&verify_params));
 
         assert_eq!(verify_result["valid"], true);
         assert_eq!(verify_result["claims"]["sub"], "alice");
@@ -352,12 +569,12 @@ mod tests {
         let vk = derive_primal_verifying_key(PRIMAL, NODE);
 
         let ok_params = serde_json::json!({ "token": token, "method": "crypto.sign" });
-        let ok_result = handle_auth_verify_ionic(&vk, Some(&ok_params));
+        let ok_result = handle_auth_verify_ionic(&vk, None, Some(&ok_params));
         assert_eq!(ok_result["valid"], true);
         assert_eq!(ok_result["scope_ok"], true);
 
         let bad_params = serde_json::json!({ "token": token, "method": "lifecycle.shutdown" });
-        let bad_result = handle_auth_verify_ionic(&vk, Some(&bad_params));
+        let bad_result = handle_auth_verify_ionic(&vk, None, Some(&bad_params));
         assert_eq!(bad_result["valid"], true);
         assert_eq!(bad_result["scope_ok"], false);
     }
@@ -365,7 +582,7 @@ mod tests {
     #[test]
     fn verify_missing_token_returns_error() {
         let vk = derive_primal_verifying_key(PRIMAL, NODE);
-        let result = handle_auth_verify_ionic(&vk, Some(&serde_json::json!({})));
+        let result = handle_auth_verify_ionic(&vk, None, Some(&serde_json::json!({})));
         assert_eq!(result["valid"], false);
         assert_eq!(
             result["scopes"],
@@ -378,7 +595,7 @@ mod tests {
     fn verify_bad_token_returns_reason() {
         let vk = derive_primal_verifying_key(PRIMAL, NODE);
         let params = serde_json::json!({ "token": "garbage" });
-        let result = handle_auth_verify_ionic(&vk, Some(&params));
+        let result = handle_auth_verify_ionic(&vk, None, Some(&params));
         assert_eq!(result["valid"], false);
         assert_eq!(result["reason"], "malformed");
         assert_eq!(
@@ -449,7 +666,7 @@ mod tests {
         let token = issue_result["token"].as_str().unwrap();
 
         let verify_params = serde_json::json!({ "token": token, "method": "crypto.sign" });
-        let verify_result = handle_auth_verify_ionic(&remote_vk, Some(&verify_params));
+        let verify_result = handle_auth_verify_ionic(&remote_vk, None, Some(&verify_params));
         assert_eq!(verify_result["valid"], true);
         assert_eq!(verify_result["scope_ok"], true);
     }
@@ -521,7 +738,7 @@ mod tests {
 
         let vk = derive_primal_verifying_key(PRIMAL, NODE);
         let verify_params = serde_json::json!({ "token": token });
-        let verify_result = handle_auth_verify_ionic(&vk, Some(&verify_params));
+        let verify_result = handle_auth_verify_ionic(&vk, None, Some(&verify_params));
         assert_eq!(verify_result["valid"], true);
         assert_eq!(verify_result["claims"]["sub"], "researcher");
     }

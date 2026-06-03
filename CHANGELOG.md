@@ -9,6 +9,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 3, 2026 -- Wave 135: Cross-Gate Trust + Covalent Mesh Security
+
+#### Added
+- **Cross-gate trusted issuer registry** (`trusted_issuer_registry.rs`): Thread-safe
+  registry of remote gate Ed25519 public keys, enabling multi-gate ionic token
+  verification without per-request key exchange.
+- **Cross-gate token claims** (`ionic_token.rs`): `IonicTokenPayload` now carries
+  optional `gate_id` (issuing gate's `NODE_ID`) and `family_id` claims. Backward
+  compatible via `serde(default, skip_serializing_if)`.
+- **`auth.trust_issuer` RPC**: Register a remote gate's public key as trusted,
+  with metadata (`gate_id`, `family_id`, trust method).
+- **`auth.trusted_issuers` RPC**: List all registered trusted issuers for audit.
+- **`issue_ionic_token_with_gate()`**: Issue tokens with embedded gate identity
+  for cross-gate verifiers to identify the issuing gate.
+- **`GateIdentity` struct**: Carries `node_id` + `family_id` for token issuance.
+- **`verify_with_registry()`**: Core cross-gate verification function — tries
+  local key, then registry issuers, then ad-hoc key.
+
+#### Changed
+- **`auth.verify_ionic`**: Now supports cross-gate verification via three key
+  sources (local → trusted registry → ad-hoc `issuer_key` param). Returns
+  `verification_source` ("local" | "remote" | "adhoc") and remote issuer
+  metadata when applicable.
+- **`MethodGate`**: Now holds a `TrustedIssuerRegistry` for pre-dispatch token
+  verification against registered remote gate keys.
+- **`MethodGate::check()`**: Bearer token verification uses `verify_with_registry`
+  — tokens from trusted remote gates are now accepted for protected methods.
+- **Capability registry**: Added `auth.trust_issuer` and `auth.trusted_issuers`
+  to `capability_registry.toml`.
+
+#### Tests
+- 8 new tests in `trusted_issuer_registry`: local verification, remote
+  verification with registered issuer, ad-hoc key, idempotent registration,
+  list/remove, and full cross-gate roundtrip (token issued on gate A, verified
+  on gate B).
+- All existing ionic token tests updated for new API and passing.
+
 ### Jun 3, 2026 -- Wave 134: ACME Smart Refactor + Stub Evolution + Dep Cleanup
 
 #### Changed

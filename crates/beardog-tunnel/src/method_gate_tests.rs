@@ -422,6 +422,8 @@ fn is_gate_handled_method_correct() {
     assert!(is_gate_handled_method("auth.issue_session"));
     assert!(is_gate_handled_method("auth.verify_ionic"));
     assert!(is_gate_handled_method("auth.public_key"));
+    assert!(is_gate_handled_method("auth.trust_issuer"));
+    assert!(is_gate_handled_method("auth.trusted_issuers"));
     assert!(is_gate_handled_method("identity.create"));
     assert!(!is_gate_handled_method("crypto.sign"));
 }

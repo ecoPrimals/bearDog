@@ -43,6 +43,11 @@ impl Default for IonicTokenHeader {
 }
 
 /// Claims payload of an ionic token.
+///
+/// v2 adds optional cross-gate claims (`gate_id`, `family_id`) so verifiers
+/// can identify the issuing gate without an external registry lookup.  Both
+/// fields are `#[serde(skip_serializing_if)]` / `#[serde(default)]` for
+/// backward compatibility with v1 tokens.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IonicTokenPayload {
     /// Issuer DID (`did:key:z6Mk...` of the signing primal).
@@ -57,6 +62,17 @@ pub struct IonicTokenPayload {
     pub exp: i64,
     /// Unique token ID (hex, for future revocation tracking).
     pub jti: String,
+
+    // ── Cross-gate identity claims (v2) ──────────────────────────────
+    /// Issuing gate's `NODE_ID`.  Allows the verifier to identify which
+    /// gate instance created the token.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gate_id: Option<String>,
+
+    /// Issuing gate's `FAMILY_ID`.  Paired with a seed fingerprint in
+    /// the trust registry, this binds the token to a cryptographic family.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub family_id: Option<String>,
 }
 
 // ── Errors ──────────────────────────────────────────────────────────────
@@ -96,12 +112,23 @@ impl std::error::Error for TokenError {}
 
 // ── Issue ───────────────────────────────────────────────────────────────
 
+/// Gate identity for embedding cross-gate claims in issued tokens.
+#[derive(Debug, Clone)]
+pub struct GateIdentity {
+    /// `NODE_ID` of the issuing gate.
+    pub node_id: String,
+    /// `FAMILY_ID` of the issuing gate.
+    pub family_id: String,
+}
+
 /// Issue a signed ionic token.
 ///
 /// `issuer_did` should be the `did:key:z6Mk...` of the signing primal.
 /// `subject` identifies who the token is for (a user DID, primal name, etc.).
 /// `scopes` are glob patterns like `["crypto.*"]` or `["*"]`.
 /// `ttl_secs` is the token lifetime in seconds.
+/// `gate` optionally embeds the issuing gate's identity for cross-gate
+/// verification.
 ///
 /// Returns the compact wire representation: `header_b64.payload_b64.sig_b64`.
 pub fn issue_ionic_token(
@@ -110,6 +137,18 @@ pub fn issue_ionic_token(
     subject: &str,
     scopes: &[String],
     ttl_secs: i64,
+) -> String {
+    issue_ionic_token_with_gate(signing_key, issuer_did, subject, scopes, ttl_secs, None)
+}
+
+/// Issue a signed ionic token with optional cross-gate identity claims.
+pub fn issue_ionic_token_with_gate(
+    signing_key: &SigningKey,
+    issuer_did: &str,
+    subject: &str,
+    scopes: &[String],
+    ttl_secs: i64,
+    gate: Option<&GateIdentity>,
 ) -> String {
     let now = Utc::now().timestamp();
 
@@ -121,6 +160,8 @@ pub fn issue_ionic_token(
         iat: now,
         exp: now + ttl_secs,
         jti: generate_jti(),
+        gate_id: gate.map(|g| g.node_id.clone()),
+        family_id: gate.map(|g| g.family_id.clone()),
     };
 
     let header_json = serde_json::to_vec(&header).unwrap_or_default();

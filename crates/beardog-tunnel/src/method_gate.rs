@@ -21,7 +21,8 @@
 //! Implements the ecosystem standard defined in
 //! `primalSpring/wateringHole/METHOD_GATE_STANDARD.md`.
 
-use crate::ionic_token::{IonicTokenPayload, TokenError, scope_covers_method, verify_ionic_token};
+use crate::ionic_token::{IonicTokenPayload, TokenError, scope_covers_method};
+use crate::trusted_issuer_registry::TrustedIssuerRegistry;
 use crate::unix_socket_ipc::handlers::primal_signing::derive_primal_verifying_key;
 use crate::unix_socket_ipc::types::JsonRpcError;
 use ed25519_dalek::VerifyingKey;
@@ -52,6 +53,8 @@ const PUBLIC_METHODS: &[&str] = &[
     "auth.issue_session",
     "auth.verify_ionic",
     "auth.public_key",
+    "auth.trust_issuer",
+    "auth.trusted_issuers",
 ];
 
 /// Classify a method string into its access level.
@@ -198,6 +201,8 @@ pub struct MethodGate {
     primal_name: String,
     /// Node ID (for token issuance in dispatch handlers).
     node_id: String,
+    /// Cross-gate trusted issuer registry (Wave 135).
+    trusted_issuers: TrustedIssuerRegistry,
 }
 
 impl MethodGate {
@@ -209,6 +214,7 @@ impl MethodGate {
             verifying_key: derive_primal_verifying_key(primal_name, node_id),
             primal_name: primal_name.to_owned(),
             node_id: node_id.to_owned(),
+            trusted_issuers: TrustedIssuerRegistry::new(),
         }
     }
 
@@ -242,6 +248,12 @@ impl MethodGate {
         &self.node_id
     }
 
+    /// Access the trusted issuer registry for cross-gate trust management.
+    #[must_use]
+    pub fn trusted_issuers(&self) -> &TrustedIssuerRegistry {
+        &self.trusted_issuers
+    }
+
     /// Pre-dispatch authorization check.
     ///
     /// For public methods, always returns `Ok(())`.
@@ -263,8 +275,13 @@ impl MethodGate {
         }
 
         if let Some(ref token_str) = caller.bearer_token {
-            match verify_ionic_token(token_str, &self.verifying_key) {
-                Ok(payload) => {
+            use crate::trusted_issuer_registry::{CrossGateVerifyResult, verify_with_registry};
+
+            match verify_with_registry(token_str, &self.verifying_key, &self.trusted_issuers, None)
+            {
+                CrossGateVerifyResult::LocalVerified(payload)
+                | CrossGateVerifyResult::RemoteVerified { payload, .. }
+                | CrossGateVerifyResult::AdHocVerified(payload) => {
                     if !scope_covers_method(&payload.scope, method) {
                         match self.mode {
                             EnforcementMode::Permissive => {
@@ -282,7 +299,7 @@ impl MethodGate {
                     caller.validated_claims = Some(payload);
                     return Ok(());
                 }
-                Err(e) => match self.mode {
+                CrossGateVerifyResult::Failed(e) => match self.mode {
                     EnforcementMode::Permissive => {
                         tracing::warn!(
                             method,
@@ -398,6 +415,8 @@ pub fn is_gate_handled_method(method: &str) -> bool {
             | "auth.issue_session"
             | "auth.verify_ionic"
             | "auth.public_key"
+            | "auth.trust_issuer"
+            | "auth.trusted_issuers"
             | "identity.create"
     )
 }
@@ -413,7 +432,8 @@ pub fn dispatch_auth_method(
 ) -> Option<serde_json::Value> {
     use crate::ionic_token_handlers::{
         handle_auth_issue_ionic, handle_auth_issue_session, handle_auth_public_key,
-        handle_auth_verify_ionic, handle_identity_create,
+        handle_auth_trust_issuer, handle_auth_trusted_issuers, handle_auth_verify_ionic,
+        handle_identity_create,
     };
     match method {
         "auth.check" => Some(handle_auth_check(caller)),
@@ -430,8 +450,14 @@ pub fn dispatch_auth_method(
             gate.node_id(),
             params,
         )),
-        "auth.verify_ionic" => Some(handle_auth_verify_ionic(gate.verifying_key(), params)),
+        "auth.verify_ionic" => Some(handle_auth_verify_ionic(
+            gate.verifying_key(),
+            Some(gate.trusted_issuers()),
+            params,
+        )),
         "auth.public_key" => Some(handle_auth_public_key(gate.primal_name(), gate.node_id())),
+        "auth.trust_issuer" => Some(handle_auth_trust_issuer(gate.trusted_issuers(), params)),
+        "auth.trusted_issuers" => Some(handle_auth_trusted_issuers(gate.trusted_issuers())),
         _ => None,
     }
 }

@@ -40,6 +40,7 @@ methods = [
     "auth.check", "auth.mode", "auth.peer_info",
     "auth.issue_ionic", "auth.verify_ionic",
     "auth.issue_session", "auth.public_key",
+    "auth.trust_issuer", "auth.trusted_issuers",
 ]
 
 [capabilities.auth_token]
