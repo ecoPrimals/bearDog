@@ -182,22 +182,19 @@ impl CapabilityDiscovery {
         capability: &str,
     ) -> Result<Vec<DiscoveredService>> {
         if let Some(registry_url) = self.service_registry_url.as_ref() {
-            debug!(
-                "Service registry configured at {}, but client not yet implemented for '{}'",
-                registry_url, capability
-            );
-            info!(
-                "Service registry discovery for '{}' pending full implementation",
-                capability
+            warn!(
+                registry_url = %registry_url,
+                capability,
+                "service registry URL configured but client not yet implemented — \
+                 falling back to other discovery methods"
             );
         } else {
             debug!(
-                "Service registry URL not injected, trying other methods for '{}'",
-                capability
+                capability,
+                "no service registry URL configured, using other discovery methods"
             );
         }
 
-        // Graceful fallback: return empty, allowing other discovery methods
         Ok(vec![])
     }
 

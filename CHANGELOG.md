@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 3, 2026 -- Wave 134: ACME Smart Refactor + Stub Evolution + Dep Cleanup
+
+#### Changed
+- **ACME client smart refactor**: Split `client.rs` (860 lines) into 4 cohesive modules:
+  - `client/mod.rs` — struct, constructor, protocol core (directory, account, order, challenges)
+  - `client/config.rs` — `AcmeConfig`, HTTP bootstrap, `Directory` type
+  - `client/renewal.rs` — daemon loop, expiry checks, renewal scheduling
+  - `client/issuance.rs` — CSR generation, order finalization, polling, cert download
+  All 36 tests preserved and passing.
+- **Production stub evolution**: Silent no-ops now emit `warn!` when registry URL
+  is configured but client not implemented (`primal_self_knowledge.rs`,
+  `beardog-discovery/discovery.rs`). Unimplemented capability discovery now
+  warns instead of silently succeeding (`trait_impl.rs`).
+- **Dead dependency removal**: `hostname` removed from `beardog-tunnel` and root
+  binary `Cargo.toml` (zero usage confirmed in both).
+
 ### Jun 3, 2026 -- Wave 133: Deep Debt Audit + Env Migration Wave 5
 
 #### Fixed

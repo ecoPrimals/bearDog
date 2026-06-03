@@ -386,12 +386,11 @@ impl BearDogCore {
         }
     }
 
-    /// Generic capability discovery method (private helper)
     async fn discover_capability(
         &self,
         capability: &ServiceCapabilityType,
     ) -> Result<(), BearDogError> {
-        info!("🔍 Discovering capability: {:?}", capability);
+        info!(capability = ?capability, "discovering capability");
 
         match capability {
             ServiceCapabilityType::ArtificialIntelligence => {
@@ -403,10 +402,11 @@ impl BearDogCore {
             ServiceCapabilityType::Storage => {
                 self.discover_storage_capabilities().await.map(|_| ())
             }
-            _ => {
-                debug!(
-                    "ℹ️ Capability {:?} discovery not yet implemented",
-                    capability
+            other => {
+                warn!(
+                    capability = ?other,
+                    "capability discovery not yet implemented — \
+                     will be resolved at runtime via IPC if available"
                 );
                 Ok(())
             }

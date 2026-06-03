@@ -448,13 +448,20 @@ impl PrimalDiscovery {
         }
     }
 
-    /// Discover via service registry (if configured)
-    fn discover_via_registry(&self, _capability: &str) -> Result<Vec<DiscoveredPrimal>> {
-        if self.runtime.service_registry_url.is_none() {
-            return Ok(Vec::new());
+    /// Discover via service registry (if configured).
+    ///
+    /// When a registry URL is set, logs a warning that the client is not yet
+    /// implemented. Returns empty until the async registry client ships.
+    fn discover_via_registry(&self, capability: &str) -> Result<Vec<DiscoveredPrimal>> {
+        if let Some(url) = self.runtime.service_registry_url.as_ref() {
+            tracing::warn!(
+                registry_url = %url,
+                capability,
+                "service registry URL configured but client not yet implemented — \
+                 discovery will use mDNS/cache only"
+            );
         }
 
-        // Will become async when registry client is implemented
         Ok(Vec::new())
     }
 

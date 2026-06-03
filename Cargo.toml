@@ -295,7 +295,6 @@ beardog-auth = { workspace = true }
 beardog-genetics = { workspace = true }
 beardog-monitoring = { workspace = true }
 beardog-ipc = { workspace = true }
-hostname = { workspace = true }
 beardog-security = { workspace = true }
 beardog-traits = { workspace = true }
 beardog-cli = { workspace = true }
