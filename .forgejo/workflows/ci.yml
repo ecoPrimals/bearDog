@@ -1,0 +1,45 @@
+# Forgejo Actions CI — bearDog
+#
+# Sovereign CI on git.primals.eco. Second primal with Forgejo CI
+# (after primalSpring). Validates core crates: beardog-core,
+# beardog-auth, beardog-ipc, beardog-types, beardog-traits.
+# Full workspace build validates all non-excluded members.
+#
+# Toolchain pinned via rust-toolchain.toml at workspace root.
+#
+# Wave 74: activated as 2nd primal Forgejo CI pipeline.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  rust-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pinned Rust toolchain
+        run: |
+          if [ -f rust-toolchain.toml ]; then
+            channel=$(grep 'channel' rust-toolchain.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+            rustup toolchain install "$channel" --profile minimal --component rustfmt,clippy
+            rustup default "$channel"
+          else
+            rustup default stable
+            rustup component add rustfmt clippy
+          fi
+          rustc --version
+          cargo --version
+
+      - name: Format check (workspace)
+        run: cargo fmt --all --check
+
+      - name: Clippy (workspace)
+        run: cargo clippy --workspace -- -D warnings
+
+      - name: Test (workspace)
+        run: cargo test --workspace
