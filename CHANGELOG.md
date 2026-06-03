@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 2, 2026 -- Wave 129: grapheneGate Keystore Design, Pure-Rust Crypto Horizon
+
+#### Changed
+- Added `AndroidDeviceInfo::pixel_8a()` with Pixel 8a/akita/Tensor G3/Titan M2 defaults
+- Added `AndroidKeymaster` transport variant for future hardware-backed keystore
+- Backend selection via `BEARDOG_KEYSTORE_BACKEND` env var (memory vs keymaster)
+- `is_production_ready()` method on `KeystoreTransportBackend` distinguishes mock from real
+- Renamed `create_pixel8_graphene_config()` to `create_pixel8a_graphene_config()`
+- Safe device detection falls back to `ANDROID_MODEL`/`ANDROID_MANUFACTURER` env vars
+- `deny.toml` documents pure-Rust crypto horizon tracking (rustls-rustcrypto, rcgen alternatives)
+
 ### Jun 2, 2026 -- Wave 128: Env Migration Complete, Dependency Consolidation
 
 #### Changed
