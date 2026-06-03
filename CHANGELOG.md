@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 3, 2026 -- Wave 132: AI Type Migration + Mobile Feature Gate
+
+#### Changed
+- **AI deprecated modules migration (P2)**: Moved type definitions from
+  `beardog-core/ai/hybrid_intelligence/{learning,neural_networks,learning_optimization}.rs`
+  to `beardog-types/ai_config/{core_learning,core_neural_networks}.rs`.
+  Deprecated modules are now thin re-exports. `learning_optimization.rs` deleted.
+  -1,104 LOC from beardog-core, types centralized in beardog-types.
+- **Mobile feature flag (P3)**: `beardog-security` now has `feature = "mobile"`
+  that gates Android `StrongBox` and iOS Secure Enclave paths, mirroring
+  the FIDO2 `feature = "fido2"` pattern. All `cfg(target_os = "android")`
+  and `cfg(target_os = "ios")` in the HSM orchestrator updated to require
+  `feature = "mobile"` as well.
+
 ### Jun 3, 2026 -- Wave 131: auth.verify_ionic Scopes Fix + Wave 73 Gap Analysis
 
 #### Fixed

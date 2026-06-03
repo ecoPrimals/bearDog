@@ -107,4 +107,5 @@ tempfile = { workspace = true }
 
 [features]
 fido2 = ["dep:beardog-hid", "dep:ciborium"]
+mobile = []
 quantum-crypto = []

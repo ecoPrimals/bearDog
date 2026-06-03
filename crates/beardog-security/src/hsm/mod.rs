@@ -35,13 +35,13 @@
 #[cfg(feature = "fido2")]
 pub mod fido2;
 
-#[cfg(target_os = "android")]
+#[cfg(all(feature = "mobile", target_os = "android"))]
 pub mod android_strongbox;
 
 #[cfg(feature = "fido2")]
 pub use fido2::*;
 
-#[cfg(target_os = "android")]
+#[cfg(all(feature = "mobile", target_os = "android"))]
 pub use android_strongbox::*;
 
 /// Universal HSM Entropy Orchestrator

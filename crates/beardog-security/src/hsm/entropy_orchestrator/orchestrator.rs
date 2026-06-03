@@ -7,7 +7,11 @@ use super::types::{
     SecurityLevel,
 };
 
-#[cfg(any(feature = "fido2", target_os = "android", target_os = "ios"))]
+#[cfg(any(
+    feature = "fido2",
+    all(feature = "mobile", target_os = "android"),
+    all(feature = "mobile", target_os = "ios")
+))]
 use super::types::HsmDeviceType;
 use beardog_errors::BearDogError;
 
@@ -19,11 +23,11 @@ enum HsmSource {
     Fido2(usize), // Index in fido2_providers vec
 
     /// Android StrongBox
-    #[cfg(target_os = "android")]
+    #[cfg(all(feature = "mobile", target_os = "android"))]
     Android,
 
     /// iOS Secure Enclave
-    #[cfg(target_os = "ios")]
+    #[cfg(all(feature = "mobile", target_os = "ios"))]
     IOS,
 }
 use tracing::{debug, info, warn};
@@ -44,11 +48,11 @@ pub struct HsmEntropyOrchestrator {
     fido2_providers: Vec<Fido2MultiCredentialProvider>,
 
     /// Android StrongBox provider (if available)
-    #[cfg(target_os = "android")]
+    #[cfg(all(feature = "mobile", target_os = "android"))]
     android_provider: Option<crate::hsm::android_strongbox::StrongBoxMultiCredentialProvider>,
 
     /// iOS Secure Enclave provider (if available)
-    #[cfg(target_os = "ios")]
+    #[cfg(all(feature = "mobile", target_os = "ios"))]
     ios_provider: Option<Arc<RwLock<()>>>, // PHASE-2(iOS): Replace with actual iOS provider once types.rs fixed
 
     /// Configuration - used for Phase 2 orchestration logic
@@ -120,7 +124,7 @@ impl HsmEntropyOrchestrator {
         };
 
         // Check for Android StrongBox
-        #[cfg(target_os = "android")]
+        #[cfg(all(feature = "mobile", target_os = "android"))]
         let android_provider = {
             info!("🔍 Checking for Android StrongBox...");
             // PHASE-2(Android-JNI): Implement Android StrongBox provider initialization
@@ -130,7 +134,7 @@ impl HsmEntropyOrchestrator {
         };
 
         // Check for iOS Secure Enclave
-        #[cfg(target_os = "ios")]
+        #[cfg(all(feature = "mobile", target_os = "ios"))]
         let ios_provider = {
             info!("🔍 Checking for iOS Secure Enclave...");
             // PHASE-2(iOS): Implement iOS Secure Enclave provider detection
@@ -143,12 +147,12 @@ impl HsmEntropyOrchestrator {
         #[cfg(not(feature = "fido2"))]
         let fido2_device_count = 0usize;
 
-        #[cfg(target_os = "android")]
+        #[cfg(all(feature = "mobile", target_os = "android"))]
         let android_device_count = usize::from(android_provider.is_some());
         #[cfg(not(target_os = "android"))]
         let android_device_count = 0usize;
 
-        #[cfg(target_os = "ios")]
+        #[cfg(all(feature = "mobile", target_os = "ios"))]
         let ios_device_count = usize::from(ios_provider.is_some());
         #[cfg(not(target_os = "ios"))]
         let ios_device_count = 0usize;
@@ -163,9 +167,9 @@ impl HsmEntropyOrchestrator {
         Ok(Self {
             #[cfg(feature = "fido2")]
             fido2_providers,
-            #[cfg(target_os = "android")]
+            #[cfg(all(feature = "mobile", target_os = "android"))]
             android_provider,
-            #[cfg(target_os = "ios")]
+            #[cfg(all(feature = "mobile", target_os = "ios"))]
             ios_provider,
             _config: config,
         })
@@ -194,7 +198,7 @@ impl HsmEntropyOrchestrator {
         }
 
         // Add Android StrongBox
-        #[cfg(target_os = "android")]
+        #[cfg(all(feature = "mobile", target_os = "android"))]
         if self.android_provider.is_some() {
             devices.push(HsmDeviceInfo {
                 device_type: HsmDeviceType::AndroidStrongBox,
@@ -206,7 +210,7 @@ impl HsmEntropyOrchestrator {
         }
 
         // Add iOS Secure Enclave
-        #[cfg(target_os = "ios")]
+        #[cfg(all(feature = "mobile", target_os = "ios"))]
         if self.ios_provider.is_some() {
             devices.push(HsmDeviceInfo {
                 device_type: HsmDeviceType::IOSSecureEnclave,
@@ -324,13 +328,13 @@ impl HsmEntropyOrchestrator {
 
         // Priority order: StrongBox/Secure Enclave > FIDO2
 
-        #[cfg(target_os = "android")]
+        #[cfg(all(feature = "mobile", target_os = "android"))]
         if self.android_provider.is_some() {
             debug!("🎯 Selected Android StrongBox");
             return Ok(HsmSource::Android);
         }
 
-        #[cfg(target_os = "ios")]
+        #[cfg(all(feature = "mobile", target_os = "ios"))]
         if self.ios_provider.is_some() {
             debug!("🎯 Selected iOS Secure Enclave");
             return Ok(HsmSource::IOS);
@@ -404,10 +408,10 @@ impl HsmEntropyOrchestrator {
     /// Calculate quality tier based on HSM source and data
     const fn calculate_quality_tier(&self, source: &HsmSource, _data_length: usize) -> u8 {
         match source {
-            #[cfg(target_os = "android")]
+            #[cfg(all(feature = "mobile", target_os = "android"))]
             HsmSource::Android => 3, // StrongBox = Tier 3
 
-            #[cfg(target_os = "ios")]
+            #[cfg(all(feature = "mobile", target_os = "ios"))]
             HsmSource::IOS => 3, // Secure Enclave = Tier 3
 
             #[cfg(feature = "fido2")]
@@ -437,10 +441,10 @@ impl HsmEntropyOrchestrator {
             #[cfg(feature = "fido2")]
             HsmSource::Fido2(idx) => format!("FIDO2 Device #{}", idx + 1),
 
-            #[cfg(target_os = "android")]
+            #[cfg(all(feature = "mobile", target_os = "android"))]
             HsmSource::Android => "Android StrongBox".to_string(),
 
-            #[cfg(target_os = "ios")]
+            #[cfg(all(feature = "mobile", target_os = "ios"))]
             HsmSource::IOS => "iOS Secure Enclave".to_string(),
 
             #[allow(
@@ -463,7 +467,7 @@ impl HsmEntropyOrchestrator {
             }
         }
 
-        #[cfg(target_os = "android")]
+        #[cfg(all(feature = "mobile", target_os = "android"))]
         {
             if device_id == "android_strongbox" && self.android_provider.is_some() {
                 return Some(HsmSource::Android);
@@ -475,7 +479,7 @@ impl HsmEntropyOrchestrator {
             let _ = device_id; // Suppress unused variable warning
         }
 
-        #[cfg(target_os = "ios")]
+        #[cfg(all(feature = "mobile", target_os = "ios"))]
         if device_id == "ios_secure_enclave" && self.ios_provider.is_some() {
             return Some(HsmSource::IOS);
         }

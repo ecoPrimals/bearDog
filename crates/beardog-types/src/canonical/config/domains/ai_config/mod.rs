@@ -16,6 +16,8 @@ use std::time::Duration;
 use crate::canonical::config::r#trait::BearDogConfig;
 
 // Submodule declarations
+pub mod core_learning;
+pub mod core_neural_networks;
 pub mod learning;
 pub mod management;
 pub mod neural_networks;
