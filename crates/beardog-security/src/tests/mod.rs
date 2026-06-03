@@ -135,7 +135,8 @@ mod security_edge_cases;
 #[cfg(test)]
 mod authorization_comprehensive_tests;
 
-// quantum_crypto_comprehensive_tests not wired until quantum_crypto module is exported.
+#[cfg(all(test, feature = "quantum-crypto"))]
+mod quantum_crypto_comprehensive_tests;
 
 // October 31, 2025 - Week 1 Test Expansion: Orchestration Tests
 #[cfg(test)]

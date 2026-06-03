@@ -10,8 +10,6 @@ pub mod connection;
 /// Core module
 /// Core functionality
 pub mod core;
-/// Discovery module (deprecated - use service_discovery instead)
-pub mod discovery;
 /// Health module
 pub mod health;
 /// Load Balancing module
@@ -32,8 +30,8 @@ pub mod service_discovery;
 pub mod traits; // NEW: Unified provider trait system // Provider migration utilities
 
 // Re-export all types for easy access (avoiding ambiguous re-exports)
+pub use crate::canonical::config::domains::discovery::DiscoveryConfig;
 pub use connection::ConnectionConfig;
-pub use discovery::DiscoveryConfig;
 pub use health::HealthConfig;
 pub use load_balancing::LoadBalancingConfig;
 pub use migration::*;

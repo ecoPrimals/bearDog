@@ -31,9 +31,8 @@ pub mod security;
 pub mod system;
 pub mod testing;
 pub mod threat;
-/// **Deprecated**: legacy timeout keys; use [`timeout_unified`] instead.
-pub mod timeout; // ⚠️ DEPRECATED — Use timeout_unified
-pub mod timeout_unified;
+/// Canonical timeout configuration for network and domain operations.
+pub mod timeout;
 pub mod workflow;
 
 // Re-export all domain configurations for easy access

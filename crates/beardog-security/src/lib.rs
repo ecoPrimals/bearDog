@@ -91,6 +91,7 @@ pub mod genesis;
 /// - **ML-KEM** (Kyber) - Key Encapsulation Mechanism
 /// - **ML-DSA** (Dilithium) - Digital Signatures
 /// - **SPHINCS+** - Stateless hash-based signatures
+#[cfg(feature = "quantum-crypto")]
 pub mod quantum_crypto;
 
 // Comprehensive test modules

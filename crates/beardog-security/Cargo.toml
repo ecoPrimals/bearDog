@@ -107,3 +107,4 @@ tempfile = { workspace = true }
 
 [features]
 fido2 = ["dep:beardog-hid", "dep:ciborium"]
+quantum-crypto = []

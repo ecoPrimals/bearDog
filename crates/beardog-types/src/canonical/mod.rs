@@ -57,8 +57,6 @@ pub mod network;
 // NEW: Unified configurations (replaces fragmented configs)
 /// Hsm Unified module
 pub mod hsm_unified;
-/// Monitoring Unified module
-pub mod monitoring_unified; // ✅ MODERNIZED: Split into modular structure
 /// Network Unified module
 pub mod network_unified;
 /// Providers Unified module
@@ -119,13 +117,7 @@ pub use providers_unified::{
 // Export the canonical MonitoringConfig
 pub use monitoring::MonitoringConfig;
 
-// Backward compatibility aliases
-// ecoPrimals: Migration plan - use canonical::monitoring::MonitoringConfig directly. Remove in v4.
-#[expect(
-    deprecated,
-    reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
-)]
-pub use monitoring_unified::CanonicalMonitoringConfig;
+pub use monitoring::MonitoringConfig as CanonicalMonitoringConfig;
 
 pub use network_unified::{
     CanonicalNetworkConfig,
