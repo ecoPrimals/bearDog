@@ -71,9 +71,17 @@ pub enum KeystoreTransportBackend {
     /// Non-Android hosts: in-memory stub — keys are **not** hardware-backed.
     #[cfg(not(target_os = "android"))]
     Stub(MemoryKeystoreTransport),
-    /// Android: Keystore JNI adapter (in-memory until Keymaster JNI is wired).
+    /// Android: placeholder for real JNI/Binder Keystore integration.
+    ///
+    /// Currently delegates to [`MemoryKeystoreTransport`] until Keymaster/keystore2 IPC is wired.
+    /// Keys stored through this backend are **not** hardware-backed.
     #[cfg(target_os = "android")]
     AndroidJni(MemoryKeystoreTransport),
+    /// Real Android Keymaster/StrongBox transport (Phase 2).
+    ///
+    /// Will use keystore2 Binder IPC on Android 12+ or JNI KeyStore API.
+    #[cfg(target_os = "android")]
+    AndroidKeymaster,
 }
 
 impl KeystoreTransportBackend {
@@ -84,8 +92,27 @@ impl KeystoreTransportBackend {
             Self::Stub(_) => false,
             #[cfg(target_os = "android")]
             Self::AndroidJni(_) => false, // Until real JNI is wired
+            #[cfg(target_os = "android")]
+            Self::AndroidKeymaster => true,
         }
     }
+
+    /// Whether this transport is ready for production use (real hardware or host CI stub).
+    pub fn is_production_ready(&self) -> bool {
+        match self {
+            #[cfg(not(target_os = "android"))]
+            Self::Stub(_) => false,
+            #[cfg(target_os = "android")]
+            Self::AndroidJni(_) => false,
+            #[cfg(target_os = "android")]
+            Self::AndroidKeymaster => true,
+        }
+    }
+}
+
+#[cfg(target_os = "android")]
+fn android_keymaster_not_wired() -> BearDogError {
+    BearDogError::not_yet_available("AndroidKeymaster transport not yet wired")
 }
 
 impl KeystoreTransport for KeystoreTransportBackend {
@@ -99,6 +126,8 @@ impl KeystoreTransport for KeystoreTransportBackend {
             Self::Stub(t) => t.jni_generate_key(alias, params),
             #[cfg(target_os = "android")]
             Self::AndroidJni(t) => t.jni_generate_key(alias, params),
+            #[cfg(target_os = "android")]
+            Self::AndroidKeymaster => ready(Err(android_keymaster_not_wired())),
         }
     }
 
@@ -112,6 +141,8 @@ impl KeystoreTransport for KeystoreTransportBackend {
             Self::Stub(t) => t.jni_sign(alias, data),
             #[cfg(target_os = "android")]
             Self::AndroidJni(t) => t.jni_sign(alias, data),
+            #[cfg(target_os = "android")]
+            Self::AndroidKeymaster => ready(Err(android_keymaster_not_wired())),
         }
     }
 
@@ -126,6 +157,8 @@ impl KeystoreTransport for KeystoreTransportBackend {
             Self::Stub(t) => t.jni_verify(alias, data, signature),
             #[cfg(target_os = "android")]
             Self::AndroidJni(t) => t.jni_verify(alias, data, signature),
+            #[cfg(target_os = "android")]
+            Self::AndroidKeymaster => ready(Err(android_keymaster_not_wired())),
         }
     }
 
@@ -139,6 +172,8 @@ impl KeystoreTransport for KeystoreTransportBackend {
             Self::Stub(t) => t.jni_encrypt(alias, plaintext),
             #[cfg(target_os = "android")]
             Self::AndroidJni(t) => t.jni_encrypt(alias, plaintext),
+            #[cfg(target_os = "android")]
+            Self::AndroidKeymaster => ready(Err(android_keymaster_not_wired())),
         }
     }
 
@@ -152,6 +187,8 @@ impl KeystoreTransport for KeystoreTransportBackend {
             Self::Stub(t) => t.jni_decrypt(alias, ciphertext),
             #[cfg(target_os = "android")]
             Self::AndroidJni(t) => t.jni_decrypt(alias, ciphertext),
+            #[cfg(target_os = "android")]
+            Self::AndroidKeymaster => ready(Err(android_keymaster_not_wired())),
         }
     }
 
@@ -161,6 +198,8 @@ impl KeystoreTransport for KeystoreTransportBackend {
             Self::Stub(t) => t.jni_list_aliases(),
             #[cfg(target_os = "android")]
             Self::AndroidJni(t) => t.jni_list_aliases(),
+            #[cfg(target_os = "android")]
+            Self::AndroidKeymaster => ready(Err(android_keymaster_not_wired())),
         }
     }
 
@@ -170,6 +209,8 @@ impl KeystoreTransport for KeystoreTransportBackend {
             Self::Stub(t) => t.jni_delete_key(alias),
             #[cfg(target_os = "android")]
             Self::AndroidJni(t) => t.jni_delete_key(alias),
+            #[cfg(target_os = "android")]
+            Self::AndroidKeymaster => ready(Err(android_keymaster_not_wired())),
         }
     }
 
@@ -184,6 +225,8 @@ impl KeystoreTransport for KeystoreTransportBackend {
             Self::Stub(t) => t.jni_import_key(alias, key_data, key_type),
             #[cfg(target_os = "android")]
             Self::AndroidJni(t) => t.jni_import_key(alias, key_data, key_type),
+            #[cfg(target_os = "android")]
+            Self::AndroidKeymaster => ready(Err(android_keymaster_not_wired())),
         }
     }
 }

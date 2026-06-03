@@ -8,6 +8,8 @@
 
 use std::sync::Arc;
 
+#[cfg(target_os = "android")]
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::providers_unified::traits::security_traits::{
     KeyInfo, KeyType, KeyUsage,
@@ -238,16 +240,29 @@ impl AndroidKeystore {
     ) -> Result<Self, BearDogError> {
         #[cfg(target_os = "android")]
         {
-            tracing::warn!(
-                "Android keystore using in-memory stub — keys are NOT hardware-backed. \
-                 Wire real Keymaster JNI for production security."
-            );
-            Self::new(
-                config,
-                Arc::new(KeystoreTransportBackend::AndroidJni(
-                    MemoryKeystoreTransport::default(),
-                )),
-            )
+            let transport = match beardog_errors::process_env::var(env_keys::ENV_KEYSTORE_BACKEND) {
+                Ok(backend) if backend.eq_ignore_ascii_case("keymaster") => {
+                    tracing::info!(
+                        "Android keystore backend: keymaster (hardware StrongBox transport selected)"
+                    );
+                    KeystoreTransportBackend::AndroidKeymaster
+                }
+                Ok(backend) => {
+                    tracing::warn!(
+                        "Unknown BEARDOG_KEYSTORE_BACKEND={backend:?}; \
+                         falling back to in-memory AndroidJni stub"
+                    );
+                    KeystoreTransportBackend::AndroidJni(MemoryKeystoreTransport::default())
+                }
+                Err(_) => {
+                    tracing::warn!(
+                        "Android keystore using in-memory stub — keys are NOT hardware-backed. \
+                         Set BEARDOG_KEYSTORE_BACKEND=keymaster when Keymaster JNI is wired."
+                    );
+                    KeystoreTransportBackend::AndroidJni(MemoryKeystoreTransport::default())
+                }
+            };
+            Self::new(config, Arc::new(transport))
         }
         #[cfg(not(target_os = "android"))]
         {

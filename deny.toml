@@ -76,3 +76,22 @@ targets = [
     "aarch64-linux-android",
 ]
 all-features = false
+
+# ── Pure-Rust Crypto Horizon (P3, Phase 2) ──────────────────────────────
+#
+# aws-lc-rs provides production-grade crypto but depends on aws-lc-sys (C).
+# Target: replace with pure-Rust alternatives when mature.
+#
+# Tracking:
+#   rustls-rustcrypto — not yet production-ready (experimental)
+#   rcgen alternatives — p256 + x509-cert for CSR generation
+#   chacha20poly1305 — already pure-Rust (RustCrypto)
+#   ed25519-dalek — already pure-Rust
+#   x25519-dalek — already pure-Rust
+#   blake3 — already pure-Rust
+#
+# Pure-Rust crates already in use: ed25519-dalek, x25519-dalek, chacha20poly1305,
+# blake3, argon2, hkdf, sha2, hmac, aes-gcm, rand
+#
+# Remaining C dependencies via aws-lc-rs: TLS handshake (rustls), CSR (rcgen),
+# certificate verification (webpki)

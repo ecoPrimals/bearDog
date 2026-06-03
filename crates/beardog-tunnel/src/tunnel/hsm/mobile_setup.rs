@@ -12,7 +12,7 @@ use super::android_strongbox::AndroidStrongBoxHsm;
 #[cfg(not(target_os = "android"))]
 use beardog_types::hsm::AndroidStrongBoxHsm;
 
-use crate::tunnel::hsm::types::{AndroidHsmConfig, HsmTier, SoftwareHsmConfig};
+use crate::tunnel::hsm::types::{AndroidHsmConfig, AttestationLevel, HsmTier, SoftwareHsmConfig};
 use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tracing::{info, warn};
@@ -128,15 +128,30 @@ async fn initialize_software_hsm(
     Ok(software_hsm)
 }
 
-/// Creates Pixel 8 + `GrapheneOS` optimized configuration
-pub fn create_pixel8_graphene_config() -> MobileHsmSetup {
-    info!("🎯 Creating Pixel 8 + GrapheneOS optimized HSM configuration");
+/// Creates Pixel 8a + `GrapheneOS` optimized configuration.
+///
+/// Target device: Google Pixel 8a (codename `akita`, Tensor G3, Titan M2 `StrongBox`).
+///
+/// GrapheneOS-specific flags:
+/// - `enable_graphene_optimizations`: assumes `GrapheneOS` hardening (`StrongBox`-first key policy,
+///   verified-boot attestation expectations, no Google Play Services keystore fallbacks).
+/// - `require_mobile_for_critical`: startup fails if Titan M2 `StrongBox` HSM is unavailable.
+pub fn create_pixel8a_graphene_config() -> MobileHsmSetup {
+    info!("Creating Pixel 8a + GrapheneOS optimized HSM configuration (akita / Titan M2)");
+
+    let mut android_config = AndroidHsmConfig {
+        strongbox_enabled: true,
+        attestation_level: AttestationLevel::StrongBox,
+        security_level: 3,
+        ..AndroidHsmConfig::default()
+    };
+    android_config.key_params.set_strongbox_required(true);
 
     MobileHsmSetup {
         require_mobile_for_critical: true,
         enable_graphene_optimizations: true,
         software_hsm_config: SoftwareHsmConfig::default(),
-        android_config: AndroidHsmConfig::default(),
+        android_config,
     }
 }
 
@@ -158,7 +173,7 @@ pub fn create_dev_config() -> MobileHsmSetup {
 /// Returns an error if setup fails.
 pub async fn setup_production_mobile_hsm() -> Result<HsmManager, BearDogError> {
     info!("🚀 Setting up production mobile HSM environment");
-    let config = create_pixel8_graphene_config();
+    let config = create_pixel8a_graphene_config();
     initialize_mobile_hsm_manager(config).await
 }
 
@@ -188,8 +203,8 @@ mod tests {
     }
 
     #[test]
-    fn test_pixel8_config() {
-        let config = create_pixel8_graphene_config();
+    fn test_pixel8a_config() {
+        let config = create_pixel8a_graphene_config();
         assert!(config.enable_graphene_optimizations);
     }
 
@@ -245,9 +260,11 @@ mod tests {
     }
 
     #[test]
-    fn create_pixel8_graphene_config_matches_defaults_shape() {
-        let p = create_pixel8_graphene_config();
+    fn create_pixel8a_graphene_config_matches_defaults_shape() {
+        let p = create_pixel8a_graphene_config();
         assert!(p.require_mobile_for_critical);
         assert!(p.enable_graphene_optimizations);
+        assert!(p.android_config.strongbox_enabled);
+        assert!(p.android_config.key_params.strongbox_required);
     }
 }

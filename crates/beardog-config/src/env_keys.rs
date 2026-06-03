@@ -1292,6 +1292,8 @@ pub const ENV_ANDROID_STRONGBOX_AVAILABLE: &str = "ANDROID_STRONGBOX_AVAILABLE";
 pub const ENV_ANDROID_TITAN_M_AVAILABLE: &str = "ANDROID_TITAN_M_AVAILABLE";
 /// `StrongBox` mock availability flag (test/dev).
 pub const ENV_STRONGBOX_MOCK_AVAILABLE: &str = "STRONGBOX_MOCK_AVAILABLE";
+/// Keystore backend selection (`memory`, `keymaster`).
+pub const ENV_KEYSTORE_BACKEND: &str = "BEARDOG_KEYSTORE_BACKEND";
 
 // ── iOS HSM ───────────────────────────────────────────────────────────
 

@@ -7,6 +7,7 @@
 use crate::tunnel::hsm::android_strongbox::types::{
     AndroidDeviceInfo, StrongBoxImplementation, VerifiedBootState,
 };
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use tracing::{debug, info};
 
@@ -184,7 +185,10 @@ fn is_android_platform() -> bool {
 #[cfg(target_os = "android")]
 fn get_device_model() -> Result<String, BearDogError> {
     // Real implementation would query android.os.Build.MODEL
-    Ok("Pixel 8".to_string())
+    Ok(
+        beardog_errors::process_env::var(env_keys::ENV_ANDROID_MODEL)
+            .unwrap_or_else(|_| "Pixel 8a".to_string()),
+    )
 }
 
 #[cfg(not(target_os = "android"))]
@@ -196,7 +200,10 @@ fn get_device_model() -> Result<String, BearDogError> {
 #[cfg(target_os = "android")]
 fn get_device_manufacturer() -> Result<String, BearDogError> {
     // Real implementation would query android.os.Build.MANUFACTURER
-    Ok("Google".to_string())
+    Ok(
+        beardog_errors::process_env::var(env_keys::ENV_ANDROID_MANUFACTURER)
+            .unwrap_or_else(|_| "Google".to_string()),
+    )
 }
 
 #[cfg(not(target_os = "android"))]
@@ -206,7 +213,7 @@ fn get_device_manufacturer() -> Result<String, BearDogError> {
 
 /// Detects Pixel generation from model string
 pub fn detect_pixel_generation(model: &str) -> u32 {
-    if model.contains("Pixel 8") {
+    if model.contains("Pixel 8a") || model.contains("Pixel 8") {
         8
     } else if model.contains("Pixel 7") {
         7
@@ -264,6 +271,7 @@ mod tests {
 
     #[test]
     fn test_pixel_generation_detection() {
+        assert_eq!(detect_pixel_generation("Pixel 8a"), 8);
         assert_eq!(detect_pixel_generation("Pixel 8"), 8);
         assert_eq!(detect_pixel_generation("Pixel 7"), 7);
         assert_eq!(detect_pixel_generation("Pixel 6 Pro"), 6);

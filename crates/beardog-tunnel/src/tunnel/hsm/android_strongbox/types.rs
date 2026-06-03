@@ -4,6 +4,7 @@
 //
 // Canonical type definitions for Android StrongBox HSM integration
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
@@ -69,7 +70,7 @@ pub struct AndroidDeviceInfo {
 }
 
 impl AndroidDeviceInfo {
-    /// Creates a new instance with default Pixel 8 values
+    /// Creates a new instance with generic Google Tensor defaults (fallback when detection fails).
     ///
     /// # Errors
     /// Returns error if initialization fails
@@ -89,6 +90,37 @@ impl AndroidDeviceInfo {
             titan_m_version: Some("1.0".to_string()),
             verified_boot_state: VerifiedBootState::Verified,
         })
+    }
+
+    /// Pixel 8a defaults (codename `akita`, Tensor G3, Titan M2 StrongBox).
+    ///
+    /// # Errors
+    /// Returns error if initialization fails
+    pub fn pixel_8a() -> Result<Self, BearDogError> {
+        Ok(Self {
+            manufacturer: "Google".to_string(),
+            model: "Pixel 8a".to_string(),
+            device: "akita".to_string(),
+            hardware: Some("google_tensor_g3".to_string()),
+            board: Some("akita".to_string()),
+            brand: Some("google".to_string()),
+            android_version: "14".to_string(),
+            api_level: 34,
+            security_patch: Some("2024-01-01".to_string()),
+            security_patch_level: "2024-01-01".to_string(),
+            strongbox_version: Some("1.0".to_string()),
+            titan_m_version: Some("2.0".to_string()),
+            verified_boot_state: VerifiedBootState::Verified,
+        })
+    }
+
+    fn detect_from_env_model() -> Result<Self, BearDogError> {
+        if let Ok(model) = beardog_errors::process_env::var(env_keys::ENV_ANDROID_MODEL)
+            && model.contains("Pixel 8a")
+        {
+            return Self::pixel_8a();
+        }
+        Self::new()
     }
 
     /// Returns whether StrongBox is available on this device
@@ -117,22 +149,15 @@ impl AndroidDeviceInfo {
     ///
     /// # Errors
     /// Returns error if detection fails
-    #[cfg(target_os = "android")]
+    /// Detect device information from system properties or environment overrides.
+    ///
     /// # Errors
     ///
     /// Returns an error if key derivation fails.
     pub fn detect() -> Result<Self, BearDogError> {
-        // In real implementation, query Android system properties
-        Self::new()
-    }
-
-    #[cfg(not(target_os = "android"))]
-    /// # Errors
-    ///
-    /// Returns an error if key derivation fails.
-    pub fn detect() -> Result<Self, BearDogError> {
-        // Mock implementation for non-Android platforms
-        Self::new()
+        // In real implementation, query Android system properties via JNI.
+        // Until then, honour ANDROID_MODEL for Pixel 8a targeting (GrapheneOS / dev hosts).
+        Self::detect_from_env_model()
     }
 }
 

@@ -123,8 +123,10 @@ impl AndroidUniversalProvider {
             self.device_metadata
                 .insert("device_model".to_string(), model.clone());
 
-            // Known StrongBox-capable devices
-            if model.contains("Pixel")
+            // Known StrongBox-capable devices (Pixel 8a = Titan M2 StrongBox on GrapheneOS)
+            if model.contains("Pixel 8a")
+                || model.contains("Pixel 8")
+                || model.contains("Pixel")
                 || model.contains("Galaxy S")
                 || model.contains("Galaxy Note")
             {
