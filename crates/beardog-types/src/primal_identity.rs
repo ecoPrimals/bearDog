@@ -27,6 +27,7 @@
 //! - **Explicit**: Dependencies visible in signatures
 //! - **Zero-Cost**: Arc provides cheap cloning
 
+use beardog_config::env_keys;
 use std::sync::OnceLock;
 
 use tracing::warn;
@@ -139,8 +140,8 @@ impl PrimalIdentity {
     /// ```
     #[must_use]
     pub fn from_env() -> Self {
-        let family_id = env_nonempty("BEARDOG_FAMILY_ID", "FAMILY_ID");
-        let node_id = env_nonempty("BEARDOG_NODE_ID", "NODE_ID");
+        let family_id = env_nonempty(env_keys::ENV_FAMILY_ID_PREFIXED, env_keys::ENV_FAMILY_ID);
+        let node_id = env_nonempty(env_keys::ENV_NODE_ID_PREFIXED, env_keys::ENV_NODE_ID);
 
         let is_standalone = family_id.is_none() && node_id.is_none();
 

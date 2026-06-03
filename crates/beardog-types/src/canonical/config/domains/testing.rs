@@ -90,11 +90,15 @@ impl CanonicalTestConfig {
             max_threads: std::thread::available_parallelism()
                 .map(std::num::NonZeroUsize::get)
                 .unwrap_or(4),
-            timeout_seconds: get_parsed(source, "BEARDOG_TEST_TIMEOUT_SECS", 300),
+            timeout_seconds: get_parsed(source, env_keys::ENV_TEST_TIMEOUT_SECS, 300),
             collect_coverage: false,
             test_data_dir: PathBuf::from("test-data"),
             property_testing_enabled: true,
-            property_test_iterations: get_parsed(source, "BEARDOG_TEST_PROPERTY_ITERATIONS", 100),
+            property_test_iterations: get_parsed(
+                source,
+                env_keys::ENV_TEST_PROPERTY_ITERATIONS,
+                100,
+            ),
             fuzzing_enabled: false,
             random_seed: None,
         }
@@ -404,11 +408,11 @@ impl CanonicalBenchmarkConfig {
 
         Self {
             name: "benchmark".to_string(),
-            iterations: get_parsed(source, "BEARDOG_BENCHMARK_ITERATIONS", 1000),
-            warmup_iterations: get_parsed(source, "BEARDOG_BENCHMARK_WARMUP_ITERATIONS", 100),
+            iterations: get_parsed(source, env_keys::ENV_BENCHMARK_ITERATIONS, 1000),
+            warmup_iterations: get_parsed(source, env_keys::ENV_BENCHMARK_WARMUP_ITERATIONS, 100),
             measurement_duration: Duration::from_secs(get_parsed(
                 source,
-                "BEARDOG_BENCHMARK_MEASUREMENT_DURATION_SECS",
+                env_keys::ENV_BENCHMARK_MEASUREMENT_DURATION_SECS,
                 10,
             )),
             statistical_analysis: true,

@@ -213,21 +213,18 @@ pub async fn discover_ipc_socket() -> String {
 /// The value is an opaque id from capability discovery, not a fixed peer product name.
 pub const IPC_RESOLVE_TARGET_PARAM_KEY: &str = "primal";
 
-/// Override [`IPC_RESOLVE_TARGET_PARAM_KEY`] for registries that use a different field name.
-pub const ENV_IPC_RESOLVE_TARGET_PARAM_KEY: &str = "BEARDOG_IPC_RESOLVE_TARGET_PARAM_KEY";
-
 /// Returns the JSON-RPC parameter name used for `ipc.resolve` targets from an explicit override.
 #[must_use]
 pub fn ipc_resolve_target_param_key_with(override_name: Option<String>) -> String {
     override_name.unwrap_or_else(|| IPC_RESOLVE_TARGET_PARAM_KEY.to_string())
 }
 
-/// Reads [`ENV_IPC_RESOLVE_TARGET_PARAM_KEY`] from the environment, or defaults to
+/// Reads [`env_keys::ENV_IPC_RESOLVE_TARGET_PARAM_KEY`] from the environment, or defaults to
 /// [`IPC_RESOLVE_TARGET_PARAM_KEY`] so registries can rename the field without recompiling clients.
 #[must_use]
 pub fn ipc_resolve_target_param_key() -> String {
     ipc_resolve_target_param_key_with(
-        beardog_errors::process_env::var(ENV_IPC_RESOLVE_TARGET_PARAM_KEY).ok(),
+        beardog_errors::process_env::var(env_keys::ENV_IPC_RESOLVE_TARGET_PARAM_KEY).ok(),
     )
 }
 

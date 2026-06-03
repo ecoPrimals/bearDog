@@ -87,11 +87,11 @@ impl EndpointConfig {
     /// - `BEARDOG_BIND_ADDR` - Bind address (default: 0.0.0.0)
     pub fn from_env() -> Self {
         Self {
-            http_port: Self::env_port("BEARDOG_HTTP_PORT", 0),
-            rpc_port: Self::env_port("BEARDOG_RPC_PORT", 0),
-            ws_port: Self::env_port("BEARDOG_WS_PORT", 0),
-            metrics_port: Self::env_port("BEARDOG_METRICS_PORT", 0),
-            bind_addr: Self::env_addr("BEARDOG_BIND_ADDR", WILDCARD_IPV4),
+            http_port: Self::env_port(env_keys::ENV_HTTP_PORT, 0),
+            rpc_port: Self::env_port(env_keys::ENV_RPC_PORT, 0),
+            ws_port: Self::env_port(env_keys::ENV_WS_PORT, 0),
+            metrics_port: Self::env_port(env_keys::ENV_METRICS_PORT, 0),
+            bind_addr: Self::env_addr(env_keys::ENV_BIND_ADDR, WILDCARD_IPV4),
         }
     }
 
@@ -233,13 +233,13 @@ impl ZeroHardcodingTimeouts {
     /// - `BEARDOG_TIMEOUT_DB_QUERY` - DB query timeout (seconds, default: 10)
     pub fn from_env() -> Self {
         Self {
-            connect: Self::env_duration("BEARDOG_TIMEOUT_CONNECT", 10),
-            request: Self::env_duration("BEARDOG_TIMEOUT_REQUEST", 30),
-            idle: Self::env_duration("BEARDOG_TIMEOUT_IDLE", 60),
-            discovery: Self::env_duration("BEARDOG_TIMEOUT_DISCOVERY", 5),
-            shutdown: Self::env_duration("BEARDOG_TIMEOUT_SHUTDOWN", 30),
-            health_check: Self::env_duration("BEARDOG_TIMEOUT_HEALTH", 5),
-            db_query: Self::env_duration("BEARDOG_TIMEOUT_DB_QUERY", 10),
+            connect: Self::env_duration(env_keys::ENV_TIMEOUT_CONNECT, 10),
+            request: Self::env_duration(env_keys::ENV_TIMEOUT_REQUEST, 30),
+            idle: Self::env_duration(env_keys::ENV_TIMEOUT_IDLE, 60),
+            discovery: Self::env_duration(env_keys::ENV_TIMEOUT_DISCOVERY, 5),
+            shutdown: Self::env_duration(env_keys::ENV_TIMEOUT_SHUTDOWN, 30),
+            health_check: Self::env_duration(env_keys::ENV_TIMEOUT_HEALTH, 5),
+            db_query: Self::env_duration(env_keys::ENV_TIMEOUT_DB_QUERY, 10),
         }
     }
 

@@ -261,10 +261,10 @@ impl LogRotationConfig {
     /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
     pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            max_size_mb: get("BEARDOG_SYSTEM_LOG_MAX_SIZE_MB")
+            max_size_mb: get(env_keys::ENV_SYSTEM_LOG_MAX_SIZE_MB)
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_SIZE_MB),
-            max_files: get("BEARDOG_SYSTEM_LOG_MAX_FILES")
+            max_files: get(env_keys::ENV_SYSTEM_LOG_MAX_FILES)
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_FILES),
             frequency: LogRotationFrequency::Daily,

@@ -9,6 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 3, 2026 -- Wave 133: Deep Debt Audit + Env Migration Wave 5
+
+#### Fixed
+- **Windows `.expect()` panic removed**: `platform/mod.rs` `default_socket_endpoint()`
+  now uses `unwrap_or_else` with a fallback named pipe instead of panicking.
+- **iOS XPC hardcoded identifier**: `SocketEndpoint::XPC("com.ecoprimals.beardog")`
+  now derives from `ENV_PRIMAL_NAME` at runtime (self-knowledge pattern).
+
+#### Changed
+- **Env literal migration Wave 5** (~35 string literals → `env_keys` constants):
+  - `system.rs`: 10 literals → `env_keys` (app name, version, instance, workers, etc.)
+  - `system_logging.rs`: 2 literals → `env_keys` (log rotation)
+  - `compliance.rs`: 2 literals → `env_keys` (audit retention/frequency)
+  - `testing.rs`: 5 literals → `env_keys` (test/benchmark config)
+  - `security/mod.rs`: 6 literals → `env_keys` (rate limiting)
+  - `core_learning.rs`: 4 literals → `env_keys` (online learning)
+  - `zero_hardcoding.rs`: 12 literals → `env_keys` (ports + timeouts)
+  - `primal_identity.rs`: 2 literals → `env_keys` (family/node ID)
+  - `beardog-ipc/lib.rs`: local `ENV_IPC_RESOLVE_TARGET_PARAM_KEY` → centralized
+- **`env_keys.rs` expanded**: ~25 new constants added for system, logging, compliance,
+  testing, benchmarks, timeouts, rate limiting, and IPC categories.
+
+#### Verified
+- `ring` confirmed ABSENT from all targets (`cargo tree -i ring --target all` → empty).
+  deny.toml ban effective. Zero transitive ring dependencies.
+- `unsafe` code: zero blocks in production (workspace `forbid(unsafe_code)` enforced).
+- `.unwrap()` in production: zero (only `#[cfg(test)]` blocks).
+- `todo!()`/`unimplemented!()`: zero in all .rs files.
+
 ### Jun 3, 2026 -- Wave 132: AI Type Migration + Mobile Feature Gate
 
 #### Changed

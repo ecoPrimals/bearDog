@@ -196,12 +196,12 @@ impl ConsolidatedComplianceConfiguration {
             ],
             audit_retention_days: get_parsed(
                 source,
-                "BEARDOG_COMPLIANCE_AUDIT_RETENTION_DAYS",
+                env_keys::ENV_COMPLIANCE_AUDIT_RETENTION_DAYS,
                 2555,
             ), // 7 years
             audit_frequency_hours: get_parsed(
                 source,
-                "BEARDOG_COMPLIANCE_AUDIT_FREQUENCY_HOURS",
+                env_keys::ENV_COMPLIANCE_AUDIT_FREQUENCY_HOURS,
                 168,
             ), // Weekly
             reporting: ReportingConfiguration::default(),

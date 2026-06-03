@@ -6,6 +6,7 @@
 //! hybrid intelligence pipeline. They complement the simplified configuration types
 //! in the sibling `learning` module.
 
+use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -49,19 +50,19 @@ pub struct OnlineLearningConfig {
 impl Default for OnlineLearningConfig {
     fn default() -> Self {
         Self {
-            enabled: std::env::var("BEARDOG_AI_ONLINE_LEARNING_ENABLED")
+            enabled: std::env::var(env_keys::ENV_AI_ONLINE_LEARNING_ENABLED)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(false),
-            learning_rate: std::env::var("BEARDOG_AI_ONLINE_LEARNING_RATE")
+            learning_rate: std::env::var(env_keys::ENV_AI_ONLINE_LEARNING_RATE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.001),
-            batch_size: std::env::var("BEARDOG_AI_ONLINE_BATCH_SIZE")
+            batch_size: std::env::var(env_keys::ENV_AI_ONLINE_BATCH_SIZE)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(32),
-            update_frequency: std::env::var("BEARDOG_AI_ONLINE_UPDATE_FREQUENCY")
+            update_frequency: std::env::var(env_keys::ENV_AI_ONLINE_UPDATE_FREQUENCY)
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(100),

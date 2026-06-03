@@ -176,13 +176,18 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
             .ok()
             .as_deref(),
     )
-    .expect("Windows named pipe path")
+    .unwrap_or_else(|e| {
+        tracing::warn!("Windows named pipe creation failed: {e}, using default");
+        SocketEndpoint::NamedPipe(format!("\\\\.\\pipe\\beardog-{primal_name}"))
+    })
 }
 
 #[cfg(target_os = "ios")]
 pub fn default_socket_endpoint() -> SocketEndpoint {
-    // iOS: Use XPC services (Apple's recommended IPC)
-    SocketEndpoint::XPC("com.ecoprimals.beardog".to_string())
+    let primal_name = beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME)
+        .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME_PREFIXED))
+        .unwrap_or_else(|_| DEFAULT_SYSTEM_NAME.to_string());
+    SocketEndpoint::XPC(format!("com.ecoprimals.{primal_name}"))
 }
 
 #[cfg(target_family = "wasm")]

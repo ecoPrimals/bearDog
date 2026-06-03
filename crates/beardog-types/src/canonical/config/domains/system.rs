@@ -85,12 +85,12 @@ impl ApplicationConfig {
     /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
     pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            name: get("BEARDOG_APP_NAME").unwrap_or_else(|| Self::DEFAULT_NAME.to_string()),
-            version: get("BEARDOG_APP_VERSION")
+            name: get(env_keys::ENV_APP_NAME).unwrap_or_else(|| Self::DEFAULT_NAME.to_string()),
+            version: get(env_keys::ENV_APP_VERSION)
                 .unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_string()),
-            instance_id: get("BEARDOG_INSTANCE_ID")
+            instance_id: get(env_keys::ENV_INSTANCE_ID)
                 .unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
-            description: get("BEARDOG_APP_DESCRIPTION")
+            description: get(env_keys::ENV_APP_DESCRIPTION)
                 .unwrap_or_else(|| Self::DEFAULT_DESCRIPTION.to_string()),
             features: HashMap::new(),
         }
@@ -153,7 +153,7 @@ impl ThreadingConfig {
 
     /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
     pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
-        let worker_threads = get("BEARDOG_WORKER_THREADS")
+        let worker_threads = get(env_keys::ENV_WORKER_THREADS)
             .and_then(|v| v.parse().ok())
             .unwrap_or_else(|| {
                 std::thread::available_parallelism()
@@ -161,7 +161,7 @@ impl ThreadingConfig {
                     .unwrap_or(Self::DEFAULT_WORKER_THREADS)
             });
 
-        let blocking_threads = get("BEARDOG_BLOCKING_THREADS")
+        let blocking_threads = get(env_keys::ENV_BLOCKING_THREADS)
             .and_then(|v| v.parse().ok())
             .unwrap_or(Self::DEFAULT_BLOCKING_THREADS);
 
@@ -252,15 +252,15 @@ impl ResourceConfig {
         Self {
             max_memory_bytes: None,
             max_file_descriptors: Some(
-                get("BEARDOG_MAX_FILE_DESCRIPTORS")
+                get(env_keys::ENV_MAX_FILE_DESCRIPTORS)
                     .and_then(|f| f.parse().ok())
                     .unwrap_or(Self::DEFAULT_MAX_FILE_DESCRIPTORS),
             ),
-            max_connections: get("BEARDOG_SYSTEM_MAX_CONNECTIONS")
+            max_connections: get(env_keys::ENV_SYSTEM_MAX_CONNECTIONS)
                 .and_then(|c| c.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_CONNECTIONS),
             monitoring_interval: Duration::from_secs(
-                get("BEARDOG_SYSTEM_MONITORING_INTERVAL_SECS")
+                get(env_keys::ENV_SYSTEM_MONITORING_INTERVAL_SECS)
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_MONITORING_INTERVAL_SECS),
             ),
@@ -303,7 +303,7 @@ impl EnvironmentConfig {
     /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
     pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            environment_type: get("BEARDOG_ENVIRONMENT")
+            environment_type: get(env_keys::ENV_ENVIRONMENT)
                 .unwrap_or_else(|| Self::DEFAULT_ENVIRONMENT_TYPE.to_string()),
             variables: HashMap::new(),
             overrides: HashMap::new(),

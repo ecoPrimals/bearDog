@@ -200,13 +200,13 @@ impl RateLimitingConfig {
     pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             enabled: true,
-            max_requests_per_minute: get("BEARDOG_RATE_LIMIT_MAX_REQUESTS_PER_MIN")
+            max_requests_per_minute: get(env_keys::ENV_RATE_LIMIT_MAX_REQUESTS_PER_MIN)
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_REQUESTS_PER_MINUTE),
-            burst_capacity: get("BEARDOG_RATE_LIMIT_BURST_CAPACITY")
+            burst_capacity: get(env_keys::ENV_RATE_LIMIT_BURST_CAPACITY)
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(Self::DEFAULT_BURST_CAPACITY),
-            window_seconds: get("BEARDOG_RATE_LIMIT_WINDOW_SECS")
+            window_seconds: get(env_keys::ENV_RATE_LIMIT_WINDOW_SECS)
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(Self::DEFAULT_WINDOW_SECS),
         }
@@ -298,9 +298,9 @@ mod tests {
     #[test]
     fn rate_limiting_from_env_provider_overrides() {
         let r = RateLimitingConfig::from_env_provider(|k| match k {
-            "BEARDOG_RATE_LIMIT_MAX_REQUESTS_PER_MIN" => Some("250".to_string()),
-            "BEARDOG_RATE_LIMIT_BURST_CAPACITY" => Some("20".to_string()),
-            "BEARDOG_RATE_LIMIT_WINDOW_SECS" => Some("120".to_string()),
+            env_keys::ENV_RATE_LIMIT_MAX_REQUESTS_PER_MIN => Some("250".to_string()),
+            env_keys::ENV_RATE_LIMIT_BURST_CAPACITY => Some("20".to_string()),
+            env_keys::ENV_RATE_LIMIT_WINDOW_SECS => Some("120".to_string()),
             _ => None,
         });
         assert_eq!(r.max_requests_per_minute, 250);
