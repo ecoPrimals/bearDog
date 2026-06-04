@@ -89,7 +89,7 @@ Each family gets its own BearDog instance with independently derived key materia
 
 ### JSON-RPC Methods
 
-BearDog exposes 223 dispatchable methods organized by domain:
+BearDog exposes 225 dispatchable methods organized by domain:
 
 | Namespace | Examples |
 |-----------|----------|

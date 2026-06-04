@@ -100,6 +100,18 @@ fn trust_issuer_is_protected() {
 }
 
 #[test]
+fn phase35_verify_ed25519_is_protected() {
+    assert_eq!(
+        classify_method("crypto.verify.ed25519"),
+        MethodAccessLevel::Protected
+    );
+    assert_eq!(
+        classify_method("crypto.sign.ed25519"),
+        MethodAccessLevel::Protected
+    );
+}
+
+#[test]
 fn lifecycle_status_is_public() {
     assert_eq!(
         classify_method("lifecycle.status"),

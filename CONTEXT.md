@@ -2,7 +2,7 @@
 
 # Context — BearDog
 
-**Last Updated**: Jun 3, 2026
+**Last Updated**: Jun 4, 2026
 
 ## What This Is
 
@@ -26,7 +26,7 @@ BearDog answers "who is this node?" and "perform this crypto operation safely" f
 
 ## Key Capabilities
 
-- **Protocols:** JSON-RPC 2.0 over NDJSON (223 dispatchable methods)
+- **Protocols:** JSON-RPC 2.0 over NDJSON (225 dispatchable methods)
 - **Cryptography:** Ed25519, X25519, ChaCha20-Poly1305, BLAKE3 (plus TLS, Tor, and broader RustCrypto suite as exposed by handlers)
 - **Hardware / identity:** HSM abstraction (software, PKCS#11, StrongBox, etc.), **FIDO2** / HID device discovery (`beardog-hid`)
 - **Witness encoding:** `crypto.verify_ed25519` accepts encoding hints (`base64`, `hex`, `base64url`, `utf8`, `none`) per `ATTESTATION_ENCODING_STANDARD.md` v2.0

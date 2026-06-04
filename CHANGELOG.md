@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 4, 2026 -- Wave 138: Phase 3.5 Relay Interface + Seed Fingerprint Validation
+
+#### Added
+- **`crypto.verify.ed25519` / `crypto.sign.ed25519`**: Phase 3.5 `CryptoProvider::call`
+  aliases for Songbird relay-path Ed25519 signature verification. Routes to existing
+  `handle_verify_ed25519` / `handle_sign_ed25519` handlers with full multi-encoding support.
+- Tests: `phase35_crypto_provider_call_aliases_registered`, `phase35_verify_ed25519_is_protected`
+
+#### Verified
+- **`crypto.seed_fingerprint`**: Confirmed implementation matches westGate enrollment spec —
+  `BLAKE3(HMAC-SHA256(family_seed, "seed-fingerprint-v1"))`, truncated to 16 bytes, hex-encoded.
+  5 existing tests cover correctness, determinism, seed differentiation, error handling, routing.
+- **S4 7-day gate**: Active through ~Jun 9, passive monitoring.
+
+#### Metrics
+- 225 JSON-RPC methods (217 registry + 8 pre-dispatch gate)
+- 108 crypto handler methods
+- 14,987 tests passing, 169 suites, 0 failures
+
 ### Jun 3, 2026 -- Wave 137: Deep Debt — Typed Handler Errors, Zero-Hardcoding, Dashmap 6
 
 #### Changed

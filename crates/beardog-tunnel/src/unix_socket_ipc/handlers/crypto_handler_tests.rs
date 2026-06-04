@@ -28,13 +28,14 @@ fn test_crypto_handler_methods() {
     //   - 2 Tor v3 Phase 1 (crypto.derive_onion_address semantic + beardog.crypto.* alias; generate_onion_identity)
     //   - 6 Tor Phase 2 (ntor_client_init, ntor_client_finish, ntor_server_respond, cell_encrypt, cell_decrypt, tor_kdf)
     //   - 2 semantic dot-separated aliases (crypto.ed25519.sign, crypto.ed25519.verify)
+    //   - 2 Phase 3.5 CryptoProvider::call aliases (crypto.sign.ed25519, crypto.verify.ed25519)
     //   - 1 crypto.public_key (standalone key retrieval)
     //   - 1 crypto.did_from_key (did:key derivation from Ed25519 signing key)
     //   - 1 crypto.derive_public_key (purpose-key Ed25519 public key)
     //   - 1 crypto.hmac_verify (constant-time HMAC verification)
     //   - 1 crypto.hkdf_sha256 (HKDF-SHA256 key derivation)
     //   - 1 crypto.seed_fingerprint (Tower atomic identity fingerprint)
-    assert_eq!(methods.len(), 106);
+    assert_eq!(methods.len(), 108);
 
     // Verify all core crypto methods are present
     assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -120,6 +121,10 @@ fn test_crypto_handler_methods() {
     assert!(methods.contains(&"crypto.ed25519.sign"));
     assert!(methods.contains(&"crypto.ed25519.verify"));
 
+    // Phase 3.5 CryptoProvider::call aliases for relay path verification
+    assert!(methods.contains(&"crypto.sign.ed25519"));
+    assert!(methods.contains(&"crypto.verify.ed25519"));
+
     // HMAC verify + HKDF (Wave 101 — barraCuda crypto dedup surface)
     assert!(methods.contains(&"crypto.hmac_verify"));
     assert!(methods.contains(&"crypto.hkdf_sha256"));
@@ -133,7 +138,7 @@ fn test_handler_method_count() {
     let handler = CryptoHandler;
     assert_eq!(
         handler.methods().len(),
-        106,
-        "Should have exactly 106 crypto methods (see test_crypto_handler_methods for breakdown)"
+        108,
+        "Should have exactly 108 crypto methods (see test_crypto_handler_methods for breakdown)"
     );
 }

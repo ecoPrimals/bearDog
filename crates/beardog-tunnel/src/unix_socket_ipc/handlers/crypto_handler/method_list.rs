@@ -111,6 +111,9 @@ pub fn crypto_method_names() -> Vec<&'static str> {
         // Dot-separated semantic names (SEMANTIC_METHOD_NAMING_STANDARD v2.0)
         "crypto.ed25519.sign",
         "crypto.ed25519.verify",
+        // Phase 3.5: CryptoProvider::call convention for relay signature verification
+        "crypto.sign.ed25519",
+        "crypto.verify.ed25519",
         // Cross-Primal namespace (beardog.crypto.*)
         "beardog.crypto.sha3_256",
         "beardog.crypto.ed25519_generate_keypair",
@@ -172,6 +175,19 @@ mod tests {
         assert!(
             names.contains(&"crypto.ed25519.verify"),
             "dot-separated crypto.ed25519.verify per SEMANTIC_METHOD_NAMING_STANDARD v2.0"
+        );
+    }
+
+    #[test]
+    fn phase35_crypto_provider_call_aliases_registered() {
+        let names = crypto_method_names();
+        assert!(
+            names.contains(&"crypto.verify.ed25519"),
+            "Phase 3.5: crypto.verify.ed25519 for CryptoProvider::call relay path"
+        );
+        assert!(
+            names.contains(&"crypto.sign.ed25519"),
+            "Phase 3.5: crypto.sign.ed25519 for CryptoProvider::call relay path"
         );
     }
 }

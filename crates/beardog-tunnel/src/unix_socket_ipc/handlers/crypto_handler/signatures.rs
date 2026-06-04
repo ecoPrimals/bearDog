@@ -28,12 +28,12 @@ pub async fn route(
             Ok(Some(handle_ed25519_generate_keypair(params).await?))
         }
 
-        "crypto.sign_ed25519" | "crypto.ed25519.sign" => {
+        "crypto.sign_ed25519" | "crypto.ed25519.sign" | "crypto.sign.ed25519" => {
             info!("✍️  Crypto: sign_ed25519");
             Ok(Some(handle_sign_ed25519(params).await?))
         }
 
-        "crypto.verify_ed25519" | "crypto.ed25519.verify" => {
+        "crypto.verify_ed25519" | "crypto.ed25519.verify" | "crypto.verify.ed25519" => {
             info!("✅ Crypto: verify_ed25519");
             Ok(Some(handle_verify_ed25519(params).await?))
         }
