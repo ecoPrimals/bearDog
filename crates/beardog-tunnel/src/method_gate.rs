@@ -53,7 +53,6 @@ const PUBLIC_METHODS: &[&str] = &[
     "auth.issue_session",
     "auth.verify_ionic",
     "auth.public_key",
-    "auth.trust_issuer",
     "auth.trusted_issuers",
 ];
 

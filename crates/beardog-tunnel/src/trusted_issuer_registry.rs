@@ -32,6 +32,25 @@ use std::sync::{Arc, RwLock};
 
 use crate::ionic_token::{IonicTokenPayload, TokenError, verify_ionic_token};
 
+/// Derive the `did:key:z6Mk...` DID from an Ed25519 public key.
+///
+/// This is the canonical derivation: multicodec prefix `0xed01` +
+/// 32-byte public key, then base58btc-encode with `z` prefix.
+#[must_use]
+pub fn did_from_verifying_key(key: &VerifyingKey) -> String {
+    let mut multicodec = Vec::with_capacity(34);
+    multicodec.push(0xed);
+    multicodec.push(0x01);
+    multicodec.extend_from_slice(key.as_bytes());
+    format!("did:key:z{}", bs58::encode(&multicodec).into_string())
+}
+
+/// Check if a DID string matches a verifying key.
+#[must_use]
+pub fn did_matches_key(did: &str, key: &VerifyingKey) -> bool {
+    did_from_verifying_key(key) == did
+}
+
 /// Metadata associated with a trusted issuer.
 #[derive(Debug, Clone)]
 pub struct IssuerInfo {
@@ -57,6 +76,28 @@ pub enum TrustMethod {
     /// Manual operator registration.
     Manual,
 }
+
+/// Error returned when issuer registration fails.
+#[derive(Debug)]
+pub enum RegisterError {
+    /// The supplied DID does not match the canonical DID derived from the key.
+    DidKeyMismatch {
+        /// The DID that the key actually produces.
+        expected: String,
+    },
+}
+
+impl std::fmt::Display for RegisterError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::DidKeyMismatch { expected } => {
+                write!(f, "DID does not match public key (expected {expected})")
+            }
+        }
+    }
+}
+
+impl std::error::Error for RegisterError {}
 
 impl TrustMethod {
     /// Human-readable label.
@@ -114,8 +155,17 @@ impl TrustedIssuerRegistry {
 
     /// Register a trusted remote issuer.
     ///
-    /// Returns `true` if the issuer was newly registered, `false` if
-    /// already present (existing entry is preserved — no silent replacement).
+    /// The `did` must be the canonical `did:key:z6Mk...` derived from the
+    /// supplied `key` — the registry validates this binding to prevent
+    /// mismatched DID/key registration.
+    ///
+    /// Returns `Ok(true)` if newly registered, `Ok(false)` if already
+    /// present, or `Err` if the DID does not match the key.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`RegisterError::DidKeyMismatch`] if the supplied DID does
+    /// not match the canonical DID derived from the public key.
     pub fn register(
         &self,
         did: &str,
@@ -123,13 +173,18 @@ impl TrustedIssuerRegistry {
         gate_id: Option<String>,
         family_id: Option<String>,
         method: TrustMethod,
-    ) -> bool {
+    ) -> Result<bool, RegisterError> {
+        if !did_matches_key(did, &key) {
+            let expected = did_from_verifying_key(&key);
+            return Err(RegisterError::DidKeyMismatch { expected });
+        }
+
         let mut inner = self
             .inner
             .write()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         if inner.issuers.contains_key(did) {
-            return false;
+            return Ok(false);
         }
         let info = IssuerInfo {
             did: did.to_owned(),
@@ -139,7 +194,7 @@ impl TrustedIssuerRegistry {
             trust_method: method,
         };
         inner.issuers.insert(did.to_owned(), (key, info));
-        true
+        Ok(true)
     }
 
     /// Look up a trusted issuer by DID.
@@ -222,7 +277,8 @@ pub fn verify_with_registry(
         Err(e) => return CrossGateVerifyResult::Failed(e), // structural / expiry errors are terminal
     }
 
-    // 2. Try registry issuers
+    // 2. Try registry issuers — signature must verify AND payload.iss must
+    //    match the registered DID (prevents key-confusion attacks).
     {
         let inner = registry
             .inner
@@ -230,12 +286,13 @@ pub fn verify_with_registry(
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         for (vk, info) in inner.issuers.values() {
             match verify_ionic_token(token_str, vk) {
-                Ok(payload) => {
+                Ok(payload) if payload.iss == info.did => {
                     return CrossGateVerifyResult::RemoteVerified {
                         payload,
                         issuer_info: info.clone(),
                     };
                 }
+                Ok(_) => {} // sig valid but iss mismatch — skip
                 Err(TokenError::InvalidSignature) => {}
                 Err(e) => return CrossGateVerifyResult::Failed(e),
             }
@@ -267,15 +324,21 @@ mod tests {
     const GATE_B_PRIMAL: &str = "beardog";
     const GATE_B_NODE: &str = "eastgate-node-1";
 
-    fn issue_token(primal: &str, node: &str, subject: &str) -> String {
+    fn gate_did(primal: &str, node: &str) -> String {
+        let vk = derive_primal_verifying_key(primal, node);
+        did_from_verifying_key(&vk)
+    }
+
+    fn issue_token_with_did(primal: &str, node: &str, subject: &str) -> String {
         let sk = derive_primal_signing_key(primal, node);
-        issue_ionic_token(&sk, "did:key:test", subject, &["*".to_owned()], 3600)
+        let did = gate_did(primal, node);
+        issue_ionic_token(&sk, &did, subject, &["*".to_owned()], 3600)
     }
 
     #[test]
     fn local_token_verifies_without_registry() {
         let local_vk = derive_primal_verifying_key(GATE_A_PRIMAL, GATE_A_NODE);
-        let token = issue_token(GATE_A_PRIMAL, GATE_A_NODE, "alice");
+        let token = issue_token_with_did(GATE_A_PRIMAL, GATE_A_NODE, "alice");
         let registry = TrustedIssuerRegistry::new();
 
         let result = verify_with_registry(&token, &local_vk, &registry, None);
@@ -285,7 +348,7 @@ mod tests {
     #[test]
     fn remote_token_fails_without_registry() {
         let local_vk = derive_primal_verifying_key(GATE_A_PRIMAL, GATE_A_NODE);
-        let token = issue_token(GATE_B_PRIMAL, GATE_B_NODE, "bob");
+        let token = issue_token_with_did(GATE_B_PRIMAL, GATE_B_NODE, "bob");
         let registry = TrustedIssuerRegistry::new();
 
         let result = verify_with_registry(&token, &local_vk, &registry, None);
@@ -299,16 +362,19 @@ mod tests {
     fn remote_token_verifies_with_registered_issuer() {
         let local_vk = derive_primal_verifying_key(GATE_A_PRIMAL, GATE_A_NODE);
         let remote_vk = derive_primal_verifying_key(GATE_B_PRIMAL, GATE_B_NODE);
-        let token = issue_token(GATE_B_PRIMAL, GATE_B_NODE, "bob");
+        let remote_did = gate_did(GATE_B_PRIMAL, GATE_B_NODE);
+        let token = issue_token_with_did(GATE_B_PRIMAL, GATE_B_NODE, "bob");
 
         let registry = TrustedIssuerRegistry::new();
-        registry.register(
-            "did:key:eastgate",
-            remote_vk,
-            Some("eastgate-node-1".to_owned()),
-            Some("family-alpha".to_owned()),
-            TrustMethod::FamilySeed,
-        );
+        registry
+            .register(
+                &remote_did,
+                remote_vk,
+                Some("eastgate-node-1".to_owned()),
+                Some("family-alpha".to_owned()),
+                TrustMethod::FamilySeed,
+            )
+            .expect("register should succeed");
 
         let result = verify_with_registry(&token, &local_vk, &registry, None);
         match result {
@@ -328,7 +394,7 @@ mod tests {
     fn adhoc_key_verifies_unregistered_issuer() {
         let local_vk = derive_primal_verifying_key(GATE_A_PRIMAL, GATE_A_NODE);
         let remote_vk = derive_primal_verifying_key(GATE_B_PRIMAL, GATE_B_NODE);
-        let token = issue_token(GATE_B_PRIMAL, GATE_B_NODE, "charlie");
+        let token = issue_token_with_did(GATE_B_PRIMAL, GATE_B_NODE, "charlie");
         let registry = TrustedIssuerRegistry::new();
 
         let result = verify_with_registry(&token, &local_vk, &registry, Some(&remote_vk));
@@ -336,12 +402,22 @@ mod tests {
     }
 
     #[test]
-    fn register_is_idempotent() {
+    fn register_validates_did_key_binding() {
         let registry = TrustedIssuerRegistry::new();
         let vk = derive_primal_verifying_key(GATE_B_PRIMAL, GATE_B_NODE);
+        let correct_did = gate_did(GATE_B_PRIMAL, GATE_B_NODE);
 
-        assert!(registry.register("did:key:b", vk, None, None, TrustMethod::Manual));
-        assert!(!registry.register("did:key:b", vk, None, None, TrustMethod::Manual));
+        // Mismatched DID should fail
+        let result = registry.register("did:key:wrong", vk, None, None, TrustMethod::Manual);
+        assert!(result.is_err());
+
+        // Correct DID should succeed
+        let result = registry.register(&correct_did, vk, None, None, TrustMethod::Manual);
+        assert_eq!(result.unwrap(), true);
+
+        // Idempotent — second register returns false
+        let result = registry.register(&correct_did, vk, None, None, TrustMethod::Manual);
+        assert_eq!(result.unwrap(), false);
         assert_eq!(registry.len(), 1);
     }
 
@@ -350,21 +426,27 @@ mod tests {
         let registry = TrustedIssuerRegistry::new();
         let vk_b = derive_primal_verifying_key(GATE_B_PRIMAL, GATE_B_NODE);
         let vk_c = derive_primal_verifying_key("beardog", "westgate-node-1");
+        let did_b = gate_did(GATE_B_PRIMAL, GATE_B_NODE);
+        let did_c = gate_did("beardog", "westgate-node-1");
 
-        registry.register(
-            "did:key:b",
-            vk_b,
-            Some("eastgate-node-1".to_owned()),
-            None,
-            TrustMethod::FamilySeed,
-        );
-        registry.register(
-            "did:key:c",
-            vk_c,
-            Some("westgate-node-1".to_owned()),
-            None,
-            TrustMethod::ContractExchange,
-        );
+        registry
+            .register(
+                &did_b,
+                vk_b,
+                Some("eastgate-node-1".to_owned()),
+                None,
+                TrustMethod::FamilySeed,
+            )
+            .unwrap();
+        registry
+            .register(
+                &did_c,
+                vk_c,
+                Some("westgate-node-1".to_owned()),
+                None,
+                TrustMethod::ContractExchange,
+            )
+            .unwrap();
 
         let issuers = registry.list();
         assert_eq!(issuers.len(), 2);
@@ -374,28 +456,26 @@ mod tests {
     fn remove_issuer() {
         let registry = TrustedIssuerRegistry::new();
         let vk = derive_primal_verifying_key(GATE_B_PRIMAL, GATE_B_NODE);
-        registry.register("did:key:b", vk, None, None, TrustMethod::Manual);
+        let did = gate_did(GATE_B_PRIMAL, GATE_B_NODE);
+        registry
+            .register(&did, vk, None, None, TrustMethod::Manual)
+            .unwrap();
         assert_eq!(registry.len(), 1);
-        assert!(registry.remove("did:key:b"));
+        assert!(registry.remove(&did));
         assert!(registry.is_empty());
-        assert!(!registry.remove("did:key:b"));
+        assert!(!registry.remove(&did));
     }
 
     #[test]
     fn cross_gate_roundtrip_full_flow() {
-        // Simulate: Gate A and Gate B share a family.
-        // Gate B issues a token → Gate A should verify it after trust exchange.
-
-        // Gate A's local key
         let gate_a_vk = derive_primal_verifying_key(GATE_A_PRIMAL, GATE_A_NODE);
-
-        // Gate B issues a token
         let gate_b_sk = derive_primal_signing_key(GATE_B_PRIMAL, GATE_B_NODE);
         let gate_b_vk = derive_primal_verifying_key(GATE_B_PRIMAL, GATE_B_NODE);
+        let gate_b_did = gate_did(GATE_B_PRIMAL, GATE_B_NODE);
 
         let token = crate::ionic_token::issue_ionic_token_with_gate(
             &gate_b_sk,
-            "did:key:gate-b",
+            &gate_b_did,
             "cross-gate-user",
             &["crypto.*".to_owned()],
             3600,
@@ -405,17 +485,17 @@ mod tests {
             }),
         );
 
-        // Gate A registers Gate B as trusted (simulating post-BTSP key exchange)
         let registry = TrustedIssuerRegistry::new();
-        registry.register(
-            "did:key:gate-b",
-            gate_b_vk,
-            Some(GATE_B_NODE.to_owned()),
-            Some("family-alpha".to_owned()),
-            TrustMethod::FamilySeed,
-        );
+        registry
+            .register(
+                &gate_b_did,
+                gate_b_vk,
+                Some(GATE_B_NODE.to_owned()),
+                Some("family-alpha".to_owned()),
+                TrustMethod::FamilySeed,
+            )
+            .expect("register gate B");
 
-        // Gate A verifies Gate B's token
         let result = verify_with_registry(&token, &gate_a_vk, &registry, None);
         match result {
             CrossGateVerifyResult::RemoteVerified {
@@ -426,8 +506,50 @@ mod tests {
                 assert_eq!(payload.gate_id.as_deref(), Some(GATE_B_NODE));
                 assert_eq!(payload.family_id.as_deref(), Some("family-alpha"));
                 assert_eq!(issuer_info.trust_method, TrustMethod::FamilySeed);
+                assert_eq!(payload.iss, gate_b_did);
             }
             other => panic!("expected RemoteVerified, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn iss_mismatch_prevents_remote_verify() {
+        let local_vk = derive_primal_verifying_key(GATE_A_PRIMAL, GATE_A_NODE);
+        let remote_sk = derive_primal_signing_key(GATE_B_PRIMAL, GATE_B_NODE);
+        let remote_vk = derive_primal_verifying_key(GATE_B_PRIMAL, GATE_B_NODE);
+        let remote_did = gate_did(GATE_B_PRIMAL, GATE_B_NODE);
+
+        // Issue token with a WRONG iss (key signs fine but iss won't match registry DID)
+        let token = issue_ionic_token(
+            &remote_sk,
+            "did:key:forged-iss",
+            "mallory",
+            &["*".to_owned()],
+            3600,
+        );
+
+        let registry = TrustedIssuerRegistry::new();
+        registry
+            .register(&remote_did, remote_vk, None, None, TrustMethod::FamilySeed)
+            .unwrap();
+
+        // Sig is valid for the key but iss doesn't match → should NOT verify as remote
+        let result = verify_with_registry(&token, &local_vk, &registry, None);
+        assert!(
+            matches!(
+                result,
+                CrossGateVerifyResult::Failed(TokenError::InvalidSignature)
+            ),
+            "iss mismatch should prevent RemoteVerified"
+        );
+    }
+
+    #[test]
+    fn did_from_key_roundtrip() {
+        let vk = derive_primal_verifying_key("beardog", "test-node");
+        let did = did_from_verifying_key(&vk);
+        assert!(did.starts_with("did:key:z6Mk"));
+        assert!(did_matches_key(&did, &vk));
+        assert!(!did_matches_key("did:key:z6MkWrong", &vk));
     }
 }

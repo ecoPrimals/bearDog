@@ -85,6 +85,18 @@ fn ionic_auth_methods_are_public() {
         classify_method("auth.public_key"),
         MethodAccessLevel::Public
     );
+    assert_eq!(
+        classify_method("auth.trusted_issuers"),
+        MethodAccessLevel::Public
+    );
+}
+
+#[test]
+fn trust_issuer_is_protected() {
+    assert_eq!(
+        classify_method("auth.trust_issuer"),
+        MethodAccessLevel::Protected
+    );
 }
 
 #[test]

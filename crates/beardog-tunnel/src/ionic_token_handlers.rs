@@ -466,16 +466,20 @@ pub fn handle_auth_trust_issuer(registry: &TrustedIssuerRegistry, params: Option
         _ => crate::trusted_issuer_registry::TrustMethod::Manual,
     };
 
-    let newly_registered = registry.register(did, vk, gate_id.clone(), family_id.clone(), method);
-
-    serde_json::json!({
-        "registered": newly_registered,
-        "did": did,
-        "gate_id": gate_id,
-        "family_id": family_id,
-        "trust_method": method.as_str(),
-        "total_trusted_issuers": registry.len(),
-    })
+    match registry.register(did, vk, gate_id.clone(), family_id.clone(), method) {
+        Ok(newly_registered) => serde_json::json!({
+            "registered": newly_registered,
+            "did": did,
+            "gate_id": gate_id,
+            "family_id": family_id,
+            "trust_method": method.as_str(),
+            "total_trusted_issuers": registry.len(),
+        }),
+        Err(e) => serde_json::json!({
+            "registered": false,
+            "error": e.to_string(),
+        }),
+    }
 }
 
 // ── auth.trusted_issuers ───────────────────────────────────────────────

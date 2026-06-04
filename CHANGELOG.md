@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 3, 2026 -- Wave 136: Trust Hardening + Phase 3.5 Design
+
+#### Security Fixes (P0)
+- **`auth.trust_issuer` moved to PROTECTED**: Unauthenticated callers can no
+  longer inject trusted issuers. Requires valid ionic token in Enforced mode.
+- **DID ↔ key binding on register**: `TrustedIssuerRegistry::register()` now
+  validates that the supplied `did:key:z6Mk...` matches the canonical DID
+  derived from the Ed25519 public key. Returns `RegisterError::DidKeyMismatch`
+  on mismatch. Prevents trust-store poisoning with mismatched DID/key pairs.
+- **`iss` binding in verification**: `verify_with_registry()` now checks that
+  `payload.iss` matches the registered DID after Ed25519 signature verification.
+  Tokens with valid signature but mismatched `iss` are rejected (prevents
+  key-confusion attacks).
+
+#### Added
+- `did_from_verifying_key()` / `did_matches_key()` — canonical DID derivation
+  and validation helpers in `trusted_issuer_registry`.
+- `RegisterError` type for structured error reporting from issuer registration.
+- `iss_mismatch_prevents_remote_verify` test — validates the new iss binding.
+- `register_validates_did_key_binding` test — validates DID/key binding.
+- `did_from_key_roundtrip` test — validates DID derivation.
+
 ### Jun 3, 2026 -- Wave 135: Cross-Gate Trust + Covalent Mesh Security
 
 #### Added
