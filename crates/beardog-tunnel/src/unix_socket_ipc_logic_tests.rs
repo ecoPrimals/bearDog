@@ -230,8 +230,8 @@ mod tests {
             ],
             "version": "0.9.0",
             "ipc_socket": "/tmp/beardog-nat0-tower1.sock",
-            "supported_protocols": ["tarpc", "json-rpc", "http"],
-            "recommended_protocol": "tarpc",
+            "supported_protocols": ["json-rpc", "http"],
+            "recommended_protocol": "json-rpc",
             "security_level": 5
         });
 
@@ -241,7 +241,7 @@ mod tests {
             response["provided_capabilities"].as_array().unwrap().len(),
             3
         );
-        assert_eq!(response["recommended_protocol"], "tarpc");
+        assert_eq!(response["recommended_protocol"], "json-rpc");
         assert_eq!(response["security_level"], 5);
     }
 

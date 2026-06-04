@@ -9,7 +9,7 @@
 //! ## Philosophy (Feb 2, 2026)
 //!
 //! Primals should ALWAYS function:
-//! - **Tier 1** (Full system): tarpc + Unix sockets (Linux, macOS)
+//! - **Tier 1** (Full system): JSON-RPC + Unix sockets (Linux, macOS)
 //! - **Tier 2** (Degraded): TCP transport (Android shell, Windows)
 //! - **Tier 3** (Elevated): App packaging with proper permissions (later)
 //!

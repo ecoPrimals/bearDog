@@ -112,6 +112,70 @@ fn phase35_verify_ed25519_is_protected() {
 }
 
 #[test]
+fn auth_events_poll_is_protected() {
+    assert_eq!(
+        classify_method("auth.events.poll"),
+        MethodAccessLevel::Protected
+    );
+}
+
+#[test]
+fn auth_events_poll_is_gate_handled() {
+    assert!(is_gate_handled_method("auth.events.poll"));
+}
+
+#[test]
+fn trust_issuer_emits_event() {
+    use crate::auth_event_bus::AuthEventKind;
+
+    let gate = test_gate(EnforcementMode::Permissive);
+    let sk = crate::unix_socket_ipc::handlers::primal_signing::derive_primal_signing_key(
+        "remote-gate",
+        "remote-node",
+    );
+    let vk = sk.verifying_key();
+    let did = crate::trusted_issuer_registry::did_from_verifying_key(&vk);
+    let pk_b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, vk.as_bytes());
+
+    let params = serde_json::json!({
+        "public_key": pk_b64,
+        "did": did,
+        "gate_id": "remote-gate",
+        "trust_method": "family_seed",
+    });
+
+    let result = crate::ionic_token_handlers::handle_auth_trust_issuer(
+        gate.trusted_issuers(),
+        gate.auth_events(),
+        gate.primal_name(),
+        Some(&params),
+    );
+    assert_eq!(result["registered"], true);
+
+    let events = gate.auth_events().poll_since(0);
+    assert_eq!(events.len(), 1);
+    match &events[0].kind {
+        AuthEventKind::TrustIssuerRegistered {
+            issuer_did,
+            trust_method,
+            ..
+        } => {
+            assert_eq!(issuer_did, &did);
+            assert_eq!(trust_method, "family_seed");
+        }
+        other => panic!("expected TrustIssuerRegistered, got {other:?}"),
+    }
+}
+
+#[test]
+fn auth_events_poll_returns_empty_initially() {
+    let gate = test_gate(EnforcementMode::Permissive);
+    let result = crate::ionic_token_handlers::handle_auth_events_poll(gate.auth_events(), None);
+    assert_eq!(result["count"], 0);
+    assert!(result["events"].as_array().expect("array").is_empty());
+}
+
+#[test]
 fn lifecycle_status_is_public() {
     assert_eq!(
         classify_method("lifecycle.status"),

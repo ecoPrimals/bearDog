@@ -9,6 +9,7 @@
 //! - `auth.issue_ionic` — issue a signed ionic capability token
 //! - `auth.verify_ionic` — verify a token string, return claims or error
 
+use crate::auth_event_bus::{AuthEvent, AuthEventBus, AuthEventKind};
 use crate::ionic_token::{
     GateIdentity, TokenError, issue_ionic_token, issue_ionic_token_with_gate, scope_covers_method,
 };
@@ -418,7 +419,12 @@ fn build_verify_success(
 /// - `family_id` (string, optional): remote gate's `FAMILY_ID`
 /// - `trust_method` (string, optional): `"family_seed"` | `"contract_exchange"` | `"manual"`
 #[must_use]
-pub fn handle_auth_trust_issuer(registry: &TrustedIssuerRegistry, params: Option<&Value>) -> Value {
+pub fn handle_auth_trust_issuer(
+    registry: &TrustedIssuerRegistry,
+    event_bus: &AuthEventBus,
+    source_gate: &str,
+    params: Option<&Value>,
+) -> Value {
     let Some(pk_b64) = params
         .and_then(|p| p.get("public_key"))
         .and_then(Value::as_str)
@@ -467,19 +473,62 @@ pub fn handle_auth_trust_issuer(registry: &TrustedIssuerRegistry, params: Option
     };
 
     match registry.register(did, vk, gate_id.clone(), family_id.clone(), method) {
-        Ok(newly_registered) => serde_json::json!({
-            "registered": newly_registered,
-            "did": did,
-            "gate_id": gate_id,
-            "family_id": family_id,
-            "trust_method": method.as_str(),
-            "total_trusted_issuers": registry.len(),
-        }),
+        Ok(newly_registered) => {
+            if newly_registered {
+                let fingerprint = hex::encode(&vk.as_bytes()[..16]);
+                event_bus.emit(AuthEvent {
+                    kind: AuthEventKind::TrustIssuerRegistered {
+                        issuer_did: did.to_owned(),
+                        issuer_fingerprint: fingerprint,
+                        trust_method: method.as_str().to_owned(),
+                    },
+                    source_gate: source_gate.to_owned(),
+                    timestamp: chrono::Utc::now().timestamp(),
+                });
+            }
+            serde_json::json!({
+                "registered": newly_registered,
+                "did": did,
+                "gate_id": gate_id,
+                "family_id": family_id,
+                "trust_method": method.as_str(),
+                "total_trusted_issuers": registry.len(),
+            })
+        }
         Err(e) => serde_json::json!({
             "registered": false,
             "error": e.to_string(),
         }),
     }
+}
+
+// ── auth.events.poll ──────────────────────────────────────────────────
+
+/// Handle `auth.events.poll` — return auth events since a given timestamp.
+///
+/// # Parameters
+///
+/// - `since_timestamp` (integer, optional): Unix seconds. Defaults to 0 (all events).
+///
+/// # Returns
+///
+/// - `events`: array of auth events matching the FRAGO wire format
+/// - `count`: number of events returned
+#[must_use]
+pub fn handle_auth_events_poll(event_bus: &AuthEventBus, params: Option<&Value>) -> Value {
+    let since = params
+        .and_then(|p| p.get("since_timestamp"))
+        .and_then(Value::as_i64)
+        .unwrap_or(0);
+
+    let events = event_bus.poll_since(since);
+    let count = events.len();
+
+    serde_json::json!({
+        "events": events,
+        "count": count,
+        "since_timestamp": since,
+    })
 }
 
 // ── auth.trusted_issuers ───────────────────────────────────────────────

@@ -8,7 +8,7 @@
 //! Protocol-agnostic `CryptoService` trait
 //!
 //! This trait defines all cryptographic operations in a transport-neutral way.
-//! Implementations can expose these via any protocol (HTTP, JSON-RPC, tarpc, gRPC, etc.).
+//! Implementations can expose these via any protocol (JSON-RPC, HTTP, gRPC, etc.).
 //!
 //! ## Design Philosophy
 //!

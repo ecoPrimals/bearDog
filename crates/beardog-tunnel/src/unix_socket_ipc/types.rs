@@ -175,7 +175,6 @@ impl JsonRpcError {
 /// 1. JSON-RPC (PRIMARY) - Universal, comprehensive, production-ready
 /// 2. HTTP (LEGACY) - Compatibility only, less secure
 ///
-/// Note: tarpc was removed (Jan 29, 2026) — JSON-RPC provides all needed functionality.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Protocol {
     /// Primary: Universal JSON-RPC 2.0 (security level 4)

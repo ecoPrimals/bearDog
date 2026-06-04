@@ -3,7 +3,7 @@
 //! Protocol Detection for Unix Socket IPC
 //!
 //! Detects which protocol a client is using based on initial bytes.
-//! Supports: tarpc (PRIMARY), JSON-RPC (FALLBACK), HTTP (LEGACY)
+//! Supports: JSON-RPC (PRIMARY), HTTP (LEGACY)
 
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::net::unix::OwnedReadHalf;

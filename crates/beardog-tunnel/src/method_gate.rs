@@ -21,6 +21,7 @@
 //! Implements the ecosystem standard defined in
 //! `primalSpring/wateringHole/METHOD_GATE_STANDARD.md`.
 
+use crate::auth_event_bus::AuthEventBus;
 use crate::ionic_token::{IonicTokenPayload, TokenError, scope_covers_method};
 use crate::trusted_issuer_registry::TrustedIssuerRegistry;
 use crate::unix_socket_ipc::handlers::primal_signing::derive_primal_verifying_key;
@@ -202,6 +203,8 @@ pub struct MethodGate {
     node_id: String,
     /// Cross-gate trusted issuer registry (Wave 135).
     trusted_issuers: TrustedIssuerRegistry,
+    /// Auth event bus for cross-gate trust provenance (Wave 138).
+    auth_events: AuthEventBus,
 }
 
 impl MethodGate {
@@ -214,6 +217,7 @@ impl MethodGate {
             primal_name: primal_name.to_owned(),
             node_id: node_id.to_owned(),
             trusted_issuers: TrustedIssuerRegistry::new(),
+            auth_events: AuthEventBus::default(),
         }
     }
 
@@ -251,6 +255,12 @@ impl MethodGate {
     #[must_use]
     pub fn trusted_issuers(&self) -> &TrustedIssuerRegistry {
         &self.trusted_issuers
+    }
+
+    /// Access the auth event bus for trust provenance.
+    #[must_use]
+    pub fn auth_events(&self) -> &AuthEventBus {
+        &self.auth_events
     }
 
     /// Pre-dispatch authorization check.
@@ -416,6 +426,7 @@ pub fn is_gate_handled_method(method: &str) -> bool {
             | "auth.public_key"
             | "auth.trust_issuer"
             | "auth.trusted_issuers"
+            | "auth.events.poll"
             | "identity.create"
     )
 }
@@ -430,9 +441,9 @@ pub fn dispatch_auth_method(
     params: Option<&serde_json::Value>,
 ) -> Option<serde_json::Value> {
     use crate::ionic_token_handlers::{
-        handle_auth_issue_ionic, handle_auth_issue_session, handle_auth_public_key,
-        handle_auth_trust_issuer, handle_auth_trusted_issuers, handle_auth_verify_ionic,
-        handle_identity_create,
+        handle_auth_events_poll, handle_auth_issue_ionic, handle_auth_issue_session,
+        handle_auth_public_key, handle_auth_trust_issuer, handle_auth_trusted_issuers,
+        handle_auth_verify_ionic, handle_identity_create,
     };
     match method {
         "auth.check" => Some(handle_auth_check(caller)),
@@ -455,8 +466,14 @@ pub fn dispatch_auth_method(
             params,
         )),
         "auth.public_key" => Some(handle_auth_public_key(gate.primal_name(), gate.node_id())),
-        "auth.trust_issuer" => Some(handle_auth_trust_issuer(gate.trusted_issuers(), params)),
+        "auth.trust_issuer" => Some(handle_auth_trust_issuer(
+            gate.trusted_issuers(),
+            gate.auth_events(),
+            gate.primal_name(),
+            params,
+        )),
         "auth.trusted_issuers" => Some(handle_auth_trusted_issuers(gate.trusted_issuers())),
+        "auth.events.poll" => Some(handle_auth_events_poll(gate.auth_events(), params)),
         _ => None,
     }
 }

@@ -147,8 +147,7 @@ pub mod btsp_provider;
 // Generic IPC server - capability-based, primal-agnostic
 pub mod ipc_server;
 
-// Unix socket IPC server (PRIMARY inter-primal communication)
-// tarpc_service removed (Jan 29, 2026) — JSON-RPC first architecture
+// Unix socket IPC server (PRIMARY inter-primal communication, JSON-RPC 2.0)
 pub mod unix_socket_ipc;
 
 // Platform-specific socket implementations (Android abstract sockets, Unix filesystem)
@@ -175,6 +174,9 @@ pub mod ionic_token_handlers;
 
 // Cross-gate trusted issuer registry (Wave 135: covalent mesh trust)
 pub mod trusted_issuer_registry;
+
+// Auth event bus for cross-gate trust provenance (Wave 138)
+pub mod auth_event_bus;
 
 #[cfg(test)]
 mod btsp_handshake_tests;

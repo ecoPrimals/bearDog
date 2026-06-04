@@ -187,7 +187,7 @@ pub mod migration;
 
 /// Protocol-agnostic crypto service
 ///
-/// Core cryptographic service trait that can be exposed via HTTP, JSON-RPC, `tarpc`,
+/// Core cryptographic service trait that can be exposed via JSON-RPC, HTTP,
 /// or any future protocol without protocol-specific dependencies.
 pub mod crypto_service;
 #[cfg(test)]

@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 4, 2026 -- Wave 139: Auth Event Bus + tarpc Cleanup
+
+#### Added
+- **`auth_event_bus` module**: Bounded, poll-based event log for cross-gate trust provenance.
+  - `AuthEventKind` enum: `TrustIssuerRegistered`, `KeyExchangeCompleted`, `FamilyEnrollment`,
+    `MeshJoin`, `MeshLeave` — maps 1:1 to rhizoCrypt's `MeshTrustEvent` wire DTOs.
+  - `AuthEventBus`: Thread-safe bounded ring buffer + `tokio::sync::broadcast` for future streaming.
+  - Wire format matches FRAGO `wave76c-beardog-auth-events-subscribe`.
+- **`auth.events.poll` RPC method**: Gate-handled (Protected), returns events since a given
+  Unix timestamp. Enables rhizoCrypt's `MeshEventListener` to consume trust events.
+- **Event emission from `auth.trust_issuer`**: On successful registration, emits
+  `TrustIssuerRegistered` event with issuer DID, fingerprint, and trust method.
+- Tests: `auth_event_bus` (8 tests), `trust_issuer_emits_event`, `auth_events_poll_*` (3 tests).
+
+#### Changed
+- **tarpc debris cleanup**: Removed stale tarpc references from 10 doc comments across
+  `server.rs`, `protocol.rs`, `tcp_ipc/mod.rs`, `zero_hardcoding.rs`, `crypto_service/`.
+  Deleted orphan `multi_transport_tests.rs` (references deleted APIs). Updated test fixtures
+  from `"tarpc"` to `"json-rpc"` protocol. `Protocol::Tarpc` enum retained in `beardog-ipc`
+  for binary frame detection (structural, not a dependency).
+
+#### Metrics
+- 14,999 tests passing, 169 suites, 0 failures
+
 ### Jun 4, 2026 -- Wave 138: Phase 3.5 Relay Interface + Seed Fingerprint Validation
 
 #### Added
