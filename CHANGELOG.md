@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 3, 2026 -- Wave 137: Deep Debt — Typed Handler Errors, Zero-Hardcoding, Dashmap 6
+
+#### Changed
+- **`MethodHandler::handle` returns `HandlerResult`**: Replaced `Result<Value, String>`
+  with typed `HandlerError` enum (`MethodNotFound` / `InvalidParams` / `Application` /
+  `Domain`) across all 14 handler implementations, the `MethodHandlerKind` dispatch
+  enum, and `HandlerRegistry::route`. JSON-RPC error codes now derive from enum
+  variants, eliminating string-contains matching. `From<String>` bridge ensures
+  backward compatibility for existing handlers during gradual migration.
+- **`route_with_outcome` uses structured error matching**: Dispatch phase and error
+  code now derive from `HandlerError::error_phase()` / `json_rpc_code()` instead
+  of string pattern matching on error messages.
+- **`discover_by_capability(Vec<UniversalCapabilityType>)` renamed to
+  `discover_by_typed_capability`**: Documents the type-system convergence gap
+  between typed capability enums and string-based discovery pipeline.
+- **Dashmap 5.5 → 6.2**: Upgraded concurrent map to latest stable (hashbrown 0.15,
+  detached guards, `SharedValue` removed). Zero API breakage.
+
+#### Fixed
+- **7 hardcoded `"beardog"` fallbacks centralized**: All inline `"beardog"` string
+  defaults now reference `env_keys::DEFAULT_PRIMAL_NAME`.
+- **5 hardcoded `*.ecosystem.internal` defaults centralized**: Discovery and registry
+  host defaults now reference `env_keys::DEFAULT_DISCOVERY_HOST` and
+  `env_keys::DEFAULT_REGISTRY_HOST`.
+
+#### Added
+- `HandlerError` enum with `contains()`, `is_empty()`, `json_rpc_code()`,
+  `error_phase()`, `into_json_rpc_error()` methods.
+- `HandlerResult` type alias for handler return types.
+- `DEFAULT_PRIMAL_NAME`, `DEFAULT_DISCOVERY_HOST`, `DEFAULT_REGISTRY_HOST` constants
+  in `env_keys.rs`.
+
 ### Jun 3, 2026 -- Wave 136: Trust Hardening + Phase 3.5 Design
 
 #### Security Fixes (P0)

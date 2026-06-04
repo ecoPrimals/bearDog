@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: Jun 3, 2026 (Wave 134)
+**Last Updated**: Jun 3, 2026 (Wave 137)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 

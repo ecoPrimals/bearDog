@@ -19,7 +19,7 @@ BearDog answers "who is this node?" and "perform this crypto operation safely" f
 - **Version:** 0.9.0
 - **Workspace:** 29 crates (`Cargo.toml` workspace)
 - **MSRV:** 1.93.0 (`rust-toolchain.toml`)
-- **Tests:** 14,974+ passing (0 failed; `cargo test --workspace`)
+- **Tests:** 15,000+ passing (0 failed; 169 test suites; `cargo test --workspace`)
 - **Coverage:** 90.51% line (llvm-cov, workspace; see [STATUS.md](STATUS.md))
 - **Unsafe:** 0 production blocks (`forbid(unsafe_code)` workspace-wide)
 - **IPC:** JSON-RPC 2.0 over NDJSON via Unix sockets / TCP / named pipes (platform-dependent)
