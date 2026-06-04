@@ -5,6 +5,7 @@
 
 use super::IonicBondHandler;
 use super::crypto::{compute_contract_terms_hash, sign_terms_ed25519, verify_ed25519_signature};
+use crate::auth_event_bus::{AuthEvent, AuthEventKind};
 use crate::btsp_provider::BeardogBtspProvider;
 use beardog_types::ionic_bond::{
     ContractCountersignParams, ContractCountersignResponse, ContractProposeParams,
@@ -228,6 +229,17 @@ impl IonicBondHandler {
             proposed_at = %pending.created_at,
             "Cross-family contract sealed (both signatures verified)"
         );
+
+        if let Some(ref bus) = self.event_bus {
+            bus.emit(AuthEvent {
+                kind: AuthEventKind::KeyExchangeCompleted {
+                    remote_gate: sealed.countersigner.clone(),
+                    method: "contract_exchange".to_string(),
+                },
+                source_gate: sealed.proposer.clone(),
+                timestamp: Utc::now().timestamp(),
+            });
+        }
 
         let resp = ContractCountersignResponse { contract: sealed };
         serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))

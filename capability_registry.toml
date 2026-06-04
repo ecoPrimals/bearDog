@@ -41,7 +41,14 @@ methods = [
     "auth.issue_ionic", "auth.verify_ionic",
     "auth.issue_session", "auth.public_key",
     "auth.trust_issuer", "auth.trusted_issuers",
+    "auth.events.poll",
 ]
+
+[capabilities.auth_events]
+domain = "auth"
+stability = "provisional"
+description = "Trust event notifications — poll-based event log for cross-gate provenance"
+methods = ["auth.events.poll"]
 
 [capabilities.auth_token]
 domain = "auth"

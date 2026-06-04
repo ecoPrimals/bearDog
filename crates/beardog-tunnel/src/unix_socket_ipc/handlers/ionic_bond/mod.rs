@@ -10,6 +10,7 @@
 //! The bond lifecycle is: propose → accept → seal → (verify | revoke).
 
 use super::{HandlerResult, MethodHandler};
+use crate::auth_event_bus::AuthEventBus;
 use crate::btsp_provider::BeardogBtspProvider;
 use beardog_types::ionic_bond::{IonicBond, IonicBondProposeParams};
 use std::collections::HashMap;
@@ -41,6 +42,7 @@ pub struct IonicBondHandler {
     bonds: Arc<RwLock<HashMap<String, IonicBond>>>,
     pending_contracts: Arc<RwLock<HashMap<String, contract::PendingContract>>>,
     persistence: Arc<BondPersistenceBackend>,
+    event_bus: Option<AuthEventBus>,
 }
 
 struct PendingProposal {
@@ -70,6 +72,7 @@ impl IonicBondHandler {
             persistence: Arc::new(BondPersistenceBackend::InMemory(
                 InMemoryBondPersistence::default(),
             )),
+            event_bus: None,
         }
     }
 
@@ -81,7 +84,14 @@ impl IonicBondHandler {
             bonds: Arc::new(RwLock::new(HashMap::new())),
             pending_contracts: Arc::new(RwLock::new(HashMap::new())),
             persistence,
+            event_bus: None,
         }
+    }
+
+    /// Attach an auth event bus for cross-gate trust provenance.
+    pub fn with_event_bus(mut self, bus: AuthEventBus) -> Self {
+        self.event_bus = Some(bus);
+        self
     }
 }
 
