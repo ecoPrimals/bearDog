@@ -70,6 +70,8 @@ pub const ENV_ENABLE_LOCALHOST_FALLBACK: &str = "BEARDOG_ENABLE_LOCALHOST_FALLBA
 pub const ENV_CLIENT_HOST: &str = "BEARDOG_CLIENT_HOST";
 /// Discovery host address.
 pub const ENV_DISCOVERY_HOST: &str = "BEARDOG_DISCOVERY_HOST";
+/// Default discovery host when no env override is set.
+pub const DEFAULT_DISCOVERY_HOST: &str = "discovery.ecosystem.internal";
 /// Database host address.
 pub const ENV_DATABASE_HOST: &str = "BEARDOG_DATABASE_HOST";
 /// Redis host address.
@@ -682,6 +684,8 @@ pub const ENV_NODE_ID_PREFIXED: &str = "BEARDOG_NODE_ID";
 pub const ENV_PRIMAL_NAME: &str = "PRIMAL_NAME";
 /// BearDog-prefixed primal name override.
 pub const ENV_PRIMAL_NAME_PREFIXED: &str = "BEARDOG_PRIMAL_NAME";
+/// Fallback primal name when no env var is set.
+pub const DEFAULT_PRIMAL_NAME: &str = "beardog";
 /// Primal type / role (unprefixed).
 pub const ENV_PRIMAL_TYPE: &str = "PRIMAL_TYPE";
 /// BearDog-prefixed primal type override.
@@ -862,6 +866,8 @@ pub const ENV_REGISTRY_BACKEND: &str = "BEARDOG_REGISTRY_BACKEND";
 pub const ENV_REGISTRY_ENDPOINTS: &str = "BEARDOG_REGISTRY_ENDPOINTS";
 /// Registry host (unprefixed).
 pub const ENV_REGISTRY_HOST: &str = "REGISTRY_HOST";
+/// Default registry host when no env override is set.
+pub const DEFAULT_REGISTRY_HOST: &str = "consul.ecosystem.internal";
 /// Registry port (unprefixed).
 pub const ENV_REGISTRY_PORT: &str = "REGISTRY_PORT";
 /// Registry service TTL (seconds).

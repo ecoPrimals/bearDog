@@ -436,7 +436,7 @@ pub async fn handle_beacon_add_known(
 // MethodHandler Implementation for HandlerRegistry Integration
 // ============================================================================
 
-use super::MethodHandler;
+use super::{HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 
 /// `BeaconHandler` wraps `BeaconManager` for `HandlerRegistry` integration
@@ -488,7 +488,7 @@ impl MethodHandler for BeaconHandler {
         method: &str,
         params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> HandlerResult {
         // Zero-copy: pass Arc by reference instead of cloning
         match method {
             "beacon.generate" => handle_beacon_generate(&self.beacon_manager, params).await,
@@ -502,6 +502,7 @@ impl MethodHandler for BeaconHandler {
             "beacon.add_known" => handle_beacon_add_known(&self.beacon_manager, params).await,
             _ => Err(format!("Unknown beacon method: {method}")),
         }
+        .map_err(Into::into)
     }
 }
 

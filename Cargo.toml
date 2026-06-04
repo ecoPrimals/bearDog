@@ -198,7 +198,7 @@ bcrypt = "0.18"  # Legacy password hashing - Phase 7
 
 # Concurrent data structures
 crossbeam-queue = "0.3"
-dashmap = "5.5"
+dashmap = "6.2"
 
 # Utilities
 http = "1"

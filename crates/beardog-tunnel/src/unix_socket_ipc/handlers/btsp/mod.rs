@@ -19,7 +19,7 @@ mod peer;
 mod session;
 mod tunnel;
 
-use super::MethodHandler;
+use super::{HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use std::sync::Arc;
 
@@ -109,7 +109,7 @@ impl MethodHandler for BtspHandler {
         method: &str,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> HandlerResult {
         // Match on method (semantic `btsp.*` dot names, legacy underscores, path-like beardog.*)
         if method == "btsp.contact.exchange"
             || method.ends_with("contact_exchange")
@@ -162,6 +162,7 @@ impl MethodHandler for BtspHandler {
         } else {
             Err(format!("Unknown BTSP method: {method}"))
         }
+        .map_err(Into::into)
     }
 }
 

@@ -99,10 +99,9 @@ impl EcosystemListenerEnvInputs {
             self.ecosystem_discovery_endpoint
                 .clone()
                 .unwrap_or_else(|| {
-                    let discovery_host = self
-                        .discovery_host
-                        .clone()
-                        .unwrap_or_else(|| "discovery.ecosystem.internal".to_string());
+                    let discovery_host = self.discovery_host.clone().unwrap_or_else(|| {
+                        beardog_config::env_keys::DEFAULT_DISCOVERY_HOST.to_string()
+                    });
                     format!("http://{discovery_host}:{}", self.discovery_base_port)
                 })
         });

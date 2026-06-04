@@ -68,8 +68,8 @@ impl TcpIpcServer {
         identity: Arc<PrimalIdentity>,
         security_mode: BtspSecurityMode,
     ) -> Self {
-        let primal_name =
-            std::env::var(env_keys::ENV_PRIMAL_NAME).unwrap_or_else(|_| "beardog".to_owned());
+        let primal_name = std::env::var(env_keys::ENV_PRIMAL_NAME)
+            .unwrap_or_else(|_| env_keys::DEFAULT_PRIMAL_NAME.to_owned());
         let method_gate = Arc::new(MethodGate::from_env(&primal_name, identity.node_id()));
         info!(
             mode = method_gate.mode().as_str(),

@@ -122,8 +122,8 @@ impl UnixSocketIpcServer {
             info!("BTSP handshake enforcement disabled (development mode)");
         }
 
-        let primal_name =
-            std::env::var(env_keys::ENV_PRIMAL_NAME).unwrap_or_else(|_| "beardog".to_owned());
+        let primal_name = std::env::var(env_keys::ENV_PRIMAL_NAME)
+            .unwrap_or_else(|_| env_keys::DEFAULT_PRIMAL_NAME.to_owned());
         let method_gate = MethodGate::from_env(&primal_name, identity.node_id());
         info!(
             mode = method_gate.mode().as_str(),
@@ -611,22 +611,12 @@ impl UnixSocketIpcServer {
                 error: None,
                 id,
             },
-            Err(e) => {
-                let error = if e.contains("Method not found") || e.contains("Unknown method") {
-                    JsonRpcError::method_not_found(e)
-                } else if e.contains("Invalid params") || e.contains("Missing required") {
-                    JsonRpcError::invalid_params(e)
-                } else {
-                    JsonRpcError::internal_error(e)
-                };
-
-                JsonRpcResponse {
-                    jsonrpc: JSONRPC_VERSION.to_string(),
-                    result: None,
-                    error: Some(error),
-                    id,
-                }
-            }
+            Err(e) => JsonRpcResponse {
+                jsonrpc: JSONRPC_VERSION.to_string(),
+                result: None,
+                error: Some(e.into_json_rpc_error()),
+                id,
+            },
         })
     }
 

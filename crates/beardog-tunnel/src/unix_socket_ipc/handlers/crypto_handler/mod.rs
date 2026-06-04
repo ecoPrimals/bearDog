@@ -3,7 +3,7 @@
 //! Crypto RPC handler: routes JSON-RPC methods to domain route modules (`router`, `signatures`, etc.).
 
 use crate::btsp_provider::BeardogBtspProvider;
-use crate::unix_socket_ipc::handlers::MethodHandler;
+use crate::unix_socket_ipc::handlers::{HandlerResult, MethodHandler};
 use std::sync::Arc;
 
 pub(crate) mod aliases_and_beardog;
@@ -31,8 +31,10 @@ impl MethodHandler for CryptoHandler {
         method: &str,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
-        router::dispatch(method, params, btsp_provider).await
+    ) -> HandlerResult {
+        router::dispatch(method, params, btsp_provider)
+            .await
+            .map_err(Into::into)
     }
 }
 

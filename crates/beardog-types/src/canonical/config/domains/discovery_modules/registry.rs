@@ -162,7 +162,7 @@ impl Default for ServiceRegistryConfig {
             .unwrap_or_else(|_| {
                 // Build from components
                 let host = std::env::var(env_keys::ENV_REGISTRY_HOST)
-                    .unwrap_or_else(|_| "consul.ecosystem.internal".to_string());
+                    .unwrap_or_else(|_| env_keys::DEFAULT_REGISTRY_HOST.to_string());
                 let port = std::env::var(env_keys::ENV_REGISTRY_PORT)
                     .unwrap_or_else(|_| "8500".to_string());
                 format!("http://{host}:{port}")

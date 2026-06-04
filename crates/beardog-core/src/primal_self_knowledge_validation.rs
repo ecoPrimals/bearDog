@@ -72,7 +72,7 @@ mod runtime_discovery_tests {
         let primal = PrimalSelfKnowledge::new();
 
         // Discovery should execute without panicking, even if no services found
-        let result = primal.discover_by_capability(vec![]);
+        let result = primal.discover_by_typed_capability(vec![]);
 
         // Even if no primals are found, discovery should execute without errors
         assert!(result.is_ok(), "Discovery should execute successfully");
@@ -83,10 +83,10 @@ mod runtime_discovery_tests {
         let primal = PrimalSelfKnowledge::new();
 
         // First discovery
-        let result1 = primal.discover_by_capability(vec![]);
+        let result1 = primal.discover_by_typed_capability(vec![]);
 
         // Second discovery (should query again, not use static list)
-        let result2 = primal.discover_by_capability(vec![]);
+        let result2 = primal.discover_by_typed_capability(vec![]);
 
         // Both should succeed (even if empty)
         assert!(result1.is_ok());
@@ -99,7 +99,7 @@ mod runtime_discovery_tests {
         let primal = PrimalSelfKnowledge::new();
 
         // No configuration loaded, should still attempt discovery
-        let result = primal.discover_by_capability(vec![]);
+        let result = primal.discover_by_typed_capability(vec![]);
 
         // Should not error even if no configuration
         assert!(
@@ -136,7 +136,7 @@ mod sovereignty_tests {
         let primal = PrimalSelfKnowledge::new();
 
         // Discovery should execute (not fail with "not implemented")
-        let result = primal.discover_by_capability(vec![]);
+        let result = primal.discover_by_typed_capability(vec![]);
 
         // Should attempt discovery even if mechanisms aren't fully implemented yet
         assert!(result.is_ok(), "Discovery mechanism should be present");
@@ -161,11 +161,11 @@ mod integration_validation {
         assert!(self_caps.is_ok());
 
         // 3. Primal can attempt discovery (even if none found)
-        let discovered = primal.discover_by_capability(vec![]);
+        let discovered = primal.discover_by_typed_capability(vec![]);
         assert!(discovered.is_ok());
 
         // 4. Discovery is repeatable
-        let discovered2 = primal.discover_by_capability(vec![]);
+        let discovered2 = primal.discover_by_typed_capability(vec![]);
         assert!(discovered2.is_ok());
     }
 

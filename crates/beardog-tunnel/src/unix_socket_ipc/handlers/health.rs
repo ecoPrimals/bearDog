@@ -5,8 +5,8 @@
 //! Provides universal health/status/ping endpoints that work across all primals.
 //! These methods are essential for service discovery, load balancing, and monitoring.
 
-use super::MethodHandler;
 use super::utils::{IdentityHints, get_primal_name_with};
+use super::{HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use chrono::Utc;
 use std::sync::Arc;
@@ -85,7 +85,7 @@ impl MethodHandler for HealthHandler {
         method: &str,
         _params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> HandlerResult {
         let primal = get_primal_name_with(&self.identity);
         let version = env!("CARGO_PKG_VERSION");
 

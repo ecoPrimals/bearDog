@@ -22,8 +22,8 @@ pub(super) fn sign_terms_ed25519(
     _btsp_provider: &Arc<BeardogBtspProvider>,
     terms_hash: &str,
 ) -> Result<(String, String), String> {
-    let primal_name =
-        std::env::var(env_keys::ENV_PRIMAL_NAME).unwrap_or_else(|_| "beardog".to_string());
+    let primal_name = std::env::var(env_keys::ENV_PRIMAL_NAME)
+        .unwrap_or_else(|_| env_keys::DEFAULT_PRIMAL_NAME.to_string());
     let node_id = beardog_types::primal_identity::resolve_node_id_from_env_or_ephemeral(None);
 
     Ok(

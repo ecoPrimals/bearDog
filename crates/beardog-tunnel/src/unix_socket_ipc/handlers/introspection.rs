@@ -10,7 +10,7 @@
 //! and services to query what this primal provides without manual configuration.
 
 use super::utils::{IdentityHints, get_primal_name_with};
-use super::{HandlerRegistry, MethodHandler};
+use super::{HandlerRegistry, HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use beardog_types::constants::domains::network::ipc_discovery::BEARDOG_CAPABILITY_DOMAIN;
 use serde_json::{Value, json};
@@ -48,13 +48,14 @@ impl MethodHandler for IntrospectionHandler {
         method: &str,
         _params: Option<&Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<Value, String> {
+    ) -> HandlerResult {
         match method {
             "primal.info" => self.handle_primal_info().await,
             "rpc.methods" => self.handle_rpc_methods().await,
             "primal.capabilities" => self.handle_primal_capabilities().await,
             _ => Err(format!("Unknown introspection method: {method}")),
         }
+        .map_err(Into::into)
     }
 }
 

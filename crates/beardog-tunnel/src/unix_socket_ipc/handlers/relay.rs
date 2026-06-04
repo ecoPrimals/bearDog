@@ -36,8 +36,8 @@
 //! - **Principle #3**: No hardcoding (`family_id` from `PrimalIdentity`)
 //! - **Principle #6**: Production crypto (real lineage verification, no mocks)
 
-use super::MethodHandler;
 use super::utils::get_primal_name;
+use super::{HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64_STD;
@@ -207,11 +207,12 @@ impl MethodHandler for RelayHandler {
         method: &str,
         params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> HandlerResult {
         match method {
             "relay.authorize" => self.handle_authorize(params).await,
             _ => Err(format!("Unknown relay method: {method}")),
         }
+        .map_err(Into::into)
     }
 }
 

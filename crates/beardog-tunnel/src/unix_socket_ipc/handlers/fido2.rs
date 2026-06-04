@@ -25,7 +25,7 @@
 //! - Private keys never leave the security key
 //! - `BearDog` relays CTAP2 frames, never holds credential secrets
 
-use super::MethodHandler;
+use super::{HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use serde_json::{Value, json};
 use std::sync::Arc;
@@ -57,13 +57,14 @@ impl MethodHandler for Fido2Handler {
         method: &str,
         params: Option<&Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<Value, String> {
+    ) -> HandlerResult {
         match method {
             "beardog.fido2.discover" => handle_fido2_discover(params).await,
             "beardog.fido2.register" => handle_fido2_register(params).await,
             "beardog.fido2.authenticate" => handle_fido2_authenticate(params).await,
             _ => Err(format!("Unknown FIDO2 method: {method}")),
         }
+        .map_err(Into::into)
     }
 }
 

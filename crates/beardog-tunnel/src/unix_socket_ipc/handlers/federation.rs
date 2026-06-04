@@ -26,7 +26,7 @@
 //! - Key derivation: ~100-200μs (HKDF + HSM key generation)
 
 use crate::btsp_provider::BeardogBtspProvider;
-use crate::unix_socket_ipc::handlers::MethodHandler;
+use crate::unix_socket_ipc::handlers::{HandlerResult, MethodHandler};
 use beardog_types::primal_identity::PrimalIdentity;
 use chrono::Utc;
 use std::sync::Arc;
@@ -53,12 +53,13 @@ impl MethodHandler for FederationHandler {
         method: &str,
         params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> HandlerResult {
         match method {
             "federation.verify_family_member" => self.handle_verify_family_member(params).await,
             "federation.derive_subfed_key" => self.handle_derive_subfed_key(params).await,
             _ => Err(format!("Unknown federation method: {method}")),
         }
+        .map_err(Into::into)
     }
 }
 

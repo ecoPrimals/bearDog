@@ -10,7 +10,7 @@
 //! - `identity.get` returns `{primal, version, domain, license}`
 
 use super::utils::{IdentityHints, get_primal_name_with};
-use super::{HandlerRegistry, MethodHandler};
+use super::{HandlerRegistry, HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use beardog_types::primal_identity::PrimalIdentity;
 use std::sync::Arc;
@@ -63,7 +63,7 @@ impl MethodHandler for CapabilitiesHandler {
         method: &str,
         _params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> HandlerResult {
         match method {
             "capabilities.list" | "capability.list" | "primal.capabilities" => {
                 self.handle_capabilities().await
@@ -77,6 +77,7 @@ impl MethodHandler for CapabilitiesHandler {
             "identity" | "whoami" | "get_identity" => self.handle_identity().await,
             _ => Err(format!("Method not found: {method}")),
         }
+        .map_err(Into::into)
     }
 }
 

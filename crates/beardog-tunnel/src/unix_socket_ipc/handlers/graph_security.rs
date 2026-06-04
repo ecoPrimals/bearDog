@@ -18,7 +18,7 @@
 //! - Threat pattern detection
 //! - Provenance tracking
 
-use super::MethodHandler;
+use super::{HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use serde_json::Value;
 use std::sync::Arc;
@@ -44,7 +44,7 @@ impl MethodHandler for GraphSecurityHandler {
         method: &str,
         params: Option<&Value>,
         _btsp: &Arc<BeardogBtspProvider>,
-    ) -> Result<Value, String> {
+    ) -> HandlerResult {
         debug!("🔒 Graph security handler: {}", method);
 
         match method {
@@ -53,6 +53,7 @@ impl MethodHandler for GraphSecurityHandler {
             "graph.authorize_modification" => self.authorize_modification(params).await,
             _ => Err(format!("Method not found: {method}")),
         }
+        .map_err(Into::into)
     }
 }
 

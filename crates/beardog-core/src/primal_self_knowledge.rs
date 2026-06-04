@@ -680,32 +680,24 @@ impl PrimalSelfKnowledge {
         Ok(caps)
     }
 
-    /// Discover other primals by capability (runtime discovery)
+    /// Discover other primals by typed capability (runtime discovery).
+    ///
+    /// Currently returns an empty list — the `UniversalCapabilityType` enum
+    /// and the string-based `discover_by_capability(&str)` pipeline use
+    /// different type systems. Converging these requires a capability-type
+    /// → capability-string mapping layer (tracked for a future wave).
+    ///
+    /// For active capability discovery, use
+    /// [`discover_by_capability(&str)`](Self::discover_by_capability) directly.
     ///
     /// # Errors
     ///
     /// Returns error if the discovery mechanism fails or encounters network issues.
-    pub fn discover_by_capability(
+    pub fn discover_by_typed_capability(
         &self,
         _capabilities: Vec<UniversalCapabilityType>,
     ) -> Result<Vec<UniversalServiceDescriptor>> {
-        // Use the discovery system to find primals
-        // This demonstrates runtime discovery, not hardcoded knowledge
-        // The discovery field is actively used here for runtime primal discovery
-
-        // For now, return empty list as this is a validation interface
-        // Real implementation would convert capabilities and query self.discovery
-        let discovered = Vec::new();
-
-        // Discovery happens at runtime through:
-        // 1. mDNS/DNS-SD
-        // 2. Capability registry queries
-        // 3. Service announcements
-
-        // For now, return empty (discovery mechanisms are being evolved)
-        // The key is that this ATTEMPTS runtime discovery, not using hardcoded list
-
-        Ok(discovered)
+        Ok(Vec::new())
     }
 }
 

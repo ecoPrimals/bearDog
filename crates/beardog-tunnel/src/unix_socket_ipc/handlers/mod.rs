@@ -38,6 +38,109 @@ use beardog_ipc::{DispatchOutcome, IpcErrorPhase, OrchestratorRegistryClient};
 use std::collections::HashMap;
 use std::sync::Arc;
 
+/// Typed error for JSON-RPC method handlers.
+///
+/// Replaces raw `String` errors with structured variants that map directly
+/// to JSON-RPC error codes, while maintaining backward compatibility via
+/// `From<String>` (maps to [`HandlerError::Application`]).
+///
+/// # Migration
+///
+/// Existing handlers returning `Err("some message".to_string())` compile
+/// unchanged — the `?` operator and `From<String>` bridge transparently.
+/// New handlers should prefer [`HandlerError::InvalidParams`] or
+/// [`HandlerError::Domain`] for richer error taxonomy.
+#[derive(Debug, PartialEq, thiserror::Error)]
+pub enum HandlerError {
+    /// The requested method does not exist. Maps to JSON-RPC `-32601`.
+    #[error("Method not found: {0}")]
+    MethodNotFound(String),
+
+    /// Required parameters are missing or malformed. Maps to JSON-RPC `-32602`.
+    #[error("Invalid params: {0}")]
+    InvalidParams(String),
+
+    /// Application-level error (legacy `String` bridge). Maps to JSON-RPC `-32000`.
+    #[error("{0}")]
+    Application(String),
+
+    /// Structured domain error from the `BearDogError` taxonomy.
+    #[error(transparent)]
+    Domain(#[from] beardog_errors::BearDogError),
+}
+
+impl From<String> for HandlerError {
+    fn from(s: String) -> Self {
+        Self::Application(s)
+    }
+}
+
+impl HandlerError {
+    /// Check if the error message contains a substring (test convenience).
+    #[must_use]
+    pub fn contains(&self, pat: &str) -> bool {
+        self.to_string().contains(pat)
+    }
+
+    /// Check if the error message is empty (test convenience).
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.to_string().is_empty()
+    }
+}
+
+impl HandlerError {
+    /// Map to a JSON-RPC error code.
+    #[must_use]
+    pub const fn json_rpc_code(&self) -> i32 {
+        match self {
+            Self::MethodNotFound(_) => -32601,
+            Self::InvalidParams(_) => -32602,
+            Self::Application(_) | Self::Domain(_) => -32000,
+        }
+    }
+
+    /// Map to a JSON-RPC error response.
+    ///
+    /// For [`Application`](Self::Application) errors, heuristically detects
+    /// missing/invalid parameter messages from legacy `String`-returning
+    /// handlers and maps them to `-32602` (Invalid Params) for backward
+    /// compatibility with existing callers.
+    #[must_use]
+    pub fn into_json_rpc_error(self) -> crate::unix_socket_ipc::types::JsonRpcError {
+        use crate::unix_socket_ipc::types::JsonRpcError;
+        match self {
+            Self::MethodNotFound(msg) => JsonRpcError::method_not_found(msg),
+            Self::InvalidParams(msg) => JsonRpcError::invalid_params(msg),
+            Self::Application(ref msg)
+                if msg.contains("Missing")
+                    || msg.contains("Invalid params")
+                    || msg.contains("required parameter")
+                    || msg.contains("Missing params") =>
+            {
+                let Self::Application(msg) = self else {
+                    unreachable!()
+                };
+                JsonRpcError::invalid_params(msg)
+            }
+            Self::Application(msg) => JsonRpcError::internal_error(msg),
+            Self::Domain(err) => JsonRpcError::internal_error(err.to_string()),
+        }
+    }
+
+    /// Map to a dispatch error phase.
+    #[must_use]
+    pub const fn error_phase(&self) -> IpcErrorPhase {
+        match self {
+            Self::MethodNotFound(_) | Self::InvalidParams(_) => IpcErrorPhase::Dispatch,
+            Self::Application(_) | Self::Domain(_) => IpcErrorPhase::Application,
+        }
+    }
+}
+
+/// Convenience alias for handler return types.
+pub type HandlerResult = Result<serde_json::Value, HandlerError>;
+
 // Dark Forest Beacon Genetics (Phase 1 - Feb 2026)
 pub mod beacon;
 
@@ -61,10 +164,10 @@ pub mod relay; // Relay authorization (lineage-gated, for coordinated punch)
 pub mod secrets; // Encrypted secret storage (family-scoped, ChaCha20-Poly1305)
 pub mod security;
 
-/// Trait for JSON-RPC method handlers
+/// Trait for JSON-RPC method handlers.
 ///
 /// Implement this trait to create a new handler that can be registered
-/// with the `HandlerRegistry`. Each handler is responsible for handling
+/// with the [`HandlerRegistry`]. Each handler is responsible for handling
 /// one or more related JSON-RPC methods.
 ///
 /// # Example
@@ -84,11 +187,11 @@ pub mod security;
 ///         method: &str,
 ///         params: Option<&serde_json::Value>,
 ///         btsp_provider: &Arc<BeardogBtspProvider>,
-///     ) -> Result<serde_json::Value, String> {
+///     ) -> HandlerResult {
 ///         match method {
 ///             "my.method1" => Ok(serde_json::json!({"result": "ok"})),
 ///             "my.method2" => Ok(serde_json::json!({"result": "ok2"})),
-///             _ => Err(format!("Unknown method: {}", method)),
+///             _ => Err(HandlerError::MethodNotFound(method.to_owned())),
 ///         }
 ///     }
 /// }
@@ -98,27 +201,29 @@ pub mod security;
     reason = "JSON-RPC handlers are async; object-safe trait for registry"
 )]
 pub trait MethodHandler: Send + Sync {
-    /// Get the methods this handler can handle
+    /// Get the methods this handler can handle.
     ///
     /// Returns a list of method names (including namespace) that this
     /// handler supports. The registry uses this for routing.
     fn methods(&self) -> Vec<&'static str>;
 
-    /// Handle a JSON-RPC request
+    /// Handle a JSON-RPC request.
     ///
     /// # Arguments
     /// * `method` - The JSON-RPC method name (e.g., "`crypto.sign_ed25519`")
     /// * `params` - Optional parameters for the method
     /// * `btsp_provider` - The BTSP provider for accessing capabilities
     ///
-    /// # Returns
-    /// The result as a JSON value, or an error message
+    /// # Errors
+    ///
+    /// Returns [`HandlerError`] on missing params, unknown method, or
+    /// domain-specific failures.
     async fn handle(
         &self,
         method: &str,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String>;
+    ) -> HandlerResult;
 }
 
 /// Concrete enum of all [`MethodHandler`] implementations held by [`HandlerRegistry`].
@@ -168,7 +273,7 @@ impl MethodHandler for MethodHandlerKind {
         method: &str,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> HandlerResult {
         match self {
             Self::Health(h) => h.handle(method, params, btsp_provider).await,
             Self::Security(h) => h.handle(method, params, btsp_provider).await,
@@ -322,12 +427,15 @@ impl HandlerRegistry {
     /// O(1) via pre-built method→handler `HashMap` (constructed once at init).
     /// Falls back to O(n) linear scan only if the map was never built (should
     /// not happen in normal operation).
+    /// # Errors
+    ///
+    /// Returns [`HandlerError`] if the method is unknown or the handler fails.
     pub async fn route(
         &self,
         method: &str,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> HandlerResult {
         // Backward-compat bridge: bare crypto names → namespaced equivalents,
         // plus bonding.* aliases used by primalSpring graphs and dispatch.
         let method = match method {
@@ -354,7 +462,7 @@ impl HandlerRegistry {
             if let Some(&idx) = map.get(method) {
                 return handlers[idx].handle(method, params, btsp_provider).await;
             }
-            return Err(format!("Method not found: {method}"));
+            return Err(HandlerError::MethodNotFound(method.to_owned()));
         }
 
         // Fallback: linear scan (only if method_map was never built)
@@ -363,7 +471,7 @@ impl HandlerRegistry {
                 return handler.handle(method, params, btsp_provider).await;
             }
         }
-        Err(format!("Method not found: {method}"))
+        Err(HandlerError::MethodNotFound(method.to_owned()))
     }
 
     /// Route a request and return a structured [`DispatchOutcome`].
@@ -376,23 +484,12 @@ impl HandlerRegistry {
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> DispatchOutcome {
-        let result = self.route(method, params, btsp_provider).await;
-        match result {
+        match self.route(method, params, btsp_provider).await {
             Ok(v) => DispatchOutcome::Success(v),
-            Err(ref msg) if msg.contains("Method not found") => DispatchOutcome::Failure {
-                phase: IpcErrorPhase::Dispatch,
-                code: -32601,
-                message: msg.clone(),
-            },
-            Err(ref msg) if msg.contains("Invalid params") => DispatchOutcome::Failure {
-                phase: IpcErrorPhase::Dispatch,
-                code: -32602,
-                message: msg.clone(),
-            },
-            Err(msg) => DispatchOutcome::Failure {
-                phase: IpcErrorPhase::Application,
-                code: -32000,
-                message: msg,
+            Err(ref e) => DispatchOutcome::Failure {
+                phase: e.error_phase(),
+                code: i64::from(e.json_rpc_code()),
+                message: e.to_string(),
             },
         }
     }
@@ -430,7 +527,6 @@ impl HandlerRegistry {
 mod tests {
     use super::*;
 
-    /// Test handler for testing the registry
     struct TestHandler;
 
     impl MethodHandler for TestHandler {
@@ -443,10 +539,10 @@ mod tests {
             method: &str,
             _params: Option<&serde_json::Value>,
             _btsp_provider: &Arc<BeardogBtspProvider>,
-        ) -> Result<serde_json::Value, String> {
+        ) -> HandlerResult {
             match method {
                 "test.method" => Ok(serde_json::json!({"test": "ok"})),
-                _ => Err(format!("Unknown method: {}", method)),
+                _ => Err(HandlerError::MethodNotFound(method.to_owned())),
             }
         }
     }

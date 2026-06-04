@@ -41,8 +41,8 @@
 //! - Random nonce per encryption (never reused)
 //! - Family-scoped: different families derive different keys for the same secret name
 
-use super::MethodHandler;
 use super::utils::get_primal_name;
+use super::{HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
@@ -393,7 +393,7 @@ impl MethodHandler for SecretsHandler {
         method: &str,
         params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> HandlerResult {
         match method {
             "secrets.store" => self.handle_store(params).await,
             "secrets.retrieve" => self.handle_retrieve(params).await,
@@ -401,6 +401,7 @@ impl MethodHandler for SecretsHandler {
             "secrets.delete" => self.handle_delete(params).await,
             _ => Err(format!("Unknown secrets method: {method}")),
         }
+        .map_err(Into::into)
     }
 }
 

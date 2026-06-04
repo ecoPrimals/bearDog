@@ -36,7 +36,7 @@
 //! - Authenticated encryption (integrity + confidentiality)
 
 use crate::btsp_provider::BeardogBtspProvider;
-use crate::unix_socket_ipc::handlers::MethodHandler;
+use crate::unix_socket_ipc::handlers::{HandlerResult, MethodHandler};
 use base64::engine::Engine;
 use chacha20poly1305::{
     ChaCha20Poly1305, Nonce,
@@ -61,12 +61,13 @@ impl MethodHandler for EncryptionHandler {
         method: &str,
         params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> HandlerResult {
         match method {
             "encryption.encrypt" => self.handle_encrypt(params).await,
             "encryption.decrypt" => self.handle_decrypt(params).await,
             _ => Err(format!("Unknown encryption method: {method}")),
         }
+        .map_err(Into::into)
     }
 }
 

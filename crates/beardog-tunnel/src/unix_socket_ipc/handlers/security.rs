@@ -8,8 +8,8 @@
 //! - `BirdSong` encryption/decryption for secure discovery
 //! - JWT secret generation for authentication systems
 
-use super::MethodHandler;
 use super::utils::get_primal_name;
+use super::{HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use base64::Engine;
 use beardog_types::primal_identity::PrimalIdentity;
@@ -83,7 +83,7 @@ impl MethodHandler for SecurityHandler {
         method: &str,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> HandlerResult {
         match method {
             "security.evaluate"
             | "trust.evaluate"
@@ -110,6 +110,7 @@ impl MethodHandler for SecurityHandler {
             | "beardog.jwt_secret" => self.handle_generate_jwt_secret(params).await,
             _ => Err(format!("Method not found: {method}")),
         }
+        .map_err(Into::into)
     }
 }
 

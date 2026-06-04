@@ -22,7 +22,7 @@ fn discover_socket_path() -> String {
     // Use primal name pattern
     let primal_name = beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME)
         .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_NAME))
-        .unwrap_or_else(|_| "beardog".to_string());
+        .unwrap_or_else(|_| env_keys::DEFAULT_PRIMAL_NAME.to_string());
 
     ipc_discovery::biomeos_ipc_socket_dir_from_env()
         .join(format!("{primal_name}.sock"))

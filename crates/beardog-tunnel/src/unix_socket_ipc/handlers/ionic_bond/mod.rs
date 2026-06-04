@@ -9,7 +9,7 @@
 //!
 //! The bond lifecycle is: propose → accept → seal → (verify | revoke).
 
-use super::MethodHandler;
+use super::{HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use beardog_types::ionic_bond::{IonicBond, IonicBondProposeParams};
 use std::collections::HashMap;
@@ -108,7 +108,7 @@ impl MethodHandler for IonicBondHandler {
         method: &str,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> HandlerResult {
         match method {
             "crypto.ionic_bond.propose" => self.handle_propose(params, btsp_provider).await,
             "crypto.ionic_bond.accept" => self.handle_accept(params).await,
@@ -124,6 +124,7 @@ impl MethodHandler for IonicBondHandler {
             "crypto.contract.verify" => Self::handle_contract_verify(params).await,
             _ => Err(format!("Unknown ionic bond method: {method}")),
         }
+        .map_err(Into::into)
     }
 }
 
