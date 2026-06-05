@@ -3,7 +3,7 @@
 # Copyright (c) 2025-2026 ecoPrimals Collective
 #
 # Self-knowledge for primal discovery and biomeOS capability routing.
-# BearDog's full method surface (223 methods) is defined in code via
+# BearDog's full method surface (226 methods) is defined in code via
 # HandlerRegistry; this file declares capability domains for routing.
 #
 # Stability tiers:
@@ -26,6 +26,7 @@ stability = "stable"
 description = "Core cryptography — signatures, encryption, hashing, KDF, key exchange"
 methods = [
     "crypto.sign_ed25519", "crypto.verify_ed25519",
+    "crypto.sign.ed25519", "crypto.verify.ed25519",
     "crypto.sign", "crypto.verify",
     "crypto.encrypt", "crypto.decrypt",
     "crypto.hash", "crypto.hmac",
@@ -41,7 +42,7 @@ methods = [
     "auth.issue_ionic", "auth.verify_ionic",
     "auth.issue_session", "auth.public_key",
     "auth.trust_issuer", "auth.trusted_issuers",
-    "auth.events.poll",
+    "auth.exchange_trust", "auth.events.poll",
 ]
 
 [capabilities.auth_events]

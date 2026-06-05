@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 5, 2026 -- Wave 141: Ecosystem Parity — Registry Move + Method Sync
+
+#### Changed
+- **`capability_registry.toml` → `config/capability_registry.toml`**: Moved to match ecosystem
+  convention (biomeOS/petalTongue/sweetGrass pattern). Updated method count 223→226 and added
+  `auth.exchange_trust`, `crypto.sign.ed25519`, `crypto.verify.ed25519`.
+- bearDog confirmed at ecosystem **REFERENCE TIER**: zero gaps, zero `.unwrap()` in production,
+  zero TODO/FIXME, zero stale tarpc, zero blocking debt.
+
+#### Metrics
+- 226 JSON-RPC methods (217 registry + 9 pre-dispatch gate)
+- 15,004 tests passing, 169 suites, 0 failures
+- 90.5% line coverage
+
 ### Jun 4, 2026 -- Wave 140: BD-TRUST-01 — Auto Trust Seeding via auth.exchange_trust
 
 #### Added
@@ -150,7 +164,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`MethodGate::check()`**: Bearer token verification uses `verify_with_registry`
   — tokens from trusted remote gates are now accepted for protected methods.
 - **Capability registry**: Added `auth.trust_issuer` and `auth.trusted_issuers`
-  to `capability_registry.toml`.
+  to `config/capability_registry.toml`.
 
 #### Tests
 - 8 new tests in `trusted_issuer_registry`: local verification, remote
