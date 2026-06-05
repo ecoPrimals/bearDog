@@ -176,6 +176,121 @@ fn auth_events_poll_returns_empty_initially() {
 }
 
 #[test]
+fn exchange_trust_is_gate_handled() {
+    assert!(is_gate_handled_method("auth.exchange_trust"));
+}
+
+#[test]
+fn exchange_trust_is_protected() {
+    assert_eq!(
+        classify_method("auth.exchange_trust"),
+        MethodAccessLevel::Protected
+    );
+}
+
+#[test]
+fn exchange_trust_registers_and_returns_local_key() {
+    let gate = test_gate(EnforcementMode::Permissive);
+
+    let remote_sk = crate::unix_socket_ipc::handlers::primal_signing::derive_primal_signing_key(
+        "remote-gate",
+        "remote-node",
+    );
+    let remote_vk = remote_sk.verifying_key();
+    let pk_b64 = base64::Engine::encode(
+        &base64::engine::general_purpose::STANDARD,
+        remote_vk.as_bytes(),
+    );
+
+    let params = serde_json::json!({
+        "public_key": pk_b64,
+        "gate_id": "remote-gate",
+        "family_id": "test-family",
+    });
+
+    let mut caller = CallerContext::from_unix();
+    caller.btsp_family_verified = true;
+
+    let result = crate::ionic_token_handlers::handle_auth_exchange_trust(
+        gate.trusted_issuers(),
+        gate.auth_events(),
+        gate.primal_name(),
+        gate.node_id(),
+        &caller,
+        Some(&params),
+    );
+
+    assert_eq!(result["registered"], true);
+    assert!(result["local_public_key"].is_string());
+    assert!(
+        result["local_did"]
+            .as_str()
+            .expect("did")
+            .starts_with("did:key:z6Mk")
+    );
+    assert_eq!(result["trust_method"], "family_seed");
+    assert_eq!(result["local_gate_id"], PRIMAL);
+
+    let events = gate.auth_events().poll_since(0);
+    assert_eq!(events.len(), 1);
+}
+
+#[test]
+fn exchange_trust_rejects_unauthenticated() {
+    let gate = test_gate(EnforcementMode::Permissive);
+    let caller = CallerContext::from_unix();
+
+    let params = serde_json::json!({
+        "public_key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+    });
+
+    let result = crate::ionic_token_handlers::handle_auth_exchange_trust(
+        gate.trusted_issuers(),
+        gate.auth_events(),
+        gate.primal_name(),
+        gate.node_id(),
+        &caller,
+        Some(&params),
+    );
+
+    assert_eq!(result["registered"], false);
+    assert!(result["error"].as_str().expect("err").contains("BTSP"));
+}
+
+#[test]
+fn exchange_trust_derives_did_from_key() {
+    let gate = test_gate(EnforcementMode::Permissive);
+
+    let remote_sk = crate::unix_socket_ipc::handlers::primal_signing::derive_primal_signing_key(
+        "auto-gate",
+        "auto-node",
+    );
+    let remote_vk = remote_sk.verifying_key();
+    let pk_b64 = base64::Engine::encode(
+        &base64::engine::general_purpose::STANDARD,
+        remote_vk.as_bytes(),
+    );
+    let expected_did = crate::trusted_issuer_registry::did_from_verifying_key(&remote_vk);
+
+    let params = serde_json::json!({ "public_key": pk_b64 });
+
+    let mut caller = CallerContext::from_unix();
+    caller.btsp_family_verified = true;
+
+    let result = crate::ionic_token_handlers::handle_auth_exchange_trust(
+        gate.trusted_issuers(),
+        gate.auth_events(),
+        gate.primal_name(),
+        gate.node_id(),
+        &caller,
+        Some(&params),
+    );
+
+    assert_eq!(result["registered"], true);
+    assert_eq!(result["remote_did"], expected_did);
+}
+
+#[test]
 fn lifecycle_status_is_public() {
     assert_eq!(
         classify_method("lifecycle.status"),
@@ -289,6 +404,7 @@ fn protected_method_passes_with_valid_ionic_token() {
         peer: None,
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
+        btsp_family_verified: false,
     };
     assert!(gate.check("crypto.sign_ed25519", &mut caller).is_ok());
     assert!(caller.validated_claims.is_some());
@@ -304,6 +420,7 @@ fn insufficient_scope_rejected_in_enforced_mode() {
         peer: None,
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
+        btsp_family_verified: false,
     };
     let result = gate.check("crypto.sign_ed25519", &mut caller);
     assert!(result.is_err());
@@ -319,6 +436,7 @@ fn insufficient_scope_allowed_in_permissive_mode() {
         peer: None,
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
+        btsp_family_verified: false,
     };
     assert!(gate.check("crypto.sign_ed25519", &mut caller).is_ok());
     assert!(caller.validated_claims.is_some());
@@ -333,6 +451,7 @@ fn expired_token_rejected_in_enforced_mode() {
         peer: None,
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
+        btsp_family_verified: false,
     };
     let result = gate.check("crypto.sign_ed25519", &mut caller);
     assert!(result.is_err());
@@ -348,6 +467,7 @@ fn expired_token_allowed_in_permissive_mode() {
         peer: None,
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
+        btsp_family_verified: false,
     };
     assert!(gate.check("crypto.sign_ed25519", &mut caller).is_ok());
 }
@@ -360,6 +480,7 @@ fn bogus_token_rejected_in_enforced_mode() {
         peer: None,
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
+        btsp_family_verified: false,
     };
     let result = gate.check("crypto.sign_ed25519", &mut caller);
     assert!(result.is_err());
@@ -399,6 +520,7 @@ fn auth_check_authenticated_with_claims() {
         peer: None,
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
+        btsp_family_verified: false,
     };
     gate.check("crypto.sign", &mut caller).unwrap();
     let result = handle_auth_check(&caller);
@@ -431,6 +553,7 @@ fn auth_peer_info_with_creds() {
         }),
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
+        btsp_family_verified: false,
     };
     let result = handle_auth_peer_info(&caller);
     assert_eq!(result["available"], true);

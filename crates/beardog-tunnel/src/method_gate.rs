@@ -96,6 +96,9 @@ pub struct CallerContext {
     /// Populated by [`MethodGate::check`] when the bearer token passes
     /// full cryptographic + expiry verification.
     pub validated_claims: Option<IonicTokenPayload>,
+    /// Whether this connection completed a BTSP handshake proving
+    /// family seed membership. Set by post-handshake code paths.
+    pub btsp_family_verified: bool,
 }
 
 /// How the caller connected.
@@ -119,6 +122,7 @@ impl CallerContext {
             peer: None,
             origin: ConnectionOrigin::Unix,
             validated_claims: None,
+            btsp_family_verified: false,
         }
     }
 
@@ -131,6 +135,7 @@ impl CallerContext {
             peer: raw.map(|(uid, pid)| PeerCredentials { pid, uid }),
             origin: ConnectionOrigin::Unix,
             validated_claims: None,
+            btsp_family_verified: false,
         }
     }
 
@@ -142,6 +147,7 @@ impl CallerContext {
             peer: None,
             origin: ConnectionOrigin::Loopback,
             validated_claims: None,
+            btsp_family_verified: false,
         }
     }
 
@@ -153,6 +159,7 @@ impl CallerContext {
             peer: None,
             origin: ConnectionOrigin::Remote,
             validated_claims: None,
+            btsp_family_verified: false,
         }
     }
 }
@@ -426,6 +433,7 @@ pub fn is_gate_handled_method(method: &str) -> bool {
             | "auth.public_key"
             | "auth.trust_issuer"
             | "auth.trusted_issuers"
+            | "auth.exchange_trust"
             | "auth.events.poll"
             | "identity.create"
     )
@@ -441,9 +449,9 @@ pub fn dispatch_auth_method(
     params: Option<&serde_json::Value>,
 ) -> Option<serde_json::Value> {
     use crate::ionic_token_handlers::{
-        handle_auth_events_poll, handle_auth_issue_ionic, handle_auth_issue_session,
-        handle_auth_public_key, handle_auth_trust_issuer, handle_auth_trusted_issuers,
-        handle_auth_verify_ionic, handle_identity_create,
+        handle_auth_events_poll, handle_auth_exchange_trust, handle_auth_issue_ionic,
+        handle_auth_issue_session, handle_auth_public_key, handle_auth_trust_issuer,
+        handle_auth_trusted_issuers, handle_auth_verify_ionic, handle_identity_create,
     };
     match method {
         "auth.check" => Some(handle_auth_check(caller)),
@@ -473,6 +481,14 @@ pub fn dispatch_auth_method(
             params,
         )),
         "auth.trusted_issuers" => Some(handle_auth_trusted_issuers(gate.trusted_issuers())),
+        "auth.exchange_trust" => Some(handle_auth_exchange_trust(
+            gate.trusted_issuers(),
+            gate.auth_events(),
+            gate.primal_name(),
+            gate.node_id(),
+            caller,
+            params,
+        )),
         "auth.events.poll" => Some(handle_auth_events_poll(gate.auth_events(), params)),
         _ => None,
     }

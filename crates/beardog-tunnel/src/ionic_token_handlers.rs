@@ -13,8 +13,9 @@ use crate::auth_event_bus::{AuthEvent, AuthEventBus, AuthEventKind};
 use crate::ionic_token::{
     GateIdentity, TokenError, issue_ionic_token, issue_ionic_token_with_gate, scope_covers_method,
 };
+use crate::method_gate::CallerContext;
 use crate::trusted_issuer_registry::{
-    CrossGateVerifyResult, TrustedIssuerRegistry, verify_with_registry,
+    CrossGateVerifyResult, TrustedIssuerRegistry, did_from_verifying_key, verify_with_registry,
 };
 use crate::unix_socket_ipc::handlers::primal_signing::derive_primal_signing_key;
 use base64::Engine;
@@ -528,6 +529,146 @@ pub fn handle_auth_events_poll(event_bus: &AuthEventBus, params: Option<&Value>)
         "events": events,
         "count": count,
         "since_timestamp": since,
+    })
+}
+
+// ── auth.exchange_trust ───────────────────────────────────────────────
+
+/// Handle `auth.exchange_trust` — bidirectional trust exchange for mesh auto-join.
+///
+/// Requires a BTSP-authenticated channel (proves family seed membership)
+/// OR a valid ionic token. When called:
+///
+/// 1. Auto-registers the caller's Ed25519 public key as a trusted issuer
+/// 2. Returns this gate's Ed25519 public key + DID so the caller can
+///    register it on their end
+///
+/// This eliminates the manual `auth.trust_issuer` step during mesh join.
+///
+/// # Parameters
+///
+/// - `public_key` (string, required): base64-encoded Ed25519 public key of the remote gate
+/// - `did` (string, optional): remote gate's `did:key:z6Mk...` — derived from `public_key` if absent
+/// - `gate_id` (string, optional): remote gate's node ID
+/// - `family_id` (string, optional): remote gate's family ID
+///
+/// # Returns
+///
+/// - `registered`: whether the remote key was newly registered
+/// - `local_public_key`: this gate's Ed25519 public key (base64)
+/// - `local_did`: this gate's DID
+/// - `local_gate_id`: this gate's primal name
+///
+/// # Errors
+///
+/// Returns error if caller is not BTSP-authenticated and has no valid ionic token.
+#[must_use]
+pub fn handle_auth_exchange_trust(
+    registry: &TrustedIssuerRegistry,
+    event_bus: &AuthEventBus,
+    primal_name: &str,
+    node_id: &str,
+    caller: &CallerContext,
+    params: Option<&Value>,
+) -> Value {
+    if !caller.btsp_family_verified && caller.validated_claims.is_none() {
+        return serde_json::json!({
+            "error": "auth.exchange_trust requires BTSP-authenticated channel or valid ionic token",
+            "registered": false,
+        });
+    }
+
+    let Some(pk_b64) = params
+        .and_then(|p| p.get("public_key"))
+        .and_then(Value::as_str)
+    else {
+        return serde_json::json!({
+            "error": "missing required parameter: public_key",
+            "registered": false,
+        });
+    };
+
+    let pk_bytes = match B64.decode(pk_b64) {
+        Ok(b) => b,
+        Err(e) => {
+            return serde_json::json!({ "registered": false, "error": format!("invalid base64: {e}") });
+        }
+    };
+    let arr: [u8; 32] = match pk_bytes.try_into() {
+        Ok(a) => a,
+        Err(_) => {
+            return serde_json::json!({ "registered": false, "error": "public_key must be 32 bytes" });
+        }
+    };
+    let remote_vk = match VerifyingKey::from_bytes(&arr) {
+        Ok(k) => k,
+        Err(e) => {
+            return serde_json::json!({ "registered": false, "error": format!("invalid Ed25519 key: {e}") });
+        }
+    };
+
+    let remote_did = params
+        .and_then(|p| p.get("did"))
+        .and_then(Value::as_str)
+        .map_or_else(|| did_from_verifying_key(&remote_vk), String::from);
+
+    let remote_gate_id = params
+        .and_then(|p| p.get("gate_id"))
+        .and_then(Value::as_str)
+        .map(String::from);
+    let remote_family_id = params
+        .and_then(|p| p.get("family_id"))
+        .and_then(Value::as_str)
+        .map(String::from);
+
+    let trust_method = if caller.btsp_family_verified {
+        crate::trusted_issuer_registry::TrustMethod::FamilySeed
+    } else {
+        crate::trusted_issuer_registry::TrustMethod::ContractExchange
+    };
+
+    let registered = match registry.register(
+        &remote_did,
+        remote_vk,
+        remote_gate_id,
+        remote_family_id,
+        trust_method,
+    ) {
+        Ok(newly_registered) => {
+            if newly_registered {
+                let fingerprint = hex::encode(&remote_vk.as_bytes()[..16]);
+                event_bus.emit(AuthEvent {
+                    kind: AuthEventKind::TrustIssuerRegistered {
+                        issuer_did: remote_did.clone(),
+                        issuer_fingerprint: fingerprint,
+                        trust_method: trust_method.as_str().to_owned(),
+                    },
+                    source_gate: primal_name.to_owned(),
+                    timestamp: chrono::Utc::now().timestamp(),
+                });
+            }
+            newly_registered
+        }
+        Err(e) => {
+            return serde_json::json!({
+                "registered": false,
+                "error": e.to_string(),
+            });
+        }
+    };
+
+    let local_sk = derive_primal_signing_key(primal_name, node_id);
+    let local_vk = local_sk.verifying_key();
+    let local_did = primal_did(primal_name, node_id);
+
+    serde_json::json!({
+        "registered": registered,
+        "remote_did": remote_did,
+        "trust_method": trust_method.as_str(),
+        "total_trusted_issuers": registry.len(),
+        "local_public_key": B64.encode(local_vk.as_bytes()),
+        "local_did": local_did,
+        "local_gate_id": primal_name,
     })
 }
 

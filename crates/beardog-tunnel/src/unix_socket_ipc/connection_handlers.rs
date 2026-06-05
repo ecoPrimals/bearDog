@@ -223,6 +223,7 @@ impl UnixSocketIpcServer {
         mut session: BtspSession,
     ) -> Result<()> {
         let mut caller = CallerContext::from_unix_with_peer(stream.peer_credentials());
+        caller.btsp_family_verified = true;
         loop {
             let frame = match btsp_handshake::read_frame(&mut stream).await {
                 Ok(f) => f,

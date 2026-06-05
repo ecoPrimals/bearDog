@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 4, 2026 -- Wave 140: BD-TRUST-01 — Auto Trust Seeding via auth.exchange_trust
+
+#### Added
+- **`auth.exchange_trust` RPC method**: Bidirectional trust exchange for mesh auto-join.
+  When called on a BTSP-authenticated channel (family seed proven), auto-registers the
+  caller's Ed25519 public key as a trusted issuer and returns the local gate's identity.
+  Eliminates manual `auth.trust_issuer` calls during mesh join.
+- **`CallerContext.btsp_family_verified`**: New field set after successful BTSP handshake
+  on TCP and UDS code paths. Enables `auth.exchange_trust` without requiring ionic tokens.
+- Auto-derives DID from public key when `did` parameter is absent.
+- Tests: `exchange_trust_*` (5 tests covering registration, unauthenticated rejection,
+  DID derivation, gate-handled classification, Protected access level).
+
+#### Metrics
+- 15,004 tests passing, 169 suites, 0 failures
+
 ### Jun 4, 2026 -- Wave 139: Auth Event Bus + tarpc Cleanup
 
 #### Added
