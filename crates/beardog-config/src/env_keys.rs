@@ -610,6 +610,12 @@ pub const ENV_HSM_HARDWARE_CONNECTION_TIMEOUT_SECS: &str =
     "BEARDOG_HSM_HARDWARE_CONNECTION_TIMEOUT_SECS";
 /// Hardware HSM connection max retries.
 pub const ENV_HSM_HARDWARE_MAX_RETRIES: &str = "BEARDOG_HSM_HARDWARE_MAX_RETRIES";
+/// Comma-separated CIDR ranges for network HSM discovery (e.g. `"10.0.0.0/8,192.168.1.0/24"`).
+pub const ENV_HSM_NETWORK_SCAN_RANGES: &str = "BEARDOG_HSM_NETWORK_SCAN_RANGES";
+/// Network HSM scan timeout in milliseconds.
+pub const ENV_HSM_NETWORK_SCAN_TIMEOUT_MS: &str = "BEARDOG_HSM_NETWORK_SCAN_TIMEOUT_MS";
+/// Maximum parallel network HSM scan threads.
+pub const ENV_HSM_NETWORK_SCAN_PARALLEL: &str = "BEARDOG_HSM_NETWORK_SCAN_PARALLEL";
 
 // ── ACME ─────────────────────────────────────────────────────────────
 

@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 5, 2026 -- Wave 142: Deep Debt Cleanup — Smart Refactor + Stub Evolution + Protocol Rename
+
+#### Changed
+- **Smart refactor `ionic_token_handlers.rs`** (954→668L): Extracted trust management handlers
+  (`auth.trust_issuer`, `auth.exchange_trust`, `auth.events.poll`, `auth.trusted_issuers`) into
+  new `trust_handlers.rs` (317L). Clean domain boundary: token lifecycle vs trust topology.
+- **`Protocol::Tarpc` → `Protocol::BinaryFrame`**: Renamed enum variant, config field
+  (`enable_tarpc` → `enable_binary_frame`), and all references to accurately reflect the actual
+  purpose (binary frame protocol sniffing) rather than the removed tarpc dependency. Default
+  changed from `enable_tarpc: true` + `preferred: Tarpc` to `enable_binary_frame: false` +
+  `preferred: JsonRpc` — JSON-RPC 2.0 is the primary architecture.
+- **Ed448 handlers**: Migrated from `Result<Value, String>` to `Result<Value, BearDogError>`.
+  Uses `BearDogError::not_yet_available` for deferred feature (< 0.1% server support).
+  Removed dead crypto key imports. Added verify + missing-params test coverage.
+- **Discovery engine hardcoding eliminated**: `192.168.1.0/24` replaced with env-driven
+  `BEARDOG_HSM_NETWORK_SCAN_RANGES` (comma-separated CIDRs). Added `ENV_HSM_NETWORK_SCAN_TIMEOUT_MS`
+  and `ENV_HSM_NETWORK_SCAN_PARALLEL` for full config control.
+- **Mobile ephemeral entropy evolved**: Placeholder `vec![1, 2, 3, 4, 5]` → cryptographically
+  random 32-byte context via `rand::random()`. Simulated sensor data → randomized values
+  using `mul_add` FMA optimization.
+
+#### Metrics
+- 15,004+ tests passing, 169 suites, 0 failures
+- 0 clippy warnings, 0 files >800L in production
+
 ### Jun 5, 2026 -- Wave 141: Ecosystem Parity — Registry Move + Method Sync
 
 #### Changed

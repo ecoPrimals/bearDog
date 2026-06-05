@@ -58,7 +58,7 @@ fn test_protocol_detector_concurrent() {
                 match i % 4 {
                     0 => assert_eq!(protocol, Protocol::JsonRpc),
                     1 => assert_eq!(protocol, Protocol::Http),
-                    2 => assert_eq!(protocol, Protocol::Tarpc),
+                    2 => assert_eq!(protocol, Protocol::BinaryFrame),
                     _ => assert_eq!(protocol, Protocol::Unknown),
                 }
             })
@@ -76,7 +76,7 @@ fn test_router_config_concurrent_creation() {
             std::thread::spawn(move || {
                 let config = match i % 4 {
                     0 => RouterConfig::default(),
-                    1 => RouterConfig::tarpc_only(),
+                    1 => RouterConfig::binary_frame_only(),
                     2 => RouterConfig::jsonrpc_only(),
                     _ => RouterConfig::development(),
                 };

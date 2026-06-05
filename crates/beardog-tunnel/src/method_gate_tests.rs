@@ -144,7 +144,7 @@ fn trust_issuer_emits_event() {
         "trust_method": "family_seed",
     });
 
-    let result = crate::ionic_token_handlers::handle_auth_trust_issuer(
+    let result = crate::trust_handlers::handle_auth_trust_issuer(
         gate.trusted_issuers(),
         gate.auth_events(),
         gate.primal_name(),
@@ -170,7 +170,7 @@ fn trust_issuer_emits_event() {
 #[test]
 fn auth_events_poll_returns_empty_initially() {
     let gate = test_gate(EnforcementMode::Permissive);
-    let result = crate::ionic_token_handlers::handle_auth_events_poll(gate.auth_events(), None);
+    let result = crate::trust_handlers::handle_auth_events_poll(gate.auth_events(), None);
     assert_eq!(result["count"], 0);
     assert!(result["events"].as_array().expect("array").is_empty());
 }
@@ -211,7 +211,7 @@ fn exchange_trust_registers_and_returns_local_key() {
     let mut caller = CallerContext::from_unix();
     caller.btsp_family_verified = true;
 
-    let result = crate::ionic_token_handlers::handle_auth_exchange_trust(
+    let result = crate::trust_handlers::handle_auth_exchange_trust(
         gate.trusted_issuers(),
         gate.auth_events(),
         gate.primal_name(),
@@ -244,7 +244,7 @@ fn exchange_trust_rejects_unauthenticated() {
         "public_key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
     });
 
-    let result = crate::ionic_token_handlers::handle_auth_exchange_trust(
+    let result = crate::trust_handlers::handle_auth_exchange_trust(
         gate.trusted_issuers(),
         gate.auth_events(),
         gate.primal_name(),
@@ -277,7 +277,7 @@ fn exchange_trust_derives_did_from_key() {
     let mut caller = CallerContext::from_unix();
     caller.btsp_family_verified = true;
 
-    let result = crate::ionic_token_handlers::handle_auth_exchange_trust(
+    let result = crate::trust_handlers::handle_auth_exchange_trust(
         gate.trusted_issuers(),
         gate.auth_events(),
         gate.primal_name(),

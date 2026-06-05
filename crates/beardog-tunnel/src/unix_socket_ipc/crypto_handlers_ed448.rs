@@ -44,11 +44,8 @@
 
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
-use ed448_goldilocks::curve::edwards::CompressedEdwardsY as Ed448CompressedPoint;
-use ed448_goldilocks::curve::edwards::EdwardsPoint as Ed448Point;
-use ed448_goldilocks::curve::scalar::Scalar as Ed448Scalar;
+use beardog_errors::BearDogError;
 use tracing::{debug, info};
-use zeroize::Zeroizing;
 
 // ============================================================================
 // Ed448 (Edwards-curve with Curve448)
@@ -102,44 +99,27 @@ use zeroize::Zeroizing;
 /// - Typical: 400-500μs sign on modern hardware
 pub async fn handle_sign_ed448(
     params: Option<&serde_json::Value>,
-) -> Result<serde_json::Value, String> {
-    info!("🔐 Ed448: Signing data");
+) -> Result<serde_json::Value, BearDogError> {
+    info!("Ed448: sign request");
 
-    // Extract and validate parameters
-    let params = params.ok_or("Missing parameters for Ed448 signing")?;
+    let params = params.ok_or_else(|| {
+        BearDogError::validation("Missing parameters for Ed448 signing")
+    })?;
 
     let data_b64 = params
         .get("data")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'data' parameter")?;
+        .ok_or_else(|| BearDogError::validation("Missing 'data' parameter"))?;
 
-    // Decode input data
     let data = BASE64
         .decode(data_b64)
-        .map_err(|e| format!("Invalid base64 data: {}", e))?;
+        .map_err(|e| BearDogError::validation(format!("Invalid base64 data: {e}")))?;
 
-    debug!("📝 Data to sign: {} bytes", data.len());
+    debug!("Data to sign: {} bytes", data.len());
 
-    // Generate ephemeral Ed448 keypair
-    // Note: ed448-goldilocks uses a different key generation approach
-    let mut secret_bytes = [0u8; 57]; // Ed448 secret key size
-    rand::rng().fill_bytes(&mut secret_bytes);
-    
-    let secret = Zeroizing::new(secret_bytes);
-    let secret_scalar = Ed448Scalar::from_bytes_mod_order_wide(&secret);
-    
-    // Derive public key
-    let public_point = Ed448Point::mul_base(&secret_scalar);
-    let public_key_compressed = public_point.compress();
-    let public_key_bytes = public_key_compressed.to_bytes();
-
-    // Sign data using EdDSA Ed448
-    // For now, we'll return an error indicating Ed448 needs full implementation
-    // The ed448-goldilocks crate has a complex signing API that requires careful integration
-    
-    info!("❌ Ed448: Not yet fully implemented (ed448-goldilocks API integration required)");
-
-    Err("Ed448 signing not yet implemented - requires ed448-goldilocks API integration".to_string())
+    Err(BearDogError::not_yet_available(
+        "Ed448 signing requires ed448-goldilocks EdDSA API integration (< 0.1% server support)",
+    ))
 }
 
 /// # Errors
@@ -183,30 +163,31 @@ pub async fn handle_sign_ed448(
 /// - Typical: 800-900μs on modern hardware
 pub async fn handle_verify_ed448(
     params: Option<&serde_json::Value>,
-) -> Result<serde_json::Value, String> {
-    info!("✅ Ed448: Verifying signature");
+) -> Result<serde_json::Value, BearDogError> {
+    info!("Ed448: verify request");
 
-    // Extract and validate parameters
-    let params = params.ok_or("Missing parameters for Ed448 verification")?;
+    let params = params.ok_or_else(|| {
+        BearDogError::validation("Missing parameters for Ed448 verification")
+    })?;
 
     let _data_b64 = params
         .get("data")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'data' parameter")?;
+        .ok_or_else(|| BearDogError::validation("Missing 'data' parameter"))?;
 
     let _signature_b64 = params
         .get("signature")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'signature' parameter")?;
+        .ok_or_else(|| BearDogError::validation("Missing 'signature' parameter"))?;
 
     let _public_key_b64 = params
         .get("public_key")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'public_key' parameter")?;
+        .ok_or_else(|| BearDogError::validation("Missing 'public_key' parameter"))?;
 
-    info!("❌ Ed448: Not yet fully implemented (ed448-goldilocks API integration required)");
-
-    Err("Ed448 verification not yet implemented - requires ed448-goldilocks API integration".to_string())
+    Err(BearDogError::not_yet_available(
+        "Ed448 verification requires ed448-goldilocks EdDSA API integration (< 0.1% server support)",
+    ))
 }
 
 // ============================================================================
@@ -218,19 +199,53 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_ed448_not_yet_implemented() {
-        // Test data
+    async fn test_ed448_not_yet_available() {
         let test_data = b"Hello, Ed448!";
         let data_b64 = BASE64.encode(test_data);
 
-        // Try to sign (should error for now)
-        let sign_params = serde_json::json!({
-            "data": data_b64
-        });
-
+        let sign_params = serde_json::json!({ "data": data_b64 });
         let sign_result = handle_sign_ed448(Some(&sign_params)).await;
         assert!(sign_result.is_err());
-        assert!(sign_result.unwrap_err().contains("not yet implemented"));
+        let err_msg = sign_result.unwrap_err().to_string();
+        assert!(
+            err_msg.contains("Not yet available"),
+            "Expected BearDogError::not_yet_available, got: {err_msg}"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_ed448_verify_not_yet_available() {
+        let test_data = b"Hello, Ed448!";
+        let data_b64 = BASE64.encode(test_data);
+
+        let verify_params = serde_json::json!({
+            "data": data_b64,
+            "signature": "AAAA",
+            "public_key": "AAAA",
+        });
+        let verify_result = handle_verify_ed448(Some(&verify_params)).await;
+        assert!(verify_result.is_err());
+        let err_msg = verify_result.unwrap_err().to_string();
+        assert!(
+            err_msg.contains("Not yet available"),
+            "Expected BearDogError::not_yet_available, got: {err_msg}"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_ed448_sign_missing_params() {
+        let result = handle_sign_ed448(None).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_ed448_verify_missing_data() {
+        let params = serde_json::json!({
+            "signature": "AAAA",
+            "public_key": "AAAA",
+        });
+        let result = handle_verify_ed448(Some(&params)).await;
+        assert!(result.is_err());
     }
 }
 

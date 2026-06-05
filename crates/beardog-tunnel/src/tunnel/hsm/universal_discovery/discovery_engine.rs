@@ -416,14 +416,28 @@ impl NetworkHsmDiscoverer {
     ///
     /// Returns an error if the discoverer cannot be initialized.
     pub fn new() -> Result<Self, BearDogError> {
+        let ip_ranges = std::env::var(beardog_config::env_keys::ENV_HSM_NETWORK_SCAN_RANGES)
+            .ok()
+            .filter(|v| !v.is_empty())
+            .map(|v| v.split(',').map(|s| s.trim().to_string()).collect())
+            .unwrap_or_default();
+
+        let timeout_ms = std::env::var(beardog_config::env_keys::ENV_HSM_NETWORK_SCAN_TIMEOUT_MS)
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(1000);
+
+        let parallel_scans = std::env::var(beardog_config::env_keys::ENV_HSM_NETWORK_SCAN_PARALLEL)
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(10);
+
         Ok(Self {
             _common_ports: DEFAULT_DISCOVERY_PORTS.to_vec(),
             _scan_config: NetworkScanConfig {
-                // Example IP ranges for documentation and testing purposes.
-                // In production, these would be loaded from network discovery configuration.
-                ip_ranges: vec!["192.168.1.0/24".to_string()], // Example: local network
-                timeout_ms: 1000,
-                parallel_scans: 10,
+                ip_ranges,
+                timeout_ms,
+                parallel_scans,
             },
         })
     }

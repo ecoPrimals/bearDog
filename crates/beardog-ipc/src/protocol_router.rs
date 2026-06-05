@@ -2,25 +2,25 @@
 
 //! # Protocol Router for `BearDog` IPC
 //!
-//! **AUTOMATIC PROTOCOL DETECTION AND ROUTING** (v1.0.0)
+//! **AUTOMATIC PROTOCOL DETECTION AND ROUTING** (v2.0.0)
 //!
 //! Detects incoming connection protocol and routes to appropriate handler:
-//! - **tarpc** (binary): Highest performance (~10-20μs latency)
-//! - **JSON-RPC**: Flexible, human-readable (~100-500μs latency)
+//! - **JSON-RPC 2.0**: Primary protocol (flexible, human-readable, ~100-500μs latency)
+//! - **Binary frame**: Length-prefixed binary protocols (retained for protocol sniffing)
 //! - **HTTP**: Legacy compatibility
 //!
 //! ## Protocol Detection Strategy
 //! Uses first-bytes sniffing to identify protocol:
-//! - tarpc/binary: Length-prefixed binary frames
+//! - Binary frame: Length-prefixed binary frames (4-byte LE u32 header)
 //! - JSON-RPC: `{` character (JSON object start)
 //! - HTTP: `GET`, `POST`, `PUT`, `DELETE`, etc.
 //!
 //! ## Priority Order
-//! tarpc > JSON-RPC > HTTP
+//! JSON-RPC > Binary frame > HTTP
 //!
-//! ## Philosophy: Walk → Run
-//! New interactions start with JSON-RPC (walking - flexible, observable).
-//! As patterns stabilize, they graduate to tarpc (running - fast, efficient).
+//! ## Architecture
+//! JSON-RPC 2.0 is the primary IPC architecture. Binary frame detection
+//! is retained for forward-compatible protocol sniffing.
 
 use std::io;
 
@@ -31,10 +31,10 @@ use tracing::debug;
 /// Detected protocol type
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Protocol {
-    /// tarpc binary RPC (highest performance)
-    Tarpc,
+    /// Length-prefixed binary frame protocol (high performance, protocol sniffing)
+    BinaryFrame,
 
-    /// JSON-RPC 2.0 (flexible, human-readable)
+    /// JSON-RPC 2.0 (primary IPC protocol)
     JsonRpc,
 
     /// HTTP/1.1 (legacy compatibility)
@@ -48,8 +48,8 @@ impl Protocol {
     /// Protocol priority (higher = preferred)
     pub const fn priority(&self) -> u8 {
         match self {
-            Self::Tarpc => 3, // Highest
-            Self::JsonRpc => 2,
+            Self::JsonRpc => 3,
+            Self::BinaryFrame => 2,
             Self::Http => 1,
             Self::Unknown => 0,
         }
@@ -58,7 +58,7 @@ impl Protocol {
     /// Human-readable name
     pub const fn name(&self) -> &'static str {
         match self {
-            Self::Tarpc => "tarpc",
+            Self::BinaryFrame => "binary-frame",
             Self::JsonRpc => "json-rpc",
             Self::Http => "http",
             Self::Unknown => "unknown",
@@ -67,7 +67,7 @@ impl Protocol {
 
     /// Is this a high-performance protocol?
     pub const fn is_high_performance(&self) -> bool {
-        matches!(self, Self::Tarpc)
+        matches!(self, Self::BinaryFrame)
     }
 }
 
@@ -127,23 +127,18 @@ impl ProtocolDetector {
             return Protocol::Unknown;
         }
 
-        // Check for tarpc/binary (length-prefixed binary)
-        // Length-prefixed frames start with a 4-byte length prefix (little-endian u32)
-        // The length should be reasonable (< 16MB)
+        // Check for length-prefixed binary frame protocol
+        // Binary frames start with a 4-byte length prefix (little-endian u32)
         if bytes.len() >= 4 {
             let frame_len = u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) as usize;
 
-            // If frame length looks valid for tarpc (non-zero, < 16MB, not ASCII)
-            // and first byte after length is not ASCII text
-            if frame_len > 0 && frame_len < 16 * 1024 * 1024 {
-                // Check if this looks like binary data (not ASCII text)
-                if bytes.len() > 4 {
-                    let fifth = bytes[4];
-                    // tarpc binary payloads typically start with enum variant indices
-                    // or struct field counts (small numbers), not ASCII printable chars
-                    if !fifth.is_ascii_graphic() || fifth < 0x20 {
-                        return Protocol::Tarpc;
-                    }
+            // Valid binary frame: non-zero, < 16MB, not ASCII text
+            if frame_len > 0 && frame_len < 16 * 1024 * 1024 && bytes.len() > 4 {
+                let fifth = bytes[4];
+                // Binary payloads typically start with enum variant indices
+                // or struct field counts (small numbers), not ASCII chars
+                if !fifth.is_ascii_graphic() || fifth < 0x20 {
+                    return Protocol::BinaryFrame;
                 }
             }
         }
@@ -201,8 +196,8 @@ impl Default for ProtocolDetector {
 /// Protocol router configuration
 #[derive(Debug, Clone)]
 pub struct RouterConfig {
-    /// Enable tarpc handling
-    pub enable_tarpc: bool,
+    /// Enable binary frame protocol detection
+    pub enable_binary_frame: bool,
 
     /// Enable JSON-RPC handling
     pub enable_jsonrpc: bool,
@@ -217,46 +212,46 @@ pub struct RouterConfig {
 impl Default for RouterConfig {
     fn default() -> Self {
         Self {
-            enable_tarpc: true,
+            enable_binary_frame: false,
             enable_jsonrpc: true,
             enable_http: true,
-            preferred: Protocol::Tarpc, // Prefer high-performance
+            preferred: Protocol::JsonRpc,
         }
     }
 }
 
 impl RouterConfig {
-    /// Create config with only tarpc enabled
-    pub const fn tarpc_only() -> Self {
+    /// Create config with only binary frame protocol enabled
+    pub const fn binary_frame_only() -> Self {
         Self {
-            enable_tarpc: true,
+            enable_binary_frame: true,
             enable_jsonrpc: false,
             enable_http: false,
-            preferred: Protocol::Tarpc,
+            preferred: Protocol::BinaryFrame,
         }
     }
 
     /// Create config with only JSON-RPC enabled
     pub const fn jsonrpc_only() -> Self {
         Self {
-            enable_tarpc: false,
+            enable_binary_frame: false,
             enable_jsonrpc: true,
             enable_http: false,
             preferred: Protocol::JsonRpc,
         }
     }
 
-    /// Create config for development (all protocols, prefer JSON-RPC for debugging)
+    /// Create config for development (JSON-RPC + HTTP, prefer JSON-RPC)
     pub const fn development() -> Self {
         Self {
-            enable_tarpc: true,
+            enable_binary_frame: false,
             enable_jsonrpc: true,
             enable_http: true,
             preferred: Protocol::JsonRpc,
         }
     }
 
-    /// Create config for production (all protocols, prefer tarpc for performance)
+    /// Create config for production (JSON-RPC + HTTP, prefer JSON-RPC)
     pub fn production() -> Self {
         Self::default()
     }
@@ -265,8 +260,8 @@ impl RouterConfig {
     pub fn supported_protocols(&self) -> Vec<Protocol> {
         let mut protocols = Vec::new();
 
-        if self.enable_tarpc {
-            protocols.push(Protocol::Tarpc);
+        if self.enable_binary_frame {
+            protocols.push(Protocol::BinaryFrame);
         }
         if self.enable_jsonrpc {
             protocols.push(Protocol::JsonRpc);
@@ -281,7 +276,7 @@ impl RouterConfig {
     /// Check if a protocol is supported
     pub const fn is_supported(&self, protocol: Protocol) -> bool {
         match protocol {
-            Protocol::Tarpc => self.enable_tarpc,
+            Protocol::BinaryFrame => self.enable_binary_frame,
             Protocol::JsonRpc => self.enable_jsonrpc,
             Protocol::Http => self.enable_http,
             Protocol::Unknown => false,
@@ -312,10 +307,10 @@ impl ProtocolCapabilities {
         let mut high_performance = Vec::new();
         let mut versions = std::collections::HashMap::new();
 
-        if config.enable_tarpc {
-            supported.push("tarpc".to_string());
-            high_performance.push("tarpc".to_string());
-            versions.insert("tarpc".to_string(), "0.34".to_string());
+        if config.enable_binary_frame {
+            supported.push("binary-frame".to_string());
+            high_performance.push("binary-frame".to_string());
+            versions.insert("binary-frame".to_string(), "1.0".to_string());
         }
 
         if config.enable_jsonrpc {
@@ -450,24 +445,24 @@ mod tests {
 
     #[test]
     fn test_protocol_priority() {
-        assert!(Protocol::Tarpc.priority() > Protocol::JsonRpc.priority());
-        assert!(Protocol::JsonRpc.priority() > Protocol::Http.priority());
+        assert!(Protocol::JsonRpc.priority() > Protocol::BinaryFrame.priority());
+        assert!(Protocol::BinaryFrame.priority() > Protocol::Http.priority());
         assert!(Protocol::Http.priority() > Protocol::Unknown.priority());
     }
 
     #[test]
     fn test_router_config_supported() {
         let config = RouterConfig::default();
-        assert!(config.is_supported(Protocol::Tarpc));
+        assert!(!config.is_supported(Protocol::BinaryFrame));
         assert!(config.is_supported(Protocol::JsonRpc));
         assert!(config.is_supported(Protocol::Http));
         assert!(!config.is_supported(Protocol::Unknown));
     }
 
     #[test]
-    fn test_router_config_tarpc_only() {
-        let config = RouterConfig::tarpc_only();
-        assert!(config.is_supported(Protocol::Tarpc));
+    fn test_router_config_binary_frame_only() {
+        let config = RouterConfig::binary_frame_only();
+        assert!(config.is_supported(Protocol::BinaryFrame));
         assert!(!config.is_supported(Protocol::JsonRpc));
         assert!(!config.is_supported(Protocol::Http));
     }
@@ -477,10 +472,9 @@ mod tests {
         let config = RouterConfig::default();
         let caps = ProtocolCapabilities::from_config(&config);
 
-        assert!(caps.supported.contains(&"tarpc".to_string()));
         assert!(caps.supported.contains(&"json-rpc".to_string()));
-        assert!(caps.high_performance.contains(&"tarpc".to_string()));
-        assert_eq!(caps.recommended, "tarpc");
+        assert!(!caps.supported.contains(&"binary-frame".to_string()));
+        assert_eq!(caps.recommended, "json-rpc");
     }
 
     #[test]
@@ -495,7 +489,7 @@ mod tests {
 
     #[test]
     fn test_protocol_display() {
-        assert_eq!(format!("{}", Protocol::Tarpc), "tarpc");
+        assert_eq!(format!("{}", Protocol::BinaryFrame), "binary-frame");
         assert_eq!(format!("{}", Protocol::JsonRpc), "json-rpc");
         assert_eq!(format!("{}", Protocol::Http), "http");
     }
@@ -564,10 +558,10 @@ mod tests {
     }
 
     #[test]
-    fn test_detect_tarpc_ascii_graphic_fifth_byte() {
+    fn test_detect_binary_frame_ascii_graphic_fifth_byte() {
         let bytes = vec![0x10, 0x00, 0x00, 0x00, b'{'];
         let protocol = ProtocolDetector::detect_from_bytes(&bytes);
-        assert_ne!(protocol, Protocol::Tarpc);
+        assert_ne!(protocol, Protocol::BinaryFrame);
     }
 
     #[test]
@@ -576,6 +570,6 @@ mod tests {
         assert_eq!(Protocol::Unknown.name(), "unknown");
         assert_eq!(Protocol::Unknown.priority(), 0);
         assert!(!Protocol::JsonRpc.is_high_performance());
-        assert!(Protocol::Tarpc.is_high_performance());
+        assert!(Protocol::BinaryFrame.is_high_performance());
     }
 }

@@ -11,10 +11,13 @@ use std::path::PathBuf;
 // ============================================================================
 
 #[test]
-fn test_detect_tarpc_binary_frame() {
-    // Simulate tarpc binary: 4-byte length prefix + non-ASCII payload
+fn test_detect_binary_frame() {
+    // Length-prefixed binary: 4-byte LE u32 header + non-ASCII payload
     let bytes = vec![0x10, 0x00, 0x00, 0x00, 0x01];
-    assert_eq!(ProtocolDetector::detect_from_bytes(&bytes), Protocol::Tarpc);
+    assert_eq!(
+        ProtocolDetector::detect_from_bytes(&bytes),
+        Protocol::BinaryFrame
+    );
 }
 
 #[test]
@@ -122,7 +125,7 @@ fn test_detect_unknown_binary() {
 
 #[test]
 fn test_detect_short_binary() {
-    // Less than 4 bytes — can't be tarpc
+    // Less than 4 bytes — can't be binary frame
     assert_eq!(
         ProtocolDetector::detect_from_bytes(&[0x01, 0x02]),
         Protocol::Unknown
@@ -135,14 +138,14 @@ fn test_detect_short_binary() {
 
 #[test]
 fn test_protocol_priority_ordering() {
-    assert!(Protocol::Tarpc.priority() > Protocol::JsonRpc.priority());
+    assert!(Protocol::JsonRpc.priority() > Protocol::BinaryFrame.priority());
     assert!(Protocol::JsonRpc.priority() > Protocol::Http.priority());
     assert!(Protocol::Http.priority() > Protocol::Unknown.priority());
 }
 
 #[test]
 fn test_protocol_names() {
-    assert_eq!(Protocol::Tarpc.name(), "tarpc");
+    assert_eq!(Protocol::BinaryFrame.name(), "binary-frame");
     assert_eq!(Protocol::JsonRpc.name(), "json-rpc");
     assert_eq!(Protocol::Http.name(), "http");
     assert_eq!(Protocol::Unknown.name(), "unknown");
@@ -150,7 +153,7 @@ fn test_protocol_names() {
 
 #[test]
 fn test_protocol_is_high_performance() {
-    assert!(Protocol::Tarpc.is_high_performance());
+    assert!(Protocol::BinaryFrame.is_high_performance());
     assert!(!Protocol::JsonRpc.is_high_performance());
     assert!(!Protocol::Http.is_high_performance());
     assert!(!Protocol::Unknown.is_high_performance());
@@ -158,7 +161,7 @@ fn test_protocol_is_high_performance() {
 
 #[test]
 fn test_protocol_display() {
-    assert_eq!(format!("{}", Protocol::Tarpc), "tarpc");
+    assert_eq!(format!("{}", Protocol::BinaryFrame), "binary-frame");
     assert_eq!(format!("{}", Protocol::JsonRpc), "json-rpc");
     assert_eq!(format!("{}", Protocol::Http), "http");
     assert_eq!(format!("{}", Protocol::Unknown), "unknown");
@@ -168,9 +171,9 @@ fn test_protocol_display() {
 fn test_protocol_eq_and_hash() {
     use std::collections::HashSet;
     let mut set = HashSet::new();
-    set.insert(Protocol::Tarpc);
+    set.insert(Protocol::BinaryFrame);
     set.insert(Protocol::JsonRpc);
-    set.insert(Protocol::Tarpc); // duplicate
+    set.insert(Protocol::BinaryFrame); // duplicate
     assert_eq!(set.len(), 2);
 }
 
@@ -210,25 +213,25 @@ fn test_protocol_detector_default() {
 #[test]
 fn test_router_config_default() {
     let c = RouterConfig::default();
-    assert!(c.enable_tarpc);
+    assert!(!c.enable_binary_frame);
     assert!(c.enable_jsonrpc);
     assert!(c.enable_http);
-    assert_eq!(c.preferred, Protocol::Tarpc);
+    assert_eq!(c.preferred, Protocol::JsonRpc);
 }
 
 #[test]
-fn test_router_config_tarpc_only() {
-    let c = RouterConfig::tarpc_only();
-    assert!(c.enable_tarpc);
+fn test_router_config_binary_frame_only() {
+    let c = RouterConfig::binary_frame_only();
+    assert!(c.enable_binary_frame);
     assert!(!c.enable_jsonrpc);
     assert!(!c.enable_http);
-    assert_eq!(c.preferred, Protocol::Tarpc);
+    assert_eq!(c.preferred, Protocol::BinaryFrame);
 }
 
 #[test]
 fn test_router_config_jsonrpc_only() {
     let c = RouterConfig::jsonrpc_only();
-    assert!(!c.enable_tarpc);
+    assert!(!c.enable_binary_frame);
     assert!(c.enable_jsonrpc);
     assert!(!c.enable_http);
     assert_eq!(c.preferred, Protocol::JsonRpc);
@@ -237,7 +240,7 @@ fn test_router_config_jsonrpc_only() {
 #[test]
 fn test_router_config_development() {
     let c = RouterConfig::development();
-    assert!(c.enable_tarpc);
+    assert!(!c.enable_binary_frame);
     assert!(c.enable_jsonrpc);
     assert!(c.enable_http);
     assert_eq!(c.preferred, Protocol::JsonRpc);
@@ -246,23 +249,22 @@ fn test_router_config_development() {
 #[test]
 fn test_router_config_production() {
     let c = RouterConfig::production();
-    assert_eq!(c.preferred, Protocol::Tarpc);
+    assert_eq!(c.preferred, Protocol::JsonRpc);
 }
 
 #[test]
-fn test_router_config_supported_protocols_all() {
+fn test_router_config_supported_protocols_default() {
     let c = RouterConfig::default();
     let protos = c.supported_protocols();
-    assert_eq!(protos.len(), 3);
-    assert!(protos.contains(&Protocol::Tarpc));
+    assert_eq!(protos.len(), 2);
     assert!(protos.contains(&Protocol::JsonRpc));
     assert!(protos.contains(&Protocol::Http));
 }
 
 #[test]
 fn test_router_config_is_supported() {
-    let c = RouterConfig::tarpc_only();
-    assert!(c.is_supported(Protocol::Tarpc));
+    let c = RouterConfig::binary_frame_only();
+    assert!(c.is_supported(Protocol::BinaryFrame));
     assert!(!c.is_supported(Protocol::JsonRpc));
     assert!(!c.is_supported(Protocol::Http));
     assert!(!c.is_supported(Protocol::Unknown));
@@ -280,7 +282,7 @@ fn test_router_config_supported_protocols_jsonrpc_only() {
 fn test_router_config_debug_and_clone() {
     let c = RouterConfig::default();
     let c2 = c.clone();
-    assert_eq!(c.enable_tarpc, c2.enable_tarpc);
+    assert_eq!(c.enable_binary_frame, c2.enable_binary_frame);
     assert!(format!("{c:?}").contains("RouterConfig"));
 }
 
@@ -292,12 +294,11 @@ fn test_router_config_debug_and_clone() {
 fn test_capabilities_from_default_config() {
     let config = RouterConfig::default();
     let caps = ProtocolCapabilities::from_config(&config);
-    assert!(caps.supported.contains(&"tarpc".to_string()));
     assert!(caps.supported.contains(&"json-rpc".to_string()));
     assert!(caps.supported.contains(&"http".to_string()));
-    assert!(caps.high_performance.contains(&"tarpc".to_string()));
-    assert_eq!(caps.recommended, "tarpc");
-    assert!(caps.versions.contains_key("tarpc"));
+    assert!(!caps.supported.contains(&"binary-frame".to_string()));
+    assert!(caps.high_performance.is_empty());
+    assert_eq!(caps.recommended, "json-rpc");
     assert!(caps.versions.contains_key("json-rpc"));
     assert!(caps.versions.contains_key("http"));
 }
@@ -312,12 +313,12 @@ fn test_capabilities_from_jsonrpc_only() {
 }
 
 #[test]
-fn test_capabilities_from_tarpc_only() {
-    let config = RouterConfig::tarpc_only();
+fn test_capabilities_from_binary_frame_only() {
+    let config = RouterConfig::binary_frame_only();
     let caps = ProtocolCapabilities::from_config(&config);
     assert_eq!(caps.supported.len(), 1);
     assert_eq!(caps.high_performance.len(), 1);
-    assert_eq!(caps.recommended, "tarpc");
+    assert_eq!(caps.recommended, "binary-frame");
 }
 
 #[test]
@@ -325,7 +326,6 @@ fn test_capabilities_to_json() {
     let config = RouterConfig::default();
     let caps = ProtocolCapabilities::from_config(&config);
     let json = caps.to_json();
-    assert!(json.contains("tarpc"));
     assert!(json.contains("json-rpc"));
     assert!(json.contains("supported"));
     assert!(json.contains("recommended"));

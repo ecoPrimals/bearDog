@@ -449,9 +449,12 @@ pub fn dispatch_auth_method(
     params: Option<&serde_json::Value>,
 ) -> Option<serde_json::Value> {
     use crate::ionic_token_handlers::{
-        handle_auth_events_poll, handle_auth_exchange_trust, handle_auth_issue_ionic,
-        handle_auth_issue_session, handle_auth_public_key, handle_auth_trust_issuer,
-        handle_auth_trusted_issuers, handle_auth_verify_ionic, handle_identity_create,
+        handle_auth_issue_ionic, handle_auth_issue_session, handle_auth_public_key,
+        handle_auth_verify_ionic, handle_identity_create,
+    };
+    use crate::trust_handlers::{
+        handle_auth_events_poll, handle_auth_exchange_trust, handle_auth_trust_issuer,
+        handle_auth_trusted_issuers,
     };
     match method {
         "auth.check" => Some(handle_auth_check(caller)),
