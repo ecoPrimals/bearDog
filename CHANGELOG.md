@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 7, 2026 -- Wave 94: `capability.call` Routing Dispatcher (P1 Mesh Blocker)
+
+#### Added
+- **`capability.call` method**: Routing dispatcher that bridges Songbird's capability-addressed
+  RPC convention to bearDog's concrete method namespace. Accepts
+  `{"capability": "<domain>", "operation": "<method>", "args": {...}}` and routes to
+  `{capability}.{operation}` (e.g., `tls.sign_handshake`, `btsp.negotiate`).
+  This unblocks cross-gate federation peer TLS handshake — the sole blocker for 3-gate mesh.
+- **Recursion guard**: `capability.call` cannot route to itself.
+- **10 new tests**: Method exposure, routing to tls/health/btsp, error cases (missing params,
+  missing fields, recursion, unknown capability).
+- **`capability_registry.toml`**: Added `[capabilities.capability_router]` section.
+
+#### Changed
+- **`method_gate.rs`**: `capability.call` classified as Public (pre-auth primitive, same as
+  `auth.issue_ionic` — security boundary is UDS filesystem permission).
+
 ### Jun 5, 2026 -- Wave 142: Deep Debt Cleanup — Smart Refactor + Stub Evolution + Protocol Rename
 
 #### Changed

@@ -150,6 +150,7 @@ pub mod utils;
 // Existing handlers
 pub mod btsp;
 pub mod capabilities;
+pub mod capability_call; // capability.call routing dispatcher (Songbird federation bridge)
 pub mod crypto; // Refactored crypto handlers module (domain-based organization)
 pub mod crypto_handler; // Crypto RPC handler (routes to crypto module)
 pub mod encryption;
@@ -245,6 +246,7 @@ pub enum MethodHandlerKind {
     Relay(relay::RelayHandler),
     Fido2(fido2::Fido2Handler),
     Capabilities(capabilities::CapabilitiesHandler),
+    CapabilityCall(capability_call::CapabilityCallHandler),
     Introspection(introspection::IntrospectionHandler),
 }
 
@@ -264,6 +266,7 @@ impl MethodHandler for MethodHandlerKind {
             Self::Relay(h) => h.methods(),
             Self::Fido2(h) => h.methods(),
             Self::Capabilities(h) => h.methods(),
+            Self::CapabilityCall(h) => h.methods(),
             Self::Introspection(h) => h.methods(),
         }
     }
@@ -288,6 +291,7 @@ impl MethodHandler for MethodHandlerKind {
             Self::Relay(h) => h.handle(method, params, btsp_provider).await,
             Self::Fido2(h) => h.handle(method, params, btsp_provider).await,
             Self::Capabilities(h) => h.handle(method, params, btsp_provider).await,
+            Self::CapabilityCall(h) => h.handle(method, params, btsp_provider).await,
             Self::Introspection(h) => h.handle(method, params, btsp_provider).await,
         }
     }
@@ -377,11 +381,13 @@ impl HandlerRegistry {
         // Creates intentional Arc cycles — these handlers call registry.all_methods().
         let capabilities_handler =
             capabilities::CapabilitiesHandler::new(identity, registry.clone());
+        let capability_call_handler = capability_call::CapabilityCallHandler::new(registry.clone());
         let introspection = introspection::IntrospectionHandler::new(registry.clone());
 
         match registry.handlers.try_write() {
             Ok(mut handlers) => {
                 handlers.push(MethodHandlerKind::Capabilities(capabilities_handler));
+                handlers.push(MethodHandlerKind::CapabilityCall(capability_call_handler));
                 handlers.push(MethodHandlerKind::Introspection(introspection));
             }
             Err(_) => {

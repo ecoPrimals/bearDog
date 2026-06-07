@@ -116,6 +116,12 @@ stability = "stable"
 description = "Capability advertisement and listing"
 methods = ["capabilities.list", "discover.capabilities"]
 
+[capabilities.capability_router]
+domain = "routing"
+stability = "stable"
+description = "Generic capability-addressed dispatch (Songbird federation bridge)"
+methods = ["capability.call"]
+
 # Neural API announce — self-registration with biomeOS
 [announce]
 method = "primal.announce"
