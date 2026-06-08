@@ -212,6 +212,7 @@ mod tests {
         assert!(methods.contains(&"federation.derive_subfed_key"));
     }
 
+    #[serial_test::serial]
     #[tokio::test]
     async fn test_verify_family_member_same_family() {
         let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
@@ -239,6 +240,7 @@ mod tests {
         beardog_errors::process_env::remove_var("FAMILY_ID");
     }
 
+    #[serial_test::serial]
     #[tokio::test]
     async fn test_verify_family_member_different_family() {
         let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));

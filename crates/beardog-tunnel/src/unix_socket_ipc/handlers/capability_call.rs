@@ -249,7 +249,12 @@ mod tests {
             .handle("capability.call", Some(&params), &btsp)
             .await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("cannot route to itself"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("cannot route to itself")
+        );
     }
 
     #[tokio::test]

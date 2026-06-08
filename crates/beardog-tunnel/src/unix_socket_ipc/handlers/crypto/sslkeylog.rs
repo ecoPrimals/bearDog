@@ -310,6 +310,7 @@ pub fn export_to_sslkeylogfile(
 mod tests {
     use super::*;
 
+    #[serial_test::serial]
     #[test]
     fn test_export_without_env_var() {
         // Should succeed gracefully when SSLKEYLOGFILE is not set
@@ -321,6 +322,7 @@ mod tests {
         assert!(result.is_ok());
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_invalid_client_random_length() {
         // Set a temporary keylog file
@@ -342,6 +344,7 @@ mod tests {
         beardog_errors::process_env::remove_var("SSLKEYLOGFILE");
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_export_with_handshake_secrets() {
         use std::fs;
