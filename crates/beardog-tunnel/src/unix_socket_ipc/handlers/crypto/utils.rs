@@ -335,9 +335,9 @@ mod tests {
     }
 
     #[test]
-    fn test_to_error_string() {
-        let err = to_error_string("decryption", "invalid tag");
-        assert!(err.contains("decryption"));
-        assert!(err.contains("invalid tag"));
+    fn test_to_handler_error() {
+        let err = to_handler_error("decryption", "invalid tag");
+        assert!(err.to_string().contains("decryption"));
+        assert!(err.to_string().contains("invalid tag"));
     }
 }

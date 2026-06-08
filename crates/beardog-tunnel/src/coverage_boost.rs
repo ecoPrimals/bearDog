@@ -42,16 +42,14 @@ mod alias_router {
     #[tokio::test]
     async fn beardog_crypto_blake3_hash() {
         let params = json!({ "data": "dGVzdA==" });
-        let result: Result<Option<serde_json::Value>, String> =
-            route("beardog.crypto.blake3_hash", Some(&params)).await;
+        let result = route("beardog.crypto.blake3_hash", Some(&params)).await;
         assert!(result.is_ok(), "beardog.crypto.blake3_hash: {result:?}");
         assert!(result.as_ref().expect("ok").is_some());
     }
 
     #[tokio::test]
     async fn beardog_crypto_generate_onion_identity() {
-        let result: Result<Option<serde_json::Value>, String> =
-            route("beardog.crypto.generate_onion_identity", None).await;
+        let result = route("beardog.crypto.generate_onion_identity", None).await;
         assert!(
             result.is_ok(),
             "beardog.crypto.generate_onion_identity: {result:?}"
@@ -61,8 +59,7 @@ mod alias_router {
 
     #[tokio::test]
     async fn unknown_method_returns_none() {
-        let result: Result<Option<serde_json::Value>, String> =
-            route("nonexistent.method.xyz", None).await;
+        let result = route("nonexistent.method.xyz", None).await;
         assert!(result.is_ok());
         assert!(result.expect("ok").is_none());
     }

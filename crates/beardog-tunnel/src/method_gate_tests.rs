@@ -642,3 +642,65 @@ fn is_gate_handled_method_correct() {
     assert!(is_gate_handled_method("identity.create"));
     assert!(!is_gate_handled_method("crypto.sign"));
 }
+
+// ── Co-resident trust ──
+
+#[test]
+fn co_resident_same_uid_bypasses_enforced_gate() {
+    let gate = test_gate(EnforcementMode::Enforced);
+    let server_uid = gate.server_uid.unwrap_or(1000);
+    let mut caller = CallerContext {
+        bearer_token: None,
+        peer: Some(PeerCredentials {
+            uid: server_uid,
+            pid: Some(12345),
+        }),
+        origin: ConnectionOrigin::Unix,
+        validated_claims: None,
+        btsp_family_verified: false,
+    };
+    assert!(
+        gate.check("crypto.x25519_generate_ephemeral", &mut caller).is_ok(),
+        "same-UID UDS caller should bypass enforced gate"
+    );
+}
+
+#[test]
+fn different_uid_rejected_by_enforced_gate() {
+    let gate = test_gate(EnforcementMode::Enforced);
+    let different_uid = gate.server_uid.map(|u| u + 1).unwrap_or(9999);
+    let mut caller = CallerContext {
+        bearer_token: None,
+        peer: Some(PeerCredentials {
+            uid: different_uid,
+            pid: Some(12345),
+        }),
+        origin: ConnectionOrigin::Unix,
+        validated_claims: None,
+        btsp_family_verified: false,
+    };
+    assert!(
+        gate.check("crypto.x25519_generate_ephemeral", &mut caller).is_err(),
+        "different-UID UDS caller should still be rejected"
+    );
+}
+
+#[test]
+fn tcp_caller_not_bypassed_even_with_same_uid() {
+    let gate = test_gate(EnforcementMode::Enforced);
+    let server_uid = gate.server_uid.unwrap_or(1000);
+    let mut caller = CallerContext {
+        bearer_token: None,
+        peer: Some(PeerCredentials {
+            uid: server_uid,
+            pid: Some(12345),
+        }),
+        origin: ConnectionOrigin::Remote,
+        validated_claims: None,
+        btsp_family_verified: false,
+    };
+    assert!(
+        gate.check("crypto.sign_ed25519", &mut caller).is_err(),
+        "TCP caller should not get co-resident trust even with matching UID"
+    );
+}

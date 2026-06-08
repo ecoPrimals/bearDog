@@ -31,7 +31,8 @@ async fn blake3_hash_malformed_base64_returns_error() {
         .await
         .expect_err("malformed base64 should fail");
     assert!(
-        err.to_lowercase().contains("base64") || err.to_lowercase().contains("invalid"),
+        err.to_string().to_lowercase().contains("base64")
+            || err.to_string().to_lowercase().contains("invalid"),
         "unexpected error: {err}"
     );
 }
@@ -64,7 +65,7 @@ async fn chacha_encrypt_wrong_key_size_16_bytes() {
     let err = handle_chacha20_poly1305_encrypt(Some(&params))
         .await
         .expect_err("16-byte key should be rejected");
-    let msg = err.to_lowercase();
+    let msg = err.to_string().to_lowercase();
     assert!(
         msg.contains("key") || msg.contains("32") || msg.contains("length"),
         "unexpected error: {err}"
@@ -171,7 +172,8 @@ async fn x25519_derive_malformed_our_secret() {
         .await
         .expect_err("malformed base64 should fail");
     assert!(
-        err.to_lowercase().contains("base64") || err.to_lowercase().contains("secret"),
+        err.to_string().to_lowercase().contains("base64")
+            || err.to_string().to_lowercase().contains("secret"),
         "unexpected: {err}"
     );
 }
@@ -187,7 +189,7 @@ async fn x25519_derive_wrong_length_our_secret() {
     let err = handle_x25519_derive_secret(Some(&params))
         .await
         .expect_err("16-byte secret should be rejected");
-    let msg = err.to_lowercase();
+    let msg = err.to_string().to_lowercase();
     assert!(
         msg.contains("32") || msg.contains("length") || msg.contains("secret"),
         "unexpected: {err}"
@@ -253,7 +255,8 @@ async fn x25519_derive_with_zero_public_key() {
         }
         Err(e) => {
             assert!(
-                e.to_lowercase().contains("low") || e.to_lowercase().contains("zero"),
+                e.to_string().to_lowercase().contains("low")
+                    || e.to_string().to_lowercase().contains("zero"),
                 "unexpected rejection: {e}"
             );
         }

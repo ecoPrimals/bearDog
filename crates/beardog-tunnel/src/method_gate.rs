@@ -28,6 +28,24 @@ use crate::unix_socket_ipc::handlers::primal_signing::derive_primal_verifying_ke
 use crate::unix_socket_ipc::types::JsonRpcError;
 use ed25519_dalek::VerifyingKey;
 
+/// Resolve the server process UID without `unsafe` by reading `/proc/self/status`.
+fn resolve_server_uid() -> Option<u32> {
+    #[cfg(target_os = "linux")]
+    {
+        let status = std::fs::read_to_string("/proc/self/status").ok()?;
+        for line in status.lines() {
+            if let Some(rest) = line.strip_prefix("Uid:") {
+                return rest.split_whitespace().next()?.parse().ok();
+            }
+        }
+        None
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        None
+    }
+}
+
 /// Access level for a JSON-RPC method.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MethodAccessLevel {
@@ -213,6 +231,8 @@ pub struct MethodGate {
     trusted_issuers: TrustedIssuerRegistry,
     /// Auth event bus for cross-gate trust provenance (Wave 138).
     auth_events: AuthEventBus,
+    /// Cached server UID for same-UID co-resident trust bypass.
+    server_uid: Option<u32>,
 }
 
 impl MethodGate {
@@ -226,6 +246,7 @@ impl MethodGate {
             node_id: node_id.to_owned(),
             trusted_issuers: TrustedIssuerRegistry::new(),
             auth_events: AuthEventBus::default(),
+            server_uid: resolve_server_uid(),
         }
     }
 
@@ -279,6 +300,12 @@ impl MethodGate {
     /// decode -> Ed25519 signature check -> expiry check -> scope check.
     /// On success, populates `caller.validated_claims`.
     ///
+    /// **Co-resident trust**: UDS callers whose UID matches the server
+    /// process (`SO_PEERCRED` same-UID) are granted implicit access to
+    /// Protected methods. This enables Tower Atomic co-resident primals
+    /// (e.g. songbird, biomeOS) to call crypto/orchestration methods
+    /// without explicit token bootstrap.
+    ///
     /// # Errors
     ///
     /// Returns `JsonRpcError` with `UNAUTHORIZED` (-32000) for invalid/expired
@@ -288,6 +315,23 @@ impl MethodGate {
         let level = classify_method(method);
 
         if level == MethodAccessLevel::Public {
+            return Ok(());
+        }
+
+        // Co-resident trust: UDS + same UID = trusted Tower Atomic peer.
+        // Standard Unix security model — same user on the same machine
+        // via a local socket is inherently trusted.
+        if caller.origin == ConnectionOrigin::Unix
+            && let Some(ref peer) = caller.peer
+            && let Some(server_uid) = self.server_uid
+            && peer.uid == server_uid
+        {
+            tracing::debug!(
+                method,
+                peer_uid = peer.uid,
+                peer_pid = peer.pid,
+                "method gate: co-resident trust (same-UID UDS peer)"
+            );
             return Ok(());
         }
 
