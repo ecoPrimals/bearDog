@@ -116,7 +116,7 @@ pub use rpc::{
     SessionVerifyParams, SessionVerifyResponse, TunnelEstablishParams, TunnelEstablishResponse,
     TunnelSendHttpParams, TunnelSendHttpResponse, VerifyPeerParams, VerifyPeerResponse,
 };
-pub use transport::Transport;
+pub use transport::{Transport, TransportEndpoint};
 pub use trust_mode::{CaBundle, TrustMode};
 
 #[cfg(test)]

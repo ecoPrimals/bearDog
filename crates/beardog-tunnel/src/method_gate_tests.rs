@@ -660,7 +660,8 @@ fn co_resident_same_uid_bypasses_enforced_gate() {
         btsp_family_verified: false,
     };
     assert!(
-        gate.check("crypto.x25519_generate_ephemeral", &mut caller).is_ok(),
+        gate.check("crypto.x25519_generate_ephemeral", &mut caller)
+            .is_ok(),
         "same-UID UDS caller should bypass enforced gate"
     );
 }
@@ -680,7 +681,8 @@ fn different_uid_rejected_by_enforced_gate() {
         btsp_family_verified: false,
     };
     assert!(
-        gate.check("crypto.x25519_generate_ephemeral", &mut caller).is_err(),
+        gate.check("crypto.x25519_generate_ephemeral", &mut caller)
+            .is_err(),
         "different-UID UDS caller should still be rejected"
     );
 }

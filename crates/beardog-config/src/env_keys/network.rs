@@ -4,6 +4,13 @@
 
 // ── Network addresses ────────────────────────────────────────────────
 
+/// Structured transport endpoint (JSON). Tier 0 override for all transport
+/// resolution — the launcher/orchestrator injects this so the primal never
+/// self-selects a transport.
+///
+/// Format: `{"transport":"uds","path":"..."} | {"transport":"tcp","host":"...","port":N}`
+pub const ENV_TRANSPORT_ENDPOINT: &str = "TRANSPORT_ENDPOINT";
+
 /// API host address.
 pub const ENV_API_HOST: &str = "BEARDOG_API_HOST";
 /// Listen / bind address (alias: `BEARDOG_BIND_ADDRESS`).

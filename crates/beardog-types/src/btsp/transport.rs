@@ -180,6 +180,89 @@ impl Transport {
     }
 }
 
+// ── TransportEndpoint (ecosystem standard) ──────────────────────────────
+
+/// Ecosystem-standard transport endpoint.
+///
+/// Wire-compatible with `songbird_types::TransportEndpoint` and
+/// `sourdough_core::TransportEndpoint` — same serde tagged JSON format:
+///
+/// ```json
+/// { "transport": "uds", "path": "/run/user/1000/biomeos/beardog.sock" }
+/// { "transport": "tcp", "host": "127.0.0.1", "port": 9100 }
+/// { "transport": "mesh_relay", "peer_id": "strandgate", "capability": "security" }
+/// ```
+///
+/// Injected via `TRANSPORT_ENDPOINT` env var by the launcher / Tower Atomic.
+/// Primals should never self-select a transport — the orchestrator decides.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(tag = "transport", rename_all = "snake_case")]
+pub enum TransportEndpoint {
+    /// Unix domain socket (local IPC).
+    Uds {
+        /// Absolute path to the socket file.
+        path: PathBuf,
+    },
+    /// TCP socket (loopback or network).
+    Tcp {
+        /// Hostname or IP address.
+        host: String,
+        /// Port number (1–65535).
+        port: u16,
+    },
+    /// Mesh relay via a federation peer (cross-gate).
+    MeshRelay {
+        /// Peer node ID in the mesh.
+        peer_id: String,
+        /// Capability domain being relayed.
+        capability: String,
+    },
+}
+
+impl TransportEndpoint {
+    /// Parse from the `TRANSPORT_ENDPOINT` env var (JSON string).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the env var is missing or contains invalid JSON.
+    pub fn from_env() -> Result<Self, String> {
+        let raw = std::env::var("TRANSPORT_ENDPOINT")
+            .map_err(|_| "TRANSPORT_ENDPOINT env var not set".to_string())?;
+        serde_json::from_str(&raw).map_err(|e| format!("TRANSPORT_ENDPOINT parse error: {e}"))
+    }
+
+    /// Convert from the legacy BTSP [`Transport`] type.
+    #[must_use]
+    pub fn from_legacy(transport: &Transport) -> Self {
+        match transport {
+            Transport::UnixSocket { path } => Self::Uds { path: path.clone() },
+            Transport::TcpSocket { host, port } => Self::Tcp {
+                host: host.clone(),
+                port: *port,
+            },
+        }
+    }
+
+    /// Human-readable display string for logs.
+    #[must_use]
+    pub fn display(&self) -> String {
+        match self {
+            Self::Uds { path } => format!("uds://{}", path.display()),
+            Self::Tcp { host, port } => format!("tcp://{host}:{port}"),
+            Self::MeshRelay {
+                peer_id,
+                capability,
+            } => format!("mesh://{peer_id}/{capability}"),
+        }
+    }
+}
+
+impl std::fmt::Display for TransportEndpoint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.display())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -335,5 +418,64 @@ mod tests {
                 Transport::from_endpoint(&reconstructed).expect("Failed to re-parse");
             assert_eq!(transport, parsed_again, "Roundtrip failed for {endpoint}");
         }
+    }
+
+    // ── TransportEndpoint tests ──
+
+    #[test]
+    fn transport_endpoint_uds_serde_roundtrip() {
+        let json = r#"{"transport":"uds","path":"/run/user/1000/biomeos/beardog.sock"}"#;
+        let ep: TransportEndpoint = serde_json::from_str(json).unwrap();
+        assert!(matches!(ep, TransportEndpoint::Uds { .. }));
+        let back = serde_json::to_string(&ep).unwrap();
+        assert_eq!(back, json);
+    }
+
+    #[test]
+    fn transport_endpoint_tcp_serde_roundtrip() {
+        let json = r#"{"transport":"tcp","host":"127.0.0.1","port":9100}"#;
+        let ep: TransportEndpoint = serde_json::from_str(json).unwrap();
+        assert!(matches!(ep, TransportEndpoint::Tcp { .. }));
+        let back = serde_json::to_string(&ep).unwrap();
+        assert_eq!(back, json);
+    }
+
+    #[test]
+    fn transport_endpoint_mesh_relay_serde() {
+        let json = r#"{"transport":"mesh_relay","peer_id":"strandgate","capability":"security"}"#;
+        let ep: TransportEndpoint = serde_json::from_str(json).unwrap();
+        assert!(matches!(ep, TransportEndpoint::MeshRelay { .. }));
+    }
+
+    #[test]
+    fn transport_endpoint_display() {
+        let uds = TransportEndpoint::Uds {
+            path: PathBuf::from("/run/user/1000/biomeos/beardog.sock"),
+        };
+        assert_eq!(uds.to_string(), "uds:///run/user/1000/biomeos/beardog.sock");
+
+        let tcp = TransportEndpoint::Tcp {
+            host: "127.0.0.1".to_string(),
+            port: 9100,
+        };
+        assert_eq!(tcp.to_string(), "tcp://127.0.0.1:9100");
+    }
+
+    #[test]
+    fn transport_endpoint_from_legacy() {
+        let legacy_uds = Transport::UnixSocket {
+            path: PathBuf::from("/tmp/beardog.sock"),
+        };
+        let ep = TransportEndpoint::from_legacy(&legacy_uds);
+        assert!(matches!(ep, TransportEndpoint::Uds { .. }));
+
+        let legacy_tcp = Transport::TcpSocket {
+            host: "localhost".to_string(),
+            port: 3000,
+        };
+        let ep = TransportEndpoint::from_legacy(&legacy_tcp);
+        assert!(
+            matches!(ep, TransportEndpoint::Tcp { host, port } if host == "localhost" && port == 3000)
+        );
     }
 }

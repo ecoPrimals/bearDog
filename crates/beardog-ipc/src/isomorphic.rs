@@ -358,6 +358,50 @@ fn get_tcp_discovery_file_candidates() -> Vec<String> {
 /// }
 /// ```
 ///
+/// Connect to any primal via a structured [`TransportEndpoint`].
+///
+/// This is the ecosystem-standard outbound connection path: the caller
+/// provides a [`TransportEndpoint`] (from `ipc.resolve`, `TRANSPORT_ENDPOINT`
+/// env var, or capability discovery) and gets back a transport-agnostic
+/// [`IpcStream`].
+///
+/// # Errors
+///
+/// Returns an error if the connection cannot be established, or if the
+/// endpoint transport type is not supported for outbound connections
+/// (e.g. `mesh_relay` without a relay client).
+pub async fn connect_transport(
+    endpoint: &beardog_types::btsp::TransportEndpoint,
+) -> Result<IpcStream> {
+    use beardog_types::btsp::TransportEndpoint;
+
+    info!(endpoint = %endpoint, "connecting via TransportEndpoint");
+
+    match endpoint {
+        TransportEndpoint::Uds { path } => {
+            let stream = UnixStream::connect(path)
+                .await
+                .context(format!("Failed to connect to UDS: {}", path.display()))?;
+            info!(path = %path.display(), "connected via UDS");
+            Ok(IpcStream::Unix(stream))
+        }
+        TransportEndpoint::Tcp { host, port } => {
+            let addr = format!("{host}:{port}");
+            let stream = TcpStream::connect(&addr)
+                .await
+                .context(format!("Failed to connect to TCP: {addr}"))?;
+            info!(addr = %addr, "connected via TCP");
+            Ok(IpcStream::Tcp(stream))
+        }
+        TransportEndpoint::MeshRelay {
+            peer_id,
+            capability,
+        } => Err(anyhow::anyhow!(
+            "mesh_relay transport not yet supported for outbound connections (peer={peer_id}, cap={capability})"
+        )),
+    }
+}
+
 /// ## Error Handling
 ///
 /// Returns error if:

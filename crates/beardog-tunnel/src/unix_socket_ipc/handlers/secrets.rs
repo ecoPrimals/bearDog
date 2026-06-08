@@ -305,7 +305,8 @@ impl SecretsHandler {
             return Err(format!(
                 "Invalid nonce length: expected 12, got {}",
                 nonce_bytes.len()
-            ).into());
+            )
+            .into());
         }
 
         // Derive the same per-secret key

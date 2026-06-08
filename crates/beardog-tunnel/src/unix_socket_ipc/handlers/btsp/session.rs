@@ -46,7 +46,9 @@ impl BtspHandler {
             challenge: base64::engine::general_purpose::STANDARD.encode(challenge),
             session_token,
         };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+        serde_json::to_value(resp)
+            .map_err(|e| format!("Serialize: {e}"))
+            .map_err(Into::into)
     }
 
     /// Verify a client's challenge response and derive session keys.
@@ -98,7 +100,9 @@ impl BtspHandler {
                     cipher: Some(negotiated_cipher.wire_name().to_string()),
                     error: None,
                 };
-                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+                serde_json::to_value(resp)
+                    .map_err(|e| format!("Serialize: {e}"))
+                    .map_err(Into::into)
             }
             Err(e) => {
                 warn!(error = %e, "BTSP server session verification failed");
@@ -108,7 +112,9 @@ impl BtspHandler {
                     cipher: None,
                     error: Some(e.to_string()),
                 };
-                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+                serde_json::to_value(resp)
+                    .map_err(|e| format!("Serialize: {e}"))
+                    .map_err(Into::into)
             }
         }
     }
@@ -189,6 +195,8 @@ impl BtspHandler {
                 .encode(wrapper_pub.as_bytes()),
             cipher: cipher.wire_name().to_string(),
         };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+        serde_json::to_value(resp)
+            .map_err(|e| format!("Serialize: {e}"))
+            .map_err(Into::into)
     }
 }

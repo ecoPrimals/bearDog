@@ -67,7 +67,9 @@ impl IonicBondHandler {
             proposer_signature,
             proposer_public_key: pk_for_response,
         };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+        serde_json::to_value(resp)
+            .map_err(|e| format!("Serialize: {e}"))
+            .map_err(Into::into)
     }
 
     pub(super) async fn handle_accept(
@@ -97,7 +99,8 @@ impl IonicBondHandler {
             return Err(format!(
                 "Proposal {} has expired (TTL exceeded)",
                 accept_params.proposal_id
-            ).into());
+            )
+            .into());
         }
 
         verify_ed25519_signature(
@@ -143,7 +146,9 @@ impl IonicBondHandler {
         self.bonds.write().await.insert(bond_id, bond.clone());
 
         let resp = IonicBondAcceptResponse { bond };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+        serde_json::to_value(resp)
+            .map_err(|e| format!("Serialize: {e}"))
+            .map_err(Into::into)
     }
 
     /// Seal an active bond by re-verifying both Ed25519 signatures and
@@ -168,7 +173,8 @@ impl IonicBondHandler {
                 return Err(format!(
                     "Sealer '{}' is neither proposer nor acceptor",
                     seal_params.sealer
-                ).into());
+                )
+                .into());
             }
 
             if bond.state != BondState::Active {
@@ -180,7 +186,9 @@ impl IonicBondHandler {
                         bond.state
                     )),
                 };
-                return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into);
+                return serde_json::to_value(resp)
+                    .map_err(|e| format!("Serialize: {e}"))
+                    .map_err(Into::into);
             }
 
             if let Some(ref exp) = bond.expires_at
@@ -193,7 +201,9 @@ impl IonicBondHandler {
                     bond: None,
                     error: Some("Bond has expired".to_string()),
                 };
-                return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into);
+                return serde_json::to_value(resp)
+                    .map_err(|e| format!("Serialize: {e}"))
+                    .map_err(Into::into);
             }
 
             if !Self::verify_bond_signatures(bond) {
@@ -202,7 +212,9 @@ impl IonicBondHandler {
                     bond: None,
                     error: Some("Ed25519 signature verification failed during seal".to_string()),
                 };
-                return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into);
+                return serde_json::to_value(resp)
+                    .map_err(|e| format!("Serialize: {e}"))
+                    .map_err(Into::into);
             }
 
             bond.state = BondState::Sealed;
@@ -226,7 +238,9 @@ impl IonicBondHandler {
             bond: Some(sealed_bond),
             error: None,
         };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+        serde_json::to_value(resp)
+            .map_err(|e| format!("Serialize: {e}"))
+            .map_err(Into::into)
     }
 
     pub(super) async fn handle_verify(
@@ -274,7 +288,9 @@ impl IonicBondHandler {
                 bond: if valid { Some(bond.clone()) } else { None },
                 error,
             };
-            serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+            serde_json::to_value(resp)
+                .map_err(|e| format!("Serialize: {e}"))
+                .map_err(Into::into)
         } else {
             let resp = IonicBondVerifyResponse {
                 valid: false,
@@ -282,7 +298,9 @@ impl IonicBondHandler {
                 bond: None,
                 error: Some(format!("Bond not found: {}", verify_params.bond_id)),
             };
-            serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+            serde_json::to_value(resp)
+                .map_err(|e| format!("Serialize: {e}"))
+                .map_err(Into::into)
         }
     }
 
@@ -383,7 +401,8 @@ impl IonicBondHandler {
                     return Err(format!(
                         "Revoker '{}' is neither proposer nor acceptor",
                         revoke_params.revoker
-                    ).into());
+                    )
+                    .into());
                 }
 
                 bond.state = BondState::Revoked;
@@ -405,7 +424,9 @@ impl IonicBondHandler {
                 .await
                 .map_err(|e| e.to_string())?;
             let resp = IonicBondRevokeResponse { revoked: true };
-            serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+            serde_json::to_value(resp)
+                .map_err(|e| format!("Serialize: {e}"))
+                .map_err(Into::into)
         } else {
             Err(format!("Bond not found: {}", revoke_params.bond_id).into())
         }
@@ -451,6 +472,8 @@ impl IonicBondHandler {
             .collect();
 
         let resp = IonicBondListResponse { bonds: filtered };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+        serde_json::to_value(resp)
+            .map_err(|e| format!("Serialize: {e}"))
+            .map_err(Into::into)
     }
 }

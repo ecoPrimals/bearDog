@@ -45,7 +45,9 @@ impl BtspHandler {
                     accepted: true,
                     cipher: negotiated.wire_name().to_string(),
                 };
-                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+                serde_json::to_value(resp)
+                    .map_err(|e| format!("Serialize: {e}"))
+                    .map_err(Into::into)
             }
             Err(e) => {
                 warn!(error = %e, "BTSP server negotiate failed");
@@ -53,7 +55,9 @@ impl BtspHandler {
                     accepted: false,
                     cipher: neg_params.cipher,
                 };
-                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+                serde_json::to_value(resp)
+                    .map_err(|e| format!("Serialize: {e}"))
+                    .map_err(Into::into)
             }
         }
     }
@@ -99,7 +103,11 @@ impl BtspHandler {
         {
             vec![cipher.to_string()]
         } else {
-            return Err("Missing required parameter: ciphers (array of cipher names)".to_string().into());
+            return Err(
+                "Missing required parameter: ciphers (array of cipher names)"
+                    .to_string()
+                    .into(),
+            );
         };
 
         let selected = select_best_cipher(&offered_ciphers);
@@ -155,7 +163,9 @@ impl BtspHandler {
             active = status.active_sessions,
             "BTSP server status"
         );
-        serde_json::to_value(status).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+        serde_json::to_value(status)
+            .map_err(|e| format!("Serialize: {e}"))
+            .map_err(Into::into)
     }
 }
 

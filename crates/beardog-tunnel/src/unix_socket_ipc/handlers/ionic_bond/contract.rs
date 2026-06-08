@@ -65,7 +65,9 @@ impl IonicBondHandler {
             signed_at: now.to_rfc3339(),
             expires_at,
         };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+        serde_json::to_value(resp)
+            .map_err(|e| format!("Serialize: {e}"))
+            .map_err(Into::into)
     }
 
     /// Verify a single Ed25519 signature over a contract terms hash.
@@ -111,7 +113,9 @@ impl IonicBondHandler {
                 error: Some(e),
             },
         };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+        serde_json::to_value(resp)
+            .map_err(|e| format!("Serialize: {e}"))
+            .map_err(Into::into)
     }
 
     // ── Cross-family contract lifecycle ──────────────────────────────────
@@ -167,7 +171,9 @@ impl IonicBondHandler {
             created_at,
             expires_at,
         };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+        serde_json::to_value(resp)
+            .map_err(|e| format!("Serialize: {e}"))
+            .map_err(Into::into)
     }
 
     /// Countersign a pending cross-family contract. Verifies the counterparty's
@@ -196,10 +202,7 @@ impl IonicBondHandler {
             && let Ok(exp_dt) = chrono::DateTime::parse_from_rfc3339(exp)
             && Utc::now() > exp_dt
         {
-            return Err(format!(
-                "Contract '{}' expired at {exp}",
-                cs_params.contract_id
-            ).into());
+            return Err(format!("Contract '{}' expired at {exp}", cs_params.contract_id).into());
         }
 
         verify_ed25519_signature(
@@ -243,7 +246,9 @@ impl IonicBondHandler {
         }
 
         let resp = ContractCountersignResponse { contract: sealed };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+        serde_json::to_value(resp)
+            .map_err(|e| format!("Serialize: {e}"))
+            .map_err(Into::into)
     }
 
     /// Verify a sealed cross-family contract — checks both signatures.
@@ -264,7 +269,9 @@ impl IonicBondHandler {
                 failed_party: Some("proposer".to_string()),
                 error: Some(e),
             };
-            return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into);
+            return serde_json::to_value(resp)
+                .map_err(|e| format!("Serialize: {e}"))
+                .map_err(Into::into);
         }
 
         if let Err(e) = verify_ed25519_signature(
@@ -277,7 +284,9 @@ impl IonicBondHandler {
                 failed_party: Some("countersigner".to_string()),
                 error: Some(e),
             };
-            return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into);
+            return serde_json::to_value(resp)
+                .map_err(|e| format!("Serialize: {e}"))
+                .map_err(Into::into);
         }
 
         let resp = ContractVerifyResponse {
@@ -285,6 +294,8 @@ impl IonicBondHandler {
             failed_party: None,
             error: None,
         };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
+        serde_json::to_value(resp)
+            .map_err(|e| format!("Serialize: {e}"))
+            .map_err(Into::into)
     }
 }

@@ -174,9 +174,11 @@ fn detect_knox_availability(device_info: &AndroidDeviceInfo) -> Result<bool, Bea
 #[cfg(target_os = "android")]
 fn check_android_keystore_strongbox() -> Result<bool, BearDogError> {
     debug!("Checking Android KeyStore for StrongBox support (JNI bridge pending)");
-    Ok(beardog_errors::process_env::var(env_keys::ENV_ANDROID_STRONGBOX_AVAILABLE)
-        .map(|v| v == "true")
-        .unwrap_or(false))
+    Ok(
+        beardog_errors::process_env::var(env_keys::ENV_ANDROID_STRONGBOX_AVAILABLE)
+            .map(|v| v == "true")
+            .unwrap_or(false),
+    )
 }
 
 /// Returns true if running on Android platform

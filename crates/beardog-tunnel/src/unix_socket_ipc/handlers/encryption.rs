@@ -215,7 +215,8 @@ impl EncryptionHandler {
             return Err(format!(
                 "Invalid nonce length: expected 12, got {}",
                 nonce_bytes.len()
-            ).into());
+            )
+            .into());
         }
 
         // REAL IMPLEMENTATION: Use ChaCha20-Poly1305

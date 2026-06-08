@@ -139,9 +139,7 @@ pub async fn handle_sign_rsa_pkcs1_sha256(
 
     // Validate key size (security requirement, not hardcoding)
     if ![2048, 3072, 4096].contains(&key_size) {
-        return Err(format!(
-            "Invalid key size: {key_size}. Supported: 2048, 3072, 4096"
-        ).into());
+        return Err(format!("Invalid key size: {key_size}. Supported: 2048, 3072, 4096").into());
     }
 
     // Decode input data
@@ -375,9 +373,7 @@ pub async fn handle_sign_rsa_pss_sha256(
 
     // Validate key size (security requirement, not hardcoding)
     if ![2048, 3072, 4096].contains(&key_size) {
-        return Err(format!(
-            "Invalid key size: {key_size}. Supported: 2048, 3072, 4096"
-        ).into());
+        return Err(format!("Invalid key size: {key_size}. Supported: 2048, 3072, 4096").into());
     }
 
     // Decode input data

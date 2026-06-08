@@ -105,23 +105,53 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         info!(audit_dir = %dir.display(), "audit directory override");
     }
 
-    // Determine socket path - use abstract socket if --abstract flag is set,
-    // or derive family-scoped socket if --family-id is provided
-    let socket_path = resolve_server_socket_path(&args);
-    if args.r#abstract {
-        info!(
-            transport = "abstract-namespace",
-            "transport selected (no filesystem path)"
-        );
-        info!(abstract_name = %socket_path, "bound to abstract namespace (kernel-only, not on disk)");
-    } else if args.family_id.is_some() {
-        info!(socket_path = %socket_path, "multi-family socket");
-    }
+    // ================================================================
+    // TRANSPORT RESOLUTION (Tier 0 → Tier 5)
+    // ================================================================
+
+    // Tier 0: TRANSPORT_ENDPOINT env var (orchestrator-injected, highest priority)
+    let transport_endpoint = beardog_types::btsp::TransportEndpoint::from_env().ok();
+    let (socket_path, effective_listen) = if let Some(ref ep) = transport_endpoint {
+        info!(endpoint = %ep, tier = 0, "TRANSPORT_ENDPOINT override");
+        match ep {
+            beardog_types::btsp::TransportEndpoint::Uds { path } => {
+                (path.to_string_lossy().to_string(), None)
+            }
+            beardog_types::btsp::TransportEndpoint::Tcp { host, port } => {
+                let addr = format!("{host}:{port}");
+                let fallback_socket = resolve_server_socket_path(&args);
+                (fallback_socket, Some(addr))
+            }
+            beardog_types::btsp::TransportEndpoint::MeshRelay { .. } => {
+                return Err(BearDogError::configuration(
+                    "TRANSPORT_ENDPOINT mesh_relay is not supported for server bind",
+                ));
+            }
+        }
+    } else {
+        // Tier 1–4: existing socket/port resolution
+        let socket_path = resolve_server_socket_path(&args);
+        if args.r#abstract {
+            info!(
+                transport = "abstract-namespace",
+                "transport selected (no filesystem path)"
+            );
+            info!(abstract_name = %socket_path, "bound to abstract namespace (kernel-only, not on disk)");
+        } else if args.family_id.is_some() {
+            info!(socket_path = %socket_path, "multi-family socket");
+        }
+
+        // Tier 5: --port / --listen
+        let effective_listen = resolve_effective_tcp_listen(args.port, args.listen.as_deref());
+        (socket_path, effective_listen)
+    };
 
     // Prepare socket directory: ensure parent exists and stale socket is removed.
-    // Without this, bind fails with ENOENT when the runtime dir (e.g.
-    // /run/user/1000/biomeos/) hasn't been pre-created by the supervisor.
-    if !args.r#abstract {
+    if !args.r#abstract
+        && transport_endpoint
+            .as_ref()
+            .is_none_or(|ep| matches!(ep, beardog_types::btsp::TransportEndpoint::Uds { .. }))
+    {
         let sock = std::path::Path::new(&socket_path);
         if let Some(parent) = sock.parent()
             && !parent.exists()
@@ -145,15 +175,14 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         }
     }
 
-    // Resolve --port into --listen (UniBin v1.1: `server --port <PORT>`)
-    let effective_listen = resolve_effective_tcp_listen(args.port, args.listen.as_deref());
-
-    // Determine transport mode
+    // Log transport selection
     if let Some(ref addr) = effective_listen {
-        info!(transport = "tcp", tier = 2, "transport selected");
+        let tier = transport_endpoint.as_ref().map_or(5_u8, |_| 0);
+        info!(transport = "tcp", tier, "transport selected");
         info!(listen = %addr, "listen address");
     } else if !args.r#abstract {
-        info!(transport = "unix", tier = 1, "transport selected");
+        let tier = transport_endpoint.as_ref().map_or(1_u8, |_| 0);
+        info!(transport = "unix", tier, "transport selected");
         info!(socket_path = %socket_path, "unix socket path");
     }
 
