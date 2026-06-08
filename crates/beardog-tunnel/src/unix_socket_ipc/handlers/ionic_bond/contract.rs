@@ -3,6 +3,7 @@
 //! Contract signing — single-party (`crypto.sign_contract`) and cross-family
 //! multi-party lifecycle (`crypto.contract.propose` / `countersign` / `verify`).
 
+use super::super::HandlerError;
 use super::IonicBondHandler;
 use super::crypto::{compute_contract_terms_hash, sign_terms_ed25519, verify_ed25519_signature};
 use crate::auth_event_bus::{AuthEvent, AuthEventKind};
@@ -35,7 +36,7 @@ impl IonicBondHandler {
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params_value = params.ok_or("Missing params for crypto.sign_contract")?;
         let sign_params = SignContractParams::deserialize(params_value)
             .map_err(|e| format!("Invalid sign_contract params: {e}"))?;
@@ -64,14 +65,14 @@ impl IonicBondHandler {
             signed_at: now.to_rfc3339(),
             expires_at,
         };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
     }
 
     /// Verify a single Ed25519 signature over a contract terms hash.
     /// When `expires_at` is present, also checks ionic lease expiry.
     pub(super) async fn handle_verify_contract(
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params_value = params.ok_or("Missing params for crypto.verify_contract")?;
         let verify_params = VerifyContractParams::deserialize(params_value)
             .map_err(|e| format!("Invalid verify_contract params: {e}"))?;
@@ -110,7 +111,7 @@ impl IonicBondHandler {
                 error: Some(e),
             },
         };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
     }
 
     // ── Cross-family contract lifecycle ──────────────────────────────────
@@ -121,7 +122,7 @@ impl IonicBondHandler {
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params_value = params.ok_or("Missing params for crypto.contract.propose")?;
         let propose_params = ContractProposeParams::deserialize(params_value)
             .map_err(|e| format!("Invalid contract.propose params: {e}"))?;
@@ -166,7 +167,7 @@ impl IonicBondHandler {
             created_at,
             expires_at,
         };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
     }
 
     /// Countersign a pending cross-family contract. Verifies the counterparty's
@@ -174,7 +175,7 @@ impl IonicBondHandler {
     pub(super) async fn handle_contract_countersign(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params_value = params.ok_or("Missing params for crypto.contract.countersign")?;
         let cs_params = ContractCountersignParams::deserialize(params_value)
             .map_err(|e| format!("Invalid contract.countersign params: {e}"))?;
@@ -198,7 +199,7 @@ impl IonicBondHandler {
             return Err(format!(
                 "Contract '{}' expired at {exp}",
                 cs_params.contract_id
-            ));
+            ).into());
         }
 
         verify_ed25519_signature(
@@ -242,13 +243,13 @@ impl IonicBondHandler {
         }
 
         let resp = ContractCountersignResponse { contract: sealed };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
     }
 
     /// Verify a sealed cross-family contract — checks both signatures.
     pub(super) async fn handle_contract_verify(
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params_value = params.ok_or("Missing params for crypto.contract.verify")?;
         let verify_params = ContractVerifyParams::deserialize(params_value)
             .map_err(|e| format!("Invalid contract.verify params: {e}"))?;
@@ -263,7 +264,7 @@ impl IonicBondHandler {
                 failed_party: Some("proposer".to_string()),
                 error: Some(e),
             };
-            return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"));
+            return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into);
         }
 
         if let Err(e) = verify_ed25519_signature(
@@ -276,7 +277,7 @@ impl IonicBondHandler {
                 failed_party: Some("countersigner".to_string()),
                 error: Some(e),
             };
-            return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"));
+            return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into);
         }
 
         let resp = ContractVerifyResponse {
@@ -284,6 +285,6 @@ impl IonicBondHandler {
             failed_party: None,
             error: None,
         };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
     }
 }

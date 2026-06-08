@@ -49,6 +49,7 @@
 //! - Recommended: 3072 bits (128-bit security, future-proof)
 //! - Maximum: 4096 bits (152-bit security, high-security/government)
 
+use crate::unix_socket_ipc::handlers::HandlerError;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use rsa::pkcs1v15::{SigningKey as Pkcs1SigningKey, VerifyingKey as Pkcs1VerifyingKey};
@@ -115,7 +116,7 @@ use zeroize::Zeroizing;
 /// - 4096-bit: ~15-25ms sign
 pub async fn handle_sign_rsa_pkcs1_sha256(
     params: Option<&serde_json::Value>,
-) -> Result<serde_json::Value, String> {
+) -> Result<serde_json::Value, HandlerError> {
     info!("🔐 RSA PKCS#1 v1.5: Signing data");
 
     // Extract and validate parameters
@@ -140,7 +141,7 @@ pub async fn handle_sign_rsa_pkcs1_sha256(
     if ![2048, 3072, 4096].contains(&key_size) {
         return Err(format!(
             "Invalid key size: {key_size}. Supported: 2048, 3072, 4096"
-        ));
+        ).into());
     }
 
     // Decode input data
@@ -231,7 +232,7 @@ pub async fn handle_sign_rsa_pkcs1_sha256(
 /// - Typical: 100-300μs depending on key size
 pub async fn handle_verify_rsa_pkcs1_sha256(
     params: Option<&serde_json::Value>,
-) -> Result<serde_json::Value, String> {
+) -> Result<serde_json::Value, HandlerError> {
     info!("✅ RSA PKCS#1 v1.5: Verifying signature");
 
     // Extract and validate parameters
@@ -351,7 +352,7 @@ pub async fn handle_verify_rsa_pkcs1_sha256(
 /// - 4096-bit: ~15-25ms sign
 pub async fn handle_sign_rsa_pss_sha256(
     params: Option<&serde_json::Value>,
-) -> Result<serde_json::Value, String> {
+) -> Result<serde_json::Value, HandlerError> {
     info!("🔐 RSA-PSS: Signing data");
 
     // Extract and validate parameters
@@ -376,7 +377,7 @@ pub async fn handle_sign_rsa_pss_sha256(
     if ![2048, 3072, 4096].contains(&key_size) {
         return Err(format!(
             "Invalid key size: {key_size}. Supported: 2048, 3072, 4096"
-        ));
+        ).into());
     }
 
     // Decode input data
@@ -467,7 +468,7 @@ pub async fn handle_sign_rsa_pss_sha256(
 /// - Typical: 100-300μs depending on key size
 pub async fn handle_verify_rsa_pss_sha256(
     params: Option<&serde_json::Value>,
-) -> Result<serde_json::Value, String> {
+) -> Result<serde_json::Value, HandlerError> {
     info!("✅ RSA-PSS: Verifying signature");
 
     // Extract and validate parameters

@@ -36,7 +36,7 @@
 //! - Authenticated encryption (integrity + confidentiality)
 
 use crate::btsp_provider::BeardogBtspProvider;
-use crate::unix_socket_ipc::handlers::{HandlerResult, MethodHandler};
+use crate::unix_socket_ipc::handlers::{HandlerError, HandlerResult, MethodHandler};
 use base64::engine::Engine;
 use chacha20poly1305::{
     ChaCha20Poly1305, Nonce,
@@ -65,9 +65,8 @@ impl MethodHandler for EncryptionHandler {
         match method {
             "encryption.encrypt" => self.handle_encrypt(params).await,
             "encryption.decrypt" => self.handle_decrypt(params).await,
-            _ => Err(format!("Unknown encryption method: {method}")),
+            _ => Err(format!("Unknown encryption method: {method}").into()),
         }
-        .map_err(Into::into)
     }
 }
 
@@ -87,7 +86,7 @@ impl EncryptionHandler {
     async fn handle_encrypt(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!("🔒 Encryption: encrypt");
 
         let params = params.ok_or("Missing params for encryption")?;
@@ -177,7 +176,7 @@ impl EncryptionHandler {
     async fn handle_decrypt(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!("🔓 Encryption: decrypt");
 
         let params = params.ok_or("Missing params for decryption")?;
@@ -216,7 +215,7 @@ impl EncryptionHandler {
             return Err(format!(
                 "Invalid nonce length: expected 12, got {}",
                 nonce_bytes.len()
-            ));
+            ).into());
         }
 
         // REAL IMPLEMENTATION: Use ChaCha20-Poly1305

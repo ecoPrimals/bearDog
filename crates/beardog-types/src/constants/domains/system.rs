@@ -207,12 +207,16 @@ pub mod defaults {
     /// Tier-5 fallback cache directory.
     pub const DEFAULT_CACHE_DIR: &str = "/var/cache/beardog";
     /// Tier-5 fallback temp directory.
+    #[deprecated(note = "use std::env::temp_dir().join(\"beardog\") at runtime")]
     pub const DEFAULT_TEMP_DIR: &str = "/tmp/beardog";
     /// Tier-5 fallback IPC socket path.
+    #[deprecated(note = "use SocketConfig::from_env() for runtime resolution")]
     pub const DEFAULT_SOCKET_PATH: &str = "/tmp/beardog.sock";
     /// Tier-5 fallback IPC port file.
+    #[deprecated(note = "use get_tcp_discovery_file_candidates() at runtime")]
     pub const DEFAULT_IPC_PORT_FILE: &str = "/tmp/beardog-ipc-port";
     /// Tier-5 fallback key storage directory.
+    #[deprecated(note = "use BEARDOG_HSM_KEY_DIR env var or std::env::temp_dir() at runtime")]
     pub const DEFAULT_KEY_STORAGE_DIR: &str = "/tmp/beardog/keys";
 
     /// Environment defaults

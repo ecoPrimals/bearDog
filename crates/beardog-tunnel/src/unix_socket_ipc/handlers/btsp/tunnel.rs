@@ -10,6 +10,7 @@ use serde::Deserialize;
 use std::sync::Arc;
 use tracing::{info, warn};
 
+use super::super::HandlerError;
 use super::BtspHandler;
 
 impl BtspHandler {
@@ -31,7 +32,7 @@ impl BtspHandler {
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!("🔒 BTSP Tunnel Establish requested (Unified)");
 
         let params_value = params.ok_or("Missing params for tunnel establish")?;
@@ -62,7 +63,7 @@ impl BtspHandler {
             }
             Err(e) => {
                 warn!("⚠️  Tunnel establish failed: {}", e);
-                Err(format!("Tunnel establish failed: {e}"))
+                Err(format!("Tunnel establish failed: {e}").into())
             }
         }
     }
@@ -74,7 +75,7 @@ impl BtspHandler {
         &self,
         params: beardog_types::btsp::TunnelEstablishParams,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         // Detect mode
         let is_internal = params.is_internal();
         let is_external = params.is_external();
@@ -99,7 +100,7 @@ impl BtspHandler {
         &self,
         params: beardog_types::btsp::TunnelEstablishParams,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!(
             "🧬 Establishing internal tunnel: {} → {}",
             params.peer_id, params.peer_endpoint
@@ -130,7 +131,7 @@ impl BtspHandler {
             }
             Err(e) => {
                 warn!("⚠️  Internal tunnel establish failed: {}", e);
-                Err(format!("Internal tunnel establish failed: {e}"))
+                Err(format!("Internal tunnel establish failed: {e}").into())
             }
         }
     }
@@ -147,7 +148,7 @@ impl BtspHandler {
         &self,
         params: beardog_types::btsp::TunnelEstablishParams,
         _btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!(
             "🌐 External tunnel requested: {} → {}",
             params.peer_id, params.peer_endpoint
@@ -172,7 +173,7 @@ impl BtspHandler {
              Requested: {} ({})\n\
              Primal responsibility: BearDog = internal mode + crypto; external HTTPS = calling primal.",
             params.peer_id, params.peer_endpoint
-        ))
+        ).into())
     }
 
     /// Handle BTSP tunnel encryption request
@@ -182,7 +183,7 @@ impl BtspHandler {
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!("🔒 BTSP Tunnel Encrypt requested");
 
         let params = params.ok_or("Missing params for tunnel encrypt")?;
@@ -211,7 +212,7 @@ impl BtspHandler {
             }
             Err(e) => {
                 warn!("⚠️  Tunnel encrypt failed: {}", e);
-                Err(format!("Tunnel encrypt failed: {e}"))
+                Err(format!("Tunnel encrypt failed: {e}").into())
             }
         }
     }
@@ -223,7 +224,7 @@ impl BtspHandler {
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!("🔓 BTSP Tunnel Decrypt requested");
 
         let params = params.ok_or("Missing params for tunnel decrypt")?;
@@ -252,7 +253,7 @@ impl BtspHandler {
             }
             Err(e) => {
                 warn!("⚠️  Tunnel decrypt failed: {}", e);
-                Err(format!("Tunnel decrypt failed: {e}"))
+                Err(format!("Tunnel decrypt failed: {e}").into())
             }
         }
     }
@@ -284,7 +285,7 @@ impl BtspHandler {
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!("📊 BTSP Tunnel Status requested");
         let params = params.ok_or("Missing params for tunnel status")?;
         let tunnel_handle = Self::resolve_tunnel_handle(params)?;
@@ -299,7 +300,7 @@ impl BtspHandler {
             }
             Err(e) => {
                 warn!("⚠️  Tunnel status failed: {}", e);
-                Err(format!("Tunnel status failed: {e}"))
+                Err(format!("Tunnel status failed: {e}").into())
             }
         }
     }
@@ -309,7 +310,7 @@ impl BtspHandler {
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!("🔒 BTSP Tunnel Close requested");
         let params = params.ok_or("Missing params for tunnel close")?;
         let tunnel_handle = Self::resolve_tunnel_handle(params)?;
@@ -325,7 +326,7 @@ impl BtspHandler {
             }
             Err(e) => {
                 warn!("⚠️  Tunnel close failed: {}", e);
-                Err(format!("Tunnel close failed: {e}"))
+                Err(format!("Tunnel close failed: {e}").into())
             }
         }
     }
@@ -344,7 +345,7 @@ impl BtspHandler {
         &self,
         params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!("🔐 BTSP Configure TLS requested");
         info!(
             "📡 TLS configuration is part of external mode; handled outside BearDog (requesting primal's BTSP external mode API)"
@@ -375,7 +376,7 @@ impl BtspHandler {
         &self,
         params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!("🌐 BTSP Tunnel Send HTTP requested");
         info!(
             "📡 HTTP operations are part of external mode; handled outside BearDog (requesting primal)"

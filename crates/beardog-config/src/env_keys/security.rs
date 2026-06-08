@@ -320,6 +320,8 @@ pub const ENV_ANDROID_STRONGBOX_VERSION: &str = "ANDROID_STRONGBOX_VERSION";
 pub const ENV_ANDROID_TITAN_M_VERSION: &str = "ANDROID_TITAN_M_VERSION";
 /// Android `StrongBox` availability flag.
 pub const ENV_ANDROID_STRONGBOX_AVAILABLE: &str = "ANDROID_STRONGBOX_AVAILABLE";
+/// Android TEE (Trusted Execution Environment) availability flag.
+pub const ENV_ANDROID_TEE_AVAILABLE: &str = "ANDROID_TEE_AVAILABLE";
 /// Android Titan M availability flag.
 pub const ENV_ANDROID_TITAN_M_AVAILABLE: &str = "ANDROID_TITAN_M_AVAILABLE";
 /// `StrongBox` mock availability flag (test/dev).

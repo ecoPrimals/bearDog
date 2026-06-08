@@ -160,9 +160,8 @@ impl MethodHandler for BtspHandler {
         } else if method == "btsp.server.status" {
             self.handle_server_status().await
         } else {
-            Err(format!("Unknown BTSP method: {method}"))
+            Err(format!("Unknown BTSP method: {method}").into())
         }
-        .map_err(Into::into)
     }
 }
 

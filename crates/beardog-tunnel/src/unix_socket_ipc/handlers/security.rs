@@ -9,7 +9,7 @@
 //! - JWT secret generation for authentication systems
 
 use super::utils::get_primal_name;
-use super::{HandlerResult, MethodHandler};
+use super::{HandlerError, HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use base64::Engine;
 use beardog_types::primal_identity::PrimalIdentity;
@@ -108,9 +108,8 @@ impl MethodHandler for SecurityHandler {
             | "security.jwt_secret"
             | "beardog.generate_jwt_secret"
             | "beardog.jwt_secret" => self.handle_generate_jwt_secret(params).await,
-            _ => Err(format!("Method not found: {method}")),
+            _ => Err(format!("Method not found: {method}").into()),
         }
-        .map_err(Into::into)
     }
 }
 
@@ -143,7 +142,7 @@ impl SecurityHandler {
     async fn handle_trust_evaluation(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params = params.ok_or("Missing params for trust evaluation")?;
 
         // Flexible parameter extraction (works with any primal's naming)
@@ -240,7 +239,7 @@ impl SecurityHandler {
     /// Handle lineage information request
     ///
     /// Returns genetic lineage information for identity verification.
-    async fn handle_lineage(&self) -> Result<serde_json::Value, String> {
+    async fn handle_lineage(&self) -> Result<serde_json::Value, HandlerError> {
         // Use injected identity (no environment variables!)
         let family_id = self.identity.family_id();
         let node_id = self.identity.node_id();
@@ -288,7 +287,7 @@ impl SecurityHandler {
     async fn handle_verify_consent(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params = params.ok_or("Missing params for verify_consent")?;
 
         let owner_id = params
@@ -345,7 +344,7 @@ impl SecurityHandler {
     async fn handle_issue_consent_token(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params = params.ok_or("Missing params for issue_consent_token")?;
 
         let owner_id = params
@@ -385,7 +384,7 @@ impl SecurityHandler {
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params = params.ok_or("Missing params")?;
         let plaintext = params["plaintext"].as_str().ok_or("Missing plaintext")?;
         let family_id = params["family_id"].as_str().ok_or("Missing family_id")?;
@@ -418,7 +417,7 @@ impl SecurityHandler {
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params = params.ok_or("Missing params")?;
         let ciphertext = params["ciphertext"].as_str().ok_or("Missing ciphertext")?;
         let family_id = params["family_id"].as_str().ok_or("Missing family_id")?;
@@ -471,7 +470,7 @@ impl SecurityHandler {
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         use beardog_genetics::birdsong::BeaconSeed;
 
         let params = params.ok_or("Missing params")?;
@@ -501,7 +500,7 @@ impl SecurityHandler {
     async fn handle_generate_jwt_secret(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!("🔐 JWT Secret Generation requested");
 
         let params = params.ok_or("Missing params for JWT secret generation")?;

@@ -37,7 +37,7 @@
 //! - **Principle #6**: Production crypto (real lineage verification, no mocks)
 
 use super::utils::get_primal_name;
-use super::{HandlerResult, MethodHandler};
+use super::{HandlerError, HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64_STD;
@@ -78,7 +78,7 @@ impl RelayHandler {
     async fn handle_authorize(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params = params.ok_or("Missing params for relay.authorize")?;
 
         let requester_node_id = params
@@ -210,9 +210,8 @@ impl MethodHandler for RelayHandler {
     ) -> HandlerResult {
         match method {
             "relay.authorize" => self.handle_authorize(params).await,
-            _ => Err(format!("Unknown relay method: {method}")),
+            _ => Err(format!("Unknown relay method: {method}").into()),
         }
-        .map_err(Into::into)
     }
 }
 

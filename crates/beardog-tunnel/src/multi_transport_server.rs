@@ -123,7 +123,7 @@ impl MultiTransportServer {
                     "Unix socket"
                 };
                 info!(
-                    "   ✅ Tier 1 (Native): {} bound: {}",
+                    "   ✅ Tier 1 (Native): {} configured: {}",
                     transport_type, socket_path
                 );
                 transports.push(BoundTransport::Unix(Arc::new(server)));

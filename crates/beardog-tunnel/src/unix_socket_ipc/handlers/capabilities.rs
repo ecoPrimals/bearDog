@@ -10,7 +10,7 @@
 //! - `identity.get` returns `{primal, version, domain, license}`
 
 use super::utils::{IdentityHints, get_primal_name_with};
-use super::{HandlerRegistry, HandlerResult, MethodHandler};
+use super::{HandlerError, HandlerRegistry, HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use beardog_types::primal_identity::PrimalIdentity;
 use std::sync::Arc;
@@ -75,9 +75,8 @@ impl MethodHandler for CapabilitiesHandler {
             "identity.get" => self.handle_identity_get().await,
             // Deprecated flat aliases — remove in v1.0
             "identity" | "whoami" | "get_identity" => self.handle_identity().await,
-            _ => Err(format!("Method not found: {method}")),
+            _ => Err(format!("Method not found: {method}").into()),
         }
-        .map_err(Into::into)
     }
 }
 
@@ -130,7 +129,7 @@ impl CapabilitiesHandler {
     /// # Errors
     ///
     /// Returns an error string if method enumeration fails.
-    async fn handle_capabilities(&self) -> Result<serde_json::Value, String> {
+    async fn handle_capabilities(&self) -> Result<serde_json::Value, HandlerError> {
         let family_id = self.identity.family_id();
         let node_id = self.identity.node_id();
         let methods = self.wire_standard_methods().await;
@@ -409,7 +408,7 @@ impl CapabilitiesHandler {
     /// This mirrors the conventional `discover_capabilities` format, enabling
     /// uniform capability discovery across all primals. Includes a signed
     /// attestation so ecosystem discovery can verify authenticity.
-    async fn handle_discover_capabilities(&self) -> Result<serde_json::Value, String> {
+    async fn handle_discover_capabilities(&self) -> Result<serde_json::Value, HandlerError> {
         info!("🔍 discover_capabilities requested");
 
         let capabilities: Vec<String> = [
@@ -469,7 +468,7 @@ impl CapabilitiesHandler {
     /// Handle `identity.get` — Wire Standard Level 2 identity endpoint.
     ///
     /// Returns `{primal, version, domain, license}` per `CAPABILITY_WIRE_STANDARD.md` §4.
-    async fn handle_identity_get(&self) -> Result<serde_json::Value, String> {
+    async fn handle_identity_get(&self) -> Result<serde_json::Value, HandlerError> {
         info!("identity.get requested (Wire Standard L2)");
 
         Ok(serde_json::json!({
@@ -484,7 +483,7 @@ impl CapabilitiesHandler {
     ///
     /// Returns the primal's identity including family and node IDs,
     /// plus an encryption tag for discovery/federation.
-    async fn handle_identity(&self) -> Result<serde_json::Value, String> {
+    async fn handle_identity(&self) -> Result<serde_json::Value, HandlerError> {
         let family_id = self.identity.family_id();
         let node_id = self.identity.node_id();
         let encryption_tag = self.identity.encryption_tag();

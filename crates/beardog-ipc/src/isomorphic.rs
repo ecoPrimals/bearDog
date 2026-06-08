@@ -252,7 +252,7 @@ pub fn get_unix_socket_paths_with(hints: &UnixSocketPathHints) -> Vec<PathBuf> {
 /// **Discovery Priority**:
 /// 1. `BEARDOG_SOCKET` env var (operator override)
 /// 2. `$XDG_RUNTIME_DIR/biomeos/beardog.sock` (XDG standard)
-/// 3. `/tmp/beardog.sock` (fallback)
+/// 3. `{std::env::temp_dir()}/beardog.sock` (fallback)
 ///
 /// **Zero Hardcoding**: Uses XDG Base Directory specification
 fn get_unix_socket_paths() -> Vec<PathBuf> {
@@ -271,7 +271,7 @@ fn get_unix_socket_paths() -> Vec<PathBuf> {
 /// **Search Paths** (XDG-compliant):
 /// 1. `$XDG_RUNTIME_DIR/beardog-ipc-port`
 /// 2. `$HOME/.local/share/beardog-ipc-port`
-/// 3. `/tmp/beardog-ipc-port`
+/// 3. `{std::env::temp_dir()}/beardog-ipc-port`
 ///
 /// **Zero Hardcoding**: Uses XDG Base Directory specification
 async fn discover_tcp_endpoint() -> Result<IpcEndpoint> {

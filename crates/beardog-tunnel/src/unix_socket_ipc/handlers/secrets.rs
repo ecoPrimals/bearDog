@@ -42,7 +42,7 @@
 //! - Family-scoped: different families derive different keys for the same secret name
 
 use super::utils::get_primal_name;
-use super::{HandlerResult, MethodHandler};
+use super::{HandlerError, HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
@@ -127,7 +127,7 @@ impl SecretsHandler {
     async fn handle_store(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params = params.ok_or("Missing params for secrets.store")?;
 
         let name = params
@@ -257,7 +257,7 @@ impl SecretsHandler {
     async fn handle_retrieve(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params = params.ok_or("Missing params for secrets.retrieve")?;
 
         let name = params
@@ -287,7 +287,7 @@ impl SecretsHandler {
                         .cloned()
                         .ok_or_else(|| format!("Secret '{name}' not found after derivation"))?
                 } else {
-                    return Err(format!("Secret '{name}' not found"));
+                    return Err(format!("Secret '{name}' not found").into());
                 }
             }
         };
@@ -305,7 +305,7 @@ impl SecretsHandler {
             return Err(format!(
                 "Invalid nonce length: expected 12, got {}",
                 nonce_bytes.len()
-            ));
+            ).into());
         }
 
         // Derive the same per-secret key
@@ -334,7 +334,7 @@ impl SecretsHandler {
     /// Handle secrets.list - list stored secret names (not values)
     ///
     /// Returns only the key names, never the encrypted values.
-    async fn handle_list(&self) -> Result<serde_json::Value, String> {
+    async fn handle_list(&self) -> Result<serde_json::Value, HandlerError> {
         let store = self.store.read();
         let names: Vec<&str> = store.keys().map(String::as_str).collect();
 
@@ -354,7 +354,7 @@ impl SecretsHandler {
     async fn handle_delete(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params = params.ok_or("Missing params for secrets.delete")?;
 
         let name = params
@@ -399,9 +399,8 @@ impl MethodHandler for SecretsHandler {
             "secrets.retrieve" => self.handle_retrieve(params).await,
             "secrets.list" => self.handle_list().await,
             "secrets.delete" => self.handle_delete(params).await,
-            _ => Err(format!("Unknown secrets method: {method}")),
+            _ => Err(format!("Unknown secrets method: {method}").into()),
         }
-        .map_err(Into::into)
     }
 }
 

@@ -26,7 +26,7 @@
 //! - Key derivation: ~100-200μs (HKDF + HSM key generation)
 
 use crate::btsp_provider::BeardogBtspProvider;
-use crate::unix_socket_ipc::handlers::{HandlerResult, MethodHandler};
+use crate::unix_socket_ipc::handlers::{HandlerError, HandlerResult, MethodHandler};
 use beardog_types::primal_identity::PrimalIdentity;
 use chrono::Utc;
 use std::sync::Arc;
@@ -57,9 +57,8 @@ impl MethodHandler for FederationHandler {
         match method {
             "federation.verify_family_member" => self.handle_verify_family_member(params).await,
             "federation.derive_subfed_key" => self.handle_derive_subfed_key(params).await,
-            _ => Err(format!("Unknown federation method: {method}")),
+            _ => Err(format!("Unknown federation method: {method}").into()),
         }
-        .map_err(Into::into)
     }
 }
 
@@ -83,7 +82,7 @@ impl FederationHandler {
     async fn handle_verify_family_member(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!("🧬 Federation: verify_family_member");
 
         let params = params.ok_or("Missing params for family verification")?;
@@ -148,7 +147,7 @@ impl FederationHandler {
     async fn handle_derive_subfed_key(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!("🔑 Federation: derive_subfed_key");
 
         let params = params.ok_or("Missing params for key derivation")?;

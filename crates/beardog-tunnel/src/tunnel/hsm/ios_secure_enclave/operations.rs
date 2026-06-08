@@ -152,27 +152,19 @@ impl<'a, A: SecureEnclaveConstraint> TypeSafeSecureEnclaveKey<'a, A> {
             }
             policy => {
                 debug!("🔐 Authenticating with biometric policy: {:?}", policy);
-                self.simulate_biometric_auth(policy)
+                self.perform_biometric_auth(policy)
             }
         }
     }
 
-    fn simulate_biometric_auth(&self, policy: &BiometricPolicy) -> Result<(), BearDogError> {
-        match policy {
-            BiometricPolicy::TouchIDRequired | BiometricPolicy::TouchIDOnly => {
-                debug!("👆 TouchID authentication simulated");
-                Ok(())
-            }
-            BiometricPolicy::FaceIDRequired | BiometricPolicy::FaceIDOnly => {
-                debug!("🆔 FaceID authentication simulated");
-                Ok(())
-            }
-            BiometricPolicy::TouchIDOrFaceID | BiometricPolicy::AnyBiometric => {
-                debug!("🔐 Any biometric authentication simulated");
-                Ok(())
-            }
-            BiometricPolicy::NoBiometric => Ok(()),
+    fn perform_biometric_auth(&self, policy: &BiometricPolicy) -> Result<(), BearDogError> {
+        if matches!(policy, BiometricPolicy::NoBiometric) {
+            return Ok(());
         }
+
+        Err(BearDogError::not_yet_available(format!(
+            "iOS biometric auth ({policy:?}) — LAContext native bridge pending"
+        )))
     }
 
     fn secure_enclave_key_agreement(

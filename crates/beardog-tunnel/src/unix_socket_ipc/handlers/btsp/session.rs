@@ -9,6 +9,7 @@ use serde::Deserialize;
 use tracing::{info, warn};
 use x25519_dalek::{PublicKey, StaticSecret};
 
+use super::super::HandlerError;
 use super::BtspHandler;
 
 impl BtspHandler {
@@ -20,7 +21,7 @@ impl BtspHandler {
     pub(super) async fn handle_server_create_session(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params_value = params.ok_or("Missing params for btsp.server.create_session")?;
         let create_params = beardog_types::btsp::SessionCreateParams::deserialize(params_value)
             .map_err(|e| format!("Invalid create_session params: {e}"))?;
@@ -45,7 +46,7 @@ impl BtspHandler {
             challenge: base64::engine::general_purpose::STANDARD.encode(challenge),
             session_token,
         };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
     }
 
     /// Verify a client's challenge response and derive session keys.
@@ -55,7 +56,7 @@ impl BtspHandler {
     pub(super) async fn handle_server_verify(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params_value = params.ok_or("Missing params for btsp.server.verify")?;
         let verify_params = beardog_types::btsp::SessionVerifyParams::deserialize(params_value)
             .map_err(|e| format!("Invalid server.verify params: {e}"))?;
@@ -97,7 +98,7 @@ impl BtspHandler {
                     cipher: Some(negotiated_cipher.wire_name().to_string()),
                     error: None,
                 };
-                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
             }
             Err(e) => {
                 warn!(error = %e, "BTSP server session verification failed");
@@ -107,7 +108,7 @@ impl BtspHandler {
                     cipher: None,
                     error: Some(e.to_string()),
                 };
-                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
             }
         }
     }
@@ -129,7 +130,7 @@ impl BtspHandler {
     pub(super) async fn handle_server_export_keys(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params_value = params.ok_or("Missing params for btsp.server.export_keys")?;
         let export_params = beardog_types::btsp::SessionExportKeysParams::deserialize(params_value)
             .map_err(|e| format!("Invalid export_keys params: {e}"))?;
@@ -188,6 +189,6 @@ impl BtspHandler {
                 .encode(wrapper_pub.as_bytes()),
             cipher: cipher.wire_name().to_string(),
         };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
     }
 }

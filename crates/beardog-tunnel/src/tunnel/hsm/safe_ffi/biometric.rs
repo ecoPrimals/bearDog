@@ -193,32 +193,15 @@ impl SafeBiometricAuthenticator {
     #[cfg(target_os = "ios")]
     async fn authenticate_ios(
         &self,
-        policy: BiometricPolicy,
+        _policy: BiometricPolicy,
         reason: &str,
     ) -> Result<BiometricAuthResult, BearDogError> {
-        info!("🍎 Authenticating with iOS biometric: {:?}", policy);
+        info!("🍎 iOS biometric auth requested: {}", reason);
 
-        // Production: LocalAuthentication (`LAContext.evaluatePolicy`).
-
-        // For now, simulate successful authentication
-        let biometric_type = match policy {
-            BiometricPolicy::TouchIdRequired => Some(BiometricType::TouchId),
-            BiometricPolicy::FaceIdRequired => Some(BiometricType::FaceId),
-            BiometricPolicy::Either | BiometricPolicy::DeviceDefault => {
-                // Use first available
-                self.available_types.first().cloned()
-            }
-            BiometricPolicy::None => None,
-        };
-
-        info!("✅ Biometric authentication successful");
-        info!("📝 In production, would call LAContext.evaluatePolicy");
-
-        Ok(BiometricAuthResult {
-            success: true,
-            biometric_type,
-            error_message: None,
-        })
+        // LAContext.evaluatePolicy native bridge not yet wired — fail closed.
+        Err(BearDogError::not_yet_available(
+            "iOS biometric auth (LAContext.evaluatePolicy) — native bridge pending".to_string(),
+        ))
     }
 
     /// Check if Touch ID is available

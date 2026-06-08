@@ -100,17 +100,28 @@ impl AndroidUniversalProvider {
         has_strongbox
     }
 
-    /// Detect TEE availability
+    /// Detect TEE availability.
+    ///
+    /// On non-Android platforms, TEE is reported as unavailable (fail closed).
+    /// On Android, defers to `BEARDOG_ANDROID_TEE_AVAILABLE` env var until
+    /// JNI bridge can query the Keymaster HAL.
     fn detect_tee(&mut self) -> bool {
         info!("Detecting TEE availability");
 
-        // Most modern Android devices have TEE
-        let has_tee = true;
+        let has_tee = if cfg!(target_os = "android") {
+            beardog_errors::process_env::var(env_keys::ENV_ANDROID_TEE_AVAILABLE)
+                .map(|v| v == "true")
+                .unwrap_or(false)
+        } else {
+            false
+        };
 
         if has_tee {
             info!("✅ TEE detected and available");
             self.device_metadata
                 .insert("tee_version".to_string(), "trusty".to_string());
+        } else {
+            info!("TEE not available on this platform");
         }
 
         self.tee_available = has_tee;

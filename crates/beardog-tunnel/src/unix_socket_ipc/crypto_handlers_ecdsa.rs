@@ -48,6 +48,7 @@
 //!
 //! All operations target < 1ms for TLS compatibility.
 
+use crate::unix_socket_ipc::handlers::HandlerError;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use p256::ecdsa::{
@@ -108,7 +109,7 @@ use zeroize::Zeroizing;
 /// - Typical: 100-150μs on modern hardware
 pub async fn handle_sign_ecdsa_secp256r1(
     params: Option<&serde_json::Value>,
-) -> Result<serde_json::Value, String> {
+) -> Result<serde_json::Value, HandlerError> {
     info!("🔐 ECDSA P-256: Signing data");
 
     // Extract and validate parameters
@@ -202,7 +203,7 @@ pub async fn handle_sign_ecdsa_secp256r1(
 /// - Typical: 200-250μs on modern hardware
 pub async fn handle_verify_ecdsa_secp256r1(
     params: Option<&serde_json::Value>,
-) -> Result<serde_json::Value, String> {
+) -> Result<serde_json::Value, HandlerError> {
     info!("✅ ECDSA P-256: Verifying signature");
 
     // Extract and validate parameters
@@ -313,7 +314,7 @@ pub async fn handle_verify_ecdsa_secp256r1(
 /// - Typical: 300-350μs on modern hardware
 pub async fn handle_sign_ecdsa_secp384r1(
     params: Option<&serde_json::Value>,
-) -> Result<serde_json::Value, String> {
+) -> Result<serde_json::Value, HandlerError> {
     info!("🔐 ECDSA P-384: Signing data");
 
     // Extract and validate parameters
@@ -406,7 +407,7 @@ pub async fn handle_sign_ecdsa_secp384r1(
 /// - Typical: 400-450μs on modern hardware
 pub async fn handle_verify_ecdsa_secp384r1(
     params: Option<&serde_json::Value>,
-) -> Result<serde_json::Value, String> {
+) -> Result<serde_json::Value, HandlerError> {
     info!("✅ ECDSA P-384: Verifying signature");
 
     // Extract and validate parameters

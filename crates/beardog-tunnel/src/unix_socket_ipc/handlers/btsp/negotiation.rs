@@ -13,6 +13,7 @@ use rand::RngCore;
 use serde::Deserialize;
 use tracing::{debug, info, warn};
 
+use super::super::HandlerError;
 use super::BtspHandler;
 
 impl BtspHandler {
@@ -20,7 +21,7 @@ impl BtspHandler {
     pub(super) async fn handle_server_negotiate(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params_value = params.ok_or("Missing params for btsp.server.negotiate")?;
         let neg_params = beardog_types::btsp::SessionNegotiateParams::deserialize(params_value)
             .map_err(|e| format!("Invalid server.negotiate params: {e}"))?;
@@ -44,7 +45,7 @@ impl BtspHandler {
                     accepted: true,
                     cipher: negotiated.wire_name().to_string(),
                 };
-                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
             }
             Err(e) => {
                 warn!(error = %e, "BTSP server negotiate failed");
@@ -52,7 +53,7 @@ impl BtspHandler {
                     accepted: false,
                     cipher: neg_params.cipher,
                 };
-                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
             }
         }
     }
@@ -69,7 +70,7 @@ impl BtspHandler {
     pub(super) async fn handle_phase3_negotiate(
         &self,
         params: Option<&serde_json::Value>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         let params_value = params.ok_or(
             "Missing params for btsp.negotiate — expected: \
              {\"session_id\":\"...\",\"ciphers\":[\"chacha20-poly1305\"],\"client_nonce\":\"<b64>\"}",
@@ -98,7 +99,7 @@ impl BtspHandler {
         {
             vec![cipher.to_string()]
         } else {
-            return Err("Missing required parameter: ciphers (array of cipher names)".to_string());
+            return Err("Missing required parameter: ciphers (array of cipher names)".to_string().into());
         };
 
         let selected = select_best_cipher(&offered_ciphers);
@@ -147,14 +148,14 @@ impl BtspHandler {
     }
 
     /// Report session store health and active session count.
-    pub(super) async fn handle_server_status(&self) -> Result<serde_json::Value, String> {
+    pub(super) async fn handle_server_status(&self) -> Result<serde_json::Value, HandlerError> {
         let status = self.session_store.status().await;
         info!(
             pending = status.pending_sessions,
             active = status.active_sessions,
             "BTSP server status"
         );
-        serde_json::to_value(status).map_err(|e| format!("Serialize: {e}"))
+        serde_json::to_value(status).map_err(|e| format!("Serialize: {e}")).map_err(Into::into)
     }
 }
 

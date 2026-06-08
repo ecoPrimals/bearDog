@@ -132,9 +132,8 @@ impl MethodHandler for IonicBondHandler {
             "crypto.contract.propose" => self.handle_contract_propose(params, btsp_provider).await,
             "crypto.contract.countersign" => self.handle_contract_countersign(params).await,
             "crypto.contract.verify" => Self::handle_contract_verify(params).await,
-            _ => Err(format!("Unknown ionic bond method: {method}")),
+            _ => Err(format!("Unknown ionic bond method: {method}").into()),
         }
-        .map_err(Into::into)
     }
 }
 

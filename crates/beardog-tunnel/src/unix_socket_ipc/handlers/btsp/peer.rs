@@ -7,6 +7,7 @@ use serde::Deserialize;
 use std::sync::Arc;
 use tracing::{info, warn};
 
+use super::super::HandlerError;
 use super::BtspHandler;
 
 impl BtspHandler {
@@ -22,7 +23,7 @@ impl BtspHandler {
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!("🔍 BTSP Verify Peer requested");
 
         let params_value = params.ok_or("Missing params for verify_peer")?;
@@ -83,7 +84,7 @@ impl BtspHandler {
                      Use the requesting primal's BTSP external mode API for certificate verification.\n\
                      BearDog provides crypto primitives (tls.verify_certificate RPC method).".into())
             }
-            _ => Err(format!("Unknown trust_mode: {}", verify_params.trust_mode)),
+            _ => Err(format!("Unknown trust_mode: {}", verify_params.trust_mode).into()),
         }
     }
 }

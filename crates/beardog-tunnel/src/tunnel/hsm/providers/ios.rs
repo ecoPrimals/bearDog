@@ -111,17 +111,29 @@ impl IosUniversalProvider {
         has_secure_enclave
     }
 
-    /// Detect biometric authentication availability
+    /// Detect biometric authentication availability.
+    ///
+    /// On non-iOS platforms, biometrics are reported as unavailable (fail closed).
     fn detect_biometrics(&mut self) -> bool {
         info!("Detecting biometric authentication availability");
 
-        // Most modern iOS devices have biometrics
-        let has_biometric = true;
+        let has_biometric = if cfg!(target_os = "ios") {
+            beardog_errors::process_env::var(env_keys::ENV_IOS_FACE_ID_AVAILABLE)
+                .map(|v| v == "true")
+                .unwrap_or(false)
+                || beardog_errors::process_env::var(env_keys::ENV_IOS_TOUCH_ID_AVAILABLE)
+                    .map(|v| v == "true")
+                    .unwrap_or(false)
+        } else {
+            false
+        };
 
         if has_biometric {
             info!("✅ Biometric authentication detected");
             self.device_metadata
                 .insert("biometric_type".to_string(), "FaceID".to_string());
+        } else {
+            info!("Biometric authentication not available on this platform");
         }
 
         self.biometric_available = has_biometric;

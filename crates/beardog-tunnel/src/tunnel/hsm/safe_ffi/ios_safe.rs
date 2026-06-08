@@ -31,8 +31,8 @@ impl SafeIosProvider {
 
         let mut capabilities = HashMap::new();
         capabilities.insert("secure_enclave".to_string(), secure_enclave_available);
-        capabilities.insert("biometric_auth".to_string(), true);
-        capabilities.insert("keychain_access".to_string(), true);
+        capabilities.insert("biometric_auth".to_string(), cfg!(target_os = "ios"));
+        capabilities.insert("keychain_access".to_string(), cfg!(target_os = "ios"));
 
         Ok(Self {
             capabilities,

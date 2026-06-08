@@ -6,6 +6,7 @@ use crate::btsp_provider::BeardogBtspProvider;
 use std::sync::Arc;
 use tracing::{info, warn};
 
+use super::super::HandlerError;
 use super::BtspHandler;
 
 impl BtspHandler {
@@ -16,7 +17,7 @@ impl BtspHandler {
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         info!("🔍 BTSP Contact Exchange requested");
 
         let params = params.ok_or("Missing params for contact exchange")?;
@@ -56,7 +57,7 @@ impl BtspHandler {
             }
             Err(e) => {
                 warn!("⚠️  Contact exchange failed: {}", e);
-                Err(format!("Contact exchange failed: {e}"))
+                Err(format!("Contact exchange failed: {e}").into())
             }
         }
     }

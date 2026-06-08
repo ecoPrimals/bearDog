@@ -83,9 +83,16 @@ pub struct SoftwareHsmConfig {
 
 impl Default for SoftwareHsmConfig {
     fn default() -> Self {
+        let key_storage_path = std::env::var("BEARDOG_HSM_KEY_DIR")
+            .unwrap_or_else(|_| {
+                std::env::temp_dir()
+                    .join("beardog_hsm_keys")
+                    .to_string_lossy()
+                    .into_owned()
+            });
         Self {
             security_level: SecurityLevel::Software,
-            key_storage_path: "/tmp/beardog_hsm_keys".to_string(),
+            key_storage_path,
             encrypt_stored_keys: true,
             primary_password: None,
             software_params: HashMap::new(),

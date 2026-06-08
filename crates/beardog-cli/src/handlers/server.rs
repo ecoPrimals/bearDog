@@ -118,6 +118,33 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         info!(socket_path = %socket_path, "multi-family socket");
     }
 
+    // Prepare socket directory: ensure parent exists and stale socket is removed.
+    // Without this, bind fails with ENOENT when the runtime dir (e.g.
+    // /run/user/1000/biomeos/) hasn't been pre-created by the supervisor.
+    if !args.r#abstract {
+        let sock = std::path::Path::new(&socket_path);
+        if let Some(parent) = sock.parent()
+            && !parent.exists()
+        {
+            info!(dir = %parent.display(), "creating socket directory");
+            std::fs::create_dir_all(parent).map_err(|e| {
+                BearDogError::configuration(&format!(
+                    "Cannot create socket directory {}: {e}",
+                    parent.display()
+                ))
+            })?;
+        }
+        if sock.exists() {
+            info!(path = %sock.display(), "removing stale socket");
+            std::fs::remove_file(sock).map_err(|e| {
+                BearDogError::configuration(&format!(
+                    "Cannot remove stale socket {}: {e}",
+                    sock.display()
+                ))
+            })?;
+        }
+    }
+
     // Resolve --port into --listen (UniBin v1.1: `server --port <PORT>`)
     let effective_listen = resolve_effective_tcp_listen(args.port, args.listen.as_deref());
 
