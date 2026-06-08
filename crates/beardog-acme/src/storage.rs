@@ -32,14 +32,20 @@ impl CertificateStore {
     ///
     /// # Errors
     ///
-    /// Returns an error if the resolved directory cannot be created.
+    /// Returns an error if no data directory can be resolved or if the
+    /// resolved directory cannot be created.
     pub fn from_env() -> Result<Self, AcmeError> {
         let base = if let Ok(data_dir) = std::env::var(env_keys::ENV_DATA_DIR) {
             PathBuf::from(data_dir).join("acme")
         } else if let Ok(home) = std::env::var(env_keys::ENV_HOME) {
             PathBuf::from(home).join(".beardog").join("acme")
+        } else if let Ok(xdg) = std::env::var(env_keys::ENV_XDG_DATA_HOME) {
+            PathBuf::from(xdg).join("beardog").join("acme")
         } else {
-            PathBuf::from("/tmp/beardog-acme")
+            return Err(AcmeError::Storage(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "Cannot resolve ACME data directory: set BEARDOG_DATA_DIR or HOME",
+            )));
         };
         Self::new(&base)
     }

@@ -35,7 +35,9 @@ use zeroize::Zeroizing;
 /// - `public_key`: Base64-encoded P-256 public key (compressed, 33 bytes)
 /// - `secret_key`: Base64-encoded P-256 secret key (32 bytes)
 /// - `algorithm`: "P-256" (NIST secp256r1)
-pub async fn handle_ecdhe_p256_generate(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_ecdhe_p256_generate(
+    params: Option<&Value>,
+) -> Result<Value, super::super::super::HandlerError> {
     let purpose = params
         .and_then(|p| p.get("purpose"))
         .and_then(|v| v.as_str())
@@ -92,7 +94,9 @@ pub async fn handle_ecdhe_p256_generate(params: Option<&Value>) -> Result<Value,
 ///
 /// - `shared_secret`: Base64-encoded shared secret (32 bytes)
 /// - `algorithm`: "P-256"
-pub async fn handle_ecdhe_p256_compute_shared(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_ecdhe_p256_compute_shared(
+    params: Option<&Value>,
+) -> Result<Value, super::super::super::HandlerError> {
     let params = params.ok_or("Missing parameters for P-256 ECDH")?;
 
     let our_secret_b64 = params
@@ -158,7 +162,9 @@ pub async fn handle_ecdhe_p256_compute_shared(params: Option<&Value>) -> Result<
 /// - `public_key`: Base64-encoded P-384 public key (compressed, 49 bytes)
 /// - `secret_key`: Base64-encoded P-384 secret key (48 bytes)
 /// - `algorithm`: "P-384" (NIST secp384r1)
-pub async fn handle_ecdhe_p384_generate(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_ecdhe_p384_generate(
+    params: Option<&Value>,
+) -> Result<Value, super::super::super::HandlerError> {
     let purpose = params
         .and_then(|p| p.get("purpose"))
         .and_then(|v| v.as_str())
@@ -215,7 +221,9 @@ pub async fn handle_ecdhe_p384_generate(params: Option<&Value>) -> Result<Value,
 ///
 /// - `shared_secret`: Base64-encoded shared secret (48 bytes)
 /// - `algorithm`: "P-384"
-pub async fn handle_ecdhe_p384_compute_shared(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_ecdhe_p384_compute_shared(
+    params: Option<&Value>,
+) -> Result<Value, super::super::super::HandlerError> {
     let params = params.ok_or("Missing parameters for P-384 ECDH")?;
 
     let our_secret_b64 = params

@@ -53,7 +53,9 @@ use tracing::{debug, info};
 ///
 /// - RFC 8446 Section 7.1: TLS 1.3 Key Schedule
 /// - RFC 5869: HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
-pub async fn handle_tls_derive_secrets(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_tls_derive_secrets(
+    params: Option<&Value>,
+) -> Result<Value, super::super::super::super::HandlerError> {
     let params = params.ok_or("Missing params for tls.derive_secrets")?;
 
     // Extract parameters
@@ -91,11 +93,11 @@ pub async fn handle_tls_derive_secrets(params: Option<&Value>) -> Result<Value, 
         .map_err(|e| format!("Invalid base64 server_random: {e}"))?;
 
     if client_random.len() != 32 {
-        return Err("client_random must be 32 bytes".to_string());
+        return Err("client_random must be 32 bytes".to_string().into());
     }
 
     if server_random.len() != 32 {
-        return Err("server_random must be 32 bytes".to_string());
+        return Err("server_random must be 32 bytes".to_string().into());
     }
 
     debug!(

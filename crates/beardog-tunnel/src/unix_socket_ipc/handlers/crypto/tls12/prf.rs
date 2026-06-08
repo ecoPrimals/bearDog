@@ -44,7 +44,9 @@ use tracing::{debug, info};
 /// A(0) = seed
 /// A(i) = HMAC_hash(secret, A(i-1))
 /// ```
-pub async fn handle_tls12_prf(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_tls12_prf(
+    params: Option<&Value>,
+) -> Result<Value, super::super::super::HandlerError> {
     let params = params.ok_or("Missing parameters for TLS 1.2 PRF")?;
 
     let secret_b64 = params
@@ -97,7 +99,8 @@ pub async fn handle_tls12_prf(params: Option<&Value>) -> Result<Value, String> {
         _ => {
             return Err(format!(
                 "Unsupported hash algorithm: {hash_alg} (use 'sha256' or 'sha384')"
-            ));
+            )
+            .into());
         }
     };
 

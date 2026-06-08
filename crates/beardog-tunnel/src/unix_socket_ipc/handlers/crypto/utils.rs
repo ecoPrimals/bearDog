@@ -13,6 +13,7 @@
 //! - `extract_str_param()` - Extract optional string parameter from JSON
 //! - `deserialize_request()` - Deserialize JSON params with method-specific errors
 
+use super::super::HandlerError;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_config::env_keys;
@@ -55,11 +56,11 @@ use serde_json::Value;
 pub(crate) fn derive_key_from_id_for_tests(
     key_id: &str,
     purpose: &str,
-) -> Result<[u8; 32], String> {
+) -> Result<[u8; 32], HandlerError> {
     derive_key_from_id(key_id, purpose)
 }
 
-pub(super) fn derive_key_from_id(key_id: &str, purpose: &str) -> Result<[u8; 32], String> {
+pub(super) fn derive_key_from_id(key_id: &str, purpose: &str) -> Result<[u8; 32], HandlerError> {
     use std::sync::OnceLock;
 
     static EPHEMERAL_KEY: OnceLock<String> = OnceLock::new();
@@ -87,7 +88,7 @@ pub(super) fn derive_key_from_id(key_id: &str, purpose: &str) -> Result<[u8; 32]
     let key: [u8; 32] = derived
         .as_slice()
         .try_into()
-        .map_err(|_| "Key derivation failed".to_string())?;
+        .map_err(|_| HandlerError::Application("Key derivation failed".to_owned()))?;
 
     Ok(key)
 }
@@ -112,16 +113,15 @@ pub fn decode_base64_field(field_name: &str, input: &str) -> Result<Vec<u8>, Bea
     })
 }
 
+/// Decode base64 returning `HandlerError` (for crypto handlers)
+///
 /// # Errors
 ///
-/// Returns an error if serialization fails.
-/// Decode base64 returning String error (for handlers using Result<_, String>)
-///
-/// This is a transition helper while migrating to proper error types.
-pub fn decode_base64_field_str(field_name: &str, input: &str) -> Result<Vec<u8>, String> {
-    BASE64
-        .decode(input)
-        .map_err(|e| format!("Invalid {field_name} (not valid base64): {e}"))
+/// Returns `HandlerError::InvalidParams` if the input is not valid base64.
+pub fn decode_base64_field_handler(field_name: &str, input: &str) -> Result<Vec<u8>, HandlerError> {
+    BASE64.decode(input).map_err(|e| {
+        HandlerError::InvalidParams(format!("Invalid {field_name} (not valid base64): {e}"))
+    })
 }
 
 // ============================================================================
@@ -139,8 +139,8 @@ pub fn decode_base64_field_str(field_name: &str, input: &str) -> Result<Vec<u8>,
 /// let params = require_params(params)?;
 /// let key_id = extract_str_param(&params, "key_id")?;
 /// ```
-pub fn require_params(params: Option<&Value>) -> Result<&Value, String> {
-    params.ok_or_else(|| "Missing required parameters".to_string())
+pub fn require_params(params: Option<&Value>) -> Result<&Value, HandlerError> {
+    params.ok_or_else(|| HandlerError::InvalidParams("Missing required parameters".to_owned()))
 }
 
 /// Extract an optional string parameter from JSON
@@ -156,9 +156,10 @@ pub fn extract_str_param<'a>(params: &'a Value, field: &str) -> Option<&'a str> 
 /// Extract a required string parameter from JSON
 ///
 /// Returns an error if the field doesn't exist or isn't a string.
-pub fn require_str_param<'a>(params: &'a Value, field: &str) -> Result<&'a str, String> {
-    extract_str_param(params, field)
-        .ok_or_else(|| format!("Missing or invalid '{field}' parameter"))
+pub fn require_str_param<'a>(params: &'a Value, field: &str) -> Result<&'a str, HandlerError> {
+    extract_str_param(params, field).ok_or_else(|| {
+        HandlerError::InvalidParams(format!("Missing or invalid '{field}' parameter"))
+    })
 }
 
 /// Extract an optional integer parameter from JSON
@@ -188,15 +189,17 @@ pub fn deserialize_request<T: DeserializeOwned>(
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid {method_name} params: {e}")))
 }
 
+/// Deserialize with `HandlerError`
+///
 /// # Errors
 ///
-/// Returns an error if serialization fails.
-/// Deserialize with String error (transition helper)
-pub fn deserialize_request_str<T: DeserializeOwned>(
+/// Returns `HandlerError::InvalidParams` if deserialization fails.
+pub fn deserialize_request_handler<T: DeserializeOwned>(
     params: Value,
     method_name: &str,
-) -> Result<T, String> {
-    serde_json::from_value(params).map_err(|e| format!("Invalid {method_name} params: {e}"))
+) -> Result<T, HandlerError> {
+    serde_json::from_value(params)
+        .map_err(|e| HandlerError::InvalidParams(format!("Invalid {method_name} params: {e}")))
 }
 
 // ============================================================================
@@ -214,9 +217,9 @@ pub fn to_security_error<E: std::fmt::Display>(operation: &str, error: E) -> Bea
     BearDogError::security(format!("{operation} failed: {error}"))
 }
 
-/// Convert any Display error to String with context (transition helper)
-pub fn to_error_string<E: std::fmt::Display>(operation: &str, error: E) -> String {
-    format!("{operation} failed: {error}")
+/// Convert any Display error to `HandlerError` with context
+pub fn to_handler_error<E: std::fmt::Display>(operation: &str, error: E) -> HandlerError {
+    HandlerError::Application(format!("{operation} failed: {error}"))
 }
 
 #[cfg(test)]
@@ -267,7 +270,7 @@ mod tests {
     fn test_require_params_none() {
         let result = require_params(None);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Missing"));
+        assert!(result.unwrap_err().to_string().contains("Missing"));
     }
 
     #[test]

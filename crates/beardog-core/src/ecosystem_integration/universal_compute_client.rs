@@ -409,66 +409,15 @@ impl UniversalComputeClient {
         clippy::unused_self,
         reason = "Instance reserved for real provider RPC calls"
     )]
-    #[expect(
-        clippy::unnecessary_wraps,
-        reason = "Result reserved for remote compute errors"
-    )]
-    #[expect(
-        clippy::cast_possible_truncation,
-        reason = "Processing duration ms from Instant"
-    )]
     fn execute_compute_request(
         &self,
         request: &UniversalComputeRequest,
-        provider: &UniversalCapability,
+        _provider: &UniversalCapability,
     ) -> Result<UniversalComputeResponse, BearDogError> {
-        let start_time = std::time::Instant::now();
-
-        // For demo purposes, simulate compute execution
-        // In real implementation, this would make HTTP/gRPC calls to discovered endpoints
-        let processing_time = start_time.elapsed().as_millis() as u64;
-
-        let response = UniversalComputeResponse {
-            request_id: request.request_id.clone(),
-            success: true,
-            result: Some({
-                use serde_json::{Map, Value};
-                let mut result = Map::new();
-                result.insert(
-                    "computation_result".to_string(),
-                    Value::String(
-                        "Processed successfully through capability-based routing".to_string(),
-                    ),
-                );
-                result.insert(
-                    "provider_type".to_string(),
-                    Value::String("dynamic_discovery".to_string()),
-                );
-                result.insert(
-                    "operation".to_string(),
-                    Value::String(request.operation_type.clone()),
-                );
-                Value::Object(result)
-            }),
-            error_message: None,
-            processing_time_ms: processing_time,
-            provider_info: ComputeProviderInfo {
-                provider_id: provider.provider.provider_id.clone(),
-                capability_type: "ComputeIntelligence".to_string(),
-                endpoint: provider.endpoint.base_url.clone(),
-                performance_score: provider.performance.success_rate,
-                available_architectures: vec![ComputeArchitecture::X86_64], // From provider metadata
-            },
-            resource_usage: ResourceUsageStats {
-                cpu_usage_percent: 45.0,
-                memory_usage_mb: 256,
-                gpu_usage_percent: None,
-                network_usage_mb: 10,
-                estimated_cost: Some(0.001),
-            },
-        };
-
-        Ok(response)
+        Err(BearDogError::not_yet_available(format!(
+            "Universal compute dispatch for operation '{}' — awaiting IPC transport integration",
+            request.operation_type
+        )))
     }
 
     /// Updates metrics

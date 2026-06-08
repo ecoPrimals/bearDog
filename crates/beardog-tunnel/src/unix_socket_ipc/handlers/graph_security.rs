@@ -51,9 +51,8 @@ impl MethodHandler for GraphSecurityHandler {
             "graph.validate_template" => self.validate_template(params).await,
             "graph.audit_origin" => self.audit_origin(params).await,
             "graph.authorize_modification" => self.authorize_modification(params).await,
-            _ => Err(format!("Method not found: {method}")),
+            _ => Err(format!("Method not found: {method}").into()),
         }
-        .map_err(Into::into)
     }
 }
 
@@ -65,7 +64,10 @@ impl GraphSecurityHandler {
     /// 2. Signature verification (if present)
     /// 3. Vulnerability scanning
     /// 4. Threat detection
-    async fn validate_template(&self, params: Option<&Value>) -> Result<Value, String> {
+    async fn validate_template(
+        &self,
+        params: Option<&Value>,
+    ) -> Result<Value, super::HandlerError> {
         let params = params.ok_or("Missing params for graph.validate_template")?;
 
         // Parse template from params
@@ -91,8 +93,8 @@ impl GraphSecurityHandler {
         );
 
         // Convert to JSON-RPC response
-        serde_json::to_value(report)
-            .map_err(|e| format!("Failed to serialize validation report: {e}"))
+        Ok(serde_json::to_value(report)
+            .map_err(|e| format!("Failed to serialize validation report: {e}"))?)
     }
 
     /// Audit the origin and provenance of a template
@@ -102,7 +104,7 @@ impl GraphSecurityHandler {
     /// 2. Lineage tracking and chain of custody
     /// 3. Community usage metrics
     /// 4. Security assessment
-    async fn audit_origin(&self, params: Option<&Value>) -> Result<Value, String> {
+    async fn audit_origin(&self, params: Option<&Value>) -> Result<Value, super::HandlerError> {
         let params = params.ok_or("Missing params for graph.audit_origin")?;
 
         // Parse template_id from params
@@ -125,7 +127,7 @@ impl GraphSecurityHandler {
         );
 
         // Convert to JSON-RPC response
-        serde_json::to_value(audit).map_err(|e| format!("Failed to serialize audit: {e}"))
+        Ok(serde_json::to_value(audit).map_err(|e| format!("Failed to serialize audit: {e}"))?)
     }
 
     /// Authorize a graph modification in real-time
@@ -136,7 +138,10 @@ impl GraphSecurityHandler {
     /// 3. Validation (structure and safety)
     /// 4. Threat Detection (malicious patterns)
     /// 5. Audit (logging and provenance)
-    async fn authorize_modification(&self, params: Option<&Value>) -> Result<Value, String> {
+    async fn authorize_modification(
+        &self,
+        params: Option<&Value>,
+    ) -> Result<Value, super::HandlerError> {
         let params = params.ok_or("Missing params for graph.authorize_modification")?;
 
         // Parse user_id
@@ -185,7 +190,9 @@ impl GraphSecurityHandler {
         );
 
         // Convert to JSON-RPC response
-        serde_json::to_value(result).map_err(|e| format!("Failed to serialize authorization: {e}"))
+        serde_json::to_value(result).map_err(|e| {
+            super::HandlerError::Application(format!("Failed to serialize authorization: {e}"))
+        })
     }
 }
 

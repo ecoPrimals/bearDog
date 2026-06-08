@@ -22,7 +22,7 @@ use tracing::info;
 pub async fn route(
     method: &str,
     params: Option<&serde_json::Value>,
-) -> Result<Option<serde_json::Value>, String> {
+) -> Result<Option<serde_json::Value>, super::super::HandlerError> {
     match method {
         "crypto.blake3_hash" => {
             info!("🔍 Crypto: blake3_hash");

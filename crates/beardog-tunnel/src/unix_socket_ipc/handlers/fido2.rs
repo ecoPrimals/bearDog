@@ -62,9 +62,8 @@ impl MethodHandler for Fido2Handler {
             "beardog.fido2.discover" => handle_fido2_discover(params).await,
             "beardog.fido2.register" => handle_fido2_register(params).await,
             "beardog.fido2.authenticate" => handle_fido2_authenticate(params).await,
-            _ => Err(format!("Unknown FIDO2 method: {method}")),
+            _ => Err(format!("Unknown FIDO2 method: {method}").into()),
         }
-        .map_err(Into::into)
     }
 }
 
@@ -86,7 +85,7 @@ impl MethodHandler for Fido2Handler {
 ///   "count": 1
 /// }
 /// ```
-async fn handle_fido2_discover(_params: Option<&Value>) -> Result<Value, String> {
+async fn handle_fido2_discover(_params: Option<&Value>) -> Result<Value, super::HandlerError> {
     #[cfg(feature = "ctap2")]
     {
         let raw_devices = beardog_hid::discover()
@@ -149,7 +148,7 @@ async fn handle_fido2_discover(_params: Option<&Value>) -> Result<Value, String>
 ///   "rp_id": "primals.eco"
 /// }
 /// ```
-async fn handle_fido2_register(params: Option<&Value>) -> Result<Value, String> {
+async fn handle_fido2_register(params: Option<&Value>) -> Result<Value, super::HandlerError> {
     let params = params.ok_or("Missing params for beardog.fido2.register")?;
 
     let rp_id = params
@@ -218,7 +217,8 @@ async fn handle_fido2_register(params: Option<&Value>) -> Result<Value, String> 
         Err(
             "FIDO2 feature not enabled — rebuild bearDog with --features ctap2 to use \
              hardware security keys"
-                .to_string(),
+                .to_string()
+                .into(),
         )
     }
 }
@@ -247,7 +247,7 @@ async fn handle_fido2_register(params: Option<&Value>) -> Result<Value, String> 
 ///   "credential_id": "<base64>"
 /// }
 /// ```
-async fn handle_fido2_authenticate(params: Option<&Value>) -> Result<Value, String> {
+async fn handle_fido2_authenticate(params: Option<&Value>) -> Result<Value, super::HandlerError> {
     let params = params.ok_or("Missing params for beardog.fido2.authenticate")?;
 
     let rp_id = params
@@ -312,7 +312,8 @@ async fn handle_fido2_authenticate(params: Option<&Value>) -> Result<Value, Stri
         Err(
             "FIDO2 feature not enabled — rebuild bearDog with --features fido2 to use \
              hardware security keys"
-                .to_string(),
+                .to_string()
+                .into(),
         )
     }
 }

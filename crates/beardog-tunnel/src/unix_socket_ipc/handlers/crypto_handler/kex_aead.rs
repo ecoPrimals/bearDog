@@ -22,7 +22,7 @@ use tracing::info;
 pub async fn route(
     method: &str,
     params: Option<&serde_json::Value>,
-) -> Result<Option<serde_json::Value>, String> {
+) -> Result<Option<serde_json::Value>, super::super::HandlerError> {
     match method {
         "crypto.x25519_generate_ephemeral" => {
             info!("🔑 Crypto: x25519_generate_ephemeral");

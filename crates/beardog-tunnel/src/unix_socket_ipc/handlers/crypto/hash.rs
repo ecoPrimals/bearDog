@@ -134,7 +134,9 @@ use tracing::{debug, info};
 ///
 /// This method enables callers to hash data without knowing which algorithm to use.
 /// `BearDog` owns the crypto decisions; callers pass `cipher_suite`.
-pub async fn handle_hash_for_cipher(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_hash_for_cipher(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for crypto.hash_for_cipher")?;
 
     // Extract parameters
@@ -183,7 +185,7 @@ pub async fn handle_hash_for_cipher(params: Option<&Value>) -> Result<Value, Str
         _ => {
             return Err(format!(
                 "Unsupported TLS 1.3 cipher suite: 0x{cipher_suite:04x}. Supported: 0x1301 (AES-128-GCM), 0x1302 (AES-256-GCM), 0x1303 (ChaCha20-Poly1305)"
-            ));
+            ).into());
         }
     };
 
@@ -215,7 +217,9 @@ pub async fn handle_hash_for_cipher(params: Option<&Value>) -> Result<Value, Str
 /// # Errors
 ///
 /// Returns an error if `data` is missing or not valid Base64.
-pub async fn handle_blake3_hash(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_blake3_hash(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or(
         "Missing params for crypto.blake3_hash — expected: {\"data\": \"<standard-base64>\"}",
     )?;
@@ -263,7 +267,9 @@ pub async fn handle_blake3_hash(params: Option<&Value>) -> Result<Value, String>
 /// # Returns
 ///
 /// - `mac`: Base64-encoded HMAC-SHA256 tag (32 bytes)
-pub async fn handle_hmac_sha256(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_hmac_sha256(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for crypto.hmac_sha256")?;
 
     // Extract parameters
@@ -311,7 +317,9 @@ pub async fn handle_hmac_sha256(params: Option<&Value>) -> Result<Value, String>
 /// # Errors
 ///
 /// Returns an error if parameters are missing or base64 decoding fails.
-pub async fn handle_hmac_verify(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_hmac_verify(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for crypto.hmac_verify")?;
 
     let key_b64 = params
@@ -368,7 +376,9 @@ pub async fn handle_hmac_verify(params: Option<&Value>) -> Result<Value, String>
 /// # Errors
 ///
 /// Returns an error if parameters are missing or HKDF expand fails.
-pub async fn handle_hkdf_sha256(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_hkdf_sha256(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     use hkdf::Hkdf;
     use sha2::Sha256;
 

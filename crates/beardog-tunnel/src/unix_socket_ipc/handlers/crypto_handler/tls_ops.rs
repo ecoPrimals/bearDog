@@ -16,7 +16,7 @@ use tracing::info;
 pub async fn route(
     method: &str,
     params: Option<&serde_json::Value>,
-) -> Result<Option<serde_json::Value>, String> {
+) -> Result<Option<serde_json::Value>, super::super::HandlerError> {
     match method {
         "tls.derive_secrets" => {
             info!("🔑 TLS: derive_secrets (HKDF handshake key derivation - legacy)");

@@ -29,9 +29,6 @@ use beardog_core::self_knowledge::{
 };
 use beardog_core::socket_config::ipc_capability_domain_stems_resolved;
 use beardog_types::constants::domains::network::ipc_discovery as ipc_layout;
-use beardog_types::constants::domains::system::defaults::{
-    DEFAULT_IPC_PORT_FILE, DEFAULT_SOCKET_PATH,
-};
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::pin::Pin;
@@ -245,7 +242,7 @@ pub fn get_unix_socket_paths_with(hints: &UnixSocketPathHints) -> Vec<PathBuf> {
         }
     }
 
-    paths.push(PathBuf::from(DEFAULT_SOCKET_PATH));
+    paths.push(std::env::temp_dir().join("beardog.sock"));
 
     paths
 }
@@ -323,7 +320,12 @@ pub fn get_tcp_discovery_file_candidates_with(hints: &TcpDiscoveryPathHints) -> 
         ));
     }
 
-    files.push(DEFAULT_IPC_PORT_FILE.to_string());
+    files.push(
+        std::env::temp_dir()
+            .join("beardog-ipc-port")
+            .to_string_lossy()
+            .into_owned(),
+    );
 
     files
 }

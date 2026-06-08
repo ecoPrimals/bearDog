@@ -36,7 +36,9 @@ use tracing::{debug, info};
 /// # Security
 ///
 /// ⚠️ **NEVER reuse a nonce with the same key!** Use random 12-byte nonces.
-pub async fn handle_aes_128_gcm_encrypt(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_aes_128_gcm_encrypt(
+    params: Option<&Value>,
+) -> Result<Value, super::super::super::HandlerError> {
     let params = params.ok_or("Missing parameters for AES-128-GCM encryption")?;
 
     let key_b64 = params
@@ -67,7 +69,8 @@ pub async fn handle_aes_128_gcm_encrypt(params: Option<&Value>) -> Result<Value,
         return Err(format!(
             "Invalid AES-128 key length: {} (expected 16)",
             key_bytes.len()
-        ));
+        )
+        .into());
     }
 
     let nonce_bytes = BASE64
@@ -78,7 +81,8 @@ pub async fn handle_aes_128_gcm_encrypt(params: Option<&Value>) -> Result<Value,
         return Err(format!(
             "Invalid GCM nonce length: {} (expected 12)",
             nonce_bytes.len()
-        ));
+        )
+        .into());
     }
 
     let plaintext_bytes = BASE64
@@ -149,7 +153,9 @@ pub async fn handle_aes_128_gcm_encrypt(params: Option<&Value>) -> Result<Value,
 /// - `plaintext`: Base64-encoded plaintext
 /// - `verified`: Always `true` (decryption fails if tag invalid)
 /// - `algorithm`: "AES-128-GCM"
-pub async fn handle_aes_128_gcm_decrypt(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_aes_128_gcm_decrypt(
+    params: Option<&Value>,
+) -> Result<Value, super::super::super::HandlerError> {
     let params = params.ok_or("Missing parameters for AES-128-GCM decryption")?;
 
     let key_b64 = params
@@ -248,7 +254,9 @@ pub async fn handle_aes_128_gcm_decrypt(params: Option<&Value>) -> Result<Value,
 /// # Returns
 ///
 /// Same as `handle_aes_128_gcm_encrypt` with algorithm "AES-256-GCM".
-pub async fn handle_aes_256_gcm_encrypt(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_aes_256_gcm_encrypt(
+    params: Option<&Value>,
+) -> Result<Value, super::super::super::HandlerError> {
     let params = params.ok_or("Missing parameters for AES-256-GCM encryption")?;
 
     let key_b64 = params
@@ -279,7 +287,8 @@ pub async fn handle_aes_256_gcm_encrypt(params: Option<&Value>) -> Result<Value,
         return Err(format!(
             "Invalid AES-256 key length: {} (expected 32)",
             key_bytes.len()
-        ));
+        )
+        .into());
     }
 
     let nonce_bytes = BASE64
@@ -290,7 +299,8 @@ pub async fn handle_aes_256_gcm_encrypt(params: Option<&Value>) -> Result<Value,
         return Err(format!(
             "Invalid GCM nonce length: {} (expected 12)",
             nonce_bytes.len()
-        ));
+        )
+        .into());
     }
 
     let plaintext_bytes = BASE64
@@ -355,7 +365,9 @@ pub async fn handle_aes_256_gcm_encrypt(params: Option<&Value>) -> Result<Value,
 /// # Returns
 ///
 /// Same as `handle_aes_128_gcm_decrypt` with algorithm "AES-256-GCM".
-pub async fn handle_aes_256_gcm_decrypt(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_aes_256_gcm_decrypt(
+    params: Option<&Value>,
+) -> Result<Value, super::super::super::HandlerError> {
     let params = params.ok_or("Missing parameters for AES-256-GCM decryption")?;
 
     let key_b64 = params

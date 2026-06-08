@@ -301,12 +301,7 @@ impl UniversalAdapter {
     ) -> Result<CapabilityResponse, BearDogError> {
         let timeout_duration = Duration::from_secs(self.config.timeout_seconds);
 
-        match timeout(
-            timeout_duration,
-            self.simulate_capability_execution(request),
-        )
-        .await
-        {
+        match timeout(timeout_duration, self.dispatch_capability(request)).await {
             Ok(result) => result,
             Err(_) => Err(BearDogError::Adapter {
                 message: format!(
@@ -317,52 +312,19 @@ impl UniversalAdapter {
         }
     }
 
-    /// Simulate capability execution (replace with actual implementation)
-    async fn simulate_capability_execution(
+    /// Execute capability via IPC dispatch.
+    ///
+    /// Dispatches the capability request to the target primal via the
+    /// ecosystem's IPC resolution mechanism. Returns an error until
+    /// real IPC dispatch is wired (requires `ipc.resolve` integration).
+    async fn dispatch_capability(
         &self,
         request: &CapabilityRequest,
     ) -> Result<CapabilityResponse, BearDogError> {
-        // Modern: Yield to simulate async work (no arbitrary sleep in tests)
-        // In production, this would be actual async I/O
-        tokio::task::yield_now().await;
-
-        // Simulate occasional failures for testing retry logic
-        if request.operation == "fail_test" {
-            return Err(BearDogError::Adapter {
-                message: "Simulated failure for testing".to_string(),
-            });
-        }
-
-        let response_data = {
-            use serde_json::{Map, Value};
-            let mut data = Map::new();
-            data.insert("result".to_string(), Value::String("executed".to_string()));
-            data.insert(
-                "capability".to_string(),
-                Value::String(request.capability.clone()),
-            );
-            data.insert(
-                "operation".to_string(),
-                Value::String(request.operation.clone()),
-            );
-            data.insert(
-                "parameters".to_string(),
-                serde_json::to_value(&request.parameters).unwrap_or(Value::Null),
-            );
-            Value::Object(data)
-        };
-
-        Ok(CapabilityResponse {
-            success: true,
-            data: Some(response_data),
-            error: None,
-            metadata: {
-                let mut meta = HashMap::new();
-                meta.insert("execution_time_ms".to_string(), "10".to_string());
-                meta.insert("cached".to_string(), "false".to_string());
-                meta
-            },
-        })
+        Err(BearDogError::not_yet_available(format!(
+            "Adapter capability dispatch for {}.{} — awaiting ipc.resolve integration",
+            request.capability, request.operation
+        )))
     }
 
     /// Get available capabilities

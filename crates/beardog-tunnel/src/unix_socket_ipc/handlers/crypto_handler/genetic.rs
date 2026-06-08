@@ -20,7 +20,7 @@ pub async fn route(
     method: &str,
     params: Option<&serde_json::Value>,
     btsp_provider: &Arc<BeardogBtspProvider>,
-) -> Result<Option<serde_json::Value>, String> {
+) -> Result<Option<serde_json::Value>, super::super::HandlerError> {
     match method {
         "genetic.derive_lineage_key" => {
             info!("🧬 Genetic: derive_lineage_key (lineage-based key derivation)");
@@ -183,9 +183,9 @@ pub async fn route(
                 .ok_or("Missing required parameter: chain_id")?;
             let birdsong = btsp_provider.birdsong_manager();
             match birdsong.get_lineage_chain(chain_id) {
-                Some(chain) => serde_json::to_value(chain)
+                Some(chain) => Ok(serde_json::to_value(chain)
                     .map(Some)
-                    .map_err(|e| format!("Serialize: {e}")),
+                    .map_err(|e| format!("Serialize: {e}"))?),
                 None => Ok(Some(
                     serde_json::json!({ "error": "chain_not_found", "chain_id": chain_id }),
                 )),

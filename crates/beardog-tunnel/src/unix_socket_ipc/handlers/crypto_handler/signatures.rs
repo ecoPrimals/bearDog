@@ -21,7 +21,7 @@ use tracing::info;
 pub async fn route(
     method: &str,
     params: Option<&serde_json::Value>,
-) -> Result<Option<serde_json::Value>, String> {
+) -> Result<Option<serde_json::Value>, super::super::HandlerError> {
     match method {
         "crypto.ed25519_generate_keypair" => {
             info!("🔑 Crypto: ed25519_generate_keypair (onion identity route)");

@@ -16,7 +16,7 @@ pub async fn dispatch(
     method: &str,
     params: Option<&serde_json::Value>,
     btsp_provider: &Arc<BeardogBtspProvider>,
-) -> Result<serde_json::Value, String> {
+) -> Result<serde_json::Value, super::super::HandlerError> {
     if let Some(v) = signatures::route(method, params).await? {
         return Ok(v);
     }
@@ -42,7 +42,7 @@ pub async fn dispatch(
         return Ok(v);
     }
 
-    Err(format!("Unknown crypto method: {method}"))
+    Err(format!("Unknown crypto method: {method}").into())
 }
 
 #[cfg(test)]

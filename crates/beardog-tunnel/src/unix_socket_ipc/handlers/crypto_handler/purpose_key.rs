@@ -40,7 +40,9 @@ use ed25519_dalek::SigningKey;
 /// - `key`: Base64-encoded derived 32-byte purpose key
 /// - `purpose`: Echo of the purpose string
 /// - `method`: `"HMAC-SHA256-purpose-v1"`
-pub async fn handle_derive_purpose_key(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_derive_purpose_key(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for crypto.derive_purpose_key")?;
 
     let key_b64 = params
@@ -93,7 +95,9 @@ pub async fn handle_derive_purpose_key(params: Option<&Value>) -> Result<Value, 
 /// - `algorithm`: `"Ed25519"`
 /// - `purpose`: Echo of the purpose string
 /// - `derivation`: `"HMAC-SHA256-purpose-v1 → Ed25519"`
-pub async fn handle_derive_public_key(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_derive_public_key(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or(
         "Missing params for crypto.derive_public_key — expected: {\"purpose\": \"<string>\"}",
     )?;
@@ -142,7 +146,9 @@ pub async fn handle_derive_public_key(params: Option<&Value>) -> Result<Value, S
 /// - `public_key`: Base64-encoded Ed25519 public key (for verification)
 /// - `canonical`: The canonical string that was signed
 /// - `algorithm`: `"Ed25519"`
-pub async fn handle_sign_registration(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_sign_registration(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for crypto.sign_registration")?;
 
     let primal_id = params
@@ -202,7 +208,7 @@ pub async fn handle_sign_registration(params: Option<&Value>) -> Result<Value, S
 ///
 /// Same HMAC-SHA256 convention as `handle_derive_purpose_key`:
 /// `purpose_key = HMAC-SHA256(family_seed, hex("purpose-v1:" + purpose))`
-fn resolve_purpose_key(purpose: &str) -> Result<[u8; 32], String> {
+fn resolve_purpose_key(purpose: &str) -> Result<[u8; 32], super::super::HandlerError> {
     let family_seed = load_family_seed()?;
 
     let msg = hex::encode(format!("purpose-v1:{purpose}"));
@@ -217,7 +223,7 @@ fn resolve_purpose_key(purpose: &str) -> Result<[u8; 32], String> {
     Ok(key)
 }
 
-fn load_family_seed() -> Result<Vec<u8>, String> {
+fn load_family_seed() -> Result<Vec<u8>, super::super::HandlerError> {
     if let Ok(seed) = beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED_PREFIXED)
         && !seed.is_empty()
     {
@@ -230,7 +236,8 @@ fn load_family_seed() -> Result<Vec<u8>, String> {
     }
     Err(
         "Purpose-based encrypt/decrypt requires FAMILY_SEED or BEARDOG_FAMILY_SEED env var"
-            .to_string(),
+            .to_string()
+            .into(),
     )
 }
 
@@ -246,7 +253,9 @@ fn load_family_seed() -> Result<Vec<u8>, String> {
 /// # Returns
 ///
 /// NUCLEUS standard envelope: `{"v":1,"ct":"<b64>","n":"<b64>","alg":"chacha20-poly1305"}`
-pub async fn handle_purpose_encrypt(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_purpose_encrypt(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for crypto.encrypt with purpose")?;
 
     let data_b64 = params
@@ -304,7 +313,9 @@ pub async fn handle_purpose_encrypt(params: Option<&Value>) -> Result<Value, Str
 ///
 /// - `plaintext`: Base64-encoded decrypted data
 /// - `algorithm`: `"chacha20-poly1305"`
-pub async fn handle_purpose_decrypt(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_purpose_decrypt(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for crypto.decrypt with purpose")?;
 
     let purpose = params
@@ -336,7 +347,8 @@ pub async fn handle_purpose_decrypt(params: Option<&Value>) -> Result<Value, Str
         return Err(format!(
             "Invalid nonce length: expected 12, got {}",
             nonce_bytes.len()
-        ));
+        )
+        .into());
     }
 
     let key = resolve_purpose_key(purpose)?;
@@ -382,7 +394,9 @@ pub async fn handle_purpose_decrypt(params: Option<&Value>) -> Result<Value, Str
 /// # Errors
 ///
 /// Returns an error if `FAMILY_SEED` / `BEARDOG_FAMILY_SEED` is not set.
-pub async fn handle_seed_fingerprint(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_seed_fingerprint(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let _ = params;
 
     let seed = load_family_seed()?;

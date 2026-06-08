@@ -80,7 +80,9 @@ use super::super::utils::derive_key_from_id;
 ///
 /// - RFC 8032: Edwards-Curve Digital Signature Algorithm (`EdDSA`)
 /// - RFC 8446 Section 4.4.3: Certificate Verify
-pub async fn handle_tls_sign_handshake(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_tls_sign_handshake(
+    params: Option<&Value>,
+) -> Result<Value, super::super::super::HandlerError> {
     let params = params.ok_or("Missing params for tls.sign_handshake")?;
 
     // Extract parameters
@@ -119,7 +121,7 @@ pub async fn handle_tls_sign_handshake(params: Option<&Value>) -> Result<Value, 
 
     // Only Ed25519 is supported for now (most common in modern TLS)
     if algorithm != "ed25519" {
-        return Err(format!("Unsupported algorithm: {algorithm}"));
+        return Err(format!("Unsupported algorithm: {algorithm}").into());
     }
 
     // Derive TLS-specific signing key (includes "tls_handshake" in context)
@@ -209,7 +211,7 @@ pub async fn handle_tls_sign_handshake(params: Option<&Value>) -> Result<Value, 
 /// - RFC 2104: HMAC
 pub async fn handle_tls_compute_finished_verify_data(
     params: Option<&Value>,
-) -> Result<Value, String> {
+) -> Result<Value, super::super::super::HandlerError> {
     let params = params.ok_or("Missing params for tls.compute_finished_verify_data")?;
 
     // Extract parameters
@@ -254,7 +256,8 @@ pub async fn handle_tls_compute_finished_verify_data(
         _ => {
             return Err(format!(
                 "Unsupported TLS 1.3 cipher suite for finished verify_data: 0x{cipher_suite:04x}"
-            ));
+            )
+            .into());
         }
     };
 
@@ -265,7 +268,8 @@ pub async fn handle_tls_compute_finished_verify_data(
             expected_len,
             hash_algo,
             cipher_suite
-        ));
+        )
+        .into());
     }
 
     // Step 1: Derive finished_key using cipher-aware HKDF-Expand-Label
@@ -352,7 +356,7 @@ pub async fn handle_tls_compute_finished_verify_data(
         _ => {
             return Err(format!(
                 "unsupported TLS 1.3 cipher suite variant in Finished verify_data derivation: 0x{cipher_suite:04x} (expected 0x1301, 0x1302, or 0x1303 after prior validation)"
-            ));
+            ).into());
         }
     };
 

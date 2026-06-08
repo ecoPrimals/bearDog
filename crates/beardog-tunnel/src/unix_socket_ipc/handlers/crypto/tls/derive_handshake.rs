@@ -37,7 +37,9 @@ use super::helpers::{derive_handshake_secrets_sha256, derive_handshake_secrets_s
 /// - `tls.derive_application_secrets`: Derives APPLICATION traffic keys (for HTTP data)
 ///
 /// Both follow RFC 8446, but at different stages of the key schedule.
-pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_tls_derive_handshake_secrets(
+    params: Option<&Value>,
+) -> Result<Value, super::super::super::super::HandlerError> {
     const IV_LEN: usize = 12; // AEAD nonce size (same for all cipher suites)
 
     let params = params.ok_or("Missing params for tls.derive_handshake_secrets")?;
@@ -93,11 +95,11 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
 
     // Validate parameter sizes
     if client_random.len() != 32 {
-        return Err("client_random must be 32 bytes".to_string());
+        return Err("client_random must be 32 bytes".to_string().into());
     }
 
     if server_random.len() != 32 {
-        return Err("server_random must be 32 bytes".to_string());
+        return Err("server_random must be 32 bytes".to_string().into());
     }
 
     // Determine hash algorithm and key length based on cipher suite (RFC 8446)
@@ -123,7 +125,7 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
         _ => {
             return Err(format!(
                 "Unsupported TLS 1.3 cipher suite: 0x{cipher_suite:04x}. Supported: 0x1301 (AES-128-GCM-SHA256), 0x1302 (AES-256-GCM-SHA384), 0x1303 (ChaCha20-Poly1305-SHA256)"
-            ));
+            ).into());
         }
     };
 
@@ -134,7 +136,8 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
             hash_len,
             hash_algo,
             transcript_hash.len()
-        ));
+        )
+        .into());
     }
 
     debug!("🔑 Deriving TLS 1.3 HANDSHAKE secrets (RFC 8446 Section 7.1)");
@@ -185,7 +188,7 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
         _ => {
             return Err(format!(
                 "unsupported cipher suite variant reached in TLS 1.3 handshake key derivation: 0x{cipher_suite:04x} (expected 0x1301, 0x1302, or 0x1303 after validation)"
-            ));
+            ).into());
         }
     };
 

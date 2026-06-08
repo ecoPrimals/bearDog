@@ -56,11 +56,25 @@ pub fn validate_config_file(path: &str) -> bool {
 
 /// Gets config_paths
 pub fn get_config_paths() -> Vec<String> {
-    vec![
+    let mut paths = vec![
         "./beardog.toml".to_string(),
         "./config/beardog.toml".to_string(),
-        "/etc/beardog/beardog.toml".to_string(),
-    ]
+    ];
+
+    if let Ok(config_dir) = beardog_errors::process_env::var(env_keys::ENV_CONFIG_DIR) {
+        paths.insert(0, format!("{config_dir}/beardog.toml"));
+    }
+    if let Ok(config_path) = beardog_errors::process_env::var(env_keys::ENV_CONFIG_PATH) {
+        paths.insert(0, config_path);
+    }
+    if let Ok(xdg) = beardog_errors::process_env::var(env_keys::ENV_XDG_CONFIG_HOME) {
+        paths.push(format!("{xdg}/beardog/beardog.toml"));
+    }
+    if let Ok(home) = beardog_errors::process_env::var(env_keys::ENV_HOME) {
+        paths.push(format!("{home}/.config/beardog/beardog.toml"));
+    }
+
+    paths
 
 
 

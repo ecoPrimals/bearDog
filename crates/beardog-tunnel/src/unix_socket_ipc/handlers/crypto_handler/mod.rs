@@ -32,9 +32,7 @@ impl MethodHandler for CryptoHandler {
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> HandlerResult {
-        router::dispatch(method, params, btsp_provider)
-            .await
-            .map_err(Into::into)
+        router::dispatch(method, params, btsp_provider).await
     }
 }
 

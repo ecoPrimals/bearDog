@@ -53,9 +53,8 @@ impl MethodHandler for IntrospectionHandler {
             "primal.info" => self.handle_primal_info().await,
             "rpc.methods" => self.handle_rpc_methods().await,
             "primal.capabilities" => self.handle_primal_capabilities().await,
-            _ => Err(format!("Unknown introspection method: {method}")),
+            _ => Err(format!("Unknown introspection method: {method}").into()),
         }
-        .map_err(Into::into)
     }
 }
 
@@ -67,7 +66,7 @@ impl IntrospectionHandler {
     /// - Capabilities provided
     /// - Available method namespaces
     /// - Protocol version
-    async fn handle_primal_info(&self) -> Result<Value, String> {
+    async fn handle_primal_info(&self) -> Result<Value, super::HandlerError> {
         Ok(json!({
             "name": get_primal_name_with(&self.identity),
             "version": env!("CARGO_PKG_VERSION"),
@@ -111,7 +110,7 @@ impl IntrospectionHandler {
     ///
     /// Returns all JSON-RPC methods this primal exposes, grouped by namespace.
     /// This enables auto-discovery of capabilities.
-    async fn handle_rpc_methods(&self) -> Result<Value, String> {
+    async fn handle_rpc_methods(&self) -> Result<Value, super::HandlerError> {
         // Get all methods from registry (now async)
         let all_methods = self.registry.all_methods().await;
 
@@ -139,7 +138,7 @@ impl IntrospectionHandler {
     ///
     /// Returns structured information about each capability this primal provides,
     /// including methods available for each capability.
-    async fn handle_primal_capabilities(&self) -> Result<Value, String> {
+    async fn handle_primal_capabilities(&self) -> Result<Value, super::HandlerError> {
         let all_methods = self.registry.all_methods().await;
 
         // Define capability mappings

@@ -108,7 +108,7 @@ impl Default for BeaconManager {
 pub async fn handle_beacon_generate(
     beacon_manager: &Arc<BeaconManager>,
     _params: Option<&Value>,
-) -> Result<Value, String> {
+) -> Result<Value, super::HandlerError> {
     debug!("🌱 RPC: beacon.generate");
 
     let beacon = beacon_manager
@@ -129,7 +129,7 @@ pub async fn handle_beacon_generate(
 pub async fn handle_beacon_get_id(
     beacon_manager: &Arc<BeaconManager>,
     _params: Option<&Value>,
-) -> Result<Value, String> {
+) -> Result<Value, super::HandlerError> {
     debug!("🔍 RPC: beacon.get_id");
 
     let beacon = beacon_manager
@@ -165,7 +165,7 @@ pub async fn handle_beacon_get_id(
 pub async fn handle_beacon_encrypt(
     beacon_manager: &Arc<BeaconManager>,
     params: Option<&Value>,
-) -> Result<Value, String> {
+) -> Result<Value, super::HandlerError> {
     debug!("🔒 RPC: beacon.encrypt");
 
     let params = params.ok_or("Missing params")?;
@@ -222,7 +222,7 @@ pub async fn handle_beacon_encrypt(
 pub async fn handle_beacon_try_decrypt(
     beacon_manager: &Arc<BeaconManager>,
     params: Option<&Value>,
-) -> Result<Value, String> {
+) -> Result<Value, super::HandlerError> {
     debug!("🔓 RPC: beacon.try_decrypt");
 
     let params = params.ok_or("Missing params")?;
@@ -240,7 +240,7 @@ pub async fn handle_beacon_try_decrypt(
         .map_err(|e| format!("Invalid nonce base64: {e}"))?;
 
     if nonce_vec.len() != 12 {
-        return Err(format!("Nonce must be 12 bytes, got {}", nonce_vec.len()));
+        return Err(format!("Nonce must be 12 bytes, got {}", nonce_vec.len()).into());
     }
 
     let mut nonce = [0u8; 12];
@@ -291,7 +291,7 @@ pub async fn handle_beacon_try_decrypt(
 pub async fn handle_beacon_try_decrypt_any(
     beacon_manager: &Arc<BeaconManager>,
     params: Option<&Value>,
-) -> Result<Value, String> {
+) -> Result<Value, super::HandlerError> {
     debug!("🔍 RPC: beacon.try_decrypt_any");
 
     let params = params.ok_or("Missing params")?;
@@ -309,7 +309,7 @@ pub async fn handle_beacon_try_decrypt_any(
         .map_err(|e| format!("Invalid nonce base64: {e}"))?;
 
     if nonce_vec.len() != 12 {
-        return Err(format!("Nonce must be 12 bytes, got {}", nonce_vec.len()));
+        return Err(format!("Nonce must be 12 bytes, got {}", nonce_vec.len()).into());
     }
 
     let mut nonce = [0u8; 12];
@@ -368,7 +368,7 @@ pub async fn handle_beacon_try_decrypt_any(
 pub async fn handle_beacon_list_known(
     beacon_manager: &Arc<BeaconManager>,
     _params: Option<&Value>,
-) -> Result<Value, String> {
+) -> Result<Value, super::HandlerError> {
     debug!("📋 RPC: beacon.list_known");
 
     let known = beacon_manager.known_beacons.read().await;
@@ -395,7 +395,7 @@ pub async fn handle_beacon_list_known(
 pub async fn handle_beacon_add_known(
     beacon_manager: &Arc<BeaconManager>,
     params: Option<&Value>,
-) -> Result<Value, String> {
+) -> Result<Value, super::HandlerError> {
     debug!("🤝 RPC: beacon.add_known");
 
     let params = params.ok_or("Missing params")?;
@@ -406,10 +406,7 @@ pub async fn handle_beacon_add_known(
     let seed_bytes = hex::decode(seed_hex).map_err(|e| format!("Invalid hex: {e}"))?;
 
     if seed_bytes.len() != 32 {
-        return Err(format!(
-            "Beacon seed must be 32 bytes, got {}",
-            seed_bytes.len()
-        ));
+        return Err(format!("Beacon seed must be 32 bytes, got {}", seed_bytes.len()).into());
     }
 
     let mut seed = [0u8; 32];
@@ -500,9 +497,8 @@ impl MethodHandler for BeaconHandler {
             }
             "beacon.list_known" => handle_beacon_list_known(&self.beacon_manager, params).await,
             "beacon.add_known" => handle_beacon_add_known(&self.beacon_manager, params).await,
-            _ => Err(format!("Unknown beacon method: {method}")),
+            _ => Err(format!("Unknown beacon method: {method}").into()),
         }
-        .map_err(Into::into)
     }
 }
 

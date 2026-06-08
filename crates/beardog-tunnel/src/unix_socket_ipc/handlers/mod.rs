@@ -75,6 +75,12 @@ impl From<String> for HandlerError {
     }
 }
 
+impl From<&str> for HandlerError {
+    fn from(s: &str) -> Self {
+        Self::Application(s.to_owned())
+    }
+}
+
 impl HandlerError {
     /// Check if the error message contains a substring (test convenience).
     #[must_use]

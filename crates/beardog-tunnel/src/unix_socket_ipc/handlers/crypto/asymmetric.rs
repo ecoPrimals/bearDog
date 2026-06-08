@@ -86,7 +86,9 @@ use super::utils::derive_key_from_id;
 /// # Errors
 ///
 /// Returns an error if key derivation fails.
-pub async fn handle_sign_ed25519(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_sign_ed25519(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for crypto.sign_ed25519")?;
 
     // Extract parameters
@@ -156,7 +158,9 @@ pub async fn handle_sign_ed25519(params: Option<&Value>) -> Result<Value, String
 /// # Errors
 ///
 /// Returns an error if key derivation fails.
-pub async fn handle_public_key(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_public_key(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let key_id = params
         .and_then(|p| p.get("key_id"))
         .and_then(|v| v.as_str())
@@ -200,7 +204,9 @@ pub async fn handle_public_key(params: Option<&Value>) -> Result<Value, String> 
 /// # Errors
 ///
 /// Returns an error if key derivation fails.
-pub async fn handle_did_from_key(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_did_from_key(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let key_id = params
         .and_then(|p| p.get("key_id"))
         .and_then(|v| v.as_str())
@@ -291,7 +297,9 @@ fn decode_with_encoding(
 /// # Errors
 ///
 /// Returns an error if decoding or verification fails.
-pub async fn handle_verify_ed25519(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_verify_ed25519(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for crypto.verify_ed25519")?;
 
     let default_encoding = params
@@ -368,7 +376,9 @@ pub async fn handle_verify_ed25519(params: Option<&Value>) -> Result<Value, Stri
 /// - `public_key`: Base64-encoded Ed25519 public key (32 bytes)
 /// - `secret_key`: Base64-encoded Ed25519 secret key (32 bytes)
 /// - `algorithm`: "Ed25519"
-pub async fn handle_ed25519_generate_keypair(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_ed25519_generate_keypair(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let purpose = params
         .and_then(|p| p.get("purpose"))
         .and_then(|v| v.as_str())
@@ -412,7 +422,9 @@ pub async fn handle_ed25519_generate_keypair(params: Option<&Value>) -> Result<V
 ///
 /// - `public_key`: Base64-encoded X25519 public key (32 bytes)
 /// - `secret_key`: Base64-encoded X25519 secret key (32 bytes)
-pub async fn handle_x25519_generate_ephemeral(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_x25519_generate_ephemeral(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let purpose = params
         .and_then(|p| p.get("purpose"))
         .and_then(|v| v.as_str())
@@ -456,7 +468,9 @@ pub async fn handle_x25519_generate_ephemeral(params: Option<&Value>) -> Result<
 /// # Errors
 ///
 /// Returns an error when the requested HSM backend is unavailable or unknown.
-pub async fn handle_generate_keypair_with_hsm(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_generate_keypair_with_hsm(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     use crate::tunnel::hsm::providers::registry::HsmProviderRegistry;
     use beardog_traits::hsm::HsmKeyProvider;
     use beardog_types::hsm::{HsmAlgorithm, KeyGenParams, SelectionPreference};
@@ -476,7 +490,7 @@ pub async fn handle_generate_keypair_with_hsm(params: Option<&Value>) -> Result<
         "AES-256-GCM" | "aes256gcm" => HsmAlgorithm::Aes256Gcm,
         "ChaCha20-Poly1305" | "chacha20poly1305" => HsmAlgorithm::ChaCha20Poly1305,
         "ECDSA-P256" | "ecdsa_p256" => HsmAlgorithm::EcdsaP256,
-        _ => return Err(format!("unsupported algorithm: {algorithm_str}")),
+        _ => return Err(format!("unsupported algorithm: {algorithm_str}").into()),
     };
 
     match hsm_backend {
@@ -513,7 +527,8 @@ pub async fn handle_generate_keypair_with_hsm(params: Option<&Value>) -> Result<
                             "hsm_backend_requested": backend,
                             "provider_id": provider.provider_id(),
                         }))
-                        .unwrap_or_else(|e| format!("hsm_key_generation_failed: {e}"))),
+                        .unwrap_or_else(|e| format!("hsm_key_generation_failed: {e}"))
+                        .into()),
                     }
                 }
                 Err(e) => Err(serde_json::to_string(&serde_json::json!({
@@ -524,7 +539,8 @@ pub async fn handle_generate_keypair_with_hsm(params: Option<&Value>) -> Result<
                         .map(|p| p.provider_id())
                         .collect::<Vec<_>>(),
                 }))
-                .unwrap_or_else(|e| format!("hsm_backend_not_available: {e}"))),
+                .unwrap_or_else(|e| format!("hsm_backend_not_available: {e}"))
+                .into()),
             }
         }
 
@@ -534,7 +550,8 @@ pub async fn handle_generate_keypair_with_hsm(params: Option<&Value>) -> Result<
             "hsm_backend_requested": other,
             "available_backends": ["software", "strongbox", "titan_m2"],
         }))
-        .unwrap_or_else(|e| format!("hsm_backend_unknown: {e}"))),
+        .unwrap_or_else(|e| format!("hsm_backend_unknown: {e}"))
+        .into()),
     }
 }
 
@@ -553,7 +570,9 @@ pub async fn handle_generate_keypair_with_hsm(params: Option<&Value>) -> Result<
 /// # Returns
 ///
 /// - `shared_secret`: Base64-encoded shared secret (32 bytes)
-pub async fn handle_x25519_derive_secret(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_x25519_derive_secret(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for crypto.x25519_derive_secret")?;
 
     // Extract parameters

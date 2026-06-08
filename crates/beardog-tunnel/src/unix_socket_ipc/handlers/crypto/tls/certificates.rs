@@ -86,7 +86,9 @@ use x509_parser::prelude::FromDer;
 /// - RFC 5280: X.509 Public Key Infrastructure Certificate and CRL Profile
 /// - RFC 6125: Domain-Based Application Service Identity
 /// - RFC 8446 Section 4.4.2: Certificate
-pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_tls_verify_certificate(
+    params: Option<&Value>,
+) -> Result<Value, super::super::super::HandlerError> {
     let params = params.ok_or("Missing params for tls.verify_certificate")?;
 
     // Extract parameters
@@ -126,7 +128,7 @@ pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Val
     }
 
     if certs.is_empty() {
-        return Err("Certificate chain is empty".to_string());
+        return Err("Certificate chain is empty".to_string().into());
     }
 
     // Parse the server (leaf) certificate

@@ -67,7 +67,9 @@ use tracing::{debug, info};
 /// # Errors
 ///
 /// Returns an error if encryption fails.
-pub async fn handle_chacha20_poly1305_encrypt(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_chacha20_poly1305_encrypt(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for crypto.chacha20_poly1305_encrypt")?;
 
     // Extract parameters
@@ -153,7 +155,9 @@ pub async fn handle_chacha20_poly1305_encrypt(params: Option<&Value>) -> Result<
 /// # Returns
 ///
 /// - `plaintext`: Base64-encoded plaintext
-pub async fn handle_chacha20_poly1305_decrypt(params: Option<&Value>) -> Result<Value, String> {
+pub async fn handle_chacha20_poly1305_decrypt(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for crypto.chacha20_poly1305_decrypt")?;
 
     // Extract parameters
