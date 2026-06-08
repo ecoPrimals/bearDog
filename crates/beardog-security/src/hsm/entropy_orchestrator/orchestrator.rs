@@ -149,12 +149,12 @@ impl HsmEntropyOrchestrator {
 
         #[cfg(all(feature = "mobile", target_os = "android"))]
         let android_device_count = usize::from(android_provider.is_some());
-        #[cfg(not(target_os = "android"))]
+        #[cfg(not(all(feature = "mobile", target_os = "android")))]
         let android_device_count = 0usize;
 
         #[cfg(all(feature = "mobile", target_os = "ios"))]
         let ios_device_count = usize::from(ios_provider.is_some());
-        #[cfg(not(target_os = "ios"))]
+        #[cfg(not(all(feature = "mobile", target_os = "ios")))]
         let ios_device_count = 0usize;
 
         let total_devices = fido2_device_count + android_device_count + ios_device_count;

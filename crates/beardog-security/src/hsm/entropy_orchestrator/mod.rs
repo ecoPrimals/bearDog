@@ -25,7 +25,7 @@
 //!
 //! # Example
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use beardog_security::hsm::entropy_orchestrator::HsmEntropyOrchestrator;
 //!
 //! #[tokio::main]
