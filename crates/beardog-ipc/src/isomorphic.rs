@@ -413,28 +413,33 @@ pub async fn connect_transport(
 /// Propagates [`discover_beardog_endpoint`] failures, or I/O errors when opening the socket.
 pub async fn connect_beardog() -> Result<IpcStream> {
     let endpoint = discover_beardog_endpoint().await?;
+    let te = ipc_endpoint_to_transport(&endpoint);
+    connect_transport(&te).await
+}
 
-    info!("🔌 Connecting to BearDog via {}", endpoint.display());
-
-    match endpoint {
-        IpcEndpoint::UnixSocket(path) => {
-            let stream = UnixStream::connect(&path).await.context(format!(
-                "Failed to connect to Unix socket: {}",
-                path.display()
-            ))?;
-
-            info!("✅ Connected via Unix socket (optimal)");
-            Ok(IpcStream::Unix(stream))
-        }
-        IpcEndpoint::TcpLocal(addr) => {
-            let stream = TcpStream::connect(addr)
-                .await
-                .context(format!("Failed to connect to TCP: {addr}"))?;
-
-            info!("✅ Connected via TCP (isomorphic fallback)");
-            Ok(IpcStream::Tcp(stream))
-        }
+/// Convert a discovered [`IpcEndpoint`] into a [`TransportEndpoint`].
+#[must_use]
+pub fn ipc_endpoint_to_transport(ep: &IpcEndpoint) -> beardog_types::btsp::TransportEndpoint {
+    use beardog_types::btsp::TransportEndpoint;
+    match ep {
+        IpcEndpoint::UnixSocket(path) => TransportEndpoint::Uds { path: path.clone() },
+        IpcEndpoint::TcpLocal(addr) => TransportEndpoint::Tcp {
+            host: addr.ip().to_string(),
+            port: addr.port(),
+        },
     }
+}
+
+/// Connect to a primal via a Unix socket path (convenience wrapper).
+///
+/// # Errors
+///
+/// Returns an error if the socket cannot be opened.
+pub async fn connect_unix(path: impl AsRef<std::path::Path>) -> Result<IpcStream> {
+    let te = beardog_types::btsp::TransportEndpoint::Uds {
+        path: path.as_ref().to_path_buf(),
+    };
+    connect_transport(&te).await
 }
 
 #[cfg(test)]

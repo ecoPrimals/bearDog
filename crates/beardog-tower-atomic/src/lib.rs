@@ -143,6 +143,30 @@ impl Client {
         })
     }
 
+    /// Connect via a structured [`TransportEndpoint`].
+    ///
+    /// UDS endpoints connect directly. TCP endpoints are not supported
+    /// by Tower Atomic (UDS-only by design); callers should use
+    /// `beardog_ipc::connect_transport()` for TCP.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::ConnectionFailed`] if the endpoint is not UDS
+    /// or the socket cannot be opened.
+    pub async fn connect_endpoint(
+        endpoint: &beardog_types::btsp::TransportEndpoint,
+        peer_label: &str,
+    ) -> Result<Self> {
+        match endpoint {
+            beardog_types::btsp::TransportEndpoint::Uds { path } => {
+                Self::connect_unix_path(path, peer_label).await
+            }
+            other => Err(Error::ConnectionFailed(format!(
+                "Tower Atomic requires UDS transport, got: {other}"
+            ))),
+        }
+    }
+
     /// Call a method via JSON-RPC 2.0
     ///
     /// # Arguments

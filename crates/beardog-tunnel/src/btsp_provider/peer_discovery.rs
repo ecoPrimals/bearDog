@@ -44,52 +44,60 @@ impl BeardogBtspProvider {
         peer_id: &str,
     ) -> Result<Vec<String>, BearDogError> {
         use tokio::io::{AsyncReadExt, AsyncWriteExt};
-        use tokio::net::UnixStream;
 
         let socket_paths = Self::get_discovery_socket_paths();
 
         for socket_path in socket_paths {
-            if let Ok(mut stream) = UnixStream::connect(&socket_path).await {
-                let mut params = serde_json::Map::new();
-                params.insert(
-                    beardog_ipc::ipc_resolve_target_param_key(),
-                    serde_json::Value::String(peer_id.to_string()),
-                );
-                let request = serde_json::json!({
-                    "jsonrpc": "2.0",
-                    "method": "ipc.resolve",
-                    "params": params,
-                    "id": 1
-                });
+            let Ok(mut stream) = beardog_ipc::connect_unix(&socket_path).await else {
+                continue;
+            };
 
-                let request_bytes = serde_json::to_vec(&request)
-                    .map_err(|e| BearDogError::system(format!("JSON serialization failed: {e}")))?;
+            let mut params = serde_json::Map::new();
+            params.insert(
+                beardog_ipc::ipc_resolve_target_param_key(),
+                serde_json::Value::String(peer_id.to_string()),
+            );
+            let request = serde_json::json!({
+                "jsonrpc": "2.0",
+                "method": "ipc.resolve",
+                "params": params,
+                "id": 1
+            });
 
-                stream
-                    .write_all(&request_bytes)
-                    .await
-                    .map_err(|e| BearDogError::system(format!("Socket write failed: {e}")))?;
-                stream
-                    .write_all(b"\n")
-                    .await
-                    .map_err(|e| BearDogError::system(format!("Socket write failed: {e}")))?;
+            let request_bytes = serde_json::to_vec(&request)
+                .map_err(|e| BearDogError::system(format!("JSON serialization failed: {e}")))?;
 
-                let mut buffer = vec![0u8; 4096];
-                let n = stream
-                    .read(&mut buffer)
-                    .await
-                    .map_err(|e| BearDogError::system(format!("Socket read failed: {e}")))?;
+            stream
+                .write_all(&request_bytes)
+                .await
+                .map_err(|e| BearDogError::system(format!("Socket write failed: {e}")))?;
+            stream
+                .write_all(b"\n")
+                .await
+                .map_err(|e| BearDogError::system(format!("Socket write failed: {e}")))?;
 
-                if n == 0 {
-                    continue;
-                }
+            let mut buffer = vec![0u8; 4096];
+            let n = stream
+                .read(&mut buffer)
+                .await
+                .map_err(|e| BearDogError::system(format!("Socket read failed: {e}")))?;
 
-                let response: serde_json::Value = serde_json::from_slice(&buffer[..n])
-                    .map_err(|e| BearDogError::system(format!("JSON parse failed: {e}")))?;
+            if n == 0 {
+                continue;
+            }
 
-                if let Some(result) = response.get("result")
-                    && let Some(endpoint) = result.get("endpoint").and_then(|e| e.as_str())
+            let response: serde_json::Value = serde_json::from_slice(&buffer[..n])
+                .map_err(|e| BearDogError::system(format!("JSON parse failed: {e}")))?;
+
+            if let Some(result) = response.get("result") {
+                // Prefer structured TransportEndpoint from ipc.resolve
+                if let Ok(te) =
+                    serde_json::from_value::<beardog_types::btsp::TransportEndpoint>(result.clone())
                 {
+                    return Ok(vec![te.to_string()]);
+                }
+                // Fall back to legacy string endpoint
+                if let Some(endpoint) = result.get("endpoint").and_then(|e| e.as_str()) {
                     return Ok(vec![endpoint.to_string()]);
                 }
             }
