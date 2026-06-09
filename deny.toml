@@ -9,6 +9,9 @@ ignore = [
     # RustCrypto RSA is the only pure-Rust RSA implementation.
     # BearDog uses Ed25519/X25519 as primary; RSA is legacy/interop only.
     "RUSTSEC-2023-0071",
+    # paste (RUSTSEC-2024-0436): unmaintained but stable, no known vuln.
+    # Transitive dep via rustls-rustcrypto — will drop when upstream removes.
+    "RUSTSEC-2024-0436",
 ]
 
 [licenses]
@@ -20,6 +23,8 @@ allow = [
     "Apache-2.0 WITH LLVM-exception",
     "BSD-3-Clause",
     "BSD-2-Clause",
+    "ISC",
+    "CDLA-Permissive-2.0",
     "Zlib",
     "Unicode-3.0",
     "BSL-1.0",
@@ -31,14 +36,18 @@ confidence-threshold = 0.8
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
-allow-git = []
+allow-git = [
+    # Pure-Rust CryptoProvider — tracks RustCrypto/rustls-rustcrypto main
+    # until a stable crates.io release is published.
+    "https://github.com/RustCrypto/rustls-rustcrypto",
+]
 
 [bans]
 multiple-versions = "deny"
 wildcards = "allow"
 skip = [
     # Transitive version splits — will resolve as upstream deps align.
-    # Last audited: 2026-04-20 — removed 3 resolved single-version skips.
+    # Last audited: 2026-06-09
     { crate = "cpufeatures" },  # 0.2 (aes/sha2) + 0.3 (blake3)
     { crate = "getrandom" },
     { crate = "hashbrown" },
@@ -51,20 +60,111 @@ skip = [
     { crate = "toml_datetime" },
     { crate = "toml_edit" },
     { crate = "winnow" },
+
+    # RustCrypto stable + RC version splits (rustls-rustcrypto uses RC crates)
+    # These will converge once RustCrypto publishes stable releases.
+    { crate = "aead" },
+    { crate = "aes" },
+    { crate = "aes-gcm" },
+    { crate = "base16ct" },
+    { crate = "block-buffer" },
+    { crate = "chacha20" },
+    { crate = "chacha20poly1305" },
+    { crate = "cipher" },
+    { crate = "const-oid" },
+    { crate = "crypto-bigint" },
+    { crate = "crypto-common" },
+    { crate = "ctr" },
+    { crate = "curve25519-dalek" },
+    { crate = "der" },
+    { crate = "digest" },
+    { crate = "ecdsa" },
+    { crate = "ed25519" },
+    { crate = "ed25519-dalek" },
+    { crate = "elliptic-curve" },
+    { crate = "ff" },
+    { crate = "fiat-crypto" },
+    { crate = "ghash" },
+    { crate = "group" },
+    { crate = "hkdf" },
+    { crate = "hmac" },
+    { crate = "inout" },
+    { crate = "p256" },
+    { crate = "p384" },
+    { crate = "pem-rfc7468" },
+    { crate = "pkcs1" },
+    { crate = "pkcs8" },
+    { crate = "poly1305" },
+    { crate = "polyval" },
+    { crate = "primeorder" },
+    { crate = "rfc6979" },
+    { crate = "rsa" },
+    { crate = "sec1" },
+    { crate = "sha2" },
+    { crate = "signature" },
+    { crate = "spki" },
+    { crate = "universal-hash" },
+    { crate = "x25519-dalek" },
 ]
 deny = [
+    # ── Anti-patterns ────────────────────────────────────────────────────
     { crate = "async-trait" },
+
+    # ── C/FFI crypto backends (hard ban — beardog IS the pure Rust alternative) ──
+    #
+    # Any crate that links C/C++ crypto code. If a transitive dep pulls one of
+    # these in, the dep must be replaced or the feature must be disabled.
+    # This list is the ecoBin purity contract.
+
+    # OpenSSL family
     { crate = "openssl", wrappers = [] },
     { crate = "openssl-sys", wrappers = [] },
-    # ring + aws-lc-rs eliminated (Wave 104) — pure-Rust RustCrypto CryptoProvider
-    { crate = "ring", wrappers = [] },
+    { crate = "openssl-probe", wrappers = [] },
+
+    # AWS libcrypto (C)
     { crate = "aws-lc-rs", wrappers = [] },
     { crate = "aws-lc-sys", wrappers = [] },
-    { crate = "rcgen", wrappers = [] },
-    { crate = "native-tls", wrappers = [] },
+
+    # ring (C assembly)
+    { crate = "ring", wrappers = [] },
+    { crate = "ring-core", wrappers = [] },
+
+    # BoringSSL / Google
+    { crate = "boring", wrappers = [] },
+    { crate = "boring-sys", wrappers = [] },
+
+    # wolfSSL
+    { crate = "wolfssl", wrappers = [] },
+    { crate = "wolfssl-sys", wrappers = [] },
+
+    # mbedTLS
+    { crate = "mbedtls", wrappers = [] },
+    { crate = "mbedtls-sys-auto", wrappers = [] },
+
+    # libsodium
     { crate = "libsodium-sys", wrappers = [] },
-    { crate = "hidapi", wrappers = [] },
+    { crate = "sodiumoxide", wrappers = [] },
+    { crate = "libsodium-sys-stable", wrappers = [] },
+
+    # GnuTLS / Nettle
+    { crate = "nettle-sys", wrappers = [] },
+
+    # Legacy / compatibility traps
+    { crate = "native-tls", wrappers = [] },
+    { crate = "security-framework-sys", wrappers = [] },
+    { crate = "schannel", wrappers = [] },
+
+    # rcgen (was aws-lc-rs dependent — replaced by p256 + x509-cert)
+    { crate = "rcgen", wrappers = [] },
+
+    # ── C toolchain / FFI generators (prevent accidental C build deps) ───
     { crate = "bindgen", wrappers = [] },
+    # cc: allowed only as blake3 build-dep (blake3 features=["pure"] disables C assembly)
+    { crate = "cc", wrappers = ["blake3"] },
+    { crate = "cmake", wrappers = [] },
+
+    # ── Hardware FFI (replaced by pure-Rust beardog-hid) ─────────────────
+    { crate = "hidapi", wrappers = [] },
 ]
 skip-tree = []
 
