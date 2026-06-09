@@ -354,20 +354,19 @@ impl UniversalCryptoProvider for RustCryptoProvider {
                 KdfAlgorithm::HkdfSha512 => {
                     this.derive_hkdf_sha512(&input_key, &salt, &info, output_length)
                 }
-                KdfAlgorithm::Pbkdf2 { ref hash, iterations } => {
-                    this.derive_pbkdf2(hash, iterations, &input_key, &salt, output_length)
-                }
+                KdfAlgorithm::Pbkdf2 {
+                    ref hash,
+                    iterations,
+                } => this.derive_pbkdf2(hash, iterations, &input_key, &salt, output_length),
                 KdfAlgorithm::Argon2 { ref variant } => {
                     this.derive_argon2(variant, &input_key, &salt, output_length)
                 }
                 KdfAlgorithm::Scrypt { n, r, p } => {
                     this.derive_scrypt(n, r, p, &input_key, &salt, output_length)
                 }
-                KdfAlgorithm::Custom { ref name, .. } => {
-                    Err(BearDogError::unsupported_operation(format!(
-                        "Custom KDF '{name}' not supported by RustCrypto provider"
-                    )))
-                }
+                KdfAlgorithm::Custom { ref name, .. } => Err(BearDogError::unsupported_operation(
+                    format!("Custom KDF '{name}' not supported by RustCrypto provider"),
+                )),
             }
         }
     }
@@ -676,9 +675,8 @@ impl RustCryptoProvider {
     ) -> Result<Signature, BearDogError> {
         use p384::ecdsa::{SigningKey, signature::Signer};
 
-        let signing_key = SigningKey::from_bytes(private_key.into()).map_err(|e| {
-            BearDogError::crypto_error(format!("Invalid P-384 private key: {e}"))
-        })?;
+        let signing_key = SigningKey::from_bytes(private_key.into())
+            .map_err(|e| BearDogError::crypto_error(format!("Invalid P-384 private key: {e}")))?;
 
         let signature: p384::ecdsa::Signature = signing_key.sign(message);
 
@@ -697,14 +695,11 @@ impl RustCryptoProvider {
     ) -> Result<bool, BearDogError> {
         use p384::ecdsa::{VerifyingKey, signature::Verifier};
 
-        let verifying_key = VerifyingKey::from_sec1_bytes(public_key).map_err(|e| {
-            BearDogError::crypto_error(format!("Invalid P-384 public key: {e}"))
-        })?;
+        let verifying_key = VerifyingKey::from_sec1_bytes(public_key)
+            .map_err(|e| BearDogError::crypto_error(format!("Invalid P-384 public key: {e}")))?;
 
         let sig = p384::ecdsa::Signature::from_bytes(signature.signature.as_slice().into())
-            .map_err(|e| {
-                BearDogError::crypto_error(format!("Invalid P-384 signature: {e}"))
-            })?;
+            .map_err(|e| BearDogError::crypto_error(format!("Invalid P-384 signature: {e}")))?;
 
         Ok(verifying_key.verify(message, &sig).is_ok())
     }
@@ -862,9 +857,10 @@ impl RustCryptoProvider {
         salt: &[u8],
         output_length: usize,
     ) -> Result<Vec<u8>, BearDogError> {
-        let log_n = u8::try_from(n.checked_ilog2().ok_or_else(|| {
-            BearDogError::crypto_error("scrypt n must be a power of 2 > 0")
-        })?)
+        let log_n = u8::try_from(
+            n.checked_ilog2()
+                .ok_or_else(|| BearDogError::crypto_error("scrypt n must be a power of 2 > 0"))?,
+        )
         .map_err(|_| BearDogError::crypto_error("scrypt log_n exceeds u8 range"))?;
         let params = scrypt::Params::new(log_n, r, p, output_length)
             .map_err(|e| BearDogError::crypto_error(format!("scrypt params: {e}")))?;

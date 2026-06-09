@@ -63,7 +63,7 @@ New crate: `crates/beardog-acme/`
 
 Dependencies (all pure Rust, no C):
 - `rustls` (already in workspace — shared with beardog-tunnel)
-- `rcgen` — CSR generation (pure Rust, RustCrypto)
+- `p256` + `x509-cert` — CSR generation (pure Rust, RustCrypto; replaced `rcgen`)
 - `reqwest` (rustls backend) — ACME directory + order HTTP calls
 - `base64ct` — JWS encoding (already in workspace)
 

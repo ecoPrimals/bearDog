@@ -257,11 +257,16 @@ impl BearDogCrypto {
         }
     }
 
-    /// Sha256 Hash operation.
-    pub fn sha256_hash(input: &[u8]) -> String {
+    /// SHA-256 hash returning raw bytes.
+    pub fn sha256_hash_bytes(input: &[u8]) -> Vec<u8> {
         let mut hasher = Sha256::new();
         hasher.update(input);
-        hex::encode(hasher.finalize())
+        hasher.finalize().to_vec()
+    }
+
+    /// SHA-256 hash returning a hex-encoded string.
+    pub fn sha256_hash(input: &[u8]) -> String {
+        hex::encode(Self::sha256_hash_bytes(input))
     }
 
     /// Compute HMAC-SHA256
@@ -387,6 +392,79 @@ impl BearDogCrypto {
         } else {
             Ok(format!("{prefix}_{base64_key}"))
         }
+    }
+
+    /// Encrypt data using ChaCha20-Poly1305
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key length is invalid or encryption fails.
+    pub fn encrypt_chacha20_poly1305(
+        key: &[u8],
+        plaintext: &[u8],
+        nonce_opt: Option<&[u8]>,
+    ) -> Result<(Vec<u8>, Vec<u8>), BearDogError> {
+        use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce, aead::Aead};
+
+        if key.len() != 32 {
+            return Err(BearDogError::invalid_input(
+                "ChaCha20-Poly1305 key must be 32 bytes",
+            ));
+        }
+
+        let cipher = ChaCha20Poly1305::new_from_slice(key)
+            .map_err(|e| BearDogError::security(format!("Invalid ChaCha20 key: {e}")))?;
+
+        let nonce_bytes = if let Some(nonce) = nonce_opt {
+            if nonce.len() != 12 {
+                return Err(BearDogError::invalid_input(
+                    "ChaCha20-Poly1305 nonce must be 12 bytes",
+                ));
+            }
+            nonce.to_vec()
+        } else {
+            Self::generate_secure_nonce(12)
+        };
+
+        let nonce = Nonce::from_slice(&nonce_bytes);
+        let ciphertext = cipher.encrypt(nonce, plaintext).map_err(|e| {
+            BearDogError::security(format!("ChaCha20-Poly1305 encryption failed: {e}"))
+        })?;
+
+        Ok((ciphertext, nonce_bytes))
+    }
+
+    /// Decrypt data using ChaCha20-Poly1305
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key or nonce length is invalid, authentication fails, or
+    /// decryption fails.
+    pub fn decrypt_chacha20_poly1305(
+        key: &[u8],
+        ciphertext: &[u8],
+        nonce: &[u8],
+    ) -> Result<Vec<u8>, BearDogError> {
+        use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce, aead::Aead};
+
+        if key.len() != 32 {
+            return Err(BearDogError::invalid_input(
+                "ChaCha20-Poly1305 key must be 32 bytes",
+            ));
+        }
+        if nonce.len() != 12 {
+            return Err(BearDogError::invalid_input(
+                "ChaCha20-Poly1305 nonce must be 12 bytes",
+            ));
+        }
+
+        let cipher = ChaCha20Poly1305::new_from_slice(key)
+            .map_err(|e| BearDogError::security(format!("Invalid ChaCha20 key: {e}")))?;
+        let nonce = Nonce::from_slice(nonce);
+
+        cipher.decrypt(nonce, ciphertext).map_err(|e| {
+            BearDogError::security(format!("ChaCha20-Poly1305 decryption failed: {e}"))
+        })
     }
 
     /// Zero memory securely

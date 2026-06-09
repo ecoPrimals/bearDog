@@ -112,7 +112,7 @@ pub use key_rotation_manager::{KeyRotationManager, RotationStatistics};
 pub use memory_key_manager::*;
 
 use beardog_errors::BearDogError;
-use rand::RngCore;
+use crypto_utils::BearDogCrypto;
 use sha2::{Digest, Sha256, Sha512};
 
 /// Compute SHA-256 hash of input data
@@ -145,9 +145,7 @@ use sha2::{Digest, Sha256, Sha512};
 ///
 /// Currently infallible; the `Result` is reserved for future hashing backends.
 pub fn compute_sha256_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-    let mut hasher = Sha256::new();
-    hasher.update(data);
-    Ok(hasher.finalize().to_vec())
+    Ok(BearDogCrypto::sha256_hash_bytes(data))
 }
 
 /// Compute SHA-512 hash of input data
@@ -260,9 +258,7 @@ pub fn compute_sha512_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
 ///
 /// Currently always returns `Ok`; the `Result` is reserved for future RNG or allocation failures.
 pub fn generate_secure_random_bytes(size: usize) -> Result<Vec<u8>, BearDogError> {
-    let mut bytes = vec![0u8; size];
-    rand::rng().fill_bytes(&mut bytes);
-    Ok(bytes)
+    Ok(BearDogCrypto::generate_secure_random(size))
 }
 
 /// Derive cryptographic key from password using iterative hashing
@@ -516,15 +512,7 @@ pub fn derive_key_from_password(
 /// - [`compute_sha256_hash`] - For creating HMACs
 #[must_use]
 pub fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
-    if a.len() != b.len() {
-        return false;
-    }
-
-    let mut result = 0u8;
-    for (x, y) in a.iter().zip(b.iter()) {
-        result |= x ^ y;
-    }
-    result == 0
+    BearDogCrypto::constant_time_compare(a, b)
 }
 
 /// Securely zeroes memory to prevent sensitive data leakage
@@ -538,15 +526,5 @@ pub fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
 /// # Security
 /// Uses `ptr::write_volatile` to ensure the zeroing operation cannot be optimized away
 pub fn secure_zero_memory(data: &mut [u8]) {
-    // 🛡️ 100% SAFE: Use zeroize crate (audited, guaranteed)!
-    //
-    // The zeroize crate provides safe memory clearing that CANNOT be optimized away.
-    // It's widely used, audited by security experts, and recommended by:
-    // - OWASP
-    // - RustSec Advisory Database
-    // - Major security organizations
-    //
-    // No unchecked memory patterns needed - zeroize handles everything safely!
-    use zeroize::Zeroize;
-    data.zeroize();
+    BearDogCrypto::zero_memory(data);
 }

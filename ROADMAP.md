@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: Jun 3, 2026
+**Updated**: Jun 9, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -15,7 +15,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ### Completed
 
 - Rust edition 2024 (MSRV 1.93.0, `rust-toolchain.toml` pinned)
-- 100% Pure Rust crypto intent (`aws-lc-rs` via `rustls` is C FFI; tracking `rustls-rustcrypto` for Phase 2)
+- 100% Pure Rust crypto achieved — `aws-lc-rs` replaced by `rustls-rustcrypto` (Pure Rust CryptoProvider); `rcgen` replaced by `p256` + `x509-cert`; 19 C-crypto crates banned in `deny.toml`
 - 225 JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing, lineage queries, auth gate, ionic tokens, FIDO2/CTAP2, seed fingerprint, universal discovery, threat analysis, ecosystem integration)
 - 0 clippy warnings (pedantic + nursery + all cast lints warn + `doc_markdown` warn + `missing_errors_doc` warn + unwrap/expect warn, workspace-centralized)
 - 0 missing documentation warnings (all public items documented, all `# Errors` sections present)
@@ -80,9 +80,9 @@ Top-level `scopes` array always present in verify response. Unblocks primalSprin
 
 `KeystoreTransport` trait with Stub/AndroidJni/AndroidKeymaster backends. Pixel 8a device detection. `BEARDOG_KEYSTORE_BACKEND` env switch.
 
-### ring Elimination — DONE (Wave 125)
+### ring Elimination — DONE (Wave 125), Pure Rust Completion (Wave 145)
 
-`ring` → `aws-lc-rs` complete. `deny.toml` bans ring. Zero ring in dependency graph.
+`ring` → `aws-lc-rs` → Pure Rust `rustls-rustcrypto` complete. `deny.toml` bans ring, aws-lc-rs, rcgen, and 16 C-crypto crates. Zero C-crypto in dependency graph. CSR generation via `p256` + `x509-cert`. Crypto wrapper stacks consolidated; `BearDogCrypto` established as canonical primitive layer.
 
 ### Env Migration Complete — DONE (Waves 121–128)
 

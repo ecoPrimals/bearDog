@@ -123,18 +123,19 @@ impl EncryptionService {
             )));
         }
 
-        match self.config.algorithm {
+        let (ciphertext, nonce) = match self.config.algorithm {
             EncryptionAlgorithm::Aes256Gcm => {
-                let (ciphertext, nonce) = BearDogCrypto::encrypt_aes_gcm(key, input_bytes, None)?;
-                let mut result = Vec::with_capacity(nonce.len() + ciphertext.len());
-                result.extend_from_slice(&nonce);
-                result.extend_from_slice(&ciphertext);
-                Ok(result)
+                BearDogCrypto::encrypt_aes_gcm(key, input_bytes, None)?
             }
             EncryptionAlgorithm::ChaCha20Poly1305 => {
-                encrypt_chacha20_poly1305(key, input_bytes)
+                BearDogCrypto::encrypt_chacha20_poly1305(key, input_bytes, None)?
             }
-        }
+        };
+
+        let mut result = Vec::with_capacity(nonce.len() + ciphertext.len());
+        result.extend_from_slice(&nonce);
+        result.extend_from_slice(&ciphertext);
+        Ok(result)
     }
 
     /// Decrypt Data operation.
@@ -171,49 +172,10 @@ impl EncryptionService {
                 BearDogCrypto::decrypt_aes_gcm(key, ciphertext, nonce)
             }
             EncryptionAlgorithm::ChaCha20Poly1305 => {
-                decrypt_chacha20_poly1305(key, ciphertext, nonce)
+                BearDogCrypto::decrypt_chacha20_poly1305(key, ciphertext, nonce)
             }
         }
     }
 }
 
 pub(crate) const CHACHA20_NONCE_LEN: usize = 12;
-
-fn encrypt_chacha20_poly1305(key: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
-    use chacha20poly1305::aead::Aead;
-    use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
-
-    let cipher = ChaCha20Poly1305::new_from_slice(key)
-        .map_err(|e| BearDogError::crypto_error(format!("Invalid ChaCha20 key: {e}")))?;
-
-    let mut nonce_bytes = [0u8; CHACHA20_NONCE_LEN];
-    rand::fill(&mut nonce_bytes);
-    let nonce = Nonce::from_slice(&nonce_bytes);
-
-    let ciphertext = cipher
-        .encrypt(nonce, plaintext)
-        .map_err(|e| BearDogError::crypto_error(format!("ChaCha20-Poly1305 encryption failed: {e}")))?;
-
-    let mut result = Vec::with_capacity(CHACHA20_NONCE_LEN + ciphertext.len());
-    result.extend_from_slice(&nonce_bytes);
-    result.extend_from_slice(&ciphertext);
-    Ok(result)
-}
-
-fn decrypt_chacha20_poly1305(
-    key: &[u8],
-    ciphertext: &[u8],
-    nonce: &[u8],
-) -> Result<Vec<u8>, BearDogError> {
-    use chacha20poly1305::aead::Aead;
-    use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
-
-    let cipher = ChaCha20Poly1305::new_from_slice(key)
-        .map_err(|e| BearDogError::crypto_error(format!("Invalid ChaCha20 key: {e}")))?;
-
-    let nonce = Nonce::from_slice(nonce);
-
-    cipher
-        .decrypt(nonce, ciphertext)
-        .map_err(|e| BearDogError::crypto_error(format!("ChaCha20-Poly1305 decryption failed: {e}")))
-}

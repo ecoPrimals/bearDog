@@ -180,7 +180,8 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_provider_type_strings() -> Result<(), BearDogError> {
-        let rust_crypto = CryptoProviderDispatch::RustCrypto(SoftwareHsmCryptoProvider::new().await?);
+        let rust_crypto =
+            CryptoProviderDispatch::RustCrypto(SoftwareHsmCryptoProvider::new().await?);
         assert_eq!(rust_crypto.provider_type(), "rust_crypto");
 
         // Ring removed - evolved to RustCrypto (100% Pure Rust!)

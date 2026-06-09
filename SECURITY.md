@@ -2,7 +2,7 @@
 
 # BearDog Security
 
-**Last Updated**: Jun 3, 2026
+**Last Updated**: Jun 9, 2026
 **Status**: Production Ready
 
 ---
@@ -11,7 +11,7 @@
 
 | Metric | Status |
 |--------|--------|
-| **Pure Rust** | ✅ Crypto via `aws-lc-rs` (C FFI); `ring` eliminated and banned in `deny.toml` |
+| **Pure Rust** | ✅ 100% Pure Rust crypto (RustCrypto suite via `rustls-rustcrypto`); `ring`, `aws-lc-rs`, `rcgen`, and 16 C-crypto crates banned in `deny.toml` |
 | **Unsafe Code** | ✅ 0 blocks in production |
 | **Panic Paths** | ✅ 0 — All `Result<T, E>` |
 | **Constant-Time** | ✅ `subtle` crate for secrets |
@@ -47,12 +47,12 @@
 
 ### Cryptographic Safety
 
-- **Crypto backend** — `aws-lc-rs` via `rustls`; `ring` eliminated and banned in `deny.toml`
+- **Crypto backend** — Pure Rust `rustls-rustcrypto` CryptoProvider; `ring`, `aws-lc-rs`, and all C-crypto crates banned in `deny.toml`
 - **HSM abstraction** — Software, PKCS#11, Android StrongBox backends (`feature = "mobile"` gated)
 - **Key derivation** — HKDF-SHA256, family-scoped keys
 - **AEAD encryption** — ChaCha20-Poly1305, AES-256-GCM
 - **Post-quantum** — `quantum_crypto` module feature-gated (`feature = "quantum-crypto"`); experimental only
-- **ACME** — Automated certificate lifecycle with renewal daemon; `rcgen` CSR generation (ECDSA P-256)
+- **ACME** — Automated certificate lifecycle with renewal daemon; Pure Rust CSR generation via `p256` + `x509-cert` (ECDSA P-256)
 
 ### Operational Safety
 

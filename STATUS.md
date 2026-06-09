@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: Jun 5, 2026 (Wave 142)
+**Last Updated**: Jun 9, 2026 (Wave 145)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -23,7 +23,7 @@
 | **Tests** | 14,974+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
-| **cargo deny** | bans pass | 1 advisory ignore (RSA Marvin), `ring` banned in `deny.toml`; TLS backend is `aws-lc-rs` |
+| **cargo deny** | all 4 pass | 2 advisory ignores (RSA Marvin, `paste`); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned; TLS backend is Pure Rust `rustls-rustcrypto` |
 | **License** | AGPL-3.0-or-later | SPDX headers on all .rs files |
 | **Architecture** | DI-based | Pure `Default`, `from_env()` at boundaries |
 | **Toolchain** | Pinned | `rust-toolchain.toml` at 1.93.0 |
@@ -69,7 +69,7 @@
 | Standard | Status |
 |----------|--------|
 | Edition 2024 | MSRV 1.93.0, all crates, `rust-toolchain.toml` pinned |
-| Pure Rust (ecoBin) | Zero C deps; `ring` banned in `deny.toml`; TLS backend is `aws-lc-rs` via `rustls`; blake3 pure feature; sysinfo removed |
+| Pure Rust (ecoBin) | Zero C deps; `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned in `deny.toml`; TLS backend is Pure Rust `rustls-rustcrypto`; CSR via `p256` + `x509-cert`; blake3 pure feature; sysinfo removed |
 | UniBin/ecoBin | Single binary, standalone identity fallback per UniBin v1.1, cross-compilation ready |
 | Dependency Injection | Pure `Default`, `from_env()` at startup, `from_env_provider()` for tests |
 | Zero Hardcoding | 850+ env_keys constants; capability-based discovery everywhere |
@@ -89,6 +89,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 145 — Pure Rust Crypto, Crypto Dedup, Debris Cleanup (Jun 9, 2026)
+
+- **100% Pure Rust crypto achieved** — `aws-lc-rs` replaced by `rustls-rustcrypto` (Pure Rust `CryptoProvider`); `rcgen` replaced by `p256` + `x509-cert` for CSR generation. Zero C-crypto in dependency graph.
+- **`deny.toml` hardened** — 19 C-crypto crates banned (aws-lc-rs, openssl, ring, boring, native-tls, etc.); `cc` allowed only as `blake3` pure-mode wrapper.
+- **Crypto wrapper dedup** — 5 parallel crypto stacks audited; `BearDogCrypto` established as canonical primitive layer. ChaCha20-Poly1305 consolidated into `BearDogCrypto`. `EncryptionService` and `lib.rs` free functions now delegate to `BearDogCrypto`. `SoftwareHsmCryptoProvider` renamed to resolve naming collision.
+- **Dead code removed** — `unified.rs` (20KB orphan), `service.rs`, `config.rs` (superseded), `crypto_edge_cases_tests.rs` (never compiled); 15 additional orphaned/corrupted `.rs` files cleaned.
+- **Root docs updated** — STATUS, SECURITY, ROADMAP, ACME spec corrected from `aws-lc-rs`/`rcgen` to Pure Rust stack.
 
 ### Wave 134 — ACME Smart Refactor, Stub Evolution, Dead Dep Removal (Jun 3, 2026)
 
@@ -140,8 +148,8 @@
 
 ### Wave 125 — Ring Elimination (Jun 2, 2026)
 
-- **TLS backend switched to `aws-lc-rs`** — `rustls`, `tokio-rustls`, and `rcgen` no longer pull `ring`.
-- **`ring` banned in `deny.toml`** — Direct and transitive `ring` usage blocked; `aws-lc-rs`/`aws-lc-sys` allowed when wrapped by rustls/rcgen.
+- **TLS backend switched to `aws-lc-rs`** — `rustls`, `tokio-rustls`, and `rcgen` no longer pull `ring`. (Superseded Wave 145: `aws-lc-rs` itself replaced by Pure Rust `rustls-rustcrypto`; `rcgen` replaced by `p256` + `x509-cert`.)
+- **`ring` banned in `deny.toml`** — Direct and transitive `ring` usage blocked.
 
 ### Wave 124 — Root Doc Sync, Debris Cleanup, Fossil Hygiene (Jun 2, 2026)
 
@@ -153,11 +161,11 @@
 
 - **~200 env var strings centralized** — beardog-types, beardog-core, beardog-tunnel HSM, beardog-ipc migrated to `env_keys::` constants.
 - **`rustls-pemfile` replaced** — RUSTSEC-2025-0134 addressed via `rustls-pki-types` `PemObject` API.
-- **Cert stack upgraded** — `x509-parser` 0.16 → 0.18, `rcgen` 0.13 → 0.14; `beardog-acme` unified to workspace `x509-parser`.
+- **Cert stack upgraded** — `x509-parser` 0.16 → 0.18; `beardog-acme` unified to workspace `x509-parser`. (Superseded Wave 145: `rcgen` eliminated entirely in favor of `p256` + `x509-cert`.)
 
 ### Wave 122 — ACME CSR Evolution, Android Mock Honesty, Env Migration Wave 3 (Jun 2, 2026)
 
-- **Proper ACME CSR** — PKCS#10 DER generation via `rcgen` (ECDSA P-256); PKCS#8 PEM export via `cert_private_key_pem()`.
+- **Proper ACME CSR** — PKCS#10 DER generation via ECDSA P-256; PKCS#8 PEM export. (Superseded Wave 145: now uses `p256` + `x509-cert` instead of `rcgen`.)
 - **Android keystore honesty** — `MemoryKeystoreTransport` reports `strongbox_available: false`, `hardware_backed: false`; `tracing::warn!` on stub paths.
 - **~130 env var strings centralized** — network_discovery, security, network, runtime_config, self_discovery domains.
 

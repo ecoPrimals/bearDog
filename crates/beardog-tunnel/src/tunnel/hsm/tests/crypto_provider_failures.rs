@@ -6,7 +6,9 @@
 
 use crate::tunnel::hsm::manager::HsmProvider;
 use crate::tunnel::hsm::software_hsm::core::RustSoftwareHsm;
-use crate::tunnel::hsm::software_hsm::crypto_providers::{CryptoProvider, SoftwareHsmCryptoProvider};
+use crate::tunnel::hsm::software_hsm::crypto_providers::{
+    CryptoProvider, SoftwareHsmCryptoProvider,
+};
 // RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust!)
 // OpenSslCryptoProvider removed - evolved to pure Rust only
 use crate::tunnel::hsm::GenerateKeyRequest;

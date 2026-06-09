@@ -23,7 +23,6 @@ use tracing::{debug, info};
 #[derive(Debug, Clone)]
 pub struct SoftwareHsmCryptoProvider;
 
-
 impl SoftwareHsmCryptoProvider {
     /// Create new Rust crypto provider
     ///
