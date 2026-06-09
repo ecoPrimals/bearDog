@@ -285,6 +285,9 @@ pub const ENV_HSM_RETRY_MAX_DELAY_SECS: &str = "BEARDOG_HSM_RETRY_MAX_DELAY_SECS
 pub const ENV_HSM_MODE: &str = "BEARDOG_HSM_MODE";
 /// HSM auto-initialization flag.
 pub const ENV_HSM_AUTO_INIT: &str = "BEARDOG_HSM_AUTO_INIT";
+/// When `true`, requesting a hardware HSM tier that is unavailable silently
+/// degrades to software. Default is `false` (fail-closed).
+pub const ENV_HSM_ALLOW_SOFTWARE_FALLBACK: &str = "BEARDOG_HSM_ALLOW_SOFTWARE_FALLBACK";
 /// Colon-separated HSM library search paths.
 pub const ENV_HSM_LIBRARY_PATHS: &str = "BEARDOG_HSM_LIBRARY_PATHS";
 /// HSM audit log directory.

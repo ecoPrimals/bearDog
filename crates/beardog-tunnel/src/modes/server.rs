@@ -153,10 +153,8 @@ pub async fn run(
     info!("   Node: {}", socket_config.node_id());
     info!("   PID: {}", std::process::id());
 
-    // Prepare socket (create parent dir, remove old socket)
-    socket_config.prepare().map_err(|e| {
+    socket_config.prepare().inspect_err(|e| {
         error!("Failed to prepare socket: {}", e);
-        BearDogError::configuration(&e)
     })?;
 
     // wateringHole v3.1: capability-domain symlinks are installed after bind in [`UnixSocketIpcServer::start`].

@@ -9,6 +9,7 @@
 //! periodically to bound memory usage.
 
 use beardog_config::env_keys;
+use beardog_errors::BearDogError;
 use dashmap::DashMap;
 use std::net::IpAddr;
 use std::sync::Arc;
@@ -106,7 +107,7 @@ impl ConnectionRateLimiter {
     /// # Errors
     ///
     /// Returns a string describing why the connection was rejected.
-    pub fn check_connection(&self, ip: &IpAddr) -> Result<(), String> {
+    pub fn check_connection(&self, ip: &IpAddr) -> Result<(), BearDogError> {
         if self.config.allowlist.contains(ip) {
             return Ok(());
         }
@@ -119,10 +120,10 @@ impl ConnectionRateLimiter {
                 max = self.config.max_total_connections,
                 "rate limit: total connection limit reached"
             );
-            return Err(format!(
+            return Err(BearDogError::unavailable(format!(
                 "server at connection capacity ({}/{})",
                 total, self.config.max_total_connections
-            ));
+            )));
         }
 
         let now = Instant::now();
@@ -148,10 +149,10 @@ impl ConnectionRateLimiter {
                 window_secs = self.config.window.as_secs(),
                 "rate limit: per-IP connection limit exceeded"
             );
-            return Err(format!(
+            return Err(BearDogError::unavailable(format!(
                 "too many connections from {} ({}/{})",
                 ip, count, self.config.max_connections_per_window
-            ));
+            )));
         }
 
         entry.timestamps.push(now);

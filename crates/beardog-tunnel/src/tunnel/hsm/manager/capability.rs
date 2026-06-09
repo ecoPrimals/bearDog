@@ -110,22 +110,32 @@ impl DefaultHsmCapabilityDetector {
         Ok(Self::default())
     }
 
-    /// Check hardware HSM availability
-    const fn check_hardware_hsm_availability(&self) -> Result<bool, BearDogError> {
-        // In production, this would check for actual hardware HSM presence
-        Ok(false)
+    /// Check hardware HSM availability via environment probe.
+    ///
+    /// Returns `true` when `BEARDOG_HSM_DEVICE` is set to a non-empty path
+    /// (indicates a PKCS#11 library or TPM device is configured).
+    fn check_hardware_hsm_availability(&self) -> Result<bool, BearDogError> {
+        Ok(std::env::var("BEARDOG_HSM_DEVICE")
+            .map(|v| !v.is_empty())
+            .unwrap_or(false))
     }
 
-    /// Check smart card availability
-    const fn check_smartcard_availability(&self) -> Result<bool, BearDogError> {
-        // In production, this would check for smart card readers
-        Ok(false)
+    /// Check smart card availability via environment probe.
+    ///
+    /// Returns `true` when `BEARDOG_SMARTCARD_READER` is set.
+    fn check_smartcard_availability(&self) -> Result<bool, BearDogError> {
+        Ok(std::env::var("BEARDOG_SMARTCARD_READER")
+            .map(|v| !v.is_empty())
+            .unwrap_or(false))
     }
 
-    /// Check cloud HSM availability
-    const fn check_cloud_hsm_availability(&self) -> Result<bool, BearDogError> {
-        // In production, this would check cloud HSM connectivity
-        Ok(false)
+    /// Check cloud HSM availability via environment probe.
+    ///
+    /// Returns `true` when `BEARDOG_CLOUD_HSM_ENDPOINT` is set.
+    fn check_cloud_hsm_availability(&self) -> Result<bool, BearDogError> {
+        Ok(std::env::var("BEARDOG_CLOUD_HSM_ENDPOINT")
+            .map(|v| !v.is_empty())
+            .unwrap_or(false))
     }
 
     /// Get provider capabilities

@@ -249,7 +249,7 @@ async fn test_auto_initialize_default_software_mode() {
 async fn test_auto_initialize_explicit_software_mode() {
     let config = HsmAutoInitConfig {
         mode: "software".to_string(),
-        auto_init: true,
+        ..Default::default()
     };
 
     let manager = HsmManager::auto_initialize_with_config(config).await;
@@ -268,7 +268,7 @@ async fn test_auto_initialize_case_insensitive() {
     // Test uppercase
     let config = HsmAutoInitConfig {
         mode: "SOFTWARE".to_string(),
-        auto_init: true,
+        ..Default::default()
     };
     let manager = HsmManager::auto_initialize_with_config(config).await;
     assert!(manager.is_ok(), "Should handle uppercase mode");
@@ -276,65 +276,74 @@ async fn test_auto_initialize_case_insensitive() {
     // Test mixed case
     let config = HsmAutoInitConfig {
         mode: "SoftWare".to_string(),
-        auto_init: true,
+        ..Default::default()
     };
     let manager = HsmManager::auto_initialize_with_config(config).await;
     assert!(manager.is_ok(), "Should handle mixed case mode");
 }
 
 #[tokio::test]
-async fn test_auto_initialize_hardware_mode_fallback() {
-    // Use config directly instead of process env to avoid parallel-test env races.
-    // See test_auto_initialize_default_software_mode comment for rationale.
+async fn test_hardware_mode_fails_without_fallback_flag() {
     let config = HsmAutoInitConfig {
         mode: "hardware".to_string(),
         auto_init: true,
+        allow_software_fallback: false,
     };
+    let result = HsmManager::auto_initialize_with_config(config).await;
+    assert!(
+        result.is_err(),
+        "Hardware mode should fail without fallback"
+    );
+    assert!(
+        result.unwrap_err().to_string().contains("not available"),
+        "Error should explain the mode is unavailable"
+    );
+}
 
+#[tokio::test]
+async fn test_hardware_mode_falls_back_when_allowed() {
+    let config = HsmAutoInitConfig {
+        mode: "hardware".to_string(),
+        auto_init: true,
+        allow_software_fallback: true,
+    };
     let manager = HsmManager::auto_initialize_with_config(config).await;
     assert!(
         manager.is_ok(),
-        "Should fallback to software when hardware not available"
+        "Should fallback to software when allow_software_fallback=true"
     );
-
     let manager = manager.unwrap();
     let key = manager.generate_key("test_key", &KeyType::Aes).await;
     assert!(key.is_ok(), "Fallback software HSM should work");
 }
 
 #[tokio::test]
-async fn test_auto_initialize_android_mode_fallback() {
+async fn test_android_mode_fails_without_fallback_flag() {
     let config = HsmAutoInitConfig {
         mode: "android_strongbox".to_string(),
         auto_init: true,
+        allow_software_fallback: false,
     };
-
-    let manager = HsmManager::auto_initialize_with_config(config).await;
-    assert!(
-        manager.is_ok(),
-        "Should fallback to software when Android not available"
-    );
+    let result = HsmManager::auto_initialize_with_config(config).await;
+    assert!(result.is_err(), "Android mode should fail on non-Android");
 }
 
 #[tokio::test]
-async fn test_auto_initialize_ios_mode_fallback() {
+async fn test_ios_mode_fails_without_fallback_flag() {
     let config = HsmAutoInitConfig {
         mode: "ios_secure_enclave".to_string(),
         auto_init: true,
+        allow_software_fallback: false,
     };
-
-    let manager = HsmManager::auto_initialize_with_config(config).await;
-    assert!(
-        manager.is_ok(),
-        "Should fallback to software when iOS not available"
-    );
+    let result = HsmManager::auto_initialize_with_config(config).await;
+    assert!(result.is_err(), "iOS mode should fail on non-iOS");
 }
 
 #[tokio::test]
 async fn test_auto_initialize_invalid_mode() {
     let config = HsmAutoInitConfig {
         mode: "invalid_mode".to_string(),
-        auto_init: true,
+        ..Default::default()
     };
 
     let result = HsmManager::auto_initialize_with_config(config).await;
@@ -353,6 +362,7 @@ async fn test_auto_initialize_disabled() {
     let config = HsmAutoInitConfig {
         mode: "software".to_string(),
         auto_init: false,
+        ..Default::default()
     };
 
     let manager = HsmManager::auto_initialize_with_config(config).await;
@@ -376,7 +386,7 @@ async fn test_auto_initialize_disabled() {
 async fn test_auto_initialize_multiple_key_operations() {
     let config = HsmAutoInitConfig {
         mode: "software".to_string(),
-        auto_init: true,
+        ..Default::default()
     };
 
     let manager = HsmManager::auto_initialize_with_config(config)
@@ -405,7 +415,7 @@ async fn test_auto_initialize_concurrent_safe() {
 
     let config = HsmAutoInitConfig {
         mode: "software".to_string(),
-        auto_init: true,
+        ..Default::default()
     };
 
     // Initialize the manager once
@@ -441,7 +451,7 @@ async fn test_auto_initialize_environment_precedence() {
     // (same code path, deterministic).
     let config = HsmAutoInitConfig {
         mode: "software".to_string(),
-        auto_init: true,
+        ..Default::default()
     };
     let manager = HsmManager::auto_initialize_with_config(config)
         .await
@@ -455,7 +465,7 @@ async fn test_auto_initialize_bool_states() {
     // Test enabled state
     let config = HsmAutoInitConfig {
         mode: "software".to_string(),
-        auto_init: true,
+        ..Default::default()
     };
     let manager = HsmManager::auto_initialize_with_config(config)
         .await
@@ -467,6 +477,7 @@ async fn test_auto_initialize_bool_states() {
     let config = HsmAutoInitConfig {
         mode: "software".to_string(),
         auto_init: false,
+        ..Default::default()
     };
     let manager = HsmManager::auto_initialize_with_config(config)
         .await

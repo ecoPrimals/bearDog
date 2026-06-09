@@ -74,7 +74,7 @@ pub use performance::{HsmPerformanceTracker, OperationMetrics};
 /// // Explicit configuration (thread-safe, no env vars)
 /// let config = HsmAutoInitConfig {
 ///     mode: "software".to_string(),
-///     auto_init: true,
+///     ..Default::default()
 /// };
 /// let manager = HsmManager::auto_initialize_with_config(config).await?;
 /// ```
@@ -84,6 +84,10 @@ pub struct HsmAutoInitConfig {
     pub mode: String,
     /// Whether auto-initialization is enabled
     pub auto_init: bool,
+    /// When `true`, requesting a hardware tier that is unavailable degrades to
+    /// software with a warning. When `false` (production default), the init
+    /// fails so operators notice the gap immediately.
+    pub allow_software_fallback: bool,
 }
 
 impl Default for HsmAutoInitConfig {
@@ -91,6 +95,7 @@ impl Default for HsmAutoInitConfig {
         Self {
             mode: "software".to_string(),
             auto_init: true,
+            allow_software_fallback: false,
         }
     }
 }
@@ -106,6 +111,11 @@ impl HsmAutoInitConfig {
                 .unwrap_or_else(|_| "true".to_string())
                 .parse::<bool>()
                 .unwrap_or(true),
+            allow_software_fallback: beardog_errors::process_env::var(
+                env_keys::ENV_HSM_ALLOW_SOFTWARE_FALLBACK,
+            )
+            .map(|v| v == "true")
+            .unwrap_or(false),
         }
     }
 }
@@ -347,7 +357,7 @@ impl HsmManager {
     /// // Explicit configuration (thread-safe)
     /// let config = HsmAutoInitConfig {
     ///     mode: "software".to_string(),
-    ///     auto_init: true,
+    ///     ..Default::default()
     /// };
     /// let manager = HsmManager::auto_initialize_with_config(config).await?;
     /// ```
@@ -387,59 +397,33 @@ impl HsmManager {
                 )?;
                 info!("✅ Software HSM initialized successfully");
             }
-            "hardware" => {
-                // Hardware HSM initialization (future implementation)
-                warn!(
-                    "⚠️  Hardware HSM mode requested but not yet implemented, falling back to software"
-                );
-                let config = SoftwareHsmConfig::default();
-                let software_hsm = RustSoftwareHsm::new(config).await.map_err(|e| {
-                    BearDogError::initialization(format!(
-                        "Failed to initialize fallback software HSM: {e}"
-                    ))
-                })?;
-                manager.register_hsm_provider(
-                    HsmTier::Software,
-                    Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
-                        software_hsm,
-                    )),
-                )?;
-            }
-            "android_strongbox" => {
-                // Android StrongBox initialization (future implementation)
-                warn!(
-                    "⚠️  Android StrongBox mode requested but not yet implemented, falling back to software"
-                );
-                let config = SoftwareHsmConfig::default();
-                let software_hsm = RustSoftwareHsm::new(config).await.map_err(|e| {
-                    BearDogError::initialization(format!(
-                        "Failed to initialize fallback software HSM: {e}"
-                    ))
-                })?;
-                manager.register_hsm_provider(
-                    HsmTier::Software,
-                    Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
-                        software_hsm,
-                    )),
-                )?;
-            }
-            "ios_secure_enclave" => {
-                // iOS Secure Enclave initialization (future implementation)
-                warn!(
-                    "⚠️  iOS Secure Enclave mode requested but not yet implemented, falling back to software"
-                );
-                let config = SoftwareHsmConfig::default();
-                let software_hsm = RustSoftwareHsm::new(config).await.map_err(|e| {
-                    BearDogError::initialization(format!(
-                        "Failed to initialize fallback software HSM: {e}"
-                    ))
-                })?;
-                manager.register_hsm_provider(
-                    HsmTier::Software,
-                    Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
-                        software_hsm,
-                    )),
-                )?;
+            "hardware" | "android_strongbox" | "ios_secure_enclave" => {
+                if config.allow_software_fallback {
+                    warn!(
+                        mode = mode_normalized.as_str(),
+                        "HSM mode not yet available on this platform — \
+                         falling back to software (BEARDOG_HSM_ALLOW_SOFTWARE_FALLBACK=true)"
+                    );
+                    let sw_config = SoftwareHsmConfig::default();
+                    let software_hsm = RustSoftwareHsm::new(sw_config).await.map_err(|e| {
+                        BearDogError::initialization(format!(
+                            "Failed to initialize fallback software HSM: {e}"
+                        ))
+                    })?;
+                    manager.register_hsm_provider(
+                        HsmTier::Software,
+                        Arc::new(crate::tunnel::hsm::HsmProviderBackend::RustSoftware(
+                            software_hsm,
+                        )),
+                    )?;
+                } else {
+                    return Err(BearDogError::unavailable(format!(
+                        "HSM mode '{}' requested but not available on this platform. \
+                         Set BEARDOG_HSM_ALLOW_SOFTWARE_FALLBACK=true to allow software fallback, \
+                         or use BEARDOG_HSM_MODE=software",
+                        config.mode
+                    )));
+                }
             }
             _ => {
                 let error_msg = format!(

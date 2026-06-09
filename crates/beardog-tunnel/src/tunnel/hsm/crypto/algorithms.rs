@@ -4,6 +4,7 @@
 //!
 //! Vendor-agnostic algorithm definitions that can be implemented by any crypto library.
 
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
 /// Universal cryptographic algorithm type
@@ -29,10 +30,12 @@ impl CryptoAlgorithm {
     ///
     /// # Errors
     /// Returns an error if this is not a symmetric algorithm
-    pub fn as_symmetric(&self) -> Result<SymmetricAlgorithm, String> {
+    pub fn as_symmetric(&self) -> Result<SymmetricAlgorithm, BearDogError> {
         match self {
             Self::Symmetric(alg) => Ok(alg.clone()),
-            _ => Err(format!("Expected symmetric algorithm, got: {self:?}")),
+            _ => Err(BearDogError::invalid_input(&format!(
+                "Expected symmetric algorithm, got: {self:?}"
+            ))),
         }
     }
 
@@ -40,10 +43,12 @@ impl CryptoAlgorithm {
     ///
     /// # Errors
     /// Returns an error if this is not a signature algorithm
-    pub fn as_signature(&self) -> Result<SignatureAlgorithm, String> {
+    pub fn as_signature(&self) -> Result<SignatureAlgorithm, BearDogError> {
         match self {
             Self::Signature(alg) => Ok(alg.clone()),
-            _ => Err(format!("Expected signature algorithm, got: {self:?}")),
+            _ => Err(BearDogError::invalid_input(&format!(
+                "Expected signature algorithm, got: {self:?}"
+            ))),
         }
     }
 }

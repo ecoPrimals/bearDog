@@ -36,7 +36,7 @@ async fn create_test_btsp_provider() -> Arc<BeardogBtspProvider> {
     let hsm = Arc::new(
         HsmManager::auto_initialize_with_config(HsmAutoInitConfig {
             mode: "software".to_string(),
-            auto_init: true,
+            ..Default::default()
         })
         .await
         .expect("HSM init"),

@@ -118,8 +118,7 @@ impl HsmProvider for RustSoftwareHsm {
         let algorithm = requirements
             .algorithm
             .ok_or_else(|| BearDogError::internal("No algorithm in requirements".to_string()))?
-            .as_symmetric()
-            .map_err(|e| BearDogError::crypto_error(&e))?;
+            .as_symmetric()?;
 
         let encrypted_data = provider
             .encrypt_symmetric(
@@ -165,8 +164,7 @@ impl HsmProvider for RustSoftwareHsm {
         let algorithm = requirements
             .algorithm
             .ok_or_else(|| BearDogError::internal("No algorithm in requirements".to_string()))?
-            .as_symmetric()
-            .map_err(|e| BearDogError::crypto_error(&e))?;
+            .as_symmetric()?;
 
         let (nonce, actual_ciphertext) = if ciphertext.len() >= 12 {
             let (nonce_bytes, ct_bytes) = ciphertext.split_at(12);
@@ -220,8 +218,7 @@ impl HsmProvider for RustSoftwareHsm {
         let algorithm = requirements
             .algorithm
             .ok_or_else(|| BearDogError::internal("No algorithm in requirements".to_string()))?
-            .as_signature()
-            .map_err(|e| BearDogError::crypto_error(&e))?;
+            .as_signature()?;
 
         let signature = provider
             .sign(algorithm, &key_material, &data, &SigningOptions::default())
@@ -262,8 +259,7 @@ impl HsmProvider for RustSoftwareHsm {
         let algorithm = requirements
             .algorithm
             .ok_or_else(|| BearDogError::internal("No algorithm in requirements".to_string()))?
-            .as_signature()
-            .map_err(|e| BearDogError::crypto_error(&e))?;
+            .as_signature()?;
 
         let sig = Signature {
             algorithm: algorithm.to_string(),

@@ -42,6 +42,7 @@ use std::path::{Path, PathBuf};
 
 use crate::self_knowledge::SimpleCapability;
 use beardog_config::env_keys;
+use beardog_errors::BearDogError;
 use beardog_types::constants::domains::network::ipc_discovery::BIOMEOS_RUNTIME_SOCKET_SUBDIR;
 use beardog_types::primal_identity::resolve_node_id_from_env_or_ephemeral;
 use tracing::warn;
@@ -401,28 +402,26 @@ impl SocketConfig {
     ///
     /// Returns `Err` with a message when the parent directory cannot be created or the stale socket
     /// file cannot be removed.
-    pub fn prepare(&self) -> Result<(), String> {
-        // Ensure parent directory exists
+    pub fn prepare(&self) -> Result<(), BearDogError> {
         if let Some(parent) = self.socket_path.parent()
             && !parent.exists()
         {
             fs::create_dir_all(parent).map_err(|e| {
-                format!(
+                BearDogError::configuration(&format!(
                     "Failed to create socket directory {}: {}",
                     parent.display(),
                     e
-                )
+                ))
             })?;
         }
 
-        // Remove old socket file if it exists
         if self.socket_path.exists() {
             fs::remove_file(&self.socket_path).map_err(|e| {
-                format!(
+                BearDogError::configuration(&format!(
                     "Failed to remove old socket {}: {}",
                     self.socket_path.display(),
                     e
-                )
+                ))
             })?;
         }
 

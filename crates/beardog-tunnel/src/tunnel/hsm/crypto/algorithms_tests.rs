@@ -59,7 +59,12 @@ mod crypto_algorithm_tests {
         let alg = CryptoAlgorithm::Hash(HashAlgorithm::Sha256);
         let result = alg.as_symmetric();
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Expected symmetric algorithm"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Expected symmetric algorithm")
+        );
     }
 
     #[test]
@@ -76,7 +81,12 @@ mod crypto_algorithm_tests {
         let alg = CryptoAlgorithm::Symmetric(SymmetricAlgorithm::Aes256Gcm);
         let result = alg.as_signature();
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Expected signature algorithm"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Expected signature algorithm")
+        );
     }
 
     #[test]

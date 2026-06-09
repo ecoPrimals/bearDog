@@ -165,3 +165,6 @@ mod hsm_error_path_comprehensive_tests;
 // February 2026: Coverage gap tests (authorization_types, metrics, config, genesis types, etc.)
 #[cfg(test)]
 mod coverage_gap;
+
+#[cfg(test)]
+mod lib_core_tests;

@@ -57,7 +57,9 @@ mod quantum_crypto_tests {
             )
             .unwrap_err();
         assert!(
-            decap_err.to_string().contains("PQC library integration pending"),
+            decap_err
+                .to_string()
+                .contains("PQC library integration pending"),
             "decapsulate should fail-closed in simulation"
         );
     }
@@ -82,7 +84,9 @@ mod quantum_crypto_tests {
             .verify(&keypair.public_key, b"test message", &sig.signature)
             .unwrap_err();
         assert!(
-            verify_err.to_string().contains("PQC library integration pending"),
+            verify_err
+                .to_string()
+                .contains("PQC library integration pending"),
             "verify should fail-closed in simulation"
         );
     }
