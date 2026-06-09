@@ -56,10 +56,11 @@ deny = [
     { crate = "async-trait" },
     { crate = "openssl", wrappers = [] },
     { crate = "openssl-sys", wrappers = [] },
-    # ring eliminated — aws-lc-rs is the TLS crypto backend via rustls (Wave 125)
+    # ring + aws-lc-rs eliminated (Wave 104) — pure-Rust RustCrypto CryptoProvider
     { crate = "ring", wrappers = [] },
-    { crate = "aws-lc-rs", wrappers = ["rustls", "rustls-webpki", "rcgen"] },
-    { crate = "aws-lc-sys", wrappers = ["aws-lc-rs"] },
+    { crate = "aws-lc-rs", wrappers = [] },
+    { crate = "aws-lc-sys", wrappers = [] },
+    { crate = "rcgen", wrappers = [] },
     { crate = "native-tls", wrappers = [] },
     { crate = "libsodium-sys", wrappers = [] },
     { crate = "hidapi", wrappers = [] },
@@ -77,21 +78,12 @@ targets = [
 ]
 all-features = false
 
-# ── Pure-Rust Crypto Horizon (P3, Phase 2) ──────────────────────────────
+# ── Pure-Rust Crypto — COMPLETE (Wave 104) ────────────────────────────
 #
-# aws-lc-rs provides production-grade crypto but depends on aws-lc-sys (C).
-# Target: replace with pure-Rust alternatives when mature.
+# aws-lc-rs and rcgen eliminated. TLS uses rustls-rustcrypto provider
+# (pure Rust CryptoProvider from RustCrypto). CSR generation uses
+# p256 + x509-cert. Zero C crypto dependencies remain.
 #
-# Tracking:
-#   rustls-rustcrypto — not yet production-ready (experimental)
-#   rcgen alternatives — p256 + x509-cert for CSR generation
-#   chacha20poly1305 — already pure-Rust (RustCrypto)
-#   ed25519-dalek — already pure-Rust
-#   x25519-dalek — already pure-Rust
-#   blake3 — already pure-Rust
-#
-# Pure-Rust crates already in use: ed25519-dalek, x25519-dalek, chacha20poly1305,
-# blake3, argon2, hkdf, sha2, hmac, aes-gcm, rand
-#
-# Remaining C dependencies via aws-lc-rs: TLS handshake (rustls), CSR (rcgen),
-# certificate verification (webpki)
+# Full pure-Rust crypto stack: ed25519-dalek, x25519-dalek, p256, p384,
+# chacha20poly1305, aes-gcm, sha2, sha3, blake3, hkdf, hmac, argon2,
+# rsa, ecdsa, rand, rustls-rustcrypto, x509-cert

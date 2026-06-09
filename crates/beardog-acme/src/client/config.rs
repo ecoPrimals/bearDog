@@ -9,12 +9,11 @@ use std::time::Duration;
 
 use crate::error::AcmeError;
 
-/// Install the workspace `aws-lc-rs` rustls crypto provider (required for reqwest's
-/// `rustls-tls-*-no-provider` feature).
+/// Install the pure-Rust RustCrypto-based rustls crypto provider.
 fn ensure_rustls_crypto_provider() {
     static INSTALL: std::sync::Once = std::sync::Once::new();
     INSTALL.call_once(|| {
-        let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+        let _ = rustls_rustcrypto::provider().install_default();
     });
 }
 

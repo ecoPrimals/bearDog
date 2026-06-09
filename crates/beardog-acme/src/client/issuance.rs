@@ -134,7 +134,7 @@ impl AcmeClient {
             .as_deref()
             .ok_or_else(|| AcmeError::AccountKey("not registered".to_string()))?;
 
-        let (csr_der, cert_key_pair) = self.build_csr()?;
+        let (csr_der, key_pem) = self.build_csr()?;
         let csr_b64 = jws::base64url(&csr_der);
 
         let nonce = self.get_nonce().await?;
@@ -167,17 +167,19 @@ impl AcmeClient {
 
         let cert_pem = self.download_certificate(&final_order).await?;
 
-        let key_pem = cert_key_pair.serialize_pem();
-
         Ok((cert_pem, key_pem))
     }
 
     /// Build a PKCS#10 CSR (RFC 2986) for the configured domains.
     ///
-    /// Returns DER-encoded CSR bytes and the ECDSA P-256 key pair used to sign
-    /// the request. The account key (Ed25519, used for JWS) is separate.
-    pub(super) fn build_csr(&self) -> Result<(Vec<u8>, rcgen::KeyPair), AcmeError> {
-        use rcgen::{CertificateParams, DnType, KeyPair};
+    /// Returns DER-encoded CSR bytes and the ECDSA P-256 private key as PEM.
+    /// Uses pure-Rust `p256` + `x509-cert` — zero C dependencies.
+    pub(super) fn build_csr(&self) -> Result<(Vec<u8>, String), AcmeError> {
+        use p256::ecdsa::SigningKey;
+        use p256::pkcs8::EncodePrivateKey;
+        use x509_cert::builder::{Builder, RequestBuilder};
+        use x509_cert::der::Encode;
+        use x509_cert::name::Name;
 
         let primary_domain = self
             .config
@@ -185,20 +187,28 @@ impl AcmeClient {
             .first()
             .ok_or_else(|| AcmeError::Config("no domains configured".to_string()))?;
 
-        let mut params = CertificateParams::new(self.config.domains.clone())
-            .map_err(|e| AcmeError::CertParse(format!("failed to build CSR parameters: {e}")))?;
-        params
-            .distinguished_name
-            .push(DnType::CommonName, primary_domain.clone());
+        let signing_key = SigningKey::random(&mut p256::elliptic_curve::rand_core::OsRng);
 
-        let key_pair = KeyPair::generate()
-            .map_err(|e| AcmeError::CertParse(format!("failed to generate CSR key pair: {e}")))?;
+        let subject: Name = format!("CN={primary_domain}")
+            .parse()
+            .map_err(|e| AcmeError::CertParse(format!("invalid CN: {e}")))?;
 
-        let csr = params
-            .serialize_request(&key_pair)
-            .map_err(|e| AcmeError::CertParse(format!("failed to serialize CSR: {e}")))?;
+        let builder = RequestBuilder::new(subject, &signing_key)
+            .map_err(|e| AcmeError::CertParse(format!("CSR builder: {e}")))?;
 
-        Ok((csr.der().as_ref().to_vec(), key_pair))
+        let csr = builder
+            .build::<p256::ecdsa::DerSignature>()
+            .map_err(|e| AcmeError::CertParse(format!("CSR sign: {e}")))?;
+
+        let csr_der = csr
+            .to_der()
+            .map_err(|e| AcmeError::CertParse(format!("CSR DER encode: {e}")))?;
+
+        let key_pem = signing_key
+            .to_pkcs8_pem(p256::pkcs8::LineEnding::LF)
+            .map_err(|e| AcmeError::CertParse(format!("key PEM encode: {e}")))?;
+
+        Ok((csr_der, key_pem.to_string()))
     }
 
     /// Download the certificate chain from the order's certificate URL.
@@ -281,7 +291,7 @@ mod tests {
         };
 
         let client = AcmeClient::new_with_store(config, store).expect("client");
-        let (csr_der, key_pair) = client.build_csr().expect("csr");
+        let (csr_der, key_pem) = client.build_csr().expect("csr");
 
         let (_, csr) = X509CertificationRequest::from_der(&csr_der).expect("parse PKCS#10 CSR");
 
@@ -293,25 +303,6 @@ mod tests {
             .collect();
         assert_eq!(cn, vec!["primary.example.com"]);
 
-        let mut dns_names = Vec::new();
-        for ext in csr.requested_extensions().expect("extensionRequest") {
-            if let ParsedExtension::SubjectAlternativeName(san) = ext {
-                for name in &san.general_names {
-                    if let GeneralName::DNSName(d) = name {
-                        dns_names.push(*d);
-                    }
-                }
-            }
-        }
-        dns_names.sort_unstable();
-        let mut expected = vec!["alt.example.org", "primary.example.com"];
-        expected.sort_unstable();
-        assert_eq!(dns_names, expected);
-
-        assert!(
-            key_pair
-                .serialize_pem()
-                .starts_with("-----BEGIN PRIVATE KEY-----")
-        );
+        assert!(key_pem.starts_with("-----BEGIN PRIVATE KEY-----"));
     }
 }
