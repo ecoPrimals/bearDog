@@ -106,8 +106,8 @@ pub const ENV_REGISTRY_BACKEND: &str = "BEARDOG_REGISTRY_BACKEND";
 pub const ENV_REGISTRY_ENDPOINTS: &str = "BEARDOG_REGISTRY_ENDPOINTS";
 /// Registry host (unprefixed).
 pub const ENV_REGISTRY_HOST: &str = "REGISTRY_HOST";
-/// Default registry host when no env override is set.
-pub const DEFAULT_REGISTRY_HOST: &str = "consul.ecosystem.internal";
+/// Default registry host when no env override is set (empty = not configured).
+pub const DEFAULT_REGISTRY_HOST: &str = "";
 /// Registry port (unprefixed).
 pub const ENV_REGISTRY_PORT: &str = "REGISTRY_PORT";
 /// Registry service TTL (seconds).

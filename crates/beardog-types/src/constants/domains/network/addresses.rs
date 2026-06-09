@@ -125,16 +125,22 @@ pub fn default_health_bind_from_env() -> String {
 
 /// Get multicast address from environment or fallback to 224.0.0.251
 ///
-/// Checks `BEARDOG_MULTICAST_ADDRESS` environment variable first.
+/// Checks `BEARDOG_MULTICAST_ADDRESS` environment variable first,
+/// falling back to the mDNS multicast group (224.0.0.251).
 #[must_use]
 pub fn multicast_address() -> String {
-    "224.0.0.251".to_string()
+    std::env::var(env_keys::ENV_MULTICAST_ADDRESS)
+        .ok()
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or_else(|| MDNS_MULTICAST_GROUP.to_string())
 }
+
+const MDNS_MULTICAST_GROUP: &str = "224.0.0.251";
 
 /// Multicast address from `BEARDOG_MULTICAST_ADDRESS`, falling back to the default multicast group.
 #[must_use]
 pub fn multicast_address_from_env() -> String {
-    std::env::var(env_keys::ENV_MULTICAST_ADDRESS).unwrap_or_else(|_| "224.0.0.251".to_string())
+    multicast_address()
 }
 
 // Legacy const exports for backward compatibility (deprecated)

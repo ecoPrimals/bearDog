@@ -227,7 +227,9 @@ impl ProviderFactory {
             .device_path
             .as_ref()
             .map(|p| p.display().to_string())
-            .unwrap_or_else(|| "/dev/tpm0".to_string());
+            .unwrap_or_else(|| {
+                std::env::var("BEARDOG_TPM_DEVICE").unwrap_or_else(|_| "/dev/tpm0".to_string())
+            });
 
         info!("Creating TPM 2.0 HSM provider (device: {})", device_path);
         debug!(

@@ -97,17 +97,17 @@ impl EnvUtils {
             ("BEARDOG_LOG_LEVEL", "INFO"),
             (
                 "BEARDOG_DISCOVERY_ENDPOINT",
-                &format!("https://discovery.ecosystem.internal:{}", network_config.service_ports.api_port),
+                &format!("https://<discovery-host>:{}", network_config.service_ports.api_port),
             ),
             (
                 "BEARDOG_CAPABILITY_REGISTRY",
-                &format!("https://capabilities.ecosystem.internal:{}", network_config.service_ports.admin_port),
+                &format!("https://<registry-host>:{}", network_config.service_ports.admin_port),
             ),
             (
                 "BEARDOG_SERVICE_MESH_ENDPOINT",
-                &format!("https://mesh.ecosystem.internal:{}", network_config.service_ports.admin_port),
+                &format!("https://<mesh-host>:{}", network_config.service_ports.admin_port),
             ),
-            ("BEARDOG_SMTP_SERVER", "smtp.example.com"),
+            ("BEARDOG_SMTP_SERVER", "<smtp-host>"),
         ];
 
         for (var, example) in &warnings {

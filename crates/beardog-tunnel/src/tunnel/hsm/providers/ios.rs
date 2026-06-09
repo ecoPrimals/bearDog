@@ -140,14 +140,14 @@ impl IosUniversalProvider {
         has_biometric
     }
 
-    /// Simulate Secure Enclave detection based on device model
+    /// Detect Secure Enclave availability based on device model.
     fn simulate_secure_enclave_detection(&mut self) -> bool {
         if let Ok(model) = beardog_errors::process_env::var(env_keys::ENV_IOS_MODEL) {
             return self.detect_from_model(&model);
         }
 
-        // Default: assume Secure Enclave on modern iOS
-        true
+        // Without model info, only assume Secure Enclave on actual iOS/macOS
+        cfg!(any(target_os = "ios", target_os = "macos"))
     }
 
     /// Detect capabilities from a device model string (capability-based, not hardcoded)

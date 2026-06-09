@@ -50,13 +50,16 @@ mod quantum_crypto_tests {
         assert!(!exchange.shared_secret.is_empty());
         assert!(!exchange.ciphertext.is_empty());
 
-        let secret = engine
+        let decap_err = engine
             .decapsulate(
                 &exchange.ciphertext,
                 keypair.private_key.as_ref().unwrap().key_data(),
             )
-            .unwrap();
-        assert!(!secret.is_empty());
+            .unwrap_err();
+        assert!(
+            decap_err.to_string().contains("PQC library integration pending"),
+            "decapsulate should fail-closed in simulation"
+        );
     }
 
     #[test]
@@ -75,10 +78,13 @@ mod quantum_crypto_tests {
             .unwrap();
         assert!(!sig.signature.is_empty());
 
-        let valid = engine
+        let verify_err = engine
             .verify(&keypair.public_key, b"test message", &sig.signature)
-            .unwrap();
-        assert!(valid);
+            .unwrap_err();
+        assert!(
+            verify_err.to_string().contains("PQC library integration pending"),
+            "verify should fail-closed in simulation"
+        );
     }
 
     #[test]
@@ -105,20 +111,25 @@ mod quantum_crypto_tests {
         // KEM operations
         let kem = engine.generate_kem_keypair().unwrap();
         let exchange = engine.encapsulate(&kem.public_key).unwrap();
-        let _ = engine
-            .decapsulate(
-                &exchange.ciphertext,
-                kem.private_key.as_ref().unwrap().key_data(),
-            )
-            .unwrap();
+        assert!(
+            engine
+                .decapsulate(
+                    &exchange.ciphertext,
+                    kem.private_key.as_ref().unwrap().key_data(),
+                )
+                .is_err(),
+            "decapsulate should fail-closed in simulation"
+        );
 
         // Signature operations
         let sig_keypair = engine.generate_signature_keypair().unwrap();
         let sig = engine.sign(&sig_keypair, b"message").unwrap();
-        let valid = engine
-            .verify(&sig_keypair, b"message", &sig.signature)
-            .unwrap();
-        assert!(valid);
+        assert!(
+            engine
+                .verify(&sig_keypair, b"message", &sig.signature)
+                .is_err(),
+            "verify should fail-closed in simulation"
+        );
 
         // Metrics
         assert!(engine.operations_count() >= 5);

@@ -197,7 +197,7 @@ impl QuantumCryptoEngine {
     ///
     /// # Errors
     ///
-    /// Returns an error if verification fails internally (simulation currently returns `Ok(true)`).
+    /// Returns an error in simulation mode (fail-closed; PQC library integration pending).
     pub fn verify(
         &self,
         keypair: &QuantumSignature,

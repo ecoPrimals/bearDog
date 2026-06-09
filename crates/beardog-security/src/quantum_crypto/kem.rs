@@ -6,8 +6,10 @@
 //!
 //! ## Security Note
 //!
-//! This is a **simulation implementation** for API design. Production use
-//! requires integration with actual PQC libraries when stable.
+//! This is a **simulation implementation** for API design and testing only.
+//! All operations are clearly marked as simulated and include a `simulated: true`
+//! flag in their output. Production use requires integration with actual PQC
+//! libraries (e.g. `pqcrypto`, `ml-kem`) when stable.
 
 use super::types::{
     KemAlgorithm, QuantumKEM, QuantumKeyExchange, QuantumPrivateKey, SecurityLevel,
@@ -115,35 +117,23 @@ impl KyberEngine {
         })
     }
 
-    /// Decapsulate a shared secret using own private key
+    /// Decapsulate a shared secret using own private key.
     ///
-    /// # Arguments
-    /// * `ciphertext` - The ciphertext from encapsulation
-    /// * `private_key` - Own private key
-    ///
-    /// # Returns
-    /// * The derived shared secret
+    /// Fail-closed: simulation cannot produce real shared secrets from
+    /// ciphertext. Returns an error to prevent callers from relying on
+    /// simulated key agreement.
     ///
     /// # Errors
     ///
-    /// Currently infallible in this simulation; production may fail on invalid ciphertext or keys.
+    /// Always returns `BearDogError::not_yet_available` in this simulation.
     pub fn decapsulate(
         &self,
         _ciphertext: &[u8],
         _private_key: &[u8],
     ) -> Result<Vec<u8>, BearDogError> {
-        let mut rng = rand::rng();
-
-        let ss_size = match self.security_level {
-            SecurityLevel::Level1 | SecurityLevel::Level2 => KYBER512_SS_SIZE,
-            SecurityLevel::Level3 => KYBER768_SS_SIZE,
-            SecurityLevel::Level4 | SecurityLevel::Level5 => KYBER1024_SS_SIZE,
-        };
-
-        let mut shared_secret = vec![0u8; ss_size];
-        rng.fill_bytes(&mut shared_secret);
-
-        Ok(shared_secret)
+        Err(BearDogError::not_yet_available(
+            "ML-KEM (Kyber) decapsulate — PQC library integration pending".to_string(),
+        ))
     }
 
     /// Get the security level

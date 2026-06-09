@@ -73,7 +73,7 @@ pub fn biomeos_tmp_socket_root() -> PathBuf {
     std::env::var(ENV_BIOMEOS_TMP_ROOT)
         .ok()
         .filter(|s| !s.trim().is_empty())
-        .map_or_else(|| PathBuf::from("/tmp"), PathBuf::from)
+        .map_or_else(std::env::temp_dir, PathBuf::from)
 }
 
 /// Resolve `$XDG_RUNTIME_DIR/biomeos` (or override / temp fallback) from process environment.

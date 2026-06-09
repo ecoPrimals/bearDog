@@ -18,10 +18,14 @@ pub enum SecureEnclaveDevice {
     IPhone,
     /// iPad with Secure Enclave
     IPad,
-    /// Mac with Apple Silicon
-    MacAppleSilicon,
+    /// Mac with T2 chip or Apple Silicon
+    Mac,
+    /// Apple Watch with Secure Enclave
+    AppleWatch,
     /// Simulator (no real Secure Enclave)
     Simulator,
+    /// Unknown device (detected at runtime)
+    Unknown,
 }
 
 impl Default for SecureEnclaveDevice {

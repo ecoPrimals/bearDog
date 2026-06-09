@@ -77,7 +77,7 @@ impl PlatformSocket for IOSSocket {
                     let path = std::path::PathBuf::from(d);
                     if path.exists() { Some(path) } else { None }
                 })
-                .unwrap_or_else(|| std::path::PathBuf::from("/var/tmp/biomeos"));
+                .unwrap_or_else(|| std::env::temp_dir().join("biomeos"));
 
             // Ensure directory exists
             if let Err(e) = std::fs::create_dir_all(&socket_dir) {

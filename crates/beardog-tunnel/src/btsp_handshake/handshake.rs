@@ -320,6 +320,8 @@ async fn write_jsonline<S: tokio::io::AsyncWrite + Unpin>(
     Ok(())
 }
 
+const BTSP_MAX_JSONLINE_BYTES: usize = 64 * 1024;
+
 /// Read bytes until a newline delimiter, with a 30-second deadline.
 ///
 /// Uses byte-at-a-time reads to avoid `BufReader` ownership issues during
@@ -340,7 +342,7 @@ async fn read_jsonline<S: tokio::io::AsyncRead + Unpin>(
             return Ok(buf);
         }
         buf.push(byte[0]);
-        if buf.len() > 65536 {
+        if buf.len() > BTSP_MAX_JSONLINE_BYTES {
             return Err(BearDogError::system(
                 "BTSP JSON-line message exceeds 64 KiB".to_string(),
             ));

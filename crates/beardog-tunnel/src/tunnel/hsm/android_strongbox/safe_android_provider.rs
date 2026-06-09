@@ -694,7 +694,11 @@ impl SafeMobileHardwareProvider<TeeAvailable> {
 
     fn check_tee_with_safe_api() -> Result<bool, BearDogError> {
         debug!("🔐 Checking TEE with safe API");
-        Ok(true) // Most Android devices have TEE
+        Ok(
+            beardog_errors::process_env::var(beardog_config::env_keys::ENV_ANDROID_TEE_AVAILABLE)
+                .map(|v| v == "true")
+                .unwrap_or(cfg!(target_os = "android")),
+        )
     }
 }
 

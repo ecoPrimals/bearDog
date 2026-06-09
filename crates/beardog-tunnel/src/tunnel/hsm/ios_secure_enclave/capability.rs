@@ -67,7 +67,7 @@ impl CapabilityDetector {
                     patch: 0,
                 }, // macOS equivalent
                 SecureEnclaveDevice::Mac,
-                vec![BiometricFeature::TouchID], // Assume Touch ID for now
+                Vec::new(), // Biometric features detected at runtime via LAContext
             )))
         } else {
             info!("ℹ️ Mac does not support Secure Enclave");
@@ -91,16 +91,18 @@ impl CapabilityDetector {
 
     /// Gets safe_device_type
     fn get_safe_device_type() -> Result<SecureEnclaveDevice, BearDogError> {
-        let device_model =
-            beardog_errors::process_env::var(env_keys::ENV_IOS_DEVICE_MODEL).unwrap_or_else(|_| "iPhone".to_string());
+        let device_model = beardog_errors::process_env::var(env_keys::ENV_IOS_DEVICE_MODEL)
+            .unwrap_or_else(|_| "Unknown".to_string());
         if device_model.contains("iPhone") {
             Ok(SecureEnclaveDevice::IPhone)
         } else if device_model.contains("iPad") {
             Ok(SecureEnclaveDevice::IPad)
         } else if device_model.contains("Watch") {
             Ok(SecureEnclaveDevice::AppleWatch)
+        } else if device_model.contains("Mac") {
+            Ok(SecureEnclaveDevice::Mac)
         } else {
-            Ok(SecureEnclaveDevice::IPhone) // Default fallback
+            Ok(SecureEnclaveDevice::Unknown)
         }
     }
 

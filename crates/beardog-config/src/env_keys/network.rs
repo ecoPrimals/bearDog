@@ -53,8 +53,8 @@ pub const ENV_ENABLE_LOCALHOST_FALLBACK: &str = "BEARDOG_ENABLE_LOCALHOST_FALLBA
 pub const ENV_CLIENT_HOST: &str = "BEARDOG_CLIENT_HOST";
 /// Discovery host address.
 pub const ENV_DISCOVERY_HOST: &str = "BEARDOG_DISCOVERY_HOST";
-/// Default discovery host when no env override is set.
-pub const DEFAULT_DISCOVERY_HOST: &str = "discovery.ecosystem.internal";
+/// Default discovery host when no env override is set (empty = not configured).
+pub const DEFAULT_DISCOVERY_HOST: &str = "";
 /// Database host address.
 pub const ENV_DATABASE_HOST: &str = "BEARDOG_DATABASE_HOST";
 /// Redis host address.

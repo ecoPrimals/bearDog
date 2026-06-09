@@ -6,8 +6,10 @@
 //!
 //! ## Security Note
 //!
-//! These are **simulation implementations** for API design. Production use
-//! requires integration with actual PQC libraries when stable.
+//! These are **simulation implementations** for API design and testing only.
+//! Verify operations return `Err` (fail-closed) rather than unconditionally
+//! accepting signatures. Production use requires integration with actual PQC
+//! libraries (e.g. `pqcrypto`, `ml-dsa`) when stable.
 
 use super::types::{
     QuantumPrivateKey, QuantumSignature, QuantumSignatureResult, SecurityLevel, SignatureAlgorithm,
@@ -122,23 +124,22 @@ impl DilithiumEngine {
         })
     }
 
-    /// Verify a signature
+    /// Verify a signature.
     ///
-    /// # Note
-    /// Simulation returns `true`. Production implementations must perform
-    /// actual cryptographic verification.
+    /// Fail-closed: simulation cannot perform real cryptographic verification.
     ///
     /// # Errors
     ///
-    /// Currently always returns `Ok(true)` in this simulation.
-    pub const fn verify(
+    /// Always returns `BearDogError::not_yet_available` in this simulation.
+    pub fn verify(
         &self,
         _public_key: &[u8],
         _message: &[u8],
         _signature: &[u8],
     ) -> Result<bool, BearDogError> {
-        // Simulation: In production, perform actual verification
-        Ok(true)
+        Err(BearDogError::not_yet_available(
+            "ML-DSA (Dilithium) verify — PQC library integration pending".to_string(),
+        ))
     }
 
     /// Get the security level
@@ -234,23 +235,22 @@ impl SphincsEngine {
         })
     }
 
-    /// Verify a signature
+    /// Verify a signature.
     ///
-    /// # Note
-    /// Simulation returns `true`. Production implementations must perform
-    /// actual cryptographic verification.
+    /// Fail-closed: simulation cannot perform real cryptographic verification.
     ///
     /// # Errors
     ///
-    /// Currently always returns `Ok(true)` in this simulation.
-    pub const fn verify(
+    /// Always returns `BearDogError::not_yet_available` in this simulation.
+    pub fn verify(
         &self,
         _public_key: &[u8],
         _message: &[u8],
         _signature: &[u8],
     ) -> Result<bool, BearDogError> {
-        // Simulation: In production, perform actual verification
-        Ok(true)
+        Err(BearDogError::not_yet_available(
+            "SPHINCS+ verify — PQC library integration pending".to_string(),
+        ))
     }
 
     /// Get the security level
