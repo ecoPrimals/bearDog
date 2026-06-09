@@ -111,11 +111,10 @@ impl EncryptionService {
     ///
     /// # Errors
     ///
-    /// Returns an error if the key size is wrong or AES-GCM encryption fails.
+    /// Returns an error if the key size is wrong or encryption fails.
     pub fn encrypt_data(&self, input_bytes: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        debug!("🔒 Encrypting {} bytes of data", input_bytes.len());
+        debug!("Encrypting {} bytes of data", input_bytes.len());
 
-        // Validate key size
         if key.len() != self.config.key_size {
             return Err(BearDogError::internal(format!(
                 "Invalid key size: expected {}, got {}",
@@ -124,20 +123,18 @@ impl EncryptionService {
             )));
         }
 
-        // Use AES-256-GCM for authenticated encryption
-        let (ciphertext, nonce) = BearDogCrypto::encrypt_aes_gcm(key, input_bytes, None)?;
-
-        // Format: nonce (12 bytes) + ciphertext (includes 16-byte auth tag)
-        let mut result = Vec::with_capacity(nonce.len() + ciphertext.len());
-        result.extend_from_slice(&nonce);
-        result.extend_from_slice(&ciphertext);
-
-        debug!(
-            "✅ Successfully encrypted {} bytes to {} bytes",
-            input_bytes.len(),
-            result.len()
-        );
-        Ok(result)
+        match self.config.algorithm {
+            EncryptionAlgorithm::Aes256Gcm => {
+                let (ciphertext, nonce) = BearDogCrypto::encrypt_aes_gcm(key, input_bytes, None)?;
+                let mut result = Vec::with_capacity(nonce.len() + ciphertext.len());
+                result.extend_from_slice(&nonce);
+                result.extend_from_slice(&ciphertext);
+                Ok(result)
+            }
+            EncryptionAlgorithm::ChaCha20Poly1305 => {
+                encrypt_chacha20_poly1305(key, input_bytes)
+            }
+        }
     }
 
     /// Decrypt Data operation.
@@ -146,9 +143,8 @@ impl EncryptionService {
     ///
     /// Returns an error if the key size is wrong, ciphertext is too short, or decryption fails.
     pub fn decrypt_data(&self, encrypted_data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        debug!("🔓 Decrypting {} bytes of data", encrypted_data.len());
+        debug!("Decrypting {} bytes of data", encrypted_data.len());
 
-        // Validate key size
         if key.len() != self.config.key_size {
             return Err(BearDogError::internal(format!(
                 "Invalid key size: expected {}, got {}",
@@ -157,24 +153,67 @@ impl EncryptionService {
             )));
         }
 
-        // Minimum size check: nonce + auth tag
-        if encrypted_data.len() < AES_GCM_NONCE_LEN + AES_GCM_TAG_LEN {
+        let nonce_len = match self.config.algorithm {
+            EncryptionAlgorithm::Aes256Gcm => AES_GCM_NONCE_LEN,
+            EncryptionAlgorithm::ChaCha20Poly1305 => CHACHA20_NONCE_LEN,
+        };
+
+        if encrypted_data.len() < nonce_len + AES_GCM_TAG_LEN {
             return Err(BearDogError::security(
-                "Encrypted data too short (minimum 28 bytes required)".to_string(),
+                "Encrypted data too short".to_string(),
             ));
         }
 
-        // Extract nonce and ciphertext (remaining bytes)
-        let (nonce, ciphertext) = encrypted_data.split_at(AES_GCM_NONCE_LEN);
+        let (nonce, ciphertext) = encrypted_data.split_at(nonce_len);
 
-        // Decrypt using AES-256-GCM with authentication
-        let plaintext = BearDogCrypto::decrypt_aes_gcm(key, ciphertext, nonce)?;
-
-        debug!(
-            "✅ Successfully decrypted {} bytes to {} bytes",
-            encrypted_data.len(),
-            plaintext.len()
-        );
-        Ok(plaintext)
+        match self.config.algorithm {
+            EncryptionAlgorithm::Aes256Gcm => {
+                BearDogCrypto::decrypt_aes_gcm(key, ciphertext, nonce)
+            }
+            EncryptionAlgorithm::ChaCha20Poly1305 => {
+                decrypt_chacha20_poly1305(key, ciphertext, nonce)
+            }
+        }
     }
+}
+
+pub(crate) const CHACHA20_NONCE_LEN: usize = 12;
+
+fn encrypt_chacha20_poly1305(key: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+    use chacha20poly1305::aead::Aead;
+    use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
+
+    let cipher = ChaCha20Poly1305::new_from_slice(key)
+        .map_err(|e| BearDogError::crypto_error(format!("Invalid ChaCha20 key: {e}")))?;
+
+    let mut nonce_bytes = [0u8; CHACHA20_NONCE_LEN];
+    rand::fill(&mut nonce_bytes);
+    let nonce = Nonce::from_slice(&nonce_bytes);
+
+    let ciphertext = cipher
+        .encrypt(nonce, plaintext)
+        .map_err(|e| BearDogError::crypto_error(format!("ChaCha20-Poly1305 encryption failed: {e}")))?;
+
+    let mut result = Vec::with_capacity(CHACHA20_NONCE_LEN + ciphertext.len());
+    result.extend_from_slice(&nonce_bytes);
+    result.extend_from_slice(&ciphertext);
+    Ok(result)
+}
+
+fn decrypt_chacha20_poly1305(
+    key: &[u8],
+    ciphertext: &[u8],
+    nonce: &[u8],
+) -> Result<Vec<u8>, BearDogError> {
+    use chacha20poly1305::aead::Aead;
+    use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
+
+    let cipher = ChaCha20Poly1305::new_from_slice(key)
+        .map_err(|e| BearDogError::crypto_error(format!("Invalid ChaCha20 key: {e}")))?;
+
+    let nonce = Nonce::from_slice(nonce);
+
+    cipher
+        .decrypt(nonce, ciphertext)
+        .map_err(|e| BearDogError::crypto_error(format!("ChaCha20-Poly1305 decryption failed: {e}")))
 }

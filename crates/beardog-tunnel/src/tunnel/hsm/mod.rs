@@ -84,7 +84,7 @@ pub use beardog_types::hsm::{
 // ✅ MIGRATED: Using real crypto providers from software_hsm/crypto_providers and canonical trait (100% Pure Rust!)
 pub use beardog_types::hsm::CryptoProvider; // Canonical trait
 pub use crypto_provider_backend::CryptoProviderBackend;
-pub use software_hsm::crypto_providers::RustCryptoProvider;
+pub use software_hsm::crypto_providers::SoftwareHsmCryptoProvider;
 // RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust, ARM-ready!)
 // OpenSslCryptoProvider removed - evolved to pure Rust alternatives
 pub use types::{

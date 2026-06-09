@@ -7,7 +7,7 @@ use beardog_errors::BearDogError;
 use super::genetic_crypto::GeneticCryptoProvider;
 // OpenSslCryptoProvider removed - evolved to 100% Pure Rust
 // RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust, no C deps!)
-use super::rust_crypto::RustCryptoProvider;
+use super::rust_crypto::SoftwareHsmCryptoProvider;
 use crate::tunnel::hsm::CryptoProviderBackend;
 use crate::tunnel::hsm::types::config::CryptoBackend;
 use crate::tunnel::hsm::types::tier::KeyStorageType;
@@ -24,7 +24,7 @@ pub async fn create_crypto_provider(
             GeneticCryptoProvider::new()?,
         ))),
         CryptoBackend::RustCrypto => Ok(Arc::new(CryptoProviderBackend::RustCrypto(
-            RustCryptoProvider::new().await?,
+            SoftwareHsmCryptoProvider::new().await?,
         ))),
         CryptoBackend::Ring => {
             // Ring evolved to RustCrypto (100% Pure Rust, no C dependencies!)
@@ -32,14 +32,14 @@ pub async fn create_crypto_provider(
                 "Ring backend deprecated - evolved to RustCrypto (100% Pure Rust, ARM-ready!)"
             );
             Ok(Arc::new(CryptoProviderBackend::RustCrypto(
-                RustCryptoProvider::new().await?,
+                SoftwareHsmCryptoProvider::new().await?,
             )))
         }
         CryptoBackend::OpenSsl => {
             // OpenSSL evolved to RustCrypto (100% Pure Rust sovereignty)
             tracing::warn!("OpenSSL backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)");
             Ok(Arc::new(CryptoProviderBackend::RustCrypto(
-                RustCryptoProvider::new().await?,
+                SoftwareHsmCryptoProvider::new().await?,
             )))
         }
     }

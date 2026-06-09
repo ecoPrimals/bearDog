@@ -5,7 +5,7 @@
 //! Implementation of `UniversalCryptoProvider` using the `RustCrypto` ecosystem.
 
 use crate::tunnel::hsm::crypto::algorithms::{
-    AesMode, AsymmetricAlgorithm, CryptoAlgorithm, DecryptionOptions, EncryptedData,
+    AesMode, Argon2Variant, AsymmetricAlgorithm, CryptoAlgorithm, DecryptionOptions, EncryptedData,
     EncryptionOptions, HashAlgorithm, KdfAlgorithm, Signature, SignatureAlgorithm, SigningOptions,
     SymmetricAlgorithm, VerificationOptions,
 };
@@ -75,6 +75,18 @@ impl RustCryptoProvider {
                 KdfAlgorithm::HkdfSha256,
                 KdfAlgorithm::HkdfSha384,
                 KdfAlgorithm::HkdfSha512,
+                KdfAlgorithm::Pbkdf2 {
+                    hash: HashAlgorithm::Sha256,
+                    iterations: 600_000,
+                },
+                KdfAlgorithm::Argon2 {
+                    variant: Argon2Variant::Argon2id,
+                },
+                KdfAlgorithm::Scrypt {
+                    n: 32768,
+                    r: 8,
+                    p: 1,
+                },
             ],
 
             performance_profile: PerformanceProfile {
@@ -257,6 +269,9 @@ impl UniversalCryptoProvider for RustCryptoProvider {
                 SignatureAlgorithm::EcdsaP256 { .. } => {
                     this.sign_ecdsa_p256(&private_key, &message).await
                 }
+                SignatureAlgorithm::EcdsaP384 { .. } => {
+                    this.sign_ecdsa_p384(&private_key, &message).await
+                }
                 _ => Err(BearDogError::unsupported_operation(format!(
                     "RustCrypto doesn't support signing with: {algorithm}"
                 ))),
@@ -283,6 +298,10 @@ impl UniversalCryptoProvider for RustCryptoProvider {
                 }
                 SignatureAlgorithm::EcdsaP256 { .. } => {
                     this.verify_ecdsa_p256(&public_key, &message, &signature)
+                        .await
+                }
+                SignatureAlgorithm::EcdsaP384 { .. } => {
+                    this.verify_ecdsa_p384(&public_key, &message, &signature)
                         .await
                 }
                 _ => Err(BearDogError::unsupported_operation(format!(
@@ -335,9 +354,20 @@ impl UniversalCryptoProvider for RustCryptoProvider {
                 KdfAlgorithm::HkdfSha512 => {
                     this.derive_hkdf_sha512(&input_key, &salt, &info, output_length)
                 }
-                _ => Err(BearDogError::unsupported_operation(format!(
-                    "RustCrypto doesn't support KDF with: {algorithm}"
-                ))),
+                KdfAlgorithm::Pbkdf2 { ref hash, iterations } => {
+                    this.derive_pbkdf2(hash, iterations, &input_key, &salt, output_length)
+                }
+                KdfAlgorithm::Argon2 { ref variant } => {
+                    this.derive_argon2(variant, &input_key, &salt, output_length)
+                }
+                KdfAlgorithm::Scrypt { n, r, p } => {
+                    this.derive_scrypt(n, r, p, &input_key, &salt, output_length)
+                }
+                KdfAlgorithm::Custom { ref name, .. } => {
+                    Err(BearDogError::unsupported_operation(format!(
+                        "Custom KDF '{name}' not supported by RustCrypto provider"
+                    )))
+                }
             }
         }
     }
@@ -638,6 +668,47 @@ impl RustCryptoProvider {
         Ok(verifying_key.verify(message, &sig).is_ok())
     }
 
+    /// Sign using ECDSA P-384
+    async fn sign_ecdsa_p384(
+        &self,
+        private_key: &[u8],
+        message: &[u8],
+    ) -> Result<Signature, BearDogError> {
+        use p384::ecdsa::{SigningKey, signature::Signer};
+
+        let signing_key = SigningKey::from_bytes(private_key.into()).map_err(|e| {
+            BearDogError::crypto_error(format!("Invalid P-384 private key: {e}"))
+        })?;
+
+        let signature: p384::ecdsa::Signature = signing_key.sign(message);
+
+        Ok(Signature {
+            algorithm: "ECDSA-P384-SHA384".to_string(),
+            signature: signature.to_bytes().to_vec(),
+        })
+    }
+
+    /// Verify using ECDSA P-384
+    async fn verify_ecdsa_p384(
+        &self,
+        public_key: &[u8],
+        message: &[u8],
+        signature: &Signature,
+    ) -> Result<bool, BearDogError> {
+        use p384::ecdsa::{VerifyingKey, signature::Verifier};
+
+        let verifying_key = VerifyingKey::from_sec1_bytes(public_key).map_err(|e| {
+            BearDogError::crypto_error(format!("Invalid P-384 public key: {e}"))
+        })?;
+
+        let sig = p384::ecdsa::Signature::from_bytes(signature.signature.as_slice().into())
+            .map_err(|e| {
+                BearDogError::crypto_error(format!("Invalid P-384 signature: {e}"))
+            })?;
+
+        Ok(verifying_key.verify(message, &sig).is_ok())
+    }
+
     /// Hash using SHA-256
     fn hash_sha256(&self, data: &[u8]) -> Vec<u8> {
         use sha2::{Digest, Sha256};
@@ -720,6 +791,87 @@ impl RustCryptoProvider {
         let mut output = vec![0u8; output_length];
         hkdf.expand(info, &mut output)
             .map_err(|e| BearDogError::crypto_error(format!("HKDF expansion failed: {e}")))?;
+
+        Ok(output)
+    }
+
+    /// Derive key using PBKDF2
+    fn derive_pbkdf2(
+        &self,
+        hash: &HashAlgorithm,
+        iterations: u32,
+        password: &[u8],
+        salt: &[u8],
+        output_length: usize,
+    ) -> Result<Vec<u8>, BearDogError> {
+        let mut output = vec![0u8; output_length];
+        match hash {
+            HashAlgorithm::Sha256 => {
+                pbkdf2::pbkdf2_hmac::<sha2::Sha256>(password, salt, iterations, &mut output);
+            }
+            HashAlgorithm::Sha384 => {
+                pbkdf2::pbkdf2_hmac::<sha2::Sha384>(password, salt, iterations, &mut output);
+            }
+            HashAlgorithm::Sha512 => {
+                pbkdf2::pbkdf2_hmac::<sha2::Sha512>(password, salt, iterations, &mut output);
+            }
+            other => {
+                return Err(BearDogError::unsupported_operation(format!(
+                    "PBKDF2 with {other} not supported"
+                )));
+            }
+        }
+        Ok(output)
+    }
+
+    /// Derive key using Argon2
+    fn derive_argon2(
+        &self,
+        variant: &Argon2Variant,
+        password: &[u8],
+        salt: &[u8],
+        output_length: usize,
+    ) -> Result<Vec<u8>, BearDogError> {
+        use argon2::Argon2;
+
+        let algorithm = match variant {
+            Argon2Variant::Argon2d => argon2::Algorithm::Argon2d,
+            Argon2Variant::Argon2i => argon2::Algorithm::Argon2i,
+            Argon2Variant::Argon2id => argon2::Algorithm::Argon2id,
+        };
+
+        let params = argon2::Params::new(19456, 2, 1, Some(output_length))
+            .map_err(|e| BearDogError::crypto_error(format!("Argon2 params: {e}")))?;
+
+        let argon2 = Argon2::new(algorithm, argon2::Version::V0x13, params);
+        let mut output = vec![0u8; output_length];
+        argon2
+            .hash_password_into(password, salt, &mut output)
+            .map_err(|e| BearDogError::crypto_error(format!("Argon2 derivation failed: {e}")))?;
+
+        Ok(output)
+    }
+
+    /// Derive key using scrypt
+    fn derive_scrypt(
+        &self,
+        n: u64,
+        r: u32,
+        p: u32,
+        password: &[u8],
+        salt: &[u8],
+        output_length: usize,
+    ) -> Result<Vec<u8>, BearDogError> {
+        let log_n = u8::try_from(n.checked_ilog2().ok_or_else(|| {
+            BearDogError::crypto_error("scrypt n must be a power of 2 > 0")
+        })?)
+        .map_err(|_| BearDogError::crypto_error("scrypt log_n exceeds u8 range"))?;
+        let params = scrypt::Params::new(log_n, r, p, output_length)
+            .map_err(|e| BearDogError::crypto_error(format!("scrypt params: {e}")))?;
+
+        let mut output = vec![0u8; output_length];
+        scrypt::scrypt(password, salt, &params, &mut output)
+            .map_err(|e| BearDogError::crypto_error(format!("scrypt derivation failed: {e}")))?;
 
         Ok(output)
     }

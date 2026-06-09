@@ -14,14 +14,17 @@ use sha2::Sha256;
 use std::future::Future;
 use tracing::{debug, info};
 
-/// Pure Rust crypto provider with no C dependencies
+/// HSM-layer crypto provider using pure-Rust `RustCrypto` crates.
 ///
-/// Uses pure Rust cryptographic libraries (`RustCrypto` crates) for all operations,
-/// providing excellent portability and no dependency on external C libraries.
+/// Implements `beardog_types::hsm::CryptoProvider<KeyType>` for the software HSM
+/// key lifecycle (generate, encrypt, sign, verify). This is distinct from the
+/// universal `RustCryptoProvider` in `tunnel::hsm::crypto::providers` which
+/// implements the higher-level `UniversalCryptoProvider` trait.
 #[derive(Debug, Clone)]
-pub struct RustCryptoProvider;
+pub struct SoftwareHsmCryptoProvider;
 
-impl RustCryptoProvider {
+
+impl SoftwareHsmCryptoProvider {
     /// Create new Rust crypto provider
     ///
     /// # Errors
@@ -32,7 +35,7 @@ impl RustCryptoProvider {
     }
 }
 
-impl CryptoProvider<KeyType> for RustCryptoProvider {
+impl CryptoProvider<KeyType> for SoftwareHsmCryptoProvider {
     async fn initialize(&self) -> Result<(), BearDogError> {
         info!("Initializing Rust crypto provider");
         Ok(())
@@ -242,14 +245,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_rust_crypto_provider_creation() -> Result<(), BearDogError> {
-        let provider = RustCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new().await?;
         assert!(provider.initialize().await.is_ok());
         Ok(())
     }
 
     #[tokio::test]
     async fn test_key_generation() -> Result<(), BearDogError> {
-        let provider = RustCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new().await?;
         let key = provider.generate_key_material(&KeyType::Aes).await?; // Vendor-agnostic
         assert_eq!(key.len(), 32);
 
@@ -260,7 +263,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_encryption_decryption() -> Result<(), BearDogError> {
-        let provider = RustCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new().await?;
         let key = provider.generate_key_material(&KeyType::ChaCha20).await?;
         let plaintext = b"Rust crypto test";
 
@@ -273,7 +276,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_signing_verification() -> Result<(), BearDogError> {
-        let provider = RustCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new().await?;
         let key_material = provider.generate_key_material(&KeyType::Ed25519).await?;
 
         // Convert Vec<u8> to [u8; 32] for SigningKey
@@ -302,7 +305,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_key_derivation() -> Result<(), BearDogError> {
-        let provider = RustCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new().await?;
         let root_key = b"rust_root_key_for_derivation";
         let context = b"derivation_context";
 

@@ -4,7 +4,7 @@
 
 use crate::tunnel::hsm::crypto_dispatch::CryptoProviderDispatch;
 use crate::tunnel::hsm::software_hsm::crypto_providers::genetic_crypto::GeneticCryptoProvider;
-use crate::tunnel::hsm::software_hsm::crypto_providers::rust_crypto::RustCryptoProvider;
+use crate::tunnel::hsm::software_hsm::crypto_providers::rust_crypto::SoftwareHsmCryptoProvider;
 use crate::tunnel::hsm::types::KeyType;
 use beardog_errors::BearDogError;
 use beardog_types::hsm::CryptoProvider;
@@ -14,7 +14,7 @@ use std::future::Future;
 #[derive(Debug, Clone)]
 pub enum CryptoProviderBackend {
     /// Pure Rust `RustCrypto` stack (software HSM).
-    RustCrypto(RustCryptoProvider),
+    RustCrypto(SoftwareHsmCryptoProvider),
     /// Genetic lineage-aware provider.
     Genetic(GeneticCryptoProvider),
     /// Existing [`CryptoProviderDispatch`] wrapper.

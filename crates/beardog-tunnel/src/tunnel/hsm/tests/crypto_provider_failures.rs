@@ -6,7 +6,7 @@
 
 use crate::tunnel::hsm::manager::HsmProvider;
 use crate::tunnel::hsm::software_hsm::core::RustSoftwareHsm;
-use crate::tunnel::hsm::software_hsm::crypto_providers::{CryptoProvider, RustCryptoProvider};
+use crate::tunnel::hsm::software_hsm::crypto_providers::{CryptoProvider, SoftwareHsmCryptoProvider};
 // RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust!)
 // OpenSslCryptoProvider removed - evolved to pure Rust only
 use crate::tunnel::hsm::GenerateKeyRequest;
@@ -20,7 +20,7 @@ use beardog_errors::BearDogError;
 
 #[tokio::test]
 async fn test_rustcrypto_provider_initialization() -> Result<(), BearDogError> {
-    let provider = RustCryptoProvider::new().await?;
+    let provider = SoftwareHsmCryptoProvider::new().await?;
     let result = provider.initialize().await;
     assert!(result.is_ok());
     Ok(())
@@ -243,7 +243,7 @@ async fn test_backend_switching_new_hsm() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_provider_initialize_multiple_times() -> Result<(), BearDogError> {
-    let provider = RustCryptoProvider::new().await?;
+    let provider = SoftwareHsmCryptoProvider::new().await?;
 
     // Initialize multiple times
     provider.initialize().await?;

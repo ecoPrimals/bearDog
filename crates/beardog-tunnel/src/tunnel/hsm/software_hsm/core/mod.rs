@@ -20,7 +20,7 @@ use super::types::{SoftwareHealthMonitor, SoftwareKeyStore};
 use crate::tunnel::hsm::CryptoProviderBackend;
 use crate::tunnel::hsm::crypto::{CryptoProviderManager, RustCryptoProvider};
 use crate::tunnel::hsm::software_hsm::crypto_providers::{
-    GeneticCryptoProvider, RustCryptoProvider as SoftwareRustCryptoProvider,
+    GeneticCryptoProvider, SoftwareHsmCryptoProvider,
 };
 use crate::tunnel::hsm::types::config::{
     CryptoBackendType, SoftwareHsmConfig as CanonicalSoftwareHsmConfig,
@@ -210,12 +210,12 @@ impl RustSoftwareHsm {
                 GeneticCryptoProvider::new()?,
             ))),
             CryptoBackendType::RustCrypto => Ok(Arc::new(CryptoProviderBackend::RustCrypto(
-                SoftwareRustCryptoProvider::new().await?,
+                SoftwareHsmCryptoProvider::new().await?,
             ))),
             CryptoBackendType::Ring => {
                 tracing::warn!("Ring backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)");
                 Ok(Arc::new(CryptoProviderBackend::RustCrypto(
-                    SoftwareRustCryptoProvider::new().await?,
+                    SoftwareHsmCryptoProvider::new().await?,
                 )))
             }
             CryptoBackendType::OpenSsl => {
@@ -223,7 +223,7 @@ impl RustSoftwareHsm {
                     "OpenSSL backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)"
                 );
                 Ok(Arc::new(CryptoProviderBackend::RustCrypto(
-                    SoftwareRustCryptoProvider::new().await?,
+                    SoftwareHsmCryptoProvider::new().await?,
                 )))
             }
         }

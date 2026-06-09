@@ -14,7 +14,7 @@ use tracing::{debug, info};
 
 // Import real crypto providers (100% Pure Rust!)
 use crate::tunnel::hsm::CryptoProviderBackend;
-use crate::tunnel::hsm::software_hsm::crypto_providers::RustCryptoProvider;
+use crate::tunnel::hsm::software_hsm::crypto_providers::SoftwareHsmCryptoProvider;
 // RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust, ARM-ready!)
 // OpenSslCryptoProvider removed - evolved to pure Rust alternatives
 use crate::tunnel::hsm::types::KeyType;
@@ -72,7 +72,7 @@ impl SoftwareUniversalProvider {
         // Create real crypto provider based on type
         let crypto_impl: Arc<CryptoProviderBackend> = match &provider_type {
             CryptoProviderType::Software => {
-                let provider = RustCryptoProvider::new().await?;
+                let provider = SoftwareHsmCryptoProvider::new().await?;
                 Arc::new(CryptoProviderBackend::RustCrypto(provider))
             }
             CryptoProviderType::OpenSsl => {
@@ -80,13 +80,13 @@ impl SoftwareUniversalProvider {
                 tracing::warn!(
                     "OpenSSL backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)"
                 );
-                let provider = RustCryptoProvider::new().await?;
+                let provider = SoftwareHsmCryptoProvider::new().await?;
                 Arc::new(CryptoProviderBackend::RustCrypto(provider))
             }
             CryptoProviderType::Ring => {
                 // Ring evolved to RustCrypto (100% Pure Rust, ARM-ready!)
                 tracing::warn!("Ring backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)");
-                let provider = RustCryptoProvider::new().await?;
+                let provider = SoftwareHsmCryptoProvider::new().await?;
                 Arc::new(CryptoProviderBackend::RustCrypto(provider))
             }
             CryptoProviderType::Hardware => {

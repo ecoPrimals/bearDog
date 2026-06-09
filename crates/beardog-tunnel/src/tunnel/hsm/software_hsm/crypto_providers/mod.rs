@@ -22,8 +22,7 @@ pub use beardog_types::hsm::CryptoProvider;
 
 // ✅ Export all crypto provider implementations (ordered by recommendation)
 pub use genetic_crypto::GeneticCryptoProvider; // RECOMMENDED (100% Pure Rust)
-// OpenSslCryptoProvider / RingCryptoProvider removed — pure Rust alternatives available (REMOVED: Ring had C deps; use RustCryptoProvider).
-pub use rust_crypto::RustCryptoProvider;
+pub use rust_crypto::SoftwareHsmCryptoProvider;
 #[cfg(test)]
 mod tests {
     use super::*;

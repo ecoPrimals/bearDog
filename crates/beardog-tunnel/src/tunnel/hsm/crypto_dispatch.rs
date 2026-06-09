@@ -28,7 +28,7 @@ use crate::tunnel::hsm::types::KeyType;
 use beardog_errors::BearDogError;
 use std::future::Future;
 // ✅ SECURITY FIX: Using real crypto providers with actual encryption (100% Pure Rust!)
-use crate::tunnel::hsm::software_hsm::crypto_providers::RustCryptoProvider;
+use crate::tunnel::hsm::software_hsm::crypto_providers::SoftwareHsmCryptoProvider;
 // RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust, ARM-ready!)
 // OpenSslCryptoProvider removed - evolved to pure Rust alternatives
 use beardog_types::hsm::CryptoProvider;
@@ -53,14 +53,14 @@ use beardog_types::hsm::CryptoProvider;
 #[derive(Debug, Clone)]
 pub enum CryptoProviderDispatch {
     /// 100% Pure Rust cryptography implementation (ARM cross-compile ready!)
-    RustCrypto(RustCryptoProvider),
+    RustCrypto(SoftwareHsmCryptoProvider),
     // Ring removed - evolved to RustCrypto (100% Pure Rust, ARM-ready!)
     // OpenSSL removed - evolved to pure Rust
 }
 
 impl CryptoProviderDispatch {
     /// Create a `RustCrypto` provider (100% Pure Rust, ARM-ready!)
-    pub const fn rust_crypto(provider: RustCryptoProvider) -> Self {
+    pub const fn rust_crypto(provider: SoftwareHsmCryptoProvider) -> Self {
         Self::RustCrypto(provider)
     }
 
@@ -166,7 +166,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_rust_crypto_constructor() -> Result<(), BearDogError> {
-        let provider = RustCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new().await?;
         let dispatch = CryptoProviderDispatch::rust_crypto(provider);
         assert_eq!(dispatch.provider_type(), "rust_crypto");
         Ok(())
@@ -180,7 +180,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_provider_type_strings() -> Result<(), BearDogError> {
-        let rust_crypto = CryptoProviderDispatch::RustCrypto(RustCryptoProvider::new().await?);
+        let rust_crypto = CryptoProviderDispatch::RustCrypto(SoftwareHsmCryptoProvider::new().await?);
         assert_eq!(rust_crypto.provider_type(), "rust_crypto");
 
         // Ring removed - evolved to RustCrypto (100% Pure Rust!)
@@ -193,7 +193,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_rust_crypto_initialize() -> Result<(), BearDogError> {
-        let provider = RustCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new().await?;
         let dispatch = CryptoProviderDispatch::rust_crypto(provider);
         dispatch.initialize().await?;
         Ok(())
@@ -207,7 +207,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_rust_crypto_generate_key() -> Result<(), BearDogError> {
-        let provider = RustCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new().await?;
         let dispatch = CryptoProviderDispatch::rust_crypto(provider);
         let key = dispatch.generate_key_material(&KeyType::Aes).await?;
         assert!(!key.is_empty());
@@ -222,7 +222,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_rust_crypto_encrypt_decrypt() -> Result<(), BearDogError> {
-        let provider = RustCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new().await?;
         let dispatch = CryptoProviderDispatch::rust_crypto(provider);
         let key = dispatch.generate_key_material(&KeyType::Aes).await?;
         let plaintext = b"test message";
@@ -249,7 +249,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_dispatch_clone() -> Result<(), BearDogError> {
-        let provider = RustCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new().await?;
         let dispatch = CryptoProviderDispatch::rust_crypto(provider);
         let cloned = dispatch.clone();
         assert_eq!(cloned.provider_type(), dispatch.provider_type());
@@ -261,7 +261,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_dispatch_debug() -> Result<(), BearDogError> {
-        let provider = RustCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new().await?;
         let dispatch = CryptoProviderDispatch::rust_crypto(provider);
         let debug_str = format!("{:?}", dispatch);
         assert!(debug_str.contains("RustCrypto"));
@@ -293,7 +293,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_multiple_operations_same_dispatch() -> Result<(), BearDogError> {
-        let provider = RustCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new().await?;
         let dispatch = CryptoProviderDispatch::rust_crypto(provider);
 
         // Generate key
