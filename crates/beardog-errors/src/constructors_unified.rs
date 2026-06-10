@@ -236,7 +236,7 @@ pub fn network_error_with_context(message: &str, endpoint: &str, operation: &str
 /// let error = configuration_error_with_docs(
 ///     "HSM provider 'yubico' not found in configuration",
 ///     "hsm",
-///     "docs/hsm/providers.md#supported-providers"
+///     "ARCHITECTURE.md#hsm-abstraction"
 /// );
 /// ```
 #[must_use]

@@ -77,8 +77,8 @@ impl RustCryptoProvider {
 //   ✅ Easier auditing
 //   ✅ NCC Group audited
 //
-// **Migration**: Use `RustCryptoProvider` instead
-// **See**: docs/sessions/jan_16_2026/RUSTCRYPTO_MIGRATION_JAN_16_2026.md
+// **Migration**: Use `SoftwareHsmCryptoProvider` (RustCrypto backend) instead
+// **See**: STATUS.md — Wave 125/145 ring → RustCrypto migration history
 
 #[cfg(test)]
 mod tests {

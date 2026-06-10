@@ -9,6 +9,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 10, 2026 -- Wave 146: Debris Sweep — 9 Orphan Files + Doc Metric Sync
+
+#### Removed
+- **9 orphaned `.rs` files** (~66KB dead code, never compiled):
+  - `beardog-utils/src/zero_copy/` — `safe.rs`, `buffer_management.rs`, `advanced_patterns.rs`,
+    `advanced_optimization.rs` (never declared in `mod.rs`)
+  - `beardog-genetics/src/genetics/spawning/` — `lineage.rs`, `workflows.rs` (broken syntax,
+    never declared in `mod.rs`)
+  - `beardog-core/src/zero_knowledge_bootstrap/` — `tests.rs`, `tests/mod.rs`,
+    `tests/discovery_comprehensive_tests.rs` (superseded by wired `zero_knowledge_bootstrap_tests.rs`)
+
+#### Changed
+- **Root doc metric sync**: Aligned 6 docs (README, ARCHITECTURE, START_HERE, CONTEXT, ROADMAP,
+  STATUS) to ground-truth — 226 methods, 14,974+ tests, 2,125 `.rs` files, Jun 10 dates.
+- **Broken doc links fixed**: Removed stale `docs/sessions/` references from source code.
+
+#### Metrics
+- 226 JSON-RPC methods (217 registry + 9 pre-dispatch gate)
+- 14,974+ tests, 169 suites, 0 failures
+- 2,125 `.rs` files (down from 2,134 after Wave 145+146 debris removal)
+
+### Jun 9, 2026 -- Wave 145: Pure Rust Crypto Dedup + Dead Code Cleanup
+
+#### Changed
+- **Pure Rust Crypto Transition**: Replaced `aws-lc-rs` with `rustls-rustcrypto` (pure Rust
+  `CryptoProvider` for `rustls`). Replaced `rcgen` with `p256` + `x509-cert` for ACME CSR
+  generation. 19 C-crypto crates banned in `deny.toml`.
+- **Crypto Dedup**: Consolidated `BearDogCrypto` as canonical primitive layer — ChaCha20-Poly1305,
+  SHA-256, secure random, constant-time compare all delegate through single implementation.
+  Renamed `RustCryptoProvider` → `SoftwareHsmCryptoProvider` to resolve naming collision.
+  Filled KDF/ECDSA gaps in `UniversalCryptoProvider`.
+- **19 orphaned files removed** (~194KB dead code): abandoned crypto wrappers, stale test files,
+  superseded bootstrap/utility modules.
+
+#### Metrics
+- 14,974+ tests, 169 suites, 0 failures
+- 0 clippy warnings
+- Pure Rust crypto: `rustls-rustcrypto`, `p256`, `x509-cert` — zero C/FFI crypto deps
+
 ### Jun 7, 2026 -- Wave 94: `capability.call` Routing Dispatcher (P1 Mesh Blocker)
 
 #### Added

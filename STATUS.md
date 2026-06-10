@@ -34,7 +34,7 @@
 ## Codebase Metrics
 
 - **Crates**: 29 workspace members (beardog-integration, beardog-deploy, crates/beardog excluded)
-- **Rust Files**: 2,115 (crates + src + tests; excludes showcase/examples)
+- **Rust Files**: 2,125 (crates + src + tests; excludes showcase/examples)
 - **JSON-RPC Methods**: 226 dispatchable (217 registry + 9 pre-dispatch gate) — see `docs/PRIMAL_CONTRACTS.md` v4.0.0 for category breakdown
 - **`#[allow(`**: 81 (was 86; all carry `reason`)
 - **`#[expect(`**: 644 (was 646; 2 stale removed)

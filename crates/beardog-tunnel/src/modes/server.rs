@@ -253,7 +253,7 @@ pub async fn run(
     if http_enabled {
         warn!("⚠️  HTTP API is deprecated!");
         warn!("   Use Unix socket JSON-RPC instead (ecosystem standard)");
-        warn!("   See: docs/sessions/jan_16_2026/BTSP_EVOLUTION_COMPLETE_JAN_16_2026.md\n");
+        warn!("   See: ARCHITECTURE.md for current IPC transport guidance\n");
     }
 
     // Step 9: Display Ready Status

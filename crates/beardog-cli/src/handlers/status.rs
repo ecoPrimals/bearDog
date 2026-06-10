@@ -110,7 +110,7 @@ pub async fn handle_status(verbose: bool) -> Result<(), BearDogError> {
 
     if verbose {
         println!("📚 Documentation:");
-        println!("   • User Guide: docs/USER_GUIDE_CLI.md");
+        println!("   • User Guide: START_HERE.md");
         println!("   • Architecture: specs/current/integration/");
         println!("   • GitHub: https://github.com/ecoPrimals/beardog");
         println!();
