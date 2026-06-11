@@ -41,12 +41,21 @@ pub fn resolve_effective_tcp_listen(port: Option<u16>, listen: Option<&str>) -> 
     }
 }
 
-/// Resolve the effective socket path for server startup (abstract, multi-family, or explicit).
+/// Resolve the effective socket path for server startup.
+///
+/// Bind-mode priority: `--bind-mode abstract` (or legacy `--abstract`) → abstract
+/// namespace name. `--bind-mode tcp` → returns a placeholder (UDS is skipped
+/// later). `--bind-mode filesystem` or `auto` → family-aware filesystem path.
 pub fn resolve_server_socket_path(args: &ServerArgs) -> String {
-    if args.r#abstract {
+    let use_abstract =
+        args.bind_mode == crate::BindMode::Abstract || args.r#abstract;
+
+    if use_abstract {
         let family = args.family_id.as_deref().unwrap_or("default");
         let ns = resolve_biomeos_ipc_subdir_from_optional(None);
         format!("@{ns}_beardog_{family}")
+    } else if args.bind_mode == crate::BindMode::Tcp {
+        String::new()
     } else if let Some(ref family_id) = args.family_id {
         let family_sock = std::path::PathBuf::from(&args.socket);
         let parent = family_sock
@@ -101,12 +110,24 @@ fn build_neural_attestation(primal_name: &str) -> serde_json::Value {
 pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     info!("BearDog server starting");
 
+    info!(bind_mode = ?args.bind_mode, "guideStone startup contract");
+
     if let Some(ref dir) = args.audit_dir {
         info!(audit_dir = %dir.display(), "audit directory override");
     }
 
+    let use_abstract =
+        args.bind_mode == crate::BindMode::Abstract || args.r#abstract;
+    let tcp_only = args.bind_mode == crate::BindMode::Tcp;
+
+    if tcp_only && args.port.is_none() && args.listen.is_none() {
+        return Err(BearDogError::configuration(
+            "--bind-mode tcp requires --port or PORT env var",
+        ));
+    }
+
     // ================================================================
-    // TRANSPORT RESOLUTION (Tier 0 → Tier 5)
+    // TRANSPORT RESOLUTION (Tier 0 → bind-mode → legacy tiers)
     // ================================================================
 
     // Tier 0: TRANSPORT_ENDPOINT env var (orchestrator-injected, highest priority)
@@ -129,25 +150,29 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
             }
         }
     } else {
-        // Tier 1–4: existing socket/port resolution
         let socket_path = resolve_server_socket_path(&args);
-        if args.r#abstract {
+
+        if use_abstract {
             info!(
                 transport = "abstract-namespace",
+                bind_mode = ?args.bind_mode,
                 "transport selected (no filesystem path)"
             );
             info!(abstract_name = %socket_path, "bound to abstract namespace (kernel-only, not on disk)");
+        } else if tcp_only {
+            info!(bind_mode = "tcp", "UDS disabled — TCP-only mode");
         } else if args.family_id.is_some() {
             info!(socket_path = %socket_path, "multi-family socket");
         }
 
-        // Tier 5: --port / --listen
         let effective_listen = resolve_effective_tcp_listen(args.port, args.listen.as_deref());
         (socket_path, effective_listen)
     };
 
     // Prepare socket directory: ensure parent exists and stale socket is removed.
-    if !args.r#abstract
+    // Skip for abstract sockets (no filesystem path) and TCP-only mode.
+    if !use_abstract
+        && !tcp_only
         && transport_endpoint
             .as_ref()
             .is_none_or(|ep| matches!(ep, beardog_types::btsp::TransportEndpoint::Uds { .. }))
@@ -180,7 +205,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         let tier = transport_endpoint.as_ref().map_or(5_u8, |_| 0);
         info!(transport = "tcp", tier, "transport selected");
         info!(listen = %addr, "listen address");
-    } else if !args.r#abstract {
+    } else if !use_abstract && !tcp_only {
         let tier = transport_endpoint.as_ref().map_or(1_u8, |_| 0);
         info!(transport = "unix", tier, "transport selected");
         info!(socket_path = %socket_path, "unix socket path");
@@ -274,10 +299,11 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
 
     info!(platform = "universal", "creating multi-transport server");
 
+    let uds_path = if tcp_only { None } else { Some(socket_path.as_str()) };
     let server = MultiTransportServer::bind_all_available(
         btsp_provider,
         identity,
-        &socket_path,
+        uds_path,
         tcp_addr.as_deref(),
         security_mode,
     )
@@ -412,7 +438,7 @@ fn spawn_acme_renewal_daemon() -> Result<(), BearDogError> {
 
 #[cfg(test)]
 mod server_handler_tests {
-    use crate::ServerArgs;
+    use crate::{BindMode, ServerArgs};
     use beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional;
 
     use super::{
@@ -468,6 +494,7 @@ mod server_handler_tests {
     #[test]
     fn resolve_server_socket_path_abstract_default_family() {
         let args = ServerArgs {
+            bind_mode: BindMode::Auto,
             socket: "/tmp/ignored.sock".to_string(),
             r#abstract: true,
             port: None,
@@ -486,6 +513,7 @@ mod server_handler_tests {
     #[test]
     fn resolve_server_socket_path_abstract_named_family() {
         let args = ServerArgs {
+            bind_mode: BindMode::Auto,
             socket: "/tmp/ignored.sock".to_string(),
             r#abstract: true,
             port: None,
@@ -504,6 +532,7 @@ mod server_handler_tests {
     #[test]
     fn resolve_server_socket_path_family_scoped_file() {
         let args = ServerArgs {
+            bind_mode: BindMode::Auto,
             socket: "/var/run/beardog.sock".to_string(),
             r#abstract: false,
             port: None,
@@ -521,6 +550,7 @@ mod server_handler_tests {
     #[test]
     fn resolve_server_socket_path_family_with_socket_filename_only_uses_parent_join() {
         let args = ServerArgs {
+            bind_mode: BindMode::Auto,
             socket: "beardog.sock".to_string(),
             r#abstract: false,
             port: None,
@@ -539,6 +569,7 @@ mod server_handler_tests {
     #[test]
     fn resolve_server_socket_path_explicit_when_no_family() {
         let args = ServerArgs {
+            bind_mode: BindMode::Auto,
             socket: "/tmp/custom.sock".to_string(),
             r#abstract: false,
             port: None,
@@ -548,6 +579,55 @@ mod server_handler_tests {
             orchestrator_id: None,
         };
         assert_eq!(resolve_server_socket_path(&args), "/tmp/custom.sock");
+    }
+
+    #[test]
+    fn resolve_server_socket_path_bind_mode_abstract_without_legacy_flag() {
+        let args = ServerArgs {
+            bind_mode: BindMode::Abstract,
+            socket: "/tmp/ignored.sock".to_string(),
+            r#abstract: false,
+            port: None,
+            listen: None,
+            audit_dir: None,
+            family_id: Some("gamma".to_string()),
+            orchestrator_id: None,
+        };
+        let ns = resolve_biomeos_ipc_subdir_from_optional(None);
+        assert_eq!(
+            resolve_server_socket_path(&args),
+            format!("@{ns}_beardog_gamma")
+        );
+    }
+
+    #[test]
+    fn resolve_server_socket_path_bind_mode_tcp_returns_empty() {
+        let args = ServerArgs {
+            bind_mode: BindMode::Tcp,
+            socket: "/tmp/ignored.sock".to_string(),
+            r#abstract: false,
+            port: Some(9100),
+            listen: None,
+            audit_dir: None,
+            family_id: None,
+            orchestrator_id: None,
+        };
+        assert_eq!(resolve_server_socket_path(&args), "");
+    }
+
+    #[test]
+    fn resolve_server_socket_path_bind_mode_filesystem_uses_explicit() {
+        let args = ServerArgs {
+            bind_mode: BindMode::Filesystem,
+            socket: "/run/beardog.sock".to_string(),
+            r#abstract: false,
+            port: None,
+            listen: None,
+            audit_dir: None,
+            family_id: None,
+            orchestrator_id: None,
+        };
+        assert_eq!(resolve_server_socket_path(&args), "/run/beardog.sock");
     }
 
     #[tokio::test]

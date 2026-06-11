@@ -32,6 +32,24 @@ pub enum HsmProviderBackend {
     DefaultManagerMock(DefaultManagerMockProvider),
 }
 
+impl std::fmt::Debug for HsmProviderBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::RustSoftware(_) => f.debug_tuple("RustSoftware").finish(),
+            #[cfg(test)]
+            Self::Mock(_) => f.debug_tuple("Mock").finish(),
+            #[cfg(test)]
+            Self::MockHardware(_) => f.debug_tuple("MockHardware").finish(),
+            #[cfg(test)]
+            Self::MockSoftware(_) => f.debug_tuple("MockSoftware").finish(),
+            #[cfg(test)]
+            Self::MockCloud(_) => f.debug_tuple("MockCloud").finish(),
+            #[cfg(test)]
+            Self::DefaultManagerMock(_) => f.debug_tuple("DefaultManagerMock").finish(),
+        }
+    }
+}
+
 impl HsmProvider for HsmProviderBackend {
     async fn get_info(&self) -> Result<ProviderInfo, BearDogError> {
         match self {

@@ -86,10 +86,14 @@ impl MultiTransportServer {
     /// # Errors
     ///
     /// Returns an error if neither the Unix nor TCP transport could be bound.
+    /// Bind all available transports.
+    ///
+    /// Pass `socket_path = None` to skip UDS entirely (TCP-only mode via
+    /// `--bind-mode tcp`).
     pub async fn bind_all_available(
         btsp_provider: Arc<BeardogBtspProvider>,
         identity: Arc<PrimalIdentity>,
-        socket_path: &str,
+        socket_path: Option<&str>,
         tcp_addr: Option<&str>,
         security_mode: BtspSecurityMode,
     ) -> Result<Self, BearDogError> {
@@ -97,44 +101,49 @@ impl MultiTransportServer {
 
         info!("🔌 Binding all available transports...");
 
-        let ipc_symlinks = IpcCapabilitySymlinksConfig {
-            symlink_suffix: ".sock".to_string(),
-            domain_stems: ipc_capability_domain_stems_resolved(&discovered_simple_capabilities()),
-        };
-
         // ================================================================
-        // TIER 1: Platform-Native Socket
+        // TIER 1: Platform-Native Socket (skipped in TCP-only mode)
         // ================================================================
 
-        // Try native socket (Unix or Abstract)
-        match UnixSocketIpcServer::new(
-            socket_path,
-            btsp_provider.clone(),
-            identity.clone(),
-            security_mode.clone(),
-            ipc_symlinks,
-        )
-        .await
-        {
-            Ok(server) => {
-                let transport_type = if socket_path.starts_with('@') {
-                    "Abstract socket"
-                } else {
-                    "Unix socket"
-                };
-                info!(
-                    "   ✅ Tier 1 (Native): {} configured: {}",
-                    transport_type, socket_path
-                );
-                transports.push(BoundTransport::Unix(Arc::new(server)));
+        if let Some(socket_path) = socket_path {
+            let ipc_symlinks = IpcCapabilitySymlinksConfig {
+                symlink_suffix: ".sock".to_string(),
+                domain_stems: ipc_capability_domain_stems_resolved(
+                    &discovered_simple_capabilities(),
+                ),
+            };
+
+            match UnixSocketIpcServer::new(
+                socket_path,
+                btsp_provider.clone(),
+                identity.clone(),
+                security_mode.clone(),
+                ipc_symlinks,
+            )
+            .await
+            {
+                Ok(server) => {
+                    let transport_type = if socket_path.starts_with('@') {
+                        "Abstract socket"
+                    } else {
+                        "Unix socket"
+                    };
+                    info!(
+                        "   ✅ Tier 1 (Native): {} configured: {}",
+                        transport_type, socket_path
+                    );
+                    transports.push(BoundTransport::Unix(Arc::new(server)));
+                }
+                Err(e) => {
+                    warn!(
+                        "   ⚠️  Tier 1 (Native): Failed to bind {}: {}",
+                        socket_path, e
+                    );
+                    info!("   → Continuing with available transports...");
+                }
             }
-            Err(e) => {
-                warn!(
-                    "   ⚠️  Tier 1 (Native): Failed to bind {}: {}",
-                    socket_path, e
-                );
-                info!("   → Continuing with available transports...");
-            }
+        } else {
+            info!("   ℹ️  Tier 1 (Native): skipped (TCP-only bind mode)");
         }
 
         // ================================================================
@@ -368,7 +377,7 @@ mod tests {
         let mts = MultiTransportServer::bind_all_available(
             provider,
             identity,
-            sock.to_string_lossy().as_ref(),
+            Some(sock.to_string_lossy().as_ref()),
             Some("127.0.0.1:0"),
             BtspSecurityMode::Development,
         )
@@ -387,7 +396,7 @@ mod tests {
         let outcome = MultiTransportServer::bind_all_available(
             provider,
             identity,
-            dir.path().to_str().expect("utf8"),
+            Some(dir.path().to_str().expect("utf8")),
             Some("not-a-valid-socket-address:xyz"),
             BtspSecurityMode::Development,
         )
@@ -416,7 +425,7 @@ mod tests {
         let mts = MultiTransportServer::bind_all_available(
             provider,
             identity,
-            sock.to_string_lossy().as_ref(),
+            Some(sock.to_string_lossy().as_ref()),
             Some(":::not-a-tcp-addr:::bad"),
             BtspSecurityMode::Development,
         )
@@ -436,7 +445,7 @@ mod tests {
         let mts = MultiTransportServer::bind_all_available(
             provider,
             identity,
-            sock.to_string_lossy().as_ref(),
+            Some(sock.to_string_lossy().as_ref()),
             Some("127.0.0.1:0"),
             BtspSecurityMode::Development,
         )
@@ -459,7 +468,7 @@ mod tests {
         let mts = MultiTransportServer::bind_all_available(
             provider,
             identity,
-            sock.to_string_lossy().as_ref(),
+            Some(sock.to_string_lossy().as_ref()),
             None,
             BtspSecurityMode::Development,
         )
@@ -479,7 +488,7 @@ mod tests {
         let mts = MultiTransportServer::bind_all_available(
             provider,
             identity,
-            sock.to_string_lossy().as_ref(),
+            Some(sock.to_string_lossy().as_ref()),
             Some("127.0.0.1:0"),
             BtspSecurityMode::Development,
         )

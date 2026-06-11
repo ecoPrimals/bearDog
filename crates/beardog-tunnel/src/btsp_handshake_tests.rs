@@ -286,4 +286,66 @@ mod tests {
             assert_eq!(String::from_utf8(dec).unwrap(), msg);
         }
     }
+
+    /// BTSP-E2E-01: Full handshake over real TCP sockets.
+    ///
+    /// Validates the complete BTSP handshake path that grapheneGate TCP-only
+    /// deployments use: length-prefixed framing over a real TCP connection,
+    /// not an in-memory duplex. After handshake, encrypted JSON-RPC roundtrip.
+    #[tokio::test]
+    async fn btsp_e2e_tcp_handshake_and_encrypted_jsonrpc() {
+        use tokio::net::{TcpListener, TcpStream};
+
+        let seed = b"e2e-tcp-family-seed-32bytes!!!!";
+        let family_seed = FamilySeed::new(seed.to_vec());
+
+        let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
+        let addr = listener.local_addr().expect("local addr");
+
+        let server_seed = family_seed.clone();
+        let server_handle = tokio::spawn(async move {
+            let (stream, _) = listener.accept().await.expect("accept");
+            let (mut rd, mut wr) = tokio::io::split(stream);
+            let mut combined = tokio::io::join(&mut rd, &mut wr);
+            perform_server_handshake(&mut combined, &server_seed)
+                .await
+                .expect("server handshake over TCP")
+        });
+
+        let client_handle = tokio::spawn(async move {
+            let stream = TcpStream::connect(addr).await.expect("connect");
+            let (mut rd, mut wr) = tokio::io::split(stream);
+            let mut combined = tokio::io::join(&mut rd, &mut wr);
+            client_handshake(&mut combined, seed).await
+        });
+
+        let (server_session, client_session) = tokio::join!(server_handle, client_handle);
+        let mut server_session = server_session.expect("join server");
+        let mut client_session = client_session.expect("join client");
+
+        assert_eq!(server_session.session_id, client_session.session_id);
+        assert_eq!(server_session.cipher, client_session.cipher);
+
+        // Simulate encrypted JSON-RPC: client sends `health.liveness` request
+        let jsonrpc_request =
+            br#"{"jsonrpc":"2.0","method":"health.liveness","id":1}"#;
+        let encrypted_req = client_session
+            .encrypt_frame(jsonrpc_request)
+            .expect("encrypt request");
+        let decrypted_req = server_session
+            .decrypt_frame(&encrypted_req)
+            .expect("decrypt request");
+        assert_eq!(decrypted_req, jsonrpc_request);
+
+        // Server responds with encrypted JSON-RPC response
+        let jsonrpc_response =
+            br#"{"jsonrpc":"2.0","result":{"status":"ok","primal":"beardog"},"id":1}"#;
+        let encrypted_resp = server_session
+            .encrypt_frame(jsonrpc_response)
+            .expect("encrypt response");
+        let decrypted_resp = client_session
+            .decrypt_frame(&encrypted_resp)
+            .expect("decrypt response");
+        assert_eq!(decrypted_resp, jsonrpc_response);
+    }
 }

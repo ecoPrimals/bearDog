@@ -95,6 +95,7 @@ pub async fn handle_daemon(args: DaemonArgs) -> Result<(), BearDogError> {
 
     // Run server in foreground (systemd/nohup will background it)
     let server_args = crate::ServerArgs {
+        bind_mode: crate::BindMode::Auto,
         socket: args.socket,
         r#abstract: false,
         port: None,

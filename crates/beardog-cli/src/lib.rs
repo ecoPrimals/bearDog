@@ -22,6 +22,25 @@
 use beardog_core::socket_config::SocketConfig;
 use clap::Parser;
 
+/// guideStone P1/P4: Standard bind mode for primal startup contract.
+///
+/// Replaces per-primal transport flags (`--abstract`, `--no-unix`, `--no-uds`)
+/// with a single ecosystem-standard enum. Set via `--bind-mode` or
+/// `PRIMAL_BIND_MODE` env var.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
+pub enum BindMode {
+    /// Auto-detect transport from platform capabilities (default).
+    /// Linux/macOS → filesystem UDS + optional TCP.
+    /// Android → abstract socket + optional TCP.
+    Auto,
+    /// Filesystem Unix domain socket (explicit).
+    Filesystem,
+    /// Linux abstract namespace socket (kernel-only, no disk path).
+    Abstract,
+    /// TCP only — skip Unix socket entirely. Requires `--port` or `PORT`.
+    Tcp,
+}
+
 pub mod ecosystem_discovery_adapter;
 pub mod handlers;
 
@@ -41,35 +60,40 @@ pub mod __cli_test_env {
 /// Server mode arguments
 #[derive(Parser, Debug, Clone)]
 pub struct ServerArgs {
-    /// Socket path (platform-native default)
+    /// Transport bind mode (guideStone P1/P4 standard startup contract).
     ///
-    /// **Deep Debt Evolution**: Platform-agnostic runtime discovery!
+    /// Replaces per-primal transport flags with a single ecosystem-standard
+    /// enum. `auto` uses platform detection; `abstract` forces Linux abstract
+    /// namespace; `tcp` disables UDS entirely.
+    ///
+    /// Set via `--bind-mode` or `PRIMAL_BIND_MODE` env var.
+    #[arg(long, value_enum, env = "PRIMAL_BIND_MODE", default_value_t = BindMode::Auto)]
+    pub bind_mode: BindMode,
+
+    /// Socket path (platform-native default)
     ///
     /// Defaults:
     /// - Android: @`biomeos_beardog` (abstract socket, bypasses `SELinux`)
-    /// - Linux/macOS: `{temp}/beardog.sock` (platform temp dir + primal name; override dir with `BEARDOG_SOCKET_TMP_DIR` / `BEARDOG_LOCAL_SOCKET_DIR` in client handler)
+    /// - Linux/macOS: `{temp}/beardog.sock` (platform temp dir + primal name)
     /// - Windows: `\\.\pipe\biomeos_beardog` (named pipe)
     ///
-    /// Override with --socket for custom path
+    /// Override with --socket for custom path. Ignored when `--bind-mode tcp`.
     #[arg(long, default_value_t = default_socket_path())]
     pub socket: String,
 
     /// Use abstract socket (Linux/Android SELinux-safe)
     ///
+    /// **Deprecated**: Prefer `--bind-mode abstract`. Kept for backward compatibility.
     /// Forces abstract socket mode regardless of platform detection.
-    /// Abstract sockets bypass `SELinux` restrictions on Android.
-    /// Format: @`biomeos_beardog`_{`family_id`}
-    ///
-    /// Use when deploying to Android with aarch64-linux-musl target.
     #[arg(long)]
     pub r#abstract: bool,
 
-    /// TCP port for JSON-RPC listener (`UniBin` v1.1 mandatory)
+    /// TCP port for JSON-RPC listener.
     ///
     /// Binds a newline-delimited JSON-RPC server on `0.0.0.0:<PORT>`.
-    /// Required by `PRIMAL_IPC_PROTOCOL` and `UNIBIN_ARCHITECTURE_STANDARD` v1.1.
+    /// Also reads unprefixed `PORT` env var (guideStone P4 standard).
     /// Override bind address with --listen.
-    #[arg(long)]
+    #[arg(long, env = "PORT")]
     pub port: Option<u16>,
 
     /// TCP listen address (overrides --port with full addr:port)

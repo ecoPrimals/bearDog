@@ -242,6 +242,14 @@ pub struct HsmManager {
     _operation_router: Arc<RwLock<HsmOperationRouter>>,
 }
 
+impl std::fmt::Debug for HsmManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("HsmManager")
+            .field("providers", &self.hsm_providers.len())
+            .finish_non_exhaustive()
+    }
+}
+
 impl Default for HsmManager {
     fn default() -> Self {
         Self::new()

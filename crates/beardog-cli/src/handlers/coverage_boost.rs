@@ -2,13 +2,14 @@
 
 //! Targeted coverage tests for low-coverage CLI handlers (server, hsm, daemon, `cross_primal`).
 
-use crate::ServerArgs;
+use crate::{BindMode, ServerArgs};
 
 // -- resolve_server_socket_path: bare filename fallback to /tmp parent --
 
 #[test]
 fn resolve_socket_path_family_bare_filename_uses_empty_parent() {
     let args = ServerArgs {
+        bind_mode: BindMode::Auto,
         socket: "beardog.sock".to_string(),
         r#abstract: false,
         port: None,
@@ -27,6 +28,7 @@ fn resolve_socket_path_family_bare_filename_uses_empty_parent() {
 #[test]
 fn resolve_socket_path_with_listen_addr_still_returns_socket_for_explicit() {
     let args = ServerArgs {
+        bind_mode: BindMode::Auto,
         socket: "/run/bd.sock".to_string(),
         r#abstract: false,
         port: None,

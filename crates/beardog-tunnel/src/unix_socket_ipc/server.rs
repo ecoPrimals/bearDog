@@ -271,8 +271,12 @@ impl UnixSocketIpcServer {
         };
         info!(platform = platform_type, "IPC server platform");
 
-        // Create endpoint from stored socket_path
-        let endpoint = SocketEndpoint::Filesystem(self.socket_path.clone());
+        let endpoint = if self.socket_path.to_string_lossy().starts_with('@') {
+            let name = self.socket_path.to_string_lossy()[1..].to_string();
+            SocketEndpoint::Abstract(name)
+        } else {
+            SocketEndpoint::Filesystem(self.socket_path.clone())
+        };
 
         // Bind with platform-specific logic (universal listener!)
         let mut listener = Socket::bind(&endpoint).context(format!(

@@ -7,11 +7,12 @@
 #[cfg(test)]
 mod tests {
 
-    use crate::ServerArgs;
+    use crate::{BindMode, ServerArgs};
 
     #[test]
     fn test_server_args_creation() {
         let args = ServerArgs {
+            bind_mode: BindMode::Auto,
             socket: "/tmp/test.sock".to_string(),
             r#abstract: false,
             port: None,
@@ -31,6 +32,7 @@ mod tests {
     #[test]
     fn test_server_args_defaults() {
         let args = ServerArgs {
+            bind_mode: BindMode::Auto,
             socket: "/tmp/beardog.sock".to_string(),
             r#abstract: false,
             port: None,
@@ -49,6 +51,7 @@ mod tests {
     #[test]
     fn test_server_args_abstract_socket() {
         let args = ServerArgs {
+            bind_mode: BindMode::Auto,
             socket: "/tmp/beardog.sock".to_string(),
             r#abstract: true,
             port: None,
@@ -65,6 +68,7 @@ mod tests {
     #[test]
     fn test_server_args_clone() {
         let args1 = ServerArgs {
+            bind_mode: BindMode::Abstract,
             socket: "/tmp/test.sock".to_string(),
             r#abstract: true,
             port: None,

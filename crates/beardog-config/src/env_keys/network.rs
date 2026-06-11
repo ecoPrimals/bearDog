@@ -11,6 +11,13 @@
 /// Format: `{"transport":"uds","path":"..."} | {"transport":"tcp","host":"...","port":N}`
 pub const ENV_TRANSPORT_ENDPOINT: &str = "TRANSPORT_ENDPOINT";
 
+/// guideStone P1/P4: Ecosystem-standard bind mode for primal startup contract.
+///
+/// Values: `auto` (default), `filesystem`, `abstract`, `tcp`.
+/// Unprefixed — shared across all primals. Replaces per-primal transport
+/// flags (`--abstract`, `--no-unix`, `--no-uds`).
+pub const ENV_PRIMAL_BIND_MODE: &str = "PRIMAL_BIND_MODE";
+
 /// API host address.
 pub const ENV_API_HOST: &str = "BEARDOG_API_HOST";
 /// Listen / bind address (alias: `BEARDOG_BIND_ADDRESS`).
