@@ -78,6 +78,13 @@ mod tcp_client_test {
         let (stream, _) = listener.accept().await.expect("accept");
         let (reader, mut writer) = stream.into_split();
         let mut reader = BufReader::new(reader);
+
+        // Consume riboCipher signal prefix
+        let mut sig = [0u8; 2];
+        tokio::io::AsyncReadExt::read_exact(&mut reader.get_mut(), &mut sig)
+            .await
+            .expect("read riboCipher signal");
+
         let mut line = String::new();
         reader.read_line(&mut line).await.expect("read request");
 
@@ -127,6 +134,13 @@ mod tcp_client_test {
         let (stream, _) = listener.accept().await.expect("accept");
         let (reader, mut writer) = stream.into_split();
         let mut reader = BufReader::new(reader);
+
+        // Consume riboCipher signal prefix
+        let mut sig = [0u8; 2];
+        tokio::io::AsyncReadExt::read_exact(&mut reader.get_mut(), &mut sig)
+            .await
+            .expect("read riboCipher signal");
+
         let mut line = String::new();
         reader.read_line(&mut line).await.expect("read");
 

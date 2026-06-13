@@ -376,6 +376,13 @@ async fn test_send_request_tower_atomic_unix_socket() {
                 .accept()
                 .await
                 .expect("mock server accepts connection");
+
+            // Consume riboCipher signal prefix before JSON
+            let mut sig = [0u8; 2];
+            tokio::io::AsyncReadExt::read_exact(&mut stream, &mut sig)
+                .await
+                .expect("mock server reads riboCipher signal");
+
             let mut reader = BufReader::new(&mut stream);
             let mut request = String::new();
             reader

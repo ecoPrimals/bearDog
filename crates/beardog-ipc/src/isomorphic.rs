@@ -29,11 +29,12 @@ use beardog_core::self_knowledge::{
 };
 use beardog_core::socket_config::ipc_capability_domain_stems_resolved;
 use beardog_types::constants::domains::network::ipc_discovery as ipc_layout;
+use beardog_types::constants::domains::network::ribocipher;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::pin::Pin;
 use std::task::Poll;
-use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
+use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt, ReadBuf};
 use tokio::net::{TcpStream, UnixStream};
 use tracing::{debug, info};
 
@@ -379,17 +380,25 @@ pub async fn connect_transport(
 
     match endpoint {
         TransportEndpoint::Uds { path } => {
-            let stream = UnixStream::connect(path)
+            let mut stream = UnixStream::connect(path)
                 .await
                 .context(format!("Failed to connect to UDS: {}", path.display()))?;
+            stream
+                .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
+                .await
+                .context("Failed to send riboCipher signal")?;
             info!(path = %path.display(), "connected via UDS");
             Ok(IpcStream::Unix(stream))
         }
         TransportEndpoint::Tcp { host, port } => {
             let addr = format!("{host}:{port}");
-            let stream = TcpStream::connect(&addr)
+            let mut stream = TcpStream::connect(&addr)
                 .await
                 .context(format!("Failed to connect to TCP: {addr}"))?;
+            stream
+                .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
+                .await
+                .context("Failed to send riboCipher signal")?;
             info!(addr = %addr, "connected via TCP");
             Ok(IpcStream::Tcp(stream))
         }

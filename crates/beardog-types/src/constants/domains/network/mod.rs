@@ -20,6 +20,7 @@ pub mod nodes;
 pub mod ports;
 pub mod protocols;
 pub mod rate_limiting;
+pub mod ribocipher;
 pub mod services;
 pub mod timeouts;
 

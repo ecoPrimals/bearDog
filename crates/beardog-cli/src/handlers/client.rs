@@ -63,10 +63,20 @@ pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
     let _ = ACTIVE_SOCKET.set(args.socket.clone());
 
     // Connect to server
-    let stream = UnixStream::connect(&args.socket)
+    let mut stream = UnixStream::connect(&args.socket)
         .await
         .map_err(|e| BearDogError::Network {
             message: format!("Failed to connect to server: {e}"),
+            category: NetworkErrorCategory::default(),
+        })?;
+
+    // riboCipher: signal clear NDJSON JSON-RPC
+    use beardog_types::constants::domains::network::ribocipher;
+    stream
+        .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
+        .await
+        .map_err(|e| BearDogError::Network {
+            message: format!("Failed to send riboCipher signal: {e}"),
             category: NetworkErrorCategory::default(),
         })?;
 
@@ -162,6 +172,16 @@ async fn execute_command_on_socket(
 
     let (reader, mut writer) = new_stream.into_split();
     let mut reader = BufReader::new(reader);
+
+    // riboCipher: signal clear NDJSON JSON-RPC
+    use beardog_types::constants::domains::network::ribocipher;
+    writer
+        .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
+        .await
+        .map_err(|e| BearDogError::Network {
+            message: format!("Failed to send riboCipher signal: {e}"),
+            category: NetworkErrorCategory::default(),
+        })?;
 
     let response = send_command(&mut writer, &mut reader, command).await?;
     let output = serde_json::to_string_pretty(&response)
@@ -492,6 +512,13 @@ mod client_handler_tests {
                 .accept()
                 .await
                 .expect("listener accept in test server");
+
+            // Consume riboCipher signal prefix
+            let mut sig = [0u8; 2];
+            tokio::io::AsyncReadExt::read_exact(&mut stream, &mut sig)
+                .await
+                .expect("read riboCipher signal");
+
             let mut reader = BufReader::new(&mut stream);
             let mut line = String::new();
             reader

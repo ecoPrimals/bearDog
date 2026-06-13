@@ -11,6 +11,8 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
 use tracing::debug;
 
+use crate::ribocipher;
+
 /// TCP IPC Client
 pub struct TcpIpcClient {
     server_addr: SocketAddr,
@@ -38,6 +40,12 @@ impl TcpIpcClient {
 
         let (reader, mut writer) = stream.into_split();
         let mut reader = BufReader::new(reader);
+
+        // riboCipher: signal clear NDJSON JSON-RPC before payload
+        writer
+            .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
+            .await
+            .map_err(|e| BearDogError::system(format!("Failed to send riboCipher signal: {e}")))?;
 
         // Build JSON-RPC request
         let request = serde_json::json!({

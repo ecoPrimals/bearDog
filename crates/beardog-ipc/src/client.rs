@@ -326,9 +326,17 @@ impl OrchestratorRegistryClient {
     // Internal methods
 
     async fn send_request(&self, request: JsonRpcRequest) -> IpcResult<JsonRpcResponse> {
+        use beardog_types::constants::domains::network::ribocipher;
+
         let mut stream = UnixStream::connect(&self.socket_path)
             .await
             .map_err(|e| IpcError::Connection(format!("Failed to connect: {e}")))?;
+
+        // riboCipher: signal clear NDJSON JSON-RPC
+        stream
+            .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
+            .await
+            .map_err(IpcError::Io)?;
 
         // Serialize and send request
         let request_json =
@@ -427,6 +435,14 @@ mod tests {
                 let Ok((mut stream, _)) = listener.accept().await else {
                     break;
                 };
+                // Consume riboCipher signal prefix
+                let mut sig = [0u8; 2];
+                if tokio::io::AsyncReadExt::read_exact(&mut stream, &mut sig)
+                    .await
+                    .is_err()
+                {
+                    continue;
+                }
                 let mut reader = BufReader::new(&mut stream);
                 let mut line = String::new();
                 if reader.read_line(&mut line).await.is_err() || line.trim().is_empty() {
@@ -580,6 +596,9 @@ mod tests {
             let Ok((mut stream, _)) = listener.accept().await else {
                 return;
             };
+            // Consume riboCipher signal prefix
+            let mut sig = [0u8; 2];
+            let _ = tokio::io::AsyncReadExt::read_exact(&mut stream, &mut sig).await;
             let _ = stream.write_all(b"not-json").await;
         });
         ready.notified().await;

@@ -230,6 +230,12 @@ pub async fn send_primal_announce(
         .await
         .context(format!("Failed to connect to biomeOS at {biomeos_socket}"))?;
 
+    // riboCipher: signal clear NDJSON JSON-RPC to biomeOS
+    use beardog_types::constants::domains::network::ribocipher;
+    stream
+        .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
+        .await?;
+
     stream.write_all(request_str.as_bytes()).await?;
     stream.write_all(b"\n").await?;
 
@@ -342,6 +348,12 @@ async fn register_capability(neural_socket: &str, capability: serde_json::Value)
     let mut stream = UnixStream::connect(neural_socket).await.context(format!(
         "Failed to connect to Neural API at {neural_socket}"
     ))?;
+
+    // riboCipher: signal clear NDJSON JSON-RPC
+    use beardog_types::constants::domains::network::ribocipher;
+    stream
+        .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
+        .await?;
 
     // Send registration request
     stream.write_all(request_str.as_bytes()).await?;

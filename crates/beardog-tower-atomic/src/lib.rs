@@ -127,12 +127,21 @@ impl Client {
     ///
     /// Returns [`Error::ConnectionFailed`] if the Unix socket cannot be opened.
     pub async fn connect_unix_path(socket_path: &Path, peer_label: &str) -> Result<Self> {
-        let stream = UnixStream::connect(socket_path).await.map_err(|e| {
+        let mut stream = UnixStream::connect(socket_path).await.map_err(|e| {
             Error::ConnectionFailed(format!(
                 "Failed to connect Tower Atomic peer `{peer_label}` at {}: {e}",
                 socket_path.display()
             ))
         })?;
+
+        // riboCipher: signal clear NDJSON JSON-RPC
+        use beardog_types::constants::domains::network::ribocipher;
+        stream
+            .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
+            .await
+            .map_err(|e| {
+                Error::ConnectionFailed(format!("Failed to send riboCipher signal: {e}"))
+            })?;
 
         info!("✅ Tower Atomic connected ({peer_label})");
 
