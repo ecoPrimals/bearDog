@@ -133,7 +133,6 @@ pub mod production;
 /// Security-related types and utilities. Consider using
 pub mod security;
 
-// CLEANED: Legacy services module removed - use canonical::services instead
 // Use: beardog_types::canonical::services::UnifiedServiceDefinition
 
 /// 🧬 **GENETICS** - Genetic algorithm types

@@ -10,7 +10,7 @@ use std::collections::HashMap;
 /// Defines which cryptographic provider to use and its settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptoProviderConfig {
-    /// Provider identifier (e.g., "openssl", "ring", "rust-crypto")
+    /// Provider identifier (e.g., "rust-crypto")
     pub provider_id: String,
 
     /// Provider type
@@ -35,7 +35,7 @@ pub enum CryptoProviderType {
     Software,
     /// OpenSSL-based provider
     OpenSsl,
-    /// Ring crypto library
+    /// Ring crypto library (DEPRECATED: enum variant kept for wire compatibility)
     Ring,
     /// Hardware security module
     Hardware,

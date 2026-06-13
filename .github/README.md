@@ -6,6 +6,7 @@ This directory contains GitHub-specific configuration files.
 
 - **`workflows/ci.yml`** — Quality gates: fmt check, clippy (`-D warnings`), `cargo test --workspace --lib`
 - **`workflows/notify-plasmidbin.yml`** — Dispatch to plasmidBin for binary harvesting on push to main
+- **`workflows/notify-sporeprint.yml`** — Dispatch to sporePrint for validation metrics on push to main
 
 ## Note
 

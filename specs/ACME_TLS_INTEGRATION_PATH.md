@@ -18,8 +18,8 @@ automated certificate issuance, renewal, or the stadial shadow cutover where
 BearDog replaces Cloudflare as the TLS termination point.
 
 This document specifies the integration path for ACME (RFC 8555) certificate
-lifecycle management inside BearDog. It is intentionally **design-only** — no
-code is required at this stage.
+lifecycle management inside BearDog. Implemented in `crates/beardog-acme/`
+(Waves 107–112).
 
 ---
 

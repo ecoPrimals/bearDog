@@ -160,7 +160,6 @@ mod tests;
 mod validation_comprehensive_tests;
 // unified_simple module REMOVED in Phase 2 (October 2025)
 // Functionality merged into unified.rs - use SimplifiedBearDogConfig
-// REMOVED: unified_trait module (Nov 8, 2025)
 // This module was deprecated and replaced by trait.rs
 // Migration: Use `use beardog_types::canonical::config::BearDogConfig;`
 
@@ -239,9 +238,6 @@ pub use unified::{
 // NOTE: unified_simple module removed in Phase 2 cleanup (October 2025)
 // All functionality migrated to unified.rs
 
-// REMOVED: Deprecated legacy config types (337 lines)
-// Migrated to UnifiedBearDogConfig - October 2025
-
 /// High-level flags describing which major subsystems are enabled for the loaded configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigurationSummary {
@@ -271,6 +267,4 @@ pub struct ConfigurationSummary {
 }
 
 // Compatibility aliases for migration (DEPRECATED - use actual types from unified module)
-// REMOVED: Duplicate aliases (Phase 2 cleanup - October 2025)
 // Use UnifiedBearDogConfig directly instead of deprecated legacy config types
-// CLEANED: Removed ambiguous aliases - use UnifiedBearDogConfig directly

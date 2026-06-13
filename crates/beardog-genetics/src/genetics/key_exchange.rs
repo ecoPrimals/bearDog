@@ -318,7 +318,7 @@ impl GeneticKeyExchange {
         Self::validate_key_constraints(&peer_key.constraints)?;
 
         // Perform ECDH (Elliptic Curve Diffie-Hellman) or similar
-        // Modern Rust idiom: Use ring or RustCrypto for crypto ops
+        // Modern Rust idiom: Use RustCrypto for crypto ops
         let shared_secret = Self::derive_shared_secret(peer_id, &peer_key.public_key);
 
         // Update or create lineage

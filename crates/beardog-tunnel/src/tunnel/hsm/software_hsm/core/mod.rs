@@ -40,7 +40,7 @@ use tracing::info;
 ///
 /// The Software HSM consists of several key components:
 /// - **Key Store**: Secure storage for cryptographic keys with encryption at rest
-/// - **Crypto Provider**: Pluggable backend (`RustCrypto`, Ring, or OpenSSL)
+/// - **Crypto Provider**: Pluggable backend (`RustCrypto`)
 /// - **Memory Protector**: Secure memory management with automatic zeroing
 /// - **Audit Logger**: Comprehensive logging of all cryptographic operations
 /// - **Health Monitor**: Continuous monitoring of HSM health and performance

@@ -259,7 +259,7 @@ pub fn get_capabilities_summary() -> SoftwareHsmCapabilities {
             Algorithm::RsaSha256,
             Algorithm::HkdfSha256,
         ],
-        supported_crypto_backends: vec![CryptoBackend::Ring], // Production: Ring, OpenSSL, RustCrypto available
+        supported_crypto_backends: vec![CryptoBackend::Ring], // Production: RustCrypto (pure Rust only)
         supported_storage_backends: vec![KeyStorageType::Memory], // Production: Memory, File, Database supported
         max_key_size: 4096,
         supports_key_generation: true,

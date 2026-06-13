@@ -27,7 +27,7 @@ pub async fn create_crypto_provider(
             SoftwareHsmCryptoProvider::new().await?,
         ))),
         CryptoBackend::Ring => {
-            // Ring evolved to RustCrypto (100% Pure Rust, no C dependencies!)
+            // Ring variant maps to RustCrypto
             tracing::warn!(
                 "Ring backend deprecated - evolved to RustCrypto (100% Pure Rust, ARM-ready!)"
             );
@@ -55,8 +55,6 @@ pub fn get_supported_crypto_backends() -> Vec<CryptoBackend> {
     vec![
         CryptoBackend::GeneticCrypto, // RECOMMENDED: 100% Pure Rust + Hardware Acceleration
         CryptoBackend::RustCrypto,    // 100% Pure Rust, ARM Cross-Compile Ready!
-                                      // Ring removed - evolved to RustCrypto (100% Pure Rust, no C deps!)
-                                      // OpenSsl removed - evolved to RustCrypto (100% Pure Rust sovereignty)
     ]
 }
 
@@ -105,7 +103,7 @@ pub const fn get_crypto_provider_capabilities(
             supports_rsa: true,
             supports_hardware_acceleration: false,
         },
-        // Ring evolved to RustCrypto (backward compatibility)
+        // Ring compat shim (maps to RustCrypto)
         CryptoBackend::Ring => CryptoProviderCapabilities {
             supports_aes: true,
             supports_chacha20: true,
@@ -131,8 +129,8 @@ pub const fn get_crypto_provider_capabilities(
 ///
 /// - `GeneticCrypto`: ✅ RECOMMENDED (100% Pure Rust)
 /// - `RustCrypto`: ✅ Standard (100% Pure Rust)
-/// - Ring: ✅ Supported (auto-fallback to `RustCrypto` for ARM compatibility)
-/// - `OpenSsl`: ✅ Supported (auto-fallback to `RustCrypto` for Pure Rust sovereignty)
+/// - Ring: ❌ Removed (evolved to RustCrypto)
+/// - `OpenSsl`: ❌ Removed (evolved to RustCrypto)
 pub const fn is_crypto_backend_supported(backend: &CryptoBackend) -> bool {
     // Only Pure Rust backends supported - Ring and OpenSsl evolved out! 🦀
     matches!(
@@ -162,7 +160,7 @@ pub fn get_crypto_backend_by_name(name: &str) -> Option<CryptoBackend> {
     match name.to_lowercase().as_str() {
         "genetic" | "geneticcrypto" | "genetic-crypto" => Some(CryptoBackend::GeneticCrypto),
         "rust" | "rustcrypto" | "rust-crypto" => Some(CryptoBackend::RustCrypto),
-        // Ring evolved to GeneticCrypto (100% Pure Rust, ARM-ready!)
+        // Ring string maps to GeneticCrypto for compat
         "ring" => {
             tracing::warn!(
                 "Ring backend deprecated - evolved to GeneticCrypto (100% Pure Rust, ARM-ready!)"
@@ -192,7 +190,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_ring_crypto_provider_fallback() -> Result<(), BearDogError> {
-        // Ring evolved to RustCrypto (100% Pure Rust, ARM-ready!)
+        // Ring evolved to RustCrypto (100% Pure Rust, ARM-ready)
         let provider = create_crypto_provider(&CryptoBackend::Ring).await?;
         assert!(provider.initialize().await.is_ok());
         // Should succeed - auto-fallback to RustCrypto
@@ -201,7 +199,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_openssl_crypto_provider_fallback() -> Result<(), BearDogError> {
-        // OpenSSL evolved to RustCrypto (100% Pure Rust sovereignty!)
+        // OpenSSL evolved to RustCrypto (100% Pure Rust sovereignty)
         let provider = create_crypto_provider(&CryptoBackend::OpenSsl).await?;
         assert!(provider.initialize().await.is_ok());
         // Should succeed - auto-fallback to RustCrypto
@@ -221,7 +219,7 @@ mod tests {
         let backends = get_supported_crypto_backends();
         assert!(backends.contains(&CryptoBackend::RustCrypto));
         assert!(backends.contains(&CryptoBackend::GeneticCrypto));
-        // Ring evolved to RustCrypto - only 100% Pure Rust backends listed! 🦀
+        // Ring evolved to RustCrypto - only Pure Rust backends listed
         assert!(
             !backends.contains(&CryptoBackend::Ring),
             "Ring evolved to RustCrypto"
@@ -267,14 +265,14 @@ mod tests {
     fn test_is_crypto_backend_supported() {
         assert!(is_crypto_backend_supported(&CryptoBackend::RustCrypto));
         assert!(is_crypto_backend_supported(&CryptoBackend::GeneticCrypto));
-        // Ring and OpenSSL evolved out - only Pure Rust backends supported! 🦀
+        // Ring and OpenSSL evolved out - only Pure Rust backends supported
         assert!(
             !is_crypto_backend_supported(&CryptoBackend::Ring),
-            "Ring evolved out - we're 100% Pure Rust now!"
+            "Ring evolved out - we're 100% Pure Rust now"
         );
         assert!(
             !is_crypto_backend_supported(&CryptoBackend::OpenSsl),
-            "OpenSSL evolved out - we're 100% Pure Rust now!"
+            "OpenSSL evolved out - we're 100% Pure Rust now"
         );
     }
 
@@ -292,7 +290,7 @@ mod tests {
         assert_ne!(
             recommended,
             CryptoBackend::OpenSsl,
-            "Should never recommend OpenSSL - we've evolved beyond it!"
+            "Should never recommend OpenSSL - we've evolved beyond it"
         );
     }
 
@@ -312,14 +310,14 @@ mod tests {
         assert_eq!(
             get_crypto_backend_by_name("ring"),
             Some(CryptoBackend::GeneticCrypto), // Returns GeneticCrypto directly
-            "Ring returns GeneticCrypto for backward compatibility (100% Pure Rust!)"
+            "Ring returns GeneticCrypto for backward compatibility (100% Pure Rust)"
         );
 
         // OpenSSL evolved to GeneticCrypto (direct fallback for backward compatibility)
         assert_eq!(
             get_crypto_backend_by_name("openssl"),
             Some(CryptoBackend::GeneticCrypto), // Returns GeneticCrypto directly
-            "OpenSSL returns GeneticCrypto for backward compatibility (100% Pure Rust!)"
+            "OpenSSL returns GeneticCrypto for backward compatibility (100% Pure Rust)"
         );
 
         assert_eq!(get_crypto_backend_by_name("unknown"), None);

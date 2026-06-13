@@ -150,8 +150,6 @@ pub fn multicast_address_from_env() -> String {
 )]
 /// Deprecated: use [`default_bind_address`].
 pub const DEFAULT_BIND_ADDRESS: &str = WILDCARD_IPV4;
-// ✅ REMOVED: DEFAULT_API_BIND - Use default_api_bind() function instead
-// ✅ REMOVED: DEFAULT_METRICS_BIND - Use default_metrics_bind() function instead
 #[deprecated(
     since = "3.1.0",
     note = "Use default_metrics_bind() for environment-aware configuration"

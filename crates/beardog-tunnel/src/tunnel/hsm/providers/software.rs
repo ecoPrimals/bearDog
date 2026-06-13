@@ -84,7 +84,6 @@ impl SoftwareUniversalProvider {
                 Arc::new(CryptoProviderBackend::RustCrypto(provider))
             }
             CryptoProviderType::Ring => {
-                // Ring evolved to RustCrypto (100% Pure Rust, ARM-ready!)
                 tracing::warn!("Ring backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)");
                 let provider = SoftwareHsmCryptoProvider::new().await?;
                 Arc::new(CryptoProviderBackend::RustCrypto(provider))

@@ -46,7 +46,6 @@ pub use training_config::{
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// REMOVED: Deprecated type aliases (Nov 8, 2025)
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // The following deprecated type aliases were removed as they had zero usage:

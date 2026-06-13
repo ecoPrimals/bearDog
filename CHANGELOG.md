@@ -9,6 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 13, 2026 -- Wave 147: Doc Polish + Code Hygiene + BindMode Fix
+
+#### Fixed
+- **beardog-cli binary compilation**: Re-exported `BindMode` from `main.rs` — resolves
+  pre-existing `error[E0433]` when compiling `beardog-cli` binary target (regression from Wave 109)
+
+#### Removed
+- **Completed migration guides** (fossilized to ecoPrimals):
+  - `crates/beardog-traits/PROVIDER_TRAIT_MIGRATION_NOTICE.md` — zero legacy consumers remain
+  - `crates/beardog-types/CONFIGURATION_MIGRATION.md` — zero legacy consumers remain
+- **Workspace-excluded `crates/beardog/`** — placeholder crate, never compiled
+- **10 completed migration comments** (`CLEANED:`, `REMOVED:`) across `beardog-types` and `beardog-core`
+
+#### Changed
+- **Ring/OpenSSL doc comments** (6 files): Corrected to reflect RustCrypto-only backend
+  (Ring/OpenSSL variants kept for API compat, docs now state DEPRECATED)
+- **Ring migration comment consolidation**: Trimmed repetitive celebratory comments
+  across `crypto_dispatch.rs`, `factory.rs`, `software.rs`
+- **ACME spec contradiction**: `specs/ACME_TLS_INTEGRATION_PATH.md` no longer says
+  "design-only" — references implementation in `crates/beardog-acme/`
+- **Doc metric sync** (7 docs): STATUS.md, ROADMAP.md, sporeprint/validation-summary.md,
+  docs/README.md, specs/README.md, docs/references/ROOT_INDEX.md, .github/README.md —
+  all synced to 226 methods, 14,974+ tests, 2,110 `.rs` files, Jun 13 dates
+
+#### Metrics
+- 226 JSON-RPC methods (217 registry + 9 pre-dispatch gate)
+- 14,974+ tests, 169 suites, 0 failures (1 pre-existing in beardog-adapters)
+- 2,110 `.rs` files (down from 2,125 after Wave 146 dead code removal)
+
 ### Jun 10, 2026 -- Wave 146: Debris Sweep — 9 Orphan Files + Doc Metric Sync
 
 #### Removed

@@ -52,7 +52,6 @@ pub mod hsm;
 pub mod monitoring;
 /// Network communication types
 pub mod network;
-// CLEANED: Temporary compatibility modules removed - using unified providers
 
 // NEW: Unified configurations (replaces fragmented configs)
 /// Hsm Unified module
@@ -141,7 +140,6 @@ pub use config::{
     CanonicalPerformanceConfig,
     // CanonicalProductionConfig removed - use UnifiedProductionConfig directly
     CanonicalWorkflowConfig,
-    // REMOVED: GlobalConfig, deprecated config types - use UnifiedBearDogConfig directly
     // Compatibility aliases
     UnifiedBearDogConfig,
 };

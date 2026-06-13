@@ -10,7 +10,7 @@
 //! Shared argument types (`ServerArgs`, `DaemonArgs`, etc.) live in the
 //! `beardog-cli` library crate.
 
-use beardog_cli::{ClientArgs, DaemonArgs, DoctorArgs, ServerArgs};
+use beardog_cli::{BindMode, ClientArgs, DaemonArgs, DoctorArgs, ServerArgs};
 use beardog_errors::BearDogError;
 use clap::{Parser, Subcommand};
 

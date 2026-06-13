@@ -48,14 +48,12 @@ use beardog_types::hsm::CryptoProvider;
 ///
 /// ## Evolution
 ///
-/// - Ring removed - evolved to `RustCrypto` (100% Pure Rust, no C deps!)
-/// - OpenSSL removed - evolved to `RustCrypto` (100% Pure Rust sovereignty!)
+/// - Ring removed — evolved to RustCrypto
+/// - OpenSSL removed — evolved to RustCrypto
 #[derive(Debug, Clone)]
 pub enum CryptoProviderDispatch {
     /// 100% Pure Rust cryptography implementation (ARM cross-compile ready!)
     RustCrypto(SoftwareHsmCryptoProvider),
-    // Ring removed - evolved to RustCrypto (100% Pure Rust, ARM-ready!)
-    // OpenSSL removed - evolved to pure Rust
 }
 
 impl CryptoProviderDispatch {
@@ -71,7 +69,6 @@ impl CryptoProviderDispatch {
     pub const fn provider_type(&self) -> &'static str {
         match self {
             Self::RustCrypto(_) => "rust_crypto",
-            // Ring removed - evolved to RustCrypto (100% Pure Rust!)
         }
     }
 }
@@ -184,8 +181,6 @@ mod tests {
             CryptoProviderDispatch::RustCrypto(SoftwareHsmCryptoProvider::new().await?);
         assert_eq!(rust_crypto.provider_type(), "rust_crypto");
 
-        // Ring removed - evolved to RustCrypto (100% Pure Rust!)
-        // OpenSSL removed - evolved to pure Rust only
         Ok(())
     }
 
