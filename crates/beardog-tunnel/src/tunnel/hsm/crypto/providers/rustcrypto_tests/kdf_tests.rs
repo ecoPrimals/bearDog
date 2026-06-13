@@ -167,10 +167,11 @@ async fn test_kdf_unsupported_algorithm() {
     let salt = b"salt";
     let info = b"info";
 
+    // PBKDF2 with Blake3 hash is not supported
     let result = provider
         .derive_key(
             KdfAlgorithm::Pbkdf2 {
-                hash: HashAlgorithm::Sha256,
+                hash: HashAlgorithm::Blake3,
                 iterations: 10000,
             },
             input_key,

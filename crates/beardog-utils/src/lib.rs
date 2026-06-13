@@ -57,8 +57,6 @@
 
 mod crypto_safe_accel;
 
-/// Micro-benchmark helpers used across Beardog utility code.
-pub mod benchmarks;
 /// Compile-time evaluation helpers (constants and static configuration).
 pub mod const_eval;
 /// Environment-driven configuration helpers (paths, flags, safe parsing).
@@ -84,24 +82,18 @@ pub mod simd_safe;
 /// Built only for `cargo test` or when the `test-utils` Cargo feature is enabled.
 #[cfg(any(test, feature = "test-utils"))]
 pub mod testing;
-/// Aggressive performance-oriented helpers (benchmarks, hot-path helpers).
-pub mod ultimate_performance;
 /// Defense-in-depth checks around high-risk or high-risk utility code paths.
 pub mod ultimate_safety;
 /// Safe façade over zero-copy buffers (public API re-exported below).
 pub mod zero_copy_safe;
 
 // Performance and utility modules
-/// General-purpose micro-optimizations (caching, fast paths).
-pub mod performance_optimizations;
 /// Cryptographic workloads accelerated via SIMD where available.
 pub mod simd_crypto_acceleration;
 /// SIMD-backed numeric and buffer operations with feature detection.
 pub mod simd_optimizations;
 /// Shared helpers: parsing, env, crypto utilities, and small safe primitives.
 pub mod utils;
-/// Zero-copy buffer strategies and ID management (see module docs for invariants).
-pub mod zero_copy;
 /// Experimental zero-copy layouts.
 ///
 /// Layered on the stable `zero_copy` APIs.
@@ -128,11 +120,6 @@ mod tests;
 #[path = "tests/ultimate_safety_comprehensive.rs"]
 mod ultimate_safety_comprehensive_tests;
 
-#[cfg(test)]
-mod performance_optimizations_tests;
-#[cfg(test)]
-#[path = "tests/ultimate_performance_comprehensive.rs"]
-mod ultimate_performance_comprehensive_tests;
 #[cfg(test)]
 mod ultimate_safety_tests;
 
