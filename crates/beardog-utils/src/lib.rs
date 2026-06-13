@@ -94,10 +94,6 @@ pub mod simd_crypto_acceleration;
 pub mod simd_optimizations;
 /// Shared helpers: parsing, env, crypto utilities, and small safe primitives.
 pub mod utils;
-/// Experimental zero-copy layouts.
-///
-/// Layered on the stable `zero_copy` APIs.
-pub mod zero_copy_optimized;
 
 // Testing frameworks - canonical location (includes mock crypto/config fixtures)
 /// Property-based testing adapters (QuickCheck-style) for Beardog types.
