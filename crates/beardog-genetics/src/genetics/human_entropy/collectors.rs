@@ -235,7 +235,7 @@ impl MultiModalEntropyCollector {
             fused_entropy,
             component_count: entropy_sources.len(),
             source_types,
-            fusion_quality: 0.95, // High quality for live sources
+            fusion_quality: entropy_sources.len() as f64 / 3.0,
             collection_timestamp: Utc::now(),
         })
     }

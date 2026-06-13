@@ -184,7 +184,7 @@ async fn ecosystem_storage_manager_unimplemented_operation_returns_business_erro
 
     let err = mgr.process_request(req).await.expect_err("copy");
     assert!(
-        err.to_string().contains("Operation not implemented"),
+        err.to_string().contains("Storage copy requires source and destination backends"),
         "unexpected err: {err}"
     );
 }

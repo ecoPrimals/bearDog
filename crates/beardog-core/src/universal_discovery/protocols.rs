@@ -76,7 +76,7 @@ impl ModernServiceDiscovery {
     /// # Errors
     /// Returns an error if the service discovery instance fails to initialize or start.
     pub fn start(&self) -> Result<(), BearDogError> {
-        info!("🚀 Starting modern service discovery");
+        info!("Starting modern service discovery");
         Ok(())
     }
 
@@ -85,38 +85,93 @@ impl ModernServiceDiscovery {
     /// # Errors
     /// Returns an error if the service discovery instance fails to stop gracefully or encounters shutdown issues.
     pub fn stop(&self) -> Result<(), BearDogError> {
-        info!("🛑 Stopping modern service discovery");
+        info!("Stopping modern service discovery");
         Ok(())
     }
 
     /// Register a service with the discovery system
     ///
+    /// Records the service in the internal provider registry keyed by capability.
+    /// Services are discovered at runtime via IPC announcements — no prior knowledge required.
+    ///
     /// # Errors
-    /// Returns an error if service registration fails due to duplicate names, invalid configuration, or network issues.
-    pub fn register_service(&self, service: &ServiceInfo) -> Result<(), BearDogError> {
-        info!("📝 Registering service: {}", service.name);
-        // Modern implementation would use capability-based registration
+    /// Returns an error if the service name is empty.
+    pub fn register_service(&mut self, service: &ServiceInfo) -> Result<(), BearDogError> {
+        if service.name.is_empty() {
+            return Err(BearDogError::validation("Service name cannot be empty"));
+        }
+        info!("Registering service: {}", service.name);
+
+        let key = service.name.clone();
+        let entry = self
+            .discovered_providers
+            .entry(key)
+            .or_insert_with(|| serde_json::Value::Array(Vec::new()));
+
+        if let serde_json::Value::Array(arr) = entry {
+            let service_value = serde_json::json!({
+                "name": service.name,
+                "registered_at": chrono::Utc::now().to_rfc3339(),
+            });
+            if !arr.contains(&service_value) {
+                arr.push(service_value);
+            }
+        }
+
         Ok(())
     }
 
     /// Deregister a service from the discovery system
     ///
+    /// Removes the service from the internal provider registry.
+    ///
     /// # Errors
-    /// Returns an error if service deregistration fails because the service is not found or if network operations fail.
-    pub fn deregister_service(&self, service: &ServiceInfo) -> Result<(), BearDogError> {
-        info!("🗑️ Deregistering service: {}", service.name);
-        // Modern implementation would use capability-based deregistration
+    /// Returns an error if the service is not currently registered.
+    pub fn deregister_service(&mut self, service: &ServiceInfo) -> Result<(), BearDogError> {
+        if self.discovered_providers.remove(&service.name).is_none() {
+            return Err(BearDogError::not_found(format!(
+                "Service '{}' not registered",
+                service.name
+            )));
+        }
+        info!("Deregistered service: {}", service.name);
         Ok(())
     }
 
     /// Discover services matching the given name pattern
     ///
+    /// Queries the runtime-populated provider registry. Returns matching services
+    /// that have been announced via IPC. Empty results indicate no matching providers
+    /// have announced themselves — callers must handle graceful degradation.
+    ///
     /// # Errors
-    /// Returns an error if service discovery fails due to network issues, timeouts, or invalid service names.
+    /// Returns an error if the service name pattern is invalid.
     pub fn discover_services(&self, service_name: &str) -> Result<Vec<ServiceInfo>, BearDogError> {
-        info!("🔍 Discovering services matching: {}", service_name);
-        // Modern implementation would use capability-based discovery
-        Ok(vec![])
+        if service_name.is_empty() {
+            return Err(BearDogError::validation(
+                "Service discovery requires a non-empty name pattern",
+            ));
+        }
+
+        let results: Vec<ServiceInfo> = self
+            .discovered_providers
+            .keys()
+            .filter(|key| key.contains(service_name))
+            .map(|name| ServiceInfo {
+                name: name.clone(),
+                service_type: String::new(),
+                address: String::new(),
+                port: 0,
+                metadata: std::collections::HashMap::new(),
+            })
+            .collect();
+
+        info!(
+            "Discovery for '{}': {} providers found",
+            service_name,
+            results.len()
+        );
+        Ok(results)
     }
 
     /// Get service discovery statistics

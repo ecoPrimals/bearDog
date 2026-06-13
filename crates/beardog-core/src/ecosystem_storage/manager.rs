@@ -69,8 +69,17 @@ impl EcosystemStorageManager {
             StorageOperation::Retrieve => self.handle_retrieve(request).await,
             StorageOperation::Delete => self.handle_delete(request).await,
             StorageOperation::List => self.handle_list(&request),
-            _ => Err(BearDogError::business(
-                "Operation not implemented".to_string(),
+            StorageOperation::Copy => Err(BearDogError::unsupported_operation(
+                "Storage copy requires source and destination backends",
+            )),
+            StorageOperation::Move => Err(BearDogError::unsupported_operation(
+                "Storage move requires source and destination backends",
+            )),
+            StorageOperation::Backup => Err(BearDogError::unsupported_operation(
+                "Storage backup requires configured backup target",
+            )),
+            StorageOperation::Restore => Err(BearDogError::unsupported_operation(
+                "Storage restore requires configured backup source",
             )),
         }
     }
