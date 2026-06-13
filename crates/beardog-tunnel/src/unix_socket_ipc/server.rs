@@ -362,7 +362,7 @@ impl UnixSocketIpcServer {
                 // ── riboCipher signal detection (Wave 111) ──────────────────
                 //
                 // Read first byte: if it's a riboCipher signal prefix (0xEC/0xED/0xEE),
-                // route deterministically. Otherwise WARN (deprecated unsignalled) and
+                // route deterministically. Otherwise ERROR (deprecated unsignalled) and
                 // fall through to legacy peek-and-guess logic.
                 let mut peek = [0u8; 1];
                 match tokio::time::timeout(*IPC_PEEK_TIMEOUT, stream.read_exact(&mut peek)).await {
@@ -372,7 +372,7 @@ impl UnixSocketIpcServer {
                             .await;
                     }
                     Ok(Ok(1)) if peek[0] == b'{' => {
-                        warn!(
+                        error!(
                             first_byte = "0x7B",
                             "DEPRECATED: unsignalled connection — use riboCipher signal [0xEC, 0x01] for JSON-RPC"
                         );
@@ -382,7 +382,7 @@ impl UnixSocketIpcServer {
                         Box::new(PrefixedStream::new(peek[0], stream)) as Box<dyn PlatformStream>
                     }
                     Ok(Ok(_)) => {
-                        warn!(
+                        error!(
                             first_byte = format!("0x{:02X}", peek[0]),
                             "DEPRECATED: unsignalled connection — use riboCipher signal [0xEC, 0x02] for BTSP"
                         );

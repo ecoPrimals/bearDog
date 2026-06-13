@@ -37,7 +37,7 @@ impl TcpIpcServer {
             // ── riboCipher signal detection (Wave 111) ──────────────────
             //
             // Peek first byte. If riboCipher signal prefix, consume and route
-            // deterministically. Otherwise WARN (deprecated unsignalled) and
+            // deterministically. Otherwise ERROR (deprecated unsignalled) and
             // fall through to legacy peek-and-guess.
             let mut peek_buf = [0u8; 1];
             match tokio::time::timeout(*TCP_HANDSHAKE_DETECT_TIMEOUT, stream.peek(&mut peek_buf))
@@ -63,7 +63,7 @@ impl TcpIpcServer {
                     .await;
                 }
                 Ok(Ok(1)) if peek_buf[0] == b'{' => {
-                    warn!(
+                    error!(
                         peer = %peer_addr,
                         first_byte = "0x7B",
                         "DEPRECATED: unsignalled connection — use riboCipher signal [0xEC, 0x01] for JSON-RPC"
@@ -74,7 +74,7 @@ impl TcpIpcServer {
                     );
                 }
                 _ => {
-                    warn!(
+                    error!(
                         peer = %peer_addr,
                         first_byte = format!("0x{:02X}", peek_buf[0]),
                         "DEPRECATED: unsignalled connection — use riboCipher signal [0xEC, 0x02] for BTSP"
