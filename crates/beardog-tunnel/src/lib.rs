@@ -181,6 +181,10 @@ pub mod trusted_issuer_registry;
 // Auth event bus for cross-gate trust provenance (Wave 138)
 pub mod auth_event_bus;
 
+// riboCipher transport signal standard (Wave 111)
+// Deterministic protocol routing via intentional signal prefix.
+pub mod ribocipher;
+
 #[cfg(test)]
 mod btsp_handshake_tests;
 #[cfg(test)]

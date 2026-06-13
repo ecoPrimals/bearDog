@@ -21,6 +21,7 @@ use crate::method_gate::{CallerContext, MethodGate, dispatch_auth_method, is_gat
 use crate::platform::{
     PlatformListener, PlatformSocket, PlatformStream, PrefixedStream, Socket, SocketEndpoint,
 };
+use crate::ribocipher;
 use anyhow::{Context, Result};
 use beardog_config::env_keys;
 use beardog_core::socket_config::{
@@ -358,18 +359,33 @@ impl UnixSocketIpcServer {
             {
                 let mut stream = stream;
 
-                // Peek first byte: JSON-RPC starts with '{' (0x7B); BTSP frames
-                // use a 4-byte big-endian length prefix. PrefixedStream puts the
-                // consumed byte back for whichever handler wins.
+                // ── riboCipher signal detection (Wave 111) ──────────────────
+                //
+                // Read first byte: if it's a riboCipher signal prefix (0xEC/0xED/0xEE),
+                // route deterministically. Otherwise WARN (deprecated unsignalled) and
+                // fall through to legacy peek-and-guess logic.
                 let mut peek = [0u8; 1];
                 match tokio::time::timeout(*IPC_PEEK_TIMEOUT, stream.read_exact(&mut peek)).await {
+                    Ok(Ok(1)) if ribocipher::is_signal_byte(peek[0]) => {
+                        return self
+                            .handle_ribocipher_signal(stream, peek[0], family_seed)
+                            .await;
+                    }
                     Ok(Ok(1)) if peek[0] == b'{' => {
+                        warn!(
+                            first_byte = "0x7B",
+                            "DEPRECATED: unsignalled connection — use riboCipher signal [0xEC, 0x01] for JSON-RPC"
+                        );
                         debug!(
                             "UDS peek: JSON-RPC detected (0x7B) — bypassing BTSP for local composition"
                         );
                         Box::new(PrefixedStream::new(peek[0], stream)) as Box<dyn PlatformStream>
                     }
                     Ok(Ok(_)) => {
+                        warn!(
+                            first_byte = format!("0x{:02X}", peek[0]),
+                            "DEPRECATED: unsignalled connection — use riboCipher signal [0xEC, 0x02] for BTSP"
+                        );
                         debug!("BTSP production: initiating UDS handshake");
                         let mut prefixed = PrefixedStream::new(peek[0], stream);
                         match btsp_handshake::perform_server_handshake(&mut prefixed, family_seed)

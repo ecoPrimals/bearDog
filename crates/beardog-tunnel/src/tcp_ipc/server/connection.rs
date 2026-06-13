@@ -6,12 +6,13 @@ use super::{TCP_HANDSHAKE_DETECT_TIMEOUT, TCP_READ_TIMEOUT, TcpIpcServer};
 use crate::btsp_handshake::{self, BtspSecurityMode, BtspSession};
 use crate::btsp_provider::BeardogBtspProvider;
 use crate::method_gate::{CallerContext, MethodGate, dispatch_auth_method};
+use crate::ribocipher;
 use crate::unix_socket_ipc::handlers::HandlerRegistry;
 use beardog_errors::BearDogError;
 use serde_json::Value;
 use std::net::SocketAddr;
 use std::sync::Arc;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
 use tracing::{debug, error, info, warn};
 
@@ -33,17 +34,51 @@ impl TcpIpcServer {
         debug!("Handling connection from: {}", peer_addr);
 
         if let BtspSecurityMode::Production { ref family_seed } = security_mode {
+            // ── riboCipher signal detection (Wave 111) ──────────────────
+            //
+            // Peek first byte. If riboCipher signal prefix, consume and route
+            // deterministically. Otherwise WARN (deprecated unsignalled) and
+            // fall through to legacy peek-and-guess.
             let mut peek_buf = [0u8; 1];
             match tokio::time::timeout(*TCP_HANDSHAKE_DETECT_TIMEOUT, stream.peek(&mut peek_buf))
                 .await
             {
+                Ok(Ok(1)) if ribocipher::is_signal_byte(peek_buf[0]) => {
+                    // Consume the signal byte (peek doesn't consume)
+                    let mut consume = [0u8; 1];
+                    stream
+                        .read_exact(&mut consume)
+                        .await
+                        .map_err(|e| BearDogError::system(format!("riboCipher read: {e}")))?;
+
+                    return Self::handle_tcp_ribocipher(
+                        stream,
+                        consume[0],
+                        family_seed,
+                        &registry,
+                        &btsp_provider,
+                        &gate,
+                        &peer_addr,
+                    )
+                    .await;
+                }
                 Ok(Ok(1)) if peek_buf[0] == b'{' => {
+                    warn!(
+                        peer = %peer_addr,
+                        first_byte = "0x7B",
+                        "DEPRECATED: unsignalled connection — use riboCipher signal [0xEC, 0x01] for JSON-RPC"
+                    );
                     debug!(
                         peer = %peer_addr,
                         "TCP peek: JSON-RPC detected (0x7B) — bypassing BTSP for local composition"
                     );
                 }
                 _ => {
+                    warn!(
+                        peer = %peer_addr,
+                        first_byte = format!("0x{:02X}", peek_buf[0]),
+                        "DEPRECATED: unsignalled connection — use riboCipher signal [0xEC, 0x02] for BTSP"
+                    );
                     debug!(peer = %peer_addr, "BTSP production: initiating TCP handshake");
                     match btsp_handshake::perform_server_handshake(&mut stream, family_seed).await {
                         Ok(mut session) => {
@@ -84,6 +119,134 @@ impl TcpIpcServer {
             &mut caller,
         )
         .await
+    }
+
+    /// Route a TCP connection that sent a riboCipher signal prefix.
+    async fn handle_tcp_ribocipher(
+        mut stream: TcpStream,
+        signal_byte: u8,
+        family_seed: &btsp_handshake::FamilySeed,
+        registry: &Arc<HandlerRegistry>,
+        btsp_provider: &Arc<BeardogBtspProvider>,
+        gate: &Arc<MethodGate>,
+        peer_addr: &SocketAddr,
+    ) -> Result<(), BearDogError> {
+        match signal_byte {
+            ribocipher::SIGNAL_CLEAR => {
+                let mut proto_buf = [0u8; 1];
+                stream
+                    .read_exact(&mut proto_buf)
+                    .await
+                    .map_err(|e| BearDogError::system(format!("riboCipher proto read: {e}")))?;
+                let protocol_type = proto_buf[0];
+
+                info!(
+                    peer = %peer_addr,
+                    protocol = ribocipher::protocol_name(protocol_type),
+                    byte = format!("0x{:02X}", protocol_type),
+                    "riboCipher: clear signal — routing"
+                );
+
+                match protocol_type {
+                    ribocipher::PROTO_NDJSON_JSONRPC => {
+                        let mut caller = caller_context_from_addr(peer_addr);
+                        let (reader, writer) = stream.into_split();
+                        Self::handle_plaintext_connection(
+                            reader,
+                            writer,
+                            *peer_addr,
+                            Arc::clone(registry),
+                            Arc::clone(btsp_provider),
+                            gate,
+                            &mut caller,
+                        )
+                        .await
+                    }
+                    ribocipher::PROTO_BTSP_BINARY => {
+                        match btsp_handshake::perform_server_handshake(&mut stream, family_seed)
+                            .await
+                        {
+                            Ok(mut session) => {
+                                info!(
+                                    peer = %peer_addr,
+                                    session_id = %session.session_id,
+                                    cipher = %session.cipher.wire_name(),
+                                    "riboCipher→BTSP TCP handshake succeeded"
+                                );
+                                let mut caller = caller_context_from_addr(peer_addr);
+                                caller.btsp_family_verified = true;
+                                Self::handle_jsonrpc_btsp_tcp(
+                                    &mut stream,
+                                    &mut session,
+                                    registry,
+                                    btsp_provider,
+                                    gate,
+                                    &mut caller,
+                                )
+                                .await
+                            }
+                            Err(e) => {
+                                warn!(
+                                    peer = %peer_addr,
+                                    error = %e,
+                                    "riboCipher→BTSP TCP handshake failed"
+                                );
+                                Ok(())
+                            }
+                        }
+                    }
+                    ribocipher::PROTO_PROBE => {
+                        let response = serde_json::json!({
+                            "status": "ok",
+                            "primal": "bearDog",
+                            "signal": "riboCipher-v1"
+                        });
+                        let msg = serde_json::to_string(&response)
+                            .map_err(|e| BearDogError::system(format!("serialize: {e}")))?;
+                        stream
+                            .write_all(format!("{msg}\n").as_bytes())
+                            .await
+                            .map_err(|e| BearDogError::system(format!("write: {e}")))?;
+                        Ok(())
+                    }
+                    _ => {
+                        warn!(
+                            peer = %peer_addr,
+                            protocol_type = format!("0x{:02X}", protocol_type),
+                            "riboCipher: unknown protocol type in clear signal"
+                        );
+                        Ok(())
+                    }
+                }
+            }
+            ribocipher::SIGNAL_MITO => {
+                let mut tag = [0u8; 4];
+                stream
+                    .read_exact(&mut tag)
+                    .await
+                    .map_err(|e| BearDogError::system(format!("riboCipher mito read: {e}")))?;
+                info!(
+                    peer = %peer_addr,
+                    "riboCipher: mito-obfuscated signal (Tier 2 — future expansion)"
+                );
+                warn!("riboCipher: mito-tier not yet implemented — closing connection");
+                Ok(())
+            }
+            ribocipher::SIGNAL_NUCLEAR => {
+                let mut payload = [0u8; 6];
+                stream
+                    .read_exact(&mut payload)
+                    .await
+                    .map_err(|e| BearDogError::system(format!("riboCipher nuclear read: {e}")))?;
+                info!(
+                    peer = %peer_addr,
+                    "riboCipher: nuclear-sealed signal (Tier 3 — future expansion)"
+                );
+                warn!("riboCipher: nuclear-tier not yet implemented — closing connection");
+                Ok(())
+            }
+            _ => unreachable!("is_signal_byte guards this branch"),
+        }
     }
 
     /// Handle a plaintext NDJSON connection over any async reader/writer.

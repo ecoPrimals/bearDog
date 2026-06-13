@@ -11,6 +11,8 @@ use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::UnixStream;
 use tracing::info;
 
+use crate::ribocipher;
+
 /// Run `BearDog` in client mode.
 ///
 /// Discovers the server endpoint via `SocketConfig`, then either dispatches
@@ -53,6 +55,9 @@ fn dispatch_rpc(socket_path: &str, method: &str) -> anyhow::Result<()> {
     let mut stream = UnixStream::connect(socket_path).map_err(|e| {
         anyhow::anyhow!("Cannot connect to {socket_path}: {e}. Is the BearDog server running?")
     })?;
+
+    // riboCipher: send clear signal for NDJSON JSON-RPC before payload
+    stream.write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))?;
 
     let mut payload = serde_json::to_string(&request)?;
     payload.push('\n');

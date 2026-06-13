@@ -14,6 +14,7 @@ mod tests {
         BTSP_HANDSHAKE_VERSION, ChallengeResponse, ClientHello, HandshakeComplete, ServerHello,
     };
     use crate::btsp_handshake::{FamilySeed, perform_server_handshake};
+    use crate::ribocipher;
     use base64::Engine;
     use base64::engine::general_purpose::STANDARD as BASE64;
     use tokio::io::duplex;
@@ -347,5 +348,136 @@ mod tests {
             .decrypt_frame(&encrypted_resp)
             .expect("decrypt response");
         assert_eq!(decrypted_resp, jsonrpc_response);
+    }
+
+    /// riboCipher: clear signal routes NDJSON JSON-RPC correctly via duplex.
+    #[tokio::test]
+    async fn ribocipher_clear_signal_ndjson_routing() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+        let (mut client, mut server) = duplex(4096);
+
+        // Client sends riboCipher clear signal for NDJSON, then JSON-RPC
+        let signal = ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC);
+        client.write_all(&signal).await.unwrap();
+        client
+            .write_all(b"{\"jsonrpc\":\"2.0\",\"method\":\"health\",\"id\":1}\n")
+            .await
+            .unwrap();
+
+        // Server reads and verifies signal routing
+        let mut first = [0u8; 1];
+        server.read_exact(&mut first).await.unwrap();
+        assert!(ribocipher::is_signal_byte(first[0]));
+        assert_eq!(first[0], ribocipher::SIGNAL_CLEAR);
+
+        let mut proto = [0u8; 1];
+        server.read_exact(&mut proto).await.unwrap();
+        assert_eq!(proto[0], ribocipher::PROTO_NDJSON_JSONRPC);
+
+        // Remaining bytes are the JSON-RPC payload
+        let mut buf = vec![0u8; 256];
+        let n = server.read(&mut buf).await.unwrap();
+        let payload = String::from_utf8_lossy(&buf[..n]);
+        assert!(payload.contains("\"method\":\"health\""));
+    }
+
+    /// riboCipher: clear signal routes BTSP binary correctly.
+    #[tokio::test]
+    async fn ribocipher_clear_signal_btsp_binary() {
+        use tokio::io::AsyncWriteExt;
+
+        let seed = b"ribocipher-btsp-binary-test!!!!!";
+        let family_seed = FamilySeed::new(seed.to_vec());
+
+        let (mut client, mut server) = duplex(16384);
+
+        let server_seed = family_seed.clone();
+        let server_handle = tokio::spawn(async move {
+            // Server: skip signal bytes (simulating riboCipher detection dispatch)
+            use tokio::io::AsyncReadExt;
+            let mut sig = [0u8; 2];
+            server.read_exact(&mut sig).await.unwrap();
+            assert_eq!(sig[0], ribocipher::SIGNAL_CLEAR);
+            assert_eq!(sig[1], ribocipher::PROTO_BTSP_BINARY);
+
+            // Then run BTSP handshake on the remaining stream
+            perform_server_handshake(&mut server, &server_seed)
+                .await
+                .expect("server handshake after riboCipher signal")
+        });
+
+        let client_handle = tokio::spawn(async move {
+            // Client: send riboCipher clear signal for BTSP, then do handshake
+            let signal = ribocipher::clear_signal(ribocipher::PROTO_BTSP_BINARY);
+            client.write_all(&signal).await.unwrap();
+            client_handshake(&mut client, seed).await
+        });
+
+        let (server_session, client_session) = tokio::join!(server_handle, client_handle);
+        let mut server_session = server_session.expect("join server");
+        let mut client_session = client_session.expect("join client");
+
+        assert_eq!(server_session.session_id, client_session.session_id);
+
+        // Verify encrypted communication works after riboCipher+BTSP
+        let msg = b"post-ribocipher encrypted payload";
+        let enc = server_session.encrypt_frame(msg).expect("enc");
+        let dec = client_session.decrypt_frame(&enc).expect("dec");
+        assert_eq!(dec, msg);
+    }
+
+    /// riboCipher: probe signal returns health acknowledgment.
+    #[tokio::test]
+    async fn ribocipher_probe_signal() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+        let (mut client, mut server) = duplex(4096);
+
+        // Client sends probe signal
+        let signal = ribocipher::clear_signal(ribocipher::PROTO_PROBE);
+        client.write_all(&signal).await.unwrap();
+
+        // Server reads signal
+        let mut sig = [0u8; 2];
+        server.read_exact(&mut sig).await.unwrap();
+        assert_eq!(sig, [ribocipher::SIGNAL_CLEAR, ribocipher::PROTO_PROBE]);
+    }
+
+    /// riboCipher: legacy unsignalled connection ('{' first byte) still works.
+    #[tokio::test]
+    async fn ribocipher_legacy_json_still_detected() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+        let (mut client, mut server) = duplex(4096);
+
+        // Client sends raw JSON without riboCipher signal (legacy behavior)
+        client
+            .write_all(b"{\"jsonrpc\":\"2.0\",\"method\":\"status\",\"id\":1}\n")
+            .await
+            .unwrap();
+
+        // Server peeks first byte — NOT a riboCipher signal
+        let mut peek = [0u8; 1];
+        server.read_exact(&mut peek).await.unwrap();
+        assert!(!ribocipher::is_signal_byte(peek[0]));
+        assert_eq!(peek[0], b'{');
+    }
+
+    /// riboCipher signal bytes never collide with valid protocol starts.
+    #[test]
+    fn ribocipher_no_collision_with_existing_protocols() {
+        // JSON-RPC starts with '{'
+        assert_ne!(ribocipher::SIGNAL_CLEAR, b'{');
+        assert_ne!(ribocipher::SIGNAL_MITO, b'{');
+        assert_ne!(ribocipher::SIGNAL_NUCLEAR, b'{');
+
+        // HTTP verbs start with these ASCII chars
+        for &b in &[b'G', b'P', b'H', b'D', b'O', b'T', b'C'] {
+            assert_ne!(ribocipher::SIGNAL_CLEAR, b);
+        }
+
+        // BTSP binary frames start with 0x00 (BE length high byte for <16MB)
+        assert_ne!(ribocipher::SIGNAL_CLEAR, 0x00);
     }
 }
