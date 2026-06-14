@@ -311,30 +311,6 @@ impl EcosystemPerformanceOptimizer {
         }
         Ok(None)
     }
-
-    /// Executes `compute_request`
-    #[expect(dead_code, reason = "Compute execution stub for future pooling")]
-    #[expect(
-        clippy::unused_self,
-        reason = "Self reserved when routing through pooled connections"
-    )]
-    #[expect(
-        clippy::unnecessary_wraps,
-        reason = "Result reserved for compute errors"
-    )]
-    fn execute_compute_request(
-        &self,
-        _connection: &PooledConnection,
-        payload: &[u8],
-    ) -> Result<Vec<u8>, BearDogError> {
-        // Implement compute request logic
-        debug!("Executing compute request with {} bytes", payload.len());
-
-        // Simulate compute processing
-        let response = format!("Processed {} bytes successfully", payload.len());
-
-        Ok(response.into_bytes())
-    }
 }
 
 impl CapabilityConnectionPool {

@@ -10,6 +10,10 @@ exclude = [
     "crates/beardog-integration",
     # Overstep: Android deploy orchestration → biomeOS owns deployment (PRIMAL_RESPONSIBILITY_MATRIX V2)
     "crates/beardog-deploy",
+    # Zero consumers — dormant until capability-based composition surfaces need
+    "crates/beardog-node-registry",
+    "crates/beardog-client",
+    "crates/beardog-workflows",
 ]
 
 [workspace.package]
@@ -254,10 +258,8 @@ beardog-hid = { path = "crates/beardog-hid" }
 beardog-tower-atomic = { path = "crates/beardog-tower-atomic" }
 beardog-discovery = { path = "crates/beardog-discovery" }
 beardog-threat = { path = "crates/beardog-threat" }
-beardog-workflows = { path = "crates/beardog-workflows" }
 beardog-compliance = { path = "crates/beardog-compliance" }
 beardog-production = { path = "crates/beardog-production" }
-beardog-node-registry = { path = "crates/beardog-node-registry" }
 beardog-acme = { path = "crates/beardog-acme" }
 
 [package]

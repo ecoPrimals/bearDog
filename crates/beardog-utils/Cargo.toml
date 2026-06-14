@@ -16,34 +16,11 @@ categories = [ "development-tools", "data-structures", "algorithms",]
 workspace = true
 
 [dependencies]
-aes = { workspace = true }
-ctr = { workspace = true }
-tracing = { workspace = true }
-parking_lot = { workspace = true }
-bytes = { workspace = true }
-serde_json = { workspace = true }
-tokio = { workspace = true, features = ["rt", "macros", "sync", "time", "fs"] }
-serde = { workspace = true }
-chrono = { workspace = true }
-rand = { workspace = true }
-sha2 = { workspace = true }
-zeroize = { workspace = true }
-pbkdf2 = { workspace = true }
-hmac = { workspace = true }
-hkdf = { workspace = true }
-hex = { workspace = true }
-thiserror = { workspace = true }
 beardog-errors = { workspace = true }
-beardog-config = { workspace = true }
 beardog-types = { workspace = true }
-
-# Safe concurrent data structures
-dashmap = { workspace = true }
-crossbeam-queue = { workspace = true }
+tokio = { workspace = true, features = ["rt", "macros", "sync", "time"] }
+tracing = { workspace = true }
+zeroize = { workspace = true }
 
 [features]
 test-utils = []
-
-[dev-dependencies]
-futures = { workspace = true }
-serial_test = { workspace = true }
