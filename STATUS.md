@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: Jun 13, 2026 (Wave 147)
+**Last Updated**: Jun 14, 2026 (Wave 148)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -89,6 +89,13 @@
 ---
 
 ## Recent Improvements
+
+### Wave 148 — Dead Code Elimination, Workspace Hygiene (Jun 14, 2026)
+
+- **~19,700 lines of dead code removed** — beardog-utils gutted from 18K+ to 887 lines (only SafeOps + SafePinnedBuffer remain, zero external consumers for everything else). performance_optimizer module (1,192 lines) also removed.
+- **Workspace deps trimmed** — beardog-utils reduced from 20+ deps to 5. Dead `beardog-compliance` dep removed from beardog-core and beardog-security.
+- **4 crates excluded from workspace** — beardog-node-registry, beardog-client, beardog-workflows, beardog-production (zero consumers, dormant).
+- **Wave 113 bearDog P1 complete** — plaintext health socket (`beardog-default.sock`) auto-spawns alongside main socket; accepts plain JSON-RPC or riboCipher-prefixed probes for cellMembrane monitoring.
 
 ### Wave 145 — Pure Rust Crypto, Crypto Dedup, Debris Cleanup (Jun 9, 2026)
 
