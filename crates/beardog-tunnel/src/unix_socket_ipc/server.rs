@@ -407,7 +407,7 @@ impl UnixSocketIpcServer {
                                         "code": -32600,
                                         "message": "BTSP handshake required",
                                         "data": {
-                                            "reason": "This socket is family-scoped and requires a BTSP handshake before JSON-RPC traffic. Use btsp.server.create_session to initiate, or connect to the dev socket (beardog-default.sock) for plaintext.",
+                                            "reason": "This socket requires BTSP handshake. Use riboCipher [0xEC, 0x01] prefix for plain JSON-RPC, or connect to the health socket (beardog-default.sock) for plaintext probes.",
                                             "btsp_version": "2.0",
                                         }
                                     },

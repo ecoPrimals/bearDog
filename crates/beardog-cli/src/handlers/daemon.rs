@@ -103,6 +103,7 @@ pub async fn handle_daemon(args: DaemonArgs) -> Result<(), BearDogError> {
         audit_dir: None,
         family_id: args.family_id,
         orchestrator_id: args.orchestrator_id,
+        health_socket: None,
     };
 
     // Call server handler

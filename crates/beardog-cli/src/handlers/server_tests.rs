@@ -20,6 +20,7 @@ mod tests {
             audit_dir: None,
             family_id: Some("test_family".to_string()),
             orchestrator_id: Some("test_orch".to_string()),
+            health_socket: None,
         };
 
         assert_eq!(args.socket, "/tmp/test.sock");
@@ -40,6 +41,7 @@ mod tests {
             audit_dir: None,
             family_id: None,
             orchestrator_id: None,
+            health_socket: None,
         };
 
         assert_eq!(args.socket, "/tmp/beardog.sock");
@@ -59,6 +61,7 @@ mod tests {
             audit_dir: None,
             family_id: Some("stun_test".to_string()),
             orchestrator_id: None,
+            health_socket: None,
         };
 
         assert!(args.r#abstract);
@@ -76,6 +79,7 @@ mod tests {
             audit_dir: None,
             family_id: Some("family1".to_string()),
             orchestrator_id: Some("orch1".to_string()),
+            health_socket: None,
         };
 
         let args2 = args1.clone();

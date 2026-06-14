@@ -371,10 +371,106 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         }
     }
 
+    // Health socket: lightweight plaintext listener for monitoring probes.
+    // Always spawn unless --bind-mode=tcp (no UDS available).
+    let health_path = args.health_socket.clone().unwrap_or_else(|| {
+        let main = std::path::Path::new(&socket_path);
+        if let Some(dir) = main.parent() {
+            dir.join("beardog-default.sock")
+                .to_string_lossy()
+                .to_string()
+        } else {
+            "/tmp/beardog-default.sock".to_string()
+        }
+    });
+    if !tcp_only {
+        let hp = health_path.clone();
+        info!(path = %hp, "spawning plaintext health socket");
+        tokio::spawn(async move {
+            if let Err(e) = run_health_socket(&hp).await {
+                warn!(error = %e, "health socket exited");
+            }
+        });
+    }
+
     // Start all transports (runs until Ctrl+C)
     server.start_all().await?;
 
     Ok(())
+}
+
+/// Lightweight plaintext health socket for monitoring probes.
+///
+/// Accepts connections, optionally consumes riboCipher prefix, reads one
+/// JSON-RPC request, responds with health status. No BTSP, no auth, no
+/// method gate — just a liveness signal for cellMembrane and orchestration.
+async fn run_health_socket(path: &str) -> Result<(), BearDogError> {
+    use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
+    use tokio::net::UnixListener;
+
+    let _ = std::fs::remove_file(path);
+    let listener = UnixListener::bind(path)
+        .map_err(|e| BearDogError::system(format!("health socket bind failed: {e}")))?;
+    info!(path = %path, "health socket listening");
+
+    loop {
+        let (mut stream, _) = listener.accept().await?;
+
+        tokio::spawn(async move {
+            let mut first = [0u8; 1];
+            if stream.read_exact(&mut first).await.is_err() {
+                return;
+            }
+
+            // Tolerate riboCipher prefix: consume second byte and read JSON
+            let is_signal = matches!(first[0], 0xEC | 0xED | 0xEE);
+            if is_signal {
+                let mut _proto = [0u8; 1];
+                let _ = stream.read_exact(&mut _proto).await;
+            }
+
+            let mut reader = BufReader::new(&mut stream);
+            let mut line = String::new();
+            if is_signal {
+                if reader.read_line(&mut line).await.is_err() || line.is_empty() {
+                    return;
+                }
+            } else {
+                // First byte was part of the JSON payload
+                line.push(first[0] as char);
+                let mut rest = String::new();
+                if reader.read_line(&mut rest).await.is_err() {
+                    return;
+                }
+                line.push_str(&rest);
+                if line.trim().is_empty() {
+                    return;
+                }
+            }
+
+            // Extract request id for proper JSON-RPC correlation
+            let req_id = serde_json::from_str::<serde_json::Value>(line.trim())
+                .ok()
+                .and_then(|v| v.get("id").cloned())
+                .unwrap_or(serde_json::Value::Null);
+
+            let primal = std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_string());
+            let version = env!("CARGO_PKG_VERSION");
+            let response = serde_json::json!({
+                "jsonrpc": "2.0",
+                "result": {
+                    "status": "alive",
+                    "primal": primal,
+                    "version": version,
+                },
+                "id": req_id
+            });
+
+            let mut resp_bytes = serde_json::to_vec(&response).unwrap_or_default();
+            resp_bytes.push(b'\n');
+            let _ = stream.write_all(&resp_bytes).await;
+        });
+    }
 }
 
 /// Best-effort registration with the ecosystem's IPC registry (non-fatal).
@@ -502,6 +598,7 @@ mod server_handler_tests {
             audit_dir: None,
             family_id: None,
             orchestrator_id: None,
+            health_socket: None,
         };
         let ns = resolve_biomeos_ipc_subdir_from_optional(None);
         assert_eq!(
@@ -521,6 +618,7 @@ mod server_handler_tests {
             audit_dir: None,
             family_id: Some("alpha".to_string()),
             orchestrator_id: None,
+            health_socket: None,
         };
         let ns = resolve_biomeos_ipc_subdir_from_optional(None);
         assert_eq!(
@@ -540,6 +638,7 @@ mod server_handler_tests {
             audit_dir: None,
             family_id: Some("fam99".to_string()),
             orchestrator_id: None,
+            health_socket: None,
         };
         assert_eq!(
             resolve_server_socket_path(&args),
@@ -558,6 +657,7 @@ mod server_handler_tests {
             audit_dir: None,
             family_id: Some("rel".to_string()),
             orchestrator_id: None,
+            health_socket: None,
         };
         let resolved = resolve_server_socket_path(&args);
         assert!(
@@ -577,6 +677,7 @@ mod server_handler_tests {
             audit_dir: None,
             family_id: None,
             orchestrator_id: None,
+            health_socket: None,
         };
         assert_eq!(resolve_server_socket_path(&args), "/tmp/custom.sock");
     }
@@ -592,6 +693,7 @@ mod server_handler_tests {
             audit_dir: None,
             family_id: Some("gamma".to_string()),
             orchestrator_id: None,
+            health_socket: None,
         };
         let ns = resolve_biomeos_ipc_subdir_from_optional(None);
         assert_eq!(
@@ -611,6 +713,7 @@ mod server_handler_tests {
             audit_dir: None,
             family_id: None,
             orchestrator_id: None,
+            health_socket: None,
         };
         assert_eq!(resolve_server_socket_path(&args), "");
     }
@@ -626,6 +729,7 @@ mod server_handler_tests {
             audit_dir: None,
             family_id: None,
             orchestrator_id: None,
+            health_socket: None,
         };
         assert_eq!(resolve_server_socket_path(&args), "/run/beardog.sock");
     }
@@ -638,5 +742,70 @@ mod server_handler_tests {
     #[tokio::test]
     async fn attempt_orchestrator_registration_with_tcp_addr_completes_without_panic() {
         attempt_orchestrator_registration("/tmp/beardog.sock", Some("127.0.0.1:9900")).await;
+    }
+
+    #[tokio::test]
+    async fn health_socket_responds_to_plain_json_rpc() {
+        use super::run_health_socket;
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+        use tokio::net::UnixStream;
+
+        let dir = tempfile::tempdir().expect("tempdir");
+        let sock_path = dir.path().join("health-test.sock");
+        let path_str = sock_path.to_string_lossy().to_string();
+
+        let path_clone = path_str.clone();
+        tokio::spawn(async move {
+            let _ = run_health_socket(&path_clone).await;
+        });
+
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+
+        let mut stream = UnixStream::connect(&path_str).await.expect("connect");
+        let req = b"{\"jsonrpc\":\"2.0\",\"method\":\"health\",\"id\":42}\n";
+        stream.write_all(req).await.expect("write");
+
+        let mut reader = BufReader::new(stream);
+        let mut line = String::new();
+        reader.read_line(&mut line).await.expect("read response");
+
+        let resp: serde_json::Value = serde_json::from_str(&line).expect("parse JSON");
+        assert_eq!(resp["jsonrpc"], "2.0");
+        assert_eq!(resp["id"], 42);
+        assert_eq!(resp["result"]["status"], "alive");
+        assert_eq!(resp["result"]["primal"], "beardog");
+        assert!(resp["result"]["version"].is_string());
+    }
+
+    #[tokio::test]
+    async fn health_socket_tolerates_ribocipher_prefix() {
+        use super::run_health_socket;
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+        use tokio::net::UnixStream;
+
+        let dir = tempfile::tempdir().expect("tempdir");
+        let sock_path = dir.path().join("health-ribo.sock");
+        let path_str = sock_path.to_string_lossy().to_string();
+
+        let path_clone = path_str.clone();
+        tokio::spawn(async move {
+            let _ = run_health_socket(&path_clone).await;
+        });
+
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+
+        let mut stream = UnixStream::connect(&path_str).await.expect("connect");
+        // riboCipher prefix [0xEC, 0x01] then JSON-RPC
+        let mut payload = vec![0xEC, 0x01];
+        payload.extend_from_slice(b"{\"jsonrpc\":\"2.0\",\"method\":\"health.liveness\",\"id\":7}\n");
+        stream.write_all(&payload).await.expect("write");
+
+        let mut reader = BufReader::new(stream);
+        let mut line = String::new();
+        reader.read_line(&mut line).await.expect("read response");
+
+        let resp: serde_json::Value = serde_json::from_str(&line).expect("parse JSON");
+        assert_eq!(resp["id"], 7);
+        assert_eq!(resp["result"]["status"], "alive");
     }
 }

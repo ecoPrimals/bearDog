@@ -17,6 +17,7 @@ fn resolve_socket_path_family_bare_filename_uses_empty_parent() {
         audit_dir: None,
         family_id: Some("bare".to_string()),
         orchestrator_id: None,
+            health_socket: None,
     };
     let p = super::server::resolve_server_socket_path(&args);
     assert!(
@@ -36,6 +37,7 @@ fn resolve_socket_path_with_listen_addr_still_returns_socket_for_explicit() {
         audit_dir: None,
         family_id: None,
         orchestrator_id: None,
+            health_socket: None,
     };
     let p = super::server::resolve_server_socket_path(&args);
     assert_eq!(p, "/run/bd.sock");
