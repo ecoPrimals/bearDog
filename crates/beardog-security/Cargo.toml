@@ -77,9 +77,6 @@ workspace = true
 [dependencies.beardog-threat]
 workspace = true
 
-[dependencies.beardog-compliance]
-workspace = true
-
 [dependencies.beardog-traits]
 path = "../beardog-traits"
 

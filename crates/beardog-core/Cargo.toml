@@ -78,9 +78,6 @@ path = "../beardog-monitoring"
 [dependencies.beardog-auth]
 path = "../beardog-auth"
 
-[dependencies.beardog-compliance]
-workspace = true
-
 [dependencies.beardog-threat]
 workspace = true
 

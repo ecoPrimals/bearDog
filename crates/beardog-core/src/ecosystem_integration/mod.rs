@@ -47,9 +47,6 @@ pub mod integration_engine;
 /// License and agreement management
 pub mod license_manager;
 
-/// Cross-ecosystem performance optimization
-pub mod performance_optimizer;
-
 /// Integration type definitions
 pub mod types;
 
@@ -72,20 +69,11 @@ mod integration_engine_tests;
 mod license_manager_tests;
 
 #[cfg(test)]
-mod performance_optimizer_tests;
-
-#[cfg(test)]
 #[path = "event_system_comprehensive_tests.rs"]
 mod event_system_comprehensive_tests;
 
 #[cfg(test)]
 mod tests;
-
-// Avoid ambiguous re-exports by aliasing conflicting types
-pub use performance_optimizer::{
-    CapabilityConnectionPool, ComputeCache, ConnectionMetrics as PerformanceConnectionMetrics,
-    EcosystemPerformanceOptimizer, PoolConfig as PerformancePoolConfig,
-};
 
 pub use secure_cross_primal_messaging::{
     MessengerMetrics, PrimalDiscoveryService, SecureCrossPrimalMessenger, SecurePrimalMessage,

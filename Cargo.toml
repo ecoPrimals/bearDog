@@ -14,6 +14,7 @@ exclude = [
     "crates/beardog-node-registry",
     "crates/beardog-client",
     "crates/beardog-workflows",
+    "crates/beardog-production",
 ]
 
 [workspace.package]
@@ -259,7 +260,6 @@ beardog-tower-atomic = { path = "crates/beardog-tower-atomic" }
 beardog-discovery = { path = "crates/beardog-discovery" }
 beardog-threat = { path = "crates/beardog-threat" }
 beardog-compliance = { path = "crates/beardog-compliance" }
-beardog-production = { path = "crates/beardog-production" }
 beardog-acme = { path = "crates/beardog-acme" }
 
 [package]

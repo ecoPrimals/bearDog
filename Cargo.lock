@@ -561,7 +561,6 @@ dependencies = [
  "base64",
  "beardog-adapters",
  "beardog-auth",
- "beardog-compliance",
  "beardog-config",
  "beardog-discovery",
  "beardog-errors",
@@ -751,31 +750,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "beardog-production"
-version = "0.9.0"
-dependencies = [
- "base64",
- "beardog-config",
- "beardog-errors",
- "beardog-security",
- "beardog-types",
- "blake3",
- "chrono",
- "hex",
- "hkdf 0.12.4",
- "serde",
- "serde_json",
- "serial_test",
- "sha2 0.10.9",
- "tempfile",
- "thiserror 2.0.18",
- "tokio",
- "toml",
- "tracing",
- "uuid",
-]
-
-[[package]]
 name = "beardog-security"
 version = "0.9.0"
 dependencies = [
@@ -783,7 +757,6 @@ dependencies = [
  "anyhow",
  "argon2",
  "base64",
- "beardog-compliance",
  "beardog-errors",
  "beardog-hid",
  "beardog-threat",
