@@ -1,7 +1,7 @@
 +++
 title = "bearDog Validation Summary"
-description = "Zero-trust sovereign cryptographic orchestrator — 14,974+ tests, 29 crates, 226 IPC methods, ACME auto-cert, FIDO2/CTAP2, BTSP P3 AEAD"
-date = 2026-06-13
+description = "Zero-trust sovereign cryptographic orchestrator — 14,974+ tests, 25 active crates, 226 IPC methods, ACME auto-cert, FIDO2/CTAP2, BTSP P3 AEAD"
+date = 2026-06-15
 
 [taxonomies]
 primals = ["beardog"]
@@ -11,13 +11,15 @@ springs = []
 ## Status
 
 - **14,974+ tests** passing (169 suites, workspace), 0 failures
-- **29 crates** in workspace (`beardog-integration`, `beardog-deploy` excluded — overstep)
+- **25 active crates** in workspace (6 excluded: `beardog-integration`, `beardog-deploy` overstep; `beardog-node-registry`, `beardog-client`, `beardog-workflows`, `beardog-production` zero consumers)
 - **226 JSON-RPC methods** — 217 registry + 9 pre-dispatch gate (see `docs/PRIMAL_CONTRACTS.md` v4.0.0)
 - **v0.9.0** — edition 2024, MSRV 1.93.0
 - **Pure Rust** — 100% (zero C dependencies), `forbid(unsafe_code)` workspace-wide
 - **Clippy** — pedantic + nursery + cast lints + `doc_markdown` + `missing_errors_doc` + unwrap/expect warn
 - **Coverage** — 90.51% line (llvm-cov)
 - **License** — AGPL-3.0-or-later, SPDX headers on all `.rs` files
+- **riboCipher** — ✅ signal acceptance (UDS + TCP), ✅ client signaling, ERROR on unsignalled
+- **Health socket** — ✅ `beardog-default.sock` auto-spawns (plaintext, no BTSP), `--health-socket` override
 
 ## Key Capabilities
 
