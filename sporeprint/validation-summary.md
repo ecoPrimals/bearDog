@@ -1,7 +1,7 @@
 +++
 title = "bearDog Validation Summary"
 description = "Zero-trust sovereign cryptographic orchestrator — 14,974+ tests, 25 active crates, 226 IPC methods, ACME auto-cert, FIDO2/CTAP2, BTSP P3 AEAD"
-date = 2026-06-15
+date = 2026-06-16
 
 [taxonomies]
 primals = ["beardog"]
@@ -19,6 +19,7 @@ springs = []
 - **Coverage** — 90.51% line (llvm-cov)
 - **License** — AGPL-3.0-or-later, SPDX headers on all `.rs` files
 - **riboCipher** — ✅ signal acceptance (UDS + TCP), ✅ client signaling, ERROR on unsignalled
+- **Mito-beacon** — ✅ HMAC decode + routing (0xED tier), FAMILY_SEED-verified protocol dispatch
 - **Health socket** — ✅ `beardog-default.sock` auto-spawns (plaintext, no BTSP), `--health-socket` override
 
 ## Key Capabilities

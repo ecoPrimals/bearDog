@@ -53,6 +53,61 @@ pub const fn is_signal_byte(byte: u8) -> bool {
     matches!(byte, SIGNAL_CLEAR | SIGNAL_MITO | SIGNAL_NUCLEAR)
 }
 
+/// All known protocol types for mito-beacon brute-force decode.
+const KNOWN_PROTOS: [u8; 8] = [
+    PROTO_PROBE,
+    PROTO_NDJSON_JSONRPC,
+    PROTO_BTSP_BINARY,
+    PROTO_BTSP_JSONLINE,
+    PROTO_HTTP,
+    PROTO_ENCRYPTED_RESUME,
+    PROTO_DARK_FOREST_BEACON,
+    PROTO_MESH_RELAY,
+];
+
+/// Compute the 4-byte HMAC tag for a mito-beacon signal.
+///
+/// `HMAC-SHA256(family_seed, &[protocol_type])` truncated to 4 bytes.
+/// Both sender and receiver use this — sender to build the tag, receiver
+/// to verify by iterating known protocol types.
+#[must_use]
+pub fn mito_tag(family_seed: &[u8], protocol_type: u8) -> [u8; 4] {
+    use hmac::{Hmac, Mac};
+    use sha2::Sha256;
+
+    type HmacSha256 = Hmac<Sha256>;
+
+    let mut mac = HmacSha256::new_from_slice(family_seed)
+        .expect("HMAC accepts any key length");
+    mac.update(&[protocol_type]);
+    let result = mac.finalize().into_bytes();
+    let mut tag = [0u8; 4];
+    tag.copy_from_slice(&result[..4]);
+    tag
+}
+
+/// Build a 5-byte mito-beacon signal for outbound cross-gate connections.
+///
+/// Wire format: `[0xED][hmac_tag: 4 bytes]`
+#[must_use]
+pub fn mito_signal(family_seed: &[u8], protocol_type: u8) -> [u8; 5] {
+    let tag = mito_tag(family_seed, protocol_type);
+    [SIGNAL_MITO, tag[0], tag[1], tag[2], tag[3]]
+}
+
+/// Decode a 4-byte mito-beacon HMAC tag back to a protocol type.
+///
+/// Iterates all known protocol types, computes `mito_tag` for each, and
+/// returns the first match. Returns `None` if no known protocol produces
+/// the given tag (invalid seed or unknown protocol).
+#[must_use]
+pub fn decode_mito_tag(family_seed: &[u8], tag: &[u8; 4]) -> Option<u8> {
+    KNOWN_PROTOS
+        .iter()
+        .find(|&&proto| mito_tag(family_seed, proto) == *tag)
+        .copied()
+}
+
 /// Human-readable name for a protocol type byte.
 #[must_use]
 pub const fn protocol_name(proto: u8) -> &'static str {
@@ -113,5 +168,67 @@ mod tests {
         assert_eq!(protocol_name(PROTO_NDJSON_JSONRPC), "ndjson-jsonrpc");
         assert_eq!(protocol_name(PROTO_BTSP_BINARY), "btsp-binary");
         assert_eq!(protocol_name(0xFF), "unknown");
+    }
+
+    #[test]
+    fn mito_tag_is_deterministic() {
+        let seed = b"test-family-seed-32-bytes!!!!!!!";
+        let t1 = mito_tag(seed, PROTO_NDJSON_JSONRPC);
+        let t2 = mito_tag(seed, PROTO_NDJSON_JSONRPC);
+        assert_eq!(t1, t2);
+    }
+
+    #[test]
+    fn mito_tag_differs_by_protocol() {
+        let seed = b"test-family-seed-32-bytes!!!!!!!";
+        let t_json = mito_tag(seed, PROTO_NDJSON_JSONRPC);
+        let t_btsp = mito_tag(seed, PROTO_BTSP_BINARY);
+        let t_probe = mito_tag(seed, PROTO_PROBE);
+        assert_ne!(t_json, t_btsp);
+        assert_ne!(t_json, t_probe);
+        assert_ne!(t_btsp, t_probe);
+    }
+
+    #[test]
+    fn mito_tag_differs_by_seed() {
+        let seed_a = b"seed-alpha-32-bytes-padding!!!!";
+        let seed_b = b"seed-bravo-32-bytes-padding!!!!";
+        let t_a = mito_tag(seed_a, PROTO_NDJSON_JSONRPC);
+        let t_b = mito_tag(seed_b, PROTO_NDJSON_JSONRPC);
+        assert_ne!(t_a, t_b);
+    }
+
+    #[test]
+    fn mito_signal_builds_correct_wire_format() {
+        let seed = b"test-family-seed-32-bytes!!!!!!!";
+        let sig = mito_signal(seed, PROTO_NDJSON_JSONRPC);
+        assert_eq!(sig[0], SIGNAL_MITO);
+        let expected_tag = mito_tag(seed, PROTO_NDJSON_JSONRPC);
+        assert_eq!(&sig[1..5], &expected_tag);
+    }
+
+    #[test]
+    fn decode_mito_tag_round_trips_all_known_protocols() {
+        let seed = b"round-trip-test-seed-32-bytes!!";
+        for proto in KNOWN_PROTOS {
+            let tag = mito_tag(seed, proto);
+            let decoded = decode_mito_tag(seed, &tag);
+            assert_eq!(decoded, Some(proto), "round-trip failed for 0x{:02X}", proto);
+        }
+    }
+
+    #[test]
+    fn decode_mito_tag_rejects_wrong_seed() {
+        let seed_a = b"seed-alpha-32-bytes-padding!!!!";
+        let seed_b = b"seed-bravo-32-bytes-padding!!!!";
+        let tag = mito_tag(seed_a, PROTO_NDJSON_JSONRPC);
+        assert_eq!(decode_mito_tag(seed_b, &tag), None);
+    }
+
+    #[test]
+    fn decode_mito_tag_rejects_garbage() {
+        let seed = b"test-family-seed-32-bytes!!!!!!!";
+        let garbage = [0xFF, 0xFE, 0xFD, 0xFC];
+        assert_eq!(decode_mito_tag(seed, &garbage), None);
     }
 }

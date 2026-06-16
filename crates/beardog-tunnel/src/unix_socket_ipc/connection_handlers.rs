@@ -108,14 +108,86 @@ impl UnixSocketIpcServer {
             ribocipher::SIGNAL_MITO => {
                 let mut tag = [0u8; 4];
                 stream.read_exact(&mut tag).await?;
-                info!(
-                    tag = format!("{:02X}{:02X}{:02X}{:02X}", tag[0], tag[1], tag[2], tag[3]),
-                    "riboCipher: mito-obfuscated signal received (Tier 2 — future expansion)"
-                );
-                // Tier 2 decode: iterate known protocol types, HMAC-verify tag
-                // For Wave 111: acknowledge and reject gracefully
-                warn!("riboCipher: mito-tier not yet implemented — closing connection");
-                Ok(())
+
+                match ribocipher::decode_mito_tag(family_seed.as_bytes(), &tag) {
+                    Some(protocol_type) => {
+                        info!(
+                            protocol = ribocipher::protocol_name(protocol_type),
+                            tag = format!("{:02X}{:02X}{:02X}{:02X}", tag[0], tag[1], tag[2], tag[3]),
+                            "riboCipher: mito-beacon decoded — routing"
+                        );
+                        match protocol_type {
+                            ribocipher::PROTO_NDJSON_JSONRPC => {
+                                self.handle_jsonrpc_universal("", stream).await
+                            }
+                            ribocipher::PROTO_PROBE => {
+                                let response = serde_json::json!({
+                                    "status": "ok",
+                                    "primal": "bearDog",
+                                    "signal": "riboCipher-mito-v1"
+                                });
+                                let msg = serde_json::to_string(&response)?;
+                                stream.write_all(format!("{msg}\n").as_bytes()).await?;
+                                stream.flush().await?;
+                                Ok(())
+                            }
+                            ribocipher::PROTO_BTSP_BINARY => {
+                                match btsp_handshake::perform_server_handshake(
+                                    &mut stream,
+                                    family_seed,
+                                )
+                                .await
+                                {
+                                    Ok(session) => {
+                                        info!(
+                                            session_id = %session.session_id,
+                                            cipher = %session.cipher.wire_name(),
+                                            "mito→BTSP handshake succeeded"
+                                        );
+                                        self.handle_jsonrpc_btsp(stream, session).await
+                                    }
+                                    Err(e) => {
+                                        warn!(error = %e, "mito→BTSP handshake failed");
+                                        Ok(())
+                                    }
+                                }
+                            }
+                            ribocipher::PROTO_BTSP_JSONLINE => {
+                                let mut buf = Vec::with_capacity(512);
+                                let mut buf_reader = BufReader::new(stream);
+                                buf_reader.read_until(b'\n', &mut buf).await?;
+                                let line = String::from_utf8_lossy(&buf);
+                                if let Ok(hello) =
+                                    serde_json::from_str::<btsp_handshake::ClientHello>(line.trim())
+                                {
+                                    let stream = buf_reader.into_inner();
+                                    self.handle_btsp_jsonline_connection(stream, &hello, family_seed)
+                                        .await
+                                } else {
+                                    warn!("mito: BTSP JSON-line signal but invalid ClientHello");
+                                    Ok(())
+                                }
+                            }
+                            ribocipher::PROTO_HTTP => {
+                                self.handle_http_universal("", stream).await
+                            }
+                            _ => {
+                                warn!(
+                                    protocol_type = format!("0x{:02X}", protocol_type),
+                                    "mito: decoded protocol type has no handler"
+                                );
+                                Ok(())
+                            }
+                        }
+                    }
+                    None => {
+                        warn!(
+                            tag = format!("{:02X}{:02X}{:02X}{:02X}", tag[0], tag[1], tag[2], tag[3]),
+                            "riboCipher: mito-beacon tag verification failed — wrong family seed or unknown protocol"
+                        );
+                        Ok(())
+                    }
+                }
             }
             ribocipher::SIGNAL_NUCLEAR => {
                 let mut payload = [0u8; 6];

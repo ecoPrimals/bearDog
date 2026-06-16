@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Jun 16, 2026 -- Wave 114: Mito-Beacon Acceptance (Genetics-Layer Wiring)
+
+#### Added
+- **Mito-beacon HMAC decode** (`ribocipher.rs`): `mito_tag()`, `mito_signal()`, `decode_mito_tag()`
+  — HMAC-SHA256 truncated to 4 bytes, iterates known protocol types to verify tag against family seed
+- **Mito-beacon routing** (UDS + TCP servers): `0xED` connections now decoded via FAMILY_SEED and
+  dispatched to the correct handler (NDJSON, BTSP, probe, HTTP) — previously rejected with
+  "mito-tier not yet implemented"
+- **7 new unit tests** for mito-beacon encode/decode: determinism, per-protocol/seed differentiation,
+  round-trip, wrong-seed rejection, garbage rejection
+
+#### Fixed
+- **Mode-detection race**: Mito-beacon signals (0xED) were correctly detected but immediately
+  rejected, causing NUCLEUS launcher to see bearDog as non-responsive. Now decoded and routed
+  identically to clear signals after HMAC verification.
+
 ### Jun 13, 2026 -- Wave 147: Doc Polish + Code Hygiene + BindMode Fix
 
 #### Fixed
