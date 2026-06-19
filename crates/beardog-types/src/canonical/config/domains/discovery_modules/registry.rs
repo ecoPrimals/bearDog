@@ -19,7 +19,6 @@
 //! - **Environment-Aware**: Reads from env vars with sensible defaults
 //! - **Configurable**: All timeouts and limits are adjustable
 
-use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Duration;
@@ -59,8 +58,8 @@ pub struct EtcdAuth {
 /// ## Environment Variables
 /// - `BEARDOG_SERVICE_REGISTRY_ENDPOINT` - Primary registry endpoint
 /// - `CONSUL_HTTP_ADDR` - Fallback for Consul
-/// - `REGISTRY_HOST` - Host for registry (default: consul.ecosystem.internal)
-/// - `REGISTRY_PORT` - Port for registry (default: 8500)
+/// - `REGISTRY_HOST` - Host for registry (combined with `REGISTRY_PORT` when set)
+/// - `REGISTRY_PORT` - Port for registry (default: 8500 when `REGISTRY_HOST` is set)
 ///
 /// ## Performance
 /// Uses `Arc<str>` for endpoints to enable zero-copy cloning (10x faster than String).
@@ -152,25 +151,30 @@ impl Default for ServiceRegistryConfig {
     /// 1. `BEARDOG_SERVICE_REGISTRY_ENDPOINT` - Direct endpoint specification
     /// 2. `CONSUL_HTTP_ADDR` - Consul-specific variable
     /// 3. `REGISTRY_HOST` + `REGISTRY_PORT` - Component-based
-    /// 4. Fallback: `http://consul.ecosystem.internal:8500`
+    /// 4. Unconfigured (empty endpoints) when none of the above are set
     ///
-    /// The default backend is "consul" with standard settings.
+    /// The default backend is "consul" when an endpoint is resolved from the environment.
     fn default() -> Self {
-        // Try multiple environment variables for flexibility
-        let registry_endpoint = std::env::var(env_keys::ENV_SERVICE_REGISTRY_ENDPOINT)
-            .or_else(|_| std::env::var(env_keys::ENV_CONSUL_HTTP_ADDR))
-            .unwrap_or_else(|_| {
-                // Build from components
-                let host = std::env::var(env_keys::ENV_REGISTRY_HOST)
-                    .unwrap_or_else(|_| env_keys::DEFAULT_REGISTRY_HOST.to_string());
-                let port = std::env::var(env_keys::ENV_REGISTRY_PORT)
-                    .unwrap_or_else(|_| "8500".to_string());
-                format!("http://{host}:{port}")
+        let registry_endpoint = std::env::var("BEARDOG_SERVICE_REGISTRY_ENDPOINT")
+            .ok()
+            .or_else(|| std::env::var("CONSUL_HTTP_ADDR").ok())
+            .or_else(|| {
+                std::env::var("REGISTRY_HOST").ok().map(|host| {
+                    let port =
+                        std::env::var("REGISTRY_PORT").unwrap_or_else(|_| "8500".to_string());
+                    format!("http://{host}:{port}")
+                })
             });
 
+        let endpoints: Vec<String> = registry_endpoint.into_iter().collect();
+
         Self {
-            backend: "consul".to_string(),
-            endpoints: vec![registry_endpoint],
+            backend: if endpoints.is_empty() {
+                String::new()
+            } else {
+                "consul".to_string()
+            },
+            endpoints,
             service_ttl: Duration::from_secs(300), // 5 minutes
             health_check_interval: Duration::from_secs(30),
             cleanup_interval: Duration::from_secs(60),
@@ -208,8 +212,8 @@ mod tests {
     #[test]
     fn test_service_registry_defaults() {
         let config = ServiceRegistryConfig::default();
-        assert_eq!(&config.backend, "consul");
-        assert!(!config.endpoints.is_empty());
+        assert!(config.endpoints.is_empty());
+        assert!(!config.is_configured());
         assert_eq!(config.service_ttl, Duration::from_secs(300));
         assert_eq!(config.health_check_interval, Duration::from_secs(30));
         assert!(config.enable_versioning);

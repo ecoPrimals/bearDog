@@ -4,13 +4,9 @@
 
 use crate::tunnel::hsm::HsmProviderBackend;
 use crate::tunnel::hsm::hsm_provider_mocks::{MockCloudHsm, MockHardwareHsm, MockSoftwareHsm};
+use crate::tunnel::hsm::manager::HsmManager;
 use crate::tunnel::hsm::manager::HsmProvider;
-use crate::tunnel::hsm::manager::{HealthStatus, HsmManager, KeyInfo, ProviderInfo};
-use crate::tunnel::hsm::{
-    GenerateKeyRequest,
-    types::{HsmKey, HsmTier},
-};
-use beardog_errors::BearDogError;
+use crate::tunnel::hsm::types::HsmTier;
 use std::sync::Arc;
 
 #[tokio::test]

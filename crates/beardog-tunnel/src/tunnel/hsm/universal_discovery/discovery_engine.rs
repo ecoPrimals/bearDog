@@ -10,7 +10,6 @@ use super::{
     UniversalHsmCapabilities,
 };
 use crate::tunnel::hsm::types::HsmTier;
-use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -288,7 +287,7 @@ impl Pkcs11Discoverer {
     /// (colon-separated on Unix, semicolon-separated on Windows)
     fn get_default_search_paths() -> Vec<PathBuf> {
         // Check for environment override first
-        if let Ok(env_paths) = beardog_errors::process_env::var(env_keys::ENV_HSM_LIBRARY_PATHS) {
+        if let Ok(env_paths) = beardog_errors::process_env::var("BEARDOG_HSM_LIBRARY_PATHS") {
             let separator = if cfg!(windows) { ';' } else { ':' };
             let custom_paths: Vec<PathBuf> = env_paths
                 .split(separator)
@@ -416,28 +415,17 @@ impl NetworkHsmDiscoverer {
     ///
     /// Returns an error if the discoverer cannot be initialized.
     pub fn new() -> Result<Self, BearDogError> {
-        let ip_ranges = std::env::var(beardog_config::env_keys::ENV_HSM_NETWORK_SCAN_RANGES)
+        let ip_ranges = std::env::var("BEARDOG_HSM_NETWORK_SCAN_RANGE")
             .ok()
-            .filter(|v| !v.is_empty())
-            .map(|v| v.split(',').map(|s| s.trim().to_string()).collect())
+            .map(|range| vec![range])
             .unwrap_or_default();
-
-        let timeout_ms = std::env::var(beardog_config::env_keys::ENV_HSM_NETWORK_SCAN_TIMEOUT_MS)
-            .ok()
-            .and_then(|v| v.parse().ok())
-            .unwrap_or(1000);
-
-        let parallel_scans = std::env::var(beardog_config::env_keys::ENV_HSM_NETWORK_SCAN_PARALLEL)
-            .ok()
-            .and_then(|v| v.parse().ok())
-            .unwrap_or(10);
 
         Ok(Self {
             _common_ports: DEFAULT_DISCOVERY_PORTS.to_vec(),
             _scan_config: NetworkScanConfig {
                 ip_ranges,
-                timeout_ms,
-                parallel_scans,
+                timeout_ms: 1000,
+                parallel_scans: 10,
             },
         })
     }
@@ -448,6 +436,10 @@ impl NetworkHsmDiscoverer {
     ///
     /// Returns an error if network HSM discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
+        if self._scan_config.ip_ranges.is_empty() {
+            info!("Network HSM discovery skipped (BEARDOG_HSM_NETWORK_SCAN_RANGE not configured)");
+            return Ok(Vec::new());
+        }
         info!("Network HSM discovery skipped (no reachable HSM endpoints configured)");
         Ok(Vec::new())
     }

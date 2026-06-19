@@ -192,6 +192,7 @@ mod e2e_test_metadata {
     //! - Integration between components
     //! - Real-world usage patterns
 
+    #[ignore = "stub: comment-only placeholder"]
     #[test]
     fn test_e2e_framework_available() {
         // Test passes - E2E framework is available

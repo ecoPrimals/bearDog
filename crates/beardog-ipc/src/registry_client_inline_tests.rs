@@ -11,7 +11,7 @@ use tokio::sync::Notify;
 fn test_json_rpc_request_serialization() -> Result<(), serde_json::Error> {
     let request = JsonRpcRequest {
         jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-        method: "primal.ping".to_string(),
+        method: "primal.ping".into(),
         params: None,
         id: serde_json::Value::from(1),
     };

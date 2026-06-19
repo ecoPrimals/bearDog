@@ -3,11 +3,11 @@
 
 #![cfg(test)]
 
-pub(crate) use crate::tunnel::hsm::GenerateKeyRequest;
-pub(crate) use crate::tunnel::hsm::manager::HsmProvider;
-pub(crate) use crate::tunnel::hsm::types::KeyType;
-pub(crate) use crate::tunnel::hsm::types::config::CryptoBackendType;
-pub(crate) use crate::tunnel::hsm::types::config::SoftwareHsmConfig;
-pub(crate) use std::sync::Arc;
+pub use crate::tunnel::hsm::GenerateKeyRequest;
+pub use crate::tunnel::hsm::manager::HsmProvider;
+pub use crate::tunnel::hsm::types::KeyType;
+pub use crate::tunnel::hsm::types::config::CryptoBackendType;
+pub use crate::tunnel::hsm::types::config::SoftwareHsmConfig;
+pub use std::sync::Arc;
 
-pub(crate) use super::super::*;
+pub use super::super::*;

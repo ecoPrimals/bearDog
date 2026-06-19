@@ -13,9 +13,9 @@
 //!
 //! # Implementation Note
 //!
-//! Currently uses fallback/default data until full runtime discovery is available
-//! (pending beardog-adapters crate stability). The architecture is in place for
-//! future integration.
+//! Collaboration endpoints require a live collaboration network. Until runtime
+//! discovery is wired (`beardog-adapters` discovery client), calls return errors
+//! rather than synthetic data.
 
 use crate::graph_security::collaboration_service::CollaborationService;
 use beardog_errors::BearDogError;
@@ -28,7 +28,7 @@ use tracing::{debug, info};
 /// efficient runtime capability discovery.
 static COLLABORATION: LazyLock<Arc<CollaborationService>> = LazyLock::new(|| {
     debug!("🏗️  Initializing graph security CollaborationService");
-    info!("✅ Graph security CollaborationService initialized (using fallback data)");
+    info!("Graph security CollaborationService initialized (discovery pending live network)");
     Arc::new(CollaborationService::new())
 });
 
@@ -152,37 +152,45 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_creator_info_integration() {
-        // Integration test - should not panic
-        let result = get_creator_info("test-template").await;
-
-        // Should return either success or a graceful error
-        assert!(result.is_ok() || result.is_err());
+        let err = get_creator_info("test-template")
+            .await
+            .expect_err("creator info should fail without collaboration network");
+        assert!(
+            err.to_string().contains("collaboration network")
+                || err.to_string().contains("Not yet available")
+        );
     }
 
     #[tokio::test]
     async fn test_get_lineage_integration() {
-        // Integration test - should not panic
-        let result = get_lineage("test-template").await;
-
-        // Should return either success or a graceful error
-        assert!(result.is_ok() || result.is_err());
+        let err = get_lineage("test-template")
+            .await
+            .expect_err("lineage should fail without collaboration network");
+        assert!(
+            err.to_string().contains("collaboration network")
+                || err.to_string().contains("Not yet available")
+        );
     }
 
     #[tokio::test]
     async fn test_get_community_metrics_integration() {
-        // Integration test - should not panic
-        let result = get_community_metrics("test-template").await;
-
-        // Should return either success or a graceful error
-        assert!(result.is_ok() || result.is_err());
+        let err = get_community_metrics("test-template")
+            .await
+            .expect_err("community metrics should fail without collaboration network");
+        assert!(
+            err.to_string().contains("collaboration network")
+                || err.to_string().contains("Not yet available")
+        );
     }
 
     #[tokio::test]
     async fn test_get_user_permissions_integration() {
-        // Integration test - should not panic
-        let result = get_user_permissions("user-1", "graph-1").await;
-
-        // Should return either success or a graceful error
-        assert!(result.is_ok() || result.is_err());
+        let err = get_user_permissions("user-1", "graph-1")
+            .await
+            .expect_err("permissions should fail without collaboration network");
+        assert!(
+            err.to_string().contains("collaboration network")
+                || err.to_string().contains("Not yet available")
+        );
     }
 }

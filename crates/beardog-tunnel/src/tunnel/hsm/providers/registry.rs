@@ -526,9 +526,7 @@ mod tests {
 
     // ── canonical HsmProviderRegistry tests ────────────────────────────
 
-    use beardog_types::hsm::{
-        HsmCapabilitySet, HsmProviderType as CanonicalType, KeyGenParams, KeyHandle,
-    };
+    use beardog_types::hsm::HsmProviderType as CanonicalType;
 
     #[test]
     fn canonical_registry_empty_select_fails() {

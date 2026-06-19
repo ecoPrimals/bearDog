@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 //! Comprehensive Concurrency Stress Tests
 //!
-//! Tests that truly stress the concurrent behavior of BearDog systems.
+//! Tests that truly stress the concurrent behavior of `BearDog` systems.
 //! NO sleeps, only proper synchronization primitives.
 //!
 //! Philosophy: If it fails under stress, it will fail in production.
@@ -89,7 +90,7 @@ async fn stress_test_synchronized_start_1000_tasks() {
 
     let duration = start_time.elapsed();
 
-    println!("✅ Synchronized 1,000 tasks in {:?}", duration);
+    println!("✅ Synchronized 1,000 tasks in {duration:?}");
 
     assert_eq!(counter.load(Ordering::SeqCst), 1_000);
     assert!(started.load(Ordering::SeqCst));
@@ -174,10 +175,7 @@ async fn stress_test_rate_limiter_1000_operations() {
     let duration = start.elapsed();
     let ops_per_sec = 1_000.0 / duration.as_secs_f64();
 
-    println!(
-        "✅ Completed 1,000 operations in {:?} ({:.0} ops/sec)",
-        duration, ops_per_sec
-    );
+    println!("✅ Completed 1,000 operations in {duration:?} ({ops_per_sec:.0} ops/sec)");
 
     assert_eq!(counter.load(Ordering::SeqCst), 1_000);
 }
@@ -218,7 +216,7 @@ async fn stress_test_condition_waiting_race() {
 
     let duration = start.elapsed();
 
-    println!("✅ All 100 waiters completed in {:?}", duration);
+    println!("✅ All 100 waiters completed in {duration:?}");
 
     assert_eq!(waiter_count.load(Ordering::SeqCst), 100);
     assert!(
@@ -271,10 +269,7 @@ async fn stress_test_mixed_workload_10k_operations() {
     let duration = start.elapsed();
     let ops_per_sec = 10_000.0 / duration.as_secs_f64();
 
-    println!(
-        "✅ Completed 10,000 mixed operations in {:?} ({:.0} ops/sec)",
-        duration, ops_per_sec
-    );
+    println!("✅ Completed 10,000 mixed operations in {duration:?} ({ops_per_sec:.0} ops/sec)");
     println!(
         "   Reads: {}, Writes: {}, Computes: {}",
         reads.load(Ordering::Relaxed),
@@ -324,7 +319,7 @@ async fn stress_test_eventual_consistency_assertion() {
 
     let duration = start.elapsed();
 
-    println!("✅ Eventual consistency achieved in {:?}", duration);
+    println!("✅ Eventual consistency achieved in {duration:?}");
 
     assert_eq!(counter.load(Ordering::SeqCst), target);
 }
@@ -359,7 +354,7 @@ async fn stress_test_no_race_conditions_in_shared_state() {
 
     let final_vec = shared_vec.lock().unwrap();
     let mut sorted_vec = final_vec.clone();
-    sorted_vec.sort();
+    sorted_vec.sort_unstable();
 
     println!(
         "✅ No race conditions: {} unique values in {:?}",
@@ -372,7 +367,7 @@ async fn stress_test_no_race_conditions_in_shared_state() {
 
     // All values should be present
     for i in 0..1_000 {
-        assert!(sorted_vec.contains(&i), "Value {} should be present", i);
+        assert!(sorted_vec.contains(&i), "Value {i} should be present");
     }
 }
 
@@ -422,7 +417,7 @@ async fn stress_test_no_deadlocks_proper_ordering() {
         "Should not deadlock with proper lock ordering"
     );
 
-    println!("✅ No deadlocks detected in {:?}", duration);
+    println!("✅ No deadlocks detected in {duration:?}");
 
     let val1 = *lock1.read().await;
     let val2 = *lock2.read().await;
@@ -463,24 +458,24 @@ async fn performance_test_atomic_operations_throughput() {
     }
 
     let duration = start.elapsed();
-    let ops_per_sec = iterations as f64 / duration.as_secs_f64();
+    let ops_per_sec = f64::from(iterations) / duration.as_secs_f64();
 
-    println!(
-        "✅ {} atomic ops in {:?} ({:.0} ops/sec)",
-        iterations, duration, ops_per_sec
+    println!("✅ {iterations} atomic ops in {duration:?} ({ops_per_sec:.0} ops/sec)");
+
+    assert_eq!(
+        counter.load(Ordering::SeqCst),
+        u64::try_from(iterations).unwrap_or(0)
     );
-
-    assert_eq!(counter.load(Ordering::SeqCst), iterations as u64);
 
     // Should achieve at least 10M ops/sec on modern hardware
     assert!(
         ops_per_sec > 1_000_000.0,
-        "Atomic operations should be fast (got {:.0} ops/sec)",
-        ops_per_sec
+        "Atomic operations should be fast (got {ops_per_sec:.0} ops/sec)"
     );
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
+#[allow(clippy::cast_precision_loss)]
 async fn performance_test_task_spawn_overhead() {
     println!("🔥 PERFORMANCE: Task spawn overhead");
 
@@ -501,18 +496,14 @@ async fn performance_test_task_spawn_overhead() {
     let duration = start.elapsed();
     let spawns_per_sec = task_count as f64 / duration.as_secs_f64();
 
-    println!(
-        "✅ Spawned {} tasks in {:?} ({:.0} spawns/sec)",
-        task_count, duration, spawns_per_sec
-    );
+    println!("✅ Spawned {task_count} tasks in {duration:?} ({spawns_per_sec:.0} spawns/sec)");
 
     assert_eq!(sum, (0..task_count).sum());
 
     // Should spawn at least 50k tasks/sec
     assert!(
         spawns_per_sec > 10_000.0,
-        "Task spawning should be fast (got {:.0} spawns/sec)",
-        spawns_per_sec
+        "Task spawning should be fast (got {spawns_per_sec:.0} spawns/sec)"
     );
 }
 
@@ -546,10 +537,7 @@ async fn correctness_test_no_lost_updates() {
 
     let duration = start.elapsed();
 
-    println!(
-        "✅ Verified {} atomic operations with no lost updates in {:?}",
-        operations, duration
-    );
+    println!("✅ Verified {operations} atomic operations with no lost updates in {duration:?}");
 
     assert_eq!(
         counter.load(Ordering::SeqCst),
@@ -594,7 +582,7 @@ async fn correctness_test_ordering_guarantees() {
     assert_eq!(final_vec.len(), 100);
 
     let mut sorted = final_vec.clone();
-    sorted.sort();
+    sorted.sort_unstable();
     assert_eq!(sorted, (0..100).collect::<Vec<_>>());
 }
 
@@ -639,7 +627,7 @@ async fn stress_test_no_resource_leaks() {
 
     let duration = start.elapsed();
 
-    println!("✅ Resource cleanup verified in {:?}", duration);
+    println!("✅ Resource cleanup verified in {duration:?}");
 
     assert_eq!(
         allocated.load(Ordering::SeqCst),
@@ -665,7 +653,7 @@ async fn stress_test_panic_recovery() {
         handles.push(tokio::spawn(async move {
             if i % 10 == 0 {
                 // Intentional panic
-                panic!("Simulated panic in task {}", i);
+                panic!("Simulated panic in task {i}");
             } else {
                 successful.fetch_add(1, Ordering::SeqCst);
             }

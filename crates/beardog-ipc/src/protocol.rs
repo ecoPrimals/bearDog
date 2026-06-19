@@ -15,7 +15,7 @@ pub struct JsonRpcRequest {
     /// JSON-RPC version (always "2.0")
     pub jsonrpc: Cow<'static, str>,
     /// Method name
-    pub method: String,
+    pub method: Cow<'static, str>,
     /// Method parameters
     pub params: Value,
     /// Request ID -- absent for notifications (JSON-RPC 2.0 spec section 4.1)
@@ -26,7 +26,7 @@ pub struct JsonRpcRequest {
 impl JsonRpcRequest {
     /// Construct a new request with version pre-set
     #[must_use]
-    pub fn new(method: impl Into<String>, params: Value, id: impl Into<Value>) -> Self {
+    pub fn new(method: impl Into<Cow<'static, str>>, params: Value, id: impl Into<Value>) -> Self {
         Self {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             method: method.into(),
@@ -37,7 +37,7 @@ impl JsonRpcRequest {
 
     /// Construct a notification (no id, server MUST NOT respond)
     #[must_use]
-    pub fn notification(method: impl Into<String>, params: Value) -> Self {
+    pub fn notification(method: impl Into<Cow<'static, str>>, params: Value) -> Self {
         Self {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             method: method.into(),

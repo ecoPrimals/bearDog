@@ -510,13 +510,14 @@ impl HandlerRegistry {
     ///
     /// Returns a sorted list of all method names exposed by all handlers.
     /// Used by introspection handler for `rpc.methods`.
-    pub async fn all_methods(&self) -> Vec<String> {
+    pub async fn all_methods(&self) -> Vec<&'static str> {
         let handlers = self.handlers.read().await;
-        let mut methods = Vec::new();
+        let mut methods = Vec::with_capacity(128);
         for handler in handlers.iter() {
-            methods.extend(handler.methods().iter().map(|s| (*s).to_string()));
+            methods.extend(handler.methods());
         }
-        methods.sort();
+        methods.sort_unstable();
+        methods.dedup();
         methods
     }
 }

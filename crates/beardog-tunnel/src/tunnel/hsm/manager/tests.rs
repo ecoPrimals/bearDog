@@ -11,8 +11,8 @@
 
 use super::*;
 use crate::tunnel::hsm::HsmProviderBackend;
+use crate::tunnel::hsm::KeyType;
 use crate::tunnel::hsm::hsm_provider_mocks::MockHsmProvider;
-use crate::tunnel::hsm::{GenerateKeyRequest, KeyType};
 
 fn mock_arc(m: MockHsmProvider) -> Arc<HsmProviderBackend> {
     Arc::new(HsmProviderBackend::Mock(m))

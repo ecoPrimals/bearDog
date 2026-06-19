@@ -329,7 +329,7 @@ mod tests {
     #[test]
     fn error_rate_calculation() {
         let mut m = ShadowSideMetrics::default();
-        assert_eq!(m.error_rate(), 0.0);
+        assert!(m.error_rate().abs() < f64::EPSILON);
 
         m.record_request(Duration::from_millis(1));
         m.record_request(Duration::from_millis(1));
@@ -377,7 +377,6 @@ mod tests {
                 .await;
         }
 
-        let parity = collector.daily_parity_check().await;
-        assert!(parity || !parity); // passes either way — validates no panic
+        let _parity = collector.daily_parity_check().await;
     }
 }

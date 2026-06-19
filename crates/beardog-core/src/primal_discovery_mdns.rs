@@ -364,11 +364,22 @@ impl MdnsServiceAnnouncer {
 
 /// Get local IP addresses for mDNS announcement
 fn get_local_addresses() -> Vec<std::net::IpAddr> {
-    use std::net::{IpAddr, Ipv4Addr};
+    use std::net::{IpAddr, Ipv4Addr, UdpSocket};
 
-    // Try to get actual network interfaces
-    // For now, return localhost as fallback
-    // Real implementation would use `if_addrs` or `network-interface` crate
+    let probe_target = std::env::var("BEARDOG_NETWORK_PROBE_TARGET")
+        .unwrap_or_else(|_| "198.51.100.1:80".to_string());
+
+    if let Ok(socket) = UdpSocket::bind("0.0.0.0:0") {
+        if socket.connect(&probe_target).is_ok() {
+            if let Ok(local_addr) = socket.local_addr() {
+                let ip = local_addr.ip();
+                if !ip.is_unspecified() {
+                    return vec![ip];
+                }
+            }
+        }
+    }
+
     vec![IpAddr::V4(Ipv4Addr::LOCALHOST)]
 }
 

@@ -233,14 +233,14 @@ impl LineageKeyDerivation {
 mod tests {
     use super::*;
 
-    fn create_test_kdf() -> LineageKeyDerivation {
+    fn create_test_kdf() -> Result<LineageKeyDerivation, BearDogError> {
         let master_secret = vec![0xAB; 32]; // Test secret
-        LineageKeyDerivation::new(master_secret).unwrap()
+        LineageKeyDerivation::new(master_secret)
     }
 
     #[test]
     fn test_derive_key() -> Result<(), BearDogError> {
-        let kdf = create_test_kdf();
+        let kdf = create_test_kdf()?;
 
         let hint = LineageHint {
             root_id: "test-root".to_string(),
@@ -262,7 +262,7 @@ mod tests {
 
     #[test]
     fn test_deterministic_derivation() -> Result<(), BearDogError> {
-        let kdf = create_test_kdf();
+        let kdf = create_test_kdf()?;
 
         let hint = LineageHint {
             root_id: "test-root".to_string(),
@@ -284,7 +284,7 @@ mod tests {
 
     #[test]
     fn test_different_generations_different_keys() -> Result<(), BearDogError> {
-        let kdf = create_test_kdf();
+        let kdf = create_test_kdf()?;
 
         let hint = LineageHint {
             root_id: "test-root".to_string(),
@@ -305,7 +305,7 @@ mod tests {
 
     #[test]
     fn test_key_rotation() -> Result<(), BearDogError> {
-        let kdf = create_test_kdf();
+        let kdf = create_test_kdf()?;
 
         let hint = LineageHint {
             root_id: "test-root".to_string(),
@@ -326,7 +326,7 @@ mod tests {
 
     #[test]
     fn test_hierarchical_keys() -> Result<(), BearDogError> {
-        let kdf = create_test_kdf();
+        let kdf = create_test_kdf()?;
 
         let keys = kdf.derive_hierarchical_keys("test-root", 3, 0)?;
 

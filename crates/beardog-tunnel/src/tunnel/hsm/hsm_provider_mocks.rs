@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #![cfg(test)]
+#![allow(missing_docs)]
 
 //! Test-only [`super::manager::HsmProvider`] implementations for enum dispatch.
 //!
@@ -16,13 +17,24 @@ use beardog_errors::BearDogError;
 
 // ── manager/tests.rs: MockHsmProvider ────────────────────────────────────────
 
+/// Test-only HSM provider with configurable failure modes.
 pub struct MockHsmProvider {
+    /// Whether the mock provider reports itself as available.
     pub available: bool,
+    /// Whether key generation operations should fail.
     pub fail_generate: bool,
+    /// Whether key deletion operations should fail.
     pub fail_delete: bool,
 }
 
+impl Default for MockHsmProvider {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockHsmProvider {
+    /// Create a new mock provider in the default (available, non-failing) state.
     pub fn new() -> Self {
         Self {
             available: true,
@@ -161,7 +173,7 @@ impl HsmProvider for DefaultManagerMockProvider {
 
     async fn generate_key(&self, request: GenerateKeyRequest) -> Result<HsmKey, BearDogError> {
         use crate::tunnel::hsm::types::key::{
-            KeyAttestation, KeyHealthStatus, KeyMaterial, KeyMetadata, KeyType,
+            KeyAttestation, KeyHealthStatus, KeyMaterial, KeyMetadata,
         };
         use chrono::Utc;
 

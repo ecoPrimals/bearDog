@@ -10,7 +10,7 @@
 //! - `identity.get` returns `{primal, version, domain, license}`
 
 use super::utils::{IdentityHints, get_primal_name_with};
-use super::{HandlerError, HandlerRegistry, HandlerResult, MethodHandler};
+use super::{HandlerRegistry, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use beardog_types::primal_identity::PrimalIdentity;
 use std::sync::Arc;
@@ -63,7 +63,7 @@ impl MethodHandler for CapabilitiesHandler {
         method: &str,
         _params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> HandlerResult {
+    ) -> Result<serde_json::Value, String> {
         match method {
             "capabilities.list" | "capability.list" | "primal.capabilities" => {
                 self.handle_capabilities().await
@@ -75,7 +75,7 @@ impl MethodHandler for CapabilitiesHandler {
             "identity.get" => self.handle_identity_get().await,
             // Deprecated flat aliases — remove in v1.0
             "identity" | "whoami" | "get_identity" => self.handle_identity().await,
-            _ => Err(format!("Method not found: {method}").into()),
+            _ => Err(format!("Method not found: {method}")),
         }
     }
 }
@@ -111,7 +111,7 @@ impl CapabilitiesHandler {
     /// Filters to `domain.operation` dotted names only (excludes deprecated flat
     /// aliases like `"capabilities"` or `"get_identity"`). This is the primary
     /// routing signal for biomeOS per `CAPABILITY_WIRE_STANDARD.md`.
-    async fn wire_standard_methods(&self) -> Vec<String> {
+    async fn wire_standard_methods(&self) -> Vec<&'static str> {
         self.registry
             .all_methods()
             .await
@@ -129,7 +129,7 @@ impl CapabilitiesHandler {
     /// # Errors
     ///
     /// Returns an error string if method enumeration fails.
-    async fn handle_capabilities(&self) -> Result<serde_json::Value, HandlerError> {
+    async fn handle_capabilities(&self) -> Result<serde_json::Value, String> {
         let family_id = self.identity.family_id();
         let node_id = self.identity.node_id();
         let methods = self.wire_standard_methods().await;
@@ -385,7 +385,7 @@ impl CapabilitiesHandler {
     /// The signed payload is `SHA-256(primal ":" version ":" sorted_methods)`,
     /// ensuring deterministic verification regardless of registry ordering.
     /// Includes `schema_version` so verifiers know which canonical form was used.
-    fn sign_capability_announcement(&self, methods: &[String]) -> serde_json::Value {
+    fn sign_capability_announcement(&self, methods: &[impl AsRef<str>]) -> serde_json::Value {
         use super::primal_signing::{canonical_announcement_message, sign_with_primal_identity};
 
         let primal_name = get_primal_name_with(&self.primal_hints);
@@ -408,10 +408,11 @@ impl CapabilitiesHandler {
     /// This mirrors the conventional `discover_capabilities` format, enabling
     /// uniform capability discovery across all primals. Includes a signed
     /// attestation so ecosystem discovery can verify authenticity.
-    async fn handle_discover_capabilities(&self) -> Result<serde_json::Value, HandlerError> {
-        info!("🔍 discover_capabilities requested");
+    #[allow(clippy::items_after_statements)]
+    async fn handle_discover_capabilities(&self) -> Result<serde_json::Value, String> {
+        info!("discover_capabilities requested");
 
-        let capabilities: Vec<String> = [
+        const CAPABILITIES: &[&str] = &[
             "crypto.sha256",
             "crypto.sha512",
             "crypto.sign",
@@ -446,17 +447,14 @@ impl CapabilitiesHandler {
             "bonding.status",
             "bonding.terminate",
             "bonding.modify_scope",
-        ]
-        .iter()
-        .map(|s| (*s).to_string())
-        .collect();
+        ];
 
-        let signed = self.sign_capability_announcement(&capabilities);
+        let signed = self.sign_capability_announcement(CAPABILITIES);
 
         Ok(serde_json::json!({
             "primal": get_primal_name_with(&self.primal_hints),
             "version": env!("CARGO_PKG_VERSION"),
-            "capabilities": capabilities,
+            "capabilities": CAPABILITIES,
             "transport_security": {
                 "btsp_required": self.is_btsp_required(),
                 "btsp_version": "2.0",
@@ -468,7 +466,7 @@ impl CapabilitiesHandler {
     /// Handle `identity.get` — Wire Standard Level 2 identity endpoint.
     ///
     /// Returns `{primal, version, domain, license}` per `CAPABILITY_WIRE_STANDARD.md` §4.
-    async fn handle_identity_get(&self) -> Result<serde_json::Value, HandlerError> {
+    async fn handle_identity_get(&self) -> Result<serde_json::Value, String> {
         info!("identity.get requested (Wire Standard L2)");
 
         Ok(serde_json::json!({
@@ -483,7 +481,7 @@ impl CapabilitiesHandler {
     ///
     /// Returns the primal's identity including family and node IDs,
     /// plus an encryption tag for discovery/federation.
-    async fn handle_identity(&self) -> Result<serde_json::Value, HandlerError> {
+    async fn handle_identity(&self) -> Result<serde_json::Value, String> {
         let family_id = self.identity.family_id();
         let node_id = self.identity.node_id();
         let encryption_tag = self.identity.encryption_tag();

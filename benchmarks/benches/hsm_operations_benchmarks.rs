@@ -6,7 +6,10 @@
     unused_variables,
     dead_code,
     unused_comparisons,
-    clippy::all
+    missing_docs,
+    clippy::all,
+    clippy::unwrap_used,
+    clippy::expect_used
 )]
 //!
 //! Comprehensive benchmarks for production-critical HSM operations including:
@@ -36,7 +39,9 @@ use beardog_types::zero_cost::types::KeyType as HsmKeyType;
 
 /// Generate test data of specified size
 fn generate_test_data(size: usize) -> Vec<u8> {
-    (0..size).map(|i| (i % 256) as u8).collect()
+    (0..size)
+        .map(|i| u8::try_from(i % 256).expect("modulo 256 fits in u8"))
+        .collect()
 }
 
 /// Generate test message for signing
@@ -66,7 +71,7 @@ fn benchmark_key_generation(c: &mut Criterion) {
                 // In real implementation, this would call software_hsm.generate_key()
                 let _ = black_box(key_type);
                 std::thread::sleep(Duration::from_micros(10)); // Simulate crypto work
-            })
+            });
         });
     }
 
@@ -99,7 +104,7 @@ fn benchmark_symmetric_encryption(c: &mut Criterion) {
                 // Simulate AES-256-GCM encryption
                 let _ = black_box(data);
                 // In real implementation: provider.encrypt_symmetric()
-            })
+            });
         });
 
         // Decryption
@@ -108,7 +113,7 @@ fn benchmark_symmetric_encryption(c: &mut Criterion) {
                 // Simulate AES-256-GCM decryption
                 let _ = black_box(data);
                 // In real implementation: provider.decrypt_symmetric()
-            })
+            });
         });
     }
 
@@ -141,7 +146,7 @@ fn benchmark_asymmetric_encryption(c: &mut Criterion) {
                 b.iter(|| {
                     let _ = black_box(data);
                     std::thread::sleep(Duration::from_micros(50)); // Simulate RSA work
-                })
+                });
             },
         );
 
@@ -153,7 +158,7 @@ fn benchmark_asymmetric_encryption(c: &mut Criterion) {
                 b.iter(|| {
                     let _ = black_box(data);
                     std::thread::sleep(Duration::from_micros(200)); // RSA decrypt is 4x slower
-                })
+                });
             },
         );
     }
@@ -188,7 +193,7 @@ fn benchmark_signing(c: &mut Criterion) {
                 b.iter(|| {
                     let _ = black_box(msg);
                     std::thread::sleep(Duration::from_micros(30)); // Simulate ECDSA signing
-                })
+                });
             },
         );
 
@@ -200,7 +205,7 @@ fn benchmark_signing(c: &mut Criterion) {
                 b.iter(|| {
                     let _ = black_box(msg);
                     std::thread::sleep(Duration::from_micros(60)); // ECDSA verify is slower
-                })
+                });
             },
         );
 
@@ -212,7 +217,7 @@ fn benchmark_signing(c: &mut Criterion) {
                 b.iter(|| {
                     let _ = black_box(msg);
                     std::thread::sleep(Duration::from_micros(10)); // Ed25519 is fast
-                })
+                });
             },
         );
 
@@ -224,7 +229,7 @@ fn benchmark_signing(c: &mut Criterion) {
                 b.iter(|| {
                     let _ = black_box(msg);
                     std::thread::sleep(Duration::from_micros(15)); // Ed25519 verify
-                })
+                });
             },
         );
     }
@@ -291,7 +296,7 @@ fn benchmark_dispatch_overhead(c: &mut Criterion) {
         b.iter(|| {
             let result = provider.encrypt_enum(black_box(&data));
             black_box(result);
-        })
+        });
     });
 
     // Box<dyn> dispatch (heap allocation + vtable)
@@ -300,7 +305,7 @@ fn benchmark_dispatch_overhead(c: &mut Criterion) {
         b.iter(|| {
             let result = provider.encrypt(black_box(&data));
             black_box(result);
-        })
+        });
     });
 
     // Direct call (baseline)
@@ -309,7 +314,7 @@ fn benchmark_dispatch_overhead(c: &mut Criterion) {
         b.iter(|| {
             let result = provider.encrypt(black_box(&data));
             black_box(result);
-        })
+        });
     });
 
     group.finish();
@@ -333,7 +338,7 @@ fn benchmark_memory_protection(c: &mut Criterion) {
             b.iter(|| {
                 let _ = black_box(data);
                 // In real implementation: mlock(data)
-            })
+            });
         });
 
         // Memory zeroization
@@ -341,11 +346,11 @@ fn benchmark_memory_protection(c: &mut Criterion) {
             b.iter(|| {
                 let mut temp = data.clone();
                 // Simulate zeroize
-                for byte in temp.iter_mut() {
+                for byte in &mut temp {
                     *byte = 0;
                 }
                 black_box(temp);
-            })
+            });
         });
 
         // Memory guard (encrypt-at-rest)
@@ -353,7 +358,7 @@ fn benchmark_memory_protection(c: &mut Criterion) {
             b.iter(|| {
                 let _ = black_box(data);
                 // In real implementation: encrypt_at_rest(data)
-            })
+            });
         });
     }
 
@@ -385,7 +390,7 @@ fn benchmark_concurrent_access(c: &mut Criterion) {
                 for handle in handles {
                     handle.join().unwrap();
                 }
-            })
+            });
         });
     }
 
@@ -405,7 +410,7 @@ fn benchmark_key_lifecycle(c: &mut Criterion) {
             let key_data = generate_test_data(32); // 256-bit key
             let _ = black_box(key_data);
             std::thread::sleep(Duration::from_micros(20));
-        })
+        });
     });
 
     group.bench_function("retrieve_and_unprotect", |b| {
@@ -414,7 +419,7 @@ fn benchmark_key_lifecycle(c: &mut Criterion) {
             let key_data = generate_test_data(32);
             let _ = black_box(key_data);
             std::thread::sleep(Duration::from_micros(15));
-        })
+        });
     });
 
     group.bench_function("rotate", |b| {
@@ -424,18 +429,18 @@ fn benchmark_key_lifecycle(c: &mut Criterion) {
             let new_key = generate_test_data(32);
             let _ = black_box((old_key, new_key));
             std::thread::sleep(Duration::from_micros(50));
-        })
+        });
     });
 
     group.bench_function("delete_and_zeroize", |b| {
         b.iter(|| {
             // Simulate: zeroize -> delete metadata
             let mut key_data = generate_test_data(32);
-            for byte in key_data.iter_mut() {
+            for byte in &mut key_data {
                 *byte = 0;
             }
             let _ = black_box(key_data);
-        })
+        });
     });
 
     group.finish();

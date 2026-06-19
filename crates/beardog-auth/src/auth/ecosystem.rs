@@ -132,7 +132,7 @@ impl CrossNodeAuthEngine {
 mod tests {
     use super::*;
     use crate::auth::node_registry::InMemoryNodeRegistry;
-    use crate::auth::proof_verifier::DefaultProofVerifier;
+    use crate::auth::proof_verifier::PlaceholderProofVerifier;
     use crate::auth::types::NodeInfo;
     use crate::auth::types::authorization::{CrossNodeAuthConfig, SpawningMode, VerificationMode};
     use crate::auth::types::node_registry::NodeRegistry;
@@ -283,7 +283,7 @@ mod tests {
 
         let engine = CrossNodeAuthEngine::new(
             Box::new(registry),
-            Box::new(DefaultProofVerifier::new()),
+            Box::new(PlaceholderProofVerifier::new()),
             config,
         );
         let caps = engine.get_ecosystem_capabilities("registered-node");
@@ -350,7 +350,7 @@ mod tests {
 
         let engine = CrossNodeAuthEngine::new(
             Box::new(registry),
-            Box::new(DefaultProofVerifier::new()),
+            Box::new(PlaceholderProofVerifier::new()),
             config,
         );
         let caps = engine.get_ecosystem_capabilities("policy-node");
@@ -390,7 +390,7 @@ mod tests {
 
         let engine = CrossNodeAuthEngine::new(
             Box::new(registry),
-            Box::new(DefaultProofVerifier::new()),
+            Box::new(PlaceholderProofVerifier::new()),
             config,
         );
         let caps = engine.get_ecosystem_capabilities("consensus-only");

@@ -40,6 +40,6 @@ pub use types::{
     AuthorizationResult, CommunityUsage, CreatorInfo, Graph, GraphEdge, GraphId, GraphModification,
     GraphNode, GraphTemplate, IssueSeverity, LineageVersion, ModificationAction, NodeId,
     OriginAudit, RiskLevel, SecurityAssessment, TemplateId, TemplateMetadata, ThreatCategory,
-    ThreatDetails, UserId, ValidationIssue, ValidationReport,
+    ThreatDetails, UserId, ValidationIssue, ValidationReport, VerificationStatus,
 };
 pub use validate::validate_template;

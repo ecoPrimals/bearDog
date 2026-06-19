@@ -327,7 +327,8 @@ async fn register_with_discovery_service(
 
         let node_id = identity.node_id();
         let version = env!("CARGO_PKG_VERSION");
-        let message = canonical_announcement_message(&registration_instance, version, &[]);
+        let message =
+            canonical_announcement_message(&registration_instance, version, &[] as &[&str]);
         let (signature, public_key) =
             sign_with_primal_identity(&registration_instance, node_id, &message);
         let attestation = serde_json::json!({

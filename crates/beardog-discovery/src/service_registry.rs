@@ -118,10 +118,10 @@ impl ServiceRegistryDiscovery {
 
         // Query all discovered registry providers
         let mut all_services = Vec::new();
-        let providers = self.registry_providers.read().await.clone();
+        let providers = self.registry_providers.read().await;
 
-        for provider in providers {
-            match self.query_provider(&provider, capability).await {
+        for provider in providers.iter() {
+            match self.query_provider(provider, capability).await {
                 Ok(mut services) => {
                     info!(
                         "✅ Found {} services from {} registry",

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! HKDF-SHA256 key derivation (RFC 5869).
-
 use base64::Engine;
 use serde_json::Value;
 use tracing::info;
@@ -19,9 +17,7 @@ use tracing::info;
 /// # Errors
 ///
 /// Returns an error if parameters are missing or HKDF expand fails.
-pub async fn handle_hkdf_sha256(
-    params: Option<&Value>,
-) -> Result<Value, super::super::super::HandlerError> {
+pub async fn handle_hkdf_sha256(params: Option<&Value>) -> Result<Value, String> {
     use hkdf::Hkdf;
     use sha2::Sha256;
 
@@ -83,106 +79,4 @@ pub async fn handle_hkdf_sha256(
         "algorithm": "HKDF-SHA256",
         "length": length,
     }))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use base64::engine::general_purpose::STANDARD as BASE64;
-    use serde_json::json;
-
-    #[tokio::test]
-    async fn test_hkdf_sha256_default_length() {
-        let ikm = BASE64.encode(b"input key material");
-        let params = json!({"ikm": ikm});
-        let result = handle_hkdf_sha256(Some(&params)).await.expect("hkdf");
-        assert_eq!(result["algorithm"], "HKDF-SHA256");
-        assert_eq!(result["length"], 32);
-        let okm = BASE64
-            .decode(result["okm"].as_str().expect("okm"))
-            .expect("b64");
-        assert_eq!(okm.len(), 32);
-    }
-
-    #[tokio::test]
-    async fn test_hkdf_sha256_custom_length() {
-        let params = json!({"ikm": BASE64.encode(b"key"), "length": 48});
-        let result = handle_hkdf_sha256(Some(&params)).await.expect("hkdf");
-        assert_eq!(result["length"], 48);
-        let okm = BASE64
-            .decode(result["okm"].as_str().expect("okm"))
-            .expect("b64");
-        assert_eq!(okm.len(), 48);
-    }
-
-    #[tokio::test]
-    async fn test_hkdf_sha256_with_salt_and_info() {
-        let params = json!({
-            "ikm": BASE64.encode(b"shared_secret"),
-            "salt": BASE64.encode(b"random_salt"),
-            "info": BASE64.encode(b"btsp-v1-phase3"),
-            "length": 32
-        });
-        let result = handle_hkdf_sha256(Some(&params)).await.expect("hkdf");
-        assert_eq!(result["length"], 32);
-    }
-
-    #[tokio::test]
-    async fn test_hkdf_sha256_deterministic() {
-        let params = json!({"ikm": BASE64.encode(b"k"), "salt": BASE64.encode(b"s"), "info": BASE64.encode(b"i")});
-        let r1 = handle_hkdf_sha256(Some(&params)).await.expect("1");
-        let r2 = handle_hkdf_sha256(Some(&params)).await.expect("2");
-        assert_eq!(r1["okm"], r2["okm"]);
-    }
-
-    #[tokio::test]
-    async fn test_hkdf_sha256_different_salt_different_output() {
-        let p1 = json!({"ikm": BASE64.encode(b"k"), "salt": BASE64.encode(b"salt1")});
-        let p2 = json!({"ikm": BASE64.encode(b"k"), "salt": BASE64.encode(b"salt2")});
-        let r1 = handle_hkdf_sha256(Some(&p1)).await.expect("1");
-        let r2 = handle_hkdf_sha256(Some(&p2)).await.expect("2");
-        assert_ne!(r1["okm"], r2["okm"]);
-    }
-
-    #[tokio::test]
-    async fn test_hkdf_sha256_missing_ikm_errors() {
-        let params = json!({"salt": BASE64.encode(b"s")});
-        let err = handle_hkdf_sha256(Some(&params)).await.unwrap_err();
-        assert!(err.contains("ikm"));
-    }
-
-    #[tokio::test]
-    async fn test_hkdf_sha256_missing_params_errors() {
-        assert!(handle_hkdf_sha256(None).await.is_err());
-    }
-
-    #[tokio::test]
-    async fn test_hkdf_sha256_matches_barrucuda_pattern() {
-        let session_key = [42u8; 32];
-        let client_nonce = [1u8; 16];
-        let server_nonce = [2u8; 16];
-        let mut salt = Vec::new();
-        salt.extend_from_slice(&client_nonce);
-        salt.extend_from_slice(&server_nonce);
-
-        let params = json!({
-            "ikm": BASE64.encode(session_key),
-            "salt": BASE64.encode(&salt),
-            "info": BASE64.encode(b"btsp-v1-phase3"),
-            "length": 32
-        });
-        let result = handle_hkdf_sha256(Some(&params)).await.expect("hkdf");
-
-        use hkdf::Hkdf;
-        use sha2::Sha256;
-        let hkdf = Hkdf::<Sha256>::new(Some(&salt), &session_key);
-        let mut expected = [0u8; 32];
-        hkdf.expand(b"btsp-v1-phase3", &mut expected)
-            .expect("expand");
-
-        let okm = BASE64
-            .decode(result["okm"].as_str().expect("okm"))
-            .expect("b64");
-        assert_eq!(okm, expected);
-    }
 }

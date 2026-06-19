@@ -5,6 +5,19 @@
 //! This module connects BearDog's entropy hierarchy with all available
 //! hardware security modules (FIDO2, Android StrongBox, iOS Secure Enclave).
 //!
+//! ## Current behavior (Phase 1)
+//!
+//! Device discovery and selection run against real HSM providers, but entropy
+//! bytes are currently drawn from the operating-system CSPRNG (`rand` OS RNG) as
+//! a **software fallback**. Results are labeled honestly with `source: "os_rng"`,
+//! `device_used: "os_rng_fallback"`, and `hardware_backed: false`.
+//!
+//! ## Future (Phase 2)
+//!
+//! When FIDO2, Android StrongBox, and iOS Secure Enclave providers are wired,
+//! `generate_from_hsm()` will request hardware RNG from the selected device and
+//! report hardware tier/quality metadata only when that path succeeds.
+//!
 //! # Architecture
 //!
 //! ```text
@@ -12,11 +25,11 @@
 //!      ↓
 //! Device Selection (iPhone/Pixel/Security Key)
 //!      ↓
-//! HSM Entropy Provider (hardware RNG)
+//! Entropy Provider (OS RNG fallback today; hardware RNG in Phase 2)
 //!      ↓
 //! Entropy Mixing Engine
 //!      ↓
-//! Entropy Classification (Tier 1/2/3)
+//! Entropy Classification (Tier 0 fallback / Tier 1-3 hardware)
 //!      ↓
 //! Entropy Hierarchy Manager
 //!      ↓

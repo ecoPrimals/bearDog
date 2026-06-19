@@ -19,6 +19,18 @@ pub type TemplateId = String;
 /// Node identifier
 pub type NodeId = String;
 
+/// Cryptographic verification status for chain-of-custody checks
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum VerificationStatus {
+    /// All signatures were verified against signer public keys
+    Verified,
+    /// Verification could not be completed (e.g. missing public keys)
+    Unverified,
+    /// Verification was attempted and failed
+    Failed,
+}
+
 /// Risk level for security assessments
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -329,6 +341,8 @@ pub struct OriginAudit {
     pub lineage: Vec<LineageVersion>,
     /// Whether the chain of custody is valid
     pub chain_valid: bool,
+    /// Cryptographic verification status for lineage signatures
+    pub verification_status: VerificationStatus,
     /// Risk level
     pub risk_level: RiskLevel,
     /// Trust score (0.0 - 1.0)

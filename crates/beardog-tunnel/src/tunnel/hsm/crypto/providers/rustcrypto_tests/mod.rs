@@ -7,9 +7,9 @@
 
 #![cfg(test)]
 
-pub(crate) use super::rustcrypto::RustCryptoProvider;
-pub(crate) use crate::tunnel::hsm::crypto::algorithms::*;
-pub(crate) use crate::tunnel::hsm::crypto::provider::{NonceGenerator, UniversalCryptoProvider};
+pub use super::rustcrypto::RustCryptoProvider;
+pub use crate::tunnel::hsm::crypto::algorithms::*;
+pub use crate::tunnel::hsm::crypto::provider::{NonceGenerator, UniversalCryptoProvider};
 
 mod aes_128_gcm_tests;
 mod aes_256_gcm_tests;

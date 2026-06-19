@@ -56,7 +56,13 @@ pub(super) async fn poll_http_discovery(
 
     let mut announcements = Vec::new();
 
-    let discovery_endpoints = env.discovery_endpoints();
+    let discovery_endpoints = match env.discovery_endpoints() {
+        Ok(endpoints) => endpoints,
+        Err(e) => {
+            debug!("HTTP discovery skipped: {e}");
+            return Ok(announcements);
+        }
+    };
 
     for endpoint in discovery_endpoints {
         debug!(%endpoint, "Checking discovery endpoint");

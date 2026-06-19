@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+//! Integration tests for `BearDog`
 use beardog_errors::BearDogError;
 use std::time::{Duration, Instant};
 
@@ -30,7 +31,7 @@ async fn test_end_to_end_crypto_workflow() {
 
     for i in 0..crypto_operations {
         let operation_result = tokio::spawn(async move {
-            let _crypto_data = format!("crypto_operation_{}", i);
+            let _crypto_data = format!("crypto_operation_{i}");
             tokio::task::yield_now().await; // Prevent stack buildup
             true
         })
@@ -42,11 +43,10 @@ async fn test_end_to_end_crypto_workflow() {
     }
 
     let duration = start.elapsed();
-    let success_rate = (successful_crypto_ops as f64 / crypto_operations as f64) * 100.0;
+    let success_rate = (f64::from(successful_crypto_ops) / f64::from(crypto_operations)) * 100.0;
 
     println!(
-        "✅ Crypto workflow: {}/{} operations completed successfully ({:.1}%) in {:?}",
-        successful_crypto_ops, crypto_operations, success_rate, duration
+        "✅ Crypto workflow: {successful_crypto_ops}/{crypto_operations} operations completed successfully ({success_rate:.1}%) in {duration:?}"
     );
 
     assert!(
@@ -69,7 +69,7 @@ async fn test_concurrent_multi_user_simulation() {
     for user_id in 0..user_count {
         let handle = tokio::spawn(async move {
             for op_id in 0..operations_per_user {
-                let _result = format!("User {} operation {}", user_id, op_id);
+                let _result = format!("User {user_id} operation {op_id}");
                 tokio::task::yield_now().await; // Yield to prevent stack buildup
                 tokio::time::sleep(Duration::from_millis(1)).await;
             }
@@ -92,7 +92,7 @@ async fn test_system_stress_and_recovery() {
 
     for i in 0..stress_iterations {
         let operation_result = tokio::spawn(async move {
-            let _stress_data = format!("stress_operation_{}", i);
+            let _stress_data = format!("stress_operation_{i}");
             tokio::task::yield_now().await; // Prevent stack buildup
             true
         })
@@ -108,11 +108,10 @@ async fn test_system_stress_and_recovery() {
     }
 
     let duration = start.elapsed();
-    let success_rate = (successful_operations as f64 / stress_iterations as f64) * 100.0;
+    let success_rate = (f64::from(successful_operations) / f64::from(stress_iterations)) * 100.0;
 
     println!(
-        "✅ Stress test: {}/{} operations completed successfully ({:.1}%) in {:?}",
-        successful_operations, stress_iterations, success_rate, duration
+        "✅ Stress test: {successful_operations}/{stress_iterations} operations completed successfully ({success_rate:.1}%) in {duration:?}"
     );
 
     assert!(

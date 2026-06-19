@@ -643,10 +643,9 @@ mod tests {
     #[tokio::test]
     async fn test_provider_creation() {
         let device_info = StrongBoxDeviceInfo::default();
-        let provider = StrongBoxMultiCredentialProvider::new(device_info, None).await;
-        assert!(provider.is_ok());
-
-        let provider = provider.unwrap();
+        let provider = StrongBoxMultiCredentialProvider::new(device_info, None)
+            .await
+            .expect("StrongBox provider should initialize with default device info");
         assert_eq!(provider.provider_id(), "android_strongbox_multi_credential");
     }
 }

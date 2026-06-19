@@ -6,7 +6,10 @@
     unused_variables,
     dead_code,
     unused_comparisons,
-    clippy::all
+    missing_docs,
+    clippy::all,
+    clippy::unwrap_used,
+    clippy::expect_used
 )]
 //!
 //! Real-world scenario benchmarks that simulate production usage patterns:
@@ -104,7 +107,7 @@ fn benchmark_api_request_handling(c: &mut Criterion) {
             };
 
             black_box(response)
-        })
+        });
     });
 
     // Breakdown of components
@@ -112,7 +115,7 @@ fn benchmark_api_request_handling(c: &mut Criterion) {
         b.iter(|| {
             std::thread::sleep(Duration::from_micros(100));
             black_box(true)
-        })
+        });
     });
 
     group.bench_function("routing_only", |b| {
@@ -124,7 +127,7 @@ fn benchmark_api_request_handling(c: &mut Criterion) {
                 _ => "/unknown",
             };
             black_box(route)
-        })
+        });
     });
 
     group.finish();
@@ -142,7 +145,7 @@ fn benchmark_multitenant_operations(c: &mut Criterion) {
     // Pre-populate with tenant keys
     for i in 0..100 {
         store.store_key(
-            format!("tenant-{}", i),
+            format!("tenant-{i}"),
             vec![0u8; 32], // 256-bit key
         );
     }
@@ -167,7 +170,7 @@ fn benchmark_multitenant_operations(c: &mut Criterion) {
                 for handle in handles {
                     handle.join().unwrap();
                 }
-            })
+            });
         });
     }
 
@@ -208,7 +211,7 @@ fn benchmark_signing_service(c: &mut Criterion) {
                 let signature = vec![0u8; 72]; // ECDSA signature
 
                 black_box(signature)
-            })
+            });
         });
     }
 
@@ -231,7 +234,7 @@ fn benchmark_configuration_loading(c: &mut Criterion) {
                 ("BEARDOG_TIMEOUT_MS", "30000"),
             ]);
             black_box(config)
-        })
+        });
     });
 
     // TOML config parsing
@@ -250,7 +253,7 @@ fn benchmark_configuration_loading(c: &mut Criterion) {
             // Simulate TOML parsing
             std::thread::sleep(Duration::from_micros(50));
             black_box(toml_str)
-        })
+        });
     });
 
     // Complex config with validation
@@ -269,7 +272,7 @@ fn benchmark_configuration_loading(c: &mut Criterion) {
             std::thread::sleep(Duration::from_micros(30));
 
             black_box(true)
-        })
+        });
     });
 
     // Config reload (hot reload)
@@ -288,7 +291,7 @@ fn benchmark_configuration_loading(c: &mut Criterion) {
             std::thread::sleep(Duration::from_micros(20));
 
             black_box(true)
-        })
+        });
     });
 
     group.finish();
@@ -329,7 +332,7 @@ fn benchmark_error_handling(c: &mut Criterion) {
                 message: "Invalid signature".to_string(),
             };
             black_box(err)
-        })
+        });
     });
 
     // Error propagation (Result chain)
@@ -337,7 +340,7 @@ fn benchmark_error_handling(c: &mut Criterion) {
         b.iter(|| {
             let result = bench_error_level1();
             black_box(result)
-        })
+        });
     });
 
     // Error with context (anyhow-style)
@@ -350,7 +353,7 @@ fn benchmark_error_handling(c: &mut Criterion) {
                 ),
             };
             black_box(err)
-        })
+        });
     });
 
     // Error logging
@@ -362,7 +365,7 @@ fn benchmark_error_handling(c: &mut Criterion) {
             // Simulate structured logging
             std::thread::sleep(Duration::from_micros(5));
             black_box(err)
-        })
+        });
     });
 
     group.finish();
@@ -410,7 +413,7 @@ fn benchmark_e2e_crypto_flow(c: &mut Criterion) {
             std::thread::sleep(Duration::from_micros(100));
 
             black_box((ciphertext, wrapped_dek, plaintext.clone()))
-        })
+        });
     });
 
     group.bench_function("sign_verify_flow", |b| {
@@ -449,7 +452,7 @@ fn benchmark_e2e_crypto_flow(c: &mut Criterion) {
             std::thread::sleep(Duration::from_micros(60));
 
             black_box((signature, true))
-        })
+        });
     });
 
     group.finish();
@@ -477,7 +480,7 @@ fn benchmark_rate_limiting(c: &mut Criterion) {
                 tokens += rate * 0.001; // 1ms elapsed
                 black_box(false)
             }
-        })
+        });
     });
 
     // Sliding window rate limit
@@ -499,7 +502,7 @@ fn benchmark_rate_limiting(c: &mut Criterion) {
             } else {
                 black_box(false)
             }
-        })
+        });
     });
 
     group.finish();
@@ -519,7 +522,7 @@ fn benchmark_metrics_collection(c: &mut Criterion) {
             let mut c = counter.lock().unwrap();
             *c += 1;
             black_box(*c)
-        })
+        });
     });
 
     // Histogram recording
@@ -530,7 +533,7 @@ fn benchmark_metrics_collection(c: &mut Criterion) {
             let mut h = histogram.lock().unwrap();
             h.push(value);
             black_box(value)
-        })
+        });
     });
 
     // Structured logging with metadata
@@ -544,7 +547,7 @@ fn benchmark_metrics_collection(c: &mut Criterion) {
                 42
             );
             black_box(log_entry)
-        })
+        });
     });
 
     group.finish();

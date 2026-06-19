@@ -21,6 +21,10 @@ workspace = true
 [lints]
 workspace = true
 
+[features]
+default = []
+test-utils = []
+
 [dependencies.beardog-errors]
 workspace = true
 

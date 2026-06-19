@@ -121,10 +121,7 @@ impl IntrospectionHandler {
         for method in &all_methods {
             let namespace = method.split('.').next().unwrap_or("unknown").to_string();
 
-            by_namespace
-                .entry(namespace)
-                .or_default()
-                .push(method.as_str());
+            by_namespace.entry(namespace).or_default().push(method);
         }
 
         Ok(json!({
@@ -147,7 +144,7 @@ impl IntrospectionHandler {
                 "description": "Core cryptographic operations",
                 "methods": all_methods.iter()
                     .filter(|m| m.starts_with("crypto."))
-                    .map(String::as_str)
+                    .copied()
                     .collect::<Vec<_>>(),
                 "operations": [
                     "sign", "verify", "encrypt", "decrypt",
@@ -158,7 +155,7 @@ impl IntrospectionHandler {
                 "description": "Genetic lineage and Dark Forest operations",
                 "methods": all_methods.iter()
                     .filter(|m| m.starts_with("genetic."))
-                    .map(String::as_str)
+                    .copied()
                     .collect::<Vec<_>>(),
                 "operations": [
                     "derive_lineage_key", "mix_entropy", "verify_lineage",
@@ -169,7 +166,7 @@ impl IntrospectionHandler {
                 "description": "Sub-federation key derivation",
                 "methods": all_methods.iter()
                     .filter(|m| m.starts_with("federation."))
-                    .map(String::as_str)
+                    .copied()
                     .collect::<Vec<_>>(),
                 "operations": ["derive_subfed_key", "verify_family_member"]
             },
@@ -177,7 +174,7 @@ impl IntrospectionHandler {
                 "description": "High-level encryption/decryption",
                 "methods": all_methods.iter()
                     .filter(|m| m.starts_with("encryption."))
-                    .map(String::as_str)
+                    .copied()
                     .collect::<Vec<_>>(),
                 "operations": ["encrypt", "decrypt"]
             },
@@ -185,7 +182,7 @@ impl IntrospectionHandler {
                 "description": "Security and HSM operations",
                 "methods": all_methods.iter()
                     .filter(|m| m.starts_with("security."))
-                    .map(String::as_str)
+                    .copied()
                     .collect::<Vec<_>>(),
                 "operations": ["hsm_status", "key_management"]
             },
@@ -193,7 +190,7 @@ impl IntrospectionHandler {
                 "description": "BTSP provider for TLS integration",
                 "methods": all_methods.iter()
                     .filter(|m| m.starts_with("btsp."))
-                    .map(String::as_str)
+                    .copied()
                     .collect::<Vec<_>>(),
                 "operations": ["provide_crypto_atoms"]
             },
@@ -201,7 +198,7 @@ impl IntrospectionHandler {
                 "description": "Graph security and audit operations",
                 "methods": all_methods.iter()
                     .filter(|m| m.starts_with("graph_security."))
-                    .map(String::as_str)
+                    .copied()
                     .collect::<Vec<_>>(),
                 "operations": ["audit", "validate", "collaborate"]
             }

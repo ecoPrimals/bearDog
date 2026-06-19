@@ -208,6 +208,7 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
 }
 
 #[cfg(test)]
+#[allow(clippy::manual_async_fn)]
 pub mod tests {
     use super::*;
     use beardog_types::hsm::{

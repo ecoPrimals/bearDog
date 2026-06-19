@@ -21,7 +21,8 @@ fn test_default_uses_reasonable_values() {
     assert!(config.enabled);
     assert_eq!(config.service_id.as_ref(), "beardog-discovery");
     assert!(!config.enabled_protocols.is_empty());
-    assert_eq!(&config.registry.backend, "consul");
+    assert!(config.registry.endpoints.is_empty());
+    assert!(!config.is_configured());
     assert!(config.cache.enabled);
 }
 
@@ -41,6 +42,10 @@ fn test_validation_empty_service_id() {
 #[test]
 fn test_validation_empty_registry_endpoints() {
     let mut config = UnifiedDiscoveryConfig::default();
+    config.enabled_protocols = vec![DiscoveryProtocol::Http {
+        endpoint: "http://discovery.example:8500".to_string(),
+        timeout_ms: 3000,
+    }];
     config.registry.endpoints = vec![];
     assert!(config.validate().is_err());
 }

@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Universal HSM Entropy Orchestrator Implementation
+//!
+//! # Entropy source honesty
+//!
+//! HSM device selection is implemented, but hardware RNG integration is not yet
+//! wired for FIDO2, Android `StrongBox`, or iOS Secure Enclave. Until Phase 2 lands,
+//! [`HsmEntropyOrchestrator::generate_from_hsm`] fills bytes from the OS CSPRNG
+//! and reports `source: "os_rng"`, `device_used: "os_rng_fallback"`, and
+//! `hardware_backed: false` rather than mislabeling software entropy as hardware.
 
 use super::types::{
     EntropyGenerationRequest, EntropyGenerationResult, HsmDeviceInfo, HumanEntropyInput,
@@ -14,6 +22,35 @@ use super::types::{
 ))]
 use super::types::HsmDeviceType;
 use beardog_errors::BearDogError;
+
+/// Canonical identifier for OS RNG fallback entropy.
+pub(crate) const OS_RNG_SOURCE: &str = "os_rng";
+
+/// Human-readable label when OS RNG fallback is used instead of hardware HSM RNG.
+pub(crate) const OS_RNG_FALLBACK_DEVICE: &str = "os_rng_fallback";
+
+/// Lowest quality tier reserved for software-only (OS RNG) entropy.
+pub(crate) const OS_RNG_FALLBACK_TIER: u8 = 0;
+
+/// Metadata describing how entropy was actually produced.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct EntropySourceReport {
+    hardware_backed: bool,
+    source: &'static str,
+    device_used: &'static str,
+    quality_tier: u8,
+    quality_score: f64,
+}
+
+const fn os_rng_fallback_report() -> EntropySourceReport {
+    EntropySourceReport {
+        hardware_backed: false,
+        source: OS_RNG_SOURCE,
+        device_used: OS_RNG_FALLBACK_DEVICE,
+        quality_tier: OS_RNG_FALLBACK_TIER,
+        quality_score: 0.35,
+    }
+}
 
 /// Internal enum for HSM source selection
 #[derive(Debug)]
@@ -42,6 +79,9 @@ use crate::hsm::fido2::{
 ///
 /// Connects all available hardware security modules (FIDO2, Android `StrongBox`,
 /// iOS Secure Enclave) to `BearDog`'s entropy hierarchy system.
+///
+/// **Note:** Until hardware RNG providers are integrated, entropy bytes come from
+/// the OS CSPRNG fallback path and results are labeled accordingly.
 pub struct HsmEntropyOrchestrator {
     /// Available FIDO2 providers
     #[cfg(feature = "fido2")]
@@ -277,8 +317,9 @@ impl HsmEntropyOrchestrator {
         // Step 1: Select best available HSM
         let hsm_source = self.select_best_hsm(&request).await?;
 
-        // Step 2: Generate hardware entropy
-        let hardware_entropy = self.generate_from_hsm(&hsm_source, request.length).await?;
+        // Step 2: Generate entropy (currently OS RNG fallback until hardware is wired)
+        let (hardware_entropy, source_report) =
+            self.generate_from_hsm(&hsm_source, request.length).await?;
 
         // Step 3: Mix with human input if provided
         let mixed_entropy = if let Some(human_input) = request.human_input {
@@ -288,24 +329,42 @@ impl HsmEntropyOrchestrator {
             hardware_entropy
         };
 
-        // Step 4: Classify and create result
-        let quality_tier = self.calculate_quality_tier(&hsm_source, mixed_entropy.len());
-        let quality_score = self.calculate_quality_score(quality_tier);
-        let device_name = self.get_device_name(&hsm_source);
+        // Step 4: Classify and create result using the actual entropy path
+        let (quality_tier, quality_score, device_used, source, hardware_backed) =
+            if source_report.hardware_backed {
+                let tier = self.calculate_quality_tier(&hsm_source, mixed_entropy.len());
+                (
+                    tier,
+                    self.calculate_quality_score(tier),
+                    self.get_device_name(&hsm_source),
+                    source_report.source.to_string(),
+                    true,
+                )
+            } else {
+                (
+                    source_report.quality_tier,
+                    source_report.quality_score,
+                    source_report.device_used.to_string(),
+                    source_report.source.to_string(),
+                    false,
+                )
+            };
 
         // Opaque seed identifier for this generation session (UUID v4).
         let seed_id = Uuid::new_v4();
 
         info!(
-            "✅ Generated entropy seed {} (Tier {}, quality {:.2})",
-            seed_id, quality_tier, quality_score
+            "✅ Generated entropy seed {} (source {}, tier {}, quality {:.2}, hardware_backed {})",
+            seed_id, source, quality_tier, quality_score, hardware_backed
         );
 
         Ok(EntropyGenerationResult {
             seed_id,
             quality_tier,
             quality_score,
-            device_used: device_name,
+            device_used,
+            source,
+            hardware_backed,
             timestamp: chrono::Utc::now(),
         })
     }
@@ -352,20 +411,31 @@ impl HsmEntropyOrchestrator {
     }
 
     /// Generate entropy from specific HSM source
+    ///
+    /// **Current behavior:** Always uses the OS CSPRNG fallback and returns honest
+    /// software-only metadata. Future Phase 2 work will call FIDO2/TPM/StrongBox
+    /// hardware RNG when the selected provider is wired.
     async fn generate_from_hsm(
         &self,
         source: &HsmSource,
         length: usize,
-    ) -> Result<Vec<u8>, BearDogError> {
-        // For now, generate cryptographically secure random bytes
-        // PHASE-2(CTAP2): Integrate with actual HSM hardware once CTAP2 commands are implemented
+    ) -> Result<(Vec<u8>, EntropySourceReport), BearDogError> {
         use rand::RngCore;
+
+        warn!(
+            "Hardware entropy requested from {:?} but using OS RNG fallback (source={:?}); \
+             FIDO2/TPM/StrongBox providers not yet wired",
+            source, OS_RNG_SOURCE
+        );
         let mut rng = rand::rng();
         let mut entropy = vec![0u8; length];
         rng.fill_bytes(&mut entropy);
 
-        info!("🎲 Generated {} bytes of entropy from {:?}", length, source);
-        Ok(entropy)
+        debug!(
+            "Generated {} bytes of entropy via OS RNG fallback ({})",
+            length, OS_RNG_FALLBACK_DEVICE
+        );
+        Ok((entropy, os_rng_fallback_report()))
     }
 
     /// Mix hardware entropy with human input
@@ -431,11 +501,12 @@ impl HsmEntropyOrchestrator {
             3 => 0.95,
             2 => 0.75,
             1 => 0.50,
+            0 => 0.35, // OS RNG fallback tier
             _ => 0.40,
         }
     }
 
-    /// Get device name from source
+    /// Get hardware device name from source (only valid when hardware RNG is used)
     fn get_device_name(&self, source: &HsmSource) -> String {
         match source {
             #[cfg(feature = "fido2")]
@@ -744,5 +815,37 @@ mod tests {
 
         let result = orchestrator.generate_entropy(request).await;
         assert!(result.is_ok() || result.is_err());
+    }
+
+    #[test]
+    fn test_os_rng_fallback_report_honest_labels() {
+        let report = os_rng_fallback_report();
+        assert_eq!(report.source, OS_RNG_SOURCE);
+        assert_eq!(report.device_used, OS_RNG_FALLBACK_DEVICE);
+        assert!(!report.hardware_backed);
+        assert_eq!(report.quality_tier, OS_RNG_FALLBACK_TIER);
+        assert!(report.quality_score < 0.50);
+    }
+
+    #[tokio::test]
+    #[cfg(any(feature = "fido2", target_os = "android", target_os = "ios"))]
+    async fn test_generate_from_hsm_uses_os_rng_fallback_metadata() {
+        let orchestrator = HsmEntropyOrchestrator::new()
+            .await
+            .expect("HsmEntropyOrchestrator::new in test");
+
+        #[cfg(feature = "fido2")]
+        let source = HsmSource::Fido2(0);
+        #[cfg(all(not(feature = "fido2"), target_os = "android"))]
+        let source = HsmSource::Android;
+        #[cfg(all(not(feature = "fido2"), not(target_os = "android"), target_os = "ios"))]
+        let source = HsmSource::IOS;
+
+        let (entropy, report) = orchestrator
+            .generate_from_hsm(&source, 32)
+            .await
+            .expect("generate_from_hsm in test");
+        assert_eq!(entropy.len(), 32);
+        assert_eq!(report, os_rng_fallback_report());
     }
 }

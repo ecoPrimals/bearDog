@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Core graph RPC tests: authorize_modification, validate_template, audit_origin, capabilities.
+//! Core graph RPC tests: `authorize_modification`, `validate_template`, `audit_origin`, capabilities.
 
 use super::helpers::*;
 use serde_json::json;
@@ -66,8 +66,11 @@ async fn test_graph_audit_origin_via_unix_socket() {
     let response = send_jsonrpc_request("graph.audit_origin", params, &socket_path).await;
 
     assert_eq!(response["jsonrpc"], "2.0");
-    assert!(response["result"]["chain_valid"].is_boolean());
-    assert!(response["result"]["trust_score"].is_number());
+    assert!(
+        response["error"].is_object(),
+        "audit_origin should fail without live collaboration network: {:?}",
+        response["result"]
+    );
 
     server_task.abort();
 }

@@ -6,14 +6,17 @@
     unused_variables,
     dead_code,
     unused_comparisons,
-    clippy::all
+    missing_docs,
+    clippy::all,
+    clippy::unwrap_used,
+    clippy::expect_used
 )]
 //!
 //! Comprehensive benchmarks for HSM discovery operations including:
 //! - Network endpoint probing (HTTP/TCP)
-//! - Platform HSM detection (TPM, Secure Enclave, StrongBox)
+//! - Platform HSM detection (TPM, Secure Enclave, `StrongBox`)
 //! - Cloud HSM discovery (AWS KMS, Azure, GCP)
-//! - USB HSM detection (YubiKey, Nitrokey)
+//! - USB HSM detection (`YubiKey`, Nitrokey)
 //! - Overall discovery throughput
 //!
 //! ## Methodology
@@ -69,7 +72,7 @@ fn benchmark_endpoint_probing(c: &mut Criterion) {
                 // Simulate HTTP health check
                 std::thread::sleep(Duration::from_millis(latency_ms));
                 black_box(true) // Success
-            })
+            });
         });
     }
 
@@ -84,19 +87,18 @@ fn benchmark_concurrent_probing(c: &mut Criterion) {
     for count in endpoint_counts {
         group.bench_function(BenchmarkId::new("parallel", count), |b| {
             b.iter(|| {
-                let handles: Vec<_> = (0..count)
+                let results: Vec<_> = (0..count)
                     .map(|_| {
                         std::thread::spawn(|| {
                             std::thread::sleep(Duration::from_millis(5)); // Simulate probe
                             black_box(true)
                         })
                     })
+                    .map(|h| h.join().unwrap())
                     .collect();
 
-                let results: Vec<_> = handles.into_iter().map(|h| h.join().unwrap()).collect();
-
                 black_box(results);
-            })
+            });
         });
     }
 
@@ -111,7 +113,7 @@ fn benchmark_tcp_vs_http_probing(c: &mut Criterion) {
         b.iter(|| {
             std::thread::sleep(Duration::from_millis(2)); // TCP handshake
             black_box(true)
-        })
+        });
     });
 
     // HTTP health check (slower)
@@ -119,7 +121,7 @@ fn benchmark_tcp_vs_http_probing(c: &mut Criterion) {
         b.iter(|| {
             std::thread::sleep(Duration::from_millis(5)); // HTTP request + response
             black_box(true)
-        })
+        });
     });
 
     // HTTPS health check (slowest)
@@ -127,7 +129,7 @@ fn benchmark_tcp_vs_http_probing(c: &mut Criterion) {
         b.iter(|| {
             std::thread::sleep(Duration::from_millis(10)); // TLS handshake + HTTP
             black_box(true)
-        })
+        });
     });
 
     group.finish();
@@ -151,7 +153,7 @@ fn benchmark_platform_detection(c: &mut Criterion) {
                 endpoint: None,
                 capabilities: vec!["sign".to_string(), "encrypt".to_string()],
             }))
-        })
+        });
     });
 
     // Linux TPM detection
@@ -165,7 +167,7 @@ fn benchmark_platform_detection(c: &mut Criterion) {
                 endpoint: None,
                 capabilities: vec!["sign".to_string(), "encrypt".to_string()],
             }))
-        })
+        });
     });
 
     // macOS Secure Enclave detection
@@ -179,7 +181,7 @@ fn benchmark_platform_detection(c: &mut Criterion) {
                 endpoint: None,
                 capabilities: vec!["sign".to_string(), "biometric".to_string()],
             }))
-        })
+        });
     });
 
     // Android StrongBox detection
@@ -193,7 +195,7 @@ fn benchmark_platform_detection(c: &mut Criterion) {
                 endpoint: None,
                 capabilities: vec!["sign".to_string(), "biometric".to_string()],
             }))
-        })
+        });
     });
 
     group.finish();
@@ -217,7 +219,7 @@ fn benchmark_cloud_discovery(c: &mut Criterion) {
                 endpoint: Some("https://kms.us-east-1.amazonaws.com".to_string()),
                 capabilities: vec!["encrypt".to_string(), "sign".to_string()],
             }))
-        })
+        });
     });
 
     // Azure Key Vault discovery
@@ -231,7 +233,7 @@ fn benchmark_cloud_discovery(c: &mut Criterion) {
                 endpoint: Some("https://vault.azure.net".to_string()),
                 capabilities: vec!["encrypt".to_string(), "sign".to_string()],
             }))
-        })
+        });
     });
 
     // GCP Cloud KMS discovery
@@ -245,7 +247,7 @@ fn benchmark_cloud_discovery(c: &mut Criterion) {
                 endpoint: Some("https://cloudkms.googleapis.com".to_string()),
                 capabilities: vec!["encrypt".to_string(), "sign".to_string()],
             }))
-        })
+        });
     });
 
     group.finish();
@@ -267,7 +269,7 @@ fn benchmark_usb_discovery(c: &mut Criterion) {
                 ("20a0:4108", "Nitrokey Pro"),
             ];
             black_box(devices)
-        })
+        });
     });
 
     group.bench_function("yubikey_detection", |b| {
@@ -280,7 +282,7 @@ fn benchmark_usb_discovery(c: &mut Criterion) {
                 endpoint: None,
                 capabilities: vec!["sign".to_string(), "piv".to_string()],
             }))
-        })
+        });
     });
 
     group.bench_function("nitrokey_detection", |b| {
@@ -293,7 +295,7 @@ fn benchmark_usb_discovery(c: &mut Criterion) {
                 endpoint: None,
                 capabilities: vec!["sign".to_string(), "pgp".to_string()],
             }))
-        })
+        });
     });
 
     group.finish();
@@ -310,9 +312,9 @@ fn benchmark_discovery_caching(c: &mut Criterion) {
     let mut cache: HashMap<String, DiscoveredHsm> = HashMap::new();
     for i in 0..100 {
         cache.insert(
-            format!("hsm-{}", i),
+            format!("hsm-{i}"),
             DiscoveredHsm {
-                id: format!("hsm-{}", i),
+                id: format!("hsm-{i}"),
                 hsm_type: "Test HSM".to_string(),
                 endpoint: None,
                 capabilities: vec![],
@@ -324,7 +326,7 @@ fn benchmark_discovery_caching(c: &mut Criterion) {
         b.iter(|| {
             let result = cache.get(black_box("hsm-50"));
             black_box(result);
-        })
+        });
     });
 
     group.bench_function("cache_miss_and_discover", |b| {
@@ -341,7 +343,7 @@ fn benchmark_discovery_caching(c: &mut Criterion) {
                 };
                 black_box(hsm);
             }
-        })
+        });
     });
 
     group.bench_function("cache_invalidation", |b| {
@@ -349,7 +351,7 @@ fn benchmark_discovery_caching(c: &mut Criterion) {
         b.iter(|| {
             local_cache.clear();
             black_box(&local_cache);
-        })
+        });
     });
 
     group.finish();
@@ -398,7 +400,7 @@ fn benchmark_full_discovery_cycle(c: &mut Criterion) {
             std::thread::sleep(Duration::from_millis(40));
 
             black_box(discovered)
-        })
+        });
     });
 
     group.bench_function("discover_all_parallel", |b| {
@@ -447,7 +449,7 @@ fn benchmark_full_discovery_cycle(c: &mut Criterion) {
             }
 
             black_box(discovered)
-        })
+        });
     });
 
     group.finish();
@@ -469,7 +471,7 @@ fn benchmark_mdns_discovery(c: &mut Criterion) {
                 ("hsm-2.local", "192.168.1.101:8443"),
             ];
             black_box(responses)
-        })
+        });
     });
 
     group.bench_function("dns_sd_query", |b| {
@@ -478,7 +480,7 @@ fn benchmark_mdns_discovery(c: &mut Criterion) {
             std::thread::sleep(Duration::from_millis(50));
             let services = vec!["_beardog-hsm._tcp.local.", "_pkcs11._tcp.local."];
             black_box(services)
-        })
+        });
     });
 
     group.finish();

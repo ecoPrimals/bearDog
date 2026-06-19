@@ -7,18 +7,21 @@
 //! This service discovers collaboration capabilities at runtime.
 //! No hardcoded vendor primal names — capability-based discovery only.
 //!
-//! # Implementation Status (Deep Debt Evolution - Feb 4, 2026)
+//! # Live Collaboration Network Required
 //!
-//! **Current**: Returns fallback data (honest about capabilities - Principle #6)\
-//! **Blocker**: `beardog-adapters` discovery client needs wiring before integration\
-//! **Future**: Will use `UniversalPrimalAdapter` for TRUE runtime discovery (Principle #5)
+//! All endpoints in this module require a live collaboration network reachable via
+//! runtime capability discovery (`UniversalPrimalAdapter` + discovery client). When
+//! discovery is unavailable, methods return an error rather than synthetic data so
+//! security audits cannot be misled by placeholder metrics or trust scores.
 //!
-//! The `beardog-adapters` crate exists and is stable (211 tests passing), but requires
-//! a discovery client to be wired up before integration can proceed. The fallback data
-//! is a safety mechanism that allows the system to function while this is evolved.
+//! # Implementation Status
+//!
+//! **Current**: Discovery client wiring pending (`beardog-adapters` is stable but not
+//! yet integrated here).\
+//! **Future**: TRUE runtime discovery via capability-based primal lookup (Principle #5).
 
 use beardog_errors::BearDogError;
-use tracing::{info, warn};
+use tracing::info;
 
 type Result<T> = std::result::Result<T, BearDogError>;
 
@@ -44,161 +47,85 @@ impl CollaborationService {
         Self::new()
     }
 
+    fn discovery_unavailable(capability: &str) -> BearDogError {
+        BearDogError::not_yet_available(format!(
+            "{capability} requires a live collaboration network; \
+             runtime discovery is not yet available"
+        ))
+    }
+
     /// Get template information (replaces legacy `get_template_info` on a collaboration provider)
     ///
-    /// Discovers any primal with `Collaboration::TemplateStorage` capability
+    /// Discovers any primal with `Collaboration::TemplateStorage` capability.
+    /// Requires a live collaboration network; returns an error when discovery is unavailable.
     ///
     /// # Errors
     ///
-    /// Returns an error if template metadata cannot be retrieved (reserved for runtime discovery).
+    /// Returns an error if the collaboration network cannot be reached or template metadata
+    /// cannot be retrieved.
     pub async fn get_template_info(&self, template_id: &str) -> Result<TemplateInfo> {
-        info!(
-            "🔍 Discovering primal with TemplateStorage capability for template: {}",
-            template_id
-        );
-
-        // NOTE: beardog-adapters ready (211 tests pass), pending discovery client wiring
-        warn!("⚠️  Using fallback data (runtime discovery pending discovery client wiring)");
-        Ok(Self::default_template_info(template_id))
+        info!("Discovering primal with TemplateStorage capability for template: {template_id}");
+        Err(Self::discovery_unavailable("TemplateStorage"))
     }
 
     /// Get user permissions (replaces legacy collaborator listing on a collaboration provider)
     ///
-    /// Discovers any primal with `Collaboration::PermissionManagement` capability
+    /// Discovers any primal with `Collaboration::PermissionManagement` capability.
+    /// Requires a live collaboration network; returns an error when discovery is unavailable.
     ///
     /// # Errors
     ///
-    /// Returns an error if user permissions cannot be retrieved (reserved for runtime discovery).
+    /// Returns an error if the collaboration network cannot be reached or user permissions
+    /// cannot be retrieved.
     pub async fn get_user_permissions(
         &self,
-        user_id: &str,
-        resource_id: &str,
+        _user_id: &str,
+        _resource_id: &str,
     ) -> Result<UserPermissions> {
-        info!("🔍 Discovering primal with PermissionManagement capability");
-
-        // NOTE: beardog-adapters ready, pending discovery client wiring
-        warn!("⚠️  Using fallback data (runtime discovery pending discovery client wiring)");
-        let _resource_id = resource_id; // Acknowledge parameter for future use
-        Ok(Self::default_user_permissions(user_id))
+        info!("Discovering primal with PermissionManagement capability");
+        Err(Self::discovery_unavailable("PermissionManagement"))
     }
 
     /// Get template lineage (replaces legacy lineage query on a collaboration provider)
     ///
-    /// Discovers any primal with `Collaboration::LineageTracking` capability
+    /// Discovers any primal with `Collaboration::LineageTracking` capability.
+    /// Requires a live collaboration network; returns an error when discovery is unavailable.
     ///
     /// # Errors
     ///
-    /// Returns an error if lineage cannot be retrieved (reserved for runtime discovery).
-    pub async fn get_lineage(&self, template_id: &str) -> Result<Vec<LineageVersion>> {
-        info!("🔍 Discovering primal with LineageTracking capability");
-
-        // NOTE: beardog-adapters ready, pending discovery client wiring
-        warn!("⚠️  Using fallback data (runtime discovery pending discovery client wiring)");
-        Ok(Self::default_lineage(template_id))
+    /// Returns an error if the collaboration network cannot be reached or lineage cannot
+    /// be retrieved.
+    pub async fn get_lineage(&self, _template_id: &str) -> Result<Vec<LineageVersion>> {
+        info!("Discovering primal with LineageTracking capability");
+        Err(Self::discovery_unavailable("LineageTracking"))
     }
 
     /// Get community metrics (replaces legacy usage metrics on a collaboration provider)
     ///
-    /// Discovers any primal with `Collaboration::CommunityMetrics` capability
+    /// Discovers any primal with `Collaboration::CommunityMetrics` capability.
+    /// Requires a live collaboration network; returns an error when discovery is unavailable.
     ///
     /// # Errors
     ///
-    /// Returns an error if community metrics cannot be retrieved (reserved for runtime discovery).
-    pub async fn get_community_metrics(&self, template_id: &str) -> Result<CommunityMetrics> {
-        info!("🔍 Discovering primal with CommunityMetrics capability");
-
-        // NOTE: beardog-adapters ready, pending discovery client wiring
-        warn!("⚠️  Using fallback data (runtime discovery pending discovery client wiring)");
-        let _template_id = template_id; // Acknowledge parameter for future use
-        Ok(Self::default_community_metrics())
+    /// Returns an error if the collaboration network cannot be reached or community metrics
+    /// cannot be retrieved.
+    pub async fn get_community_metrics(&self, _template_id: &str) -> Result<CommunityMetrics> {
+        info!("Discovering primal with CommunityMetrics capability");
+        Err(Self::discovery_unavailable("CommunityMetrics"))
     }
 
     /// Get security assessment (replaces legacy security assessment on a collaboration provider)
     ///
-    /// Discovers any primal with `Collaboration::SecurityAssessment` capability
+    /// Discovers any primal with `Collaboration::SecurityAssessment` capability.
+    /// Requires a live collaboration network; returns an error when discovery is unavailable.
     ///
     /// # Errors
     ///
-    /// Returns an error if the security assessment cannot be retrieved (reserved for runtime discovery).
+    /// Returns an error if the collaboration network cannot be reached or the security
+    /// assessment cannot be retrieved.
     pub async fn get_security_assessment(&self, template_id: &str) -> Result<SecurityAssessment> {
-        info!("🔍 Discovering primal with SecurityAssessment capability");
-
-        // NOTE: beardog-adapters ready, pending discovery client wiring
-        warn!("⚠️  Using fallback data (runtime discovery pending discovery client wiring)");
-        let _template_id = template_id; // Acknowledge parameter for future use
-        Ok(Self::default_security_assessment())
-    }
-
-    // ================================================================================================
-    // Default Fallback Data
-    // ================================================================================================
-
-    fn default_template_info(template_id: &str) -> TemplateInfo {
-        let creator_id = Self::extract_creator_from_template_id(template_id);
-        TemplateInfo {
-            template_id: template_id.to_string(),
-            creator_id: creator_id.clone(),
-            identity_verified: creator_id != "unknown",
-            trust_score: if creator_id == "unknown" { 0.10 } else { 0.75 },
-            reputation: if creator_id == "unknown" {
-                "new_user".to_string()
-            } else {
-                "established_contributor".to_string()
-            },
-            member_since: "2025-06-15T10:00:00Z".to_string(),
-            genetic_family: if creator_id == "unknown" {
-                None
-            } else {
-                Some("nat0".to_string())
-            },
-        }
-    }
-
-    fn default_user_permissions(user_id: &str) -> UserPermissions {
-        UserPermissions {
-            user_id: user_id.to_string(),
-            role: "viewer".to_string(),
-            is_collaborator: false,
-            permissions: vec!["read".to_string()],
-        }
-    }
-
-    fn default_lineage(template_id: &str) -> Vec<LineageVersion> {
-        vec![LineageVersion {
-            version: "1.0.0".to_string(),
-            created_at: Some("2026-01-10T10:00:00Z".to_string()),
-            modified_at: None,
-            created_by: Some(Self::extract_creator_from_template_id(template_id)),
-            modified_by: None,
-            change_type: "initial_creation".to_string(),
-            changes: None,
-            signature: None,
-        }]
-    }
-
-    const fn default_community_metrics() -> CommunityMetrics {
-        CommunityMetrics {
-            deployments: 145, // Realistic default for fallback
-            success_rate: Some(0.94),
-            avg_rating: Some(4.6),
-            total_ratings: 23,
-        }
-    }
-
-    fn default_security_assessment() -> SecurityAssessment {
-        SecurityAssessment {
-            last_scan: chrono::Utc::now().to_rfc3339(),
-            vulnerabilities_found: 0,
-            threat_level: "none".to_string(),
-        }
-    }
-
-    fn extract_creator_from_template_id(template_id: &str) -> String {
-        if template_id.starts_with("template-") {
-            "user-creator".to_string()
-        } else {
-            "unknown".to_string()
-        }
+        info!("Discovering primal with SecurityAssessment capability for template: {template_id}");
+        Err(Self::discovery_unavailable("SecurityAssessment"))
     }
 }
 
@@ -308,20 +235,25 @@ pub struct SecurityAssessment {
 mod tests {
     use super::*;
 
+    fn assert_discovery_unavailable(err: BearDogError) {
+        let message = err.to_string();
+        assert!(
+            message.contains("collaboration network") || message.contains("Not yet available"),
+            "unexpected error: {message}"
+        );
+    }
+
     // ========================================================================================
     // Service Creation Tests
     // ========================================================================================
 
     #[test]
     fn test_collaboration_service_new() {
-        // Service should be creatable without panic
         let _service = CollaborationService::new();
-        // ZST (zero-sized type) is valid - no runtime state needed for fallback
     }
 
     #[test]
     fn test_collaboration_service_default() {
-        // Default trait should work the same as new()
         let _service = CollaborationService::default();
     }
 
@@ -332,172 +264,81 @@ mod tests {
     }
 
     // ========================================================================================
-    // Template Info Tests
+    // Discovery Failure Tests
     // ========================================================================================
 
     #[tokio::test]
-    async fn test_get_template_info_valid_template() {
+    async fn test_get_template_info_requires_live_network() {
         let service = CollaborationService::new();
-        let result = service.get_template_info("template-abc123").await;
-
-        assert!(result.is_ok());
-        let info = result.expect("get_template_info Ok");
-
-        assert_eq!(info.template_id, "template-abc123");
-        assert_eq!(info.creator_id, "user-creator");
-        assert!(info.identity_verified);
-        assert!(info.trust_score > 0.5);
-        assert_eq!(info.reputation, "established_contributor");
-        assert!(info.genetic_family.is_some());
+        let err = service
+            .get_template_info("template-abc123")
+            .await
+            .expect_err("template info should fail without collaboration network");
+        assert_discovery_unavailable(err);
     }
 
     #[tokio::test]
-    async fn test_get_template_info_unknown_template() {
+    async fn test_get_user_permissions_requires_live_network() {
         let service = CollaborationService::new();
-        let result = service.get_template_info("unknown-format").await;
-
-        assert!(result.is_ok());
-        let info = result.expect("get_template_info Ok");
-
-        assert_eq!(info.template_id, "unknown-format");
-        assert_eq!(info.creator_id, "unknown");
-        assert!(!info.identity_verified);
-        assert!(info.trust_score < 0.5); // Low trust for unknown
-        assert_eq!(info.reputation, "new_user");
-        assert!(info.genetic_family.is_none());
-    }
-
-    #[tokio::test]
-    async fn test_get_template_info_empty_id() {
-        let service = CollaborationService::new();
-        let result = service.get_template_info("").await;
-
-        // Should still return Ok with fallback data
-        assert!(result.is_ok());
-        let info = result.expect("get_template_info Ok");
-        assert_eq!(info.template_id, "");
-    }
-
-    // ========================================================================================
-    // User Permissions Tests
-    // ========================================================================================
-
-    #[tokio::test]
-    async fn test_get_user_permissions() {
-        let service = CollaborationService::new();
-        let result = service
+        let err = service
             .get_user_permissions("user-123", "resource-456")
-            .await;
-
-        assert!(result.is_ok());
-        let perms = result.expect("get_user_permissions Ok");
-
-        assert_eq!(perms.user_id, "user-123");
-        assert_eq!(perms.role, "viewer");
-        assert!(!perms.is_collaborator);
-        assert!(perms.permissions.contains(&"read".to_string()));
+            .await
+            .expect_err("permissions should fail without collaboration network");
+        assert_discovery_unavailable(err);
     }
 
     #[tokio::test]
-    async fn test_get_user_permissions_empty_user() {
+    async fn test_get_lineage_requires_live_network() {
         let service = CollaborationService::new();
-        let result = service.get_user_permissions("", "resource").await;
-
-        assert!(result.is_ok());
-        let perms = result.expect("get_user_permissions Ok");
-        assert_eq!(perms.user_id, "");
-    }
-
-    // ========================================================================================
-    // Lineage Tests
-    // ========================================================================================
-
-    #[tokio::test]
-    async fn test_get_lineage_valid_template() {
-        let service = CollaborationService::new();
-        let result = service.get_lineage("template-abc123").await;
-
-        assert!(result.is_ok());
-        let lineage = result.expect("get_lineage Ok");
-
-        assert!(!lineage.is_empty());
-        let first_version = &lineage[0];
-        assert_eq!(first_version.version, "1.0.0");
-        assert_eq!(first_version.change_type, "initial_creation");
-        assert!(first_version.created_by.is_some());
+        let err = service
+            .get_lineage("template-abc123")
+            .await
+            .expect_err("lineage should fail without collaboration network");
+        assert_discovery_unavailable(err);
     }
 
     #[tokio::test]
-    async fn test_get_lineage_unknown_template() {
+    async fn test_get_community_metrics_requires_live_network() {
         let service = CollaborationService::new();
-        let result = service.get_lineage("random").await;
-
-        assert!(result.is_ok());
-        let lineage = result.expect("get_lineage Ok");
-        assert!(!lineage.is_empty());
+        let err = service
+            .get_community_metrics("template-abc")
+            .await
+            .expect_err("community metrics should fail without collaboration network");
+        assert_discovery_unavailable(err);
     }
-
-    // ========================================================================================
-    // Community Metrics Tests
-    // ========================================================================================
 
     #[tokio::test]
-    async fn test_get_community_metrics() {
+    async fn test_get_security_assessment_requires_live_network() {
         let service = CollaborationService::new();
-        let result = service.get_community_metrics("template-abc").await;
-
-        assert!(result.is_ok());
-        let metrics = result.expect("get_community_metrics Ok");
-
-        assert!(metrics.deployments > 0);
-        assert!(metrics.success_rate.is_some());
-        let rate = metrics
-            .success_rate
-            .expect("default community metrics include success_rate");
-        assert!(rate > 0.0);
-        assert!(metrics.avg_rating.is_some());
-        assert!(metrics.total_ratings > 0);
+        let err = service
+            .get_security_assessment("template-secure")
+            .await
+            .expect_err("security assessment should fail without collaboration network");
+        assert_discovery_unavailable(err);
     }
-
-    // ========================================================================================
-    // Security Assessment Tests
-    // ========================================================================================
 
     #[tokio::test]
-    async fn test_get_security_assessment() {
-        let service = CollaborationService::new();
-        let result = service.get_security_assessment("template-secure").await;
+    async fn test_concurrent_discovery_failures() {
+        use std::sync::Arc;
 
-        assert!(result.is_ok());
-        let assessment = result.expect("get_security_assessment Ok");
+        let service = Arc::new(CollaborationService::new());
 
-        // Should have recent scan timestamp
-        assert!(!assessment.last_scan.is_empty());
-        // Default should have no vulnerabilities
-        assert_eq!(assessment.vulnerabilities_found, 0);
-        assert_eq!(assessment.threat_level, "none");
-    }
+        let handles: Vec<_> = (0..10)
+            .map(|i| {
+                let svc = Arc::clone(&service);
+                tokio::spawn(async move {
+                    let template_id = format!("template-{i}");
+                    svc.get_template_info(&template_id).await
+                })
+            })
+            .collect();
 
-    // ========================================================================================
-    // Helper Function Tests
-    // ========================================================================================
-
-    #[test]
-    fn test_extract_creator_from_template_id_with_prefix() {
-        let creator = CollaborationService::extract_creator_from_template_id("template-xyz");
-        assert_eq!(creator, "user-creator");
-    }
-
-    #[test]
-    fn test_extract_creator_from_template_id_without_prefix() {
-        let creator = CollaborationService::extract_creator_from_template_id("xyz");
-        assert_eq!(creator, "unknown");
-    }
-
-    #[test]
-    fn test_extract_creator_from_template_id_empty() {
-        let creator = CollaborationService::extract_creator_from_template_id("");
-        assert_eq!(creator, "unknown");
+        for handle in handles {
+            let result = handle
+                .await
+                .expect("concurrent get_template_info task join");
+            assert_discovery_unavailable(result.expect_err("expected discovery failure"));
+        }
     }
 
     // ========================================================================================
@@ -594,33 +435,5 @@ mod tests {
 
         assert_eq!(deserialized.vulnerabilities_found, 2);
         assert_eq!(deserialized.threat_level, "low");
-    }
-
-    // ========================================================================================
-    // Concurrent Access Tests
-    // ========================================================================================
-
-    #[tokio::test]
-    async fn test_concurrent_access() {
-        use std::sync::Arc;
-
-        let service = Arc::new(CollaborationService::new());
-
-        let handles: Vec<_> = (0..10)
-            .map(|i| {
-                let svc = Arc::clone(&service);
-                tokio::spawn(async move {
-                    let template_id = format!("template-{}", i);
-                    svc.get_template_info(&template_id).await
-                })
-            })
-            .collect();
-
-        for handle in handles {
-            let result = handle
-                .await
-                .expect("concurrent get_template_info task join");
-            assert!(result.is_ok());
-        }
     }
 }

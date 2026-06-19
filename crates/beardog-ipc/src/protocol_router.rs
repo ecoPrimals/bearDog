@@ -5,22 +5,21 @@
 //! **AUTOMATIC PROTOCOL DETECTION AND ROUTING** (v2.0.0)
 //!
 //! Detects incoming connection protocol and routes to appropriate handler:
-//! - **JSON-RPC 2.0**: Primary protocol (flexible, human-readable, ~100-500μs latency)
-//! - **Binary frame**: Length-prefixed binary protocols (retained for protocol sniffing)
+//! - **JSON-RPC 2.0**: Primary protocol — flexible, human-readable, ecosystem standard
+//! - **Binary frame**: Length-prefixed binary (detected for future evolution)
 //! - **HTTP**: Legacy compatibility
 //!
 //! ## Protocol Detection Strategy
 //! Uses first-bytes sniffing to identify protocol:
-//! - Binary frame: Length-prefixed binary frames (4-byte LE u32 header)
 //! - JSON-RPC: `{` character (JSON object start)
+//! - Binary: Length-prefixed binary frames (reserved for future zero-copy transport)
 //! - HTTP: `GET`, `POST`, `PUT`, `DELETE`, etc.
 //!
-//! ## Priority Order
-//! JSON-RPC > Binary frame > HTTP
-//!
 //! ## Architecture
-//! JSON-RPC 2.0 is the primary IPC architecture. Binary frame detection
-//! is retained for forward-compatible protocol sniffing.
+//! JSON-RPC 2.0 over NDJSON is the primary inter-primal protocol.
+//! All capability negotiation, method dispatch, and ecosystem communication
+//! flows through JSON-RPC. Binary framing is detected but not actively
+//! dispatched — reserved for future zero-copy `bytes::Bytes` evolution.
 
 use std::io;
 
@@ -31,11 +30,11 @@ use tracing::debug;
 /// Detected protocol type
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Protocol {
-    /// Length-prefixed binary frame protocol (high performance, protocol sniffing)
-    BinaryFrame,
-
-    /// JSON-RPC 2.0 (primary IPC protocol)
+    /// JSON-RPC 2.0 (primary inter-primal protocol)
     JsonRpc,
+
+    /// Length-prefixed binary frame (reserved for future zero-copy transport)
+    BinaryFrame,
 
     /// HTTP/1.1 (legacy compatibility)
     Http,
@@ -45,29 +44,19 @@ pub enum Protocol {
 }
 
 impl Protocol {
-    /// Protocol priority (higher = preferred)
-    pub const fn priority(&self) -> u8 {
-        match self {
-            Self::JsonRpc => 3,
-            Self::BinaryFrame => 2,
-            Self::Http => 1,
-            Self::Unknown => 0,
-        }
-    }
-
     /// Human-readable name
     pub const fn name(&self) -> &'static str {
         match self {
-            Self::BinaryFrame => "binary-frame",
             Self::JsonRpc => "json-rpc",
+            Self::BinaryFrame => "binary-frame",
             Self::Http => "http",
             Self::Unknown => "unknown",
         }
     }
 
-    /// Is this a high-performance protocol?
-    pub const fn is_high_performance(&self) -> bool {
-        matches!(self, Self::BinaryFrame)
+    /// Whether this is the primary ecosystem protocol
+    pub const fn is_primary(&self) -> bool {
+        matches!(self, Self::JsonRpc)
     }
 }
 
@@ -108,7 +97,6 @@ impl ProtocolDetector {
     pub async fn detect(&self, stream: &mut TcpStream) -> io::Result<(Protocol, Vec<u8>)> {
         let mut buf = vec![0u8; self.peek_size];
 
-        // Read first bytes (this consumes them from the stream)
         let n = stream.read(&mut buf).await?;
         if n == 0 {
             return Ok((Protocol::Unknown, vec![]));
@@ -127,40 +115,17 @@ impl ProtocolDetector {
             return Protocol::Unknown;
         }
 
-        // Check for length-prefixed binary frame protocol
-        // Binary frames start with a 4-byte length prefix (little-endian u32)
-        if bytes.len() >= 4 {
-            let frame_len = u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) as usize;
-
-            // Valid binary frame: non-zero, < 16MB, not ASCII text
-            if frame_len > 0 && frame_len < 16 * 1024 * 1024 && bytes.len() > 4 {
-                let fifth = bytes[4];
-                // Binary payloads typically start with enum variant indices
-                // or struct field counts (small numbers), not ASCII chars
-                if !fifth.is_ascii_graphic() || fifth < 0x20 {
-                    return Protocol::BinaryFrame;
-                }
-            }
-        }
-
-        // Check for JSON-RPC (starts with '{' or whitespace then '{')
+        // JSON-RPC: starts with '{' or whitespace then '{'
         let mut trimmed = bytes
             .iter()
             .skip_while(|&&b| b == b' ' || b == b'\t' || b == b'\n' || b == b'\r');
         if let Some(&first_char) = trimmed.next()
             && first_char == b'{'
         {
-            // Likely JSON - check for JSON-RPC fields
-            if let Ok(text) = std::str::from_utf8(bytes) {
-                if text.contains("jsonrpc") || text.contains("method") || text.contains("id") {
-                    return Protocol::JsonRpc;
-                }
-                // Generic JSON, treat as JSON-RPC
-                return Protocol::JsonRpc;
-            }
+            return Protocol::JsonRpc;
         }
 
-        // Check for HTTP (methods)
+        // HTTP methods
         let http_methods = [
             b"GET ".as_slice(),
             b"POST ".as_slice(),
@@ -178,9 +143,20 @@ impl ProtocolDetector {
             }
         }
 
-        // Could also be HTTP response
         if bytes.starts_with(b"HTTP/") {
             return Protocol::Http;
+        }
+
+        // Length-prefixed binary frame detection (reserved for future zero-copy transport)
+        if bytes.len() >= 4 {
+            let frame_len = u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) as usize;
+            if frame_len > 0
+                && frame_len < 16 * 1024 * 1024
+                && bytes.len() > 4
+                && !bytes[4].is_ascii_graphic()
+            {
+                return Protocol::BinaryFrame;
+            }
         }
 
         Protocol::Unknown
@@ -196,73 +172,35 @@ impl Default for ProtocolDetector {
 /// Protocol router configuration
 #[derive(Debug, Clone)]
 pub struct RouterConfig {
-    /// Enable binary frame protocol detection
-    pub enable_binary_frame: bool,
-
-    /// Enable JSON-RPC handling
+    /// Enable JSON-RPC handling (primary protocol)
     pub enable_jsonrpc: bool,
 
-    /// Enable HTTP handling
+    /// Enable HTTP handling (legacy compatibility)
     pub enable_http: bool,
-
-    /// Preferred protocol (for capability negotiation)
-    pub preferred: Protocol,
 }
 
 impl Default for RouterConfig {
     fn default() -> Self {
         Self {
-            enable_binary_frame: false,
             enable_jsonrpc: true,
             enable_http: true,
-            preferred: Protocol::JsonRpc,
         }
     }
 }
 
 impl RouterConfig {
-    /// Create config with only binary frame protocol enabled
-    pub const fn binary_frame_only() -> Self {
-        Self {
-            enable_binary_frame: true,
-            enable_jsonrpc: false,
-            enable_http: false,
-            preferred: Protocol::BinaryFrame,
-        }
-    }
-
-    /// Create config with only JSON-RPC enabled
+    /// Create config with only JSON-RPC enabled (recommended for inter-primal IPC)
     pub const fn jsonrpc_only() -> Self {
         Self {
-            enable_binary_frame: false,
             enable_jsonrpc: true,
             enable_http: false,
-            preferred: Protocol::JsonRpc,
         }
-    }
-
-    /// Create config for development (JSON-RPC + HTTP, prefer JSON-RPC)
-    pub const fn development() -> Self {
-        Self {
-            enable_binary_frame: false,
-            enable_jsonrpc: true,
-            enable_http: true,
-            preferred: Protocol::JsonRpc,
-        }
-    }
-
-    /// Create config for production (JSON-RPC + HTTP, prefer JSON-RPC)
-    pub fn production() -> Self {
-        Self::default()
     }
 
     /// Get list of supported protocols
     pub fn supported_protocols(&self) -> Vec<Protocol> {
         let mut protocols = Vec::new();
 
-        if self.enable_binary_frame {
-            protocols.push(Protocol::BinaryFrame);
-        }
         if self.enable_jsonrpc {
             protocols.push(Protocol::JsonRpc);
         }
@@ -276,10 +214,9 @@ impl RouterConfig {
     /// Check if a protocol is supported
     pub const fn is_supported(&self, protocol: Protocol) -> bool {
         match protocol {
-            Protocol::BinaryFrame => self.enable_binary_frame,
             Protocol::JsonRpc => self.enable_jsonrpc,
             Protocol::Http => self.enable_http,
-            Protocol::Unknown => false,
+            Protocol::BinaryFrame | Protocol::Unknown => false,
         }
     }
 }
@@ -293,9 +230,6 @@ pub struct ProtocolCapabilities {
     /// Recommended protocol for this connection
     pub recommended: String,
 
-    /// High-performance protocols available
-    pub high_performance: Vec<String>,
-
     /// Protocol version info
     pub versions: std::collections::HashMap<String, String>,
 }
@@ -304,14 +238,7 @@ impl ProtocolCapabilities {
     /// Create capabilities from router config
     pub fn from_config(config: &RouterConfig) -> Self {
         let mut supported = Vec::new();
-        let mut high_performance = Vec::new();
         let mut versions = std::collections::HashMap::new();
-
-        if config.enable_binary_frame {
-            supported.push("binary-frame".to_string());
-            high_performance.push("binary-frame".to_string());
-            versions.insert("binary-frame".to_string(), "1.0".to_string());
-        }
 
         if config.enable_jsonrpc {
             supported.push("json-rpc".to_string());
@@ -325,8 +252,7 @@ impl ProtocolCapabilities {
 
         Self {
             supported,
-            recommended: config.preferred.name().to_string(),
-            high_performance,
+            recommended: "json-rpc".to_string(),
             versions,
         }
     }
@@ -374,7 +300,6 @@ impl tokio::io::AsyncRead for PrefixedStream {
         cx: &mut std::task::Context<'_>,
         buf: &mut tokio::io::ReadBuf<'_>,
     ) -> std::task::Poll<io::Result<()>> {
-        // First, serve from prefix
         if self.prefix_pos < self.prefix.len() {
             let remaining = &self.prefix[self.prefix_pos..];
             let to_copy = std::cmp::min(remaining.len(), buf.remaining());
@@ -383,7 +308,6 @@ impl tokio::io::AsyncRead for PrefixedStream {
             return std::task::Poll::Ready(Ok(()));
         }
 
-        // Prefix exhausted, read from inner stream
         std::pin::Pin::new(&mut self.inner).poll_read(cx, buf)
     }
 }
@@ -427,7 +351,6 @@ mod tests {
 
     #[test]
     fn test_detect_http_get() {
-        // Host header is arbitrary; detection keys off request line only
         let bytes = b"GET / HTTP/1.1\r\nHost: discarded.test\r\n\r\n";
         assert_eq!(ProtocolDetector::detect_from_bytes(bytes), Protocol::Http);
     }
@@ -444,26 +367,18 @@ mod tests {
     }
 
     #[test]
-    fn test_protocol_priority() {
-        assert!(Protocol::JsonRpc.priority() > Protocol::BinaryFrame.priority());
-        assert!(Protocol::BinaryFrame.priority() > Protocol::Http.priority());
-        assert!(Protocol::Http.priority() > Protocol::Unknown.priority());
-    }
-
-    #[test]
     fn test_router_config_supported() {
         let config = RouterConfig::default();
-        assert!(!config.is_supported(Protocol::BinaryFrame));
         assert!(config.is_supported(Protocol::JsonRpc));
         assert!(config.is_supported(Protocol::Http));
         assert!(!config.is_supported(Protocol::Unknown));
+        assert!(!config.is_supported(Protocol::BinaryFrame));
     }
 
     #[test]
-    fn test_router_config_binary_frame_only() {
-        let config = RouterConfig::binary_frame_only();
-        assert!(config.is_supported(Protocol::BinaryFrame));
-        assert!(!config.is_supported(Protocol::JsonRpc));
+    fn test_router_config_jsonrpc_only() {
+        let config = RouterConfig::jsonrpc_only();
+        assert!(config.is_supported(Protocol::JsonRpc));
         assert!(!config.is_supported(Protocol::Http));
     }
 
@@ -473,13 +388,11 @@ mod tests {
         let caps = ProtocolCapabilities::from_config(&config);
 
         assert!(caps.supported.contains(&"json-rpc".to_string()));
-        assert!(!caps.supported.contains(&"binary-frame".to_string()));
         assert_eq!(caps.recommended, "json-rpc");
     }
 
     #[test]
     fn test_detect_json_without_jsonrpc_field() {
-        // Plain JSON that's not explicitly JSON-RPC should still be treated as JSON-RPC
         let bytes = br#"{"method": "crypto.sign", "params": {}}"#;
         assert_eq!(
             ProtocolDetector::detect_from_bytes(bytes),
@@ -489,15 +402,14 @@ mod tests {
 
     #[test]
     fn test_protocol_display() {
-        assert_eq!(format!("{}", Protocol::BinaryFrame), "binary-frame");
         assert_eq!(format!("{}", Protocol::JsonRpc), "json-rpc");
         assert_eq!(format!("{}", Protocol::Http), "http");
+        assert_eq!(format!("{}", Protocol::BinaryFrame), "binary-frame");
     }
 
     #[tokio::test]
     async fn test_prefixed_stream_new() {
         use tokio::net::{TcpListener, TcpStream};
-        // Ephemeral loopback — test-only
         let listener = TcpListener::bind("127.0.0.1:0")
             .await
             .expect("bind ephemeral TCP for prefixed stream test");
@@ -513,7 +425,6 @@ mod tests {
     #[tokio::test]
     async fn test_prefixed_stream_prefix_exhausted_empty() {
         use tokio::net::{TcpListener, TcpStream};
-        // Ephemeral loopback — test-only
         let listener = TcpListener::bind("127.0.0.1:0")
             .await
             .expect("bind ephemeral TCP for empty-prefix test");
@@ -530,7 +441,6 @@ mod tests {
     async fn test_prefixed_stream_read_from_prefix() {
         use tokio::io::AsyncReadExt;
         use tokio::net::TcpListener;
-        // Ephemeral loopback — test-only
         let listener = TcpListener::bind("127.0.0.1:0")
             .await
             .expect("bind ephemeral TCP for prefix read test");
@@ -558,18 +468,27 @@ mod tests {
     }
 
     #[test]
-    fn test_detect_binary_frame_ascii_graphic_fifth_byte() {
-        let bytes = vec![0x10, 0x00, 0x00, 0x00, b'{'];
-        let protocol = ProtocolDetector::detect_from_bytes(&bytes);
-        assert_ne!(protocol, Protocol::BinaryFrame);
+    fn test_detect_binary_frame() {
+        let bytes = vec![0x10, 0x00, 0x00, 0x00, 0x01];
+        assert_eq!(
+            ProtocolDetector::detect_from_bytes(&bytes),
+            Protocol::BinaryFrame
+        );
     }
 
     #[test]
-    fn test_protocol_unknown_display_name_and_high_performance() {
-        assert_eq!(format!("{}", Protocol::Unknown), "unknown");
+    fn test_binary_frame_with_ascii_fifth_byte_not_detected() {
+        let bytes = vec![0x10, 0x00, 0x00, 0x00, b'{'];
+        assert_ne!(
+            ProtocolDetector::detect_from_bytes(&bytes),
+            Protocol::BinaryFrame
+        );
+    }
+
+    #[test]
+    fn test_protocol_properties() {
         assert_eq!(Protocol::Unknown.name(), "unknown");
-        assert_eq!(Protocol::Unknown.priority(), 0);
-        assert!(!Protocol::JsonRpc.is_high_performance());
-        assert!(Protocol::BinaryFrame.is_high_performance());
+        assert!(!Protocol::Http.is_primary());
+        assert!(Protocol::JsonRpc.is_primary());
     }
 }

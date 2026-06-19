@@ -99,14 +99,20 @@ pub struct EntropyGenerationResult {
     /// Unique seed identifier in entropy hierarchy
     pub seed_id: Uuid,
 
-    /// Quality tier achieved (1-3)
+    /// Quality tier achieved (0 = OS RNG fallback, 1-3 = hardware tiers)
     pub quality_tier: u8,
 
     /// Quality score (0.0-1.0)
     pub quality_score: f64,
 
-    /// Device used for generation
+    /// Human-readable label for the entropy path used (e.g. `"os_rng_fallback"`)
     pub device_used: String,
+
+    /// Canonical entropy source identifier (e.g. `"os_rng"` or future hardware source ids)
+    pub source: String,
+
+    /// Whether entropy was produced by a hardware-backed RNG
+    pub hardware_backed: bool,
 
     /// Timestamp of generation
     pub timestamp: chrono::DateTime<chrono::Utc>,

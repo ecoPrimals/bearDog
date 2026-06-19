@@ -7,19 +7,21 @@
 use super::utils::*;
 use std::time::Duration;
 
-#[cfg(test)]
-#[expect(
-    clippy::float_cmp,
-    reason = "benchmark stats assert exact default values"
-)]
+fn assert_f64_eq(actual: f64, expected: f64) {
+    assert!(
+        (actual - expected).abs() < f64::EPSILON,
+        "expected {expected}, got {actual}"
+    );
+}
+
 #[test]
 fn test_benchmark_stats_default() {
     let stats = BenchmarkStats::default();
 
-    assert_eq!(stats.mean_ns, 0.0);
-    assert_eq!(stats.std_dev_ns, 0.0);
-    assert_eq!(stats.min_ns, 0.0);
-    assert_eq!(stats.max_ns, 0.0);
+    assert_f64_eq(stats.mean_ns, 0.0);
+    assert_f64_eq(stats.std_dev_ns, 0.0);
+    assert_f64_eq(stats.min_ns, 0.0);
+    assert_f64_eq(stats.max_ns, 0.0);
     assert_eq!(stats.count, 0);
 }
 
@@ -34,8 +36,8 @@ fn test_benchmark_stats_clone() {
     };
 
     let cloned = stats.clone();
-    assert_eq!(stats.mean_ns, cloned.mean_ns);
-    assert_eq!(stats.std_dev_ns, cloned.std_dev_ns);
+    assert_f64_eq(stats.mean_ns, cloned.mean_ns);
+    assert_f64_eq(stats.std_dev_ns, cloned.std_dev_ns);
     assert_eq!(stats.count, cloned.count);
 }
 
@@ -44,10 +46,10 @@ fn test_calculate_stats_empty_measurements() {
     let measurements: Vec<Duration> = vec![];
     let stats = calculate_stats(&measurements);
 
-    assert_eq!(stats.mean_ns, 0.0);
-    assert_eq!(stats.std_dev_ns, 0.0);
-    assert_eq!(stats.min_ns, 0.0);
-    assert_eq!(stats.max_ns, 0.0);
+    assert_f64_eq(stats.mean_ns, 0.0);
+    assert_f64_eq(stats.std_dev_ns, 0.0);
+    assert_f64_eq(stats.min_ns, 0.0);
+    assert_f64_eq(stats.max_ns, 0.0);
     assert_eq!(stats.count, 0);
 }
 
@@ -56,10 +58,10 @@ fn test_calculate_stats_single_measurement() {
     let measurements = vec![Duration::from_nanos(100)];
     let stats = calculate_stats(&measurements);
 
-    assert_eq!(stats.mean_ns, 100.0);
-    assert_eq!(stats.std_dev_ns, 0.0); // No variation with one sample
-    assert_eq!(stats.min_ns, 100.0);
-    assert_eq!(stats.max_ns, 100.0);
+    assert_f64_eq(stats.mean_ns, 100.0);
+    assert_f64_eq(stats.std_dev_ns, 0.0); // No variation with one sample
+    assert_f64_eq(stats.min_ns, 100.0);
+    assert_f64_eq(stats.max_ns, 100.0);
     assert_eq!(stats.count, 1);
 }
 
@@ -72,10 +74,10 @@ fn test_calculate_stats_multiple_identical_measurements() {
     ];
     let stats = calculate_stats(&measurements);
 
-    assert_eq!(stats.mean_ns, 100.0);
-    assert_eq!(stats.std_dev_ns, 0.0); // No variation
-    assert_eq!(stats.min_ns, 100.0);
-    assert_eq!(stats.max_ns, 100.0);
+    assert_f64_eq(stats.mean_ns, 100.0);
+    assert_f64_eq(stats.std_dev_ns, 0.0); // No variation
+    assert_f64_eq(stats.min_ns, 100.0);
+    assert_f64_eq(stats.max_ns, 100.0);
     assert_eq!(stats.count, 3);
 }
 
@@ -88,10 +90,10 @@ fn test_calculate_stats_varying_measurements() {
     ];
     let stats = calculate_stats(&measurements);
 
-    assert_eq!(stats.mean_ns, 200.0);
+    assert_f64_eq(stats.mean_ns, 200.0);
     assert!(stats.std_dev_ns > 0.0); // Should have variation
-    assert_eq!(stats.min_ns, 100.0);
-    assert_eq!(stats.max_ns, 300.0);
+    assert_f64_eq(stats.min_ns, 100.0);
+    assert_f64_eq(stats.max_ns, 300.0);
     assert_eq!(stats.count, 3);
 }
 
@@ -104,9 +106,9 @@ fn test_calculate_stats_large_numbers() {
     ];
     let stats = calculate_stats(&measurements);
 
-    assert_eq!(stats.mean_ns, 2_000_000.0);
-    assert_eq!(stats.min_ns, 1_000_000.0);
-    assert_eq!(stats.max_ns, 3_000_000.0);
+    assert_f64_eq(stats.mean_ns, 2_000_000.0);
+    assert_f64_eq(stats.min_ns, 1_000_000.0);
+    assert_f64_eq(stats.max_ns, 3_000_000.0);
     assert_eq!(stats.count, 3);
 }
 
@@ -119,9 +121,9 @@ fn test_calculate_stats_microsecond_precision() {
     ];
     let stats = calculate_stats(&measurements);
 
-    assert_eq!(stats.mean_ns, 150_000.0);
-    assert_eq!(stats.min_ns, 100_000.0);
-    assert_eq!(stats.max_ns, 200_000.0);
+    assert_f64_eq(stats.mean_ns, 150_000.0);
+    assert_f64_eq(stats.min_ns, 100_000.0);
+    assert_f64_eq(stats.max_ns, 200_000.0);
     assert_eq!(stats.count, 3);
 }
 
@@ -132,8 +134,8 @@ fn test_calculate_stats_many_measurements() {
     let stats = calculate_stats(&measurements);
 
     assert_eq!(stats.count, 100);
-    assert_eq!(stats.min_ns, 10.0);
-    assert_eq!(stats.max_ns, 1000.0);
+    assert_f64_eq(stats.min_ns, 10.0);
+    assert_f64_eq(stats.max_ns, 1000.0);
     assert!((400.0..600.0).contains(&stats.mean_ns)); // Should be around 505
     assert!(stats.std_dev_ns > 0.0);
 }
@@ -151,7 +153,7 @@ fn test_calculate_stats_standard_deviation_calculation() {
     ];
     let stats = calculate_stats(&measurements);
 
-    assert_eq!(stats.mean_ns, 20.0);
+    assert_f64_eq(stats.mean_ns, 20.0);
     assert!((stats.std_dev_ns - 8.16).abs() < 0.2); // Allow small floating point error
 }
 
@@ -165,8 +167,8 @@ fn test_calculate_stats_outliers() {
     ];
     let stats = calculate_stats(&measurements);
 
-    assert_eq!(stats.min_ns, 100.0);
-    assert_eq!(stats.max_ns, 1000.0);
+    assert_f64_eq(stats.min_ns, 100.0);
+    assert_f64_eq(stats.max_ns, 1000.0);
     assert!(stats.std_dev_ns > 0.0); // Should show high variation
     assert_eq!(stats.count, 4);
 }
@@ -198,9 +200,9 @@ fn test_calculate_stats_preserves_precision() {
     ];
     let stats = calculate_stats(&measurements);
 
-    assert_eq!(stats.mean_ns, 2.0);
-    assert_eq!(stats.min_ns, 1.0);
-    assert_eq!(stats.max_ns, 3.0);
+    assert_f64_eq(stats.mean_ns, 2.0);
+    assert_f64_eq(stats.min_ns, 1.0);
+    assert_f64_eq(stats.max_ns, 3.0);
 }
 
 #[test]
@@ -212,7 +214,7 @@ fn test_calculate_stats_handles_zero_durations() {
     ];
     let stats = calculate_stats(&measurements);
 
-    assert_eq!(stats.min_ns, 0.0);
-    assert_eq!(stats.max_ns, 200.0);
+    assert_f64_eq(stats.min_ns, 0.0);
+    assert_f64_eq(stats.max_ns, 200.0);
     assert_eq!(stats.count, 3);
 }

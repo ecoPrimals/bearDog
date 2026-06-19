@@ -293,7 +293,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn certificate_issuer_high_risk_succeeds_with_future_dated_license() {
+    async fn certificate_issuer_high_risk_succeeds_with_future_dated_license()
+    -> Result<(), BearDogError> {
         let signing_key = SigningKey::from_bytes(&[6u8; 32]);
         let issuer = CertificateIssuer::with_license_inputs(
             signing_key,
@@ -305,9 +306,9 @@ mod tests {
         let ctx = high_risk_context();
         let cert = issuer
             .issue_certificate("licensed-adapter".into(), &ctx)
-            .await
-            .unwrap();
+            .await?;
         assert_eq!(cert.adapter_id, "licensed-adapter");
+        Ok(())
     }
 
     #[tokio::test]
@@ -379,7 +380,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn commercial_medium_risk_issues_without_license() {
+    async fn commercial_medium_risk_issues_without_license() -> Result<(), BearDogError> {
         let signing_key = SigningKey::from_bytes(&[11u8; 32]);
         let issuer = CertificateIssuer::new(signing_key, CommercialExtractionDetector);
         let ctx = RequestContext {
@@ -388,12 +389,13 @@ mod tests {
             request_rate: 50,
             ..Default::default()
         };
-        let cert = issuer.issue_certificate("mid".into(), &ctx).await.unwrap();
+        let cert = issuer.issue_certificate("mid".into(), &ctx).await?;
         assert_eq!(cert.adapter_id, "mid");
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_certificate_issuance_human() {
+    async fn test_certificate_issuance_human() -> Result<(), BearDogError> {
         let signing_key = SigningKey::from_bytes(&[1u8; 32]);
         let detector = CommercialExtractionDetector;
         let issuer = CertificateIssuer::new(signing_key, detector);
@@ -412,11 +414,12 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let cert = result.unwrap();
+        let cert = result?;
         assert_eq!(cert.adapter_id, "test-adapter");
 
         let lifetime = cert.expires_at - cert.issued_at;
         assert!(lifetime.num_hours() >= 23 && lifetime.num_hours() <= 25);
+        Ok(())
     }
 
     #[tokio::test]

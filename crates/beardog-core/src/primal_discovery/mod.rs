@@ -53,147 +53,17 @@
 //! # }
 //! ```
 
-mod env;
-mod mdns;
-mod multi;
-mod upa;
+mod strategies;
+mod types;
 
-use crate::self_knowledge::{Endpoint, SimpleCapability};
-use beardog_config::env_keys;
+pub use types::{DiscoveredPrimal, DiscoveryMethod, DiscoveryQuery, PrimalDiscovery};
+
 use beardog_errors::BearDogError;
 use beardog_types::constants::domains::network::ipc_discovery as ipc;
 use beardog_types::constants::domains::system::intervals::PRIMAL_DISCOVERY_CACHE_TTL;
-use beardog_types::constants::domains::timeouts::HEALTH_CHECK_TIMEOUT;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 use tracing::{debug, info};
-
-pub use env::parse_capabilities_str;
-
-// =============================================================================
-// CORE TYPES
-// =============================================================================
-
-/// Discovery method for finding primals
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum DiscoveryMethod {
-    /// Environment variables (`PRIMAL_&lt;NAME&gt;_ADDR`)
-    Environment,
-
-    /// Universal Primal Authority (UPA) registry
-    UniversalPrimalAuthority {
-        /// Registry address (Unix socket or TCP endpoint)
-        registry_addr: String,
-    },
-
-    /// Multicast DNS (mDNS) service discovery
-    Mdns {
-        /// Service type for mDNS query (e.g., "_primal._tcp.local")
-        service_type: String,
-    },
-
-    /// DNS Service Discovery (DNS-SD)
-    DnsSd {
-        /// Domain for DNS-SD lookup
-        domain: String,
-    },
-
-    /// Multiple methods in priority order
-    Multi(Vec<Self>),
-}
-
-/// Query for discovering primals
-#[derive(Debug, Clone)]
-pub struct DiscoveryQuery {
-    /// Specific primal name (optional)
-    pub name: Option<String>,
-
-    /// Required capabilities
-    pub capabilities: Vec<SimpleCapability>,
-
-    /// Discovery timeout
-    pub timeout: Duration,
-}
-
-/// Discovered primal information
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DiscoveredPrimal {
-    /// Primal name
-    pub name: String,
-
-    /// Available endpoints
-    pub endpoints: Vec<Endpoint>,
-
-    /// Provided capabilities
-    pub capabilities: Vec<SimpleCapability>,
-
-    /// Trust score (0.0 - 1.0)
-    pub trust_score: Option<f64>,
-
-    /// Discovery timestamp
-    pub discovered_at: std::time::SystemTime,
-}
-
-/// Primal discovery engine
-#[derive(Clone)]
-pub struct PrimalDiscovery {
-    /// Discovery method
-    pub(crate) method: DiscoveryMethod,
-
-    /// Cached discoveries (for future use)
-    pub(crate) _cache: HashMap<String, DiscoveredPrimal>,
-
-    /// Cache TTL (for future use)
-    pub(crate) _cache_ttl: Duration,
-
-    /// When set, environment-based discovery uses this map instead of reading the process environment.
-    pub(crate) env_override: Option<HashMap<String, String>>,
-}
-
-// =============================================================================
-// DISCOVERY QUERY BUILDERS
-// =============================================================================
-
-impl DiscoveryQuery {
-    /// Create query for a specific primal by name
-    #[must_use]
-    pub fn by_name(name: impl Into<String>) -> Self {
-        Self {
-            name: Some(name.into()),
-            capabilities: Vec::new(),
-            timeout: HEALTH_CHECK_TIMEOUT,
-        }
-    }
-
-    /// Create query for primals by capability
-    #[must_use]
-    pub fn by_capability(capability: SimpleCapability) -> Self {
-        Self {
-            name: None,
-            capabilities: vec![capability],
-            timeout: HEALTH_CHECK_TIMEOUT,
-        }
-    }
-
-    /// Add required capability
-    #[must_use]
-    pub fn with_capability(mut self, capability: SimpleCapability) -> Self {
-        self.capabilities.push(capability);
-        self
-    }
-
-    /// Set discovery timeout
-    #[must_use]
-    pub const fn with_timeout(mut self, timeout: Duration) -> Self {
-        self.timeout = timeout;
-        self
-    }
-}
-
-// =============================================================================
-// PRIMAL DISCOVERY IMPLEMENTATION
-// =============================================================================
 
 impl PrimalDiscovery {
     /// Create discovery engine with explicit configuration
@@ -238,11 +108,10 @@ impl PrimalDiscovery {
         let method = Self::detect_discovery_method()?;
         debug!("Discovery method: {:?}", method);
 
-        let cache_ttl =
-            beardog_errors::process_env::var(env_keys::ENV_DISCOVERY_CACHE_TTL_SECS_UNPREFIXED)
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .map_or(PRIMAL_DISCOVERY_CACHE_TTL, Duration::from_secs);
+        let cache_ttl = beardog_errors::process_env::var("DISCOVERY_CACHE_TTL_SECS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .map_or(PRIMAL_DISCOVERY_CACHE_TTL, Duration::from_secs);
 
         Ok(Self {
             method,
@@ -254,7 +123,7 @@ impl PrimalDiscovery {
 
     /// Detect discovery method from environment
     fn detect_discovery_method() -> Result<DiscoveryMethod, BearDogError> {
-        match beardog_errors::process_env::var(env_keys::ENV_PRIMAL_DISCOVERY_METHOD)
+        match beardog_errors::process_env::var("PRIMAL_DISCOVERY_METHOD")
             .ok()
             .as_deref()
         {
@@ -268,14 +137,13 @@ impl PrimalDiscovery {
                 Ok(DiscoveryMethod::UniversalPrimalAuthority { registry_addr })
             }
             Some("mdns") => {
-                let service_type =
-                    beardog_errors::process_env::var(env_keys::ENV_MDNS_SERVICE_TYPE)
-                        .unwrap_or_else(|_| "_ecoprimal._tcp".to_string());
+                let service_type = beardog_errors::process_env::var("MDNS_SERVICE_TYPE")
+                    .unwrap_or_else(|_| "_ecoprimal._tcp".to_string());
                 info!("Using mDNS service discovery: {}", service_type);
                 Ok(DiscoveryMethod::Mdns { service_type })
             }
             Some("dns-sd") => {
-                let domain = beardog_errors::process_env::var(env_keys::ENV_DNSSD_DOMAIN)
+                let domain = beardog_errors::process_env::var("DNSSD_DOMAIN")
                     .unwrap_or_else(|_| "local.".to_string());
                 info!("Using DNS-SD discovery in domain: {}", domain);
                 Ok(DiscoveryMethod::DnsSd { domain })
@@ -311,11 +179,13 @@ impl PrimalDiscovery {
         query: DiscoveryQuery,
         env_vars: HashMap<String, String>,
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
+        // Clone method to avoid borrow conflicts
         let method = self.method.clone();
 
         match method {
             DiscoveryMethod::Environment => self.discover_from_env_vars(&env_vars, &query),
             DiscoveryMethod::Multi(methods) => {
+                // Try each method in order
                 for method in methods {
                     if matches!(method, DiscoveryMethod::Environment)
                         && let Ok(results) = self.discover_from_env_vars(&env_vars, &query)
@@ -326,7 +196,15 @@ impl PrimalDiscovery {
                 }
                 Ok(Vec::new())
             }
-            _ => Ok(Vec::new()),
+            other => {
+                tracing::warn!(
+                    "discover_with_env does not support {:?}; use discover() for UPA, mDNS, or DNS-SD",
+                    other
+                );
+                Err(BearDogError::not_implemented(&format!(
+                    "discover_with_env does not support {other:?}; use discover() instead"
+                )))
+            }
         }
     }
 
@@ -341,6 +219,7 @@ impl PrimalDiscovery {
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
         info!("🔍 Discovering primals: {:?}", query);
 
+        // Clone method to avoid borrow checker issues
         let method = self.method.clone();
 
         match method {
@@ -349,9 +228,9 @@ impl PrimalDiscovery {
                 self.discover_from_upa(&query, &registry_addr).await
             }
             DiscoveryMethod::Mdns { service_type } => {
-                self.discover_from_mdns(&query, &service_type).await
+                self.discover_from_mdns(&query, &service_type)
             }
-            DiscoveryMethod::DnsSd { domain } => self.discover_from_dns_sd(&query, &domain).await,
+            DiscoveryMethod::DnsSd { domain } => self.discover_from_dns_sd(&query, &domain),
             DiscoveryMethod::Multi(methods) => self.discover_multi(&query, &methods).await,
         }
     }

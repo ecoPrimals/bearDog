@@ -179,7 +179,7 @@ impl Default for CrossNodeAuthEngine {
             spawned_beardogs: HashMap::new(),
             genetics_registry: HashMap::new(),
             node_registry: Box::new(crate::auth::node_registry::InMemoryNodeRegistry::new()),
-            proof_verifier: Box::new(crate::auth::proof_verifier::DefaultProofVerifier::new()),
+            proof_verifier: Box::new(crate::auth::proof_verifier::PlaceholderProofVerifier::new()),
             workflow_engine: None,
             consensus_registry: default_consensus_registry(),
         }
@@ -191,7 +191,7 @@ impl Default for CrossNodeAuthEngine {
 mod comprehensive_tests {
     use super::*;
     use crate::auth::node_registry::InMemoryNodeRegistry;
-    use crate::auth::proof_verifier::DefaultProofVerifier;
+    use crate::auth::proof_verifier::PlaceholderProofVerifier;
 
     // Helper function to create test NodeInfo
     fn create_test_node_info(node_id: &str) -> NodeInfo {
@@ -326,7 +326,7 @@ mod comprehensive_tests {
 
     #[test]
     fn test_default_proof_verifier_verify_authorization() {
-        let verifier = DefaultProofVerifier::new();
+        let verifier = PlaceholderProofVerifier::new();
         let proof = AuthorizationProof {
             authorization_id: "test-auth".to_string(),
             operation: CrossNodeOperation::default(),

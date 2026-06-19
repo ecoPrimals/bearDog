@@ -135,7 +135,6 @@ workspace = true
 [target."cfg(target_os = \"android\")".dependencies]
 ndk = "0.8"
 ndk-sys = "0.5"
-jni = { workspace = true }
 
 # Platform-specific FFI: iOS dependencies fall outside ecoBin scope.
 [target."cfg(target_os = \"ios\")".dependencies]

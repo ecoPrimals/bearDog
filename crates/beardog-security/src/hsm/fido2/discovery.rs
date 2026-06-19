@@ -154,11 +154,8 @@ mod tests {
 
     #[tokio::test]
     #[ignore = "requires physical FIDO2 device"]
-    async fn test_discover_fido2_devices() {
-        let result = discover_fido2_devices().await;
-        assert!(result.is_ok());
-
-        let devices = result.unwrap();
+    async fn test_discover_fido2_devices() -> Result<(), BearDogError> {
+        let devices = discover_fido2_devices().await?;
         if !devices.is_empty() {
             println!("Found {} FIDO2 device(s):", devices.len());
             for dev in devices {
@@ -168,5 +165,7 @@ mod tests {
                 );
             }
         }
+
+        Ok(())
     }
 }

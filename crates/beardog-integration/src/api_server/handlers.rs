@@ -2,12 +2,13 @@
 
 //! Domain handlers for the integration API.
 //!
-//! Organized into BTSP, BirdSong, Lineage, and System handler groups.
-//! Handlers that are not yet wired to real providers return structured
-//! `501 Not Implemented` via [`super::ApiError`] so callers get a clear
-//! signal rather than simulated data.
+//! REST API surface for ecosystem integration (BTSP, BirdSong, Lineage, and system
+//! endpoints). Crypto-related handlers are **not yet wired** to real tunnel, HSM, or
+//! genetics providers; they return `501 Not Implemented` via [`super::ApiError`] until
+//! those integrations land. Non-crypto system endpoints (health, metrics, capabilities,
+//! status) and in-memory tunnel/lineage lookups are functional.
 
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
 
 use axum::{
     extract::{Path, State},
@@ -20,17 +21,17 @@ use super::types::{
     BirdSongEncryptResponse, BtspCloseResponse, BtspDecryptRequest, BtspDecryptResponse,
     BtspEncryptRequest, BtspEncryptResponse, BtspEstablishRequest, BtspEstablishResponse,
     BtspTunnelStatus, CapabilitiesResponse, GenerateLineageRequest, GenerateLineageResponse,
-    HealthResponse, LineageInfo, LineageMetadata, LineageProof, MetricsResponse, StatusResponse,
+    HealthResponse, LineageInfo, LineageProof, MetricsResponse, StatusResponse,
     VerifyLineageChainRequest, VerifyLineageChainResponse, VerifyLineageRequest,
     VerifyLineageResponse,
 };
-use super::{ApiError, ApiState, TunnelMetadata};
+use super::{ApiError, ApiState};
 
 // ── BTSP ────────────────────────────────────────────────────────────────────
 
 /// Establish a new BTSP tunnel.
 ///
-/// Creates a secure tunnel with genetic key exchange.
+/// Requires tunnel provider integration (not yet wired).
 pub(crate) async fn btsp_establish_tunnel(
     State(state): State<ApiState>,
     Json(req): Json<BtspEstablishRequest>,
@@ -38,62 +39,45 @@ pub(crate) async fn btsp_establish_tunnel(
     state.increment_requests();
     info!(responder = %req.responder_id, "BTSP: Establishing tunnel");
 
-    let tunnel_id = format!("tunnel_{}", uuid::Uuid::new_v4());
-
-    let metadata = TunnelMetadata {
-        tunnel_id: tunnel_id.clone(),
-        peer_id: req.responder_id.clone(),
-        created_at: SystemTime::now(),
-        status: "established".to_string(),
-    };
-    state.tunnels.write().insert(tunnel_id.clone(), metadata);
-
-    Ok(Json(BtspEstablishResponse {
-        tunnel_id,
-        responder_entropy: format!("entropy_{}", req.initiator_entropy),
-    }))
+    Err(ApiError::NotImplemented(
+        "BTSP handshake requires tunnel provider integration".to_string(),
+    ))
 }
 
 /// Encrypt data through a BTSP tunnel.
+///
+/// Requires AEAD provider integration (not yet wired).
 pub(crate) async fn btsp_encrypt(
     State(state): State<ApiState>,
     Path(tunnel_id): Path<String>,
     Json(req): Json<BtspEncryptRequest>,
 ) -> Result<Json<BtspEncryptResponse>, ApiError> {
     state.increment_requests();
-    info!(tunnel_id = %tunnel_id, "BTSP: Encrypting data");
+    info!(tunnel_id = %tunnel_id, plaintext_len = req.plaintext.len(), "BTSP: Encrypting data");
 
-    let tunnels = state.tunnels.read();
-    if !tunnels.contains_key(&tunnel_id) {
-        return Err(ApiError::BadRequest("Tunnel not found".to_string()));
-    }
-
-    let ciphertext = format!("encrypted_{}", req.plaintext);
-
-    Ok(Json(BtspEncryptResponse { ciphertext }))
+    Err(ApiError::NotImplemented(
+        "Crypto operations require AEAD provider".to_string(),
+    ))
 }
 
 /// Decrypt data from a BTSP tunnel.
+///
+/// Requires AEAD provider integration (not yet wired).
 pub(crate) async fn btsp_decrypt(
     State(state): State<ApiState>,
     Path(tunnel_id): Path<String>,
     Json(req): Json<BtspDecryptRequest>,
 ) -> Result<Json<BtspDecryptResponse>, ApiError> {
     state.increment_requests();
-    info!(tunnel_id = %tunnel_id, "BTSP: Decrypting data");
+    info!(
+        tunnel_id = %tunnel_id,
+        ciphertext_len = req.ciphertext.len(),
+        "BTSP: Decrypting data"
+    );
 
-    let tunnels = state.tunnels.read();
-    if !tunnels.contains_key(&tunnel_id) {
-        return Err(ApiError::BadRequest("Tunnel not found".to_string()));
-    }
-
-    let plaintext = req
-        .ciphertext
-        .strip_prefix("encrypted_")
-        .unwrap_or(&req.ciphertext)
-        .to_string();
-
-    Ok(Json(BtspDecryptResponse { plaintext }))
+    Err(ApiError::NotImplemented(
+        "Crypto operations require AEAD provider".to_string(),
+    ))
 }
 
 /// Get BTSP tunnel status.
@@ -134,6 +118,8 @@ pub(crate) async fn btsp_close_tunnel(
 // ── BirdSong ────────────────────────────────────────────────────────────────
 
 /// Encrypt a broadcast for lineage-based access.
+///
+/// Requires BirdSongManager integration (not yet wired).
 pub(crate) async fn birdsong_encrypt(
     State(state): State<ApiState>,
     Json(req): Json<BirdSongEncryptRequest>,
@@ -141,19 +127,14 @@ pub(crate) async fn birdsong_encrypt(
     state.increment_requests();
     info!(lineage_hint = ?req.lineage_hint, "BirdSong: Encrypting broadcast");
 
-    let ciphertext = format!("birdsong_encrypted_{}", req.payload);
-    let metadata = serde_json::json!({
-        "lineage_hint": req.lineage_hint,
-        "encrypted_at": chrono::Utc::now().to_rfc3339(),
-    });
-
-    Ok(Json(BirdSongEncryptResponse {
-        ciphertext,
-        metadata,
-    }))
+    Err(ApiError::NotImplemented(
+        "BirdSong operations require BirdSongManager integration".to_string(),
+    ))
 }
 
 /// Decrypt a lineage-gated broadcast.
+///
+/// Requires BirdSongManager integration (not yet wired).
 pub(crate) async fn birdsong_decrypt(
     State(state): State<ApiState>,
     Json(req): Json<BirdSongDecryptRequest>,
@@ -161,13 +142,9 @@ pub(crate) async fn birdsong_decrypt(
     state.increment_requests();
     info!(lineage_hint = ?req.lineage_hint, "BirdSong: Decrypting broadcast");
 
-    let payload = req
-        .ciphertext
-        .strip_prefix("birdsong_encrypted_")
-        .unwrap_or(&req.ciphertext)
-        .to_string();
-
-    Ok(Json(BirdSongDecryptResponse { payload }))
+    Err(ApiError::NotImplemented(
+        "BirdSong operations require BirdSongManager integration".to_string(),
+    ))
 }
 
 /// Get lineage information for a node.
@@ -197,6 +174,8 @@ pub(crate) async fn birdsong_get_lineage(
 }
 
 /// Verify a lineage proof.
+///
+/// Requires cryptographic proof validation (not yet wired).
 pub(crate) async fn birdsong_verify_lineage(
     State(state): State<ApiState>,
     Json(req): Json<VerifyLineageRequest>,
@@ -208,22 +187,16 @@ pub(crate) async fn birdsong_verify_lineage(
         "BirdSong: Verifying lineage proof"
     );
 
-    let lineages = state.lineages.read();
-    let valid = lineages.contains_key(&req.node_id);
-
-    Ok(Json(VerifyLineageResponse {
-        valid,
-        details: if valid {
-            Some("Lineage proof verified".to_string())
-        } else {
-            Some("Lineage not found".to_string())
-        },
-    }))
+    Err(ApiError::NotImplemented(
+        "Lineage verification requires cryptographic proof validation".to_string(),
+    ))
 }
 
 // ── Lineage ─────────────────────────────────────────────────────────────────
 
 /// Generate a new lineage chain.
+///
+/// Requires HSM-backed signing (not yet wired).
 pub(crate) async fn lineage_generate(
     State(state): State<ApiState>,
     Json(req): Json<GenerateLineageRequest>,
@@ -231,55 +204,29 @@ pub(crate) async fn lineage_generate(
     state.increment_requests();
     info!(node_id = %req.node_id, parent = ?req.parent_id, "Lineage: Generating");
 
-    let mut chain = Vec::new();
-    let mut depth = 0;
-
-    if let Some(parent_id) = &req.parent_id {
-        let lineages = state.lineages.read();
-        if let Some(parent) = lineages.get(parent_id) {
-            chain.extend_from_slice(&parent.chain);
-            depth = parent.depth + 1;
-        }
-    }
-
-    let node_id = req.node_id.clone();
-    chain.push(node_id.clone());
-
-    let metadata = LineageMetadata {
-        node_id: node_id.clone(),
-        parent_id: req.parent_id.clone(),
-        chain: chain.clone(),
-        depth,
-        created_at: SystemTime::now(),
-    };
-    state.lineages.write().insert(node_id, metadata);
-
-    let signature = format!("sig_{}", uuid::Uuid::new_v4());
-
-    Ok(Json(GenerateLineageResponse {
-        lineage_chain: chain,
-        signature,
-    }))
+    Err(ApiError::NotImplemented(
+        "Lineage operations require HSM-backed signing".to_string(),
+    ))
 }
 
 /// Verify a lineage chain.
+///
+/// Requires ordered signature validation (not yet wired).
 pub(crate) async fn lineage_verify(
     State(state): State<ApiState>,
-    Json(req): Json<VerifyLineageChainRequest>,
+    Json(_req): Json<VerifyLineageChainRequest>,
 ) -> Result<Json<VerifyLineageChainResponse>, ApiError> {
     state.increment_requests();
     info!("Lineage: Verifying chain");
 
-    let lineages = state.lineages.read();
-    let valid = req
-        .lineage_chain
-        .iter()
-        .any(|node_id| lineages.contains_key(node_id));
-
-    Ok(Json(VerifyLineageChainResponse { valid }))
+    Err(ApiError::NotImplemented(
+        "Chain integrity requires ordered signature validation".to_string(),
+    ))
 }
 
 /// Get cryptographic proof for a lineage.
+///
+/// Requires HSM-backed signing (not yet wired).
 pub(crate) async fn lineage_get_proof(
     State(state): State<ApiState>,
     Path(node_id): Path<String>,
@@ -287,33 +234,25 @@ pub(crate) async fn lineage_get_proof(
     state.increment_requests();
     info!(node_id = %node_id, "Lineage: Getting proof");
 
-    let lineages = state.lineages.read();
-    if !lineages.contains_key(&node_id) {
-        return Err(ApiError::BadRequest("Lineage not found".to_string()));
-    }
-
-    let merkle_proof = vec![
-        format!("hash1_{node_id}"),
-        format!("hash2_{node_id}"),
-        format!("root_{node_id}"),
-    ];
-
-    let signature = format!("proof_sig_{}", uuid::Uuid::new_v4());
-
-    Ok(Json(LineageProof {
-        merkle_proof,
-        signature,
-    }))
+    Err(ApiError::NotImplemented(
+        "Lineage operations require HSM-backed signing".to_string(),
+    ))
 }
 
 // ── System ──────────────────────────────────────────────────────────────────
 
 /// Health check endpoint.
-pub(crate) async fn health_check() -> Json<HealthResponse> {
+pub(crate) async fn health_check(State(state): State<ApiState>) -> Json<HealthResponse> {
+    let uptime = state
+        .start_time
+        .elapsed()
+        .unwrap_or(Duration::from_secs(0))
+        .as_secs();
+
     Json(HealthResponse {
         status: "healthy".to_string(),
         version: env!("CARGO_PKG_VERSION").to_string(),
-        uptime_seconds: 0,
+        uptime_seconds: uptime,
     })
 }
 

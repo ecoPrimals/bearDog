@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::auth::node_registry::InMemoryNodeRegistry;
-use crate::auth::proof_verifier::DefaultProofVerifier;
+use crate::auth::proof_verifier::PlaceholderProofVerifier;
 use crate::auth::types::*;
 use beardog_errors::BearDogError;
 use chrono::Utc;
@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 async fn test_cross_node_auth_engine_creation() -> Result<(), BearDogError> {
     let node_registry = Box::new(InMemoryNodeRegistry::new());
-    let proof_verifier = Box::new(DefaultProofVerifier::new());
+    let proof_verifier = Box::new(PlaceholderProofVerifier::new());
     let config = CrossNodeAuthConfig {
         verification_mode: VerificationMode::Enabled,
         max_proof_validity_minutes: 120,
@@ -83,7 +83,7 @@ async fn test_authorization_creation() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_proof_verification() -> Result<(), BearDogError> {
-    let verifier = DefaultProofVerifier::new();
+    let verifier = PlaceholderProofVerifier::new();
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal

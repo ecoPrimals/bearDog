@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Identity verification and proof systems for decentralized authentication.
+//!
+//! Handlers implement [`IdentityVerificationHandler`] per [`VerificationMethod`]; see
+//! [`default_stub_registry`] for placeholder wiring.
 
+pub use handlers::{
+    IdentityVerificationHandler, StubVerificationHandler, VerificationHandlerRegistry,
+    default_stub_registry,
+};
 pub use types::*;
 
 mod handlers;

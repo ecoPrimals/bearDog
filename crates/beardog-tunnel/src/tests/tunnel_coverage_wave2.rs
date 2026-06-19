@@ -7,7 +7,7 @@ use crate::graph_security::types::{
     AuthorizationResult, CommunityUsage, CreatorInfo, Graph, GraphEdge, GraphModification,
     GraphNode, IssueSeverity, LineageVersion, ModificationAction, OriginAudit, RiskLevel,
     SecurityAssessment, TemplateMetadata, ThreatCategory, ThreatDetails, ValidationIssue,
-    ValidationReport,
+    ValidationReport, VerificationStatus,
 };
 use crate::modes::doctor::{doctor_json_status_line, doctor_resolve_socket_path};
 use crate::{BStpConfig, SecurityLevel, SessionManager};
@@ -302,6 +302,7 @@ fn origin_audit_roundtrip_minimal() {
         },
         lineage: vec![],
         chain_valid: true,
+        verification_status: VerificationStatus::Verified,
         risk_level: RiskLevel::Medium,
         trust_score: 0.6,
         community_usage: CommunityUsage {

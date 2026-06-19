@@ -417,16 +417,13 @@ mod tests {
 
     #[tokio::test]
     #[ignore = "requires physical FIDO2 device"]
-    async fn test_fido2_provider_creation() {
+    async fn test_fido2_provider_creation() -> Result<(), BearDogError> {
         use crate::hsm::fido2::discover_fido2_devices;
 
-        let devices = discover_fido2_devices().await.unwrap();
+        let devices = discover_fido2_devices().await?;
 
         if let Some(device_info) = devices.first() {
-            let provider = Fido2HsmProvider::new(device_info.clone()).await;
-            assert!(provider.is_ok());
-
-            let provider = provider.unwrap();
+            let provider = Fido2HsmProvider::new(device_info.clone()).await?;
             println!("Provider created for: {}", provider.name());
             println!("Supports hmac-secret: {}", provider.supports_hmac_secret());
             println!(
@@ -434,5 +431,7 @@ mod tests {
                 provider.supports_resident_keys()
             );
         }
+
+        Ok(())
     }
 }

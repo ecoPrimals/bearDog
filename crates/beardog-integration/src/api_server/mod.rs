@@ -2,7 +2,11 @@
 
 //! # Integration API Server
 //!
-//! Expanded REST API with 17 endpoints for BTSP, BirdSong, and Lineage operations.
+//! REST API surface for ecosystem integration with 17 endpoints for BTSP, BirdSong,
+//! Lineage, and system operations. Crypto-related routes are **not yet wired** to real
+//! tunnel, HSM, or genetics providers and return `501 Not Implemented` until those
+//! integrations land. Non-crypto system endpoints (health, metrics, capabilities,
+//! status) are functional.
 //!
 //! ## Modern Axum Patterns
 //! - Type-safe extractors
@@ -99,6 +103,8 @@ impl Default for ApiState {
 pub struct ApiServerConfig {
     /// Port to bind to.
     pub port: u16,
+    /// Bind address (IP or hostname). When unset, uses `BEARDOG_BIND_ADDRESS` or `127.0.0.1`.
+    pub bind_address: Option<String>,
     /// Request timeout.
     pub timeout: Duration,
     /// Enable CORS.
@@ -109,10 +115,18 @@ impl Default for ApiServerConfig {
     fn default() -> Self {
         Self {
             port: DEFAULT_API_SERVER_LISTEN_PORT,
+            bind_address: None,
             timeout: DEFAULT_API_REQUEST_TIMEOUT,
             enable_cors: true,
         }
     }
+}
+
+fn resolve_bind_address(config: &ApiServerConfig) -> String {
+    if let Some(addr) = &config.bind_address {
+        return addr.clone();
+    }
+    std::env::var("BEARDOG_BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1".to_string())
 }
 
 // ── Router ──────────────────────────────────────────────────────────────────
@@ -171,7 +185,8 @@ pub async fn start_api_server(config: ApiServerConfig) -> Result<(), BearDogErro
 
     let app = create_router(&config);
 
-    let addr = format!("0.0.0.0:{}", config.port);
+    let bind_host = resolve_bind_address(&config);
+    let addr = format!("{bind_host}:{}", config.port);
     let listener = tokio::net::TcpListener::bind(&addr)
         .await
         .map_err(|e| BearDogError::network(format!("Failed to bind to {addr}: {e}")))?;
@@ -192,6 +207,7 @@ pub async fn start_api_server(config: ApiServerConfig) -> Result<(), BearDogErro
 enum ApiError {
     Internal(String),
     BadRequest(String),
+    NotImplemented(String),
 }
 
 impl From<BearDogError> for ApiError {
@@ -205,6 +221,7 @@ impl IntoResponse for ApiError {
         let (status, message) = match self {
             Self::Internal(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
             Self::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
+            Self::NotImplemented(msg) => (StatusCode::NOT_IMPLEMENTED, msg),
         };
 
         let body = Json(serde_json::json!({
@@ -228,6 +245,7 @@ mod tests {
     fn cfg_no_cors() -> ApiServerConfig {
         ApiServerConfig {
             port: 0,
+            bind_address: None,
             timeout: DEFAULT_API_REQUEST_TIMEOUT,
             enable_cors: false,
         }
@@ -318,6 +336,7 @@ mod tests {
         assert_eq!(res.status(), StatusCode::OK);
         let v = body_json(res).await;
         assert_eq!(v["status"], "healthy");
+        assert!(v["uptime_seconds"].as_u64().is_some());
     }
 
     #[tokio::test]
@@ -338,8 +357,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn http_btsp_establish_encrypt_decrypt_status_close() {
+    async fn http_btsp_crypto_endpoints_return_not_implemented() {
         let app = create_router(&cfg_no_cors());
+
         let establish = json!({
             "responder_id": "peer-1",
             "initiator_entropy": "ent-a",
@@ -356,16 +376,18 @@ mod tests {
             )
             .await
             .expect("response");
-        assert_eq!(res.status(), StatusCode::OK);
-        let v = body_json(res).await;
-        let tid = v["tunnel_id"].as_str().expect("tunnel id").to_string();
+        assert_eq!(res.status(), StatusCode::NOT_IMPLEMENTED);
+        assert_eq!(
+            body_json(res).await["error"],
+            "BTSP handshake requires tunnel provider integration"
+        );
 
         let enc = app
             .clone()
             .oneshot(
                 Request::builder()
                     .method("POST")
-                    .uri(format!("/btsp/tunnel/{tid}/encrypt"))
+                    .uri("/btsp/tunnel/tunnel-1/encrypt")
                     .header("content-type", "application/json")
                     .body(Body::from(
                         serde_json::to_vec(&json!({ "plaintext": "hi" })).expect("encode"),
@@ -374,73 +396,34 @@ mod tests {
             )
             .await
             .expect("response");
-        assert_eq!(enc.status(), StatusCode::OK);
-        let enc_v = body_json(enc).await;
-        let ct = enc_v["ciphertext"].as_str().expect("ct");
+        assert_eq!(enc.status(), StatusCode::NOT_IMPLEMENTED);
+        assert_eq!(
+            body_json(enc).await["error"],
+            "Crypto operations require AEAD provider"
+        );
 
         let dec = app
-            .clone()
             .oneshot(
                 Request::builder()
                     .method("POST")
-                    .uri(format!("/btsp/tunnel/{tid}/decrypt"))
+                    .uri("/btsp/tunnel/tunnel-1/decrypt")
                     .header("content-type", "application/json")
                     .body(Body::from(
-                        serde_json::to_vec(&json!({ "ciphertext": ct })).expect("encode"),
+                        serde_json::to_vec(&json!({ "ciphertext": "ct" })).expect("encode"),
                     ))
                     .expect("request"),
             )
             .await
             .expect("response");
-        assert_eq!(dec.status(), StatusCode::OK);
-
-        let st = app
-            .clone()
-            .oneshot(
-                Request::builder()
-                    .uri(format!("/btsp/tunnel/{tid}/status"))
-                    .body(Body::empty())
-                    .expect("request"),
-            )
-            .await
-            .expect("response");
-        assert_eq!(st.status(), StatusCode::OK);
-
-        let del = app
-            .oneshot(
-                Request::builder()
-                    .method("DELETE")
-                    .uri(format!("/btsp/tunnel/{tid}"))
-                    .body(Body::empty())
-                    .expect("request"),
-            )
-            .await
-            .expect("response");
-        assert_eq!(del.status(), StatusCode::OK);
-        assert_eq!(body_json(del).await["success"], true);
+        assert_eq!(dec.status(), StatusCode::NOT_IMPLEMENTED);
+        assert_eq!(
+            body_json(dec).await["error"],
+            "Crypto operations require AEAD provider"
+        );
     }
 
     #[tokio::test]
-    async fn http_btsp_encrypt_missing_tunnel_bad_request() {
-        let app = create_router(&cfg_no_cors());
-        let res = app
-            .oneshot(
-                Request::builder()
-                    .method("POST")
-                    .uri("/btsp/tunnel/missing/encrypt")
-                    .header("content-type", "application/json")
-                    .body(Body::from(
-                        serde_json::to_vec(&json!({ "plaintext": "x" })).expect("encode"),
-                    ))
-                    .expect("request"),
-            )
-            .await
-            .expect("response");
-        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
-    }
-
-    #[tokio::test]
-    async fn http_birdsong_encrypt_then_decrypt_roundtrip() {
+    async fn http_birdsong_crypto_endpoints_return_not_implemented() {
         let app = create_router(&cfg_no_cors());
         let enc = app
             .clone()
@@ -460,9 +443,11 @@ mod tests {
             )
             .await
             .expect("response");
-        assert_eq!(enc.status(), StatusCode::OK);
-        let ev = body_json(enc).await;
-        let ct = ev["ciphertext"].as_str().expect("ciphertext");
+        assert_eq!(enc.status(), StatusCode::NOT_IMPLEMENTED);
+        assert_eq!(
+            body_json(enc).await["error"],
+            "BirdSong operations require BirdSongManager integration"
+        );
 
         let dec = app
             .oneshot(
@@ -472,7 +457,7 @@ mod tests {
                     .header("content-type", "application/json")
                     .body(Body::from(
                         serde_json::to_vec(&json!({
-                            "ciphertext": ct,
+                            "ciphertext": "birdsong_encrypted_secret",
                             "lineage_hint": null
                         }))
                         .expect("encode"),
@@ -481,8 +466,38 @@ mod tests {
             )
             .await
             .expect("response");
-        assert_eq!(dec.status(), StatusCode::OK);
-        assert_eq!(body_json(dec).await["payload"], "secret");
+        assert_eq!(dec.status(), StatusCode::NOT_IMPLEMENTED);
+        assert_eq!(
+            body_json(dec).await["error"],
+            "BirdSong operations require BirdSongManager integration"
+        );
+    }
+
+    #[tokio::test]
+    async fn http_birdsong_verify_lineage_returns_not_implemented() {
+        let app = create_router(&cfg_no_cors());
+        let res = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/birdsong/lineage/verify")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        serde_json::to_vec(&json!({
+                            "node_id": "n1",
+                            "proof": "proof-bytes"
+                        }))
+                        .expect("encode"),
+                    ))
+                    .expect("request"),
+            )
+            .await
+            .expect("response");
+        assert_eq!(res.status(), StatusCode::NOT_IMPLEMENTED);
+        assert_eq!(
+            body_json(res).await["error"],
+            "Lineage verification requires cryptographic proof validation"
+        );
     }
 
     #[tokio::test]
@@ -501,7 +516,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn http_lineage_generate_verify_proof_happy_path() {
+    async fn http_lineage_crypto_endpoints_return_not_implemented() {
         let app = create_router(&cfg_no_cors());
         let gen_res = app
             .clone()
@@ -521,7 +536,11 @@ mod tests {
             )
             .await
             .expect("response");
-        assert_eq!(gen_res.status(), StatusCode::OK);
+        assert_eq!(gen_res.status(), StatusCode::NOT_IMPLEMENTED);
+        assert_eq!(
+            body_json(gen_res).await["error"],
+            "Lineage operations require HSM-backed signing"
+        );
 
         let ver = app
             .clone()
@@ -537,8 +556,11 @@ mod tests {
             )
             .await
             .expect("response");
-        assert_eq!(ver.status(), StatusCode::OK);
-        assert_eq!(body_json(ver).await["valid"], true);
+        assert_eq!(ver.status(), StatusCode::NOT_IMPLEMENTED);
+        assert_eq!(
+            body_json(ver).await["error"],
+            "Chain integrity requires ordered signature validation"
+        );
 
         let pr = app
             .oneshot(
@@ -549,22 +571,11 @@ mod tests {
             )
             .await
             .expect("response");
-        assert_eq!(pr.status(), StatusCode::OK);
-    }
-
-    #[tokio::test]
-    async fn http_lineage_proof_missing_bad_request() {
-        let app = create_router(&cfg_no_cors());
-        let res = app
-            .oneshot(
-                Request::builder()
-                    .uri("/lineage/proof/absent")
-                    .body(Body::empty())
-                    .expect("request"),
-            )
-            .await
-            .expect("response");
-        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+        assert_eq!(pr.status(), StatusCode::NOT_IMPLEMENTED);
+        assert_eq!(
+            body_json(pr).await["error"],
+            "Lineage operations require HSM-backed signing"
+        );
     }
 
     #[tokio::test]
@@ -588,5 +599,7 @@ mod tests {
         assert_eq!(r.status(), StatusCode::INTERNAL_SERVER_ERROR);
         let r2 = ApiError::BadRequest("bad".to_string()).into_response();
         assert_eq!(r2.status(), StatusCode::BAD_REQUEST);
+        let r3 = ApiError::NotImplemented("later".to_string()).into_response();
+        assert_eq!(r3.status(), StatusCode::NOT_IMPLEMENTED);
     }
 }

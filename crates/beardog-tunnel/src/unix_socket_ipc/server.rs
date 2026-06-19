@@ -8,7 +8,7 @@
 //! - Atomic readiness tracking
 //! - Connection acceptance and protocol routing
 //!
-//! The server supports multiple protocols (JSON-RPC, HTTP) with
+//! The server supports multiple protocols (tarpc, JSON-RPC, HTTP) with
 //! automatic detection and routing to appropriate handlers.
 
 use super::{
@@ -21,13 +21,12 @@ use crate::method_gate::{CallerContext, MethodGate, dispatch_auth_method, is_gat
 use crate::platform::{
     PlatformListener, PlatformSocket, PlatformStream, PrefixedStream, Socket, SocketEndpoint,
 };
-use crate::ribocipher;
 use anyhow::{Context, Result};
-use beardog_config::env_keys;
 use beardog_core::socket_config::{
     IpcCapabilitySymlinksConfig, install_ipc_symlinks_at, remove_ipc_symlinks_at,
 };
 use beardog_ipc::protocol::JSONRPC_VERSION;
+use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
@@ -39,25 +38,7 @@ use tracing::{debug, error, info, warn};
 /// Prevents indefinite blocking when a client connects but never sends a
 /// newline (e.g. raw `nc` probes, `curl` health checks). On timeout the
 /// connection is closed and the task freed.
-pub(super) static IPC_READ_TIMEOUT: std::sync::LazyLock<Duration> =
-    std::sync::LazyLock::new(|| {
-        Duration::from_secs(
-            std::env::var(beardog_config::env_keys::ENV_READ_TIMEOUT_SECS)
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(30),
-        )
-    });
-
-/// Timeout for the initial protocol-detection peek on UDS connections.
-static IPC_PEEK_TIMEOUT: std::sync::LazyLock<Duration> = std::sync::LazyLock::new(|| {
-    Duration::from_secs(
-        std::env::var(beardog_config::env_keys::ENV_HANDSHAKE_TIMEOUT_SECS)
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(5),
-    )
-});
+pub(super) const IPC_READ_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Unix socket IPC server for inter-primal communication
 pub struct UnixSocketIpcServer {
@@ -123,8 +104,7 @@ impl UnixSocketIpcServer {
             info!("BTSP handshake enforcement disabled (development mode)");
         }
 
-        let primal_name = std::env::var(env_keys::ENV_PRIMAL_NAME)
-            .unwrap_or_else(|_| env_keys::DEFAULT_PRIMAL_NAME.to_owned());
+        let primal_name = std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_owned());
         let method_gate = MethodGate::from_env(&primal_name, identity.node_id());
         info!(
             mode = method_gate.mode().as_str(),
@@ -272,12 +252,8 @@ impl UnixSocketIpcServer {
         };
         info!(platform = platform_type, "IPC server platform");
 
-        let endpoint = if self.socket_path.to_string_lossy().starts_with('@') {
-            let name = self.socket_path.to_string_lossy()[1..].to_string();
-            SocketEndpoint::Abstract(name)
-        } else {
-            SocketEndpoint::Filesystem(self.socket_path.clone())
-        };
+        // Create endpoint from stored socket_path
+        let endpoint = SocketEndpoint::Filesystem(self.socket_path.clone());
 
         // Bind with platform-specific logic (universal listener!)
         let mut listener = Socket::bind(&endpoint).context(format!(
@@ -359,33 +335,20 @@ impl UnixSocketIpcServer {
             {
                 let mut stream = stream;
 
-                // ── riboCipher signal detection (Wave 111) ──────────────────
-                //
-                // Read first byte: if it's a riboCipher signal prefix (0xEC/0xED/0xEE),
-                // route deterministically. Otherwise ERROR (deprecated unsignalled) and
-                // fall through to legacy peek-and-guess logic.
+                // Peek first byte: JSON-RPC starts with '{' (0x7B); BTSP frames
+                // use a 4-byte big-endian length prefix. PrefixedStream puts the
+                // consumed byte back for whichever handler wins.
                 let mut peek = [0u8; 1];
-                match tokio::time::timeout(*IPC_PEEK_TIMEOUT, stream.read_exact(&mut peek)).await {
-                    Ok(Ok(1)) if ribocipher::is_signal_byte(peek[0]) => {
-                        return self
-                            .handle_ribocipher_signal(stream, peek[0], family_seed)
-                            .await;
-                    }
+                match tokio::time::timeout(Duration::from_secs(5), stream.read_exact(&mut peek))
+                    .await
+                {
                     Ok(Ok(1)) if peek[0] == b'{' => {
-                        error!(
-                            first_byte = "0x7B",
-                            "DEPRECATED: unsignalled connection — use riboCipher signal [0xEC, 0x01] for JSON-RPC"
-                        );
                         debug!(
                             "UDS peek: JSON-RPC detected (0x7B) — bypassing BTSP for local composition"
                         );
                         Box::new(PrefixedStream::new(peek[0], stream)) as Box<dyn PlatformStream>
                     }
                     Ok(Ok(_)) => {
-                        error!(
-                            first_byte = format!("0x{:02X}", peek[0]),
-                            "DEPRECATED: unsignalled connection — use riboCipher signal [0xEC, 0x02] for BTSP"
-                        );
                         debug!("BTSP production: initiating UDS handshake");
                         let mut prefixed = PrefixedStream::new(peek[0], stream);
                         match btsp_handshake::perform_server_handshake(&mut prefixed, family_seed)
@@ -407,7 +370,7 @@ impl UnixSocketIpcServer {
                                         "code": -32600,
                                         "message": "BTSP handshake required",
                                         "data": {
-                                            "reason": "This socket requires BTSP handshake. Use riboCipher [0xEC, 0x01] prefix for plain JSON-RPC, or connect to the health socket (beardog-default.sock) for plaintext probes.",
+                                            "reason": "This socket is family-scoped and requires a BTSP handshake before JSON-RPC traffic. Use btsp.server.create_session to initiate, or connect to the dev socket (beardog-default.sock) for plaintext.",
                                             "btsp_version": "2.0",
                                         }
                                     },
@@ -441,7 +404,7 @@ impl UnixSocketIpcServer {
             let mut buffer = Vec::with_capacity(1024);
 
             let read_result =
-                tokio::time::timeout(*IPC_READ_TIMEOUT, buf_stream.read_until(b'\n', &mut buffer))
+                tokio::time::timeout(IPC_READ_TIMEOUT, buf_stream.read_until(b'\n', &mut buffer))
                     .await;
 
             match read_result {
@@ -569,7 +532,7 @@ impl UnixSocketIpcServer {
                 return None;
             }
             return Some(JsonRpcResponse {
-                jsonrpc: JSONRPC_VERSION.to_string(),
+                jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
                 result: None,
                 error: Some(JsonRpcError::invalid_request(
                     "Invalid JSON-RPC version (must be 2.0)",
@@ -590,7 +553,7 @@ impl UnixSocketIpcServer {
                 request.params.as_ref(),
             ) {
                 return Some(JsonRpcResponse {
-                    jsonrpc: JSONRPC_VERSION.to_string(),
+                    jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
                     result: Some(result),
                     error: None,
                     id,
@@ -604,7 +567,7 @@ impl UnixSocketIpcServer {
                 return None;
             }
             return Some(JsonRpcResponse {
-                jsonrpc: JSONRPC_VERSION.to_string(),
+                jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
                 result: None,
                 error: Some(gate_error),
                 id,
@@ -626,17 +589,27 @@ impl UnixSocketIpcServer {
 
         Some(match result {
             Ok(value) => JsonRpcResponse {
-                jsonrpc: JSONRPC_VERSION.to_string(),
+                jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
                 result: Some(value),
                 error: None,
                 id,
             },
-            Err(e) => JsonRpcResponse {
-                jsonrpc: JSONRPC_VERSION.to_string(),
-                result: None,
-                error: Some(e.into_json_rpc_error()),
-                id,
-            },
+            Err(e) => {
+                let error = if e.contains("Method not found") || e.contains("Unknown method") {
+                    JsonRpcError::method_not_found(e)
+                } else if e.contains("Invalid params") || e.contains("Missing required") {
+                    JsonRpcError::invalid_params(e)
+                } else {
+                    JsonRpcError::internal_error(e)
+                };
+
+                JsonRpcResponse {
+                    jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
+                    result: None,
+                    error: Some(error),
+                    id,
+                }
+            }
         })
     }
 
@@ -652,7 +625,7 @@ impl UnixSocketIpcServer {
             Err(e) => {
                 warn!(error = %e, "Invalid JSON-RPC request");
                 let error_response = JsonRpcResponse {
-                    jsonrpc: JSONRPC_VERSION.to_string(),
+                    jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
                     result: None,
                     error: Some(JsonRpcError::parse_error(format!("Parse error: {e}"))),
                     id: serde_json::Value::Null,

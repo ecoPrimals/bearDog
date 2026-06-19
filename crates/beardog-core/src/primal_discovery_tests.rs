@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::*;
+use crate::self_knowledge::SimpleCapability;
 use beardog_types::constants::domains::network::ipc_discovery as ipc;
 use std::sync::{Mutex, OnceLock};
 

@@ -2,7 +2,9 @@
 #![forbid(unsafe_code)]
 #![allow(
     missing_docs,
-    reason = "benchmarks are internal tooling, not a public API"
+    clippy::unwrap_used,
+    clippy::expect_used,
+    reason = "benchmarks are internal tooling; panics in bench/test code are acceptable"
 )]
 
 pub mod utils;

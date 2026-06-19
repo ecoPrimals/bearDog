@@ -6,7 +6,7 @@
 
 use crate::graph_security::types::{
     CommunityUsage, CreatorInfo, LineageVersion, OriginAudit, RiskLevel, SecurityAssessment,
-    TemplateId,
+    TemplateId, VerificationStatus,
 };
 use beardog_errors::BearDogError;
 use ed25519_dalek::{Signature as DalekSignature, Verifier, VerifyingKey};
@@ -42,7 +42,7 @@ pub async fn audit_origin(template_id: &TemplateId) -> Result<OriginAudit, BearD
     let lineage = get_template_lineage(template_id).await?;
 
     // 3. Verify chain of custody
-    let chain_valid = verify_chain_of_custody(&lineage).await?;
+    let chain_verification = verify_chain_of_custody(&lineage).await?;
 
     // 4. Get community usage metrics
     let community_usage = get_community_usage(template_id).await?;
@@ -52,13 +52,19 @@ pub async fn audit_origin(template_id: &TemplateId) -> Result<OriginAudit, BearD
 
     // Calculate overall trust score and risk level
     let trust_score = calculate_trust_score(&creator, &community_usage, &security_assessment);
-    let risk_level = calculate_audit_risk_level(&creator, &security_assessment, chain_valid);
+    let risk_level = calculate_audit_risk_level(
+        &creator,
+        &security_assessment,
+        chain_verification.chain_valid,
+        chain_verification.verification_status,
+    );
 
     // Generate warnings and recommendations
     let (warnings, recommendations) = generate_audit_warnings(
         &creator,
         &security_assessment,
-        chain_valid,
+        chain_verification.chain_valid,
+        chain_verification.verification_status,
         &community_usage,
     );
 
@@ -66,7 +72,8 @@ pub async fn audit_origin(template_id: &TemplateId) -> Result<OriginAudit, BearD
         template_id: template_id.clone(),
         creator,
         lineage,
-        chain_valid,
+        chain_valid: chain_verification.chain_valid,
+        verification_status: chain_verification.verification_status,
         risk_level,
         trust_score,
         community_usage,
@@ -124,30 +131,41 @@ async fn get_template_lineage(
         .collect())
 }
 
+/// Result of chain-of-custody verification
+#[derive(Debug)]
+struct ChainVerification {
+    chain_valid: bool,
+    verification_status: VerificationStatus,
+}
+
 /// Verify chain of custody for lineage
 ///
 /// # Current Limitations
 ///
-/// Full verification requires public keys for all signers, which will be
-/// retrieved via `CollaborationService` once available. Until then, we perform
-/// basic validation (signature format, lineage continuity).
+/// Full verification requires public keys for all signers, retrieved via
+/// `CollaborationService`. When public keys are unavailable, verification returns
+/// `Unverified` with `chain_valid: false` rather than treating format checks as success.
 ///
 /// # Future Implementation
 ///
 /// Each lineage version signature will be verified against the modifier's
 /// public key, ensuring complete chain of custody.
-async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, BearDogError> {
+async fn verify_chain_of_custody(
+    lineage: &[LineageVersion],
+) -> Result<ChainVerification, BearDogError> {
     use base64::Engine;
 
-    // Check if lineage is continuous (no gaps in versions)
     if lineage.is_empty() {
-        return Ok(false);
+        return Ok(ChainVerification {
+            chain_valid: false,
+            verification_status: VerificationStatus::Failed,
+        });
     }
 
-    // Check if all versions are properly signed (when signatures present)
+    let mut verification_status = VerificationStatus::Verified;
+
     for (idx, version) in lineage.iter().enumerate() {
         if let Some(signature_b64) = &version.signature {
-            // Validate signature format
             let signature = base64::engine::general_purpose::STANDARD
                 .decode(signature_b64)
                 .map_err(|e| {
@@ -157,22 +175,32 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
                     ))
                 })?;
 
-            // Validate Ed25519 signature length
             if signature.len() != 64 {
                 tracing::warn!(
-                    "⚠️  Lineage version {} has invalid signature length: {} bytes (expected 64)",
+                    "Lineage version {} has invalid signature length: {} bytes (expected 64)",
                     version.version,
                     signature.len()
                 );
-                return Ok(false);
+                return Ok(ChainVerification {
+                    chain_valid: false,
+                    verification_status: VerificationStatus::Failed,
+                });
             }
 
-            // Verify Ed25519 signature against modifier's public key.
-            // Planned: Get public key from CollaborationService (blocked by inventory #3).
-            // For now, verify signature format and structure is correct.
-            // Full verification will be enabled when CollaborationService integration is complete
+            // Public key lookup pending CollaborationService integration.
+            let public_key_b64: Option<String> = None;
 
-            // Create canonical lineage version (without signature) for verification
+            let Some(public_key_b64) = public_key_b64 else {
+                tracing::debug!(
+                    "Lineage version {} signature present but public key unavailable — verification cannot succeed",
+                    version.version
+                );
+                return Ok(ChainVerification {
+                    chain_valid: false,
+                    verification_status: VerificationStatus::Unverified,
+                });
+            };
+
             let mut canonical_version = version.clone();
             canonical_version.signature = None;
             let canonical_json = serde_json::to_vec(&canonical_version).map_err(|e| {
@@ -182,38 +210,34 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
                 ))
             })?;
 
-            // Verify signature using Ed25519.
-            // Planned: Replace with actual public key from CollaborationService for full verification.
-            if let Some(public_key_b64) = version.created_by.as_ref().and(None::<String>) {
-                // Decode public key (when available)
-                let public_key_bytes = base64::engine::general_purpose::STANDARD
-                    .decode(public_key_b64)
-                    .map_err(|e| {
-                        BearDogError::validation(&format!(
-                            "Invalid base64 public key for lineage version {}: {e}",
-                            version.version
-                        ))
-                    })?;
+            let public_key_bytes = base64::engine::general_purpose::STANDARD
+                .decode(public_key_b64)
+                .map_err(|e| {
+                    BearDogError::validation(&format!(
+                        "Invalid base64 public key for lineage version {}: {e}",
+                        version.version
+                    ))
+                })?;
 
-                // Validate Ed25519 public key length
-                if public_key_bytes.len() != 32 {
-                    tracing::warn!(
-                        "⚠️  Lineage version {} has invalid public key length: {} bytes (expected 32)",
-                        version.version,
-                        public_key_bytes.len()
-                    );
-                    return Ok(false);
-                }
+            if public_key_bytes.len() != 32 {
+                tracing::warn!(
+                    "Lineage version {} has invalid public key length: {} bytes (expected 32)",
+                    version.version,
+                    public_key_bytes.len()
+                );
+                return Ok(ChainVerification {
+                    chain_valid: false,
+                    verification_status: VerificationStatus::Failed,
+                });
+            }
 
-                // Perform Ed25519 signature verification
-                let verifying_key = VerifyingKey::from_bytes(
-                    public_key_bytes.as_slice().try_into().map_err(|_| {
-                        BearDogError::validation(&format!(
-                            "Invalid public key format for lineage version {}",
-                            version.version
-                        ))
-                    })?,
-                )
+            let verifying_key =
+                VerifyingKey::from_bytes(public_key_bytes.as_slice().try_into().map_err(|_| {
+                    BearDogError::validation(&format!(
+                        "Invalid public key format for lineage version {}",
+                        version.version
+                    ))
+                })?)
                 .map_err(|e| {
                     BearDogError::validation(&format!(
                         "Invalid Ed25519 public key for lineage version {}: {e}",
@@ -221,45 +245,44 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
                     ))
                 })?;
 
-                let sig =
-                    DalekSignature::from_bytes(signature.as_slice().try_into().map_err(|_| {
-                        BearDogError::validation(&format!(
-                            "Invalid signature format for lineage version {}",
-                            version.version
-                        ))
-                    })?);
-
-                // Verify the signature
-                if let Err(e) = verifying_key.verify(&canonical_json, &sig) {
-                    tracing::warn!(
-                        "⚠️  Lineage version {} has invalid Ed25519 signature: {e}",
+            let sig =
+                DalekSignature::from_bytes(signature.as_slice().try_into().map_err(|_| {
+                    BearDogError::validation(&format!(
+                        "Invalid signature format for lineage version {}",
                         version.version
-                    );
-                    return Ok(false);
-                }
+                    ))
+                })?);
 
-                tracing::debug!(
-                    "✓ Lineage version {} Ed25519 signature verified successfully",
+            if let Err(e) = verifying_key.verify(&canonical_json, &sig) {
+                tracing::warn!(
+                    "Lineage version {} has invalid Ed25519 signature: {e}",
                     version.version
                 );
-            } else {
-                // Public key not available yet (pending CollaborationService integration)
-                tracing::debug!(
-                    "✓ Lineage version {} signature format valid (full verification pending CollaborationService integration)",
-                    version.version
-                );
+                return Ok(ChainVerification {
+                    chain_valid: false,
+                    verification_status: VerificationStatus::Failed,
+                });
             }
-        } else if idx > 0 {
-            // Warn if later versions aren't signed (first version can be unsigned)
-            tracing::warn!(
-                "⚠️  Lineage version {} is not signed (chain of custody incomplete)",
+
+            tracing::debug!(
+                "Lineage version {} Ed25519 signature verified successfully",
                 version.version
             );
+        } else if idx > 0 {
+            tracing::warn!(
+                "Lineage version {} is not signed (chain of custody incomplete)",
+                version.version
+            );
+            verification_status = VerificationStatus::Unverified;
         }
     }
 
-    // Basic validation passed
-    Ok(true)
+    let chain_valid = verification_status == VerificationStatus::Verified;
+
+    Ok(ChainVerification {
+        chain_valid,
+        verification_status,
+    })
 }
 
 /// Get community usage metrics
@@ -398,12 +421,16 @@ fn calculate_trust_score(
 }
 
 /// Calculate risk level for audit
-const fn calculate_audit_risk_level(
+fn calculate_audit_risk_level(
     creator: &CreatorInfo,
     security: &SecurityAssessment,
     chain_valid: bool,
+    verification_status: VerificationStatus,
 ) -> RiskLevel {
-    if !creator.identity_verified || !chain_valid {
+    if !creator.identity_verified
+        || !chain_valid
+        || verification_status != VerificationStatus::Verified
+    {
         return RiskLevel::High;
     }
 
@@ -423,6 +450,7 @@ fn generate_audit_warnings(
     creator: &CreatorInfo,
     security: &SecurityAssessment,
     chain_valid: bool,
+    verification_status: VerificationStatus,
     community: &CommunityUsage,
 ) -> (Vec<String>, Vec<String>) {
     let mut warnings = Vec::new();
@@ -431,6 +459,23 @@ fn generate_audit_warnings(
     if !creator.identity_verified {
         warnings.push("Creator identity not verified".to_string());
         recommendations.push("Verify creator identity before using template".to_string());
+    }
+
+    match verification_status {
+        VerificationStatus::Verified => {}
+        VerificationStatus::Unverified => {
+            warnings.push(
+                "Chain of custody signatures are unverified (public keys unavailable)".to_string(),
+            );
+            recommendations.push(
+                "Obtain verified lineage signatures through the collaboration network".to_string(),
+            );
+        }
+        VerificationStatus::Failed => {
+            warnings.push("Chain of custody verification failed".to_string());
+            recommendations
+                .push("Reject template until lineage signatures can be validated".to_string());
+        }
     }
 
     if !chain_valid {
@@ -465,9 +510,10 @@ mod tests {
     use base64::Engine;
 
     #[tokio::test]
-    async fn verify_chain_of_custody_empty_lineage_is_false() {
-        let ok = verify_chain_of_custody(&[]).await.expect("query");
-        assert!(!ok);
+    async fn verify_chain_of_custody_empty_lineage_is_failed() {
+        let result = verify_chain_of_custody(&[]).await.expect("query");
+        assert!(!result.chain_valid);
+        assert_eq!(result.verification_status, VerificationStatus::Failed);
     }
 
     #[tokio::test]
@@ -490,7 +536,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn verify_chain_of_custody_wrong_signature_length_after_decode_is_false() {
+    async fn verify_chain_of_custody_wrong_signature_length_after_decode_is_failed() {
         let short_sig = base64::engine::general_purpose::STANDARD.encode([1u8, 2u8, 3u8]);
         let lineage = vec![LineageVersion {
             version: "v1".to_string(),
@@ -502,12 +548,13 @@ mod tests {
             changes: None,
             signature: Some(short_sig),
         }];
-        let ok = verify_chain_of_custody(&lineage).await.expect("query");
-        assert!(!ok);
+        let result = verify_chain_of_custody(&lineage).await.expect("query");
+        assert!(!result.chain_valid);
+        assert_eq!(result.verification_status, VerificationStatus::Failed);
     }
 
     #[tokio::test]
-    async fn verify_chain_of_custody_well_formed_ed25519_length_without_pubkey_succeeds() {
+    async fn verify_chain_of_custody_well_formed_ed25519_length_without_pubkey_is_unverified() {
         let sig64 = base64::engine::general_purpose::STANDARD.encode([0u8; 64]);
         let lineage = vec![LineageVersion {
             version: "v1".to_string(),
@@ -519,12 +566,30 @@ mod tests {
             changes: None,
             signature: Some(sig64),
         }];
-        let ok = verify_chain_of_custody(&lineage).await.expect("query");
-        assert!(ok);
+        let result = verify_chain_of_custody(&lineage).await.expect("query");
+        assert!(!result.chain_valid);
+        assert_eq!(result.verification_status, VerificationStatus::Unverified);
     }
 
     #[tokio::test]
-    async fn verify_chain_of_custody_second_version_unsigned_warns_but_passes() {
+    async fn verify_chain_of_custody_unsigned_first_version_is_unverified() {
+        let lineage = vec![LineageVersion {
+            version: "v1".to_string(),
+            created_at: None,
+            modified_at: None,
+            created_by: None,
+            modified_by: None,
+            change_type: "create".to_string(),
+            changes: None,
+            signature: None,
+        }];
+        let result = verify_chain_of_custody(&lineage).await.expect("query");
+        assert!(result.chain_valid);
+        assert_eq!(result.verification_status, VerificationStatus::Verified);
+    }
+
+    #[tokio::test]
+    async fn verify_chain_of_custody_second_version_unsigned_is_unverified() {
         let lineage = vec![
             LineageVersion {
                 version: "v1".to_string(),
@@ -547,8 +612,9 @@ mod tests {
                 signature: None,
             },
         ];
-        let ok = verify_chain_of_custody(&lineage).await.expect("query");
-        assert!(ok);
+        let result = verify_chain_of_custody(&lineage).await.expect("query");
+        assert!(!result.chain_valid);
+        assert_eq!(result.verification_status, VerificationStatus::Unverified);
     }
 
     #[test]
@@ -567,7 +633,7 @@ mod tests {
             threat_level: "high".to_string(),
         };
         assert_eq!(
-            calculate_audit_risk_level(&creator, &security, true),
+            calculate_audit_risk_level(&creator, &security, true, VerificationStatus::Verified),
             RiskLevel::Critical
         );
     }
@@ -588,8 +654,29 @@ mod tests {
             threat_level: "medium".to_string(),
         };
         assert_eq!(
-            calculate_audit_risk_level(&creator, &security, true),
+            calculate_audit_risk_level(&creator, &security, true, VerificationStatus::Verified),
             RiskLevel::Medium
+        );
+    }
+
+    #[test]
+    fn calculate_audit_risk_level_high_when_unverified() {
+        let creator = CreatorInfo {
+            user_id: "u".to_string(),
+            identity_verified: true,
+            trust_score: 0.9,
+            reputation: "ok".to_string(),
+            member_since: "2025-01-01T00:00:00Z".to_string(),
+            genetic_family: None,
+        };
+        let security = SecurityAssessment {
+            last_scan: "2026-01-01T00:00:00Z".to_string(),
+            vulnerabilities_found: 0,
+            threat_level: "none".to_string(),
+        };
+        assert_eq!(
+            calculate_audit_risk_level(&creator, &security, false, VerificationStatus::Unverified),
+            RiskLevel::High
         );
     }
 
@@ -625,27 +712,16 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_audit_origin_basic() {
+    async fn test_audit_origin_requires_live_collaboration_network() {
         let template_id = "template-123".to_string();
-        let result = audit_origin(&template_id)
+        let err = audit_origin(&template_id)
             .await
-            .expect("audit_origin succeeds for test template");
-
-        assert!(result.creator.identity_verified);
-        assert!(!result.lineage.is_empty());
-        assert!(result.trust_score > 0.0);
-    }
-
-    #[tokio::test]
-    async fn test_audit_origin_unknown_creator() {
-        let template_id = "unknown-template".to_string();
-        let result = audit_origin(&template_id)
-            .await
-            .expect("audit_origin succeeds for unknown creator template");
-
-        assert!(!result.creator.identity_verified);
-        assert_eq!(result.risk_level, RiskLevel::High);
-        assert!(result.warnings.is_some());
+            .expect_err("audit_origin should fail without collaboration network");
+        assert!(
+            err.to_string().contains("collaboration network")
+                || err.to_string().contains("Not yet available"),
+            "{err}"
+        );
     }
 
     #[test]
@@ -673,7 +749,7 @@ mod tests {
         };
 
         let score = calculate_trust_score(&creator, &community, &security);
-        assert!(score > 0.85); // High trust
+        assert!(score > 0.85);
     }
 
     #[test]
@@ -693,7 +769,8 @@ mod tests {
             threat_level: "none".to_string(),
         };
 
-        let risk = calculate_audit_risk_level(&creator, &security, true);
+        let risk =
+            calculate_audit_risk_level(&creator, &security, true, VerificationStatus::Verified);
         assert_eq!(risk, RiskLevel::Low);
     }
 
@@ -714,7 +791,8 @@ mod tests {
             threat_level: "none".to_string(),
         };
 
-        let risk = calculate_audit_risk_level(&creator, &security, false);
+        let risk =
+            calculate_audit_risk_level(&creator, &security, false, VerificationStatus::Unverified);
         assert_eq!(risk, RiskLevel::High);
     }
 }

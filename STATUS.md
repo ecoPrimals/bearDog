@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: Jun 16, 2026 (Wave 114)
+**Last Updated**: June 19, 2026 (Wave 117+)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -19,7 +19,7 @@
 | **Unsafe Code** | 0 production | `forbid(unsafe_code)` workspace-wide + all crate `lib.rs` |
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
-| **Files > 800 LOC** | 0 | All production .rs files compliant (threshold lowered to 800; `aliases_and_beardog.rs` refactored Wave 75) |
+| **Files > 750 LOC** | 0 | All production .rs files compliant (threshold tightened to 750 LOC, Wave 117+) |
 | **Tests** | 14,974+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |

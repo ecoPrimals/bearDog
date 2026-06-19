@@ -91,7 +91,7 @@ fn test_e2e_json_rpc_universal_protocol() {
 
     let request = JsonRpcRequest {
         jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-        method: "primal.register".to_string(),
+        method: "primal.register".into(),
         params: Some(serde_json::json!({
             "primal_id": "beardog",
             "capabilities": ["encryption"]

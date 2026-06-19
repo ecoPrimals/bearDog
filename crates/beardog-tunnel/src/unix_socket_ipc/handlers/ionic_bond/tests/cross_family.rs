@@ -119,11 +119,11 @@ async fn cross_family_contract_verify_both_signatures() {
     assert!(
         verify_result
             .get("failed_party")
-            .map_or(true, |v| v.is_null()),
+            .is_none_or(|v| v.is_null()),
         "failed_party should be absent or null on success"
     );
     assert!(
-        verify_result.get("error").map_or(true, |v| v.is_null()),
+        verify_result.get("error").is_none_or(|v| v.is_null()),
         "error should be absent or null on success"
     );
 }

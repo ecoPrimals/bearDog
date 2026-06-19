@@ -2,7 +2,7 @@
 
 use super::super::super::MethodHandler;
 use super::super::*;
-use super::helpers::{accept_bond, propose_bond, sign_as_acceptor};
+use super::helpers::{accept_bond, propose_bond};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use ed25519_dalek::SigningKey;

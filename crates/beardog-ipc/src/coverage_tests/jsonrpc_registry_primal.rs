@@ -32,7 +32,7 @@ fn test_songbird_client_default_creates_instance() {
 fn test_json_rpc_request_with_params() {
     let req = JsonRpcRequest {
         jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-        method: "primal.register".to_string(),
+        method: "primal.register".into(),
         params: Some(serde_json::json!({"name": "beardog"})),
         id: serde_json::Value::from(1),
     };
@@ -47,7 +47,7 @@ fn test_json_rpc_request_with_params() {
 fn test_json_rpc_request_without_params() {
     let req = JsonRpcRequest {
         jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-        method: "primal.ping".to_string(),
+        method: "primal.ping".into(),
         params: None,
         id: serde_json::Value::from(42),
     };
@@ -60,7 +60,7 @@ fn test_json_rpc_request_without_params() {
 fn test_json_rpc_request_roundtrip() {
     let req = JsonRpcRequest {
         jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-        method: "test.method".to_string(),
+        method: "test.method".into(),
         params: Some(serde_json::json!({"key": "value"})),
         id: serde_json::Value::from(7),
     };
@@ -74,7 +74,7 @@ fn test_json_rpc_request_roundtrip() {
 fn test_json_rpc_request_debug_and_clone() {
     let req = JsonRpcRequest {
         jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-        method: "primal.ping".to_string(),
+        method: "primal.ping".into(),
         params: None,
         id: serde_json::Value::from(1),
     };

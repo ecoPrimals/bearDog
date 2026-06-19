@@ -4,9 +4,13 @@
 //!
 //! This module provides safe Android hardware-backed cryptographic operations.
 
+mod detection;
+mod factory;
+
+pub use factory::SafeAndroidProviderFactory;
+
 use super::super::SecurityLevel;
 use crate::tunnel::hsm::types::{Algorithm, HsmKey, KeyType};
-use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_utils::utils::safe_memory_enhanced::{GlobalBufferPools, SafePinnedBuffer};
 use std::collections::HashMap;
@@ -145,9 +149,6 @@ impl AndroidCapability for SoftwareFallback {
     }
 }
 
-// AndroidDeviceInfo and VerifiedBootState imported from types module
-use super::types::{AndroidDeviceInfo, VerifiedBootState};
-
 /// Safe mobile hardware provider
 pub struct SafeMobileHardwareProvider<C: AndroidCapability> {
     capability: C,
@@ -227,7 +228,6 @@ impl<C: AndroidCapability> SafeMobileHardwareProvider<C> {
             C::security_level()
         );
 
-        // Use SafePinnedBuffer for secure memory handling (direct call, no complex buffer wrapping)
         let signature = self.keystore.sign_data_safe(key_id, data)?;
 
         Ok(signature)
@@ -267,10 +267,9 @@ impl<C: AndroidCapability> SafeHardwareProvider for SafeMobileHardwareProvider<C
         let safe_handle = self.generate_key_safe(key_id, algorithm)?;
 
         Ok(HsmKey {
-            id: request.key_id.clone(), // UniversalKey uses "id", not "key_id"
+            id: request.key_id.clone(),
             key_type: KeyType::from(request.algorithm),
             key_material: crate::tunnel::hsm::types::KeyMaterial::HardwareReference {
-                // UniversalKey uses "key_material", not "material"
                 reference: safe_handle.key_id.clone(),
                 hsm_location: "android_strongbox".to_string(),
             },
@@ -291,7 +290,7 @@ impl<C: AndroidCapability> SafeHardwareProvider for SafeMobileHardwareProvider<C
             hsm_tier: "production".to_string(),
             created_at: chrono::Utc::now(),
             hsm_type: "AndroidStrongBox".to_string(),
-            attestation: None, // Hardware attestation optional
+            attestation: None,
             health_status: crate::tunnel::hsm::types::KeyHealthStatus::Healthy,
         })
     }
@@ -318,12 +317,11 @@ impl<C: AndroidCapability> SafeHardwareProvider for SafeMobileHardwareProvider<C
     fn get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError> {
         info!("📋 Safe Android: Getting key info for \"{}\"", key_id);
 
-        // Retrieve actual algorithm from key metadata instead of hardcoded value
         let algorithm = self.keystore.get_key_algorithm(key_id)?;
 
         Ok(KeyInfo {
             id: key_id.to_string(),
-            key_id: key_id.to_string(), // Alias for compatibility
+            key_id: key_id.to_string(),
             algorithm,
             hardware_backed: C::hardware_backed(),
         })
@@ -358,7 +356,6 @@ impl SafeAndroidKeystore {
     ) -> Result<SafeKeyHandle, BearDogError> {
         debug!("🔑 Generating key {} with {:?}", key_id, algorithm);
 
-        // Store metadata with both key type and algorithm for accurate retrieval
         let metadata = SafeKeyMetadata {
             key_type: KeyType::from(algorithm),
             algorithm,
@@ -366,7 +363,6 @@ impl SafeAndroidKeystore {
             usage_count: 0,
         };
 
-        // Add to keystore
         let mut keys = self.keys.blocking_write();
         keys.insert(key_id.to_string(), metadata);
 
@@ -374,18 +370,7 @@ impl SafeAndroidKeystore {
     }
 
     /// Signs data safely
-    ///
-    /// # Platform Support
-    ///
-    /// **Android Only**: This function is only available on `target_os = "android"`.
-    /// On other platforms, it returns an `Err` indicating the platform limitation.
-    ///
-    /// # Errors
-    /// Returns an error if signing fails or platform is not supported
     #[cfg(target_os = "android")]
-    /// # Errors
-    ///
-    /// Returns an error if the provider is not registered.
     pub fn sign_data_safe(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         debug!("✍️ Safe signing with key: {} (Android StrongBox)", key_id);
 
@@ -394,7 +379,6 @@ impl SafeAndroidKeystore {
             .get(key_id)
             .ok_or_else(|| BearDogError::not_found(format!("Key {key_id} not found")))?;
 
-        // JNI integration required for Android Keystore API; use SoftwareHSM as fallback until wired.
         warn!(
             "Android StrongBox signing requires JNI Keystore integration; use SoftwareHSM fallback"
         );
@@ -403,19 +387,7 @@ impl SafeAndroidKeystore {
         ))
     }
 
-    /// Signs data safely (non-Android platforms)
-    ///
-    /// # Platform Limitation
-    ///
-    /// Android StrongBox is hardware-specific and only available on Android devices.
-    /// On other platforms, use `SoftwareHSM` or other available providers.
-    ///
-    /// # Errors
-    /// Always returns an error indicating platform limitation
     #[cfg(not(target_os = "android"))]
-    /// # Errors
-    ///
-    /// Returns an error if the provider is not registered.
     pub fn sign_data_safe(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::unsupported_operation(
             "Android StrongBox is only available on Android platform. \
@@ -424,17 +396,7 @@ impl SafeAndroidKeystore {
     }
 
     /// Verifies a signature safely
-    ///
-    /// # Platform Support
-    ///
-    /// **Android Only**: This function is only available on `target_os = "android"`.
-    ///
-    /// # Errors
-    /// Returns an error if verification fails or platform is not supported
     #[cfg(target_os = "android")]
-    /// # Errors
-    ///
-    /// Returns an error if key deletion fails in the underlying HSM provider.
     pub fn verify_signature_safe(
         &self,
         key_id: &str,
@@ -457,14 +419,7 @@ impl SafeAndroidKeystore {
         ))
     }
 
-    /// Verifies a signature safely (non-Android platforms)
-    ///
-    /// # Errors
-    /// Always returns an error indicating platform limitation
     #[cfg(not(target_os = "android"))]
-    /// # Errors
-    ///
-    /// Returns an error if key deletion fails in the underlying HSM provider.
     pub fn verify_signature_safe(
         &self,
         _key_id: &str,
@@ -477,9 +432,6 @@ impl SafeAndroidKeystore {
     }
 
     /// Deletes a key safely
-    ///
-    /// # Errors
-    /// Returns an error if deletion fails
     pub fn delete_key_safe(&self, key_id: &str) -> Result<(), BearDogError> {
         let mut keys = self.keys.blocking_write();
         keys.remove(key_id);
@@ -487,128 +439,26 @@ impl SafeAndroidKeystore {
     }
 
     /// Checks if a key exists
-    ///
-    /// # Errors
-    /// Returns an error if check fails
     pub fn key_exists_safe(&self, key_id: &str) -> Result<bool, BearDogError> {
         let keys = self.keys.blocking_read();
         Ok(keys.contains_key(key_id))
     }
 
     /// Gets the algorithm for a key
-    ///
-    /// # Errors
-    /// Returns `NotFound` if the key doesn't exist
     pub fn get_key_algorithm(&self, key_id: &str) -> Result<Algorithm, BearDogError> {
         let keys = self.keys.blocking_read();
         keys.get(key_id)
             .map(|metadata| metadata.algorithm)
             .ok_or_else(|| BearDogError::not_found(format!("Key {key_id} not found")))
     }
-
-    /// Detects device information safely
-    ///
-    /// # Platform Support
-    ///
-    /// **Android Only**: Device detection is only available on Android.
-    ///
-    /// # Errors
-    /// Returns an error if detection fails or platform is not supported
-    #[cfg(target_os = "android")]
-    /// # Errors
-    ///
-    /// Returns an error if the operation fails.
-    pub fn detect_device_info_safe() -> Result<AndroidDeviceInfo, BearDogError> {
-        debug!("📱 Detecting Android device info safely");
-
-        let model = beardog_errors::process_env::var(env_keys::ENV_ANDROID_MODEL)
-            .unwrap_or_else(|_| "Android Device".to_string());
-
-        let api_level = beardog_errors::process_env::var(env_keys::ENV_ANDROID_API_LEVEL)
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(30);
-
-        let security_patch = beardog_errors::process_env::var(env_keys::ENV_ANDROID_SECURITY_PATCH)
-            .unwrap_or_else(|_| "2024-01-01".to_string());
-
-        let strongbox_version = Self::detect_strongbox_version_safe()?;
-        let titan_m_version = Self::detect_titan_m_version_safe()?;
-
-        Ok(AndroidDeviceInfo {
-            manufacturer: "Google".to_string(),
-            model,
-            device: "unknown".to_string(),
-            hardware: None,
-            board: None,
-            brand: Some("google".to_string()),
-            android_version: api_level.to_string(),
-            api_level,
-            security_patch: Some(security_patch.clone()),
-            security_patch_level: security_patch, // security_patch is String from env::var
-            strongbox_version,
-            titan_m_version,
-            verified_boot_state: VerifiedBootState::Verified,
-        })
-    }
-
-    /// Detects device information safely (non-Android platforms)
-    ///
-    /// # Errors
-    /// Always returns an error indicating platform limitation
-    #[cfg(not(target_os = "android"))]
-    /// # Errors
-    ///
-    /// Returns an error if key derivation fails.
-    pub fn detect_device_info_safe() -> Result<AndroidDeviceInfo, BearDogError> {
-        Err(BearDogError::unsupported_operation(
-            "Android device detection is only available on Android platform",
-        ))
-    }
-
-    #[cfg(target_os = "android")]
-    fn detect_strongbox_version_safe() -> Result<Option<String>, BearDogError> {
-        debug!("🛡️ Safely detecting StrongBox version");
-
-        if beardog_errors::process_env::var(env_keys::ENV_ANDROID_STRONGBOX_AVAILABLE).is_ok() {
-            Ok(Some("StrongBox-1.0".to_string()))
-        } else {
-            Ok(None)
-        }
-    }
-
-    #[cfg(not(target_os = "android"))]
-    fn detect_strongbox_version_safe() -> Result<Option<String>, BearDogError> {
-        Ok(None)
-    }
-
-    #[cfg(target_os = "android")]
-    fn detect_titan_m_version_safe() -> Result<Option<String>, BearDogError> {
-        debug!("🔒 Safely detecting Titan M version");
-
-        if beardog_errors::process_env::var(env_keys::ENV_ANDROID_TITAN_M_AVAILABLE).is_ok() {
-            Ok(Some("Titan M v1".to_string()))
-        } else {
-            Ok(None)
-        }
-    }
-
-    #[cfg(not(target_os = "android"))]
-    fn detect_titan_m_version_safe() -> Result<Option<String>, BearDogError> {
-        Ok(None)
-    }
 }
 
 /// Safe key metadata
 #[derive(Debug, Clone)]
 pub struct SafeKeyMetadata {
-    /// The key type category (symmetric/asymmetric)
     key_type: KeyType,
-    /// The actual cryptographic algorithm used
     algorithm: Algorithm,
-    /// When the key was created
     created_at: std::time::SystemTime,
-    /// How many times the key has been used
     usage_count: u64,
 }
 
@@ -635,103 +485,7 @@ impl SafeKeyHandle {
 
     /// Returns the algorithm
     pub fn algorithm(&self) -> KeyType {
-        self.algorithm.clone() // Clone to avoid moving from shared reference
-    }
-}
-
-impl SafeMobileHardwareProvider<StrongBoxAvailable> {
-    /// Detects if StrongBox is available
-    ///
-    /// # Errors
-    /// Returns an error if detection fails
-    pub fn detect_strongbox() -> Result<Option<Self>, BearDogError> {
-        if !cfg!(target_os = "android") {
-            info!("📱 Not on Android platform, StrongBox not available");
-            return Ok(None);
-        }
-
-        debug!("🔍 Detecting StrongBox availability safely");
-
-        let strongbox_available =
-            beardog_errors::process_env::var(env_keys::ENV_ANDROID_STRONGBOX_AVAILABLE).is_ok()
-                || Self::check_strongbox_with_safe_api()?;
-
-        if strongbox_available {
-            let capability = StrongBoxAvailable;
-            info!("✅ StrongBox detected and available");
-            Ok(Some(Self::new(capability)?))
-        } else {
-            info!("❌ StrongBox not available on this device");
-            Ok(None)
-        }
-    }
-
-    fn check_strongbox_with_safe_api() -> Result<bool, BearDogError> {
-        debug!("🛡️ Checking StrongBox with safe API");
-        Ok(beardog_errors::process_env::var(env_keys::ENV_STRONGBOX_MOCK_AVAILABLE).is_ok())
-    }
-}
-
-impl SafeMobileHardwareProvider<TeeAvailable> {
-    /// Detects if TEE is available
-    ///
-    /// # Errors
-    /// Returns an error if detection fails
-    pub fn detect_tee() -> Result<Option<Self>, BearDogError> {
-        debug!("🔍 Detecting TEE availability safely");
-
-        let tee_available = Self::check_tee_with_safe_api()?;
-
-        if tee_available {
-            let capability = TeeAvailable;
-            info!("✅ TEE detected and available");
-            Ok(Some(Self::new(capability)?))
-        } else {
-            info!("❌ TEE not available on this device");
-            Ok(None)
-        }
-    }
-
-    fn check_tee_with_safe_api() -> Result<bool, BearDogError> {
-        debug!("🔐 Checking TEE with safe API");
-        Ok(
-            beardog_errors::process_env::var(beardog_config::env_keys::ENV_ANDROID_TEE_AVAILABLE)
-                .map(|v| v == "true")
-                .unwrap_or(cfg!(target_os = "android")),
-        )
-    }
-}
-
-/// Factory for creating Android providers
-pub struct SafeAndroidProviderFactory;
-
-impl SafeAndroidProviderFactory {
-    /// Creates the best available provider
-    ///
-    /// # Errors
-    /// Returns an error if no provider can be created
-    pub fn create_best_provider() -> Result<Box<dyn SafeHardwareProvider>, BearDogError> {
-        info!("🏭 Creating best available Android provider");
-
-        // Try StrongBox first
-        if let Some(strongbox_provider) =
-            SafeMobileHardwareProvider::<StrongBoxAvailable>::detect_strongbox()?
-        {
-            info!("🛡️ Using StrongBox provider (highest security)");
-            return Ok(Box::new(strongbox_provider));
-        }
-
-        // Try TEE second
-        if let Some(tee_provider) = SafeMobileHardwareProvider::<TeeAvailable>::detect_tee()? {
-            info!("🔐 Using TEE provider (hardware security)");
-            return Ok(Box::new(tee_provider));
-        }
-
-        // Fallback to software
-        info!("💻 Using software provider (fallback)");
-        let software_provider =
-            SafeMobileHardwareProvider::<SoftwareFallback>::new(SoftwareFallback)?;
-        Ok(Box::new(software_provider))
+        self.algorithm.clone()
     }
 }
 

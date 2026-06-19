@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! Chaos Engineering Tests
 //!
-//! These tests intentionally use sleep() to simulate:
+//! These tests intentionally use `sleep()` to simulate:
 //! - Variable network latency
 //! - Slow operations
 //! - Resource contention
@@ -160,7 +160,7 @@ async fn test_network_fault_tolerance() {
     }
 
     let duration = start.elapsed();
-    let success_rate = (successful_operations as f64 / total_operations as f64) * 100.0;
+    let success_rate = (f64::from(successful_operations) / f64::from(total_operations)) * 100.0;
 
     println!(
         "✅ Network fault tolerance: {successful_operations}/{total_operations} operations succeeded ({success_rate:.1}%) in {duration:?}"

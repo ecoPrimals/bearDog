@@ -61,10 +61,10 @@ pub fn sign_with_primal_identity(
 pub fn canonical_announcement_message(
     primal_name: &str,
     version: &str,
-    methods: &[String],
+    methods: &[impl AsRef<str>],
 ) -> Vec<u8> {
-    let mut sorted = methods.to_vec();
-    sorted.sort();
+    let mut sorted: Vec<&str> = methods.iter().map(AsRef::as_ref).collect();
+    sorted.sort_unstable();
 
     let mut h = Sha256::new();
     h.update(primal_name.as_bytes());

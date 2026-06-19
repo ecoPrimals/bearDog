@@ -182,12 +182,12 @@ impl E2ETestFramework {
             E2EScenario::MultiServiceCoordination => self.run_multi_service_coordination(),
             E2EScenario::CrossPlatformDiscovery => self.run_cross_platform_discovery().await,
             E2EScenario::DeviceDeployment => self.run_device_deployment().await,
-            E2EScenario::HsmOperations => Ok(E2EMetrics::default()),
-            E2EScenario::ConfigurationManagement => Ok(E2EMetrics::default()),
-            E2EScenario::NetworkResilience => Ok(E2EMetrics::default()),
-            E2EScenario::DataPersistence => Ok(E2EMetrics::default()),
-            E2EScenario::RateLimiting => Ok(E2EMetrics::default()),
-            E2EScenario::MonitoringObservability => Ok(E2EMetrics::default()),
+            E2EScenario::HsmOperations => self.run_hsm_operations().await,
+            E2EScenario::ConfigurationManagement => self.run_configuration_management().await,
+            E2EScenario::NetworkResilience => self.run_network_resilience().await,
+            E2EScenario::DataPersistence => self.run_data_persistence().await,
+            E2EScenario::RateLimiting => self.run_rate_limiting().await,
+            E2EScenario::MonitoringObservability => self.run_monitoring_observability().await,
         };
 
         let duration = start.elapsed();
@@ -300,6 +300,30 @@ impl E2ETestFramework {
 
     async fn run_device_deployment(&self) -> Result<E2EMetrics, BearDogError> {
         device_deployment::run_device_deployment_test(&self.config).await
+    }
+
+    async fn run_hsm_operations(&self) -> Result<E2EMetrics, BearDogError> {
+        hsm_operations::run_hsm_operations_test(&self.config).await
+    }
+
+    async fn run_configuration_management(&self) -> Result<E2EMetrics, BearDogError> {
+        configuration_management::run_configuration_management_test(&self.config).await
+    }
+
+    async fn run_network_resilience(&self) -> Result<E2EMetrics, BearDogError> {
+        network_resilience::run_network_resilience_test(&self.config).await
+    }
+
+    async fn run_data_persistence(&self) -> Result<E2EMetrics, BearDogError> {
+        data_persistence::run_data_persistence_test(&self.config).await
+    }
+
+    async fn run_rate_limiting(&self) -> Result<E2EMetrics, BearDogError> {
+        rate_limiting::run_rate_limiting_test(&self.config).await
+    }
+
+    async fn run_monitoring_observability(&self) -> Result<E2EMetrics, BearDogError> {
+        monitoring_observability::run_monitoring_observability_test(&self.config).await
     }
 }
 

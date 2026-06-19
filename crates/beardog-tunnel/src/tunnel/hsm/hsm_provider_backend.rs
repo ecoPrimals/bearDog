@@ -22,10 +22,13 @@ pub enum HsmProviderBackend {
     /// Manager unit-test mock (`manager/tests.rs`).
     Mock(MockHsmProvider),
     #[cfg(test)]
+    /// Test-only hardware HSM mock.
     MockHardware(MockHardwareHsm),
     #[cfg(test)]
+    /// Test-only software HSM mock.
     MockSoftware(MockSoftwareHsm),
     #[cfg(test)]
+    /// Test-only cloud HSM mock.
     MockCloud(MockCloudHsm),
     #[cfg(test)]
     /// `DefaultHsmManager` unit tests (`implementation.rs`).

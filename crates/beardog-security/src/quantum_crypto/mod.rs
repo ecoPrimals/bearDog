@@ -2,23 +2,31 @@
 
 //! # Quantum-Resistant Cryptography Module
 //!
-//! Provides post-quantum cryptographic operations following NIST PQC standards:
-//! - **Kyber** KEM (Key Encapsulation Mechanism) - ML-KEM
-//! - **Dilithium** signatures - ML-DSA
+//! ## Simulation only — not production PQC
+//!
+//! **This module is a SIMULATION-ONLY implementation for API surface design and
+//! integration testing. It does not perform real post-quantum cryptography and
+//! must not be used for production security, key generation, or data protection.**
+//!
+//! Operations here use placeholder logic so callers can exercise types, error
+//! paths, and wiring before a vetted PQC library is integrated. Treat all keys,
+//! ciphertexts, and signatures produced by this module as non-cryptographic mocks.
+//!
+//! Production PQC will require audited implementations (e.g. ML-KEM / ML-DSA via
+//! `pqcrypto`, `liboqs-rust`, or platform FIPS modules) once selected and reviewed.
+//!
+//! ## Intended API surface (future production target)
+//!
+//! - **Kyber** KEM (Key Encapsulation Mechanism) — ML-KEM
+//! - **Dilithium** signatures — ML-DSA
 //! - **SPHINCS+** signatures (hash-based, stateless)
 //!
-//! ## Module Structure (Smart Refactored)
+//! ## Module Structure
 //!
-//! - `types` - Core types (security levels, algorithm enums, keypairs)
-//! - `kem` - Key Encapsulation Mechanism (Kyber)
-//! - `signatures` - Digital signatures (Dilithium, SPHINCS+)
-//! - `engine` - Main `QuantumCryptoEngine` orchestrator
-//!
-//! ## Security Note
-//!
-//! Current implementations are **placeholder/simulation** for API design.
-//! Production use requires integration with actual PQC libraries when stable
-//! (e.g., pqcrypto, liboqs-rust when they reach 1.0).
+//! - `types` — Core types (security levels, algorithm enums, keypairs)
+//! - `kem` — Key Encapsulation Mechanism (Kyber) — simulated
+//! - `signatures` — Digital signatures (Dilithium, SPHINCS+) — simulated
+//! - `engine` — Main `QuantumCryptoEngine` orchestrator — simulated
 //!
 //! ## Example
 //!

@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### June 19, 2026 -- Wave 117+: Deep Debt Execution — Security Hardening, Zero-Copy, Architecture Evolution
+
+**145 files changed, 3,837 insertions, 11,638 deletions (-7,801 net LOC)**
+
+#### Security Hardening (P0)
+- **Integration API fake crypto → 501** — All BTSP/BirdSong/lineage crypto handlers now return HTTP 501 with honest messages instead of prefix-transform fake encryption. Tests assert 501 behavior.
+- **Ed25519 proof verifier** — `DefaultProofVerifier` (placeholder) → `Ed25519ProofVerifier` (production `ed25519-dalek` signing/verification). Old placeholder renamed `PlaceholderProofVerifier`, gated `cfg(test)`.
+- **Graph security audit honesty** — Deleted all `default_*()` hardcoded fake trust/metrics/security assessment data. Discovery methods return `Err` when collaboration network unreachable. Added `VerificationStatus` enum.
+- **Biometric fail-closed** — iOS biometric auth returns `not_yet_available` in non-test builds. Android keystore XOR stub → `UnwiredAndroidKeystoreTransport` on production Android. StrongBox/TEE detection defaults `false`.
+- **Entropy source honesty** — OS RNG labeled `source: "os_rng"`, `hardware_backed: false`, tier 0 with warning.
+
+#### Architecture Evolution (P1)
+- **tarpc ghost code removed** — `Protocol::Tarpc` → `Protocol::BinaryFrame`, `RouterConfig` simplified. JSON-RPC unambiguously primary.
+- **262 clippy warnings → 0** — Across entire workspace including all test targets.
+- **Production `.unwrap()` → proper error handling** — 6 crates fixed with `?`/`map_err`.
+- **Hardcoded discovery → capability-based** — `*.ecosystem.internal` synthetic DNS removed. Network scan range env-driven. Integration API binds `127.0.0.1` by default.
+- **Zero-copy IPC dispatch** — `JsonRpcRequest.method` → `Cow<'static, str>`. Handler registry returns `Vec<&'static str>`.
+- **8 files >750 LOC** refactored at semantic boundaries (protocol_router, tcp_ipc, genetics_constraints, btsp_provider, crypto/hash, birdsong, primal_discovery, safe_android_provider).
+
+#### Cleanup (P2)
+- **CI pipeline** — Now runs `cargo test --workspace`, `cargo llvm-cov --fail-under-lines 90`, `cargo deny check`.
+- **Orphan files deleted** — `pkcs11_provider.rs`, 8 root-level empty stub test files, workflow stubs.
+- **Unused deps removed** — `jni`, `libc` from security/tunnel.
+- **49 empty stub tests** → 21 implemented, 28 deleted.
+- **6 E2E match arms** wired to module runners.
+- **Verification handlers** — New `IdentityVerificationHandler` trait + `VerificationHandlerRegistry`.
+
 ### Jun 16, 2026 -- Wave 114: Mito-Beacon Acceptance (Genetics-Layer Wiring)
 
 #### Added

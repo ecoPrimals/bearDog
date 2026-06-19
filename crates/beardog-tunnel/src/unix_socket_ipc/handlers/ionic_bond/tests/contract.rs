@@ -223,7 +223,7 @@ async fn sign_contract_without_ttl_has_no_expires_at() {
         .expect("sign without TTL");
 
     assert!(
-        result.get("expires_at").map_or(true, |v| v.is_null()),
+        result.get("expires_at").is_none_or(|v| v.is_null()),
         "no expires_at without TTL"
     );
 }
@@ -326,7 +326,7 @@ async fn verify_contract_without_expiry_ignores_lease() {
 
     assert_eq!(verified["valid"], true);
     assert!(
-        verified.get("expired").map_or(true, |v| v.is_null()),
+        verified.get("expired").is_none_or(|v| v.is_null()),
         "no expired field without expiry"
     );
 }

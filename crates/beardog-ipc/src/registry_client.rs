@@ -71,7 +71,7 @@ pub struct JsonRpcRequest {
     /// Protocol version; must be `"2.0"` for compliant servers.
     pub jsonrpc: Cow<'static, str>,
     /// Method name (e.g. `primal.register`, `primal.get_provider`).
-    pub method: String,
+    pub method: Cow<'static, str>,
     /// Positional or object parameters; omitted when empty.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub params: Option<serde_json::Value>,
@@ -351,7 +351,7 @@ impl PrimalRegistryClient {
     /// Send JSON-RPC request to registry
     async fn send_request(
         &mut self,
-        method: &str,
+        method: impl Into<Cow<'static, str>>,
         params: Option<serde_json::Value>,
     ) -> Result<JsonRpcResponse, BearDogError> {
         let stream = self
@@ -362,7 +362,7 @@ impl PrimalRegistryClient {
         self.request_id += 1;
         let request = JsonRpcRequest {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-            method: method.to_string(),
+            method: method.into(),
             params,
             id: serde_json::Value::from(self.request_id),
         };

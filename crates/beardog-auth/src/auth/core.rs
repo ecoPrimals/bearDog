@@ -166,14 +166,14 @@ impl CrossNodeAuthEngine {
 mod tests {
     use super::*;
     use crate::auth::node_registry::InMemoryNodeRegistry;
-    use crate::auth::proof_verifier::DefaultProofVerifier;
+    use crate::auth::proof_verifier::PlaceholderProofVerifier;
     use beardog_security::{ActionType, SubjectType};
 
     #[test]
     fn test_new_engine_with_config() {
         let config = CrossNodeAuthConfig::default();
         let node_registry = Box::new(InMemoryNodeRegistry::new());
-        let proof_verifier = Box::new(DefaultProofVerifier::new());
+        let proof_verifier = Box::new(PlaceholderProofVerifier::new());
 
         let engine = CrossNodeAuthEngine::new(node_registry, proof_verifier, config.clone());
 
@@ -184,7 +184,7 @@ mod tests {
     #[test]
     fn test_with_default_config() {
         let node_registry = Box::new(InMemoryNodeRegistry::new());
-        let proof_verifier = Box::new(DefaultProofVerifier::new());
+        let proof_verifier = Box::new(PlaceholderProofVerifier::new());
 
         let engine = CrossNodeAuthEngine::with_default_config(node_registry, proof_verifier);
 

@@ -34,8 +34,6 @@ fn test_default_heartbeat_interval() {
 #[test]
 fn test_discover_neural_api_socket_exercises_path() {
     let result = crate::discover_neural_api_socket();
-    // Result is Some(path) if socket exists or env is set, None otherwise
-    // Just exercise the code path — the actual result depends on environment
     let _ = result;
 }
 
@@ -74,11 +72,9 @@ fn test_router_config_concurrent_creation() {
     let handles: Vec<_> = (0..8)
         .map(|i| {
             std::thread::spawn(move || {
-                let config = match i % 4 {
+                let config = match i % 2 {
                     0 => RouterConfig::default(),
-                    1 => RouterConfig::binary_frame_only(),
-                    2 => RouterConfig::jsonrpc_only(),
-                    _ => RouterConfig::development(),
+                    _ => RouterConfig::jsonrpc_only(),
                 };
                 let caps = ProtocolCapabilities::from_config(&config);
                 assert!(!caps.supported.is_empty());

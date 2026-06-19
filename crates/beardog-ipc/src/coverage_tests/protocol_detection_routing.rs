@@ -12,7 +12,6 @@ use std::path::PathBuf;
 
 #[test]
 fn test_detect_binary_frame() {
-    // Length-prefixed binary: 4-byte LE u32 header + non-ASCII payload
     let bytes = vec![0x10, 0x00, 0x00, 0x00, 0x01];
     assert_eq!(
         ProtocolDetector::detect_from_bytes(&bytes),
@@ -125,7 +124,6 @@ fn test_detect_unknown_binary() {
 
 #[test]
 fn test_detect_short_binary() {
-    // Less than 4 bytes — can't be binary frame
     assert_eq!(
         ProtocolDetector::detect_from_bytes(&[0x01, 0x02]),
         Protocol::Unknown
@@ -137,32 +135,25 @@ fn test_detect_short_binary() {
 // ============================================================================
 
 #[test]
-fn test_protocol_priority_ordering() {
-    assert!(Protocol::JsonRpc.priority() > Protocol::BinaryFrame.priority());
-    assert!(Protocol::JsonRpc.priority() > Protocol::Http.priority());
-    assert!(Protocol::Http.priority() > Protocol::Unknown.priority());
-}
-
-#[test]
 fn test_protocol_names() {
-    assert_eq!(Protocol::BinaryFrame.name(), "binary-frame");
     assert_eq!(Protocol::JsonRpc.name(), "json-rpc");
+    assert_eq!(Protocol::BinaryFrame.name(), "binary-frame");
     assert_eq!(Protocol::Http.name(), "http");
     assert_eq!(Protocol::Unknown.name(), "unknown");
 }
 
 #[test]
-fn test_protocol_is_high_performance() {
-    assert!(Protocol::BinaryFrame.is_high_performance());
-    assert!(!Protocol::JsonRpc.is_high_performance());
-    assert!(!Protocol::Http.is_high_performance());
-    assert!(!Protocol::Unknown.is_high_performance());
+fn test_protocol_is_primary() {
+    assert!(Protocol::JsonRpc.is_primary());
+    assert!(!Protocol::BinaryFrame.is_primary());
+    assert!(!Protocol::Http.is_primary());
+    assert!(!Protocol::Unknown.is_primary());
 }
 
 #[test]
 fn test_protocol_display() {
-    assert_eq!(format!("{}", Protocol::BinaryFrame), "binary-frame");
     assert_eq!(format!("{}", Protocol::JsonRpc), "json-rpc");
+    assert_eq!(format!("{}", Protocol::BinaryFrame), "binary-frame");
     assert_eq!(format!("{}", Protocol::Http), "http");
     assert_eq!(format!("{}", Protocol::Unknown), "unknown");
 }
@@ -173,14 +164,14 @@ fn test_protocol_eq_and_hash() {
     let mut set = HashSet::new();
     set.insert(Protocol::BinaryFrame);
     set.insert(Protocol::JsonRpc);
-    set.insert(Protocol::BinaryFrame); // duplicate
+    set.insert(Protocol::BinaryFrame);
     assert_eq!(set.len(), 2);
 }
 
 #[test]
 fn test_protocol_clone_copy() {
     let p = Protocol::JsonRpc;
-    let c = p; // Copy
+    let c = p;
     assert_eq!(p, c);
 }
 
@@ -191,7 +182,7 @@ fn test_protocol_clone_copy() {
 #[test]
 fn test_protocol_detector_new() {
     let d = ProtocolDetector::new();
-    assert!(format!("{d:?}").contains("16")); // default peek_size
+    assert!(format!("{d:?}").contains("16"));
 }
 
 #[test]
@@ -213,47 +204,19 @@ fn test_protocol_detector_default() {
 #[test]
 fn test_router_config_default() {
     let c = RouterConfig::default();
-    assert!(!c.enable_binary_frame);
     assert!(c.enable_jsonrpc);
     assert!(c.enable_http);
-    assert_eq!(c.preferred, Protocol::JsonRpc);
-}
-
-#[test]
-fn test_router_config_binary_frame_only() {
-    let c = RouterConfig::binary_frame_only();
-    assert!(c.enable_binary_frame);
-    assert!(!c.enable_jsonrpc);
-    assert!(!c.enable_http);
-    assert_eq!(c.preferred, Protocol::BinaryFrame);
 }
 
 #[test]
 fn test_router_config_jsonrpc_only() {
     let c = RouterConfig::jsonrpc_only();
-    assert!(!c.enable_binary_frame);
     assert!(c.enable_jsonrpc);
     assert!(!c.enable_http);
-    assert_eq!(c.preferred, Protocol::JsonRpc);
 }
 
 #[test]
-fn test_router_config_development() {
-    let c = RouterConfig::development();
-    assert!(!c.enable_binary_frame);
-    assert!(c.enable_jsonrpc);
-    assert!(c.enable_http);
-    assert_eq!(c.preferred, Protocol::JsonRpc);
-}
-
-#[test]
-fn test_router_config_production() {
-    let c = RouterConfig::production();
-    assert_eq!(c.preferred, Protocol::JsonRpc);
-}
-
-#[test]
-fn test_router_config_supported_protocols_default() {
+fn test_router_config_supported_protocols_all() {
     let c = RouterConfig::default();
     let protos = c.supported_protocols();
     assert_eq!(protos.len(), 2);
@@ -263,11 +226,11 @@ fn test_router_config_supported_protocols_default() {
 
 #[test]
 fn test_router_config_is_supported() {
-    let c = RouterConfig::binary_frame_only();
-    assert!(c.is_supported(Protocol::BinaryFrame));
-    assert!(!c.is_supported(Protocol::JsonRpc));
+    let c = RouterConfig::jsonrpc_only();
+    assert!(c.is_supported(Protocol::JsonRpc));
     assert!(!c.is_supported(Protocol::Http));
     assert!(!c.is_supported(Protocol::Unknown));
+    assert!(!c.is_supported(Protocol::BinaryFrame));
 }
 
 #[test]
@@ -282,7 +245,7 @@ fn test_router_config_supported_protocols_jsonrpc_only() {
 fn test_router_config_debug_and_clone() {
     let c = RouterConfig::default();
     let c2 = c.clone();
-    assert_eq!(c.enable_binary_frame, c2.enable_binary_frame);
+    assert_eq!(c.enable_jsonrpc, c2.enable_jsonrpc);
     assert!(format!("{c:?}").contains("RouterConfig"));
 }
 
@@ -296,8 +259,6 @@ fn test_capabilities_from_default_config() {
     let caps = ProtocolCapabilities::from_config(&config);
     assert!(caps.supported.contains(&"json-rpc".to_string()));
     assert!(caps.supported.contains(&"http".to_string()));
-    assert!(!caps.supported.contains(&"binary-frame".to_string()));
-    assert!(caps.high_performance.is_empty());
     assert_eq!(caps.recommended, "json-rpc");
     assert!(caps.versions.contains_key("json-rpc"));
     assert!(caps.versions.contains_key("http"));
@@ -308,17 +269,7 @@ fn test_capabilities_from_jsonrpc_only() {
     let config = RouterConfig::jsonrpc_only();
     let caps = ProtocolCapabilities::from_config(&config);
     assert_eq!(caps.supported.len(), 1);
-    assert!(caps.high_performance.is_empty());
     assert_eq!(caps.recommended, "json-rpc");
-}
-
-#[test]
-fn test_capabilities_from_binary_frame_only() {
-    let config = RouterConfig::binary_frame_only();
-    let caps = ProtocolCapabilities::from_config(&config);
-    assert_eq!(caps.supported.len(), 1);
-    assert_eq!(caps.high_performance.len(), 1);
-    assert_eq!(caps.recommended, "binary-frame");
 }
 
 #[test]
@@ -339,7 +290,6 @@ fn test_capabilities_serialization_roundtrip() {
     let restored: ProtocolCapabilities = serde_json::from_str(&json).unwrap();
     assert_eq!(caps.supported, restored.supported);
     assert_eq!(caps.recommended, restored.recommended);
-    assert_eq!(caps.high_performance, restored.high_performance);
 }
 
 // ============================================================================

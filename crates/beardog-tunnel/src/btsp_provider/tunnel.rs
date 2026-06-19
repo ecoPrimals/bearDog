@@ -21,7 +21,7 @@ use super::types::TrustLevel;
 /// - Activity tracking
 /// - Trust level
 /// - Statistics
-pub(super) struct Tunnel {
+pub struct Tunnel {
     /// Unique tunnel identifier
     pub id: String,
 

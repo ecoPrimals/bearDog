@@ -68,7 +68,7 @@ mod suite {
     fn test_json_rpc_request_serialization() {
         let request = JsonRpcRequest {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-            method: "primal.ping".to_string(),
+            method: "primal.ping".into(),
             params: None,
             id: serde_json::Value::from(1),
         };
@@ -249,7 +249,7 @@ mod suite {
         // Verify our types have no vendor hardcoding
         let request = JsonRpcRequest {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-            method: "primal.register".to_string(),
+            method: "primal.register".into(),
             params: None,
             id: serde_json::Value::from(1),
         };
@@ -268,7 +268,7 @@ mod suite {
         // Verify we use standard JSON-RPC 2.0
         let request = JsonRpcRequest {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-            method: "primal.ping".to_string(),
+            method: "primal.ping".into(),
             params: None,
             id: serde_json::Value::from(1),
         };
@@ -298,7 +298,7 @@ mod suite {
         for id in 0..1000 {
             let request = JsonRpcRequest {
                 jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-                method: "primal.test".to_string(),
+                method: "primal.test".into(),
                 params: None,
                 id: serde_json::Value::from(id),
             };

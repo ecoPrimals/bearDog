@@ -305,12 +305,12 @@ mod network_timeout_policy_tests {
         let tc = TimeoutConfig::default();
         assert!(!tc.should_timeout(Duration::from_secs(1), "request"));
         assert!(tc.should_timeout(Duration::from_secs(120), "request"));
-        assert_eq!(
-            tc.remaining_time(Duration::from_secs(5), "request"),
-            tc.request_timeout
-                .checked_sub(Duration::from_secs(5))
-                .unwrap()
-        );
+        let elapsed = Duration::from_secs(5);
+        let expected = tc
+            .request_timeout
+            .checked_sub(elapsed)
+            .expect("test precondition: default request timeout exceeds elapsed duration");
+        assert_eq!(tc.remaining_time(elapsed, "request"), expected);
     }
 
     #[test]

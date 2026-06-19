@@ -6,6 +6,7 @@
 //! Fully compliant with JSON-RPC 2.0 specification.
 
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 
 /// JSON-RPC 2.0 Request structure
 ///
@@ -14,7 +15,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Deserialize)]
 pub struct JsonRpcRequest {
     /// JSON-RPC version string, always "2.0"
-    pub jsonrpc: String,
+    pub jsonrpc: Cow<'static, str>,
 
     /// Method name to invoke (e.g., "`graph.validate_template`")
     pub method: String,
@@ -34,7 +35,7 @@ pub struct JsonRpcRequest {
 #[derive(Debug, Clone, Serialize)]
 pub struct JsonRpcResponse {
     /// JSON-RPC version string, always "2.0"
-    pub jsonrpc: String,
+    pub jsonrpc: Cow<'static, str>,
 
     /// Result of the method call (present on success)
     #[serde(skip_serializing_if = "Option::is_none")]
