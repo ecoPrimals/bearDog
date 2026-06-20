@@ -58,9 +58,19 @@
 //! }
 //! ```
 
-pub mod orchestrator;
+mod config;
+mod discovery;
+mod generation;
+mod mixing;
+mod orchestrator;
+mod quality;
+mod selection;
 pub mod types;
 
+#[cfg(test)]
+mod tests;
+
+pub use config::OrchestratorConfig;
 pub use orchestrator::HsmEntropyOrchestrator;
 pub use types::{
     EntropyGenerationRequest, EntropyGenerationResult, HsmDeviceInfo, HsmDeviceType,

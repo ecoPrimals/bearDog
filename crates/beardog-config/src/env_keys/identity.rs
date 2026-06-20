@@ -8,6 +8,8 @@
 pub const ENV_FAMILY_ID: &str = "FAMILY_ID";
 /// BearDog-prefixed family identifier.
 pub const ENV_FAMILY_ID_PREFIXED: &str = "BEARDOG_FAMILY_ID";
+/// Comma-separated bootstrap trusted peers (`peer_id:family_id` pairs).
+pub const ENV_TRUSTED_PEERS: &str = "BEARDOG_TRUSTED_PEERS";
 /// Ecosystem family seed (unprefixed).
 pub const ENV_FAMILY_SEED: &str = "FAMILY_SEED";
 /// BearDog-prefixed family seed.
@@ -22,6 +24,14 @@ pub const ENV_PRIMAL_NAME: &str = "PRIMAL_NAME";
 pub const ENV_PRIMAL_NAME_PREFIXED: &str = "BEARDOG_PRIMAL_NAME";
 /// Fallback primal name when no env var is set.
 pub const DEFAULT_PRIMAL_NAME: &str = "beardog";
+
+/// Resolve the primal's own name from the environment.
+///
+/// Returns [`ENV_PRIMAL_NAME`] if set, otherwise falls back to the compiled default.
+#[must_use]
+pub fn resolve_primal_name() -> String {
+    std::env::var(ENV_PRIMAL_NAME).unwrap_or_else(|_| DEFAULT_PRIMAL_NAME.to_owned())
+}
 /// Primal type / role (unprefixed).
 pub const ENV_PRIMAL_TYPE: &str = "PRIMAL_TYPE";
 /// BearDog-prefixed primal type override.

@@ -282,15 +282,17 @@ pub struct DiscoveryCapabilities {
 }
 
 /// Discovery error types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, thiserror::Error)]
 pub enum DiscoveryError {
     /// Service not found for given criteria
+    #[error("Service not found: {criteria}")]
     ServiceNotFound {
         /// Query or filter that produced no matches.
         criteria: String,
     },
 
     /// Discovery backend unavailable
+    #[error("Discovery backend '{provider}' unavailable: {reason}")]
     BackendUnavailable {
         /// Backend identifier (e.g. `consul`, `kubernetes`).
         provider: String,
@@ -299,24 +301,28 @@ pub enum DiscoveryError {
     },
 
     /// Invalid service descriptor
+    #[error("Invalid service descriptor: {reason}")]
     InvalidDescriptor {
         /// Validation failure detail.
         reason: String,
     },
 
     /// Registration failed
+    #[error("Service registration failed: {reason}")]
     RegistrationFailed {
         /// Provider-specific registration error.
         reason: String,
     },
 
     /// Network/connectivity error
+    #[error("Network error: {details}")]
     NetworkError {
         /// Transport- or DNS-level failure description.
         details: String,
     },
 
     /// Timeout during discovery operation
+    #[error("Operation '{operation}' timed out after {duration_ms}ms")]
     Timeout {
         /// Operation name that exceeded its deadline.
         operation: String,
@@ -325,50 +331,16 @@ pub enum DiscoveryError {
     },
 
     /// Permission denied
+    #[error("Permission denied for resource: {resource}")]
     PermissionDenied {
         /// Resource or action that was not allowed.
         resource: String,
     },
 
     /// Generic error
+    #[error("Discovery error: {message}")]
     Other {
         /// Fallback error message.
         message: String,
     },
 }
-
-impl fmt::Display for DiscoveryError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::ServiceNotFound { criteria } => {
-                write!(f, "Service not found: {criteria}")
-            }
-            Self::BackendUnavailable { provider, reason } => {
-                write!(f, "Discovery backend '{provider}' unavailable: {reason}")
-            }
-            Self::InvalidDescriptor { reason } => {
-                write!(f, "Invalid service descriptor: {reason}")
-            }
-            Self::RegistrationFailed { reason } => {
-                write!(f, "Service registration failed: {reason}")
-            }
-            Self::NetworkError { details } => {
-                write!(f, "Network error: {details}")
-            }
-            Self::Timeout {
-                operation,
-                duration_ms,
-            } => {
-                write!(f, "Operation '{operation}' timed out after {duration_ms}ms")
-            }
-            Self::PermissionDenied { resource } => {
-                write!(f, "Permission denied for resource: {resource}")
-            }
-            Self::Other { message } => {
-                write!(f, "Discovery error: {message}")
-            }
-        }
-    }
-}
-
-impl std::error::Error for DiscoveryError {}

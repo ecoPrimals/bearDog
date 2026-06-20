@@ -12,7 +12,7 @@ use std::fmt::Write as _;
 use std::future::Future;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 use tracing::debug;
 
 /// Capacity for the in-memory ring buffer of raw [`beardog_types::hsm::AuditEvent`] records.
@@ -86,7 +86,7 @@ pub struct CryptoOperationLog {
 #[derive(Debug, Clone)]
 pub struct DefaultAuditLogger {
     storage: Arc<PersistentAuditStorage>,
-    memory_audit_events: Arc<Mutex<VecDeque<MemoryAuditRecord>>>,
+    memory_audit_events: Arc<RwLock<VecDeque<MemoryAuditRecord>>>,
 }
 
 impl DefaultAuditLogger {
@@ -114,7 +114,7 @@ impl DefaultAuditLogger {
         let storage = Arc::new(PersistentAuditStorage::new(storage_path, 10000).await?);
         Ok(Self {
             storage,
-            memory_audit_events: Arc::new(Mutex::new(VecDeque::new())),
+            memory_audit_events: Arc::new(RwLock::new(VecDeque::new())),
         })
     }
 
@@ -129,7 +129,7 @@ impl DefaultAuditLogger {
     ) -> Result<(), BearDogError> {
         let recorded_at = Utc::now();
         {
-            let mut q = self.memory_audit_events.lock().await;
+            let mut q = self.memory_audit_events.write().await;
             q.push_back(MemoryAuditRecord {
                 recorded_at,
                 event: event.clone(),

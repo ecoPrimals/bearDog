@@ -1,10 +1,17 @@
 # 🐻 BearDog BTSP Implementation - Team Handoff
 
+> **SUPERSEDED** (Jun 20, 2026): This handoff describes the original HTTP-based BTSP
+> integration path. BearDog now implements BTSP as a Unix-socket/TCP JSON-RPC protocol
+> with 4-step handshake, TOFU trust pinning, and ChaCha20-Poly1305 encrypted framing
+> (Wave 119). The HTTP API path (`btsp-api` feature) was deprecated and the
+> `beardog-integration` crate excluded from the workspace. This document is retained
+> as a fossil record of the original Songbird→BearDog boundary negotiation.
+
 **From**: Songbird Team  
 **To**: BearDog Team  
 **Date**: December 21, 2025  
-**Priority**: High  
-**Timeline**: 1-2 weeks
+**Priority**: ~~High~~ Archived  
+**Timeline**: ~~1-2 weeks~~ Completed via different path
 
 ---
 

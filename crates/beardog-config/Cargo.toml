@@ -24,7 +24,7 @@ toml = { workspace = true }
 serde_json = { workspace = true }
 
 # Path manipulation
-dirs = { workspace = true }
+directories = { workspace = true }
 
 # Logging
 tracing = { workspace = true }

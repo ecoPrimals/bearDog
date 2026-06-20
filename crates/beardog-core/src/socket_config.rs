@@ -41,34 +41,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::self_knowledge::SimpleCapability;
-use beardog_config::env_keys;
+use beardog_config::env_keys::{self, DEFAULT_PRIMAL_NAME};
 use beardog_errors::BearDogError;
 use beardog_types::constants::domains::network::ipc_discovery::BIOMEOS_RUNTIME_SOCKET_SUBDIR;
 use beardog_types::primal_identity::resolve_node_id_from_env_or_ephemeral;
 use tracing::warn;
-
-/// Default primal identifier when `PRIMAL_NAME` is unset — used for tier 3–5 socket path resolution.
-pub const DEFAULT_PRIMAL_NAME: &str = "beardog";
-
-/// Resolve the real UID by reading `/proc/self/status` (Linux) without `unsafe`.
-///
-/// Returns `None` on non-Linux or on parse failure, allowing callers to fall back.
-fn resolve_uid_from_proc() -> Option<u32> {
-    #[cfg(target_os = "linux")]
-    {
-        let status = std::fs::read_to_string("/proc/self/status").ok()?;
-        for line in status.lines() {
-            if let Some(rest) = line.strip_prefix("Uid:") {
-                return rest.split_whitespace().next()?.parse().ok();
-            }
-        }
-        None
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        None
-    }
-}
 
 /// All inputs needed to resolve a [`SocketConfig`] without reading the process environment.
 ///
@@ -107,7 +84,7 @@ impl Default for SocketPathInputs {
             primal_name: None,
             family_id: None,
             node_id: None,
-            uid: resolve_uid_from_proc().unwrap_or(1000),
+            uid: beardog_utils::resolve_uid_from_proc().unwrap_or(1000),
             primal_namespace_root_exists: false,
             biomeos_insecure: false,
         }
@@ -128,7 +105,7 @@ impl SocketPathInputs {
             .ok()
             .or_else(|| std::env::var(env_keys::ENV_EUID).ok())
             .and_then(|s| s.parse().ok())
-            .or_else(resolve_uid_from_proc)
+            .or_else(beardog_utils::resolve_uid_from_proc)
             .unwrap_or(1000);
         let biomeos_insecure = std::env::var(env_keys::ENV_BIOMEOS_INSECURE)
             .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))

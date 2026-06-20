@@ -10,7 +10,7 @@
 //! - `identity.get` returns `{primal, version, domain, license}`
 
 use super::utils::{IdentityHints, get_primal_name_with};
-use super::{HandlerRegistry, MethodHandler};
+use super::{HandlerError, HandlerRegistry, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use beardog_types::primal_identity::PrimalIdentity;
 use std::sync::Arc;
@@ -63,19 +63,24 @@ impl MethodHandler for CapabilitiesHandler {
         method: &str,
         _params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
-    ) -> Result<serde_json::Value, String> {
+    ) -> Result<serde_json::Value, HandlerError> {
         match method {
             "capabilities.list" | "capability.list" | "primal.capabilities" => {
-                self.handle_capabilities().await
+                self.handle_capabilities().await.map_err(HandlerError::from)
             }
-            // Deprecated flat aliases — remove in v1.0
-            "capabilities" | "get_capabilities" => self.handle_capabilities().await,
-            "discover_capabilities" => self.handle_discover_capabilities().await,
-            // Wire Standard L2: canonical identity endpoint
-            "identity.get" => self.handle_identity_get().await,
-            // Deprecated flat aliases — remove in v1.0
-            "identity" | "whoami" | "get_identity" => self.handle_identity().await,
-            _ => Err(format!("Method not found: {method}")),
+            "capabilities" | "get_capabilities" => {
+                self.handle_capabilities().await.map_err(HandlerError::from)
+            }
+            "discover_capabilities" => {
+                self.handle_discover_capabilities()
+                    .await
+                    .map_err(HandlerError::from)
+            }
+            "identity.get" => self.handle_identity_get().await.map_err(HandlerError::from),
+            "identity" | "whoami" | "get_identity" => {
+                self.handle_identity().await.map_err(HandlerError::from)
+            }
+            _ => Err(HandlerError::MethodNotFound(method.to_owned())),
         }
     }
 }

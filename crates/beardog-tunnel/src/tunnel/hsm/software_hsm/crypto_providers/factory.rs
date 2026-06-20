@@ -129,8 +129,8 @@ pub const fn get_crypto_provider_capabilities(
 ///
 /// - `GeneticCrypto`: ✅ RECOMMENDED (100% Pure Rust)
 /// - `RustCrypto`: ✅ Standard (100% Pure Rust)
-/// - Ring: ❌ Removed (evolved to RustCrypto)
-/// - `OpenSsl`: ❌ Removed (evolved to RustCrypto)
+/// - `Ring`: ❌ Removed (evolved to `RustCrypto`)
+/// - `OpenSsl`: ❌ Removed (evolved to `RustCrypto`)
 pub const fn is_crypto_backend_supported(backend: &CryptoBackend) -> bool {
     // Only Pure Rust backends supported - Ring and OpenSsl evolved out! 🦀
     matches!(

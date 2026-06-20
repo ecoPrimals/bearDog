@@ -8,7 +8,6 @@ use super::types::{
 };
 use chrono::Utc;
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
-use std::fmt;
 
 /// License/pricing page URL shown when verification requires a commercial license.
 ///
@@ -161,33 +160,40 @@ impl CertificateVerifier {
 }
 
 /// Errors during certificate verification
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, thiserror::Error)]
 pub enum VerificationError {
     /// Certificate has expired
+    #[error("🔒 Certificate expired at {expired_at}")]
     Expired {
         /// UTC timestamp after which the certificate is no longer valid.
         expired_at: chrono::DateTime<chrono::Utc>,
     },
 
     /// Invalid signature
+    #[error("🔒 Invalid certificate signature: {reason}")]
     InvalidSignature {
         /// Why Ed25519 verification or signature parsing failed.
         reason: String,
     },
 
     /// License required but not present
+    #[error(
+        "🔒 License required for {classification} classification. Visit {LICENSE_PRICING_URL}"
+    )]
     LicenseRequired {
         /// Serialized or debug representation of the classification that triggered the requirement.
         classification: String,
     },
 
     /// License has expired
+    #[error("🔒 License expired at {expired_at}")]
     LicenseExpired {
         /// UTC timestamp when the attached commercial license lapsed.
         expired_at: chrono::DateTime<chrono::Utc>,
     },
 
     /// Operation not allowed by certificate
+    #[error("🔒 Operation '{operation}' not allowed. Allowed: {allowed:?}")]
     OperationNotAllowed {
         /// Requested [`AdapterOperation`] that was denied.
         operation: String,
@@ -196,44 +202,12 @@ pub enum VerificationError {
     },
 
     /// Failed to compute hash
+    #[error("🔒 Certificate hashing failed: {reason}")]
     HashingFailed {
         /// Serialization or hashing error detail when building the certificate preimage.
         reason: String,
     },
 }
-
-impl fmt::Display for VerificationError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Expired { expired_at } => {
-                write!(f, "🔒 Certificate expired at {expired_at}")
-            }
-            Self::InvalidSignature { reason } => {
-                write!(f, "🔒 Invalid certificate signature: {reason}")
-            }
-            Self::LicenseRequired { classification } => {
-                write!(
-                    f,
-                    "🔒 License required for {classification} classification. Visit {LICENSE_PRICING_URL}"
-                )
-            }
-            Self::LicenseExpired { expired_at } => {
-                write!(f, "🔒 License expired at {expired_at}")
-            }
-            Self::OperationNotAllowed { operation, allowed } => {
-                write!(
-                    f,
-                    "🔒 Operation '{operation}' not allowed. Allowed: {allowed:?}"
-                )
-            }
-            Self::HashingFailed { reason } => {
-                write!(f, "🔒 Certificate hashing failed: {reason}")
-            }
-        }
-    }
-}
-
-impl std::error::Error for VerificationError {}
 
 #[cfg(test)]
 mod tests {

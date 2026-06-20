@@ -595,12 +595,10 @@ impl UnixSocketIpcServer {
                 id,
             },
             Err(e) => {
-                let error = if e.contains("Method not found") || e.contains("Unknown method") {
-                    JsonRpcError::method_not_found(e)
-                } else if e.contains("Invalid params") || e.contains("Missing required") {
-                    JsonRpcError::invalid_params(e)
-                } else {
-                    JsonRpcError::internal_error(e)
+                let error = JsonRpcError {
+                    code: e.json_rpc_code(),
+                    message: e.to_string(),
+                    data: None,
                 };
 
                 JsonRpcResponse {

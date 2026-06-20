@@ -21,31 +21,122 @@ pub(super) async fn listen_mdns_announcements(
 ) -> Result<Vec<PrimalAnnouncement>, BearDogError> {
     debug!("Listening for mDNS primal announcements");
 
-    let announcements = Vec::new();
+    let mut announcements = Vec::new();
 
-    // Check if mDNS discovery is enabled via environment
-    if env.mdns_discovery_enabled {
-        // In a real implementation, this would use mdns-sd or similar
-        // For now, we simulate by checking for known service patterns
-        debug!("mDNS discovery enabled, scanning for services...");
+    if !env.mdns_discovery_enabled {
+        debug!(
+            "mDNS discovery disabled (set BEARDOG_MDNS_DISCOVERY=true); \
+             skipping avahi-browse scan for _beardog._tcp"
+        );
+        return Ok(announcements);
+    }
 
-        // Check for local services advertising BearDog capabilities
-        if let Ok(response) = tokio::process::Command::new("avahi-browse")
-            .args(["-t", "_beardog._tcp"])
-            .output()
-            .await
-            && response.status.success()
-        {
+    debug!("mDNS discovery enabled, scanning _beardog._tcp via avahi-browse");
+
+    match tokio::process::Command::new("avahi-browse")
+        .args(["-r", "-t", "-p", "_beardog._tcp"])
+        .output()
+        .await
+    {
+        Ok(response) if response.status.success() => {
             let output = String::from_utf8_lossy(&response.stdout);
             for line in output.lines() {
-                if line.contains("beardog ") {
-                    debug!("Found potential BearDog service via mDNS: {}", line);
+                if let Some(announcement) = parse_avahi_browse_line(line) {
+                    debug!(
+                        primal_id = %announcement.primal_id,
+                        endpoint = %announcement.endpoints.first().map_or_else(
+                            || UNKNOWN_ENDPOINT_URL.to_string(),
+                            |e| e.url.clone()
+                        ),
+                        "Parsed BearDog service from avahi-browse"
+                    );
+                    announcements.push(announcement);
                 }
             }
+            if announcements.is_empty() {
+                warn!(
+                    service_type = "_beardog._tcp",
+                    "avahi-browse completed but found no BearDog services — \
+                     ensure avahi-daemon is running and primals are announcing on the local network"
+                );
+            }
+        }
+        Ok(response) => {
+            let stderr = String::from_utf8_lossy(&response.stderr);
+            warn!(
+                service_type = "_beardog._tcp",
+                exit_code = ?response.status.code(),
+                stderr = %stderr.trim(),
+                "avahi-browse failed for _beardog._tcp — install avahi-utils and ensure avahi-daemon is running"
+            );
+        }
+        Err(e) => {
+            warn!(
+                service_type = "_beardog._tcp",
+                error = %e,
+                "avahi-browse not available — install avahi-utils for mDNS discovery of _beardog._tcp"
+            );
         }
     }
 
     Ok(announcements)
+}
+
+/// Parse a parsable (`-p`) avahi-browse line for a resolved `_beardog._tcp` service.
+fn parse_avahi_browse_line(line: &str) -> Option<PrimalAnnouncement> {
+    if !line.starts_with('=') {
+        return None;
+    }
+
+    // Format: =;interface;protocol;instance;type;domain;host;address;port;txt
+    let fields: Vec<&str> = line.split(';').collect();
+    if fields.len() < 9 {
+        return None;
+    }
+
+    let service_type = fields[4].trim();
+    if !service_type.contains("_beardog._tcp") {
+        return None;
+    }
+
+    let instance_name = fields[3].trim();
+    if instance_name.is_empty() {
+        return None;
+    }
+
+    let address = fields[7].trim();
+    let port = fields[8].trim().parse::<u16>().ok()?;
+    if address.is_empty() || port == 0 {
+        return None;
+    }
+
+    let url = format!("http://{address}:{port}");
+    let primal_id = instance_name.replace(' ', "-").to_lowercase();
+
+    Some(PrimalAnnouncement {
+        primal_id,
+        capabilities: Vec::new(),
+        endpoints: vec![UniversalEndpoint {
+            url,
+            protocols: vec!["HTTP".to_string()],
+            auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
+            security_config: crate::ecosystem::primal_types::EndpointSecurityConfig::default(),
+        }],
+        metadata: PrimalMetadata {
+            display_name: Some(instance_name.to_string()),
+            version: "unknown".to_string(),
+            protocol_versions: vec!["1.0".to_string()],
+            security_attestations: vec![],
+            custom_fields: HashMap::new(),
+            capabilities: vec![],
+            dependencies: vec![],
+            supported_protocols: vec!["http".to_string()],
+            health_check_endpoint: "/health".to_string(),
+            metrics_endpoint: "/metrics".to_string(),
+        },
+        announcement_timestamp: std::time::SystemTime::now(),
+        source_protocol: "mdns".to_string(),
+    })
 }
 
 /// Poll HTTP discovery endpoints
@@ -172,9 +263,14 @@ pub(super) fn check_environment_announcements_for_test(
 pub(super) fn discover_service_mesh_primals() -> Vec<PrimalAnnouncement> {
     debug!("Discovering primals via service mesh");
 
-    // Minimal implementation - production deployments should integrate with service mesh
-    // like Istio, Linkerd, or Consul Connect for automatic service discovery
-    Vec::new() // No service mesh integration yet - returns empty
+    warn!(
+        mesh_technologies = "Istio, Linkerd, or Consul Connect",
+        env_hint = "BEARDOG_MESH_ENDPOINT",
+        "service mesh integration not wired — cannot discover primals from sidecar control plane; \
+         set BEARDOG_MESH_ENDPOINT or integrate with Istio/Linkerd/Consul Connect service registry"
+    );
+
+    Vec::new()
 }
 
 /// Process primal announcement
@@ -319,9 +415,21 @@ pub(super) fn make_discovery_request(
         .parse::<http::Uri>()
         .map_err(|e| BearDogError::network(format!("Invalid discovery endpoint URL: {e}")))?;
 
-    // For HTTP discovery, we expect a JSON response with primal announcements
-    // If the endpoint is not accessible, we return empty results rather than failing
+    // HTTP discovery transport is not yet wired in beardog-core (no reqwest/hyper dep).
     let announcements = attempt_http_request(&url);
+    if announcements.is_empty() {
+        warn!(
+            endpoint,
+            uri = %url,
+            "HTTP discovery transport not wired — cannot GET {endpoint}; \
+             use BEARDOG_*_ENDPOINT env vars or enable mDNS (BEARDOG_MDNS_DISCOVERY=true) instead"
+        );
+        return Err(BearDogError::not_yet_available(format!(
+            "HTTP discovery transport to '{endpoint}' is not yet wired — \
+             integrate a tokio HTTP client or use mDNS/environment discovery"
+        )));
+    }
+
     debug!(
         "Successfully discovered {} primals from {}",
         announcements.len(),
@@ -330,11 +438,12 @@ pub(super) fn make_discovery_request(
     Ok(announcements)
 }
 
-/// Attempt HTTP request with basic implementation
-const fn attempt_http_request(_uri: &http::Uri) -> Vec<PrimalAnnouncement> {
-    // Basic HTTP implementation - in production this would make actual HTTP requests
-    // For now, return empty to avoid external dependencies
-    // This could be enhanced with tokio's native HTTP capabilities
+/// Attempt HTTP request — returns empty until a tokio HTTP client is wired.
+fn attempt_http_request(uri: &http::Uri) -> Vec<PrimalAnnouncement> {
+    debug!(
+        uri = %uri,
+        "HTTP discovery request skipped — no HTTP client dependency in beardog-core"
+    );
     Vec::new()
 }
 
@@ -346,6 +455,26 @@ mod tests {
     fn make_discovery_request_invalid_url_errors() {
         let err = make_discovery_request(":::not-a-uri").expect_err("bad url");
         assert!(err.to_string().contains("Invalid") || err.to_string().contains("discovery"));
+    }
+
+    #[test]
+    fn make_discovery_request_valid_url_reports_transport_unavailable() {
+        let err = make_discovery_request("http://127.0.0.1:8080/discovery")
+            .expect_err("HTTP transport should not be wired");
+        assert!(
+            err.to_string().contains("HTTP discovery transport")
+                || err.to_string().contains("not yet"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn parse_avahi_browse_line_extracts_service() {
+        let line = "=;eth0;IPv4;BearDog Node;_beardog._tcp;local;host.local;192.168.1.10;8080;";
+        let announcement = parse_avahi_browse_line(line).expect("should parse avahi line");
+        assert_eq!(announcement.primal_id, "beardog-node");
+        assert_eq!(announcement.endpoints[0].url, "http://192.168.1.10:8080");
+        assert_eq!(announcement.source_protocol, "mdns");
     }
 
     #[test]

@@ -310,7 +310,8 @@ pub enum AndroidEcCurve {
 }
 
 /// StrongBox error types
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, thiserror::Error)]
+#[error("StrongBox error (code {code}): {message}")]
 pub struct StrongBoxError {
     pub code: i32,
     pub message: String,
@@ -335,14 +336,6 @@ impl From<StrongBoxError> for BearDogError {
         ))
     }
 }
-
-impl std::fmt::Display for StrongBoxError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "StrongBox error (code {}): {}", self.code, self.message)
-    }
-}
-
-impl std::error::Error for StrongBoxError {}
 
 /// Android attestation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -78,26 +78,15 @@ pub enum TrustMethod {
 }
 
 /// Error returned when issuer registration fails.
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum RegisterError {
     /// The supplied DID does not match the canonical DID derived from the key.
+    #[error("DID does not match public key (expected {expected})")]
     DidKeyMismatch {
         /// The DID that the key actually produces.
         expected: String,
     },
 }
-
-impl std::fmt::Display for RegisterError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::DidKeyMismatch { expected } => {
-                write!(f, "DID does not match public key (expected {expected})")
-            }
-        }
-    }
-}
-
-impl std::error::Error for RegisterError {}
 
 impl TrustMethod {
     /// Human-readable label.

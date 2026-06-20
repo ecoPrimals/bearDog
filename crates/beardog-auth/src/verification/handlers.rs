@@ -67,10 +67,14 @@ impl VerificationHandlerRegistry {
 }
 
 /// Placeholder handler that reports its channel is not yet implemented.
+///
+/// Available only in tests and builds with the `test-utils` feature.
+#[cfg(any(test, feature = "test-utils"))]
 pub struct StubVerificationHandler {
     method: VerificationMethod,
 }
 
+#[cfg(any(test, feature = "test-utils"))]
 impl StubVerificationHandler {
     /// Creates a stub for the given verification channel.
     #[must_use]
@@ -79,6 +83,7 @@ impl StubVerificationHandler {
     }
 }
 
+#[cfg(any(test, feature = "test-utils"))]
 impl IdentityVerificationHandler for StubVerificationHandler {
     fn method(&self) -> VerificationMethod {
         self.method.clone()
@@ -93,6 +98,10 @@ impl IdentityVerificationHandler for StubVerificationHandler {
 }
 
 /// Registry pre-populated with stub handlers for every [`VerificationMethod`].
+///
+/// Available only in tests and builds with the `test-utils` feature.
+/// Production code should use [`VerificationHandlerRegistry::new`] and register real handlers.
+#[cfg(any(test, feature = "test-utils"))]
 #[must_use]
 pub fn default_stub_registry() -> VerificationHandlerRegistry {
     let mut registry = VerificationHandlerRegistry::new();

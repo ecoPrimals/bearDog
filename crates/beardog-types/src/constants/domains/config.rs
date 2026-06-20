@@ -11,8 +11,8 @@
 /// initialization and provide compile-time guarantees of consistency.
 /// System configuration constants
 pub mod system {
-    /// Default system name
-    pub const DEFAULT_SYSTEM_NAME: &str = "beardog";
+    /// Default system name — alias of [`beardog_config::env_keys::DEFAULT_PRIMAL_NAME`].
+    pub use beardog_config::env_keys::DEFAULT_PRIMAL_NAME as DEFAULT_SYSTEM_NAME;
 
     /// Default version string
     pub const DEFAULT_VERSION: &str = "3.6.0";

@@ -31,8 +31,7 @@ async fn blake3_hash_malformed_base64_returns_error() {
         .await
         .expect_err("malformed base64 should fail");
     assert!(
-        err.to_string().to_lowercase().contains("base64")
-            || err.to_string().to_lowercase().contains("invalid"),
+        err.to_lowercase().contains("base64") || err.to_lowercase().contains("invalid"),
         "unexpected error: {err}"
     );
 }

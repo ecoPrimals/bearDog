@@ -231,7 +231,9 @@ pub async fn handle_tls_derive_handshake_secrets(
         &client_random,
         Some((&client_handshake_secret, &server_handshake_secret)),
         None, // No application secrets yet (will be exported in handle_tls_derive_application_secrets)
-    ) {
+    )
+    .await
+    {
         warn!("⚠️  Failed to export to SSLKEYLOGFILE: {}", e);
     }
 

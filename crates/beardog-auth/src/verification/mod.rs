@@ -2,13 +2,13 @@
 
 //! Identity verification and proof systems for decentralized authentication.
 //!
-//! Handlers implement [`IdentityVerificationHandler`] per [`VerificationMethod`]; see
-//! [`default_stub_registry`] for placeholder wiring.
+//! Handlers implement [`IdentityVerificationHandler`] per [`VerificationMethod`].
+//! Production deployments register real handlers on [`VerificationHandlerRegistry`];
+//! stub helpers are gated behind `test-utils` or `cfg(test)`.
 
-pub use handlers::{
-    IdentityVerificationHandler, StubVerificationHandler, VerificationHandlerRegistry,
-    default_stub_registry,
-};
+pub use handlers::{IdentityVerificationHandler, VerificationHandlerRegistry};
+#[cfg(any(test, feature = "test-utils"))]
+pub use handlers::{StubVerificationHandler, default_stub_registry};
 pub use types::*;
 
 mod handlers;

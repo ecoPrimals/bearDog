@@ -82,6 +82,26 @@ impl BtspSession {
         }
     }
 
+    /// Create a new session after handshake completion (client side).
+    ///
+    /// `encrypt_key` is used for client → server, `decrypt_key` for server → client.
+    #[must_use]
+    pub fn new_client(
+        session_id: String,
+        cipher: BtspCipher,
+        client_to_server_key: [u8; 32],
+        server_to_client_key: [u8; 32],
+    ) -> Self {
+        Self {
+            session_id,
+            cipher,
+            encrypt_key: client_to_server_key,
+            decrypt_key: server_to_client_key,
+            encrypt_counter: 0,
+            decrypt_counter: 0,
+        }
+    }
+
     /// Encrypt a plaintext JSON-RPC frame for sending to the client.
     ///
     /// For `ChaCha20Poly1305`: returns `nonce(12) || ciphertext || tag(16)`.
@@ -301,14 +321,7 @@ mod tests {
         let key_s2c = [0x11; 32];
         let key_c2s = [0x22; 32];
         let server = BtspSession::new_server("abc123".into(), cipher, key_s2c, key_c2s);
-        let client = BtspSession {
-            session_id: "abc123".into(),
-            cipher,
-            encrypt_key: key_c2s,
-            decrypt_key: key_s2c,
-            encrypt_counter: 0,
-            decrypt_counter: 0,
-        };
+        let client = BtspSession::new_client("abc123".into(), cipher, key_c2s, key_s2c);
         (server, client)
     }
 

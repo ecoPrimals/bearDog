@@ -83,12 +83,14 @@ pub async fn handle_respond_to_challenge(params: &Value) -> Result<Value, BearDo
             BearDogError::invalid_input(&format!("Invalid respond_to_challenge params: {e}"))
         })?;
 
-    let seed_bytes = std::fs::read(&request.our_family_seed_path).map_err(|e| {
-        BearDogError::system(format!(
-            "Failed to read family seed from {}: {}",
-            request.our_family_seed_path, e
-        ))
-    })?;
+    let seed_bytes = tokio::fs::read(&request.our_family_seed_path)
+        .await
+        .map_err(|e| {
+            BearDogError::system(format!(
+                "Failed to read family seed from {}: {}",
+                request.our_family_seed_path, e
+            ))
+        })?;
     let _seed_b64 = BASE64.encode(&seed_bytes);
 
     let provider = GeneticCryptoProvider::new_with_lineage(seed_bytes.clone())?;
@@ -147,12 +149,14 @@ pub async fn handle_verify_challenge_response(params: &Value) -> Result<Value, B
             BearDogError::invalid_input(&format!("Invalid verify_challenge_response params: {e}"))
         })?;
 
-    let our_seed_bytes = std::fs::read(&request.our_family_seed_path).map_err(|e| {
-        BearDogError::system(format!(
-            "Failed to read family seed from {}: {}",
-            request.our_family_seed_path, e
-        ))
-    })?;
+    let our_seed_bytes = tokio::fs::read(&request.our_family_seed_path)
+        .await
+        .map_err(|e| {
+            BearDogError::system(format!(
+                "Failed to read family seed from {}: {}",
+                request.our_family_seed_path, e
+            ))
+        })?;
 
     let provider = GeneticCryptoProvider::new_with_lineage(our_seed_bytes.clone())?;
     let lineage_key = provider

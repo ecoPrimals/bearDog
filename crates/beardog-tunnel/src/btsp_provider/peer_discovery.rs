@@ -8,7 +8,7 @@ use beardog_errors::BearDogError;
 use tracing::debug;
 
 impl BeardogBtspProvider {
-    pub(super) async fn get_peer_addresses(
+    pub(crate) async fn get_peer_addresses(
         &self,
         peer_id: &str,
     ) -> Result<Vec<String>, BearDogError> {

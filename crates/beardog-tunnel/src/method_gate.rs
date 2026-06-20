@@ -28,24 +28,6 @@ use crate::unix_socket_ipc::handlers::primal_signing::derive_primal_verifying_ke
 use crate::unix_socket_ipc::types::JsonRpcError;
 use ed25519_dalek::VerifyingKey;
 
-/// Resolve the server process UID without `unsafe` by reading `/proc/self/status`.
-fn resolve_server_uid() -> Option<u32> {
-    #[cfg(target_os = "linux")]
-    {
-        let status = std::fs::read_to_string("/proc/self/status").ok()?;
-        for line in status.lines() {
-            if let Some(rest) = line.strip_prefix("Uid:") {
-                return rest.split_whitespace().next()?.parse().ok();
-            }
-        }
-        None
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        None
-    }
-}
-
 /// Access level for a JSON-RPC method.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MethodAccessLevel {
@@ -246,7 +228,7 @@ impl MethodGate {
             node_id: node_id.to_owned(),
             trusted_issuers: TrustedIssuerRegistry::new(),
             auth_events: AuthEventBus::default(),
-            server_uid: resolve_server_uid(),
+            server_uid: beardog_utils::resolve_uid_from_proc(),
         }
     }
 

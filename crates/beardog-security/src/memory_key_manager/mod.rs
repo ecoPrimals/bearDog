@@ -17,7 +17,7 @@ pub use metrics::{ExtendedMetrics, KeyManagerMetrics, OperationMetrics};
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 use uuid::Uuid;
 
 /// Key metadata structure
@@ -36,7 +36,7 @@ pub struct KeyMetadata {
 /// Provides secure in-memory key storage with encryption capabilities
 #[derive(Debug, Clone)]
 pub struct MemoryKeyManager {
-    keys: Arc<Mutex<HashMap<String, Vec<u8>>>>,
+    keys: Arc<RwLock<HashMap<String, Vec<u8>>>>,
 }
 
 impl MemoryKeyManager {
@@ -47,7 +47,7 @@ impl MemoryKeyManager {
     /// Creates a new instance
     pub fn new(_config: MemoryKeyConfig) -> Result<Self, BearDogError> {
         Ok(Self {
-            keys: Arc::new(Mutex::new(HashMap::with_capacity(100))),
+            keys: Arc::new(RwLock::new(HashMap::with_capacity(100))),
         })
     }
 
@@ -61,7 +61,7 @@ impl MemoryKeyManager {
 
         let mut keys = self
             .keys
-            .lock()
+            .write()
             .map_err(|_| BearDogError::internal("Failed to acquire lock".to_string()))?;
         keys.insert(key_id.clone(), key_data);
 
@@ -75,7 +75,7 @@ impl MemoryKeyManager {
     pub fn key_exists(&self, key_id: &str) -> Result<bool, BearDogError> {
         let keys = self
             .keys
-            .lock()
+            .read()
             .map_err(|_| BearDogError::internal("Failed to acquire lock".to_string()))?;
         Ok(keys.contains_key(key_id))
     }
@@ -92,7 +92,7 @@ impl MemoryKeyManager {
         let key_id = format!("key_{}", Uuid::new_v4());
         let mut keys = self
             .keys
-            .lock()
+            .write()
             .map_err(|_| BearDogError::internal("Failed to acquire lock".to_string()))?;
         keys.insert(key_id.clone(), payload.to_vec());
         Ok(key_id)
@@ -106,7 +106,7 @@ impl MemoryKeyManager {
     pub fn get_key(&self, key_id: &str) -> Result<Vec<u8>, BearDogError> {
         let keys = self
             .keys
-            .lock()
+            .read()
             .map_err(|_| BearDogError::internal("Failed to acquire lock".to_string()))?;
         keys.get(key_id)
             .cloned()
@@ -121,7 +121,7 @@ impl MemoryKeyManager {
     pub fn delete_key(&mut self, key_id: &str) -> Result<(), BearDogError> {
         let mut keys = self
             .keys
-            .lock()
+            .write()
             .map_err(|_| BearDogError::internal("Failed to acquire lock".to_string()))?;
         keys.remove(key_id);
         Ok(())
@@ -134,7 +134,7 @@ impl MemoryKeyManager {
     pub fn list_keys(&self) -> Result<Vec<KeyMetadata>, BearDogError> {
         let keys = self
             .keys
-            .lock()
+            .read()
             .map_err(|_| BearDogError::internal("Failed to acquire lock".to_string()))?;
 
         let mut listed: Vec<KeyMetadata> = keys

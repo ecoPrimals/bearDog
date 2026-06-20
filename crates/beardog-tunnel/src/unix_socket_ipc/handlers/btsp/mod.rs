@@ -87,6 +87,7 @@ impl MethodHandler for BtspHandler {
             // Unified BTSP methods (Phase 2+)
             "btsp.configure_tls",
             "btsp.verify_peer",
+            "btsp.trust.seed",
             "btsp.tunnel_send_http",
             // Server surface: handshake-as-a-service for other primals
             // (canonical `btsp.server.*` namespace per primalSpring gap synthesis)
@@ -145,6 +146,8 @@ impl MethodHandler for BtspHandler {
             self.handle_configure_tls(params, btsp_provider).await
         } else if method == "btsp.verify_peer" {
             self.handle_verify_peer(params, btsp_provider).await
+        } else if method == "btsp.trust.seed" {
+            self.handle_trust_seed(params, btsp_provider).await
         } else if method == "btsp.tunnel_send_http" {
             self.handle_tunnel_send_http(params, btsp_provider).await
         } else if method == "btsp.server.create_session" || method == "btsp.session.create" {

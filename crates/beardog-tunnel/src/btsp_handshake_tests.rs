@@ -473,7 +473,7 @@ mod tests {
         assert_ne!(ribocipher::SIGNAL_NUCLEAR, b'{');
 
         // HTTP verbs start with these ASCII chars
-        for &b in &[b'G', b'P', b'H', b'D', b'O', b'T', b'C'] {
+        for &b in b"GPHDOTC" {
             assert_ne!(ribocipher::SIGNAL_CLEAR, b);
         }
 

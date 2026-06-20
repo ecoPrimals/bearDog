@@ -73,8 +73,7 @@ pub struct CryptoServiceConfig {
 impl Default for CryptoServiceConfig {
     fn default() -> Self {
         Self {
-            // Default name - should be overridden with actual primal identity
-            service_name: "beardog".to_string(),
+            service_name: beardog_config::env_keys::resolve_primal_name(),
 
             // Conservative defaults - disable advanced features
             hsm_enabled: false,    // Require explicit opt-in

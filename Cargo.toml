@@ -134,13 +134,11 @@ toml = "0.8"
 anyhow = "1.0"
 thiserror = "2.0"
 hkdf = "0.12"
-hostname = "0.4"
 pbkdf2 = { version = "0.12", features = ["simple"] }
 ciborium = "0.2"
 
 subtle = "2.5"
 chacha20 = "0.9"
-jni = "0.21"
 libc = "0.2"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
@@ -209,7 +207,6 @@ dashmap = "6.2"
 # Utilities
 http = "1"
 url = "2.5"
-dirs = "5.0"
 getrandom = "0.3"
 aes = "0.8"
 ctr = "0.9"

@@ -495,3 +495,70 @@ async fn test_pin_and_update_peer_trust_promotes_after_three_connections() {
     let record = provider.get_peer_trust_record("peer-pin").expect("record");
     assert_eq!(record.trust_level, TrustLevel::Trusted);
 }
+
+#[tokio::test]
+async fn test_seed_trusted_peer_enables_lineage_path() {
+    let hsm = create_test_hsm().await;
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = BeardogBtspProvider::new_for_testing(hsm, genetics)
+        .await
+        .expect("provider");
+
+    let path = provider
+        .find_lineage_path("requester-lineage", "wan-peer-1", 3)
+        .await
+        .expect("lineage");
+    assert!(path.is_empty(), "unseeded peer should have no lineage path");
+
+    provider
+        .seed_trusted_peer("wan-peer-1", "family-alpha")
+        .await
+        .expect("seed");
+
+    let path = provider
+        .find_lineage_path("requester-lineage", "wan-peer-1", 3)
+        .await
+        .expect("lineage after seed");
+    assert_eq!(path.last().map(String::as_str), Some("wan-peer-1"));
+
+    let again = provider
+        .seed_trusted_peer("wan-peer-1", "family-alpha")
+        .await
+        .expect("re-seed");
+    assert!(!again, "duplicate seed should be idempotent");
+}
+
+#[tokio::test]
+async fn test_seed_trusted_peers_from_env() {
+    beardog_errors::process_env::set_var(
+        beardog_config::env_keys::ENV_TRUSTED_PEERS,
+        "peer-a:family-a, peer-b:family-b",
+    );
+
+    let hsm = create_test_hsm().await;
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = BeardogBtspProvider::new_for_testing(hsm, genetics)
+        .await
+        .expect("provider");
+
+    let seeded = provider
+        .seed_trusted_peers_from_env()
+        .await
+        .expect("env seed");
+    assert_eq!(seeded, 2);
+    assert!(provider.get_peer_trust_record("peer-a").is_some());
+    assert!(provider.get_peer_trust_record("peer-b").is_some());
+
+    beardog_errors::process_env::remove_var(beardog_config::env_keys::ENV_TRUSTED_PEERS);
+}
+
+#[test]
+fn test_parse_trusted_peer_pair() {
+    let (peer, family) = parse_trusted_peer_pair("node-1:family-x").expect("parse");
+    assert_eq!(peer, "node-1");
+    assert_eq!(family, "family-x");
+
+    assert!(parse_trusted_peer_pair("bad-entry").is_err());
+    assert!(parse_trusted_peer_pair(":family").is_err());
+    assert!(parse_trusted_peer_pair("peer:").is_err());
+}

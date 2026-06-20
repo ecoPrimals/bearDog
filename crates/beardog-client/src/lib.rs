@@ -86,7 +86,7 @@ impl BearDogClient {
     pub async fn connect() -> ClientResult<Self> {
         info!("🔌 Connecting to BearDog via Tower Atomic");
 
-        let client = AtomicClient::connect("beardog")
+        let client = AtomicClient::connect(&beardog_config::env_keys::resolve_primal_name())
             .await
             .map_err(|e| BearDogClientError::ConnectionFailed(e.to_string()))?;
 

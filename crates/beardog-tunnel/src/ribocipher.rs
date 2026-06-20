@@ -77,8 +77,9 @@ pub fn mito_tag(family_seed: &[u8], protocol_type: u8) -> [u8; 4] {
 
     type HmacSha256 = Hmac<Sha256>;
 
-    let mut mac = HmacSha256::new_from_slice(family_seed)
-        .expect("HMAC accepts any key length");
+    let Ok(mut mac) = HmacSha256::new_from_slice(family_seed) else {
+        return [0u8; 4];
+    };
     mac.update(&[protocol_type]);
     let result = mac.finalize().into_bytes();
     let mut tag = [0u8; 4];

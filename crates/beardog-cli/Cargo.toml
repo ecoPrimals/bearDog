@@ -73,9 +73,6 @@ workspace = true
 [dependencies.sha3]
 workspace = true
 
-[dependencies.hostname]
-workspace = true
-
 [dependencies.base64]
 workspace = true
 

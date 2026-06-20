@@ -231,51 +231,26 @@ mod root_lib_coverage_extension_tests {
     }
 
     #[tokio::test]
-    async fn test_discover_services_missing_compute_endpoint() {
+    async fn test_discover_services_returns_empty_before_runtime_wiring() {
         let config = FrameworkConfig {
             confidence_level: 0.95,
             sample_size: 1000,
             timeout: Duration::from_secs(30),
-            compute_endpoint: None, // Missing!
+            compute_endpoint: None,
             storage_endpoint: Some("http://storage:8081".to_string()),
         };
 
         let mut framework = BearDogFramework::with_config(config).unwrap();
         let result = framework.discover_services();
 
-        assert!(result.is_err());
-        match result {
-            Err(BearDogError::Configuration(msg)) => {
-                assert!(msg.contains("BEARDOG_COMPUTE_ENDPOINT"));
-            }
-            _ => panic!("Expected Configuration error"),
-        }
+        assert!(result.is_ok());
+        let services = result.unwrap();
+        assert!(services.is_empty());
+        assert_eq!(framework.stats.services_discovered, 0);
     }
 
     #[tokio::test]
-    async fn test_discover_services_missing_storage_endpoint() {
-        let config = FrameworkConfig {
-            confidence_level: 0.95,
-            sample_size: 1000,
-            timeout: Duration::from_secs(30),
-            compute_endpoint: Some("http://test:8080".to_string()),
-            storage_endpoint: None, // Missing!
-        };
-
-        let mut framework = BearDogFramework::with_config(config).unwrap();
-        let result = framework.discover_services();
-
-        // Should error due to missing storage endpoint
-        assert!(result.is_err());
-        if let Err(BearDogError::Configuration(msg)) = result {
-            assert!(msg.contains("BEARDOG_STORAGE_ENDPOINT") || msg.contains("storage"));
-        } else {
-            panic!("Expected Configuration error about storage endpoint");
-        }
-    }
-
-    #[tokio::test]
-    async fn test_discover_services_success() {
+    async fn test_discover_services_empty_with_endpoints_configured() {
         let config = FrameworkConfig {
             confidence_level: 0.95,
             sample_size: 1000,
@@ -289,28 +264,8 @@ mod root_lib_coverage_extension_tests {
 
         assert!(result.is_ok());
         let services = result.unwrap();
-        assert_eq!(services.len(), 2);
-        assert_eq!(framework.stats.services_discovered, 2);
-
-        // Check first service (compute)
-        assert_eq!(services[0].name, "compute-service");
-        assert_eq!(services[0].endpoint, "http://compute-test:8080");
-        assert_eq!(services[0].capabilities.len(), 2);
-        assert!(
-            services[0]
-                .capabilities
-                .contains(&"ai-processing".to_string())
-        );
-
-        // Check second service (storage)
-        assert_eq!(services[1].name, "storage-service");
-        assert_eq!(services[1].endpoint, "http://storage-test:8081");
-        assert_eq!(services[1].capabilities.len(), 2);
-        assert!(
-            services[1]
-                .capabilities
-                .contains(&"high-throughput".to_string())
-        );
+        assert!(services.is_empty());
+        assert_eq!(framework.stats.services_discovered, 0);
     }
 
     #[tokio::test]
@@ -382,17 +337,17 @@ mod root_lib_coverage_extension_tests {
 
         let mut framework = BearDogFramework::with_config(config).unwrap();
 
-        // Discover services
+        // Discovery returns empty until runtime wiring
         let services = framework.discover_services().unwrap();
-        assert_eq!(services.len(), 2);
-        assert_eq!(framework.stats.services_discovered, 2);
+        assert!(services.is_empty());
+        assert_eq!(framework.stats.services_discovered, 0);
 
         // Demonstrate performance
         framework.demonstrate_zero_copy_performance().unwrap();
         assert_eq!(framework.stats.zero_copy_operations, 1000);
 
         // Check combined stats
-        assert_eq!(framework.stats.services_discovered, 2);
+        assert_eq!(framework.stats.services_discovered, 0);
         assert_eq!(framework.stats.zero_copy_operations, 1000);
         assert_f64_approx_eq(framework.stats.cache_hit_ratio, 0.95);
     }
@@ -432,7 +387,7 @@ mod root_lib_coverage_extension_tests {
     }
 
     #[tokio::test]
-    async fn test_service_metadata() {
+    async fn test_discover_services_returns_ok_with_empty_metadata() {
         let config = FrameworkConfig {
             confidence_level: 0.95,
             sample_size: 1000,
@@ -444,17 +399,7 @@ mod root_lib_coverage_extension_tests {
         let mut framework = BearDogFramework::with_config(config).unwrap();
         let services = framework.discover_services().unwrap();
 
-        // Check compute service metadata
-        assert_eq!(
-            services[0].metadata.get("type"),
-            Some(&"compute".to_string())
-        );
-
-        // Check storage service metadata
-        assert_eq!(
-            services[1].metadata.get("type"),
-            Some(&"storage".to_string())
-        );
+        assert!(services.is_empty());
     }
 
     #[tokio::test]
@@ -488,7 +433,6 @@ mod root_lib_coverage_extension_tests {
         framework.discover_services().unwrap();
         framework.demonstrate_zero_copy_performance().unwrap();
 
-        assert!(framework.stats.services_discovered > 0);
         assert!(framework.stats.zero_copy_operations > 0);
 
         // Reset

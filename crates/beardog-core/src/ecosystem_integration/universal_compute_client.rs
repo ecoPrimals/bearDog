@@ -14,7 +14,7 @@ use beardog_types::canonical::capabilities::{CapabilityType, UniversalCapability
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 /// Universal compute client configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -412,11 +412,22 @@ impl UniversalComputeClient {
     fn execute_compute_request(
         &self,
         request: &UniversalComputeRequest,
-        _provider: &UniversalCapability,
+        provider: &UniversalCapability,
     ) -> Result<UniversalComputeResponse, BearDogError> {
+        warn!(
+            request_id = %request.request_id,
+            operation = %request.operation_type,
+            provider_id = %provider.provider.provider_id,
+            endpoint = %provider.endpoint.base_url,
+            "Universal compute dispatch not wired — IPC transport to discovered provider unavailable"
+        );
         Err(BearDogError::not_yet_available(format!(
-            "Universal compute dispatch for operation '{}' — awaiting IPC transport integration",
-            request.operation_type
+            "Universal compute dispatch for operation '{}' (request {}) to provider '{}' at {} — \
+             IPC transport to the discovered compute primal is not yet wired",
+            request.operation_type,
+            request.request_id,
+            provider.provider.provider_id,
+            provider.endpoint.base_url
         )))
     }
 

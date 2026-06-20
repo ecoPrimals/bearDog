@@ -174,8 +174,11 @@ async fn test_chaos_concurrent_random_operations() {
                             "purpose": "chaos"
                         })))
                         .await
+                        .map_err(|e| e.to_string())
                     }
-                    1 => handle_x25519_generate_ephemeral(None).await,
+                    1 => handle_x25519_generate_ephemeral(None)
+                        .await
+                        .map_err(|e| e.to_string()),
                     2 => handle_blake3_hash(Some(&json!({"data": data_b64}))).await,
                     3 => {
                         handle_hmac_sha256(Some(&json!({

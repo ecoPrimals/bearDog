@@ -9,6 +9,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### June 20, 2026 -- Wave 119: Deep Debt Sweep — Modern Idiomatic Rust, Self-Knowledge, Structural Evolution
+
+**92 files changed, +1,634 / -3,099 lines**
+
+#### BTSP Trust Bootstrap Over WAN Mesh (P1)
+- **BtspTcpClient + BtspConnection** — full 4-step BTSP handshake on client side with encrypted frame I/O (`tcp_ipc/client.rs`, `btsp_handshake/session.rs`)
+- **Env-aware UPA registry** — `resolve_upa_registry_endpoint_from_env()` wired into `"upa"` and `"multi"` discovery arms
+- **Trust DB seeding** — `seed_trusted_peer()` and `seed_trusted_peers_from_env()` for TOFU bootstrap from env vars or `btsp.trust.seed` RPC
+- **Production BTSP mode** — `modes/server.rs` now respects `FAMILY_ID` via `resolve_security_mode()`
+- **Provider dedup** — `peer_discovery.rs` solely owns address resolution; redundant methods removed from `contact_exchange.rs`
+- **WAN timeouts** — `TCP_READ_TIMEOUT` configurable via `BEARDOG_TCP_READ_TIMEOUT_SECS` env var
+
+#### Smart Refactoring (P1)
+- **`server.rs` (811L) → `server/` module directory** — 7 files: mod, transport, attestation, health, registration, acme, tests
+- **`orchestrator.rs` (851L) → pipeline stages** — 10 files: config, discovery, selection, generation, mixing, quality, orchestrator, tests
+
+#### Modern Idiomatic Rust (P1)
+- **Blocking I/O → async** — 4 async handlers migrated from `std::fs` to `tokio::fs` (genetic challenge, HSM storage, sslkeylog, TLS handshake)
+- **`Arc<Mutex>` → `Arc<RwLock>`** — memory key manager (6 methods) + audit logger for read-heavy access patterns
+- **11 error types → `thiserror::Error`** — `BondPersistenceError`, `TokenError`, `RegisterError`, `TlsConfigError`, `DiscoveryError`, `KmsError`, `ValidationError`, `VerificationError`, `ConstraintViolationError`, `AndroidError`, `StrongBoxError`
+- **UID helper centralized** — `resolve_uid_from_proc()` deduplicated from 3 crates into `beardog-utils::platform`
+- **Dependency cleanup** — removed unused `jni`; consolidated `hostname` → `whoami`, `dirs` → `directories`
+
+#### Primal Self-Knowledge (P1)
+- **`PRIMAL_NAME` wiring** — consolidated `DEFAULT_PRIMAL_NAME` to single source in `beardog-config`; added `resolve_primal_name()` helper
+- **Hardcoded `"beardog"` removed** — 5 production sites now use env-aware identity resolution
+- **Fake `discover_services()` removed** — no longer manufactures phantom compute/storage services; returns honest empty Vec with `tracing::warn`
+
+#### Production Stub Evolution (P1)
+- **mDNS discovery** — `listen_mdns_announcements()` now parses real `avahi-browse` output
+- **Auth stub isolation** — `StubVerificationHandler` gated behind `#[cfg(any(test, feature = "test-utils"))]`
+- **15+ stubs improved** — all discovery/dispatch/collaboration stubs now log actionable context with `tracing::warn!`
+
+#### Pre-Existing Debt Fixed (P2)
+- **`simd_crypto.rs` restored** — self-contained implementation after upstream `beardog_utils::simd` deletion
+- **Circuit breaker test fixed** — half-open probe logic corrected
+- **~20 clippy warnings cleaned** — doc backticks, `items_after_statements`, visibility, byte literals, error patterns
+
 ### June 19, 2026 -- Wave 117+: Deep Debt Execution — Security Hardening, Zero-Copy, Architecture Evolution
 
 **145 files changed, 3,837 insertions, 11,638 deletions (-7,801 net LOC)**

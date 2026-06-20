@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: Jun 13, 2026
+**Updated**: Jun 20, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -39,9 +39,15 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - All production `unwrap()`/`expect()` eliminated (zero panic paths)
 - SPDX license headers on all .rs files (100%)
 - ecoBin C-dependency compliance (sysinfo removed, blake3 pure, pprof optional)
-- Smart refactoring of oversized files into submodule directories
-- All mocks isolated behind `cfg(test)` / `test-utils` feature
-- Hardcoding eliminated — capability-based discovery throughout
+- Smart refactoring of oversized files into submodule directories (Wave 119: server.rs→7, orchestrator.rs→10)
+- All mocks isolated behind `cfg(test)` / `test-utils` feature (Wave 119: StubVerificationHandler gated)
+- Hardcoding eliminated — capability-based discovery throughout (Wave 119: PRIMAL_NAME self-knowledge wired)
+- BTSP trust bootstrap over WAN mesh — client handshake, trust DB seeding, env-aware UPA registry (Wave 119)
+- Blocking `std::fs` → `tokio::fs` in all async handlers (Wave 119)
+- `Arc<Mutex>` → `Arc<RwLock>` for read-heavy data structures (Wave 119)
+- 11 manual error Display types migrated to `thiserror::Error` derive (Wave 119)
+- Dependency consolidation: hostname→whoami, dirs→directories, removed unused jni (Wave 119)
+- UID helper centralized from 3 crates into beardog-utils::platform (Wave 119)
 - `deny.toml` hardened — C deps banned, duplicate versions denied
 - `CommandRunner` trait for mocking external commands (`adb`) in tests
 - **Stadial parity gate (Wave 53)** — Complete: all `#[async_trait]` removed in favor of native `async fn` in traits; `async-trait` dependency removed from every `Cargo.toml`; finite-implementor `dyn Trait` sites replaced with enum dispatch for monomorphized async routing; Clippy and rustdoc `-D warnings` clean

@@ -22,7 +22,7 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 chrono = { workspace = true }
-hostname = { workspace = true }
+whoami = { workspace = true }
 beardog-errors = { workspace = true }
 
 # mDNS discovery (biomeOS owns network discovery — feature-gated, off by default)

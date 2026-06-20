@@ -83,7 +83,8 @@ impl StorageBackend {
         async move {
             match slf {
                 Self::File(b) => {
-                    std::fs::create_dir_all(&b.path)
+                    tokio::fs::create_dir_all(&b.path)
+                        .await
                         .map_err(|e| BearDogError::io_error(&e.to_string()))?;
                     Ok(())
                 }
@@ -110,7 +111,8 @@ impl StorageBackend {
             match slf {
                 Self::File(b) => {
                     let file_path = format!("{}/{}.key", b.path, key_id);
-                    std::fs::write(&file_path, key_data)
+                    tokio::fs::write(&file_path, key_data)
+                        .await
                         .map_err(|e| BearDogError::io_error(&e.to_string()))?;
                     Ok(())
                 }
@@ -139,7 +141,8 @@ impl StorageBackend {
             match slf {
                 Self::File(b) => {
                     let file_path = format!("{}/{}.key", b.path, key_id);
-                    std::fs::read(&file_path)
+                    tokio::fs::read(&file_path)
+                        .await
                         .map_err(|e| BearDogError::not_found(format!("Key not found: {e}")))
                 }
                 Self::InMemory(_b) => Err(BearDogError::not_found(
@@ -171,7 +174,8 @@ impl StorageBackend {
             match slf {
                 Self::File(b) => {
                     let file_path = format!("{}/{}.key", b.path, key_id);
-                    std::fs::remove_file(&file_path)
+                    tokio::fs::remove_file(&file_path)
+                        .await
                         .map_err(|e| BearDogError::io_error(&e.to_string()))?;
                     Ok(())
                 }
@@ -195,10 +199,15 @@ impl StorageBackend {
         async move {
             match slf {
                 Self::File(b) => {
-                    let entries = std::fs::read_dir(&b.path)
+                    let mut dir = tokio::fs::read_dir(&b.path)
+                        .await
                         .map_err(|e| BearDogError::io_error(&e.to_string()))?;
                     let mut keys = Vec::new();
-                    for entry in entries.flatten() {
+                    while let Some(entry) = dir
+                        .next_entry()
+                        .await
+                        .map_err(|e| BearDogError::io_error(&e.to_string()))?
+                    {
                         if let Some(name) = entry.file_name().to_str() {
                             let path = std::path::Path::new(name);
                             if path
@@ -232,10 +241,15 @@ impl StorageBackend {
             match slf {
                 Self::File(b) => {
                     let path = b.path.clone();
-                    let entries = std::fs::read_dir(&path)
+                    let mut dir = tokio::fs::read_dir(&path)
+                        .await
                         .map_err(|e| BearDogError::io_error(&e.to_string()))?;
                     let mut keys = Vec::new();
-                    for entry in entries.flatten() {
+                    while let Some(entry) = dir
+                        .next_entry()
+                        .await
+                        .map_err(|e| BearDogError::io_error(&e.to_string()))?
+                    {
                         if let Some(name) = entry.file_name().to_str() {
                             let p = std::path::Path::new(name);
                             if p.extension()
@@ -249,7 +263,8 @@ impl StorageBackend {
                     let mut backup_data = HashMap::new();
                     for key_id in keys {
                         let file_path = format!("{path}/{key_id}.key");
-                        let data = std::fs::read(&file_path)
+                        let data = tokio::fs::read(&file_path)
+                            .await
                             .map_err(|e| BearDogError::not_found(format!("Key not found: {e}")))?;
                         backup_data.insert(key_id, data);
                     }
@@ -284,7 +299,8 @@ impl StorageBackend {
                         .map_err(|e| BearDogError::internal(e.to_string()))?;
                     for (key_id, data) in backup {
                         let file_path = format!("{}/{}.key", b.path, key_id);
-                        std::fs::write(&file_path, data)
+                        tokio::fs::write(&file_path, data)
+                            .await
                             .map_err(|e| BearDogError::io_error(&e.to_string()))?;
                     }
                     Ok(())

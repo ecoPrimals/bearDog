@@ -56,6 +56,8 @@
 mod strategies;
 mod types;
 
+#[cfg(test)]
+pub use strategies::parse_capabilities_str;
 pub use types::{DiscoveredPrimal, DiscoveryMethod, DiscoveryQuery, PrimalDiscovery};
 
 use beardog_errors::BearDogError;
@@ -132,7 +134,7 @@ impl PrimalDiscovery {
                 Ok(DiscoveryMethod::Environment)
             }
             Some("upa") => {
-                let registry_addr = ipc::resolve_upa_registry_endpoint();
+                let registry_addr = ipc::resolve_upa_registry_endpoint_from_env();
                 info!("Using UPA registry at: {}", registry_addr);
                 Ok(DiscoveryMethod::UniversalPrimalAuthority { registry_addr })
             }
@@ -149,7 +151,7 @@ impl PrimalDiscovery {
                 Ok(DiscoveryMethod::DnsSd { domain })
             }
             Some("multi") | None => {
-                let registry_addr = ipc::resolve_upa_registry_endpoint();
+                let registry_addr = ipc::resolve_upa_registry_endpoint_from_env();
                 info!(
                     "Using multi-method discovery (environment + platform sockets → UPA at {})",
                     registry_addr

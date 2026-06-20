@@ -15,7 +15,6 @@ use base64::Engine;
 use chrono::Utc;
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use serde::{Deserialize, Serialize};
-use std::fmt;
 
 const B64: &base64::engine::GeneralPurpose = &base64::engine::general_purpose::STANDARD;
 
@@ -78,13 +77,16 @@ pub struct IonicTokenPayload {
 // ── Errors ──────────────────────────────────────────────────────────────
 
 /// Token verification failure.
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum TokenError {
     /// Token string is not three dot-separated base64 segments.
+    #[error("malformed token: {0}")]
     Malformed(String),
     /// Ed25519 signature does not verify.
+    #[error("invalid Ed25519 signature")]
     InvalidSignature,
     /// Token `exp` is in the past.
+    #[error("token expired (exp={exp}, now={now})")]
     Expired {
         /// Token expiry timestamp.
         exp: i64,
@@ -92,23 +94,9 @@ pub enum TokenError {
         now: i64,
     },
     /// Token header `typ` or `alg` is not recognized.
+    #[error("unsupported token format: {0}")]
     UnsupportedFormat(String),
 }
-
-impl fmt::Display for TokenError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Malformed(msg) => write!(f, "malformed token: {msg}"),
-            Self::InvalidSignature => write!(f, "invalid Ed25519 signature"),
-            Self::Expired { exp, now } => {
-                write!(f, "token expired (exp={exp}, now={now})")
-            }
-            Self::UnsupportedFormat(msg) => write!(f, "unsupported token format: {msg}"),
-        }
-    }
-}
-
-impl std::error::Error for TokenError {}
 
 // ── Issue ───────────────────────────────────────────────────────────────
 

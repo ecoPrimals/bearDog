@@ -48,8 +48,8 @@ use beardog_types::hsm::CryptoProvider;
 ///
 /// ## Evolution
 ///
-/// - Ring removed — evolved to RustCrypto
-/// - OpenSSL removed — evolved to RustCrypto
+/// - `Ring` removed — evolved to `RustCrypto`
+/// - `OpenSSL` removed — evolved to `RustCrypto`
 #[derive(Debug, Clone)]
 pub enum CryptoProviderDispatch {
     /// 100% Pure Rust cryptography implementation (ARM cross-compile ready!)

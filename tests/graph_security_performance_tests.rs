@@ -58,7 +58,7 @@ impl Drop for SocketGuard {
     }
 }
 
-/// Spin up a test server on an isolated socket, returning (socket_path, server_task, guard).
+/// Spin up a test server on an isolated socket, returning (`socket_path`, `server_task`, guard).
 async fn start_test_server() -> (String, tokio::task::JoinHandle<()>, SocketGuard) {
     let socket_path = unique_unix_socket();
     let _ = std::fs::remove_file(&socket_path);

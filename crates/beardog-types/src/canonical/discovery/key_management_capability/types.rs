@@ -362,15 +362,17 @@ pub struct KmsCapabilities {
 }
 
 /// KMS error types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, thiserror::Error)]
 pub enum KmsError {
     /// Key not found for the given identifier.
+    #[error("Key not found: {key_id}")]
     KeyNotFound {
         /// KMS key identifier that could not be resolved.
         key_id: String,
     },
 
     /// KMS provider unavailable
+    #[error("KMS provider '{provider}' unavailable: {reason}")]
     ProviderUnavailable {
         /// Provider name or endpoint that failed.
         provider: String,
@@ -379,85 +381,51 @@ pub enum KmsError {
     },
 
     /// Operation not supported
+    #[error("Operation not supported: {operation}")]
     OperationNotSupported {
         /// Requested operation name as reported by the provider.
         operation: String,
     },
 
     /// Invalid key specification
+    #[error("Invalid key specification: {reason}")]
     InvalidKeySpec {
         /// Validation or parsing error detail.
         reason: String,
     },
 
     /// Cryptographic operation failed
+    #[error("Cryptographic error: {details}")]
     CryptoError {
         /// Provider error text or internal crypto failure summary.
         details: String,
     },
 
     /// Permission denied
+    #[error("Permission denied for resource: {resource}")]
     PermissionDenied {
         /// Resource or capability that was denied.
         resource: String,
     },
 
     /// Rate limit exceeded
+    #[error("Rate limit exceeded, retry after {retry_after_seconds} seconds")]
     RateLimitExceeded {
         /// Suggested backoff before retrying, in seconds.
         retry_after_seconds: u64,
     },
 
     /// Network error
+    #[error("Network error: {details}")]
     NetworkError {
         /// Transport- or TLS-level failure description.
         details: String,
     },
 
     /// Generic error
+    #[error("KMS error: {message}")]
     Other {
         /// Catch-all message when no specific variant applies.
         message: String,
     },
 }
-
-impl fmt::Display for KmsError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::KeyNotFound { key_id } => {
-                write!(f, "Key not found: {key_id}")
-            }
-            Self::ProviderUnavailable { provider, reason } => {
-                write!(f, "KMS provider '{provider}' unavailable: {reason}")
-            }
-            Self::OperationNotSupported { operation } => {
-                write!(f, "Operation not supported: {operation}")
-            }
-            Self::InvalidKeySpec { reason } => {
-                write!(f, "Invalid key specification: {reason}")
-            }
-            Self::CryptoError { details } => {
-                write!(f, "Cryptographic error: {details}")
-            }
-            Self::PermissionDenied { resource } => {
-                write!(f, "Permission denied for resource: {resource}")
-            }
-            Self::RateLimitExceeded {
-                retry_after_seconds,
-            } => {
-                write!(
-                    f,
-                    "Rate limit exceeded, retry after {retry_after_seconds} seconds"
-                )
-            }
-            Self::NetworkError { details } => {
-                write!(f, "Network error: {details}")
-            }
-            Self::Other { message } => {
-                write!(f, "KMS error: {message}")
-            }
-        }
-    }
-}
-
-impl std::error::Error for KmsError {}

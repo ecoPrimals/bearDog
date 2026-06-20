@@ -87,9 +87,10 @@ pub const MIN_BUFFER_SIZE: usize = 64;
 pub type ValidationResult<T> = Result<T, ValidationError>;
 
 /// Common validation errors
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum ValidationError {
     /// Value is below minimum threshold
+    #[error("Field '{field}' value {value} is below minimum {minimum}")]
     BelowMinimum {
         /// Rejected value (stringified)
         value: String,
@@ -99,6 +100,7 @@ pub enum ValidationError {
         field: String,
     },
     /// Value exceeds maximum threshold
+    #[error("Field '{field}' value {value} exceeds maximum {maximum}")]
     AboveMaximum {
         /// Rejected value (stringified)
         value: String,
@@ -108,6 +110,7 @@ pub enum ValidationError {
         field: String,
     },
     /// Value is outside valid range
+    #[error("Field '{field}' value {value} is outside valid range [{min}, {max}]")]
     OutOfRange {
         /// Rejected value (stringified)
         value: String,
@@ -119,43 +122,6 @@ pub enum ValidationError {
         field: String,
     },
 }
-
-impl std::fmt::Display for ValidationError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::BelowMinimum {
-                value,
-                minimum,
-                field,
-            } => {
-                write!(
-                    f,
-                    "Field '{field}' value {value} is below minimum {minimum}"
-                )
-            }
-            Self::AboveMaximum {
-                value,
-                maximum,
-                field,
-            } => {
-                write!(f, "Field '{field}' value {value} exceeds maximum {maximum}")
-            }
-            Self::OutOfRange {
-                value,
-                min,
-                max,
-                field,
-            } => {
-                write!(
-                    f,
-                    "Field '{field}' value {value} is outside valid range [{min}, {max}]"
-                )
-            }
-        }
-    }
-}
-
-impl std::error::Error for ValidationError {}
 
 #[cfg(test)]
 mod tests {

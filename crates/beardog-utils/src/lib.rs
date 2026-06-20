@@ -4,10 +4,11 @@
 
 //! # `BearDog` Utilities Crate
 //!
-//! Safe utility primitives consumed by the BearDog ecosystem:
+//! Safe utility primitives consumed by the `BearDog` ecosystem:
 //!
 //! - [`utils::safe_ops::SafeOps`] — checked arithmetic and overflow-safe operations
 //! - [`utils::safe_memory_enhanced`] — pinned buffers and global buffer pools
+//! - [`resolve_uid_from_proc`] — real UID from `/proc/self/status` on Linux
 
 /// Shared helpers: safe arithmetic, pinned memory, buffer pools.
 pub mod utils;

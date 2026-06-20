@@ -38,33 +38,24 @@ pub struct TlsTerminationConfig {
 }
 
 /// Errors from TLS configuration.
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum TlsConfigError {
     /// Certificate file could not be read.
+    #[error("failed to read cert file: {0}")]
     CertFileError(String),
     /// Key file could not be read.
+    #[error("failed to read key file: {0}")]
     KeyFileError(String),
     /// No certificates found in PEM file.
+    #[error("no certificates found in PEM file")]
     NoCertificates,
     /// No private key found in PEM file.
+    #[error("no private key found in PEM file")]
     NoPrivateKey,
     /// Failed to build `rustls` server config.
+    #[error("rustls ServerConfig error: {0}")]
     ServerConfigError(String),
 }
-
-impl std::fmt::Display for TlsConfigError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::CertFileError(e) => write!(f, "failed to read cert file: {e}"),
-            Self::KeyFileError(e) => write!(f, "failed to read key file: {e}"),
-            Self::NoCertificates => write!(f, "no certificates found in PEM file"),
-            Self::NoPrivateKey => write!(f, "no private key found in PEM file"),
-            Self::ServerConfigError(e) => write!(f, "rustls ServerConfig error: {e}"),
-        }
-    }
-}
-
-impl std::error::Error for TlsConfigError {}
 
 impl TlsTerminationConfig {
     /// Load config from environment variables.

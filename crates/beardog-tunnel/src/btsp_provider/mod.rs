@@ -23,9 +23,10 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use parking_lot::RwLock;
-use tracing::info;
+use tracing::{info, warn};
 
 use crate::tunnel::hsm::manager::HsmManager;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_genetics::birdsong::BirdSongManager;
 use beardog_genetics::ecosystem_evolution::EcosystemGeneticEngine;
@@ -129,7 +130,7 @@ impl BeardogBtspProvider {
 
         info!("✅ BearDog BTSP Provider initialized with BirdSong genetics");
 
-        Ok(Self {
+        let provider = Self {
             _hsm: hsm,
             _genetics: genetics,
             birdsong: Arc::new(birdsong),
@@ -139,7 +140,13 @@ impl BeardogBtspProvider {
             encryption_count: Arc::new(AtomicU64::new(0)),
             decryption_count: Arc::new(AtomicU64::new(0)),
             trust_eval_count: Arc::new(AtomicU64::new(0)),
-        })
+        };
+
+        if let Err(e) = provider.seed_trusted_peers_from_env().await {
+            warn!("Failed to seed trusted peers from {}: {}", env_keys::ENV_TRUSTED_PEERS, e);
+        }
+
+        Ok(provider)
     }
 
     /// Get `BirdSong` manager (for API server integration)
@@ -170,4 +177,29 @@ impl BeardogBtspProvider {
     pub fn get_peer_trust_record(&self, peer_id: &str) -> Option<PeerTrustRecord> {
         self.trust_db.read().get(peer_id).cloned()
     }
+
+    /// Get peer trust level (used by `SecureTunnelProvider`).
+    pub(crate) async fn get_peer_trust(&self, peer_id: &str) -> Option<types::TrustLevel> {
+        self.trust_db
+            .read()
+            .get(peer_id)
+            .map(|r| r.trust_level)
+    }
+}
+
+/// Parse `peer_id:family_id` bootstrap trust entries.
+pub(crate) fn parse_trusted_peer_pair(entry: &str) -> Result<(&str, &str), BearDogError> {
+    let (peer_id, family_id) = entry.split_once(':').ok_or_else(|| {
+        BearDogError::invalid_input(&format!(
+            "Invalid trusted peer entry '{entry}': expected peer_id:family_id"
+        ))
+    })?;
+    let peer_id = peer_id.trim();
+    let family_id = family_id.trim();
+    if peer_id.is_empty() || family_id.is_empty() {
+        return Err(BearDogError::invalid_input(&format!(
+            "Invalid trusted peer entry '{entry}': peer_id and family_id must be non-empty"
+        )));
+    }
+    Ok((peer_id, family_id))
 }

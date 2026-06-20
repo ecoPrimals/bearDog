@@ -16,6 +16,7 @@ workspace = true
 [dependencies]
 # Tower Atomic client (Pure Rust IPC via Unix sockets!)
 beardog-tower-atomic = { workspace = true }
+beardog-config = { path = "../beardog-config" }
 
 # Async runtime
 tokio = { workspace = true, features = ["rt", "macros", "net", "io-util", "sync"] }

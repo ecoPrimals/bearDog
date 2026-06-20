@@ -310,11 +310,10 @@ impl MdnsDiscovery {
 
     /// Get local hostname
     fn get_hostname() -> Result<String> {
-        let hostname = hostname::get()
+        let hostname = whoami::fallible::hostname()
             .map_err(|e| DiscoveryError::SystemError(format!("Failed to get hostname: {e}")))?;
 
         hostname
-            .to_string_lossy()
             .split('.')
             .next()
             .map(std::string::ToString::to_string)

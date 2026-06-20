@@ -24,7 +24,14 @@ use tracing::{debug, error, info, warn};
 /// newline (common with raw `nc` or `curl` probes). On timeout the connection
 /// is closed and the task freed. Value chosen to be generous for legitimate
 /// clients while still bounding resource usage.
-pub(super) const TCP_READ_TIMEOUT: Duration = Duration::from_secs(30);
+pub(super) static TCP_READ_TIMEOUT: std::sync::LazyLock<Duration> = std::sync::LazyLock::new(|| {
+    Duration::from_secs(
+        std::env::var("BEARDOG_TCP_READ_TIMEOUT_SECS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(30),
+    )
+});
 
 mod btsp;
 mod connection;

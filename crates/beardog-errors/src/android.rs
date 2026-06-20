@@ -5,12 +5,13 @@
 //! These errors provide clear, actionable information about Android platform limitations
 //! and PHASE-2 work.
 
-use std::fmt;
+use std::fmt::{self, Write as _};
 
 /// Android-specific errors with clear context
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, thiserror::Error)]
 pub enum AndroidError {
     /// Feature requires PHASE-2 Binder IPC implementation
+    #[error("{}", format_phase2_not_implemented(*.phase, .feature, *.tracking_issue, *.workaround, .implementation_notes))]
     Phase2NotImplemented {
         /// Name of the feature
         feature: &'static str,
@@ -25,6 +26,7 @@ pub enum AndroidError {
     },
 
     /// Platform not supported (non-Android)
+    #[error("{}", format_unsupported_platform(.platform, .feature, .alternatives))]
     UnsupportedPlatform {
         /// Current platform
         platform: String,
@@ -35,6 +37,7 @@ pub enum AndroidError {
     },
 
     /// `StrongBox` not available on this device
+    #[error("{}", format_strongbox_not_available(.manufacturer, .model, .android_version, *.tee_fallback_available))]
     StrongBoxNotAvailable {
         /// Device manufacturer
         manufacturer: String,
@@ -45,6 +48,67 @@ pub enum AndroidError {
         /// Whether TEE fallback is available
         tee_fallback_available: bool,
     },
+}
+
+fn format_phase2_not_implemented(
+    phase: Phase,
+    feature: &str,
+    tracking_issue: Option<&str>,
+    workaround: Option<&str>,
+    implementation_notes: &str,
+) -> String {
+    let mut output = format!("❌ Feature not yet implemented: {feature}\n\n");
+    let _ = writeln!(output, "📋 Status: Planned for {phase}");
+    if let Some(issue) = tracking_issue {
+        let _ = writeln!(output, "🔗 Tracking: {issue}");
+    }
+    output.push('\n');
+    output.push_str("📝 Implementation Notes:\n");
+    output.push_str(implementation_notes);
+    output.push('\n');
+    if let Some(work) = workaround {
+        output.push('\n');
+        output.push_str("💡 Workaround:\n");
+        output.push_str(work);
+        output.push('\n');
+    }
+    output
+}
+
+fn format_unsupported_platform(
+    platform: &str,
+    feature: &str,
+    alternatives: &[&str],
+) -> String {
+    let mut output = format!("❌ Platform not supported: {platform}\n\n");
+    let _ = writeln!(output, "Feature '{feature}' requires Android platform");
+    if !alternatives.is_empty() {
+        output.push('\n');
+        let _ = writeln!(output, "💡 Alternatives for {platform}:");
+        for alt in alternatives {
+            let _ = writeln!(output, "  • {alt}");
+        }
+    }
+    output
+}
+
+fn format_strongbox_not_available(
+    manufacturer: &str,
+    model: &str,
+    android_version: &str,
+    tee_fallback_available: bool,
+) -> String {
+    let mut output = String::from("❌ StrongBox not available on this device\n\n");
+    let _ = writeln!(output, "Device: {manufacturer} {model}");
+    let _ = writeln!(output, "Android: {android_version}\n");
+    if tee_fallback_available {
+        output.push_str("💡 TEE (Trusted Execution Environment) fallback available\n");
+        output.push_str("   (less secure than StrongBox but still hardware-backed)\n");
+    } else {
+        output.push_str("⚠️  No hardware-backed keystore available\n");
+        output.push_str("   Software HSM will be used (less secure)\n");
+    }
+    output
 }
 
 /// Development phase indicator
@@ -67,83 +131,6 @@ impl fmt::Display for Phase {
         }
     }
 }
-
-impl fmt::Display for AndroidError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Phase2NotImplemented {
-                feature,
-                phase,
-                tracking_issue,
-                workaround,
-                implementation_notes,
-            } => {
-                writeln!(f, "❌ Feature not yet implemented: {feature}")?;
-                writeln!(f)?;
-                writeln!(f, "📋 Status: Planned for {phase}")?;
-                if let Some(issue) = tracking_issue {
-                    writeln!(f, "🔗 Tracking: {issue}")?;
-                }
-                writeln!(f)?;
-                writeln!(f, "📝 Implementation Notes:")?;
-                writeln!(f, "{implementation_notes}")?;
-
-                if let Some(work) = workaround {
-                    writeln!(f)?;
-                    writeln!(f, "💡 Workaround:")?;
-                    writeln!(f, "{work}")?;
-                }
-
-                Ok(())
-            }
-            Self::UnsupportedPlatform {
-                platform,
-                feature,
-                alternatives,
-            } => {
-                writeln!(f, "❌ Platform not supported: {platform}")?;
-                writeln!(f)?;
-                writeln!(f, "Feature '{feature}' requires Android platform")?;
-                if !alternatives.is_empty() {
-                    writeln!(f)?;
-                    writeln!(f, "💡 Alternatives for {platform}:")?;
-                    for alt in alternatives {
-                        writeln!(f, "  • {alt}")?;
-                    }
-                }
-                Ok(())
-            }
-            Self::StrongBoxNotAvailable {
-                manufacturer,
-                model,
-                android_version,
-                tee_fallback_available,
-            } => {
-                writeln!(f, "❌ StrongBox not available on this device")?;
-                writeln!(f)?;
-                writeln!(f, "Device: {manufacturer} {model}")?;
-                writeln!(f, "Android: {android_version}")?;
-                writeln!(f)?;
-                if *tee_fallback_available {
-                    writeln!(
-                        f,
-                        "💡 TEE (Trusted Execution Environment) fallback available"
-                    )?;
-                    writeln!(
-                        f,
-                        "   (less secure than StrongBox but still hardware-backed)"
-                    )?;
-                } else {
-                    writeln!(f, "⚠️  No hardware-backed keystore available")?;
-                    writeln!(f, "   Software HSM will be used (less secure)")?;
-                }
-                Ok(())
-            }
-        }
-    }
-}
-
-impl std::error::Error for AndroidError {}
 
 /// Create a PHASE-2 not implemented error with context.
 #[must_use]

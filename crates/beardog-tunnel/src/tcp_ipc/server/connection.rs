@@ -120,7 +120,7 @@ impl TcpIpcServer {
             line.clear();
 
             let read_result =
-                tokio::time::timeout(TCP_READ_TIMEOUT, reader.read_line(&mut line)).await;
+                tokio::time::timeout(*TCP_READ_TIMEOUT, reader.read_line(&mut line)).await;
 
             let bytes_read = match read_result {
                 Err(_elapsed) => {

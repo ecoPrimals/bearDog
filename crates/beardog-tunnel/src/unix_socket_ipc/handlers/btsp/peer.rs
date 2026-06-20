@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Peer trust verification (`btsp.verify_peer`).
+//! Peer trust verification (`btsp.verify_peer`) and bootstrap seeding (`btsp.trust.seed`).
 
 use crate::btsp_provider::BeardogBtspProvider;
+use crate::btsp_provider::parse_trusted_peer_pair;
 use serde::Deserialize;
 use std::sync::Arc;
 use tracing::{info, warn};
@@ -86,5 +87,61 @@ impl BtspHandler {
             }
             _ => Err(format!("Unknown trust_mode: {}", verify_params.trust_mode).into()),
         }
+    }
+
+    /// Bootstrap a trusted peer into the BTSP trust database.
+    ///
+    /// Params: `{ "peer_id": "...", "family_id": "..." }` or `{ "peers": "id:fam,id2:fam2" }`.
+    pub(super) async fn handle_trust_seed(
+        &self,
+        params: Option<&serde_json::Value>,
+        btsp_provider: &Arc<BeardogBtspProvider>,
+    ) -> Result<serde_json::Value, HandlerError> {
+        info!("🌱 BTSP trust seed requested");
+
+        let params = params.ok_or("Missing params for trust seed")?;
+
+        if let Some(peers) = params.get("peers").and_then(|v| v.as_str()) {
+            let mut seeded = 0usize;
+            for entry in peers.split(',') {
+                let entry = entry.trim();
+                if entry.is_empty() {
+                    continue;
+                }
+                let (peer_id, family_id) = parse_trusted_peer_pair(entry)
+                    .map_err(|e| format!("Invalid peers entry: {e}"))?;
+                if btsp_provider
+                    .seed_trusted_peer(peer_id, family_id)
+                    .await
+                    .map_err(|e| format!("Trust seed failed: {e}"))?
+                {
+                    seeded += 1;
+                }
+            }
+            return Ok(serde_json::json!({
+                "seeded": seeded,
+                "source": "peers",
+            }));
+        }
+
+        let peer_id = params
+            .get("peer_id")
+            .and_then(|v| v.as_str())
+            .ok_or("Missing peer_id (or peers batch string)")?;
+        let family_id = params
+            .get("family_id")
+            .and_then(|v| v.as_str())
+            .ok_or("Missing family_id")?;
+
+        let inserted = btsp_provider
+            .seed_trusted_peer(peer_id, family_id)
+            .await
+            .map_err(|e| format!("Trust seed failed: {e}"))?;
+
+        Ok(serde_json::json!({
+            "peer_id": peer_id,
+            "family_id": family_id,
+            "seeded": inserted,
+        }))
     }
 }

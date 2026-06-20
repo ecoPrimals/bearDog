@@ -200,7 +200,7 @@ impl PrimalDiscovery {
     fn _parse_capabilities_from_env(env_key: &str) -> Vec<SimpleCapability> {
         beardog_errors::process_env::var(env_key)
             .ok()
-            .map(|caps_str| Self::parse_capabilities_str(&caps_str, env_key))
+            .map(|caps_str| parse_capabilities_str(&caps_str, env_key))
             .unwrap_or_default()
     }
 
@@ -210,28 +210,8 @@ impl PrimalDiscovery {
     ) -> Vec<SimpleCapability> {
         env_vars
             .get(env_key)
-            .map(|caps_str| Self::parse_capabilities_str(caps_str, env_key))
+            .map(|caps_str| parse_capabilities_str(caps_str, env_key))
             .unwrap_or_default()
-    }
-
-    pub(crate) fn parse_capabilities_str(caps_str: &str, env_key: &str) -> Vec<SimpleCapability> {
-        caps_str
-            .split(',')
-            .filter_map(|cap| {
-                let cap_trimmed = cap.trim();
-                match cap_trimmed {
-                    "SecureTunneling" => Some(SimpleCapability::SecureTunneling),
-                    "GeneticLineage" => Some(SimpleCapability::GeneticLineage),
-                    "Cryptography" => Some(SimpleCapability::Cryptography),
-                    "HsmIntegration" => Some(SimpleCapability::HsmIntegration),
-                    "Discovery" => Some(SimpleCapability::Discovery),
-                    _ => {
-                        warn!("Unknown capability in {}: {}", env_key, cap_trimmed);
-                        None
-                    }
-                }
-            })
-            .collect()
     }
 
     /// Discover from UPA registry (COMPLETE IMPLEMENTATION)
@@ -425,4 +405,25 @@ impl PrimalDiscovery {
 
         Ok(all_discovered)
     }
+}
+
+/// Parse a comma-separated list of capabilities from an environment variable value.
+pub fn parse_capabilities_str(caps_str: &str, env_key: &str) -> Vec<SimpleCapability> {
+    caps_str
+        .split(',')
+        .filter_map(|cap| {
+            let cap_trimmed = cap.trim();
+            match cap_trimmed {
+                "SecureTunneling" => Some(SimpleCapability::SecureTunneling),
+                "GeneticLineage" => Some(SimpleCapability::GeneticLineage),
+                "Cryptography" => Some(SimpleCapability::Cryptography),
+                "HsmIntegration" => Some(SimpleCapability::HsmIntegration),
+                "Discovery" => Some(SimpleCapability::Discovery),
+                _ => {
+                    warn!("Unknown capability in {}: {}", env_key, cap_trimmed);
+                    None
+                }
+            }
+        })
+        .collect()
 }

@@ -185,13 +185,16 @@ impl CapabilityDiscovery {
             warn!(
                 registry_url = %registry_url,
                 capability,
-                "service registry URL configured but client not yet implemented — \
-                 falling back to other discovery methods"
+                query_path = format!("/v1/catalog/service/{capability}"),
+                "service registry URL configured but HTTP registry client is not wired — \
+                 would query {registry_url}/v1/catalog/service/{capability} (Consul/etcd-style); \
+                 falling back to mDNS and environment discovery"
             );
         } else {
             debug!(
                 capability,
-                "no service registry URL configured, using other discovery methods"
+                "no service registry URL configured (set via with_service_registry_url); \
+                 using mDNS and environment discovery only"
             );
         }
 

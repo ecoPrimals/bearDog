@@ -277,10 +277,7 @@ impl MdnsServiceAnnouncer {
     /// Instance name defaults to "beardog-{hostname}"
     #[must_use]
     pub fn new(port: u16, capabilities: Vec<String>) -> Self {
-        let host = hostname::get().map_or_else(
-            |_| "unknown".to_string(),
-            |h| h.to_string_lossy().into_owned(),
-        );
+        let host = whoami::fallible::hostname().unwrap_or_else(|_| "unknown".to_string());
         let instance_name = format!("beardog-{host}");
 
         Self {

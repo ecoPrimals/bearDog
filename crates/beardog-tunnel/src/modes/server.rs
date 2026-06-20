@@ -192,7 +192,8 @@ pub async fn run(
             socket_config.socket_path_string(),
             btsp_provider.clone(),
             identity,
-            crate::btsp_handshake::BtspSecurityMode::Development,
+            crate::btsp_handshake::resolve_security_mode()
+                .unwrap_or(crate::btsp_handshake::BtspSecurityMode::Development),
             ipc_symlinks,
         )
         .await

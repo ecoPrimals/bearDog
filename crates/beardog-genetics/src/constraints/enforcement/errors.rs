@@ -6,24 +6,26 @@
 
 use crate::constraints::types::OperationType;
 use beardog_errors::BearDogError;
-use std::fmt;
 
 /// Errors that occur when constraints are violated
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, thiserror::Error)]
 pub enum ConstraintViolationError {
     /// Signature verification failed (constraints may be tampered)
+    #[error("🔒 Constraint signature verification failed: {reason}")]
     SignatureVerificationFailed {
         /// Why the embedded constraint signature did not verify.
         reason: String,
     },
 
     /// Key has expired
+    #[error("⏰ Key expired at {expired_at}")]
     KeyExpired {
         /// Wall-clock instant after which the key must not be used.
         expired_at: chrono::DateTime<chrono::Utc>,
     },
 
     /// Use count exceeded
+    #[error("🔢 Use count exceeded: {current_uses}/{max_uses} uses")]
     UseCountExceeded {
         /// Maximum operations permitted under the constraint bundle.
         max_uses: u64,
@@ -32,6 +34,7 @@ pub enum ConstraintViolationError {
     },
 
     /// Operation violates scope constraint
+    #[error("🚫 Scope violation: attempted '{attempted}', allowed: {allowed:?}")]
     ScopeViolation {
         /// Domains or scopes explicitly allowed by policy.
         allowed: Vec<String>,
@@ -40,12 +43,14 @@ pub enum ConstraintViolationError {
     },
 
     /// Operation in forbidden domain
+    #[error("🚫 Operation in forbidden domain: '{domain}'")]
     ForbiddenDomain {
         /// Label of the forbidden domain (e.g. capability realm).
         domain: String,
     },
 
     /// Operation type not allowed
+    #[error("🚫 Operation '{operation:?}' not allowed. Allowed: {allowed:?}")]
     OperationNotAllowed {
         /// Operation the caller requested.
         operation: OperationType,
@@ -54,6 +59,7 @@ pub enum ConstraintViolationError {
     },
 
     /// Data access denied
+    #[error("🚫 Data access denied: {operation} on '{path}' - {reason}")]
     DataAccessDenied {
         /// High-level operation name (e.g. read, delete).
         operation: String,
@@ -64,6 +70,7 @@ pub enum ConstraintViolationError {
     },
 
     /// Co-signer requirement not met
+    #[error("🚫 Co-signer required. Required: {required:?}, Present: {present:?}")]
     CoSignerRequired {
         /// Identifiers of principals that must co-sign.
         required: Vec<String>,
@@ -72,66 +79,12 @@ pub enum ConstraintViolationError {
     },
 
     /// Behavioral requirement not met
+    #[error("🚫 Behavioral requirement not met: {requirement}")]
     BehavioralRequirementNotMet {
         /// Description of the unmet behavioral gate (e.g. biometric step-up).
         requirement: String,
     },
 }
-
-impl fmt::Display for ConstraintViolationError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::SignatureVerificationFailed { reason } => {
-                write!(f, "🔒 Constraint signature verification failed: {reason}")
-            }
-            Self::KeyExpired { expired_at } => {
-                write!(f, "⏰ Key expired at {expired_at}")
-            }
-            Self::UseCountExceeded {
-                max_uses,
-                current_uses,
-            } => {
-                write!(f, "🔢 Use count exceeded: {current_uses}/{max_uses} uses")
-            }
-            Self::ScopeViolation { allowed, attempted } => {
-                write!(
-                    f,
-                    "🚫 Scope violation: attempted '{attempted}', allowed: {allowed:?}"
-                )
-            }
-            Self::ForbiddenDomain { domain } => {
-                write!(f, "🚫 Operation in forbidden domain: '{domain}'")
-            }
-            Self::OperationNotAllowed { operation, allowed } => {
-                write!(
-                    f,
-                    "🚫 Operation '{operation:?}' not allowed. Allowed: {allowed:?}"
-                )
-            }
-            Self::DataAccessDenied {
-                operation,
-                path,
-                reason,
-            } => {
-                write!(
-                    f,
-                    "🚫 Data access denied: {operation} on '{path}' - {reason}"
-                )
-            }
-            Self::CoSignerRequired { required, present } => {
-                write!(
-                    f,
-                    "🚫 Co-signer required. Required: {required:?}, Present: {present:?}"
-                )
-            }
-            Self::BehavioralRequirementNotMet { requirement } => {
-                write!(f, "🚫 Behavioral requirement not met: {requirement}")
-            }
-        }
-    }
-}
-
-impl std::error::Error for ConstraintViolationError {}
 
 impl From<ConstraintViolationError> for BearDogError {
     fn from(err: ConstraintViolationError) -> Self {

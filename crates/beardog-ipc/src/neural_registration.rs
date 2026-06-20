@@ -88,12 +88,14 @@ pub async fn register_with_neural_api(
     );
     info!("   Primal: {}, Socket: {}", primal_name, socket_path);
 
+    let provider = beardog_config::env_keys::resolve_primal_name();
+
     let build_cap = |capability: &str, version: &str, operations: Vec<&str>| {
         let mut cap = json!({
             "capability": capability,
             "primal": primal_name,
             "socket": socket_path,
-            "provider": "beardog",
+            "provider": provider.as_str(),
             "version": version,
             "operations": operations,
         });
@@ -185,6 +187,8 @@ pub async fn send_primal_announce(
     methods: &[String],
     signed_attestation: Option<&serde_json::Value>,
 ) -> Result<()> {
+    use beardog_types::constants::domains::network::ribocipher;
+
     info!(
         target_socket = biomeos_socket,
         primal = primal_name,
@@ -230,8 +234,6 @@ pub async fn send_primal_announce(
         .await
         .context(format!("Failed to connect to biomeOS at {biomeos_socket}"))?;
 
-    // riboCipher: signal clear NDJSON JSON-RPC to biomeOS
-    use beardog_types::constants::domains::network::ribocipher;
     stream
         .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
         .await?;
@@ -331,6 +333,8 @@ pub fn beardog_announce_method_names() -> &'static [&'static str] {
 
 /// Register a single capability with Neural API
 async fn register_capability(neural_socket: &str, capability: serde_json::Value) -> Result<()> {
+    use beardog_types::constants::domains::network::ribocipher;
+
     let cap_name = capability["capability"].as_str().unwrap_or("unknown");
     debug!("📤 Registering capability: {}", cap_name);
 
@@ -349,8 +353,6 @@ async fn register_capability(neural_socket: &str, capability: serde_json::Value)
         "Failed to connect to Neural API at {neural_socket}"
     ))?;
 
-    // riboCipher: signal clear NDJSON JSON-RPC
-    use beardog_types::constants::domains::network::ribocipher;
     stream
         .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
         .await?;

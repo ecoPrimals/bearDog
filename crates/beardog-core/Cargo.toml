@@ -30,7 +30,7 @@ aes-gcm = { workspace = true }
 chacha20poly1305 = { workspace = true }
 base64 = { workspace = true }
 mdns-sd = { workspace = true, optional = true }
-hostname = { workspace = true }
+whoami = { workspace = true }
 p256 = { workspace = true }
 rsa = { workspace = true }
 blake3 = { workspace = true }
@@ -53,6 +53,9 @@ workspace = true
 
 [package.authors]
 workspace = true
+
+[dependencies.beardog-utils]
+path = "../beardog-utils"
 
 [dependencies.beardog-config]
 path = "../beardog-config"

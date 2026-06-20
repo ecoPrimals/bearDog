@@ -55,6 +55,8 @@ fn discover_socket_path_with(get: impl Fn(&str) -> Option<String>) -> String {
 ///
 /// Returns an error if the Unix socket cannot be opened, or sending/receiving IPC commands fails.
 pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
+    use beardog_types::constants::domains::network::ribocipher;
+
     info!("🐻🐕 BearDog Client Mode");
     info!("   Connecting to: {}", args.socket);
     info!("");
@@ -70,8 +72,6 @@ pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
             category: NetworkErrorCategory::default(),
         })?;
 
-    // riboCipher: signal clear NDJSON JSON-RPC
-    use beardog_types::constants::domains::network::ribocipher;
     stream
         .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
         .await
@@ -163,6 +163,8 @@ async fn execute_command_on_socket(
     socket_path: impl AsRef<Path>,
     command: &str,
 ) -> Result<(), BearDogError> {
+    use beardog_types::constants::domains::network::ribocipher;
+
     let new_stream = UnixStream::connect(socket_path.as_ref())
         .await
         .map_err(|e| BearDogError::Network {
@@ -173,8 +175,6 @@ async fn execute_command_on_socket(
     let (reader, mut writer) = new_stream.into_split();
     let mut reader = BufReader::new(reader);
 
-    // riboCipher: signal clear NDJSON JSON-RPC
-    use beardog_types::constants::domains::network::ribocipher;
     writer
         .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
         .await

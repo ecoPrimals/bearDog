@@ -168,17 +168,23 @@ impl PathConfig {
 }
 
 fn default_config_dir() -> PathBuf {
-    dirs::config_dir().map_or_else(|| PathBuf::from("/etc/beardog"), |p| p.join("beardog"))
+    directories::BaseDirs::new().map_or_else(
+        || PathBuf::from("/etc/beardog"),
+        |d| d.config_dir().join("beardog"),
+    )
 }
 
 fn default_data_dir() -> PathBuf {
-    dirs::data_dir().map_or_else(|| PathBuf::from("/var/lib/beardog"), |p| p.join("beardog"))
+    directories::BaseDirs::new().map_or_else(
+        || PathBuf::from("/var/lib/beardog"),
+        |d| d.data_dir().join("beardog"),
+    )
 }
 
 fn default_log_dir() -> PathBuf {
-    dirs::cache_dir().map_or_else(
+    directories::BaseDirs::new().map_or_else(
         || PathBuf::from("/var/log/beardog"),
-        |p| p.join("beardog").join("logs"),
+        |d| d.cache_dir().join("beardog").join("logs"),
     )
 }
 

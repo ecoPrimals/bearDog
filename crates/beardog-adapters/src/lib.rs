@@ -321,8 +321,15 @@ impl UniversalAdapter {
         &self,
         request: &CapabilityRequest,
     ) -> Result<CapabilityResponse, BearDogError> {
+        tracing::warn!(
+            capability = %request.capability,
+            operation = %request.operation,
+            parameter_count = request.parameters.len(),
+            "Adapter IPC dispatch not wired — requires beardog-ipc ipc.resolve integration"
+        );
         Err(BearDogError::not_yet_available(format!(
-            "Adapter capability dispatch for {}.{} — awaiting ipc.resolve integration",
+            "Capability dispatch for '{}' operation '{}' via ipc.resolve — \
+             beardog-adapters has no IPC client wired; integrate beardog-ipc to route to the target primal",
             request.capability, request.operation
         )))
     }

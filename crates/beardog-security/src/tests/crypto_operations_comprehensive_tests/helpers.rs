@@ -2,7 +2,7 @@
 
 use beardog_errors::BearDogError;
 
-pub(crate) fn generate_ed25519_keypair() -> Result<Ed25519Keypair, BearDogError> {
+pub(super) fn generate_ed25519_keypair() -> Result<Ed25519Keypair, BearDogError> {
     use ed25519_dalek::SigningKey;
     use rand::RngCore;
 
@@ -17,7 +17,7 @@ pub(crate) fn generate_ed25519_keypair() -> Result<Ed25519Keypair, BearDogError>
     })
 }
 
-pub(crate) fn sign_ed25519(secret: &[u8], message: &[u8]) -> Result<Vec<u8>, BearDogError> {
+pub(super) fn sign_ed25519(secret: &[u8], message: &[u8]) -> Result<Vec<u8>, BearDogError> {
     use ed25519_dalek::{Signer, SigningKey};
 
     if secret.len() != 32 {
@@ -36,7 +36,7 @@ pub(crate) fn sign_ed25519(secret: &[u8], message: &[u8]) -> Result<Vec<u8>, Bea
     Ok(signature.to_bytes().to_vec())
 }
 
-pub(crate) fn verify_ed25519_signature(
+pub(super) fn verify_ed25519_signature(
     public: &[u8],
     message: &[u8],
     signature: &[u8],
@@ -71,21 +71,21 @@ pub(crate) fn verify_ed25519_signature(
     Ok(verifying_key.verify(message, &sig).is_ok())
 }
 
-pub(crate) fn generate_aes_256_key() -> Result<Vec<u8>, BearDogError> {
+pub(super) fn generate_aes_256_key() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut key = vec![0u8; 32];
     rand::rng().fill_bytes(&mut key);
     Ok(key)
 }
 
-pub(crate) fn generate_aes_nonce() -> Result<Vec<u8>, BearDogError> {
+pub(super) fn generate_aes_nonce() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut nonce = vec![0u8; 12];
     rand::rng().fill_bytes(&mut nonce);
     Ok(nonce)
 }
 
-pub(crate) fn encrypt_aes_256_gcm(
+pub(super) fn encrypt_aes_256_gcm(
     key: &[u8],
     nonce: &[u8],
     plaintext: &[u8],
@@ -100,7 +100,7 @@ pub(crate) fn encrypt_aes_256_gcm(
         .map_err(|e| BearDogError::security(format!("AES-GCM encryption failed: {e}")))
 }
 
-pub(crate) fn decrypt_aes_256_gcm(
+pub(super) fn decrypt_aes_256_gcm(
     key: &[u8],
     nonce: &[u8],
     ciphertext: &[u8],
@@ -115,21 +115,21 @@ pub(crate) fn decrypt_aes_256_gcm(
         .map_err(|e| BearDogError::security(format!("AES-GCM decryption failed: {e}")))
 }
 
-pub(crate) fn generate_chacha20_key() -> Result<Vec<u8>, BearDogError> {
+pub(super) fn generate_chacha20_key() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut key = vec![0u8; 32];
     rand::rng().fill_bytes(&mut key);
     Ok(key)
 }
 
-pub(crate) fn generate_chacha20_nonce() -> Result<Vec<u8>, BearDogError> {
+pub(super) fn generate_chacha20_nonce() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut nonce = vec![0u8; 12];
     rand::rng().fill_bytes(&mut nonce);
     Ok(nonce)
 }
 
-pub(crate) fn encrypt_chacha20_poly1305(
+pub(super) fn encrypt_chacha20_poly1305(
     key: &[u8],
     nonce: &[u8],
     plaintext: &[u8],
@@ -144,7 +144,7 @@ pub(crate) fn encrypt_chacha20_poly1305(
         .map_err(|e| BearDogError::security(format!("ChaCha20-Poly1305 encryption failed: {e}")))
 }
 
-pub(crate) fn decrypt_chacha20_poly1305(
+pub(super) fn decrypt_chacha20_poly1305(
     key: &[u8],
     nonce: &[u8],
     ciphertext: &[u8],
@@ -159,7 +159,7 @@ pub(crate) fn decrypt_chacha20_poly1305(
         .map_err(|e| BearDogError::security(format!("ChaCha20-Poly1305 decryption failed: {e}")))
 }
 
-pub(crate) fn encrypt_chacha20_poly1305_with_aad(
+pub(super) fn encrypt_chacha20_poly1305_with_aad(
     key: &[u8],
     nonce: &[u8],
     plaintext: &[u8],
@@ -179,7 +179,7 @@ pub(crate) fn encrypt_chacha20_poly1305_with_aad(
     })
 }
 
-pub(crate) fn decrypt_chacha20_poly1305_with_aad(
+pub(super) fn decrypt_chacha20_poly1305_with_aad(
     key: &[u8],
     nonce: &[u8],
     ciphertext: &[u8],
@@ -199,12 +199,12 @@ pub(crate) fn decrypt_chacha20_poly1305_with_aad(
     })
 }
 
-pub(crate) fn blake3_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+pub(super) fn blake3_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
     let hash = blake3::hash(data);
     Ok(hash.as_bytes().to_vec())
 }
 
-pub(crate) fn blake3_keyed_hash(key: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+pub(super) fn blake3_keyed_hash(key: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
     if key.len() != 32 {
         return Err(BearDogError::validation("BLAKE3 key must be 32 bytes"));
     }
@@ -215,7 +215,7 @@ pub(crate) fn blake3_keyed_hash(key: &[u8], data: &[u8]) -> Result<Vec<u8>, Bear
     Ok(hash.as_bytes().to_vec())
 }
 
-pub(crate) fn derive_key_pbkdf2(
+pub(super) fn derive_key_pbkdf2(
     password: &[u8],
     salt: &[u8],
     iterations: u32,
@@ -227,7 +227,7 @@ pub(crate) fn derive_key_pbkdf2(
     Ok(key.to_vec())
 }
 
-pub(crate) fn derive_key_argon2(password: &[u8], salt: &[u8]) -> Result<Vec<u8>, BearDogError> {
+pub(super) fn derive_key_argon2(password: &[u8], salt: &[u8]) -> Result<Vec<u8>, BearDogError> {
     use argon2::password_hash::SaltString;
     use argon2::{Argon2, PasswordHasher};
 
@@ -248,7 +248,7 @@ pub(crate) fn derive_key_argon2(password: &[u8], salt: &[u8]) -> Result<Vec<u8>,
     Ok(hash_bytes.as_bytes().to_vec())
 }
 
-pub(crate) struct Ed25519Keypair {
+pub(super) struct Ed25519Keypair {
     pub public: Vec<u8>,
     pub secret: Vec<u8>,
 }

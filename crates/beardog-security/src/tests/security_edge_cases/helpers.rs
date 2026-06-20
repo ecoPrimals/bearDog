@@ -2,7 +2,7 @@
 
 use beardog_errors::BearDogError;
 
-pub(crate) fn attempt_encryption(data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
+pub(super) fn attempt_encryption(data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
     if key.is_empty() {
         return Err(BearDogError::Security {
             message: "Empty encryption key".to_string(),
@@ -23,7 +23,7 @@ pub(crate) fn attempt_encryption(data: &[u8], key: &[u8]) -> Result<Vec<u8>, Bea
     Ok(result)
 }
 
-pub(crate) fn attempt_decryption(data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
+pub(super) fn attempt_decryption(data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
     if data.len() < 16 {
         return Err(BearDogError::Security {
             message: "Encrypted data too short".to_string(),
@@ -50,38 +50,38 @@ pub(crate) fn attempt_decryption(data: &[u8], key: &[u8]) -> Result<Vec<u8>, Bea
     attempt_encryption(data, key)
 }
 
-pub(crate) fn generate_test_key() -> Result<Vec<u8>, BearDogError> {
+pub(super) fn generate_test_key() -> Result<Vec<u8>, BearDogError> {
     use rand::Rng;
     let mut rng = rand::rng();
     let key: Vec<u8> = (0..32).map(|_| rng.random()).collect();
     Ok(key)
 }
 
-pub(crate) fn delete_nonexistent_key(_key_id: &str) -> Result<(), BearDogError> {
+pub(super) fn delete_nonexistent_key(_key_id: &str) -> Result<(), BearDogError> {
     Err(BearDogError::Business {
         message: "Key not found".to_string(),
         category: beardog_errors::BusinessErrorCategory::Validation,
     })
 }
 
-pub(crate) fn simulate_failed_key_rotation(_key: &[u8]) -> Result<Vec<u8>, BearDogError> {
+pub(super) fn simulate_failed_key_rotation(_key: &[u8]) -> Result<Vec<u8>, BearDogError> {
     Err(BearDogError::System {
         message: "Key rotation failed".to_string(),
         category: beardog_errors::SystemErrorCategory::General,
     })
 }
 
-pub(crate) fn access_key(_key_id: &str) -> Result<Vec<u8>, BearDogError> {
+pub(super) fn access_key(_key_id: &str) -> Result<Vec<u8>, BearDogError> {
     Ok(vec![1u8; 32])
 }
 
-pub(crate) fn compute_test_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+pub(super) fn compute_test_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
     use sha2::{Digest, Sha256};
     let hash = Sha256::digest(data);
     Ok(hash.to_vec())
 }
 
-pub(crate) fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
+pub(super) fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
     if a.len() != b.len() {
         return false;
     }
@@ -92,7 +92,7 @@ pub(crate) fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
     result == 0
 }
 
-pub(crate) fn secure_zero(data: &mut [u8]) {
+pub(super) fn secure_zero(data: &mut [u8]) {
     // Note: In real code, use zeroize crate or similar
     // This is a test stub that simulates secure zeroing
     for byte in data {
@@ -102,7 +102,7 @@ pub(crate) fn secure_zero(data: &mut [u8]) {
     std::sync::atomic::compiler_fence(std::sync::atomic::Ordering::SeqCst);
 }
 
-pub(crate) fn authenticate_user(_username: &str, password: &str) -> Result<(), BearDogError> {
+pub(super) fn authenticate_user(_username: &str, password: &str) -> Result<(), BearDogError> {
     if password.is_empty() {
         return Err(BearDogError::Security {
             message: "Empty password".to_string(),
@@ -112,7 +112,7 @@ pub(crate) fn authenticate_user(_username: &str, password: &str) -> Result<(), B
     Ok(())
 }
 
-pub(crate) fn verify_signature(data: &[u8], signature: &[u8]) -> Result<(), BearDogError> {
+pub(super) fn verify_signature(data: &[u8], signature: &[u8]) -> Result<(), BearDogError> {
     if signature.is_empty() {
         return Err(BearDogError::Security {
             message: "Empty signature".to_string(),
@@ -130,11 +130,11 @@ pub(crate) fn verify_signature(data: &[u8], signature: &[u8]) -> Result<(), Bear
     Ok(())
 }
 
-pub(crate) fn generate_test_signature(_data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+pub(super) fn generate_test_signature(_data: &[u8]) -> Result<Vec<u8>, BearDogError> {
     Ok(vec![0u8; 64])
 }
 
-pub(crate) fn verify_signature_with_data(
+pub(super) fn verify_signature_with_data(
     _data: &[u8],
     _signature: &[u8],
     expected_data: &[u8],
@@ -149,14 +149,14 @@ pub(crate) fn verify_signature_with_data(
     Ok(())
 }
 
-pub(crate) fn generate_random_bytes(size: usize) -> Result<Vec<u8>, BearDogError> {
+pub(super) fn generate_random_bytes(size: usize) -> Result<Vec<u8>, BearDogError> {
     use rand::Rng;
     let mut rng = rand::rng();
     let bytes: Vec<u8> = (0..size).map(|_| rng.random()).collect();
     Ok(bytes)
 }
 
-pub(crate) fn create_config_with_key_size(_size: usize) -> TestConfig {
+pub(super) fn create_config_with_key_size(_size: usize) -> TestConfig {
     TestConfig {
         key_size: _size,
         timeout: 60,
@@ -164,7 +164,7 @@ pub(crate) fn create_config_with_key_size(_size: usize) -> TestConfig {
     }
 }
 
-pub(crate) fn create_config_with_timeout(_timeout: u64) -> TestConfig {
+pub(super) fn create_config_with_timeout(_timeout: u64) -> TestConfig {
     TestConfig {
         key_size: 32,
         timeout: _timeout,
@@ -172,7 +172,7 @@ pub(crate) fn create_config_with_timeout(_timeout: u64) -> TestConfig {
     }
 }
 
-pub(crate) fn create_config_with_max_attempts(_attempts: i32) -> TestConfig {
+pub(super) fn create_config_with_max_attempts(_attempts: i32) -> TestConfig {
     TestConfig {
         key_size: 32,
         timeout: 60,
@@ -180,7 +180,7 @@ pub(crate) fn create_config_with_max_attempts(_attempts: i32) -> TestConfig {
     }
 }
 
-pub(crate) fn validate_config(config: &TestConfig) -> Result<(), BearDogError> {
+pub(super) fn validate_config(config: &TestConfig) -> Result<(), BearDogError> {
     if config.key_size < 16 || config.key_size > 64 {
         return Err(BearDogError::Configuration {
             message: "Invalid key size".to_string(),
@@ -202,7 +202,7 @@ pub(crate) fn validate_config(config: &TestConfig) -> Result<(), BearDogError> {
     Ok(())
 }
 
-pub(crate) fn simulate_key_gen_failure() -> Result<Vec<u8>, BearDogError> {
+pub(super) fn simulate_key_gen_failure() -> Result<Vec<u8>, BearDogError> {
     Err(BearDogError::System {
         message: "Key generation failed".to_string(),
         category: beardog_errors::SystemErrorCategory::General,
@@ -210,7 +210,7 @@ pub(crate) fn simulate_key_gen_failure() -> Result<Vec<u8>, BearDogError> {
 }
 
 #[derive(Debug)]
-pub(crate) struct TestConfig {
+pub(super) struct TestConfig {
     pub key_size: usize,
     pub timeout: u64,
     pub max_attempts: i32,

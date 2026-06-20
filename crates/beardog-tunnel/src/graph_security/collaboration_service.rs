@@ -21,7 +21,7 @@
 //! **Future**: TRUE runtime discovery via capability-based primal lookup (Principle #5).
 
 use beardog_errors::BearDogError;
-use tracing::info;
+use tracing::{debug, info};
 
 type Result<T> = std::result::Result<T, BearDogError>;
 
@@ -47,10 +47,17 @@ impl CollaborationService {
         Self::new()
     }
 
-    fn discovery_unavailable(capability: &str) -> BearDogError {
+    fn discovery_unavailable(operation: &str, capability: &str) -> BearDogError {
+        debug!(
+            operation,
+            capability,
+            discovery = "UniversalPrimalAdapter + beardog-adapters capability lookup",
+            "collaboration operation blocked — runtime discovery not wired"
+        );
         BearDogError::not_yet_available(format!(
-            "{capability} requires a live collaboration network; \
-             runtime discovery is not yet available"
+            "{operation} requires Collaboration::{capability} via UniversalPrimalAdapter \
+             capability discovery (beardog-adapters integration pending); \
+             no live collaboration network reachable"
         ))
     }
 
@@ -65,7 +72,7 @@ impl CollaborationService {
     /// cannot be retrieved.
     pub async fn get_template_info(&self, template_id: &str) -> Result<TemplateInfo> {
         info!("Discovering primal with TemplateStorage capability for template: {template_id}");
-        Err(Self::discovery_unavailable("TemplateStorage"))
+        Err(Self::discovery_unavailable("get_template_info", "TemplateStorage"))
     }
 
     /// Get user permissions (replaces legacy collaborator listing on a collaboration provider)
@@ -83,7 +90,10 @@ impl CollaborationService {
         _resource_id: &str,
     ) -> Result<UserPermissions> {
         info!("Discovering primal with PermissionManagement capability");
-        Err(Self::discovery_unavailable("PermissionManagement"))
+        Err(Self::discovery_unavailable(
+            "get_user_permissions",
+            "PermissionManagement",
+        ))
     }
 
     /// Get template lineage (replaces legacy lineage query on a collaboration provider)
@@ -97,7 +107,7 @@ impl CollaborationService {
     /// be retrieved.
     pub async fn get_lineage(&self, _template_id: &str) -> Result<Vec<LineageVersion>> {
         info!("Discovering primal with LineageTracking capability");
-        Err(Self::discovery_unavailable("LineageTracking"))
+        Err(Self::discovery_unavailable("get_lineage", "LineageTracking"))
     }
 
     /// Get community metrics (replaces legacy usage metrics on a collaboration provider)
@@ -111,7 +121,10 @@ impl CollaborationService {
     /// cannot be retrieved.
     pub async fn get_community_metrics(&self, _template_id: &str) -> Result<CommunityMetrics> {
         info!("Discovering primal with CommunityMetrics capability");
-        Err(Self::discovery_unavailable("CommunityMetrics"))
+        Err(Self::discovery_unavailable(
+            "get_community_metrics",
+            "CommunityMetrics",
+        ))
     }
 
     /// Get security assessment (replaces legacy security assessment on a collaboration provider)
@@ -125,7 +138,10 @@ impl CollaborationService {
     /// assessment cannot be retrieved.
     pub async fn get_security_assessment(&self, template_id: &str) -> Result<SecurityAssessment> {
         info!("Discovering primal with SecurityAssessment capability for template: {template_id}");
-        Err(Self::discovery_unavailable("SecurityAssessment"))
+        Err(Self::discovery_unavailable(
+            "get_security_assessment",
+            "SecurityAssessment",
+        ))
     }
 }
 
@@ -238,7 +254,9 @@ mod tests {
     fn assert_discovery_unavailable(err: BearDogError) {
         let message = err.to_string();
         assert!(
-            message.contains("collaboration network") || message.contains("Not yet available"),
+            message.contains("UniversalPrimalAdapter")
+                || message.contains("collaboration network")
+                || message.contains("Not yet available"),
             "unexpected error: {message}"
         );
     }

@@ -669,7 +669,7 @@ fn co_resident_same_uid_bypasses_enforced_gate() {
 #[test]
 fn different_uid_rejected_by_enforced_gate() {
     let gate = test_gate(EnforcementMode::Enforced);
-    let different_uid = gate.server_uid.map(|u| u + 1).unwrap_or(9999);
+    let different_uid = gate.server_uid.map_or(9999, |u| u + 1);
     let mut caller = CallerContext {
         bearer_token: None,
         peer: Some(PeerCredentials {

@@ -22,50 +22,35 @@ use tokio::sync::RwLock;
 use tracing::{debug, warn};
 
 /// Typed error for bond persistence operations.
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum BondPersistenceError {
     /// JSON serialization/deserialization failure.
+    #[error("{context}: {source}")]
     Serialization {
         /// What operation was being attempted.
         context: &'static str,
         /// Underlying serde error.
+        #[source]
         source: serde_json::Error,
     },
     /// I/O error communicating with a ledger provider.
+    #[error("{context}: {source}")]
     Io {
         /// What I/O operation failed.
         context: &'static str,
         /// Underlying I/O error.
+        #[source]
         source: std::io::Error,
     },
     /// Ledger RPC timed out.
+    #[error("ledger RPC timed out")]
     RpcTimeout,
     /// Ledger returned a JSON-RPC error object.
+    #[error("ledger RPC error: {0}")]
     RpcError(String),
     /// Ledger response was structurally invalid (e.g. missing `result` field).
+    #[error("ledger RPC: {0}")]
     InvalidResponse(&'static str),
-}
-
-impl std::fmt::Display for BondPersistenceError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Serialization { context, source } => write!(f, "{context}: {source}"),
-            Self::Io { context, source } => write!(f, "{context}: {source}"),
-            Self::RpcTimeout => write!(f, "ledger RPC timed out"),
-            Self::RpcError(msg) => write!(f, "ledger RPC error: {msg}"),
-            Self::InvalidResponse(msg) => write!(f, "ledger RPC: {msg}"),
-        }
-    }
-}
-
-impl std::error::Error for BondPersistenceError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Serialization { source, .. } => Some(source),
-            Self::Io { source, .. } => Some(source),
-            _ => None,
-        }
-    }
 }
 
 /// Convenience alias for bond persistence results.

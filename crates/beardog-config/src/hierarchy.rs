@@ -206,8 +206,8 @@ impl ConfigHierarchy {
         ];
 
         // Add user config dir if available
-        if let Some(config_dir) = dirs::config_dir() {
-            locations.push(config_dir.join("beardog/config.toml"));
+        if let Some(base_dirs) = directories::BaseDirs::new() {
+            locations.push(base_dirs.config_dir().join("beardog/config.toml"));
         }
 
         for location in &locations {

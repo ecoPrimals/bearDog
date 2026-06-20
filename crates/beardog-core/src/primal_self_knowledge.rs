@@ -457,8 +457,14 @@ impl PrimalDiscovery {
             tracing::warn!(
                 registry_url = %url,
                 capability,
-                "service registry URL configured but client not yet implemented — \
-                 discovery will use mDNS/cache only"
+                fallback = "mDNS and local discovery cache",
+                "service registry client not wired — cannot query {url} for capability '{capability}'; \
+                 using fallback: mDNS and local discovery cache"
+            );
+        } else {
+            tracing::debug!(
+                capability,
+                "no service registry URL configured; skipping registry discovery"
             );
         }
 

@@ -28,10 +28,9 @@
 //! }
 //! ```
 
-use beardog_config::env_keys;
 use std::collections::HashMap;
 use std::time::Duration;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 /// Main `BearDog` framework providing access to all ecosystem capabilities
 pub struct BearDogFramework {
@@ -171,79 +170,18 @@ impl BearDogFramework {
         })
     }
 
-    /// Discover services using universal capability-based discovery
+    /// Discover services using universal capability-based discovery.
+    ///
+    /// Runtime service discovery is not yet wired; returns an empty list until
+    /// capability-based discovery is integrated.
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError::Configuration`] when compute or storage endpoints are missing from
-    /// config and environment.
+    /// Currently infallible; the `Result` type is reserved for future discovery failures.
     pub fn discover_services(&mut self) -> Result<Vec<ServiceInfo>, BearDogError> {
-        info!("🔍 Discovering services with universal capability-based discovery");
-
-        // Modern concurrent-safe approach: config takes precedence over env vars
-        // This allows tests to run concurrently without env var races
-        let compute_endpoint = self
-            .config
-            .compute_endpoint
-            .clone()
-            .or_else(|| std::env::var(env_keys::ENV_COMPUTE_ENDPOINT).ok())
-            .ok_or_else(|| {
-                BearDogError::Configuration(
-                    "BEARDOG_COMPUTE_ENDPOINT must be configured. \
-                     Set in FrameworkConfig or environment variable. \
-                     Example: export BEARDOG_COMPUTE_ENDPOINT=http://compute.example.com:8080"
-                        .to_string(),
-                )
-            })?;
-
-        let storage_endpoint = self
-            .config
-            .storage_endpoint
-            .clone()
-            .or_else(|| std::env::var(env_keys::ENV_STORAGE_ENDPOINT).ok())
-            .ok_or_else(|| {
-                BearDogError::Configuration(
-                    "BEARDOG_STORAGE_ENDPOINT must be configured. \
-                     Set in FrameworkConfig or environment variable. \
-                     Example: export BEARDOG_STORAGE_ENDPOINT=http://storage.example.com:8080"
-                        .to_string(),
-                )
-            })?;
-
-        let compute_service = ServiceInfo {
-            name: "compute-service".to_string(),
-            capabilities: vec!["ai-processing".to_string(), "data-analysis".to_string()],
-            endpoint: compute_endpoint,
-            metadata: [("type".to_string(), "compute".to_string())].into(),
-        };
-
-        let storage_service = ServiceInfo {
-            name: "storage-service".to_string(),
-            capabilities: vec!["high-throughput".to_string(), "persistent".to_string()],
-            endpoint: storage_endpoint,
-            metadata: [("type".to_string(), "storage".to_string())].into(),
-        };
-
-        // Simulate service discovery using configured endpoints
-        let services = vec![
-            ServiceInfo {
-                name: "compute-service".to_string(),
-                capabilities: vec!["ai-processing".to_string(), "data-analysis".to_string()],
-                endpoint: compute_service.endpoint,
-                metadata: [("type".to_string(), "compute".to_string())].into(),
-            },
-            ServiceInfo {
-                name: "storage-service".to_string(),
-                capabilities: vec!["high-throughput".to_string(), "persistent".to_string()],
-                endpoint: storage_service.endpoint,
-                metadata: [("type".to_string(), "storage".to_string())].into(),
-            },
-        ];
-
-        self.stats.services_discovered = services.len();
-        info!("✅ Discovered {} services", services.len());
-
-        Ok(services)
+        warn!("runtime service discovery not yet wired — returning empty");
+        self.stats.services_discovered = 0;
+        Ok(Vec::new())
     }
 
     /// Demonstrate hyperoptimized zero-copy performance
@@ -344,8 +282,8 @@ mod tests {
         let mut framework = BearDogFramework::with_config(config).unwrap();
         let services = framework.discover_services().unwrap();
 
-        assert!(!services.is_empty());
-        assert_eq!(framework.stats.services_discovered, services.len());
+        assert!(services.is_empty());
+        assert_eq!(framework.stats.services_discovered, 0);
     }
 
     #[tokio::test]

@@ -3,6 +3,7 @@
 use super::BeardogBtspProvider;
 use super::types::{PeerTrustRecord, TrustLevel};
 use beardog_capabilities::traits::PeerEndpoint;
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_genetics::birdsong::LineageHint;
 use beardog_genetics::birdsong::types::BirdSongEncryptRequest;
@@ -11,6 +12,84 @@ use rand::RngCore;
 use tracing::{debug, info, warn};
 
 impl BeardogBtspProvider {
+    /// Seed a trusted peer into the trust database (bootstrap before TOFU tunnel).
+    ///
+    /// Accepts `peer_id` and `family_id` from explicit calls or `BEARDOG_TRUSTED_PEERS`
+    /// (`peer_id:family_id` pairs, comma-separated). Inserts a minimal trust record so
+    /// contact exchange lineage lookup can succeed for WAN peers.
+    ///
+    /// Returns `true` when a new record was inserted, `false` when the peer was already known.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `peer_id` or `family_id` is empty.
+    pub async fn seed_trusted_peer(
+        &self,
+        peer_id: &str,
+        family_id: &str,
+    ) -> Result<bool, BearDogError> {
+        let peer_id = peer_id.trim();
+        let family_id = family_id.trim();
+        if peer_id.is_empty() {
+            return Err(BearDogError::invalid_input("peer_id cannot be empty"));
+        }
+        if family_id.is_empty() {
+            return Err(BearDogError::invalid_input("family_id cannot be empty"));
+        }
+
+        let mut db = self.trust_db.write();
+        if db.contains_key(peer_id) {
+            debug!(
+                "Trusted peer {} (family: {}) already seeded — skipping",
+                peer_id, family_id
+            );
+            return Ok(false);
+        }
+
+        let now = Utc::now();
+        db.insert(
+            peer_id.to_string(),
+            PeerTrustRecord {
+                peer_id: peer_id.to_string(),
+                public_key: Vec::new(),
+                trust_level: TrustLevel::Tentative,
+                first_seen: now,
+                last_seen: now,
+                connection_count: 0,
+            },
+        );
+
+        info!(
+            "🌱 Seeded trusted peer {} (family: {}) into trust_db",
+            peer_id, family_id
+        );
+        Ok(true)
+    }
+
+    /// Parse and seed peers from [`env_keys::ENV_TRUSTED_PEERS`].
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any peer entry is malformed.
+    pub async fn seed_trusted_peers_from_env(&self) -> Result<usize, BearDogError> {
+        let Ok(raw) = beardog_errors::process_env::var(env_keys::ENV_TRUSTED_PEERS) else {
+            return Ok(0);
+        };
+
+        let mut seeded = 0usize;
+        for entry in raw.split(',') {
+            let entry = entry.trim();
+            if entry.is_empty() {
+                continue;
+            }
+            let (peer_id, family_id) = super::parse_trusted_peer_pair(entry)?;
+            if self.seed_trusted_peer(peer_id, family_id).await? {
+                seeded += 1;
+            }
+        }
+        Ok(seeded)
+    }
+
     /// Pin peer's public key (TOFU - Trust On First Use)
     pub(super) async fn pin_peer_key(
         &self,

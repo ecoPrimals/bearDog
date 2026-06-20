@@ -74,8 +74,7 @@
 //! - Wireshark TLS Decryption: <https://wiki.wireshark.org/TLS>
 
 use beardog_config::env_keys;
-use std::fs::OpenOptions;
-use std::io::Write;
+use tokio::io::AsyncWriteExt;
 use tracing::info;
 
 /// Typed error for SSLKEYLOGFILE export operations.
@@ -180,7 +179,7 @@ impl std::error::Error for SslKeylogError {
 ///
 /// Exporting session keys allows decryption of captured TLS traffic.
 /// Only use this in development/testing environments.
-pub fn export_to_sslkeylogfile(
+pub async fn export_to_sslkeylogfile(
     client_random: &[u8],
     handshake_secrets: Option<(&[u8], &[u8])>,
     application_secrets: Option<(&[u8], &[u8])>,
@@ -231,10 +230,11 @@ pub fn export_to_sslkeylogfile(
     );
 
     // Open file in append mode
-    let mut file = OpenOptions::new()
+    let mut file = tokio::fs::OpenOptions::new()
         .create(true)
         .append(true)
         .open(&keylog_path)
+        .await
         .map_err(|e| SslKeylogError::Io {
             context: "Failed to open SSLKEYLOGFILE",
             source: e,
@@ -244,23 +244,29 @@ pub fn export_to_sslkeylogfile(
 
     // Export handshake secrets (for encrypted handshake messages)
     if let Some((client_hs_secret, server_hs_secret)) = handshake_secrets {
-        writeln!(
-            file,
-            "CLIENT_HANDSHAKE_TRAFFIC_SECRET {} {}",
-            client_random_hex,
-            hex::encode(client_hs_secret)
+        file.write_all(
+            format!(
+                "CLIENT_HANDSHAKE_TRAFFIC_SECRET {} {}\n",
+                client_random_hex,
+                hex::encode(client_hs_secret)
+            )
+            .as_bytes(),
         )
+        .await
         .map_err(|e| SslKeylogError::Io {
             context: "Failed to write to SSLKEYLOGFILE",
             source: e,
         })?;
 
-        writeln!(
-            file,
-            "SERVER_HANDSHAKE_TRAFFIC_SECRET {} {}",
-            client_random_hex,
-            hex::encode(server_hs_secret)
+        file.write_all(
+            format!(
+                "SERVER_HANDSHAKE_TRAFFIC_SECRET {} {}\n",
+                client_random_hex,
+                hex::encode(server_hs_secret)
+            )
+            .as_bytes(),
         )
+        .await
         .map_err(|e| SslKeylogError::Io {
             context: "Failed to write to SSLKEYLOGFILE",
             source: e,
@@ -271,23 +277,29 @@ pub fn export_to_sslkeylogfile(
 
     // Export application secrets (for HTTP data)
     if let Some((client_app_secret, server_app_secret)) = application_secrets {
-        writeln!(
-            file,
-            "CLIENT_TRAFFIC_SECRET_0 {} {}",
-            client_random_hex,
-            hex::encode(client_app_secret)
+        file.write_all(
+            format!(
+                "CLIENT_TRAFFIC_SECRET_0 {} {}\n",
+                client_random_hex,
+                hex::encode(client_app_secret)
+            )
+            .as_bytes(),
         )
+        .await
         .map_err(|e| SslKeylogError::Io {
             context: "Failed to write to SSLKEYLOGFILE",
             source: e,
         })?;
 
-        writeln!(
-            file,
-            "SERVER_TRAFFIC_SECRET_0 {} {}",
-            client_random_hex,
-            hex::encode(server_app_secret)
+        file.write_all(
+            format!(
+                "SERVER_TRAFFIC_SECRET_0 {} {}\n",
+                client_random_hex,
+                hex::encode(server_app_secret)
+            )
+            .as_bytes(),
         )
+        .await
         .map_err(|e| SslKeylogError::Io {
             context: "Failed to write to SSLKEYLOGFILE",
             source: e,
@@ -311,25 +323,25 @@ mod tests {
     use super::*;
 
     #[serial_test::serial]
-    #[test]
-    fn test_export_without_env_var() {
+    #[tokio::test]
+    async fn test_export_without_env_var() {
         // Should succeed gracefully when SSLKEYLOGFILE is not set
         beardog_errors::process_env::remove_var("SSLKEYLOGFILE");
 
         let client_random = vec![0u8; 32];
-        let result = export_to_sslkeylogfile(&client_random, None, None);
+        let result = export_to_sslkeylogfile(&client_random, None, None).await;
 
         assert!(result.is_ok());
     }
 
     #[serial_test::serial]
-    #[test]
-    fn test_invalid_client_random_length() {
+    #[tokio::test]
+    async fn test_invalid_client_random_length() {
         // Set a temporary keylog file
         beardog_errors::process_env::set_var("SSLKEYLOGFILE", "/tmp/test-keylog.log");
 
         let client_random = vec![0u8; 16]; // Wrong length!
-        let result = export_to_sslkeylogfile(&client_random, None, None);
+        let result = export_to_sslkeylogfile(&client_random, None, None).await;
 
         assert!(result.is_err());
         assert!(
@@ -345,8 +357,8 @@ mod tests {
     }
 
     #[serial_test::serial]
-    #[test]
-    fn test_export_with_handshake_secrets() {
+    #[tokio::test]
+    async fn test_export_with_handshake_secrets() {
         use std::fs;
 
         // Scope guard for cleanup
@@ -393,7 +405,8 @@ mod tests {
             &client_random,
             Some((&client_hs_secret, &server_hs_secret)),
             None,
-        );
+        )
+        .await;
 
         // Clean up env var immediately after use
         beardog_errors::process_env::remove_var("SSLKEYLOGFILE");

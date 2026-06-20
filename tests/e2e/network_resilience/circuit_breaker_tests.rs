@@ -9,7 +9,6 @@ use beardog_errors::BearDogError;
 use tracing::{info, warn};
 
 const FAILURE_THRESHOLD: usize = 3;
-const HALF_OPEN_ATTEMPTS: usize = 2;
 
 /// Test circuit breaker failure detection and recovery
 pub async fn test_circuit_breaker() -> Result<NetworkE2EMetrics, BearDogError> {
@@ -22,21 +21,30 @@ pub async fn test_circuit_breaker() -> Result<NetworkE2EMetrics, BearDogError> {
     for attempt in 0..8 {
         metrics.connection_attempts += 1;
 
+        // Simulate upstream recovering after attempt 4
+        let upstream_available = attempt >= 5;
+
         if circuit_open {
-            warn!(
-                "Circuit open, rejecting attempt {} without upstream call",
-                attempt + 1
-            );
-            metrics.failed_connections += 1;
+            // Half-open probe: allow one attempt through to check recovery
+            if upstream_available {
+                info!("Half-open probe succeeded on attempt {}", attempt + 1);
+                metrics.successful_connections += 1;
+                metrics.recoveries += 1;
+                circuit_open = false;
+                consecutive_failures = 0;
+            } else {
+                warn!(
+                    "Circuit open, rejecting attempt {} without upstream call",
+                    attempt + 1
+                );
+                metrics.failed_connections += 1;
+            }
             continue;
         }
 
-        let upstream_available = attempt >= FAILURE_THRESHOLD + HALF_OPEN_ATTEMPTS;
         if upstream_available {
-            info!("Upstream recovered on attempt {}", attempt + 1);
+            info!("Upstream succeeded on attempt {}", attempt + 1);
             metrics.successful_connections += 1;
-            metrics.recoveries += 1;
-            circuit_open = false;
             consecutive_failures = 0;
         } else {
             consecutive_failures += 1;
