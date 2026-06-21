@@ -62,16 +62,22 @@ async fn test_non_owner_cannot_add_node() {
         changes: None,
     };
 
-    let result = authorize_modification(&"bob".to_string(), &graph, &modification)
-        .await
-        .expect("Authorization should succeed");
+    let result = authorize_modification(&"bob".to_string(), &graph, &modification).await;
 
-    assert!(!result.authorized, "Non-owner should not be authorized");
-    assert!(result.blocked_reason.is_some());
-    assert_eq!(
-        result.blocked_reason.as_ref().expect("Should have reason"),
-        "insufficient_permissions"
-    );
+    // Collaboration unavailable → fail closed, or non-owner denied if wired
+    match result {
+        Err(e) => assert!(
+            e.to_string().contains("Not yet available"),
+            "expected not_yet_available, got: {e}"
+        ),
+        Ok(auth) => {
+            assert!(!auth.authorized, "Non-owner should not be authorized");
+            assert_eq!(
+                auth.blocked_reason.as_deref(),
+                Some("insufficient_permissions")
+            );
+        }
+    }
 }
 
 #[tokio::test]
@@ -178,14 +184,18 @@ async fn test_non_owner_cannot_remove_node() {
         changes: None,
     };
 
-    let result = authorize_modification(&"bob".to_string(), &graph, &modification)
-        .await
-        .expect("Authorization should succeed");
+    let result = authorize_modification(&"bob".to_string(), &graph, &modification).await;
 
-    assert!(
-        !result.authorized,
-        "Non-owner should not be able to remove nodes"
-    );
+    match result {
+        Err(e) => assert!(
+            e.to_string().contains("Not yet available"),
+            "expected not_yet_available, got: {e}"
+        ),
+        Ok(auth) => assert!(
+            !auth.authorized,
+            "Non-owner should not be able to remove nodes"
+        ),
+    }
 }
 
 #[tokio::test]

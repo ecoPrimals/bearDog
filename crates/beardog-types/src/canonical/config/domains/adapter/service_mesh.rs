@@ -2,6 +2,7 @@
 
 //! Service mesh and handoff configuration
 
+use beardog_config::domains::network_ports::DEFAULT_HTTPS_PORT;
 use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -112,7 +113,7 @@ impl Default for MeshDiscoveryConfig {
             port: std::env::var(env_keys::ENV_MESH_DISCOVERY_PORT)
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8443),
+                .unwrap_or(DEFAULT_HTTPS_PORT),
             timeout: Duration::from_secs(
                 std::env::var(env_keys::ENV_MESH_DISCOVERY_TIMEOUT_SECS)
                     .ok()

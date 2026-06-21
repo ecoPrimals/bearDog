@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### June 21, 2026 -- Wave 120: WAN Periplasm Hardening — Mutual Auth, Trust Binding, Test Sweep
+### June 21, 2026 -- Wave 120: WAN Periplasm Hardening + Deep Debt Sweep II
 
 #### BTSP WAN Security Hardening (P1)
 - **Mutual BTSP authentication** — server now computes `server_proof` HMAC in `HandshakeComplete`; client verifies server family membership (bidirectional trust)
@@ -17,12 +17,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`family_id` persisted in `PeerTrustRecord`** — `seed_trusted_peer()` now stores `family_id: Option<String>` (previously accepted but discarded)
 - **Post-handshake peer identity binding** — `CallerContext.peer_id` bound to BTSP session ID after TCP handshake
 
-#### Pre-Existing Test Sweep (P2)
-- **10 failing tests fixed** — 9 adapter tests updated for `not_yet_available` dispatch; 1 compute client test aligned
-- **3 platform tests corrected** — Android/iOS HSM tests no longer assert hardware capabilities on Linux
-- **BTSP handler count updated** — 36 → 37 (accounts for `btsp.trust.seed`)
-- **JSON-RPC error code test corrected** — handler `Err(String)` maps to -32000, not -32602
-- **Flaky IPC discovery test** — made environment-independent
+#### Primal Identity Unification (P1)
+- **10 hardcoded `"beardog"` sites → resolved identity** — TCP/UDS servers, CLI client/health, IPC isomorphic, server transport/health socket, mDNS TXT, service mesh port
+- **`PrimalIdentity.primal_name`** — new field binds encryption tags to runtime identity instead of product name; `encryption_tag()` now uses `self.primal_name`
+- **Socket stems agnostic** — abstract namespace and filesystem socket paths use resolved primal name
+
+#### Production Hardening (P1)
+- **Graph permissions fail-closed** — collaboration lookup failure returns `not_yet_available` instead of silently downgrading to `Viewer`
+- **Blocking I/O → async** — `streaming.rs` migrated from `std::fs` to `tokio::fs` / `AsyncReadExt` / `AsyncWriteExt`
+- **`SocketConfigError` → thiserror** — manual `Display` + `impl Error` replaced with `#[derive(thiserror::Error)]`
+- **`MinimalProtocolHandler`** — `discover_services` now logs `tracing::debug!` when returning empty
+- **riboCipher dead handler** — `#[allow(dead_code)]` → `#[expect(dead_code, reason = "...")]` with documented wiring plan
+
+#### Dependency Cleanup (P2)
+- **Unused `aes`/`ctr`** — removed from `[workspace.dependencies]` (deferred Phase 7)
+- **Service mesh port** — inline `.unwrap_or(8443)` → `DEFAULT_HTTPS_PORT` constant
+
+#### Test Sweep (P2)
+- **15 pre-existing test failures fixed** — adapter dispatch (9), compute client (1), Android/iOS platform (3), BTSP handler count (1), JSON-RPC error code (1)
+- **Graph authorization tests** — updated for fail-closed behavior
+- **Flaky sslkeylog test** — resilient to env-var race in parallel test runs
 
 ### June 20, 2026 -- Wave 119: Deep Debt Sweep — Modern Idiomatic Rust, Self-Knowledge, Structural Evolution
 

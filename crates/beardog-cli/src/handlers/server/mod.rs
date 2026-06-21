@@ -21,7 +21,7 @@ mod tests;
 pub use transport::{resolve_effective_tcp_listen, resolve_server_socket_path};
 
 use crate::ServerArgs;
-use beardog_config::env_keys;
+use beardog_config::env_keys::{self, resolve_primal_name};
 use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
 use beardog_ipc::{
@@ -316,13 +316,15 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     // Health socket: lightweight plaintext listener for monitoring probes.
     // Always spawn unless --bind-mode=tcp (no UDS available).
     let health_path = args.health_socket.clone().unwrap_or_else(|| {
+        let primal_name = resolve_primal_name();
+        let default_health = format!("{primal_name}-default.sock");
         let main = std::path::Path::new(&socket_path);
         if let Some(dir) = main.parent() {
-            dir.join("beardog-default.sock")
+            dir.join(&default_health)
                 .to_string_lossy()
                 .to_string()
         } else {
-            "/tmp/beardog-default.sock".to_string()
+            format!("/tmp/{default_health}")
         }
     });
     if !tcp_only {

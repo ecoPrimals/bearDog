@@ -243,7 +243,7 @@ pub fn get_unix_socket_paths_with(hints: &UnixSocketPathHints) -> Vec<PathBuf> {
         }
     }
 
-    paths.push(std::env::temp_dir().join("beardog.sock"));
+    paths.push(std::env::temp_dir().join(format!("{stem}.sock")));
 
     paths
 }

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use beardog_config::env_keys::resolve_primal_name;
 use beardog_errors::BearDogError;
 use tracing::info;
 
@@ -58,7 +59,7 @@ pub(super) async fn run_health_socket(path: &str) -> Result<(), BearDogError> {
                 .and_then(|v| v.get("id").cloned())
                 .unwrap_or(serde_json::Value::Null);
 
-            let primal = std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_string());
+            let primal = resolve_primal_name();
             let version = env!("CARGO_PKG_VERSION");
             let response = serde_json::json!({
                 "jsonrpc": "2.0",

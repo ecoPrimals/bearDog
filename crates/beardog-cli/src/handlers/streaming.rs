@@ -11,9 +11,9 @@ use chacha20poly1305::{
     ChaCha20Poly1305, Nonce,
     aead::{Aead, KeyInit},
 };
-use std::fs::{File, OpenOptions};
-use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
+use tokio::fs::{self, File, OpenOptions};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 /// Chunk size for streaming (16MB - optimal for most systems)
 const CHUNK_SIZE: usize = 16 * 1024 * 1024;
@@ -59,30 +59,31 @@ pub async fn handle_streaming_encrypt_with_home(
     println!("================================\n");
 
     // Validate input file exists
-    if !Path::new(input_path).exists() {
+    if !fs::try_exists(input_path).await? {
         return Err(BearDogError::validation(&format!(
             "Input file not found: {input_path}"
         )));
     }
 
     // Get file size for progress reporting
-    let metadata = std::fs::metadata(input_path)?;
+    let metadata = fs::metadata(input_path).await?;
     let file_size = metadata.len();
     println!("📂 Input file: {input_path} ({file_size} bytes)");
     println!("🔑 Key ID: {key_id}");
     println!("💾 Output file: {output_path}\n");
 
     // Open input and output files
-    let mut input_file = File::open(input_path)?;
+    let mut input_file = File::open(input_path).await?;
     let mut output_file = OpenOptions::new()
         .write(true)
         .create(true)
         .truncate(true)
-        .open(output_path)?;
+        .open(output_path)
+        .await?;
 
     // Write metadata header (version, key_id, chunk_size)
     let header = format!("BEARDOG_STREAM_V1\n{key_id}\n{CHUNK_SIZE}\n");
-    output_file.write_all(header.as_bytes())?;
+    output_file.write_all(header.as_bytes()).await?;
 
     // Process file in chunks
     let mut buffer = vec![0u8; CHUNK_SIZE];
@@ -93,7 +94,7 @@ pub async fn handle_streaming_encrypt_with_home(
 
     loop {
         // Read chunk
-        let bytes_read = input_file.read(&mut buffer)?;
+        let bytes_read = input_file.read(&mut buffer).await?;
         if bytes_read == 0 {
             break; // EOF
         }
@@ -107,12 +108,12 @@ pub async fn handle_streaming_encrypt_with_home(
 
         // Write encrypted chunk with length prefix
         let chunk_len = encrypted.len() as u32;
-        output_file.write_all(&chunk_len.to_le_bytes())?;
-        output_file.write_all(&encrypted)?;
+        output_file.write_all(&chunk_len.to_le_bytes()).await?;
+        output_file.write_all(&encrypted).await?;
 
         // Progress reporting
         print!("\r   Chunk {chunk_index}: {progress:.1}% ({total_processed}/{file_size} bytes)");
-        std::io::stdout().flush()?;
+        tokio::io::stdout().flush().await?;
 
         chunk_index += 1;
     }
@@ -121,7 +122,7 @@ pub async fn handle_streaming_encrypt_with_home(
     println!("   Total chunks: {chunk_index}");
     println!(
         "   Output size: {} bytes",
-        std::fs::metadata(output_path)?.len()
+        fs::metadata(output_path).await?.len()
     );
 
     Ok(())
@@ -162,24 +163,25 @@ pub async fn handle_streaming_decrypt_with_home(
     println!("================================\n");
 
     // Validate input file exists
-    if !Path::new(input_path).exists() {
+    if !fs::try_exists(input_path).await? {
         return Err(BearDogError::validation(&format!(
             "Input file not found: {input_path}"
         )));
     }
 
     // Get file size for progress reporting
-    let metadata = std::fs::metadata(input_path)?;
+    let metadata = fs::metadata(input_path).await?;
     let file_size = metadata.len();
     println!("📂 Input file: {input_path} ({file_size} bytes)");
 
     // Open input and output files
-    let mut input_file = File::open(input_path)?;
+    let mut input_file = File::open(input_path).await?;
     let mut output_file = OpenOptions::new()
         .write(true)
         .create(true)
         .truncate(true)
-        .open(output_path)?;
+        .open(output_path)
+        .await?;
 
     // Read and validate header - Use manual reading to avoid BufReader consuming extra bytes
     // Read header lines manually to know exact position
@@ -189,7 +191,7 @@ pub async fn handle_streaming_decrypt_with_home(
     // Read until we have 3 newlines (version, key_id, chunk_size)
     let mut newline_count = 0;
     while newline_count < 3 {
-        input_file.read_exact(&mut byte_buffer)?;
+        input_file.read_exact(&mut byte_buffer).await?;
         header_bytes.push(byte_buffer[0]);
         if byte_buffer[0] == b'\n' {
             newline_count += 1;
@@ -238,8 +240,8 @@ pub async fn handle_streaming_decrypt_with_home(
     loop {
         // Read chunk length prefix
         let mut len_buffer = [0u8; 4];
-        match input_file.read_exact(&mut len_buffer) {
-            Ok(()) => {}
+        match input_file.read_exact(&mut len_buffer).await {
+            Ok(_) => {}
             Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => break, // EOF
             Err(e) => return Err(e.into()),
         }
@@ -248,21 +250,21 @@ pub async fn handle_streaming_decrypt_with_home(
 
         // Read encrypted chunk
         let mut encrypted_chunk = vec![0u8; chunk_len];
-        input_file.read_exact(&mut encrypted_chunk)?;
+        input_file.read_exact(&mut encrypted_chunk).await?;
 
         // Decrypt chunk
         let decrypted =
             decrypt_chunk_with_home(&key_id, &encrypted_chunk, chunk_index, &home).await?;
 
         // Write decrypted chunk
-        output_file.write_all(&decrypted)?;
+        output_file.write_all(&decrypted).await?;
 
         total_processed += decrypted.len() as u64;
         let progress = (total_processed as f64 / file_size as f64) * 100.0;
 
         // Progress reporting
         print!("\r   Chunk {chunk_index}: {progress:.1}% ({total_processed} bytes)");
-        std::io::stdout().flush()?;
+        tokio::io::stdout().flush().await?;
 
         chunk_index += 1;
     }
@@ -271,7 +273,7 @@ pub async fn handle_streaming_decrypt_with_home(
     println!("   Total chunks: {chunk_index}");
     println!(
         "   Output size: {} bytes",
-        std::fs::metadata(output_path)?.len()
+        fs::metadata(output_path).await?.len()
     );
 
     Ok(())

@@ -21,9 +21,14 @@ use tracing::{debug, error, info, warn};
 impl UnixSocketIpcServer {
     /// Route a connection that sent a riboCipher signal prefix.
     ///
+    /// Called from the connection accept path when the first byte on a new Unix
+    /// socket connection matches a riboCipher tier signal (e.g. `SIGNAL_CLEAR`).
     /// Reads the tier-specific payload after the signal byte, resolves the
     /// protocol type, then dispatches to the appropriate handler.
-    #[allow(dead_code)]
+    ///
+    /// Not yet wired from `handle_connection` — awaits riboCipher accept-path
+    /// integration in the connection dispatcher.
+    #[expect(dead_code, reason = "riboCipher accept-path wiring pending")]
     pub(super) async fn handle_ribocipher_signal(
         &self,
         mut stream: Box<dyn PlatformStream>,

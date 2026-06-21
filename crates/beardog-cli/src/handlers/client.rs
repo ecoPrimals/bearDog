@@ -5,7 +5,7 @@
 //! Interactive client for connecting to BearDog server.
 
 use crate::ClientArgs;
-use beardog_config::env_keys;
+use beardog_config::env_keys::{self, resolve_primal_name};
 use beardog_errors::{
     ApiErrorCategory, BearDogError, BusinessErrorCategory, NetworkErrorCategory,
     SystemErrorCategory,
@@ -41,7 +41,7 @@ fn discover_socket_path_with(get: impl Fn(&str) -> Option<String>) -> String {
 
     let primal_name = get("PRIMAL_NAME")
         .or_else(|| get("BEARDOG_NAME"))
-        .unwrap_or_else(|| "beardog".to_string());
+        .unwrap_or_else(resolve_primal_name);
 
     default_local_socket_parent_dir()
         .join(format!("{primal_name}.sock"))

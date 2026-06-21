@@ -22,6 +22,7 @@ use crate::platform::{
     PlatformListener, PlatformSocket, PlatformStream, PrefixedStream, Socket, SocketEndpoint,
 };
 use anyhow::{Context, Result};
+use beardog_config::env_keys::resolve_primal_name;
 use beardog_core::socket_config::{
     IpcCapabilitySymlinksConfig, install_ipc_symlinks_at, remove_ipc_symlinks_at,
 };
@@ -104,7 +105,7 @@ impl UnixSocketIpcServer {
             info!("BTSP handshake enforcement disabled (development mode)");
         }
 
-        let primal_name = std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_owned());
+        let primal_name = resolve_primal_name();
         let method_gate = MethodGate::from_env(&primal_name, identity.node_id());
         info!(
             mode = method_gate.mode().as_str(),

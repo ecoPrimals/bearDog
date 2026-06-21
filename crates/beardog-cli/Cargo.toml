@@ -44,7 +44,7 @@ path = "../beardog-tunnel"
 
 [dependencies.tokio]
 workspace = true
-features = ["rt", "rt-multi-thread", "macros", "net", "io-util", "io-std"]
+features = ["rt", "rt-multi-thread", "macros", "net", "io-util", "io-std", "fs"]
 
 [dependencies.tracing]
 workspace = true

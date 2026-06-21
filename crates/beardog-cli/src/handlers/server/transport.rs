@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::ServerArgs;
+use beardog_config::env_keys::resolve_primal_name;
 use beardog_types::constants::domains::network::addresses::WILDCARD_IPV4;
 use beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional;
 
@@ -23,13 +24,14 @@ pub fn resolve_effective_tcp_listen(port: Option<u16>, listen: Option<&str>) -> 
 /// namespace name. `--bind-mode tcp` → returns a placeholder (UDS is skipped
 /// later). `--bind-mode filesystem` or `auto` → family-aware filesystem path.
 pub fn resolve_server_socket_path(args: &ServerArgs) -> String {
+    let primal_name = resolve_primal_name();
     let use_abstract =
         args.bind_mode == crate::BindMode::Abstract || args.r#abstract;
 
     if use_abstract {
         let family = args.family_id.as_deref().unwrap_or("default");
         let ns = resolve_biomeos_ipc_subdir_from_optional(None);
-        format!("@{ns}_beardog_{family}")
+        format!("@{ns}_{primal_name}_{family}")
     } else if args.bind_mode == crate::BindMode::Tcp {
         String::new()
     } else if let Some(ref family_id) = args.family_id {
@@ -38,7 +40,7 @@ pub fn resolve_server_socket_path(args: &ServerArgs) -> String {
             .parent()
             .unwrap_or_else(|| std::path::Path::new("/tmp"));
         parent
-            .join(format!("beardog-{family_id}.sock"))
+            .join(format!("{primal_name}-{family_id}.sock"))
             .to_string_lossy()
             .to_string()
     } else {

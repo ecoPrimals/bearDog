@@ -101,7 +101,11 @@ impl ProtocolHandler for MinimalProtocolHandler {
     }
 
     /// Discover services by name using this protocol
-    fn discover_services(&self, _service_name: &str) -> Result<Vec<ServiceInfo>, BearDogError> {
+    fn discover_services(&self, service_name: &str) -> Result<Vec<ServiceInfo>, BearDogError> {
+        tracing::debug!(
+            service = service_name,
+            "MinimalProtocolHandler: no discovery backend wired — returning empty"
+        );
         Ok(vec![])
     }
 

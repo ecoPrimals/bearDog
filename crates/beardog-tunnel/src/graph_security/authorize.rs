@@ -250,12 +250,20 @@ mod tests {
             changes: None,
         };
 
-        let result = authorize_modification(&"bob".to_string(), &graph, &modification)
-            .await
-            .expect("authorize_modification succeeds for non-owner denial case");
+        let result = authorize_modification(&"bob".to_string(), &graph, &modification).await;
 
-        assert!(!result.authorized);
-        assert!(result.blocked_reason.is_some());
+        // Collaboration service unavailable → fail closed (not_yet_available),
+        // or if the service were wired, non-owner would be denied.
+        match result {
+            Err(e) => assert!(
+                e.to_string().contains("Not yet available"),
+                "expected not_yet_available, got: {e}"
+            ),
+            Ok(auth) => {
+                assert!(!auth.authorized);
+                assert!(auth.blocked_reason.is_some());
+            }
+        }
     }
 
     #[tokio::test]

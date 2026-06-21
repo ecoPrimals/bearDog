@@ -5,6 +5,7 @@
 //! Runtime discovery of other primals using mDNS/DNS-SD.
 //! Zero hardcoding - discovers primals announcing themselves on local network.
 
+use beardog_config::env_keys::resolve_primal_name;
 use beardog_errors::BearDogError;
 use std::time::Duration;
 use tracing::{debug, info, warn};
@@ -320,7 +321,7 @@ impl MdnsServiceAnnouncer {
         // Create TXT records
         let mut properties = HashMap::new();
         properties.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
-        properties.insert("primal".to_string(), "beardog".to_string());
+        properties.insert("primal".to_string(), resolve_primal_name());
         properties.insert("capabilities".to_string(), self.capabilities.join(","));
 
         // Register service

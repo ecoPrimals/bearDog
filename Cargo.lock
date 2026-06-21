@@ -591,6 +591,7 @@ dependencies = [
  "sha2 0.10.9",
  "sha3",
  "tempfile",
+ "thiserror 2.0.18",
  "tokio",
  "toml",
  "tracing",

@@ -56,12 +56,10 @@ async fn determine_user_role(user_id: &UserId, graph: &Graph) -> Result<UserRole
             }
         }
         Err(e) => {
-            // Fallback: If collaboration capability not available, default to Viewer
-            tracing::warn!(
-                "⚠️  Could not determine user role via collaboration capability: {}",
-                e
-            );
-            Ok(UserRole::Viewer)
+            tracing::warn!("Could not determine user role via collaboration: {e}");
+            Err(BearDogError::not_yet_available(format!(
+                "User role resolution unavailable — collaboration service returned: {e}"
+            )))
         }
     }
 }

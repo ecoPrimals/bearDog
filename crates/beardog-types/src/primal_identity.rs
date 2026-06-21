@@ -113,6 +113,9 @@ pub struct PrimalIdentity {
     /// Example: `tower1`, or an ephemeral `standalone-<uuid>` when env is unset (see [`Self::from_env`]).
     pub node_id: String,
 
+    /// Product/primal name (from `PRIMAL_NAME`; used in federation crypto bindings).
+    pub primal_name: String,
+
     /// Whether this identity was resolved from environment or defaulted
     is_standalone: bool,
 }
@@ -151,6 +154,7 @@ impl PrimalIdentity {
                 Some(n) => n,
                 None => resolve_process_node_id(),
             },
+            primal_name: env_keys::resolve_primal_name(),
             is_standalone,
         }
     }
@@ -173,6 +177,7 @@ impl PrimalIdentity {
         Self {
             family_id: family_id.into(),
             node_id: node_id.into(),
+            primal_name: env_keys::DEFAULT_PRIMAL_NAME.to_owned(),
             is_standalone: false,
         }
     }
@@ -195,12 +200,18 @@ impl PrimalIdentity {
         &self.node_id
     }
 
+    /// Get resolved primal name (`PRIMAL_NAME` or compiled default).
+    #[must_use]
+    pub fn primal_name(&self) -> &str {
+        &self.primal_name
+    }
+
     /// Get encryption tag for discovery/federation
     ///
-    /// Format: `beardog:family:{family_id}`
+    /// Format: `{primal_name}:family:{family_id}`
     #[must_use]
     pub fn encryption_tag(&self) -> String {
-        format!("beardog:family:{}", self.family_id)
+        format!("{}:family:{}", self.primal_name, self.family_id)
     }
 }
 
@@ -248,6 +259,7 @@ mod tests {
         let identity = PrimalIdentity {
             family_id: DEFAULT_STANDALONE_FAMILY.to_owned(),
             node_id: DEFAULT_STANDALONE_NODE.to_owned(),
+            primal_name: env_keys::DEFAULT_PRIMAL_NAME.to_owned(),
             is_standalone: true,
         };
         assert_eq!(identity.family_id(), "standalone");
@@ -287,6 +299,7 @@ mod tests {
         let i = PrimalIdentity {
             family_id: DEFAULT_STANDALONE_FAMILY.to_owned(),
             node_id: DEFAULT_STANDALONE_NODE.to_owned(),
+            primal_name: env_keys::DEFAULT_PRIMAL_NAME.to_owned(),
             is_standalone: true,
         };
         assert!(i.is_standalone());

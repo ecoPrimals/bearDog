@@ -45,6 +45,7 @@ use beardog_config::env_keys::{self, DEFAULT_PRIMAL_NAME};
 use beardog_errors::BearDogError;
 use beardog_types::constants::domains::network::ipc_discovery::BIOMEOS_RUNTIME_SOCKET_SUBDIR;
 use beardog_types::primal_identity::resolve_node_id_from_env_or_ephemeral;
+use thiserror::Error;
 use tracing::warn;
 
 /// All inputs needed to resolve a [`SocketConfig`] without reading the process environment.
@@ -133,30 +134,20 @@ impl SocketPathInputs {
 }
 
 /// Fatal configuration conflicts detected during socket resolution.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum SocketConfigError {
     /// `FAMILY_ID` (non-default) and `BIOMEOS_INSECURE=1` are both set.
     /// Per `BTSP_PROTOCOL_STANDARD.md`: you cannot claim a family AND skip authentication.
+    #[error(
+        "FATAL: FAMILY_ID={family_id} and BIOMEOS_INSECURE are both set. \
+         Cannot claim a family AND skip BTSP authentication. \
+         Unset BIOMEOS_INSECURE for production or unset FAMILY_ID for development."
+    )]
     InsecureWithFamily {
         /// The non-default family id that was set.
         family_id: String,
     },
 }
-
-impl std::fmt::Display for SocketConfigError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::InsecureWithFamily { family_id } => write!(
-                f,
-                "FATAL: FAMILY_ID={family_id} and BIOMEOS_INSECURE are both set. \
-                 Cannot claim a family AND skip BTSP authentication. \
-                 Unset BIOMEOS_INSECURE for production or unset FAMILY_ID for development."
-            ),
-        }
-    }
-}
-
-impl std::error::Error for SocketConfigError {}
 
 /// Socket configuration with 5-tier fallback logic
 #[derive(Debug, Clone, PartialEq, Eq)]
