@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: Jun 20, 2026
+**Updated**: Jun 21, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -22,7 +22,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 800 lines of code (production)
-- 14,974+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
+- 13,857+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
 - 90.51% line coverage (llvm-cov workspace) — target 90% met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - `#[serial]` minimized — 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent
@@ -43,11 +43,17 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - All mocks isolated behind `cfg(test)` / `test-utils` feature (Wave 119: StubVerificationHandler gated)
 - Hardcoding eliminated — capability-based discovery throughout (Wave 119: PRIMAL_NAME self-knowledge wired)
 - BTSP trust bootstrap over WAN mesh — client handshake, trust DB seeding, env-aware UPA registry (Wave 119)
-- Blocking `std::fs` → `tokio::fs` in all async handlers (Wave 119)
+- Blocking `std::fs` → `tokio::fs` in all async handlers (Waves 119–120)
 - `Arc<Mutex>` → `Arc<RwLock>` for read-heavy data structures (Wave 119)
-- 11 manual error Display types migrated to `thiserror::Error` derive (Wave 119)
-- Dependency consolidation: hostname→whoami, dirs→directories, removed unused jni (Wave 119)
+- 12 manual error Display types migrated to `thiserror::Error` derive (Waves 119–120)
+- Dependency consolidation: hostname→whoami, dirs→directories, removed unused jni/aes/ctr (Waves 119–120)
 - UID helper centralized from 3 crates into beardog-utils::platform (Wave 119)
+- Mutual BTSP authentication — server proves family membership to client via `server_proof` HMAC (Wave 120)
+- TCP BTSP parity — `btsp_family_verified` + `peer_id` binding on TCP path matching UDS (Wave 120)
+- `PeerTrustRecord.family_id` persistence — trust seeding preserves family lineage (Wave 120)
+- Primal identity unification — 10 hardcoded `"beardog"` sites → `resolve_primal_name()` (Wave 120)
+- Graph permissions fail-closed — collaboration unavailable → error, not silent `Viewer` downgrade (Wave 120)
+- 25 pre-existing test failures fixed (adapter dispatch, platform assertions, error codes) (Wave 120)
 - `deny.toml` hardened — C deps banned, duplicate versions denied
 - `CommandRunner` trait for mocking external commands (`adb`) in tests
 - **Stadial parity gate (Wave 53)** — Complete: all `#[async_trait]` removed in favor of native `async fn` in traits; `async-trait` dependency removed from every `Cargo.toml`; finite-implementor `dyn Trait` sites replaced with enum dispatch for monomorphized async routing; Clippy and rustdoc `-D warnings` clean
@@ -65,6 +71,14 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### WAN Periplasm Hardening + Deep Debt Sweep II — DONE (Wave 120)
+
+Mutual BTSP authentication (server `server_proof` HMAC in `HandshakeComplete`). TCP BTSP parity (`btsp_family_verified` + `peer_id`). `PeerTrustRecord.family_id` persistence. Primal identity unification: 10 hardcoded sites → `resolve_primal_name()`, `PrimalIdentity.primal_name` field for encryption tag binding. Graph permissions fail-closed. `streaming.rs` async I/O migration. `SocketConfigError` → thiserror. Unused `aes`/`ctr` deps removed. 25 pre-existing test failures fixed.
+
+### Deep Debt Sweep — DONE (Wave 119)
+
+BTSP WAN mesh, structural evolution, modern idiomatic Rust. 92 files changed. Smart refactoring of `server.rs` (7 files) and `orchestrator.rs` (10 files). 11 error types → thiserror. Blocking I/O → async. `Arc<Mutex>` → `Arc<RwLock>`. Dependency consolidation.
 
 ### ACME Smart Refactor + Stub Evolution — DONE (Wave 134)
 
@@ -341,4 +355,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: Jun 10, 2026
+**Last Updated**: Jun 21, 2026
