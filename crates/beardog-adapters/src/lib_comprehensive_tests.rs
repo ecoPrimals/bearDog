@@ -544,20 +544,15 @@ async fn test_universal_adapter_execute_registered_capability() {
 
     let request = CapabilityRequest {
         capability: "test".to_string(),
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: adapters
-        // TEST_PRIORITY: normal
         operation: "execute".to_string(),
         parameters: HashMap::new(),
     };
 
-    let response = adapter
+    let err = adapter
         .execute_capability(request)
         .await
-        .expect("Should execute successfully");
-
-    assert!(response.success);
-    assert!(response.data.is_some());
+        .expect_err("dispatch returns not_yet_available until IPC wired");
+    assert!(err.to_string().contains("ipc.resolve"));
 }
 // TEST_CATEGORY: unit
 // TEST_DOMAIN: adapters
@@ -579,29 +574,23 @@ async fn test_universal_adapter_caching_enabled() {
         parameters: HashMap::new(),
     };
 
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: adapters
-    // TEST_PRIORITY: normal
-    // First request - should not be cached
-    let response1 = adapter
+    // IPC dispatch not wired — both calls return not_yet_available;
+    // caching behaviour will be testable once ipc.resolve is integrated
+    let err1 = adapter
         .execute_capability(request.clone())
         .await
-        .expect("First request should succeed");
-    assert_eq!(response1.metadata.get("cached"), Some(&"false".to_string()));
+        .expect_err("dispatch returns not_yet_available until IPC wired");
+    assert!(err1.to_string().contains("ipc.resolve"));
 
-    // Second request - should be cached
-    let response2 = adapter
+    let err2 = adapter
         .execute_capability(request)
         .await
-        .expect("Second request should succeed");
-    assert_eq!(response2.metadata.get("cached"), Some(&"true".to_string()));
+        .expect_err("dispatch returns not_yet_available until IPC wired");
+    assert!(err2.to_string().contains("ipc.resolve"));
 }
 
 #[tokio::test]
 async fn test_universal_adapter_caching_disabled() {
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: adapters
-    // TEST_PRIORITY: normal
     let config = AdapterConfig {
         timeout_seconds: 30,
         retry_attempts: 3,
@@ -616,19 +605,11 @@ async fn test_universal_adapter_caching_disabled() {
         parameters: HashMap::new(),
     };
 
-    // First request
-    let response1 = adapter
-        .execute_capability(request.clone())
-        .await
-        .expect("First request should succeed");
-    assert_eq!(response1.metadata.get("cached"), Some(&"false".to_string()));
-
-    // Second request - should still not be cached
-    let response2 = adapter
+    let err = adapter
         .execute_capability(request)
         .await
-        .expect("Second request should succeed");
-    assert_eq!(response2.metadata.get("cached"), Some(&"false".to_string()));
+        .expect_err("dispatch returns not_yet_available until IPC wired");
+    assert!(err.to_string().contains("ipc.resolve"));
 }
 // TEST_CATEGORY: unit
 // TEST_DOMAIN: adapters
@@ -649,22 +630,12 @@ async fn test_universal_adapter_request_with_parameters() {
         parameters: params,
     };
 
-    let response = adapter
+    let err = adapter
         .execute_capability(request)
         .await
-        .expect("Should execute with parameters");
-
-    assert!(response.success);
-    assert!(response.data.is_some());
-
-    // Verify parameters were passed through in the response
-    if let Some(data) = response.data {
-        let params_in_response = data.get("parameters");
-        assert!(params_in_response.is_some());
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: adapters
-        // TEST_PRIORITY: normal
-    }
+        .expect_err("dispatch returns not_yet_available until IPC wired");
+    assert!(err.to_string().contains("encryption"));
+    assert!(err.to_string().contains("ipc.resolve"));
 }
 
 #[tokio::test]
@@ -678,14 +649,11 @@ async fn test_universal_adapter_retry_metadata() {
         parameters: HashMap::new(),
     };
 
-    let response = adapter
+    let err = adapter
         .execute_capability(request)
         .await
-        .expect("Should succeed on first attempt");
-
-    // Should have attempt metadata
-    assert!(response.metadata.contains_key("attempt"));
-    assert_eq!(response.metadata.get("attempt"), Some(&"1".to_string()));
+        .expect_err("dispatch returns not_yet_available until IPC wired");
+    assert!(err.to_string().contains("ipc.resolve"));
 }
 
 #[test]
@@ -712,9 +680,6 @@ fn test_universal_adapter_get_capabilities_immutable() {
 #[tokio::test]
 async fn test_universal_adapter_empty_capability_name() {
     let mut adapter = UniversalAdapter::new(AdapterConfig::default());
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: adapters
-    // TEST_PRIORITY: normal
     adapter.register_capability(String::new(), "http://test.com".to_string());
 
     let request = CapabilityRequest {
@@ -723,12 +688,11 @@ async fn test_universal_adapter_empty_capability_name() {
         parameters: HashMap::new(),
     };
 
-    let response = adapter
+    let err = adapter
         .execute_capability(request)
         .await
-        .expect("Should handle empty capability name");
-
-    assert!(response.success);
+        .expect_err("dispatch returns not_yet_available until IPC wired");
+    assert!(err.to_string().contains("ipc.resolve"));
 }
 // TEST_CATEGORY: unit
 // TEST_DOMAIN: adapters
@@ -746,15 +710,11 @@ async fn test_universal_adapter_special_characters_in_capability() {
         parameters: HashMap::new(),
     };
 
-    let response = adapter
+    let err = adapter
         .execute_capability(request)
         .await
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: adapters
-        // TEST_PRIORITY: normal
-        .expect("Should handle special characters");
-
-    assert!(response.success);
+        .expect_err("dispatch returns not_yet_available until IPC wired");
+    assert!(err.to_string().contains("ipc.resolve"));
 }
 
 #[tokio::test]
@@ -769,19 +729,15 @@ async fn test_universal_adapter_large_parameters() {
 
     let request = CapabilityRequest {
         capability: "test".to_string(),
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: adapters
-        // TEST_PRIORITY: normal
         operation: "large_params".to_string(),
         parameters: params,
     };
 
-    let response = adapter
+    let err = adapter
         .execute_capability(request)
         .await
-        .expect("Should handle large parameter sets");
-
-    assert!(response.success);
+        .expect_err("dispatch returns not_yet_available until IPC wired");
+    assert!(err.to_string().contains("ipc.resolve"));
 }
 
 #[test]

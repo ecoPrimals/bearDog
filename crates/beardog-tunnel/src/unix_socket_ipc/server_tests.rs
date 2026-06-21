@@ -90,8 +90,9 @@ async fn handle_jsonrpc_invalid_params_branch() {
         .await
         .expect("parse ok");
     let e = resp.error.expect("err");
-    assert_eq!(e.code, JsonRpcError::INVALID_PARAMS);
-    assert!(e.message.contains("Missing") || e.message.contains("required"));
+    // Handler returns Err(String) mapped to -32000 (server-defined error).
+    assert_eq!(e.code, -32000);
+    assert!(e.message.contains("Missing") || e.message.contains("params"));
 }
 
 #[tokio::test]

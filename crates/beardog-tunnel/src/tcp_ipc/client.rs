@@ -257,6 +257,25 @@ where
         BearDogError::system(format!("BTSP HandshakeComplete parse failed: {e}"))
     })?;
 
+    // Verify server's family membership proof (mutual auth)
+    if !complete.server_proof.is_empty() {
+        let expected_proof = compute_challenge_hmac(
+            &handshake_key,
+            &challenge,
+            &server_pub_bytes,
+            client_pub.as_bytes(),
+        )?;
+        let server_proof_bytes = BASE64
+            .decode(&complete.server_proof)
+            .map_err(|e| BearDogError::system(format!("BTSP server proof decode: {e}")))?;
+        if server_proof_bytes.as_slice() != expected_proof.as_slice() {
+            return Err(BearDogError::system(
+                "BTSP mutual auth failed: server proof invalid".to_string(),
+            ));
+        }
+        debug!("BTSP mutual auth: server family membership verified");
+    }
+
     let server_pub_array: [u8; 32] = server_pub_bytes
         .try_into()
         .map_err(|_| BearDogError::system("BTSP server key length mismatch".to_string()))?;

@@ -356,11 +356,8 @@ mod tests {
         assert!(adapter.get_capabilities().is_empty());
     }
 
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: adapters
-    // TEST_PRIORITY: normal
     #[tokio::test]
-    async fn test_capability_execution() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_capability_execution() {
         let mut adapter = UniversalAdapter::new(AdapterConfig::default());
         adapter.register_capability("test".to_string(), "http://test.com".to_string());
 
@@ -370,9 +367,12 @@ mod tests {
             parameters: HashMap::new(),
         };
 
-        let response = adapter.execute_capability(request).await?;
-        assert!(response.success);
-        Ok(())
+        let err = adapter
+            .execute_capability(request)
+            .await
+            .expect_err("dispatch_capability returns not_yet_available until IPC is wired");
+        let msg = err.to_string();
+        assert!(msg.contains("ipc.resolve"), "error should mention ipc.resolve: {msg}");
     }
 }
 

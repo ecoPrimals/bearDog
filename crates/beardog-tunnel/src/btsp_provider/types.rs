@@ -69,6 +69,9 @@ pub struct PeerTrustRecord {
     pub last_seen: DateTime<Utc>,
     /// Total number of connections from this peer
     pub connection_count: u64,
+    /// Family this peer belongs to (set during trust seeding)
+    #[serde(default)]
+    pub family_id: Option<String>,
 }
 
 // =============================================================================

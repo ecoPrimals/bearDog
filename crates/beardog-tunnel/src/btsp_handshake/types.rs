@@ -51,6 +51,9 @@ pub struct HandshakeComplete {
     pub cipher: String,
     /// Hex-encoded random session ID (16 bytes → 32 hex chars).
     pub session_id: String,
+    /// HMAC proving server knows the family seed (mutual authentication)
+    #[serde(default)]
+    pub server_proof: String,
 }
 
 // ── Error ──────────────────────────────────────────────────────────────
@@ -100,6 +103,7 @@ mod tests {
         let hc = HandshakeComplete {
             cipher: "chacha20_poly1305".into(),
             session_id: "aabb".into(),
+            server_proof: String::new(),
         };
         let j4 = serde_json::to_string(&hc).expect("ser");
         let back4: HandshakeComplete = serde_json::from_str(&j4).expect("de");

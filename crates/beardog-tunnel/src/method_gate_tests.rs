@@ -409,6 +409,7 @@ fn protected_method_passes_with_valid_ionic_token() {
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
         btsp_family_verified: false,
+        peer_id: None,
     };
     assert!(gate.check("crypto.sign_ed25519", &mut caller).is_ok());
     assert!(caller.validated_claims.is_some());
@@ -425,6 +426,7 @@ fn insufficient_scope_rejected_in_enforced_mode() {
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
         btsp_family_verified: false,
+        peer_id: None,
     };
     let result = gate.check("crypto.sign_ed25519", &mut caller);
     assert!(result.is_err());
@@ -441,6 +443,7 @@ fn insufficient_scope_allowed_in_permissive_mode() {
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
         btsp_family_verified: false,
+        peer_id: None,
     };
     assert!(gate.check("crypto.sign_ed25519", &mut caller).is_ok());
     assert!(caller.validated_claims.is_some());
@@ -456,6 +459,7 @@ fn expired_token_rejected_in_enforced_mode() {
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
         btsp_family_verified: false,
+        peer_id: None,
     };
     let result = gate.check("crypto.sign_ed25519", &mut caller);
     assert!(result.is_err());
@@ -472,6 +476,7 @@ fn expired_token_allowed_in_permissive_mode() {
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
         btsp_family_verified: false,
+        peer_id: None,
     };
     assert!(gate.check("crypto.sign_ed25519", &mut caller).is_ok());
 }
@@ -485,6 +490,7 @@ fn bogus_token_rejected_in_enforced_mode() {
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
         btsp_family_verified: false,
+        peer_id: None,
     };
     let result = gate.check("crypto.sign_ed25519", &mut caller);
     assert!(result.is_err());
@@ -525,6 +531,7 @@ fn auth_check_authenticated_with_claims() {
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
         btsp_family_verified: false,
+        peer_id: None,
     };
     gate.check("crypto.sign", &mut caller).unwrap();
     let result = handle_auth_check(&caller);
@@ -558,6 +565,7 @@ fn auth_peer_info_with_creds() {
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
         btsp_family_verified: false,
+        peer_id: None,
     };
     let result = handle_auth_peer_info(&caller);
     assert_eq!(result["available"], true);
@@ -658,6 +666,7 @@ fn co_resident_same_uid_bypasses_enforced_gate() {
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
         btsp_family_verified: false,
+        peer_id: None,
     };
     assert!(
         gate.check("crypto.x25519_generate_ephemeral", &mut caller)
@@ -679,6 +688,7 @@ fn different_uid_rejected_by_enforced_gate() {
         origin: ConnectionOrigin::Unix,
         validated_claims: None,
         btsp_family_verified: false,
+        peer_id: None,
     };
     assert!(
         gate.check("crypto.x25519_generate_ephemeral", &mut caller)
@@ -700,6 +710,7 @@ fn tcp_caller_not_bypassed_even_with_same_uid() {
         origin: ConnectionOrigin::Remote,
         validated_claims: None,
         btsp_family_verified: false,
+        peer_id: None,
     };
     assert!(
         gate.check("crypto.sign_ed25519", &mut caller).is_err(),

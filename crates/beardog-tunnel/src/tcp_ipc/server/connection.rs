@@ -64,6 +64,8 @@ impl TcpIpcServer {
                                 cipher = %session.cipher.wire_name(),
                                 "BTSP TCP handshake succeeded"
                             );
+                            caller.btsp_family_verified = true;
+                            caller.peer_id = Some(session.session_id.clone());
                             return Self::handle_jsonrpc_btsp_tcp(
                                 &mut stream,
                                 &mut session,

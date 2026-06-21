@@ -406,8 +406,11 @@ mod tests {
     fn capabilities_returns_expected_keys() {
         let p = SafeIosProvider::new().expect("provider");
         let c = p.capabilities();
-        assert_eq!(c.get("biometric_auth"), Some(&true));
-        assert_eq!(c.get("keychain_access"), Some(&true));
+        assert!(c.contains_key("biometric_auth"));
+        assert!(c.contains_key("keychain_access"));
+        let expected = cfg!(target_os = "ios");
+        assert_eq!(c.get("biometric_auth"), Some(&expected));
+        assert_eq!(c.get("keychain_access"), Some(&expected));
     }
 
     #[test]

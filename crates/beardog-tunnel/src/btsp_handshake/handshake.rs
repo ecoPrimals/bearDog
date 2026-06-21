@@ -5,9 +5,8 @@
 //! Runs the 4-step handshake on a raw stream before any JSON-RPC traffic.
 
 use super::FamilySeed;
-#[cfg(test)]
-use super::crypto::compute_challenge_hmac;
 use super::crypto::{
+    compute_challenge_hmac,
     derive_handshake_key, derive_session_keys, generate_ephemeral_keypair,
     verify_challenge_response, x25519_shared_secret,
 };
@@ -133,10 +132,19 @@ where
         let _ = write!(session_id, "{b:02x}");
     }
 
+    // Server proves family membership to client (mutual auth)
+    let server_proof_hmac = compute_challenge_hmac(
+        &handshake_key,
+        &challenge,
+        server_pub.as_bytes(),
+        &client_pub_bytes,
+    )?;
+
     // ── Step 4: Send HandshakeComplete ─────────────────────────────────
     let complete = HandshakeComplete {
         cipher: cipher.wire_name().to_string(),
         session_id: session_id.clone(),
+        server_proof: BASE64.encode(server_proof_hmac),
     };
     let complete_json = serde_json::to_vec(&complete)
         .map_err(|e| BearDogError::system(format!("BTSP HandshakeComplete serialize: {e}")))?;

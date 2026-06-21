@@ -56,6 +56,7 @@ impl BeardogBtspProvider {
                 first_seen: now,
                 last_seen: now,
                 connection_count: 0,
+                family_id: Some(family_id.to_string()),
             },
         );
 
@@ -105,6 +106,7 @@ impl BeardogBtspProvider {
             first_seen: Utc::now(),
             last_seen: Utc::now(),
             connection_count: 1,
+            family_id: None,
         };
 
         db.insert(peer_id.to_string(), record);

@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### June 21, 2026 -- Wave 120: WAN Periplasm Hardening — Mutual Auth, Trust Binding, Test Sweep
+
+#### BTSP WAN Security Hardening (P1)
+- **Mutual BTSP authentication** — server now computes `server_proof` HMAC in `HandshakeComplete`; client verifies server family membership (bidirectional trust)
+- **TCP `btsp_family_verified` parity** — TCP BTSP path now sets `caller.btsp_family_verified = true` after handshake, matching UDS behavior
+- **`family_id` persisted in `PeerTrustRecord`** — `seed_trusted_peer()` now stores `family_id: Option<String>` (previously accepted but discarded)
+- **Post-handshake peer identity binding** — `CallerContext.peer_id` bound to BTSP session ID after TCP handshake
+
+#### Pre-Existing Test Sweep (P2)
+- **10 failing tests fixed** — 9 adapter tests updated for `not_yet_available` dispatch; 1 compute client test aligned
+- **3 platform tests corrected** — Android/iOS HSM tests no longer assert hardware capabilities on Linux
+- **BTSP handler count updated** — 36 → 37 (accounts for `btsp.trust.seed`)
+- **JSON-RPC error code test corrected** — handler `Err(String)` maps to -32000, not -32602
+- **Flaky IPC discovery test** — made environment-independent
+
 ### June 20, 2026 -- Wave 119: Deep Debt Sweep — Modern Idiomatic Rust, Self-Knowledge, Structural Evolution
 
 **92 files changed, +1,634 / -3,099 lines**

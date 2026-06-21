@@ -600,12 +600,11 @@ mod tests {
             timeout_ms: Some(5000),
             metadata: HashMap::new(),
         };
-        let resp = client.submit_compute(req).await.expect("ok");
-        assert!(resp.success);
-        assert_eq!(resp.provider_info.performance_score, 0.99);
-
-        let m = client.get_metrics().await;
-        assert!(m.total_requests >= 1);
+        let err = client
+            .submit_compute(req)
+            .await
+            .expect_err("submit_compute returns not_yet_available until IPC transport wired");
+        assert!(err.to_string().contains("Not yet available"));
     }
 
     #[tokio::test]

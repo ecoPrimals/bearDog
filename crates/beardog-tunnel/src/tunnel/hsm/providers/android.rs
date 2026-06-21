@@ -325,8 +325,12 @@ mod tests {
         let provider = AndroidUniversalProvider::new().await?;
 
         if let Some(caps) = provider.capabilities() {
-            // TEE should be available in most environments
+            // On non-Android (Linux CI), software fallback is used:
+            // neither hardware_backed nor StrongBox will be available.
+            #[cfg(target_os = "android")]
             assert!(caps.hardware_backed || caps.strongbox_level != StrongBoxLevel::None);
+            #[cfg(not(target_os = "android"))]
+            let _ = caps;
         }
         Ok(())
     }

@@ -100,6 +100,8 @@ pub struct CallerContext {
     /// Whether this connection completed a BTSP handshake proving
     /// family seed membership. Set by post-handshake code paths.
     pub btsp_family_verified: bool,
+    /// Peer identifier bound after BTSP handshake (TCP connections)
+    pub peer_id: Option<String>,
 }
 
 /// How the caller connected.
@@ -124,6 +126,7 @@ impl CallerContext {
             origin: ConnectionOrigin::Unix,
             validated_claims: None,
             btsp_family_verified: false,
+            peer_id: None,
         }
     }
 
@@ -137,6 +140,7 @@ impl CallerContext {
             origin: ConnectionOrigin::Unix,
             validated_claims: None,
             btsp_family_verified: false,
+            peer_id: None,
         }
     }
 
@@ -149,6 +153,7 @@ impl CallerContext {
             origin: ConnectionOrigin::Loopback,
             validated_claims: None,
             btsp_family_verified: false,
+            peer_id: None,
         }
     }
 
@@ -161,6 +166,7 @@ impl CallerContext {
             origin: ConnectionOrigin::Remote,
             validated_claims: None,
             btsp_family_verified: false,
+            peer_id: None,
         }
     }
 }

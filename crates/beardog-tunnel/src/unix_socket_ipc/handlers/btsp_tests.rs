@@ -9,12 +9,12 @@ async fn test_btsp_handler_methods() {
     let methods = handler.methods();
 
     // - 6 core operations x 4 aliases each = 24
-    // - 3 unified methods (configure_tls, verify_peer, tunnel_send_http) = 3
+    // - 4 unified methods (configure_tls, verify_peer, trust.seed, tunnel_send_http) = 4
     // - 5 server methods (create_session, verify, export_keys, negotiate, status) = 5
     // - 1 Phase 3 method (btsp.negotiate) = 1
     // - 3 legacy session aliases (session.create, session.verify, session.negotiate) = 3
-    // Total = 36 methods
-    assert_eq!(methods.len(), 36);
+    // Total = 37 methods
+    assert_eq!(methods.len(), 37);
 
     // Semantic domain.operation names (primary in registry)
     assert!(methods.contains(&"btsp.contact.exchange"));
