@@ -2,7 +2,7 @@
 
 # BearDog Security
 
-**Last Updated**: Jun 9, 2026
+**Last Updated**: Jun 22, 2026
 **Status**: Production Ready
 
 ---
