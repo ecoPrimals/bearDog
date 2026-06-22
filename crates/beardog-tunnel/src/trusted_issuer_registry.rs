@@ -26,6 +26,9 @@
 //! - Registration is append-only (no silent replacement).
 //! - Each entry includes metadata (`family_id`, `registered_at`) for audit.
 
+use base64::Engine;
+use beardog_config::env_keys::ENV_TRUSTED_ISSUERS;
+use beardog_errors::BearDogError;
 use ed25519_dalek::VerifyingKey;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
@@ -224,6 +227,60 @@ impl TrustedIssuerRegistry {
             .values()
             .map(|(_, info)| info.clone())
             .collect()
+    }
+
+    /// Parse and seed issuers from [`ENV_TRUSTED_ISSUERS`].
+    ///
+    /// Each comma-separated entry uses `public_key_base64:gate_id:family_id`
+    /// (`gate_id` and `family_id` are optional). The DID is derived from the key.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any entry contains invalid base64 or an invalid Ed25519 key.
+    pub fn seed_from_env(&self) -> Result<usize, BearDogError> {
+        let Ok(raw) = beardog_errors::process_env::var(ENV_TRUSTED_ISSUERS) else {
+            return Ok(0);
+        };
+        let mut seeded = 0usize;
+        for entry in raw.split(',') {
+            let entry = entry.trim();
+            if entry.is_empty() {
+                continue;
+            }
+            let parts: Vec<&str> = entry.splitn(3, ':').collect();
+            if parts.is_empty() {
+                continue;
+            }
+            let key_b64 = parts[0].trim();
+            let gate_id = parts.get(1).map(|s| s.trim().to_string());
+            let family_id = parts.get(2).map(|s| s.trim().to_string());
+
+            let key_bytes = base64::engine::general_purpose::STANDARD
+                .decode(key_b64)
+                .map_err(|e| {
+                    BearDogError::invalid_input(&format!(
+                        "Invalid base64 in BEARDOG_TRUSTED_ISSUERS: {e}"
+                    ))
+                })?;
+            let key_array: [u8; 32] = key_bytes.try_into().map_err(|_| {
+                BearDogError::invalid_input("BEARDOG_TRUSTED_ISSUERS key not 32 bytes")
+            })?;
+            let vk = VerifyingKey::from_bytes(&key_array).map_err(|e| {
+                BearDogError::invalid_input(&format!(
+                    "Invalid Ed25519 key in BEARDOG_TRUSTED_ISSUERS: {e}"
+                ))
+            })?;
+
+            let did = did_from_verifying_key(&vk);
+            if self
+                .register(&did, vk, gate_id, family_id, TrustMethod::Manual)
+                .map_err(|e| BearDogError::invalid_input(&e.to_string()))?
+            {
+                seeded += 1;
+                tracing::info!(did = %did, "Seeded trusted issuer from env");
+            }
+        }
+        Ok(seeded)
     }
 
     /// Remove a trusted issuer by DID. Returns `true` if removed.

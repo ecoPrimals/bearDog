@@ -10,6 +10,8 @@ pub const ENV_FAMILY_ID: &str = "FAMILY_ID";
 pub const ENV_FAMILY_ID_PREFIXED: &str = "BEARDOG_FAMILY_ID";
 /// Comma-separated bootstrap trusted peers (`peer_id:family_id` pairs).
 pub const ENV_TRUSTED_PEERS: &str = "BEARDOG_TRUSTED_PEERS";
+/// Comma-separated bootstrap trusted issuers (`public_key_base64:gate_id:family_id` entries).
+pub const ENV_TRUSTED_ISSUERS: &str = "BEARDOG_TRUSTED_ISSUERS";
 /// Ecosystem family seed (unprefixed).
 pub const ENV_FAMILY_SEED: &str = "FAMILY_SEED";
 /// BearDog-prefixed family seed.

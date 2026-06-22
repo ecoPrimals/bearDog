@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### June 22, 2026 -- Wave 123: Cross-Gate Trust Hardening
+
+#### TrustedIssuerRegistry Security (P1)
+- **`auth.trust_issuer` auth gate** — handler now requires BTSP-authenticated channel, valid ionic token, or co-resident UDS; previously dispatched before MethodGate check (effectively unauthenticated)
+- **`try_verify_bearer` pre-dispatch** — ionic-token auth path for `auth.trust_issuer` and `auth.exchange_trust` now wired via `MethodGate::try_verify_bearer()` (populates `validated_claims` before gate-handled dispatch)
+
+#### Cross-Gate Issuer Bootstrap (P1)
+- **`BEARDOG_TRUSTED_ISSUERS` env var** — new env-based bootstrap for `TrustedIssuerRegistry`; format `public_key_base64:gate_id:family_id` (comma-separated); seeded at `MethodGate::new()` (both UDS and TCP servers)
+- **`ENV_TRUSTED_ISSUERS` constant** — added to `beardog-config::env_keys::identity`
+
+#### Exchange Trust Identity Fix (P1)
+- **`auth.exchange_trust` `local_gate_id`** — response field now returns `node_id` (gate instance identity) instead of `primal_name` (product name); correct for 5-gate mesh where each gate has a unique `NODE_ID`
+
 ### June 21, 2026 -- Wave 120: WAN Periplasm Hardening + Deep Debt Sweep II
 
 #### BTSP WAN Security Hardening (P1)

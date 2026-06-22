@@ -13,7 +13,7 @@
 //! verification) separate from trust topology management.
 
 use crate::auth_event_bus::{AuthEvent, AuthEventBus, AuthEventKind};
-use crate::method_gate::CallerContext;
+use crate::method_gate::{CallerContext, ConnectionOrigin};
 use crate::trusted_issuer_registry::{TrustedIssuerRegistry, did_from_verifying_key};
 use crate::unix_socket_ipc::handlers::primal_signing::derive_primal_signing_key;
 use base64::Engine;
@@ -45,8 +45,19 @@ pub fn handle_auth_trust_issuer(
     registry: &TrustedIssuerRegistry,
     event_bus: &AuthEventBus,
     source_gate: &str,
+    caller: &CallerContext,
     params: Option<&Value>,
 ) -> Value {
+    if !caller.btsp_family_verified
+        && caller.validated_claims.is_none()
+        && caller.origin != ConnectionOrigin::Unix
+    {
+        return serde_json::json!({
+            "registered": false,
+            "error": "auth.trust_issuer requires BTSP-authenticated channel, valid ionic token, or co-resident UDS",
+        });
+    }
+
     let Some(pk_b64) = params
         .and_then(|p| p.get("public_key"))
         .and_then(Value::as_str)
@@ -176,7 +187,7 @@ pub fn handle_auth_events_poll(event_bus: &AuthEventBus, params: Option<&Value>)
 /// - `registered`: whether the remote key was newly registered
 /// - `local_public_key`: this gate's Ed25519 public key (base64)
 /// - `local_did`: this gate's DID
-/// - `local_gate_id`: this gate's primal name
+/// - `local_gate_id`: this gate's node ID
 ///
 /// # Errors
 ///
@@ -287,7 +298,7 @@ pub fn handle_auth_exchange_trust(
         "total_trusted_issuers": registry.len(),
         "local_public_key": B64.encode(local_vk.as_bytes()),
         "local_did": local_did,
-        "local_gate_id": primal_name,
+        "local_gate_id": node_id,
     })
 }
 

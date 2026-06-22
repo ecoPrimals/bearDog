@@ -227,12 +227,26 @@ impl MethodGate {
     /// Create a gate with explicit configuration.
     #[must_use]
     pub fn new(mode: EnforcementMode, primal_name: &str, node_id: &str) -> Self {
+        let trusted_issuers = TrustedIssuerRegistry::new();
+        match trusted_issuers.seed_from_env() {
+            Ok(n) if n > 0 => {
+                tracing::info!(count = n, "Seeded trusted issuers from BEARDOG_TRUSTED_ISSUERS");
+            }
+            Ok(_) => {}
+            Err(e) => {
+                tracing::warn!(
+                    error = %e,
+                    "Failed to seed trusted issuers from BEARDOG_TRUSTED_ISSUERS"
+                );
+            }
+        }
+
         Self {
             mode,
             verifying_key: derive_primal_verifying_key(primal_name, node_id),
             primal_name: primal_name.to_owned(),
             node_id: node_id.to_owned(),
-            trusted_issuers: TrustedIssuerRegistry::new(),
+            trusted_issuers,
             auth_events: AuthEventBus::default(),
             server_uid: beardog_utils::resolve_uid_from_proc(),
         }
@@ -278,6 +292,32 @@ impl MethodGate {
     #[must_use]
     pub fn auth_events(&self) -> &AuthEventBus {
         &self.auth_events
+    }
+
+    /// Verify a bearer token and populate `caller.validated_claims` when valid.
+    ///
+    /// Used by gate-handled methods dispatched before [`Self::check`] so ionic
+    /// token auth paths remain reachable. Does not reject callers without tokens.
+    pub fn try_verify_bearer(&self, method: &str, caller: &mut CallerContext) {
+        use crate::trusted_issuer_registry::{CrossGateVerifyResult, verify_with_registry};
+
+        if caller.validated_claims.is_some() {
+            return;
+        }
+        let Some(ref token_str) = caller.bearer_token else {
+            return;
+        };
+
+        match verify_with_registry(token_str, &self.verifying_key, &self.trusted_issuers, None) {
+            CrossGateVerifyResult::LocalVerified(payload)
+            | CrossGateVerifyResult::RemoteVerified { payload, .. }
+            | CrossGateVerifyResult::AdHocVerified(payload) => {
+                if scope_covers_method(&payload.scope, method) {
+                    caller.validated_claims = Some(payload);
+                }
+            }
+            CrossGateVerifyResult::Failed(_) => {}
+        }
     }
 
     /// Pre-dispatch authorization check.
@@ -478,7 +518,7 @@ pub fn is_gate_handled_method(method: &str) -> bool {
 pub fn dispatch_auth_method(
     method: &str,
     gate: &MethodGate,
-    caller: &CallerContext,
+    caller: &mut CallerContext,
     params: Option<&serde_json::Value>,
 ) -> Option<serde_json::Value> {
     use crate::ionic_token_handlers::{
@@ -510,21 +550,28 @@ pub fn dispatch_auth_method(
             params,
         )),
         "auth.public_key" => Some(handle_auth_public_key(gate.primal_name(), gate.node_id())),
-        "auth.trust_issuer" => Some(handle_auth_trust_issuer(
-            gate.trusted_issuers(),
-            gate.auth_events(),
-            gate.primal_name(),
-            params,
-        )),
+        "auth.trust_issuer" => {
+            gate.try_verify_bearer(method, caller);
+            Some(handle_auth_trust_issuer(
+                gate.trusted_issuers(),
+                gate.auth_events(),
+                gate.primal_name(),
+                caller,
+                params,
+            ))
+        }
         "auth.trusted_issuers" => Some(handle_auth_trusted_issuers(gate.trusted_issuers())),
-        "auth.exchange_trust" => Some(handle_auth_exchange_trust(
-            gate.trusted_issuers(),
-            gate.auth_events(),
-            gate.primal_name(),
-            gate.node_id(),
-            caller,
-            params,
-        )),
+        "auth.exchange_trust" => {
+            gate.try_verify_bearer(method, caller);
+            Some(handle_auth_exchange_trust(
+                gate.trusted_issuers(),
+                gate.auth_events(),
+                gate.primal_name(),
+                gate.node_id(),
+                caller,
+                params,
+            ))
+        }
         "auth.events.poll" => Some(handle_auth_events_poll(gate.auth_events(), params)),
         _ => None,
     }

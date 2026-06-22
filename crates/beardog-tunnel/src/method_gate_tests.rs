@@ -148,10 +148,12 @@ fn trust_issuer_emits_event() {
         "trust_method": "family_seed",
     });
 
+    let caller = CallerContext::from_unix();
     let result = crate::trust_handlers::handle_auth_trust_issuer(
         gate.trusted_issuers(),
         gate.auth_events(),
         gate.primal_name(),
+        &caller,
         Some(&params),
     );
     assert_eq!(result["registered"], true);
@@ -233,7 +235,7 @@ fn exchange_trust_registers_and_returns_local_key() {
             .starts_with("did:key:z6Mk")
     );
     assert_eq!(result["trust_method"], "family_seed");
-    assert_eq!(result["local_gate_id"], PRIMAL);
+    assert_eq!(result["local_gate_id"], NODE);
 
     let events = gate.auth_events().poll_since(0);
     assert_eq!(events.len(), 1);
@@ -578,36 +580,36 @@ fn auth_peer_info_with_creds() {
 #[test]
 fn dispatch_routes_auth_methods() {
     let gate = test_gate(EnforcementMode::Permissive);
-    let caller = CallerContext::loopback();
-    assert!(dispatch_auth_method("auth.check", &gate, &caller, None).is_some());
-    assert!(dispatch_auth_method("auth.mode", &gate, &caller, None).is_some());
-    assert!(dispatch_auth_method("auth.peer_info", &gate, &caller, None).is_some());
+    let mut caller = CallerContext::loopback();
+    assert!(dispatch_auth_method("auth.check", &gate, &mut caller, None).is_some());
+    assert!(dispatch_auth_method("auth.mode", &gate, &mut caller, None).is_some());
+    assert!(dispatch_auth_method("auth.peer_info", &gate, &mut caller, None).is_some());
 }
 
 #[test]
 fn dispatch_routes_ionic_methods() {
     let gate = test_gate(EnforcementMode::Permissive);
-    let caller = CallerContext::loopback();
-    assert!(dispatch_auth_method("identity.create", &gate, &caller, None).is_some());
+    let mut caller = CallerContext::loopback();
+    assert!(dispatch_auth_method("identity.create", &gate, &mut caller, None).is_some());
 
     let issue_params = serde_json::json!({"subject": "alice"});
     assert!(
-        dispatch_auth_method("auth.issue_ionic", &gate, &caller, Some(&issue_params)).is_some()
+        dispatch_auth_method("auth.issue_ionic", &gate, &mut caller, Some(&issue_params)).is_some()
     );
 
     let token_result =
-        dispatch_auth_method("auth.issue_ionic", &gate, &caller, Some(&issue_params)).unwrap();
+        dispatch_auth_method("auth.issue_ionic", &gate, &mut caller, Some(&issue_params)).unwrap();
     let verify_params = serde_json::json!({"token": token_result["token"]});
     assert!(
-        dispatch_auth_method("auth.verify_ionic", &gate, &caller, Some(&verify_params)).is_some()
+        dispatch_auth_method("auth.verify_ionic", &gate, &mut caller, Some(&verify_params)).is_some()
     );
 }
 
 #[test]
 fn dispatch_routes_public_key() {
     let gate = test_gate(EnforcementMode::Permissive);
-    let caller = CallerContext::loopback();
-    let result = dispatch_auth_method("auth.public_key", &gate, &caller, None);
+    let mut caller = CallerContext::loopback();
+    let result = dispatch_auth_method("auth.public_key", &gate, &mut caller, None);
     assert!(result.is_some());
     let val = result.unwrap();
     assert_eq!(val["algorithm"], "Ed25519");
@@ -619,9 +621,9 @@ fn dispatch_routes_public_key() {
 #[test]
 fn dispatch_routes_issue_session() {
     let gate = test_gate(EnforcementMode::Permissive);
-    let caller = CallerContext::loopback();
+    let mut caller = CallerContext::loopback();
     let session_params = serde_json::json!({"purpose": "jupyterhub", "user": "researcher"});
-    let result = dispatch_auth_method("auth.issue_session", &gate, &caller, Some(&session_params));
+    let result = dispatch_auth_method("auth.issue_session", &gate, &mut caller, Some(&session_params));
     assert!(result.is_some());
     let val = result.unwrap();
     assert_eq!(val["purpose"], "jupyterhub");
@@ -632,8 +634,8 @@ fn dispatch_routes_issue_session() {
 #[test]
 fn dispatch_returns_none_for_non_auth() {
     let gate = test_gate(EnforcementMode::Permissive);
-    let caller = CallerContext::loopback();
-    assert!(dispatch_auth_method("crypto.sign_ed25519", &gate, &caller, None).is_none());
+    let mut caller = CallerContext::loopback();
+    assert!(dispatch_auth_method("crypto.sign_ed25519", &gate, &mut caller, None).is_none());
 }
 
 #[test]

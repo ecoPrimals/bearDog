@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: Jun 21, 2026
+**Updated**: Jun 22, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -54,6 +54,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - Primal identity unification — 10 hardcoded `"beardog"` sites → `resolve_primal_name()` (Wave 120)
 - Graph permissions fail-closed — collaboration unavailable → error, not silent `Viewer` downgrade (Wave 120)
 - 25 pre-existing test failures fixed (adapter dispatch, platform assertions, error codes) (Wave 120)
+- `auth.trust_issuer` auth gate — requires BTSP/ionic/UDS; previously unauthenticated (Wave 123)
+- `BEARDOG_TRUSTED_ISSUERS` env bootstrap — cross-gate issuer keys seeded at server init (Wave 123)
+- `auth.exchange_trust` returns `node_id` as `local_gate_id` (was `primal_name`) (Wave 123)
+- `try_verify_bearer` pre-dispatch — ionic-token auth path wired for gate-handled methods (Wave 123)
 - `deny.toml` hardened — C deps banned, duplicate versions denied
 - `CommandRunner` trait for mocking external commands (`adb`) in tests
 - **Stadial parity gate (Wave 53)** — Complete: all `#[async_trait]` removed in favor of native `async fn` in traits; `async-trait` dependency removed from every `Cargo.toml`; finite-implementor `dyn Trait` sites replaced with enum dispatch for monomorphized async routing; Clippy and rustdoc `-D warnings` clean
@@ -71,6 +75,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### Cross-Gate Trust Hardening — DONE (Wave 123)
+
+`auth.trust_issuer` auth gate (BTSP/ionic/UDS required; was unauthenticated). `BEARDOG_TRUSTED_ISSUERS` env-based issuer bootstrap at `MethodGate::new()`. `auth.exchange_trust` returns `node_id` as `local_gate_id`. `try_verify_bearer` pre-dispatch wires ionic-token auth for gate-handled methods.
 
 ### WAN Periplasm Hardening + Deep Debt Sweep II — DONE (Wave 120)
 
