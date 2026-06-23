@@ -1,7 +1,7 @@
 # 🔌 BearDog Primal Contracts - JSON-RPC API Specification
 
-**Version**: 4.0.0  
-**Date**: May 28, 2026  
+**Version**: 4.1.0  
+**Date**: Jun 22, 2026  
 **Status**: Production Stable  
 **Protocol**: JSON-RPC 2.0 over Unix Domain Sockets
 
@@ -37,7 +37,7 @@ BearDog exposes its cryptographic and genetic capabilities through a JSON-RPC 2.
 
 ## 📚 **API CATEGORIES**
 
-BearDog provides **226 dispatchable JSON-RPC methods** (217 via `HandlerRegistry` + 9 pre-dispatch gate methods) organized into 18 handler categories, plus 13 route aliases for backward compatibility.
+BearDog provides **229 dispatchable JSON-RPC methods** (217 via `HandlerRegistry` + 12 pre-dispatch gate methods) organized into 18 handler categories, plus 13 route aliases for backward compatibility.
 
 > **SSOT**: Call `rpc.methods` or `capabilities.list` for the live method inventory.
 
@@ -106,14 +106,18 @@ BearDog provides **226 dispatchable JSON-RPC methods** (217 via `HandlerRegistry
 ### **13. Relay** (1 method — `RelayHandler`)
 - `relay.authorize` — Lineage-gated relay authorization
 
-### **14. Auth & Ionic Token Lifecycle** (7 methods — pre-dispatch gate, JH-0/JH-1/JH-11)
+### **14. Auth & Ionic Token Lifecycle** (11 methods — pre-dispatch gate, JH-0/JH-1/JH-11)
 - `auth.check` — caller authentication status (includes validated claims)
 - `auth.mode` — enforcement mode (permissive/enforced)
 - `auth.peer_info` — peer credential inspection (SO_PEERCRED on Unix)
 - `auth.issue_ionic` — issue Ed25519-signed ionic capability token
 - `auth.verify_ionic` — verify ionic token, return claims or error
 - `auth.issue_session` — issue scoped session token (TTL-aware, `content.*` scope)
-- `auth.public_key` — return primal's Ed25519 public key
+- `auth.public_key` — return primal's Ed25519 public key (base64/hex/DID)
+- `auth.trust_issuer` — register a remote gate's Ed25519 key as trusted issuer (requires BTSP/ionic/UDS)
+- `auth.exchange_trust` — mutual trust exchange over BTSP channel (returns local key for reciprocal registration)
+- `auth.trusted_issuers` — list all registered trusted issuers
+- `auth.events.poll` — poll auth event bus (trust registrations, key exchanges)
 
 ### **15. Identity** (1 method — pre-dispatch gate)
 - `identity.create` — generate ephemeral Ed25519 caller keypair + DID
@@ -1554,7 +1558,7 @@ Plus 12 additional security/consent/birdsong methods (call `rpc.methods` for ful
 145. `encryption.encrypt` — Generic encrypt
 146. `encryption.decrypt` — Generic decrypt
 
-### **Auth Gate (7 methods — pre-dispatch, `MethodGate`)**
+### **Auth Gate (11 methods — pre-dispatch, `MethodGate`)**
 
 147. `auth.check` — Caller authentication status
 148. `auth.mode` — Enforcement mode (permissive/enforced)
@@ -1562,19 +1566,23 @@ Plus 12 additional security/consent/birdsong methods (call `rpc.methods` for ful
 150. `auth.issue_ionic` — Issue Ed25519-signed ionic capability token
 151. `auth.verify_ionic` — Verify ionic token, return claims
 152. `auth.issue_session` — Issue scoped session token (TTL-aware, `content.*` scope)
-153. `auth.public_key` — Return primal's Ed25519 public key
+153. `auth.public_key` — Return primal's Ed25519 public key (base64/hex/DID)
+154. `auth.trust_issuer` — Register remote gate Ed25519 key as trusted issuer
+155. `auth.exchange_trust` — Mutual trust exchange over BTSP (returns local key)
+156. `auth.trusted_issuers` — List all registered trusted issuers
+157. `auth.events.poll` — Poll auth event bus
 
 ### **Identity Gate (1 method — pre-dispatch)**
 
-154. `identity.create` — Generate ephemeral Ed25519 caller keypair + DID
+158. `identity.create` — Generate ephemeral Ed25519 caller keypair + DID
 
-### **BTSP Tunnel (36 methods — `BtspHandler`)**
+### **BTSP Tunnel (37 methods — `BtspHandler`)**
 
-155–190. `btsp.contact.exchange`, `btsp.tunnel.{establish,encrypt,decrypt,status,close}`, `btsp.server.*`, `btsp.configure_tls`, `btsp.verify_peer`, `btsp.negotiate`, plus legacy aliases. Call `rpc.methods` for the full BTSP surface.
+159–195. `btsp.contact.exchange`, `btsp.tunnel.{establish,encrypt,decrypt,status,close}`, `btsp.trust.seed`, `btsp.server.*`, `btsp.configure_tls`, `btsp.verify_peer`, `btsp.negotiate`, plus legacy aliases. Call `rpc.methods` for the full BTSP surface.
 
 ### **Summary**
 
-**217 registry methods** + **9 pre-dispatch gate methods** = **226 dispatchable method names**, plus **13 route aliases** for backward compatibility. The `CryptoHandler` alone registers 108 methods across signatures, encryption, hashing, KDF, TLS, genetic, Tor, and semantic alias surfaces.
+**217 registry methods** + **12 pre-dispatch gate methods** = **229 dispatchable method names**, plus **13 route aliases** for backward compatibility. The `CryptoHandler` alone registers 108 methods across signatures, encryption, hashing, KDF, TLS, genetic, Tor, and semantic alias surfaces.
 
 ═══════════════════════════════════════════════════════════════════
 

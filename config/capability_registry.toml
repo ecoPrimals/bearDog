@@ -3,7 +3,7 @@
 # Copyright (c) 2025-2026 ecoPrimals Collective
 #
 # Self-knowledge for primal discovery and biomeOS capability routing.
-# BearDog's full method surface (226 methods) is defined in code via
+# BearDog's full method surface (229 methods) is defined in code via
 # HandlerRegistry; this file declares capability domains for routing.
 #
 # Stability tiers:

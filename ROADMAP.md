@@ -16,7 +16,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 - Rust edition 2024 (MSRV 1.93.0, `rust-toolchain.toml` pinned)
 - 100% Pure Rust crypto achieved — `aws-lc-rs` replaced by `rustls-rustcrypto` (Pure Rust CryptoProvider); `rcgen` replaced by `p256` + `x509-cert`; 19 C-crypto crates banned in `deny.toml`
-- 226 JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing, lineage queries, auth gate, ionic tokens, FIDO2/CTAP2, seed fingerprint, universal discovery, threat analysis, ecosystem integration)
+- 229 JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing, lineage queries, auth gate, ionic tokens, cross-gate trust exchange, FIDO2/CTAP2, seed fingerprint, universal discovery, threat analysis, ecosystem integration)
 - 0 clippy warnings (pedantic + nursery + all cast lints warn + `doc_markdown` warn + `missing_errors_doc` warn + unwrap/expect warn, workspace-centralized)
 - 0 missing documentation warnings (all public items documented, all `# Errors` sections present)
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)

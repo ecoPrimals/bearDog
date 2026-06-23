@@ -3,7 +3,7 @@
 # Environment Variables Reference
 
 **Version**: 0.9.0
-**Date**: Jun 2, 2026 (Wave 128)
+**Date**: Jun 22, 2026 (Wave 123)
 **Status**: Common Environment Variables
 
 > **Note (Wave 128):** Env key centralization is complete. All `BEARDOG_*` keys are defined as constants in `beardog-config/src/env_keys.rs` (803+ constants). Production code should use `env_keys::ENV_*` rather than inline string literals.
@@ -121,6 +121,38 @@ If `FAMILY_ID` is set but no seed is available, the server refuses to start.
 ```bash
 export PRIMAL_NAME=beardog
 ```
+
+---
+
+#### `BEARDOG_TRUSTED_PEERS`
+
+**Purpose**: Bootstrap BTSP peer trust at startup (transport layer TOFU)
+**Required**: No
+**Default**: None (empty trust DB)
+**Format**: Comma-separated `peer_id:family_id` entries
+
+```bash
+export BEARDOG_TRUSTED_PEERS="golgi:eco-family,sporeGate:eco-family,eastGate:eco-family"
+```
+
+Seeds `PeerTrustRecord` entries with `TrustLevel::Tentative` at BTSP provider init. Peers are promoted to `Verified` after successful handshake.
+
+---
+
+#### `BEARDOG_TRUSTED_ISSUERS`
+
+**Purpose**: Bootstrap cross-gate ionic token issuer trust at startup (application auth layer)
+**Required**: No
+**Default**: None (empty `TrustedIssuerRegistry`)
+**Format**: Comma-separated `public_key_base64:gate_id:family_id` entries
+
+```bash
+export BEARDOG_TRUSTED_ISSUERS="AAAA...base64...:golgi:eco-family,BBBB...base64...:sporeGate:eco-family"
+```
+
+Each entry registers a remote gate's Ed25519 public key as a trusted ionic token issuer. The DID is derived automatically from the key. `gate_id` and `family_id` are optional (omit trailing colons). Seeded at `MethodGate::new()` before any connections are accepted.
+
+To obtain a gate's public key: call `auth.public_key` on that gate's bearDog instance.
 
 ---
 
@@ -682,6 +714,7 @@ export NODE_ID=tower2
 | Category | Variables | Required |
 |----------|-----------|----------|
 | **Identity** | `FAMILY_ID`, `BEARDOG_FAMILY_ID`, `NODE_ID`, `BEARDOG_NODE_ID`, `FAMILY_SEED`, `BEARDOG_FAMILY_SEED`, `PRIMAL_NAME` | None (standalone mode) |
+| **Trust** | `BEARDOG_TRUSTED_PEERS`, `BEARDOG_TRUSTED_ISSUERS` | None |
 | **HSM** | `BEARDOG_HSM_MODE`, `BEARDOG_YUBIKEY_SERIAL`, `BEARDOG_TPM_DEVICE` | None |
 | **Socket** | `BEARDOG_SOCKET`, `BIOMEOS_SOCKET_PATH`, `BIOMEOS_SOCKET_DIR` | None |
 | **Network** | `BEARDOG_BIND_ADDR`, `BEARDOG_ENDPOINT`, `BEARDOG_HOST`, `BEARDOG_API_PORT`, `BEARDOG_TCP_IPC_PORT`, `BEARDOG_METRICS_PORT` | None |
