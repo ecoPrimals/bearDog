@@ -719,3 +719,142 @@ fn tcp_caller_not_bypassed_even_with_same_uid() {
         "TCP caller should not get co-resident trust even with matching UID"
     );
 }
+
+// ── auth.trust_issuer auth gate ──
+
+#[test]
+fn trust_issuer_rejects_unauthenticated_remote() {
+    let gate = test_gate(EnforcementMode::Permissive);
+
+    let sk = crate::unix_socket_ipc::handlers::primal_signing::derive_primal_signing_key(
+        "remote-gate",
+        "remote-node",
+    );
+    let vk = sk.verifying_key();
+    let did = crate::trusted_issuer_registry::did_from_verifying_key(&vk);
+    let pk_b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, vk.as_bytes());
+
+    let params = serde_json::json!({
+        "public_key": pk_b64,
+        "did": did,
+        "gate_id": "remote-gate",
+    });
+
+    let caller = CallerContext::remote();
+    let result = crate::trust_handlers::handle_auth_trust_issuer(
+        gate.trusted_issuers(),
+        gate.auth_events(),
+        gate.primal_name(),
+        &caller,
+        Some(&params),
+    );
+
+    assert_eq!(result["registered"], false);
+    assert!(
+        result["error"]
+            .as_str()
+            .expect("error")
+            .contains("requires"),
+        "should indicate auth requirement"
+    );
+    assert!(gate.trusted_issuers().is_empty());
+}
+
+#[test]
+fn trust_issuer_accepts_btsp_verified() {
+    let gate = test_gate(EnforcementMode::Permissive);
+
+    let sk = crate::unix_socket_ipc::handlers::primal_signing::derive_primal_signing_key(
+        "remote-gate",
+        "remote-node",
+    );
+    let vk = sk.verifying_key();
+    let did = crate::trusted_issuer_registry::did_from_verifying_key(&vk);
+    let pk_b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, vk.as_bytes());
+
+    let params = serde_json::json!({
+        "public_key": pk_b64,
+        "did": did,
+        "gate_id": "remote-gate",
+    });
+
+    let mut caller = CallerContext::remote();
+    caller.btsp_family_verified = true;
+
+    let result = crate::trust_handlers::handle_auth_trust_issuer(
+        gate.trusted_issuers(),
+        gate.auth_events(),
+        gate.primal_name(),
+        &caller,
+        Some(&params),
+    );
+
+    assert_eq!(result["registered"], true);
+    assert_eq!(gate.trusted_issuers().len(), 1);
+}
+
+// ── try_verify_bearer ──
+
+#[test]
+fn try_verify_bearer_populates_claims_for_valid_token() {
+    let gate = test_gate(EnforcementMode::Enforced);
+    let token = issue_test_token(&["auth.*"], 300);
+
+    let mut caller = CallerContext::remote();
+    caller.bearer_token = Some(token);
+    assert!(caller.validated_claims.is_none());
+
+    gate.try_verify_bearer("auth.trust_issuer", &mut caller);
+    assert!(
+        caller.validated_claims.is_some(),
+        "valid token with matching scope should populate claims"
+    );
+}
+
+#[test]
+fn try_verify_bearer_ignores_insufficient_scope() {
+    let gate = test_gate(EnforcementMode::Enforced);
+    let token = issue_test_token(&["crypto.*"], 300);
+
+    let mut caller = CallerContext::remote();
+    caller.bearer_token = Some(token);
+
+    gate.try_verify_bearer("auth.trust_issuer", &mut caller);
+    assert!(
+        caller.validated_claims.is_none(),
+        "token with wrong scope should not populate claims for auth.trust_issuer"
+    );
+}
+
+#[test]
+fn try_verify_bearer_skips_when_no_token() {
+    let gate = test_gate(EnforcementMode::Enforced);
+    let mut caller = CallerContext::remote();
+
+    gate.try_verify_bearer("auth.trust_issuer", &mut caller);
+    assert!(caller.validated_claims.is_none());
+}
+
+#[test]
+fn try_verify_bearer_skips_when_claims_already_set() {
+    let gate = test_gate(EnforcementMode::Enforced);
+    let token = issue_test_token(&["auth.*"], 300);
+
+    let mut caller = CallerContext::remote();
+    caller.bearer_token = Some(token);
+
+    gate.try_verify_bearer("auth.trust_issuer", &mut caller);
+    assert!(caller.validated_claims.is_some());
+
+    let first_sub = caller
+        .validated_claims
+        .as_ref()
+        .map(|c| c.sub.clone());
+
+    gate.try_verify_bearer("auth.trust_issuer", &mut caller);
+    assert_eq!(
+        caller.validated_claims.as_ref().map(|c| c.sub.clone()),
+        first_sub,
+        "should not re-verify when claims already set"
+    );
+}

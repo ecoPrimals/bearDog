@@ -598,4 +598,83 @@ mod tests {
         assert!(did_matches_key(&did, &vk));
         assert!(!did_matches_key("did:key:z6MkWrong", &vk));
     }
+
+    #[test]
+    #[serial_test::serial]
+    fn seed_from_env_registers_issuers() {
+        use base64::Engine;
+
+        let vk_a = derive_primal_verifying_key("gate-a", "node-a");
+        let vk_b = derive_primal_verifying_key("gate-b", "node-b");
+        let b64_a = base64::engine::general_purpose::STANDARD.encode(vk_a.as_bytes());
+        let b64_b = base64::engine::general_purpose::STANDARD.encode(vk_b.as_bytes());
+
+        let env_val = format!("{b64_a}:gate-a:fam1,{b64_b}:gate-b:fam2");
+        beardog_errors::process_env::set_var(ENV_TRUSTED_ISSUERS, &env_val);
+
+        let registry = TrustedIssuerRegistry::new();
+        let seeded = registry.seed_from_env().expect("seed should succeed");
+        assert_eq!(seeded, 2);
+        assert_eq!(registry.len(), 2);
+
+        let did_a = did_from_verifying_key(&vk_a);
+        let (stored_vk, info) = registry.get(&did_a).expect("gate-a should be registered");
+        assert_eq!(stored_vk.as_bytes(), vk_a.as_bytes());
+        assert_eq!(info.gate_id.as_deref(), Some("gate-a"));
+        assert_eq!(info.family_id.as_deref(), Some("fam1"));
+
+        beardog_errors::process_env::remove_var(ENV_TRUSTED_ISSUERS);
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn seed_from_env_skips_when_unset() {
+        beardog_errors::process_env::remove_var(ENV_TRUSTED_ISSUERS);
+        let registry = TrustedIssuerRegistry::new();
+        let seeded = registry.seed_from_env().expect("should succeed with 0");
+        assert_eq!(seeded, 0);
+        assert!(registry.is_empty());
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn seed_from_env_rejects_invalid_base64() {
+        beardog_errors::process_env::set_var(ENV_TRUSTED_ISSUERS, "not-valid-base64!!!");
+        let registry = TrustedIssuerRegistry::new();
+        let err = registry.seed_from_env().expect_err("should reject bad base64");
+        assert!(err.to_string().contains("base64"), "error: {err}");
+        beardog_errors::process_env::remove_var(ENV_TRUSTED_ISSUERS);
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn seed_from_env_rejects_wrong_key_length() {
+        let short_key = base64::engine::general_purpose::STANDARD.encode(b"tooshort");
+        beardog_errors::process_env::set_var(ENV_TRUSTED_ISSUERS, &short_key);
+        let registry = TrustedIssuerRegistry::new();
+        let err = registry.seed_from_env().expect_err("should reject short key");
+        assert!(err.to_string().contains("32 bytes"), "error: {err}");
+        beardog_errors::process_env::remove_var(ENV_TRUSTED_ISSUERS);
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn seed_from_env_handles_optional_fields() {
+        use base64::Engine;
+
+        let vk = derive_primal_verifying_key("solo", "node");
+        let b64 = base64::engine::general_purpose::STANDARD.encode(vk.as_bytes());
+
+        beardog_errors::process_env::set_var(ENV_TRUSTED_ISSUERS, &b64);
+        let registry = TrustedIssuerRegistry::new();
+        let seeded = registry.seed_from_env().expect("should succeed");
+        assert_eq!(seeded, 1);
+
+        let did = did_from_verifying_key(&vk);
+        let (_, info) = registry.get(&did).expect("should be registered");
+        assert!(info.gate_id.is_none());
+        assert!(info.family_id.is_none());
+
+        beardog_errors::process_env::remove_var(ENV_TRUSTED_ISSUERS);
+    }
 }

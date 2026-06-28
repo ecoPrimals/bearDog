@@ -272,8 +272,6 @@ mod tests {
     fn build_csr_produces_valid_pkcs10() {
         use tempfile::TempDir;
         use x509_parser::certification_request::X509CertificationRequest;
-        #[allow(unused_imports)]
-        use x509_parser::extensions::{GeneralName, ParsedExtension};
         use x509_parser::prelude::FromDer;
 
         let data_dir = TempDir::new().expect("tempdir");

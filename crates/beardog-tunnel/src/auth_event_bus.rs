@@ -7,8 +7,8 @@
 //! to receive events since a given timestamp.
 //!
 //! The bus stores events in a bounded ring buffer (oldest evicted when full).
-//! A `tokio::sync::broadcast` channel is also available for future streaming
-//! subscribers (`auth.events.subscribe`, Phase 4+).
+//! In-process subscribers can call [`AuthEventBus::subscribe`] for a broadcast
+//! channel. An RPC method (`auth.events.subscribe`) is not yet wired.
 //!
 //! ## Wire format (FRAGO: wave76c-beardog-auth-events-subscribe)
 //!

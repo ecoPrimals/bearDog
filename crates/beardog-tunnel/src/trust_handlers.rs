@@ -26,7 +26,7 @@ const B64: &base64::engine::GeneralPurpose = &base64::engine::general_purpose::S
 fn primal_did(primal_name: &str, node_id: &str) -> String {
     let sk = derive_primal_signing_key(primal_name, node_id);
     let vk = sk.verifying_key();
-    crate::ionic_token_handlers::did_from_ed25519_public(vk.as_bytes())
+    did_from_verifying_key(&vk)
 }
 
 // ── auth.trust_issuer ──────────────────────────────────────────────────

@@ -30,7 +30,13 @@ const B64: &base64::engine::GeneralPurpose = &base64::engine::general_purpose::S
 const DEFAULT_TTL_SECS: i64 = 3600;
 
 /// Derive the `did:key:z6Mk...` for an Ed25519 public key.
+///
+/// Delegates to [`crate::trusted_issuer_registry::did_from_verifying_key`].
+/// Accepts raw bytes for callers holding `&[u8; 32]` rather than `VerifyingKey`.
 pub(crate) fn did_from_ed25519_public(public_key: &[u8; 32]) -> String {
+    if let Ok(vk) = VerifyingKey::from_bytes(public_key) {
+        return crate::trusted_issuer_registry::did_from_verifying_key(&vk);
+    }
     let mut multicodec = Vec::with_capacity(34);
     multicodec.push(0xed);
     multicodec.push(0x01);
