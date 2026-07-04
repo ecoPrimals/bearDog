@@ -1,5 +1,7 @@
 # 🔐 BearDog Physical Genesis Bootstrap - Implementation Plan
 
+> **Note (Wave 131):** Some internal references in this document point to archived paths from the HTTP-era API. Core concepts remain valid.
+
 **Date**: December 22, 2025  
 **Status**: Planning Complete → Implementation Starting  
 **Timeline**: 4-5 weeks  

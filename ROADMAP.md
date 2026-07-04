@@ -363,4 +363,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: Jun 21, 2026
+**Last Updated**: Jul 4, 2026 (Wave 131)

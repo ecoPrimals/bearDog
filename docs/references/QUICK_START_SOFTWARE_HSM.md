@@ -1,5 +1,7 @@
 # 🚀 Quick Start: BearDog with Software HSM
 
+> **Note (Wave 131):** Some internal references in this document point to archived paths from the HTTP-era API. Core concepts remain valid.
+
 **For biomeOS Team** - Copy/Paste Solution
 
 ---
