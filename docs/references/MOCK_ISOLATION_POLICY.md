@@ -1,7 +1,8 @@
-# BearDog Mock Isolation Policy - January 24, 2026
+# BearDog Mock Isolation Policy
 
 **Principle**: Mocks must be isolated to testing - ZERO mocks in production binaries  
-**Status**: 90% Complete - Major evolution done, minor debt documented
+**Status**: Complete — all production mocks either evolved to real implementations, gated behind `#[cfg(test)]` / feature flags, or return explicit `not_yet_available` errors (never fake success data)  
+**Last Updated**: Jul 4, 2026 (Wave 128)
 
 ---
 

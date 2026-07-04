@@ -3,7 +3,7 @@
 # Environment Variables Reference
 
 **Version**: 0.9.0
-**Date**: Jun 22, 2026 (Wave 123)
+**Date**: Jul 4, 2026 (Wave 128)
 **Status**: Common Environment Variables
 
 > **Note (Wave 128):** Env key centralization is complete. All `BEARDOG_*` keys are defined as constants in `beardog-config/src/env_keys.rs` (803+ constants). Production code should use `env_keys::ENV_*` rather than inline string literals.
@@ -754,6 +754,6 @@ Every tier is valid. BearDog is not required to support all tiers. Tier 3 (UDS c
 
 ---
 
-_Last Updated: Jun 2, 2026_
+_Last Updated: Jul 4, 2026_
 _Version: 0.9.0_
 _Status: Production Ready_

@@ -2,7 +2,10 @@
 
 # JupyterHub Dual-Auth Integration — BearDog as Auth Provider (S4)
 
-**Status:** Design Complete — Implementation Ready
+> **SUPERSEDED** (Jul 4, 2026) — JupyterHub auth was deferred; ecosystem moved to
+> sovereign composition (biomeOS → NestGate). Retained as fossil record.
+
+**Status:** Design Complete — Implementation Ready (DEFERRED)
 **Wave:** 24 (Shadow Run Execution)
 **Deliverable:** D4
 **Blocks:** S4 Auth Shadow cutover

@@ -5,7 +5,6 @@ members = [
     "benchmarks",
 ]
 exclude = [
-    "crates/beardog",
     # Overstep: HTTP REST API → songBird owns network transport (PRIMAL_RESPONSIBILITY_MATRIX V2)
     "crates/beardog-integration",
     # Overstep: Android deploy orchestration → biomeOS owns deployment (PRIMAL_RESPONSIBILITY_MATRIX V2)

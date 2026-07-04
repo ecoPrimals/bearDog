@@ -136,10 +136,14 @@
 - **quantum_crypto feature-gated** — Prevents false PQC claims on public API.
 - **3 deprecated modules deleted** — -369 lines, zero external callers.
 
-### Wave 128 — Env Migration Complete, Dependency Consolidation (Jun 2, 2026)
+### Wave 128 — Evolution Sweep: PQC Gating, Async I/O, Identity Fix, Lock-Free (Jul 4, 2026)
 
-- **Env key centralization complete** — 803+ constants in `env_keys.rs`; env migration waves 1–5 finished across the workspace.
-- **Dependency consolidation** — Workspace deps aligned; `beardog-config` dependency added to crates that read env at boundaries.
+- **PQC simulation gated** — `quantum_crypto` behind `#[cfg(any(test, feature = "pqc-simulation"))]`; random-byte crypto no longer ships in production.
+- **Identity resolution fixed** — `resolve_primal_name()` now checks `BEARDOG_PRIMAL_NAME` → `PRIMAL_NAME` → default; `IdentityHints` and fallback corrected.
+- **Async I/O migration** — `beardog-acme` cert storage and `beardog-monitoring` `/proc` reads converted from blocking `std::fs` to `tokio::fs`.
+- **Lock evolution** — `std::sync::Mutex` → `parking_lot::Mutex` (monitoring), `Arc<Mutex<SystemTime>>` → `AtomicU64` (BTSP tunnel), mDNS stats `Mutex` → `RwLock`.
+- **Trust test coverage** — 11 new tests for `seed_from_env`, `try_verify_bearer`, auth gate; orphan files deleted; DID helpers consolidated.
+- **SslKeylogError** → `thiserror` derive.
 
 ### Wave 127 — Stub Evolution, DNS-SD Wiring, File Splits, Safety Hygiene (Jun 2, 2026)
 
