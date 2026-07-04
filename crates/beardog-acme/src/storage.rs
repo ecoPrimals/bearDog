@@ -79,24 +79,24 @@ impl CertificateStore {
     /// # Errors
     ///
     /// Returns an error if directories cannot be created or files written.
-    pub fn store_cert(
+    pub async fn store_cert(
         &self,
         domain: &str,
         fullchain_pem: &str,
         privkey_pem: &str,
     ) -> Result<(), AcmeError> {
         let cert_dir = self.cert_dir(domain);
-        std::fs::create_dir_all(&cert_dir)?;
+        tokio::fs::create_dir_all(&cert_dir).await?;
 
-        std::fs::write(self.fullchain_path(domain), fullchain_pem)?;
+        tokio::fs::write(self.fullchain_path(domain), fullchain_pem).await?;
 
         let key_path = self.privkey_path(domain);
-        std::fs::write(&key_path, privkey_pem)?;
+        tokio::fs::write(&key_path, privkey_pem).await?;
 
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(&key_path, std::fs::Permissions::from_mode(0o600))?;
+            tokio::fs::set_permissions(&key_path, std::fs::Permissions::from_mode(0o600)).await?;
         }
 
         info!(domain, "stored certificate and key");
@@ -108,16 +108,17 @@ impl CertificateStore {
     /// # Errors
     ///
     /// Returns an error if files exist but cannot be read.
-    pub fn load_cert(&self, domain: &str) -> Result<Option<StoredCert>, AcmeError> {
+    pub async fn load_cert(&self, domain: &str) -> Result<Option<StoredCert>, AcmeError> {
         let chain_path = self.fullchain_path(domain);
         let key_path = self.privkey_path(domain);
 
-        if !chain_path.exists() || !key_path.exists() {
+        if !tokio::fs::try_exists(&chain_path).await? || !tokio::fs::try_exists(&key_path).await?
+        {
             return Ok(None);
         }
 
-        let fullchain_pem = std::fs::read_to_string(&chain_path)?;
-        let privkey_pem = std::fs::read_to_string(&key_path)?;
+        let fullchain_pem = tokio::fs::read_to_string(&chain_path).await?;
+        let privkey_pem = tokio::fs::read_to_string(&key_path).await?;
 
         Ok(Some(StoredCert {
             fullchain_pem,
@@ -140,17 +141,21 @@ mod tests {
     use super::*;
     use tempfile::tempdir;
 
-    #[test]
-    fn store_and_load_roundtrip() {
+    #[tokio::test]
+    async fn store_and_load_roundtrip() {
         let dir = tempdir().expect("tempdir");
         let store = CertificateStore::new(dir.path()).expect("store");
 
         let chain = "-----BEGIN CERTIFICATE-----\nfake\n-----END CERTIFICATE-----\n";
         let key = "-----BEGIN PRIVATE KEY-----\nsecret\n-----END PRIVATE KEY-----\n";
 
-        store.store_cert("example.com", chain, key).expect("store");
+        store
+            .store_cert("example.com", chain, key)
+            .await
+            .expect("store");
         let loaded = store
             .load_cert("example.com")
+            .await
             .expect("load")
             .expect("exists");
 
@@ -158,11 +163,15 @@ mod tests {
         assert_eq!(loaded.privkey_pem, key);
     }
 
-    #[test]
-    fn load_returns_none_when_missing() {
+    #[tokio::test]
+    async fn load_returns_none_when_missing() {
         let dir = tempdir().expect("tempdir");
         let store = CertificateStore::new(dir.path()).expect("store");
-        assert!(store.load_cert("missing.com").expect("load").is_none());
+        assert!(store
+            .load_cert("missing.com")
+            .await
+            .expect("load")
+            .is_none());
     }
 
     #[test]

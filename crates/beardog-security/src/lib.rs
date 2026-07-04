@@ -85,13 +85,18 @@ pub mod simd_crypto;
 /// **"Never let a bird be alone in the dark forest"**
 pub mod genesis;
 
-/// Quantum-resistant cryptography module
+/// Simulated post-quantum cryptography (requires `pqc-simulation` feature or `cfg(test)`).
 ///
-/// Post-quantum cryptographic operations following NIST PQC standards:
-/// - **ML-KEM** (Kyber) - Key Encapsulation Mechanism
-/// - **ML-DSA** (Dilithium) - Digital Signatures
-/// - **SPHINCS+** - Stateless hash-based signatures
+/// **Not real PQC** — uses placeholder logic for API wiring only. See module docs.
+#[cfg(any(test, feature = "pqc-simulation"))]
 pub mod quantum_crypto;
+
+/// Whether the simulated PQC module is compiled in (never true in production builds
+/// unless `pqc-simulation` is explicitly enabled).
+#[must_use]
+pub const fn pqc_simulation_enabled() -> bool {
+    cfg!(any(test, feature = "pqc-simulation"))
+}
 
 mod primitives;
 

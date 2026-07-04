@@ -7,6 +7,7 @@
 //! [`BearDogError::unsupported_platform`] while request-level metrics stay available.
 
 use beardog_errors::BearDogError;
+use parking_lot::Mutex;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use tracing::debug;
@@ -43,8 +44,9 @@ impl CpuSnapshot {
 
 /// Reads the aggregate CPU line from `/proc/stat`.
 #[cfg(target_os = "linux")]
-fn read_cpu_snapshot() -> Result<CpuSnapshot, BearDogError> {
-    let content = std::fs::read_to_string("/proc/stat")
+async fn read_cpu_snapshot() -> Result<CpuSnapshot, BearDogError> {
+    let content = tokio::fs::read_to_string("/proc/stat")
+        .await
         .map_err(|e| BearDogError::internal(format!("Failed to read /proc/stat: {e}")))?;
 
     let cpu_line = content
@@ -83,8 +85,9 @@ fn read_cpu_snapshot() -> Result<CpuSnapshot, BearDogError> {
     clippy::cast_precision_loss,
     reason = "Memory ratio from /proc counters; f64 sufficient for percentage display"
 )]
-fn read_memory_usage() -> Result<f64, BearDogError> {
-    let content = std::fs::read_to_string("/proc/meminfo")
+async fn read_memory_usage() -> Result<f64, BearDogError> {
+    let content = tokio::fs::read_to_string("/proc/meminfo")
+        .await
         .map_err(|e| BearDogError::internal(format!("Failed to read /proc/meminfo: {e}")))?;
 
     let mut total_kb: Option<u64> = None;
@@ -128,7 +131,7 @@ fn parse_meminfo_value(s: &str) -> Option<u64> {
 #[derive(Debug)]
 pub struct SystemMetrics {
     /// Previous CPU snapshot for delta calculation.
-    prev_cpu: std::sync::Mutex<Option<CpuSnapshot>>,
+    prev_cpu: Mutex<Option<CpuSnapshot>>,
 
     /// Atomic counters for request-level metrics.
     request_count: AtomicU64,
@@ -136,7 +139,7 @@ pub struct SystemMetrics {
     total_response_ns: AtomicU64,
 
     /// Window start for throughput calculation.
-    window_start: Arc<std::sync::Mutex<std::time::Instant>>,
+    window_start: Arc<Mutex<std::time::Instant>>,
 }
 
 impl Default for SystemMetrics {
@@ -149,11 +152,11 @@ impl SystemMetrics {
     /// Create a new system metrics collector.
     pub fn new() -> Self {
         Self {
-            prev_cpu: std::sync::Mutex::new(None),
+            prev_cpu: Mutex::new(None),
             request_count: AtomicU64::new(0),
             error_count: AtomicU64::new(0),
             total_response_ns: AtomicU64::new(0),
-            window_start: Arc::new(std::sync::Mutex::new(std::time::Instant::now())),
+            window_start: Arc::new(Mutex::new(std::time::Instant::now())),
         }
     }
 
@@ -178,18 +181,15 @@ impl SystemMetrics {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when `/proc/stat` cannot be read, or the CPU baseline lock is poisoned.
+    /// Returns [`BearDogError`] when `/proc/stat` cannot be read.
     #[cfg(target_os = "linux")]
     #[expect(
         clippy::cast_precision_loss,
         reason = "CPU busy/total ratio from /proc; f64 sufficient for percentage"
     )]
-    pub fn collect_cpu_usage(&self) -> Result<f64, BearDogError> {
-        let current = read_cpu_snapshot()?;
-        let mut prev_guard = self
-            .prev_cpu
-            .lock()
-            .map_err(|e| BearDogError::internal(format!("CPU snapshot lock poisoned: {e}")))?;
+    pub async fn collect_cpu_usage(&self) -> Result<f64, BearDogError> {
+        let current = read_cpu_snapshot().await?;
+        let mut prev_guard = self.prev_cpu.lock();
 
         let usage = if let Some(prev) = *prev_guard {
             let total_delta = current.total().saturating_sub(prev.total());
@@ -212,7 +212,7 @@ impl SystemMetrics {
     ///
     /// On non-Linux targets, host CPU counters are unavailable (no `/proc/stat`).
     #[cfg(not(target_os = "linux"))]
-    pub fn collect_cpu_usage(&self) -> Result<f64, BearDogError> {
+    pub async fn collect_cpu_usage(&self) -> Result<f64, BearDogError> {
         Err(BearDogError::unsupported_platform(
             "Host CPU metrics require Linux /proc/stat (capability: procfs_host_cpu_counters)",
         ))
@@ -224,8 +224,8 @@ impl SystemMetrics {
     ///
     /// Returns [`BearDogError`] when `/proc/meminfo` cannot be read or parsed.
     #[cfg(target_os = "linux")]
-    pub fn collect_memory_usage(&self) -> Result<f64, BearDogError> {
-        let usage = read_memory_usage()?;
+    pub async fn collect_memory_usage(&self) -> Result<f64, BearDogError> {
+        let usage = read_memory_usage().await?;
         debug!("Memory usage: {usage:.1}%");
         Ok(usage)
     }
@@ -234,7 +234,7 @@ impl SystemMetrics {
     ///
     /// On non-Linux targets, host memory stats are unavailable (no `/proc/meminfo`).
     #[cfg(not(target_os = "linux"))]
-    pub fn collect_memory_usage(&self) -> Result<f64, BearDogError> {
+    pub async fn collect_memory_usage(&self) -> Result<f64, BearDogError> {
         Err(BearDogError::unsupported_platform(
             "Host memory metrics require Linux /proc/meminfo (capability: procfs_host_memory)",
         ))
@@ -286,17 +286,14 @@ impl SystemMetrics {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when the throughput window lock is poisoned.
+    /// Currently always succeeds; the `Result` type is reserved for future instrumentation failures.
     #[expect(
         clippy::cast_precision_loss,
         reason = "Ops per second from counts and elapsed; f64 sufficient for throughput"
     )]
     pub fn collect_throughput(&self) -> Result<f64, BearDogError> {
         let count = self.request_count.swap(0, Ordering::Relaxed);
-        let mut start = self
-            .window_start
-            .lock()
-            .map_err(|e| BearDogError::internal(format!("Throughput window lock poisoned: {e}")))?;
+        let mut start = self.window_start.lock();
         let elapsed = start.elapsed();
         *start = std::time::Instant::now();
 
@@ -381,18 +378,18 @@ mod tests {
     }
 
     #[cfg(target_os = "linux")]
-    #[test]
-    fn test_collect_cpu_usage_linux() {
+    #[tokio::test]
+    async fn test_collect_cpu_usage_linux() {
         let metrics = SystemMetrics::new();
         // First call establishes baseline
-        let first = metrics.collect_cpu_usage().expect("cpu first");
+        let first = metrics.collect_cpu_usage().await.expect("cpu first");
         assert!(
             first.abs() < f64::EPSILON,
             "First call should be 0.0 (no baseline), got {first}"
         );
         // Brief delay for CPU delta
-        std::thread::sleep(std::time::Duration::from_millis(1));
-        let second = metrics.collect_cpu_usage().expect("cpu second");
+        tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+        let second = metrics.collect_cpu_usage().await.expect("cpu second");
         assert!(
             (0.0..=100.0).contains(&second),
             "CPU should be 0-100, got {second}"
@@ -400,10 +397,10 @@ mod tests {
     }
 
     #[cfg(target_os = "linux")]
-    #[test]
-    fn test_collect_memory_usage_linux() {
+    #[tokio::test]
+    async fn test_collect_memory_usage_linux() {
         let metrics = SystemMetrics::new();
-        let usage = metrics.collect_memory_usage().expect("memory usage");
+        let usage = metrics.collect_memory_usage().await.expect("memory usage");
         assert!(
             usage > 0.0 && usage < 100.0,
             "Memory should be 0-100, got {usage}"
@@ -411,17 +408,17 @@ mod tests {
     }
 
     #[cfg(target_os = "linux")]
-    #[test]
-    fn test_read_cpu_snapshot() {
-        let snap = read_cpu_snapshot().expect("cpu snapshot");
+    #[tokio::test]
+    async fn test_read_cpu_snapshot() {
+        let snap = read_cpu_snapshot().await.expect("cpu snapshot");
         assert!(snap.total() > 0, "Total CPU time should be > 0");
         assert!(snap.idle > 0, "Idle time should be > 0");
     }
 
     #[cfg(target_os = "linux")]
-    #[test]
-    fn test_read_memory_usage_reasonable() {
-        let usage = read_memory_usage().expect("read memory");
+    #[tokio::test]
+    async fn test_read_memory_usage_reasonable() {
+        let usage = read_memory_usage().await.expect("read memory");
         // On any real system, memory usage should be between 1% and 99%
         assert!(
             usage > 1.0 && usage < 99.0,

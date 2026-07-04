@@ -6,7 +6,7 @@
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
+use parking_lot::Mutex;
 
 /// Records security-category [`super::MetricEvent`] values and exposes aggregate counters.
 #[derive(Debug)]
@@ -57,10 +57,7 @@ impl SecurityMetricsEngine {
         reason = "gauge value is a non-negative count that fits u64"
     )]
     pub fn record_event(&self, event: &super::MetricEvent) -> Result<(), BearDogError> {
-        let mut state = self
-            .state
-            .lock()
-            .map_err(|_| BearDogError::system("security metrics lock poisoned".to_string()))?;
+        let mut state = self.state.lock();
         state.total_events = state.total_events.saturating_add(1);
         let name = event.name.to_lowercase();
         #[expect(
@@ -90,10 +87,7 @@ impl SecurityMetricsEngine {
     /// Returns [`BearDogError`] when the internal mutex is poisoned.
     #[expect(clippy::cast_precision_loss, reason = "metrics averaging")]
     pub fn get_metrics(&self) -> Result<SecurityMetrics, BearDogError> {
-        let state = self
-            .state
-            .lock()
-            .map_err(|_| BearDogError::system("security metrics lock poisoned".to_string()))?;
+        let state = self.state.lock();
         let threat_level = if state.total_events == 0 {
             0.0
         } else {

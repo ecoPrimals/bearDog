@@ -57,6 +57,8 @@ proptest = { workspace = true }
 
 [features]
 default = [ "config",]
+# Enable simulated PQC capability requirements (matches `beardog-security/pqc-simulation`).
+pqc-simulation = []
 # Enable test utilities for external testing
 test-utils = []
 config = [ "toml", "tokio",]

@@ -6,7 +6,7 @@
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
+use parking_lot::Mutex;
 
 /// Collects and surfaces performance-related [`super::MetricEvent`] values.
 #[derive(Debug)]
@@ -63,10 +63,7 @@ impl PerformanceEngine {
     /// Returns [`BearDogError`] when the internal mutex is poisoned.
     #[expect(clippy::cast_precision_loss, reason = "metrics averaging")]
     pub fn record_event(&self, event: &super::MetricEvent) -> Result<(), BearDogError> {
-        let mut state = self
-            .state
-            .lock()
-            .map_err(|_| BearDogError::system("performance metrics lock poisoned".to_string()))?;
+        let mut state = self.state.lock();
         state.total_events = state.total_events.saturating_add(1);
         let name = event.name.to_lowercase();
         match &event.value {
@@ -108,10 +105,7 @@ impl PerformanceEngine {
     /// Returns [`BearDogError`] when the internal mutex is poisoned.
     #[expect(clippy::cast_precision_loss, reason = "metrics averaging")]
     pub fn get_metrics(&self) -> Result<PerformanceMetrics, BearDogError> {
-        let state = self
-            .state
-            .lock()
-            .map_err(|_| BearDogError::system("performance metrics lock poisoned".to_string()))?;
+        let state = self.state.lock();
         let request_latency_ms = if state.latency_samples.is_empty() {
             0.0
         } else {

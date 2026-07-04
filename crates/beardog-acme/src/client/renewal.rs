@@ -30,7 +30,7 @@ impl AcmeClient {
     /// Check all configured domains and renew if needed.
     async fn check_and_renew(&mut self) -> Result<(), AcmeError> {
         for domain in &self.config.domains.clone() {
-            if let Some(cert) = self.store.load_cert(domain)? {
+            if let Some(cert) = self.store.load_cert(domain).await? {
                 if self.needs_renewal(&cert.fullchain_pem) {
                     info!(domain, "certificate needs renewal");
                     self.issue_certificate().await?;

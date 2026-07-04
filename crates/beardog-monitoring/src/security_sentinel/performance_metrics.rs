@@ -212,8 +212,8 @@ impl PerformanceMetricsCollector {
     pub async fn collect_metrics(&self) -> Result<PerformanceMetrics, BearDogError> {
         let metrics = PerformanceMetrics {
             timestamp: Utc::now(),
-            cpu_usage: self.collect_cpu_usage()?,
-            memory_usage: self.collect_memory_usage()?,
+            cpu_usage: self.collect_cpu_usage().await?,
+            memory_usage: self.collect_memory_usage().await?,
             response_time: self.collect_response_time()?,
             error_rate: self.collect_error_rate()?,
             throughput: self.collect_throughput()?,
@@ -390,12 +390,12 @@ impl PerformanceMetricsCollector {
     // CPU/memory: Pure Rust /proc/stat + /proc/meminfo parsing (Linux).
     // Response time/error rate/throughput: Atomic counters fed by record_request().
 
-    fn collect_cpu_usage(&self) -> Result<f64, BearDogError> {
-        self.system_metrics.collect_cpu_usage()
+    async fn collect_cpu_usage(&self) -> Result<f64, BearDogError> {
+        self.system_metrics.collect_cpu_usage().await
     }
 
-    fn collect_memory_usage(&self) -> Result<f64, BearDogError> {
-        self.system_metrics.collect_memory_usage()
+    async fn collect_memory_usage(&self) -> Result<f64, BearDogError> {
+        self.system_metrics.collect_memory_usage().await
     }
 
     fn collect_response_time(&self) -> Result<f64, BearDogError> {

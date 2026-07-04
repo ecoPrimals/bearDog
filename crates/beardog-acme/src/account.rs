@@ -59,17 +59,17 @@ impl AcmeAccount {
     /// # Errors
     ///
     /// Returns an error if the file cannot be written.
-    pub fn save(&self, path: &Path) -> Result<(), AcmeError> {
+    pub async fn save(&self, path: &Path) -> Result<(), AcmeError> {
         if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
+            tokio::fs::create_dir_all(parent).await?;
         }
         let json = serde_json::to_string_pretty(self)?;
-        std::fs::write(path, json)?;
+        tokio::fs::write(path, json).await?;
 
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))?;
+            tokio::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600)).await?;
         }
 
         Ok(())
@@ -130,14 +130,14 @@ mod tests {
         assert!(!account.thumbprint().is_empty());
     }
 
-    #[test]
-    fn save_and_load_roundtrip() {
+    #[tokio::test]
+    async fn save_and_load_roundtrip() {
         let dir = tempdir().expect("tempdir");
         let path = dir.path().join("account.json");
 
         let mut account = AcmeAccount::generate(vec!["mailto:a@b.com".to_string()]);
         account.set_account_url("https://acme.example/acct/1".to_string());
-        account.save(&path).expect("save");
+        account.save(&path).await.expect("save");
 
         let loaded = AcmeAccount::load_or_create(&path, vec![]).expect("load");
         assert_eq!(loaded.account_url, account.account_url);

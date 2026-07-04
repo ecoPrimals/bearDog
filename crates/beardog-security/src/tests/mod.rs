@@ -135,7 +135,7 @@ mod security_edge_cases;
 #[cfg(test)]
 mod authorization_comprehensive_tests;
 
-#[cfg(all(test, feature = "quantum-crypto"))]
+#[cfg(all(test, feature = "pqc-simulation"))]
 mod quantum_crypto_comprehensive_tests;
 
 // October 31, 2025 - Week 1 Test Expansion: Orchestration Tests

@@ -178,7 +178,7 @@ impl MonitoringService {
     /// # Errors
     /// Returns an error if the snapshot cannot be created
     pub async fn take_snapshot(&self) -> Result<MonitoringSnapshot, BearDogError> {
-        let performance = self.collect_performance_metrics()?;
+        let performance = self.collect_performance_metrics().await?;
         let health_summary = self.collect_health_summary()?;
         let alerts = self.alerts.read().await.clone();
 
@@ -256,11 +256,11 @@ impl MonitoringService {
     ///
     /// # Errors
     /// Returns an error if metrics cannot be collected
-    pub fn collect_performance_metrics(&self) -> Result<SystemPerformanceMetrics, BearDogError> {
+    pub async fn collect_performance_metrics(&self) -> Result<SystemPerformanceMetrics, BearDogError> {
         let uptime_seconds = self.start_time.elapsed().as_secs();
 
         let (cpu_usage_percent, memory_usage_percent, memory_total_bytes, memory_used_bytes) =
-            Self::read_proc_metrics();
+            Self::read_proc_metrics().await;
 
         Ok(SystemPerformanceMetrics {
             cpu_usage_percent,
@@ -276,20 +276,20 @@ impl MonitoringService {
     }
 
     #[cfg(target_os = "linux")]
-    fn read_proc_metrics() -> (f64, f64, u64, u64) {
-        let cpu = Self::read_cpu_percent().unwrap_or(0.0);
-        let (mem_pct, mem_total, mem_used) = Self::read_memory_stats().unwrap_or((0.0, 0, 0));
+    async fn read_proc_metrics() -> (f64, f64, u64, u64) {
+        let cpu = Self::read_cpu_percent().await.unwrap_or(0.0);
+        let (mem_pct, mem_total, mem_used) = Self::read_memory_stats().await.unwrap_or((0.0, 0, 0));
         (cpu, mem_pct, mem_total, mem_used)
     }
 
     #[cfg(not(target_os = "linux"))]
-    fn read_proc_metrics() -> (f64, f64, u64, u64) {
+    async fn read_proc_metrics() -> (f64, f64, u64, u64) {
         (0.0, 0.0, 0, 0)
     }
 
     #[cfg(target_os = "linux")]
-    fn read_cpu_percent() -> Option<f64> {
-        let content = std::fs::read_to_string("/proc/stat").ok()?;
+    async fn read_cpu_percent() -> Option<f64> {
+        let content = tokio::fs::read_to_string("/proc/stat").await.ok()?;
         let cpu_line = content.lines().find(|l| l.starts_with("cpu "))?;
         let fields: Vec<u64> = cpu_line
             .split_whitespace()
@@ -313,8 +313,8 @@ impl MonitoringService {
     }
 
     #[cfg(target_os = "linux")]
-    fn read_memory_stats() -> Option<(f64, u64, u64)> {
-        let content = std::fs::read_to_string("/proc/meminfo").ok()?;
+    async fn read_memory_stats() -> Option<(f64, u64, u64)> {
+        let content = tokio::fs::read_to_string("/proc/meminfo").await.ok()?;
         let mut total_kb: Option<u64> = None;
         let mut available_kb: Option<u64> = None;
         for line in content.lines() {

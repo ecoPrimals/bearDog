@@ -9,12 +9,12 @@
 //! Identity values can be injected via [`IdentityHints`] for tests; production code uses
 //! [`IdentityHints::from_env`] or the `_from_env` convenience wrappers.
 
-use beardog_config::env_keys;
+use beardog_config::env_keys::{self, resolve_primal_name};
 
 /// Identity strings for self-knowledge helpers (no I/O in [`Default`]).
 #[derive(Debug, Clone, Default)]
 pub struct IdentityHints {
-    /// `PRIMAL_NAME`
+    /// `BEARDOG_PRIMAL_NAME` / `PRIMAL_NAME`
     pub primal_name: Option<String>,
     /// `FAMILY_ID`
     pub family_id: Option<String>,
@@ -30,7 +30,9 @@ impl IdentityHints {
     /// Load from [`beardog_errors::process_env`].
     pub fn from_env() -> Self {
         Self {
-            primal_name: beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME).ok(),
+            primal_name: beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME_PREFIXED)
+                .ok()
+                .or_else(|| beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME).ok()),
             family_id: beardog_errors::process_env::var(env_keys::ENV_FAMILY_ID_PREFIXED)
                 .ok()
                 .or_else(|| beardog_errors::process_env::var(env_keys::ENV_FAMILY_ID).ok()),
@@ -48,7 +50,7 @@ impl IdentityHints {
 pub fn get_primal_name_with(h: &IdentityHints) -> String {
     h.primal_name
         .clone()
-        .unwrap_or_else(|| env!("CARGO_PKG_NAME").to_string())
+        .unwrap_or_else(resolve_primal_name)
 }
 
 /// Get the primal name using self-knowledge pattern (reads environment).
@@ -101,10 +103,9 @@ mod tests {
 
     #[test]
     fn test_get_primal_name_default() {
-        // No PRIMAL_NAME in hints → compile-time package name
         assert_eq!(
             get_primal_name_with(&IdentityHints::default()),
-            env!("CARGO_PKG_NAME")
+            beardog_config::env_keys::DEFAULT_PRIMAL_NAME
         );
     }
 

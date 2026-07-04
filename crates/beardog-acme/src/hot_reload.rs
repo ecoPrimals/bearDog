@@ -54,13 +54,14 @@ impl HotReloadController {
     /// # Errors
     ///
     /// Returns an error if the certificate cannot be loaded or parsed.
-    pub fn reload_from_store(
+    pub async fn reload_from_store(
         &self,
         store: &CertificateStore,
         domain: &str,
     ) -> Result<(), AcmeError> {
         let cert = store
-            .load_cert(domain)?
+            .load_cert(domain)
+            .await?
             .ok_or_else(|| AcmeError::CertParse(format!("no cert for {domain}")))?;
 
         let acceptor = build_acceptor_from_pem(&cert.fullchain_pem, &cert.privkey_pem)?;

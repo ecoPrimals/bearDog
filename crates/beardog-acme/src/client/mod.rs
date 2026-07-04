@@ -164,7 +164,7 @@ impl AcmeClient {
         if let Some(location) = resp.headers().get("location") {
             let url = location.to_str().unwrap_or("").to_string();
             account.set_account_url(url.clone());
-            account.save(&self.store.account_path())?;
+            account.save(&self.store.account_path()).await?;
             info!(account_url = %url, "ACME account registered");
         }
 

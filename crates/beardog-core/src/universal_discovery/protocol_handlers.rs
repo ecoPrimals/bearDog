@@ -130,7 +130,7 @@ pub struct MdnsProtocolHandler {
     client: crate::primal_discovery_mdns::MdnsDiscoveryClient,
     service_type: String,
     _id: String,
-    stats: std::sync::Arc<std::sync::Mutex<ProtocolStatistics>>,
+    stats: std::sync::Arc<parking_lot::RwLock<ProtocolStatistics>>,
 }
 
 #[cfg(feature = "mdns")]
@@ -145,7 +145,7 @@ impl MdnsProtocolHandler {
             client,
             service_type,
             _id: Uuid::new_v4().to_string(),
-            stats: std::sync::Arc::new(std::sync::Mutex::new(ProtocolStatistics {
+            stats: std::sync::Arc::new(parking_lot::RwLock::new(ProtocolStatistics {
                 services_discovered: 0,
                 discovery_requests: 0,
                 registration_requests: 0,
@@ -172,10 +172,7 @@ impl ProtocolHandler for MdnsProtocolHandler {
     }
 
     fn register_service(&self, service: &ServiceInfo) -> Result<(), BearDogError> {
-        let mut stats = self
-            .stats
-            .lock()
-            .map_err(|e| BearDogError::system(format!("Stats lock poisoned: {e}")))?;
+        let mut stats = self.stats.write();
         stats.registration_requests += 1;
         stats.last_activity = Utc::now();
 
@@ -189,10 +186,7 @@ impl ProtocolHandler for MdnsProtocolHandler {
     }
 
     fn discover_services(&self, service_name: &str) -> Result<Vec<ServiceInfo>, BearDogError> {
-        let mut stats = self
-            .stats
-            .lock()
-            .map_err(|e| BearDogError::system(format!("Stats lock poisoned: {e}")))?;
+        let mut stats = self.stats.write();
         stats.discovery_requests += 1;
         stats.last_activity = Utc::now();
 
@@ -225,20 +219,14 @@ impl ProtocolHandler for MdnsProtocolHandler {
             })
             .collect();
 
-        let mut stats = self
-            .stats
-            .lock()
-            .map_err(|e| BearDogError::system(format!("Stats lock poisoned: {e}")))?;
+        let mut stats = self.stats.write();
         stats.services_discovered += services.len();
 
         Ok(services)
     }
 
     fn get_statistics(&self) -> Result<ProtocolStatistics, BearDogError> {
-        let stats = self
-            .stats
-            .lock()
-            .map_err(|e| BearDogError::system(format!("Stats lock poisoned: {e}")))?;
+        let stats = self.stats.read();
         Ok(*stats)
     }
 }

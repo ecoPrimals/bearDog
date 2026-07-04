@@ -7,7 +7,7 @@ use crate::types::AlertLevel;
 async fn test_monitoring_service_creation() -> Result<(), BearDogError> {
     let config = MonitoringConfig::default();
     let service = MonitoringService::new(config);
-    let metrics = service.collect_performance_metrics()?;
+    let metrics = service.collect_performance_metrics().await?;
 
     assert!(metrics.cpu_usage_percent >= 0.0);
     assert!(metrics.memory_usage_percent >= 0.0);
@@ -20,7 +20,7 @@ async fn test_alert_generation() -> Result<(), BearDogError> {
     let config = MonitoringConfig::default();
 
     let service = MonitoringService::new(config);
-    let metrics = service.collect_performance_metrics()?;
+    let metrics = service.collect_performance_metrics().await?;
 
     service.check_alerts(&metrics)?;
     let alerts = service.get_recent_alerts(10).await?;
@@ -124,10 +124,10 @@ fn test_get_uptime_seconds() {
     assert!(uptime >= 0);
 }
 
-#[test]
-fn test_collect_performance_metrics() {
+#[tokio::test]
+async fn test_collect_performance_metrics() {
     let service = MonitoringService::new(MonitoringConfig::default());
-    let result = service.collect_performance_metrics();
+    let result = service.collect_performance_metrics().await;
     assert!(result.is_ok());
 }
 

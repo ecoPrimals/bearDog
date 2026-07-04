@@ -74,41 +74,25 @@
 //! - Wireshark TLS Decryption: <https://wiki.wireshark.org/TLS>
 
 use beardog_config::env_keys;
+use thiserror::Error;
 use tokio::io::AsyncWriteExt;
 use tracing::info;
 
 /// Typed error for SSLKEYLOGFILE export operations.
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum SslKeylogError {
     /// `client_random` was not the required 32 bytes.
+    #[error("client_random must be 32 bytes, got {0}")]
     InvalidClientRandom(usize),
     /// I/O failure opening or writing to the keylog file.
+    #[error("{context}: {source}")]
     Io {
         /// What I/O operation failed.
         context: &'static str,
         /// Underlying I/O error.
+        #[source]
         source: std::io::Error,
     },
-}
-
-impl std::fmt::Display for SslKeylogError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::InvalidClientRandom(len) => {
-                write!(f, "client_random must be 32 bytes, got {len}")
-            }
-            Self::Io { context, source } => write!(f, "{context}: {source}"),
-        }
-    }
-}
-
-impl std::error::Error for SslKeylogError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Io { source, .. } => Some(source),
-            Self::InvalidClientRandom(_) => None,
-        }
-    }
 }
 
 /// # Errors

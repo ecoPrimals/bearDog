@@ -741,6 +741,7 @@ dependencies = [
  "beardog-types",
  "beardog-utils",
  "chrono",
+ "parking_lot",
  "serde",
  "serde_json",
  "serial_test",

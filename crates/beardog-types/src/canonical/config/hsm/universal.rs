@@ -141,18 +141,22 @@ impl UniversalHsmConfig {
     }
 
     pub fn high_security() -> Self {
+        let mut required_capabilities = vec![
+            "KeyManagement".to_string(),
+            "HardwareSecurityModule".to_string(),
+        ];
+        #[cfg(any(test, feature = "pqc-simulation"))]
+        required_capabilities.push("QuantumCrypto".to_string());
+
+        let mut preferred_types = vec!["hardware_backed".to_string()];
+        #[cfg(any(test, feature = "pqc-simulation"))]
+        preferred_types.push("quantum_resistant".to_string());
+
         Self {
             enable_discovery: true,
             capability_config: HsmCapabilityConfig {
-                required_capabilities: vec![
-                    "KeyManagement".to_string(),
-                    "HardwareSecurityModule".to_string(),
-                    "QuantumCrypto".to_string(),
-                ],
-                preferred_types: vec![
-                    "hardware_backed".to_string(),
-                    "quantum_resistant".to_string(),
-                ],
+                required_capabilities,
+                preferred_types,
                 security_requirements: SecurityRequirements {
                     min_security_level: "critical".to_string(),
                     required_certifications: vec![

@@ -103,4 +103,7 @@ tempfile = { workspace = true }
 [features]
 fido2 = ["dep:beardog-hid", "dep:ciborium"]
 mobile = []
-quantum-crypto = []
+# Simulated PQC (random bytes, not real cryptography). OFF by default.
+pqc-simulation = []
+# Deprecated alias — prefer `pqc-simulation`.
+quantum-crypto = ["pqc-simulation"]

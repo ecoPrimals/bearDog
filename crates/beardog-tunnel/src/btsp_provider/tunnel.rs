@@ -5,14 +5,25 @@
 //! Internal tunnel state tracking and lifecycle management.
 
 use chrono::{DateTime, Utc};
-use parking_lot::Mutex;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::SystemTime;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::debug;
 use zeroize::Zeroizing;
 
 use super::types::TrustLevel;
+
+fn now_epoch_millis() -> u64 {
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Unix epoch millis fits u64 for all practical tunnel lifetimes"
+    )]
+    let millis = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as u64;
+    millis
+}
 
 /// Active tunnel state
 ///
@@ -52,11 +63,8 @@ pub struct Tunnel {
     /// EVOLUTION: Changed from Arc<Mutex<u64>> to `AtomicU64` (Jan 29, 2026)
     pub bytes_received: AtomicU64,
 
-    /// Last activity timestamp
-    ///
-    /// NOTE: `SystemTime` doesn't fit in atomic, so we keep Mutex here.
-    /// This is updated infrequently (only on activity) so mutex overhead is acceptable.
-    pub last_activity: Arc<Mutex<SystemTime>>,
+    /// Last activity timestamp (Unix epoch milliseconds)
+    pub last_activity: Arc<AtomicU64>,
 
     /// Current trust level for this peer
     pub _trust_level: TrustLevel,
@@ -87,7 +95,7 @@ impl Tunnel {
             session_key: Zeroizing::new(session_key),
             bytes_sent: AtomicU64::new(0),     // Lock-free atomic
             bytes_received: AtomicU64::new(0), // Lock-free atomic
-            last_activity: Arc::new(Mutex::new(SystemTime::now())),
+            last_activity: Arc::new(AtomicU64::new(now_epoch_millis())),
             _trust_level: trust_level,
         }
     }
@@ -97,11 +105,9 @@ impl Tunnel {
     /// A tunnel is considered active if there has been activity within
     /// the last 5 minutes. Inactive tunnels may be cleaned up.
     pub(super) fn is_active(&self) -> bool {
-        let last = *self.last_activity.lock();
-        SystemTime::now()
-            .duration_since(last)
-            .map(|d| d.as_secs() < 300) // 5 minutes
-            .unwrap_or(false)
+        let last_ms = self.last_activity.load(Ordering::Relaxed);
+        let elapsed_secs = now_epoch_millis().saturating_sub(last_ms) / 1000;
+        elapsed_secs < 300 // 5 minutes
     }
 
     /// Get total bytes sent through tunnel (lock-free atomic read)
@@ -116,15 +122,16 @@ impl Tunnel {
 
     /// Get last activity timestamp
     pub(super) fn last_activity(&self) -> DateTime<Utc> {
-        let last = *self.last_activity.lock();
-        DateTime::from(last)
+        let last_ms = self.last_activity.load(Ordering::Relaxed);
+        DateTime::from_timestamp_millis(last_ms.cast_signed()).unwrap_or_else(Utc::now)
     }
 
     /// Update activity timestamp to now
     ///
     /// Called whenever data is sent or received through the tunnel.
     fn update_activity(&self) {
-        *self.last_activity.lock() = SystemTime::now();
+        self.last_activity
+            .store(now_epoch_millis(), Ordering::Relaxed);
     }
 
     /// Increment bytes sent counter

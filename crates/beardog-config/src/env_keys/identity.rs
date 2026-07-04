@@ -29,10 +29,15 @@ pub const DEFAULT_PRIMAL_NAME: &str = "beardog";
 
 /// Resolve the primal's own name from the environment.
 ///
-/// Returns [`ENV_PRIMAL_NAME`] if set, otherwise falls back to the compiled default.
+/// Precedence: [`ENV_PRIMAL_NAME_PREFIXED`] → [`ENV_PRIMAL_NAME`] → [`DEFAULT_PRIMAL_NAME`].
 #[must_use]
 pub fn resolve_primal_name() -> String {
-    std::env::var(ENV_PRIMAL_NAME).unwrap_or_else(|_| DEFAULT_PRIMAL_NAME.to_owned())
+    std::env::var(ENV_PRIMAL_NAME_PREFIXED)
+        .ok()
+        .or_else(|| std::env::var(ENV_PRIMAL_NAME).ok())
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| DEFAULT_PRIMAL_NAME.to_owned())
 }
 /// Primal type / role (unprefixed).
 pub const ENV_PRIMAL_TYPE: &str = "PRIMAL_TYPE";

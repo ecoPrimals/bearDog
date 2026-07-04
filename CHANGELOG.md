@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 4, 2026 -- Wave 128: Convergence Debt Sweep + Evolution Targets
+
+#### Security Hardening (P0)
+- **Simulated PQC gated** — `quantum_crypto` module now behind `#[cfg(any(test, feature = "pqc-simulation"))]`; random-byte "keys/signatures" no longer exposed in production builds unless explicitly opted in; `pqc_simulation_enabled()` helper added for runtime checks
+- **PQC capability advertisement gated** — `QuantumCrypto` and `quantum_resistant` in `UniversalHsmConfig::high_security()` only included with `pqc-simulation` feature
+
+#### Identity Resolution Fix (P0)
+- **`resolve_primal_name()` precedence fixed** — now checks `BEARDOG_PRIMAL_NAME` → `PRIMAL_NAME` → `"beardog"` (was missing prefixed variant)
+- **`IdentityHints::from_env()` fixed** — reads `BEARDOG_PRIMAL_NAME` first, matching family/node ID patterns
+- **`get_primal_name_with()` fallback corrected** — uses `resolve_primal_name()` instead of `env!("CARGO_PKG_NAME")` (was returning `"beardog-tunnel"`)
+
+#### Async I/O Migration (P0)
+- **beardog-acme** — `store_cert`, `load_cert`, `save()` migrated from `std::fs` to `tokio::fs` (was blocking async runtime); callers in `issuance.rs`, `renewal.rs`, `hot_reload.rs` updated
+- **beardog-monitoring** — `/proc/stat` and `/proc/meminfo` reads migrated to `tokio::fs::read_to_string`; `collect_cpu_usage`, `collect_memory_usage`, `collect_performance_metrics` now async
+- **monitoring sentinel** — `performance_metrics.rs` async system metrics collection
+
+#### Lock Evolution (P0–P1)
+- **`std::sync::Mutex` → `parking_lot::Mutex`** — `system_metrics.rs` (CPU snapshots, window start), `metrics/performance.rs`, `metrics/security.rs`; eliminates poison risk in async-adjacent code
+- **`Arc<Mutex<SystemTime>>` → `Arc<AtomicU64>`** — `btsp_provider/tunnel.rs` `last_activity` now lock-free epoch millis
+- **mDNS stats `Mutex` → `parking_lot::RwLock`** — `protocol_handlers.rs` read-heavy stats structure
+
+#### Error Type Evolution (P1)
+- **`SslKeylogError` → thiserror** — manual `Display`/`Error` impls replaced with `#[derive(thiserror::Error)]`
+
 ### June 22, 2026 -- Wave 123: Cross-Gate Trust Hardening
 
 #### TrustedIssuerRegistry Security (P1)

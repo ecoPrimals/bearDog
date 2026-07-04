@@ -28,7 +28,7 @@ impl AcmeClient {
             let (cert_pem, key_pem) = self.finalize_order(&order).await?;
 
             for domain in &self.config.domains {
-                self.store.store_cert(domain, &cert_pem, &key_pem)?;
+                self.store.store_cert(domain, &cert_pem, &key_pem).await?;
             }
 
             info!("certificate issued and stored — ACME flow complete");
@@ -36,7 +36,8 @@ impl AcmeClient {
             let cert_pem = self.download_certificate(&order).await?;
             for domain in &self.config.domains {
                 self.store
-                    .store_cert(domain, &cert_pem, "# key already stored")?;
+                    .store_cert(domain, &cert_pem, "# key already stored")
+                    .await?;
             }
         } else {
             return Err(AcmeError::OrderState {
