@@ -13,7 +13,7 @@ use super::AcmeClient;
 
 impl AcmeClient {
     /// Execute the full certificate issuance flow.
-    pub(super) async fn issue_certificate(&mut self) -> Result<(), AcmeError> {
+    pub async fn issue_certificate(&mut self) -> Result<(), AcmeError> {
         self.discover_directory().await?;
         self.register_account().await?;
 

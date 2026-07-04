@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 4, 2026 (Wave 131)
+**Last Updated**: July 4, 2026 (Wave 132c)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -126,6 +126,14 @@
 - **exchange_trust enhanced** — returns `local_family_id`; emits `KeyExchangeCompleted` event for downstream mesh listeners.
 - **E2E test** — `mesh_join_e2e_over_tcp`: real TCP + BTSP handshake + trust dispatch + bidirectional registry assertion.
 - **Test count**: 2,331 beardog-tunnel lib tests (↑1 from mesh_join E2E).
+
+### Wave 132c Eco — Tower HTTP Gateway: ACME TLS Front (Jul 4, 2026)
+
+- **HTTPS gateway on :443** — TLS-terminating reverse proxy in `beardog-cli/src/handlers/server/gateway.rs`; uses `HotReloadAcceptor` for atomic cert swap; bidirectional TCP forwarding to configurable upstream.
+- **HTTP-01 solver spawned** — `Http01Solver::serve()` as background task; unblocks Let's Encrypt domain validation.
+- **Full ACME supervisor** — `start_acme_gateway()` orchestrates solver + initial issuance + hot-reload bootstrap + renewal daemon in single startup.
+- **`BEARDOG_GATEWAY_UPSTREAM`** — new env key for upstream target (`host:port` or `unix:/path`); default `127.0.0.1:7700` (songBird).
+- **Env**: `BEARDOG_TLS_MODE=acme` activates full gateway; `BEARDOG_HTTPS_PORT` configures bind port (default 443).
 
 ### Wave 132 — AI Type Migration, Mobile Feature Gate (Jun 3, 2026)
 

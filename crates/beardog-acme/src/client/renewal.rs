@@ -34,15 +34,25 @@ impl AcmeClient {
                 if self.needs_renewal(&cert.fullchain_pem) {
                     info!(domain, "certificate needs renewal");
                     self.issue_certificate().await?;
+                    self.reload_after_issuance(domain).await;
                 } else {
                     debug!(domain, "certificate is current");
                 }
             } else {
                 info!(domain, "no certificate found — issuing");
                 self.issue_certificate().await?;
+                self.reload_after_issuance(domain).await;
             }
         }
         Ok(())
+    }
+
+    async fn reload_after_issuance(&self, domain: &str) {
+        if let Some(ctrl) = &self.reload_controller
+            && let Err(e) = ctrl.reload_from_store(&self.store, domain).await
+        {
+            warn!(domain, error = %e, "hot-reload after renewal failed");
+        }
     }
 
     /// Check if a PEM certificate needs renewal based on its `notAfter` date.

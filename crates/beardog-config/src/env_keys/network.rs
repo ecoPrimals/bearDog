@@ -81,6 +81,9 @@ pub const ENV_ADMIN_PORT: &str = "BEARDOG_ADMIN_PORT";
 pub const ENV_HTTP_PORT: &str = "BEARDOG_HTTP_PORT";
 /// HTTPS port.
 pub const ENV_HTTPS_PORT: &str = "BEARDOG_HTTPS_PORT";
+/// Upstream HTTP backend for the ACME TLS gateway (e.g., songBird `http.proxy`).
+/// Format: `host:port` or unix socket path prefixed with `unix:`.
+pub const ENV_GATEWAY_UPSTREAM: &str = "BEARDOG_GATEWAY_UPSTREAM";
 /// RPC port.
 pub const ENV_RPC_PORT: &str = "BEARDOG_RPC_PORT";
 /// Metrics / Prometheus port.

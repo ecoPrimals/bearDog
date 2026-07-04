@@ -20,6 +20,7 @@ use config::Directory;
 use crate::account::AcmeAccount;
 use crate::challenge::{ChallengeToken, Http01Solver};
 use crate::error::AcmeError;
+use crate::hot_reload::HotReloadController;
 use crate::jws;
 use crate::order::{CertificateOrder, OrderStatus};
 use crate::storage::CertificateStore;
@@ -37,6 +38,7 @@ pub struct AcmeClient {
     pub(super) account: Arc<RwLock<AcmeAccount>>,
     pub(super) solver: Http01Solver,
     pub(super) directory: Option<Directory>,
+    reload_controller: Option<Arc<HotReloadController>>,
 }
 
 impl AcmeClient {
@@ -56,6 +58,7 @@ impl AcmeClient {
             account: Arc::new(RwLock::new(account)),
             solver: Http01Solver::new(),
             directory: None,
+            reload_controller: None,
         })
     }
 
@@ -74,7 +77,13 @@ impl AcmeClient {
             account: Arc::new(RwLock::new(account)),
             solver: Http01Solver::new(),
             directory: None,
+            reload_controller: None,
         })
+    }
+
+    /// Wire a hot-reload controller so certificate renewals update the TLS acceptor.
+    pub fn set_reload_controller(&mut self, controller: Arc<HotReloadController>) {
+        self.reload_controller = Some(controller);
     }
 
     /// Discover the ACME directory endpoints.

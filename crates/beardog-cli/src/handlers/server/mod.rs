@@ -11,6 +11,7 @@
 
 mod acme;
 mod attestation;
+mod gateway;
 mod health;
 mod registration;
 mod transport;
@@ -37,7 +38,7 @@ use beardog_tunnel::tunnel::hsm::{HsmProviderBackend, HsmTier, SoftwareHsmConfig
 use std::sync::Arc;
 use tracing::{info, warn};
 
-use self::acme::spawn_acme_renewal_daemon;
+use self::acme::start_acme_gateway;
 use self::attestation::build_neural_attestation;
 use self::health::run_health_socket;
 use self::registration::attempt_orchestrator_registration;
@@ -300,15 +301,18 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     // Best-effort orchestrator registry registration (non-fatal per PRIMAL IPC Protocol v3.1)
     attempt_orchestrator_registration(&socket_path, tcp_addr.as_deref()).await;
 
-    // ACME renewal daemon (gated by BEARDOG_TLS_MODE=acme)
+    // ACME TLS gateway (gated by BEARDOG_TLS_MODE=acme)
     if std::env::var(env_keys::ENV_TLS_MODE)
         .ok()
         .is_some_and(|v| v.eq_ignore_ascii_case("acme"))
     {
-        match spawn_acme_renewal_daemon() {
-            Ok(()) => info!("ACME renewal daemon spawned"),
-            Err(e) => warn!(error = %e, "ACME daemon init failed (non-fatal)"),
-        }
+        let gateway = start_acme_gateway().await?;
+        let https_port = std::env::var(env_keys::ENV_HTTPS_PORT)
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(443u16);
+        tokio::spawn(acme::serve_https_gateway(gateway.acceptor, https_port));
+        info!(port = https_port, "ACME HTTPS gateway spawned");
     }
 
     // Health socket: lightweight plaintext listener for monitoring probes.

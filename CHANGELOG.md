@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 4, 2026 -- Wave 132c: Tower HTTP Gateway — ACME TLS Front
+
+#### ACME Gateway (P1 — sovereign HTTPS)
+- **HTTPS gateway on :443** — new `gateway.rs` module in `beardog-cli`; TLS-terminating reverse proxy using `HotReloadAcceptor`; bidirectional TCP forwarding to upstream (songBird `http.proxy` by default)
+- **HTTP-01 solver spawn** — `Http01Solver::serve()` now spawned as background task in ACME supervisor; unblocks all Let's Encrypt domain validation
+- **HotReloadAcceptor wired** — `create_hot_reload_pair()` bootstrapped from cert store on startup; atomic cert swap on renewal via `reload_after_issuance()` hook
+- **Full ACME supervisor** — `start_acme_gateway()` replaces old `spawn_acme_renewal_daemon()`; orchestrates solver + initial issuance + hot-reload + renewal in single startup sequence
+- **`issue_certificate()` public** — exposed for initial cert bootstrapping from gateway supervisor
+- **`BEARDOG_GATEWAY_UPSTREAM` env key** — configurable upstream target (TCP `host:port` or `unix:/path`); default `127.0.0.1:7700` (songBird federation port)
+- **Upstream proxy modes** — TCP and Unix domain socket forwarding with 502 Bad Gateway on upstream failure
+- **Collapsible if fix** — `reload_after_issuance` uses let-chain pattern per Clippy
+
 ### July 4, 2026 -- Wave 131: BTSP Trust Issuer Exchange (P1)
 
 #### Mesh Join Orchestration (P1 — blocks mesh auth)
