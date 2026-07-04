@@ -111,7 +111,7 @@ fn build_acceptor_from_pem(
     fullchain_pem: &str,
     privkey_pem: &str,
 ) -> Result<TlsAcceptor, AcmeError> {
-    rustls_provider::ensure_installed();
+    rustls_provider::assert_installed();
     let certs = load_certs_from_pem(fullchain_pem)?;
     let key = load_key_from_pem(privkey_pem)?;
 

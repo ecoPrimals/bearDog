@@ -11,7 +11,7 @@ use crate::error::AcmeError;
 use crate::rustls_provider;
 
 pub(super) fn build_http_client() -> Result<Client, AcmeError> {
-    rustls_provider::ensure_installed();
+    rustls_provider::assert_installed();
     Client::builder()
         .timeout(Duration::from_secs(30))
         .build()

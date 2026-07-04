@@ -178,10 +178,6 @@ impl IntegrationEngine {
     /// Get Discovered Services Count operation.
     /// Gets `discovered_services_count`
     #[expect(
-        clippy::unnecessary_wraps,
-        reason = "Result reserved for discovery errors"
-    )]
-    #[expect(
         clippy::option_if_let_else,
         reason = "Explicit branch when universal HSM is absent"
     )]
