@@ -178,6 +178,9 @@ pub mod trust_handlers;
 // Cross-gate trusted issuer registry (Wave 135: covalent mesh trust)
 pub mod trusted_issuer_registry;
 
+// Mesh join orchestration — reciprocal trust exchange over BTSP
+pub mod mesh_join;
+
 // Auth event bus for cross-gate trust provenance (Wave 138)
 pub mod auth_event_bus;
 

@@ -151,6 +151,12 @@ pub struct BtspConnection {
 }
 
 impl BtspConnection {
+    /// BTSP session identifier from the completed handshake.
+    #[must_use]
+    pub fn session_id(&self) -> &str {
+        &self.session.session_id
+    }
+
     /// Call a JSON-RPC method over the encrypted BTSP frame channel.
     ///
     /// # Errors

@@ -17,6 +17,7 @@ use crate::method_gate::{CallerContext, ConnectionOrigin};
 use crate::trusted_issuer_registry::{TrustedIssuerRegistry, did_from_verifying_key};
 use crate::unix_socket_ipc::handlers::primal_signing::derive_primal_signing_key;
 use base64::Engine;
+use beardog_config::env_keys;
 use ed25519_dalek::VerifyingKey;
 use serde_json::Value;
 
@@ -260,7 +261,7 @@ pub fn handle_auth_exchange_trust(
     let registered = match registry.register(
         &remote_did,
         remote_vk,
-        remote_gate_id,
+        remote_gate_id.clone(),
         remote_family_id,
         trust_method,
     ) {
@@ -272,6 +273,17 @@ pub fn handle_auth_exchange_trust(
                         issuer_did: remote_did.clone(),
                         issuer_fingerprint: fingerprint,
                         trust_method: trust_method.as_str().to_owned(),
+                    },
+                    source_gate: primal_name.to_owned(),
+                    timestamp: chrono::Utc::now().timestamp(),
+                });
+                event_bus.emit(AuthEvent {
+                    kind: AuthEventKind::KeyExchangeCompleted {
+                        remote_gate: remote_gate_id
+                            .as_deref()
+                            .unwrap_or(&remote_did)
+                            .to_owned(),
+                        method: trust_method.as_str().to_owned(),
                     },
                     source_gate: primal_name.to_owned(),
                     timestamp: chrono::Utc::now().timestamp(),
@@ -290,6 +302,9 @@ pub fn handle_auth_exchange_trust(
     let local_sk = derive_primal_signing_key(primal_name, node_id);
     let local_vk = local_sk.verifying_key();
     let local_did = primal_did(primal_name, node_id);
+    let local_family_id = beardog_errors::process_env::var(env_keys::ENV_FAMILY_ID)
+        .ok()
+        .or_else(|| beardog_errors::process_env::var(env_keys::ENV_FAMILY_ID_PREFIXED).ok());
 
     serde_json::json!({
         "registered": registered,
@@ -299,6 +314,7 @@ pub fn handle_auth_exchange_trust(
         "local_public_key": B64.encode(local_vk.as_bytes()),
         "local_did": local_did,
         "local_gate_id": node_id,
+        "local_family_id": local_family_id,
     })
 }
 

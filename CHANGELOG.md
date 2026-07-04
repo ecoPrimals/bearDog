@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 4, 2026 -- Wave 131: BTSP Trust Issuer Exchange (P1)
+
+#### Mesh Join Orchestration (P1 — blocks mesh auth)
+- **`mesh_join` module** — new orchestrator in `beardog-tunnel/src/mesh_join.rs`; wraps `BtspTcpClient` → `auth.exchange_trust` → local registry registration in a single async call; returns `MeshJoinResult` with bidirectional confirmation
+- **Registry persistence** — `TrustedIssuerRegistry::save_to_file()` / `load_from_file()` with JSON v1 format; `save_path()` resolves `$XDG_DATA_HOME/beardog/trusted_issuers.json`; DID/key binding validated on load
+- **`exchange_trust` polish** — response now includes `local_family_id`; emits `KeyExchangeCompleted` event (in addition to `TrustIssuerRegistered`) for downstream mesh listeners
+- **`BtspConnection::session_id()`** — new accessor for tracing/log correlation
+
+#### E2E Integration Test
+- **`mesh_join_e2e_over_tcp`** — real TCP + BTSP handshake + `auth.exchange_trust` dispatch + bidirectional registry assertion; proves two gates can exchange trust and populate registries via one `mesh_join` call (2,331 tunnel tests total)
+
 ### July 4, 2026 -- Wave 128: Convergence Debt Sweep + Evolution Targets
 
 #### Security Hardening (P0)

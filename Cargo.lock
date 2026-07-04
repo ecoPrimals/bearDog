@@ -875,6 +875,7 @@ dependencies = [
  "core-foundation-sys",
  "dashmap",
  "data-encoding",
+ "directories",
  "ecdsa 0.16.9",
  "ed25519-dalek 2.2.0",
  "ed448-goldilocks",

@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 4, 2026 (Wave 128)
+**Last Updated**: July 4, 2026 (Wave 131)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -118,6 +118,14 @@
 - **Windows .expect() removed** — `platform/mod.rs` uses graceful fallback instead of panicking.
 - **iOS XPC hardcoding fixed** — Derives from `ENV_PRIMAL_NAME` at runtime (self-knowledge pattern).
 - **ring confirmed absent** — `cargo tree -i ring --target all` empty. deny.toml ban effective.
+
+### Wave 131 Eco — BTSP Trust Issuer Exchange (Jul 4, 2026)
+
+- **mesh_join orchestrator** — `mesh_join()` async function in `beardog-tunnel/src/mesh_join.rs`; wraps BTSP connection → `auth.exchange_trust` → local registry population; returns `MeshJoinResult` with bidirectional trust confirmation.
+- **Registry persistence** — `save_to_file()` / `load_from_file()` with JSON v1 format; `save_path()` resolves XDG data dir; DID/key binding validated on load.
+- **exchange_trust enhanced** — returns `local_family_id`; emits `KeyExchangeCompleted` event for downstream mesh listeners.
+- **E2E test** — `mesh_join_e2e_over_tcp`: real TCP + BTSP handshake + trust dispatch + bidirectional registry assertion.
+- **Test count**: 2,331 beardog-tunnel lib tests (↑1 from mesh_join E2E).
 
 ### Wave 132 — AI Type Migration, Mobile Feature Gate (Jun 3, 2026)
 

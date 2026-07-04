@@ -238,7 +238,7 @@ fn exchange_trust_registers_and_returns_local_key() {
     assert_eq!(result["local_gate_id"], NODE);
 
     let events = gate.auth_events().poll_since(0);
-    assert_eq!(events.len(), 1);
+    assert_eq!(events.len(), 2);
 }
 
 #[test]

@@ -79,6 +79,7 @@ ciborium = { workspace = true, optional = true }
 base64 = { workspace = true }  # Aligned with workspace version (0.21 → 0.22 upgrade eliminates dep duplication)
 data-encoding = { workspace = true }  # Base32 encoding for Tor v3 onion addresses
 bs58 = { workspace = true }  # Base58 encoding for did:key derivation
+directories = { workspace = true }
 
 # TLS termination (H2-10 sovereignty — feature-gated)
 rustls = { workspace = true, optional = true }
