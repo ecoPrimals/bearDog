@@ -122,6 +122,13 @@ fn load_private_key(path: &str) -> Result<PrivateKeyDer<'static>, TlsConfigError
     })
 }
 
+fn ensure_rustls_crypto_provider() {
+    static INSTALL: std::sync::Once = std::sync::Once::new();
+    INSTALL.call_once(|| {
+        let _ = rustls_rustcrypto::provider().install_default();
+    });
+}
+
 /// Build a `TlsAcceptor` from the given config.
 ///
 /// # Errors
@@ -129,6 +136,7 @@ fn load_private_key(path: &str) -> Result<PrivateKeyDer<'static>, TlsConfigError
 /// Returns `TlsConfigError` if certificates or keys cannot be loaded or the
 /// `rustls` `ServerConfig` cannot be built.
 pub fn build_tls_acceptor(config: &TlsTerminationConfig) -> Result<TlsAcceptor, TlsConfigError> {
+    ensure_rustls_crypto_provider();
     let certs = load_certs(&config.cert_path)?;
     let key = load_private_key(&config.key_path)?;
 

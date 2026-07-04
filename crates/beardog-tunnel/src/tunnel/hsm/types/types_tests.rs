@@ -53,7 +53,14 @@ fn test_android_keystore_creation() -> Result<(), Box<dyn std::error::Error>> {
 async fn test_android_attestation_service() -> Result<(), Box<dyn std::error::Error>> {
     let service = AndroidAttestationService::with_stub_transport(AttestationLevel::Hardware);
     assert!(service.enabled);
-    assert!(service.initialize().await.is_ok());
+    let err = service
+        .initialize()
+        .await
+        .expect_err("stub attestation must fail closed without Android hardware");
+    assert!(
+        err.to_string().contains("Not yet available"),
+        "expected not_yet_available, got: {err}"
+    );
     Ok(())
 }
 

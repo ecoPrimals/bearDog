@@ -168,6 +168,9 @@ pub mod multi_transport_server;
 // Pre-dispatch capability gate for JSON-RPC methods (JH-0 ecosystem standard)
 pub mod method_gate;
 
+/// Runtime introspection for `primal.announce` (HandlerRegistry-driven).
+pub mod primal_announce;
+
 // Ed25519-signed ionic capability tokens (JH-1)
 pub mod ionic_token;
 pub mod ionic_token_handlers;

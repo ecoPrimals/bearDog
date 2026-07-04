@@ -5,10 +5,11 @@
 //! Configuration types for HSM operations.
 //!
 
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 /// Simple HSM tier enumeration
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SimpleHsmTier {
     /// Smartphone HSM (iOS/Android)
     Smartphone,
@@ -21,20 +22,25 @@ pub enum SimpleHsmTier {
 }
 
 impl SimpleHsmTier {
+    /// Return the canonical string representation for this tier.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Smartphone => "Smartphone",
+            Self::Software => "Software",
+            Self::Hardware => "Hardware",
+            Self::Hybrid => "Hybrid",
+        }
+    }
+
     /// Convert to string representation
     pub fn to_string_repr(&self) -> String {
-        match self {
-            Self::Smartphone => "Smartphone".to_string(),
-            Self::Software => "Software".to_string(),
-            Self::Hardware => "Hardware".to_string(),
-            Self::Hybrid => "Hybrid".to_string(),
-        }
+        self.as_str().to_string()
     }
 }
 
 impl std::fmt::Display for SimpleHsmTier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.to_string_repr())
+        write!(f, "{}", self.as_str())
     }
 }
 
@@ -80,8 +86,25 @@ mod tests {
 
     #[test]
     fn test_simple_hsm_tier_display() {
+        assert_eq!(SimpleHsmTier::Smartphone.to_string(), "Smartphone");
         assert_eq!(SimpleHsmTier::Software.to_string(), "Software");
         assert_eq!(SimpleHsmTier::Hardware.to_string(), "Hardware");
+        assert_eq!(SimpleHsmTier::Hybrid.to_string(), "Hybrid");
+    }
+
+    #[test]
+    fn test_simple_hsm_tier_as_str() {
+        assert_eq!(SimpleHsmTier::Software.as_str(), "Software");
+        assert_eq!(SimpleHsmTier::Software.to_string_repr(), "Software");
+    }
+
+    #[test]
+    fn test_simple_hsm_tier_serde() {
+        let tier = SimpleHsmTier::Hardware;
+        let serialized = serde_json::to_string(&tier).expect("SimpleHsmTier should serialize");
+        let deserialized: SimpleHsmTier =
+            serde_json::from_str(&serialized).expect("SimpleHsmTier round-trip should deserialize");
+        assert_eq!(tier, deserialized);
     }
 
     #[test]

@@ -39,7 +39,7 @@ impl Default for MdnsConfig {
 /// mDNS discovery client - complete implementation
 #[derive(Clone)]
 pub struct MdnsDiscovery {
-    daemon: Arc<ServiceDaemon>,
+    daemon: Option<Arc<ServiceDaemon>>,
     config: MdnsConfig,
     cache: Arc<RwLock<HashMap<String, Vec<DiscoveredService>>>>,
 }
@@ -64,10 +64,29 @@ impl MdnsDiscovery {
             .map_err(|e| DiscoveryError::InitializationFailed(e.to_string()))?;
 
         Ok(Self {
-            daemon: Arc::new(daemon),
+            daemon: Some(Arc::new(daemon)),
             config,
             cache: Arc::new(RwLock::new(HashMap::new())),
         })
+    }
+
+    /// Create an inert mDNS client when the network stack is unavailable.
+    ///
+    /// Discovery returns empty results; announcements fail with
+    /// [`DiscoveryError::InitializationFailed`].
+    fn new_disabled() -> Self {
+        warn!("mDNS unavailable — using inert discovery client");
+        Self {
+            daemon: None,
+            config: MdnsConfig::default(),
+            cache: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
+
+    /// Returns whether the mDNS daemon initialized successfully.
+    #[must_use]
+    pub fn is_enabled(&self) -> bool {
+        self.daemon.is_some()
     }
 
     /// Discover services by capability using mDNS
@@ -89,9 +108,13 @@ impl MdnsDiscovery {
             return Ok(cached);
         }
 
+        let Some(daemon) = self.daemon.as_ref() else {
+            debug!("mDNS disabled — returning empty discovery results");
+            return Ok(Vec::new());
+        };
+
         // Perform real mDNS browse
-        let receiver = self
-            .daemon
+        let receiver = daemon
             .browse(&service_type)
             .map_err(|e| DiscoveryError::QueryFailed(e.to_string()))?;
 
@@ -300,7 +323,10 @@ impl MdnsDiscovery {
             ServiceInfo::new(&service_type, &hostname, &hostname, "", port, properties)
                 .map_err(|e| DiscoveryError::AnnouncementFailed(e.to_string()))?;
 
-        self.daemon
+        let daemon = self.daemon.as_ref().ok_or_else(|| {
+            DiscoveryError::InitializationFailed("mDNS discovery is disabled".to_string())
+        })?;
+        daemon
             .register(service_info)
             .map_err(|e| DiscoveryError::AnnouncementFailed(e.to_string()))?;
 
@@ -322,12 +348,8 @@ impl MdnsDiscovery {
 }
 
 impl Default for MdnsDiscovery {
-    #[expect(
-        clippy::expect_used,
-        reason = "Default impl cannot return Result; mDNS init requires working network"
-    )]
     fn default() -> Self {
-        Self::new().expect("mDNS ServiceDaemon requires a working network stack to initialize")
+        Self::new().unwrap_or_else(|_| Self::new_disabled())
     }
 }
 

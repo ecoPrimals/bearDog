@@ -25,9 +25,9 @@ use beardog_config::env_keys::{self, resolve_primal_name};
 use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
 use beardog_ipc::{
-    beardog_announce_method_names, discover_neural_api_socket, register_with_neural_api,
-    send_primal_announce,
+    discover_neural_api_socket, register_with_neural_api, send_primal_announce,
 };
+use beardog_tunnel::primal_announce::registered_announce_method_names_for_identity;
 use beardog_tunnel::btsp_handshake;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
 use beardog_tunnel::multi_transport_server::MultiTransportServer;
@@ -244,7 +244,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     let uds_path = if tcp_only { None } else { Some(socket_path.as_str()) };
     let server = MultiTransportServer::bind_all_available(
         btsp_provider,
-        identity,
+        identity.clone(),
         uds_path,
         tcp_addr.as_deref(),
         security_mode,
@@ -279,10 +279,8 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         }
 
         // biomeOS v3.69+ primal.announce (Wave 43 — push-style ecosystem registration)
-        let announce_methods: Vec<String> = beardog_announce_method_names()
-            .iter()
-            .map(|s| String::from(*s))
-            .collect();
+        let announce_methods =
+            registered_announce_method_names_for_identity(identity.clone()).await;
         match send_primal_announce(
             &neural_socket,
             &primal_name,

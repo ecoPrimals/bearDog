@@ -8,17 +8,10 @@ use serde::Deserialize;
 use std::time::Duration;
 
 use crate::error::AcmeError;
-
-/// Install the pure-Rust RustCrypto-based rustls crypto provider.
-fn ensure_rustls_crypto_provider() {
-    static INSTALL: std::sync::Once = std::sync::Once::new();
-    INSTALL.call_once(|| {
-        let _ = rustls_rustcrypto::provider().install_default();
-    });
-}
+use crate::rustls_provider;
 
 pub(super) fn build_http_client() -> Result<Client, AcmeError> {
-    ensure_rustls_crypto_provider();
+    rustls_provider::ensure_installed();
     Client::builder()
         .timeout(Duration::from_secs(30))
         .build()

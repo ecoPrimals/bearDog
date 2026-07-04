@@ -130,6 +130,12 @@ impl UnixSocketIpcServer {
         &self.socket_path
     }
 
+    /// Handler registry backing JSON-RPC dispatch (shared with TCP IPC).
+    #[must_use]
+    pub fn handler_registry(&self) -> Arc<HandlerRegistry> {
+        self.handler_registry.clone()
+    }
+
     /// Get a clone of the readiness flag
     ///
     /// This allows checking readiness even after the server has been moved

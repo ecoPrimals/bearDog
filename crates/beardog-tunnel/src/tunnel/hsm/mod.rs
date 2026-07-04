@@ -65,7 +65,7 @@ pub mod performance;
 pub mod unified_provider;
 
 // Re-exports for convenience
-pub use config::HsmConfig;
+pub use config::{HsmConfig, SimpleHsmTier};
 pub use failover::HsmFailoverManager;
 pub use health::{HsmHealthMonitor, HsmHealthStatus};
 pub use manager::capability::HsmCapabilityDetector;

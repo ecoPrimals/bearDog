@@ -196,25 +196,26 @@ pub async fn send_primal_announce(
         "sending primal.announce to biomeOS"
     );
 
+    let capabilities: Vec<String> = methods
+        .iter()
+        .filter_map(|m| m.split('.').next())
+        .map(str::to_owned)
+        .collect::<std::collections::BTreeSet<_>>()
+        .into_iter()
+        .collect();
+
+    let cost_hints = default_announce_cost_hints(&capabilities);
+    let latency_estimates = default_announce_latency_estimates(&capabilities);
+
     let mut params = json!({
         "primal": primal_name,
         "version": env!("CARGO_PKG_VERSION"),
         "socket": own_socket,
-        "capabilities": ["crypto", "security", "auth", "btsp"],
+        "capabilities": capabilities,
         "methods": methods,
         "signal_tiers": ["tower"],
-        "cost_hints": {
-            "crypto": 5.0,
-            "security": 10.0,
-            "auth": 1.0,
-            "btsp": 3.0
-        },
-        "latency_estimates": {
-            "crypto": 2,
-            "security": 15,
-            "auth": 1,
-            "btsp": 5
-        }
+        "cost_hints": cost_hints,
+        "latency_estimates": latency_estimates
     });
 
     if let Some(attestation) = signed_attestation {
@@ -261,6 +262,16 @@ pub async fn send_primal_announce(
 /// Used by `primal.announce` and capability advertisements. These are the
 /// dotted canonical names; aliases (`bonding.*`, bare names) are handled
 /// by the handler registry at dispatch time.
+///
+/// # Deprecated
+///
+/// Prefer `beardog_tunnel::primal_announce::registered_announce_method_names`
+/// which introspects the handler registry at runtime. This static list is
+/// retained for backward-compatible tests only.
+#[deprecated(
+    since = "0.9.0",
+    note = "Use beardog_tunnel::primal_announce::registered_announce_method_names for runtime introspection"
+)]
 #[must_use]
 pub fn beardog_announce_method_names() -> &'static [&'static str] {
     &[
@@ -329,6 +340,40 @@ pub fn beardog_announce_method_names() -> &'static [&'static str] {
         "btsp.capabilities",
         "btsp.server.create_session",
     ]
+}
+
+/// Derive default `cost_hints` for capability domains present in an announce payload.
+#[must_use]
+fn default_announce_cost_hints(capabilities: &[String]) -> serde_json::Value {
+    let mut hints = serde_json::Map::new();
+    for cap in capabilities {
+        let cost = match cap.as_str() {
+            "crypto" => 5.0,
+            "security" => 10.0,
+            "auth" => 1.0,
+            "btsp" => 3.0,
+            _ => 5.0,
+        };
+        hints.insert(cap.clone(), serde_json::json!(cost));
+    }
+    serde_json::Value::Object(hints)
+}
+
+/// Derive default `latency_estimates` (ms) for capability domains in an announce payload.
+#[must_use]
+fn default_announce_latency_estimates(capabilities: &[String]) -> serde_json::Value {
+    let mut estimates = serde_json::Map::new();
+    for cap in capabilities {
+        let latency = match cap.as_str() {
+            "crypto" => 2,
+            "security" => 15,
+            "auth" => 1,
+            "btsp" => 5,
+            _ => 5,
+        };
+        estimates.insert(cap.clone(), serde_json::json!(latency));
+    }
+    serde_json::Value::Object(estimates)
 }
 
 /// Register a single capability with Neural API

@@ -130,6 +130,7 @@ fn test_discover_socket_empty_vs_unset() {
 }
 
 #[test]
+#[allow(deprecated)]
 fn announce_methods_includes_crypto_and_security() {
     let methods = beardog_announce_method_names();
     assert!(
@@ -145,6 +146,7 @@ fn announce_methods_includes_crypto_and_security() {
 }
 
 #[test]
+#[allow(deprecated)]
 fn announce_methods_are_dotted_canonical() {
     for method in beardog_announce_method_names() {
         assert!(

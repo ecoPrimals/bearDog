@@ -139,10 +139,17 @@ impl IntegrationEngine {
             "initializing"
         };
 
+        let services_discovered = match self.get_discovered_services_count() {
+            Ok(count) => count,
+            Err(e) => {
+                warn!("Discovered services count unavailable: {e}");
+                0
+            }
+        };
+
         debug!(
             "Ecosystem connectivity: status={}, services_discovered={}",
-            ecosystem_status,
-            self.get_discovered_services_count().unwrap_or(0)
+            ecosystem_status, services_discovered
         );
 
         Ok(())
@@ -184,10 +191,8 @@ impl IntegrationEngine {
     )]
     fn get_discovered_services_count(&self) -> Result<u32, BearDogError> {
         if let Some(_universal_hsm) = self.universal_hsm.clone() {
-            match self.discover_ecosystem_services() {
-                Ok(providers) => Ok(providers.len() as u32),
-                Err(_) => Ok(0),
-            }
+            self.discover_ecosystem_services()
+                .map(|providers| providers.len() as u32)
         } else {
             Ok(0)
         }

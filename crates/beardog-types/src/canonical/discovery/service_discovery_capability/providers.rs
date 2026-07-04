@@ -104,14 +104,16 @@ impl DnsHttpDiscovery {
     /// Query DNS SRV records for a service.
     ///
     /// DNS resolution lives in the runtime layer (`beardog-core` / `beardog-discovery`)
-    /// rather than in this types crate.  This default returns an empty set so callers
-    /// degrade gracefully until a resolver is wired in.
+    /// rather than in this types crate. Returns [`DiscoveryError::BackendUnavailable`]
+    /// until a resolver is wired in.
     async fn query_dns_srv(&self, service: &str) -> Result<Vec<ServiceDescriptor>, DiscoveryError> {
-        tracing::debug!(
-            service,
-            "DNS SRV query — no resolver available in types crate"
-        );
-        Ok(Vec::new())
+        Err(DiscoveryError::BackendUnavailable {
+            provider: "dns-srv".to_string(),
+            reason: format!(
+                "DNS SRV resolver not wired in types crate (service: {service}); \
+                 use beardog-core / beardog-discovery runtime resolver"
+            ),
+        })
     }
 
     /// Resolve service name to IP addresses
@@ -167,10 +169,8 @@ impl ServiceDiscoveryCapability for DnsHttpDiscovery {
 
         for domain in domains {
             let full_service = format!("{service_name}.{domain}");
-
-            if let Ok(services) = self.query_dns_srv(&full_service).await {
-                discovered_services.extend(services);
-            }
+            let services = self.query_dns_srv(&full_service).await?;
+            discovered_services.extend(services);
         }
 
         tracing::info!(
@@ -308,13 +308,18 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn dns_http_discover_by_capability_runs() {
+    async fn dns_http_discover_by_capability_reports_backend_unavailable() {
         let d = DnsHttpDiscovery::default();
-        let out = d
+        let e = d
             .discover_by_capability(ServiceCapabilityType::ServiceMesh)
             .await
-            .expect("stub discovery should return Ok");
-        assert!(out.is_empty());
+            .expect_err("DNS SRV discovery should report backend unavailable");
+        match e {
+            DiscoveryError::BackendUnavailable { provider, .. } => {
+                assert_eq!(provider, "dns-srv");
+            }
+            other => panic!("unexpected error variant: {other:?}"),
+        }
     }
 
     #[tokio::test]

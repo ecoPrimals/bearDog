@@ -238,7 +238,12 @@ pub async fn run(
     // Step 7.5: Register with discovery (Neural API — capability-oriented routing)
     info!("🌐 Registering with discovery service...");
     let neural_registration = NeuralRegistrationParams::from_env();
-    match register_with_discovery_service(&socket_config, &neural_registration).await {
+    match register_with_discovery_service(
+        &socket_config,
+        &neural_registration,
+        unix_server.handler_registry(),
+    )
+    .await {
         Ok(()) => {
             info!("✅ Successfully registered with discovery service");
             info!("   Other primals can now discover BearDog via capabilities\n");
@@ -307,13 +312,14 @@ pub async fn run(
 async fn register_with_discovery_service(
     socket_config: &SocketConfig,
     neural_registration: &NeuralRegistrationParams,
+    handler_registry: std::sync::Arc<crate::unix_socket_ipc::handlers::HandlerRegistry>,
 ) -> anyhow::Result<()> {
+    use crate::primal_announce::registered_announce_method_names;
     use crate::unix_socket_ipc::handlers::primal_signing::{
         canonical_announcement_message, sign_with_primal_identity,
     };
     use beardog_ipc::{
-        beardog_announce_method_names, discover_neural_api_socket, register_with_neural_api,
-        send_primal_announce,
+        discover_neural_api_socket, register_with_neural_api, send_primal_announce,
     };
     use beardog_types::primal_identity::PrimalIdentity;
 
@@ -357,10 +363,7 @@ async fn register_with_discovery_service(
         }
 
         // biomeOS v3.69+ primal.announce (Wave 43)
-        let announce_methods: Vec<String> = beardog_announce_method_names()
-            .iter()
-            .map(|s| String::from(*s))
-            .collect();
+        let announce_methods = registered_announce_method_names(&handler_registry).await;
         match send_primal_announce(
             &neural_socket,
             &registration_instance,
@@ -692,8 +695,13 @@ mod tests {
         })
         .expect("test inputs should resolve");
         let neural_registration = NeuralRegistrationParams::default();
-        let outcome =
-            super::register_with_discovery_service(&socket_config, &neural_registration).await;
+        let registry = crate::unix_socket_ipc::handlers::HandlerRegistry::default();
+        let outcome = super::register_with_discovery_service(
+            &socket_config,
+            &neural_registration,
+            registry,
+        )
+        .await;
 
         match prev_neural {
             Some(v) => beardog_errors::process_env::set_var(env_keys::ENV_NEURAL_API_SOCKET, v),
@@ -726,7 +734,13 @@ mod tests {
             primal_type: None,
             beardog_primal_type: None,
         };
-        let _ = super::register_with_discovery_service(&socket_config, &neural_registration).await;
+        let registry = crate::unix_socket_ipc::handlers::HandlerRegistry::default();
+        let _ = super::register_with_discovery_service(
+            &socket_config,
+            &neural_registration,
+            registry,
+        )
+        .await;
 
         match prev_neural {
             Some(v) => beardog_errors::process_env::set_var(env_keys::ENV_NEURAL_API_SOCKET, v),

@@ -4,32 +4,7 @@
 //!
 //! Configuration types for HSM manager functionality.
 
-use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
-/// Simple HSM tier enumeration
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum SimpleHsmTier {
-    /// Smartphone HSM (iOS/Android)
-    Smartphone,
-    /// Software HSM
-    Software,
-    /// Hardware HSM
-    Hardware,
-    /// Hybrid HSM
-    Hybrid,
-}
-
-impl std::fmt::Display for SimpleHsmTier {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Smartphone => write!(f, "Smartphone"),
-            Self::Software => write!(f, "Software"),
-            Self::Hardware => write!(f, "Hardware"),
-            Self::Hybrid => write!(f, "Hybrid"),
-        }
-    }
-}
 
 /// HSM manager configuration
 #[derive(Debug, Clone, Default)]
@@ -117,6 +92,7 @@ impl Default for PerformanceConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tunnel::hsm::config::SimpleHsmTier;
 
     #[test]
     fn test_simple_hsm_tier_display() {

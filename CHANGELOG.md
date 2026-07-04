@@ -20,6 +20,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### E2E Integration Test
 - **`mesh_join_e2e_over_tcp`** — real TCP + BTSP handshake + `auth.exchange_trust` dispatch + bidirectional registry assertion; proves two gates can exchange trust and populate registries via one `mesh_join` call (2,331 tunnel tests total)
 
+### July 4, 2026 -- Wave 131b: Deep Evolution Sweep
+
+#### Security Hardening (P0)
+- **Android attestation fail-closed** — `StubAttestationTransport` and `AndroidJniAttestationTransport` now return `not_yet_available` instead of fake `Ok(())`; security-critical path no longer reports false success
+- **TLS provider hardened** — workspace `rustls` now uses `custom-provider` feature; `beardog-acme` extracts `rustls_provider::ensure_installed()` for consistent CryptoProvider bootstrap; `beardog-tunnel` TLS acceptor installs provider explicitly
+
+#### Type Deduplication (P0)
+- **`SimpleHsmTier` unified** — removed duplicate enum from `hsm/manager/config.rs`; canonical definition in `hsm/config.rs` now has `Serialize`/`Deserialize` + `as_str()` + `Display`; re-exports preserve backwards compatibility
+
+#### Smart Refactoring (P1)
+- **`trusted_issuer_registry.rs` (826L) → module directory** — split into `did.rs` (22L), `types.rs` (96L), `registry.rs` (189L), `persistence.rs` (129L), `verify.rs` (66L), `tests.rs` (322L); API unchanged, zero production files over 800L
+
+#### Mock/Stub Evolution (P1)
+- **`MdnsDiscovery::default()` no longer panics** — gracefully degrades to disabled state; `is_enabled()` accessor added
+- **`get_discovered_services_count`** — no longer masks errors with `Ok(0)`; propagates properly, caller logs at `warn!`
+- **HSM health monitor** — placeholder documented with `EVOLUTION` marker and debug tracing; cache timestamp refresh preserved
+- **DNS SRV discovery** — `query_dns_srv` returns `BackendUnavailable` instead of silent empty `Vec`; callers no longer misled
+
+#### Dynamic Primal Announce (P1)
+- **`primal.announce` wired to `HandlerRegistry`** — new `primal_announce.rs` derives method names and capability domains from registered handlers at runtime instead of hardcoded static list; `beardog_announce_method_names()` deprecated
+- **`UnixSocketIpcServer::handler_registry()`** — new accessor for runtime introspection
+
 ### July 4, 2026 -- Wave 128: Convergence Debt Sweep + Evolution Targets
 
 #### Security Hardening (P0)

@@ -17,6 +17,7 @@ mod error;
 pub mod hot_reload;
 mod jws;
 mod order;
+mod rustls_provider;
 pub mod shadow_metrics;
 mod storage;
 

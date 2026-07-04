@@ -895,6 +895,7 @@ dependencies = [
  "rsa 0.9.10",
  "rustls",
  "rustls-pki-types",
+ "rustls-rustcrypto",
  "scrypt",
  "security-framework",
  "security-framework-sys",

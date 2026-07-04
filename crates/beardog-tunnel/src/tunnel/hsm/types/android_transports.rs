@@ -382,6 +382,13 @@ impl KeystoreTransport for MemoryKeystoreTransport {
 
 // --- Attestation transport -----------------------------------------------------------------------
 
+#[cfg(not(target_os = "android"))]
+const STUB_ATTESTATION_MESSAGE: &str = "device attestation requires Android hardware";
+
+#[cfg(target_os = "android")]
+const ANDROID_ATTESTATION_JNI_MESSAGE: &str =
+    "Android Key Attestation JNI integration is not yet available (hardware-backed attestation required)";
+
 /// Port for Android Key Attestation JNI (hardware-backed attestation).
 pub trait AttestationTransport: Send + Sync {
     /// JNI: initialize attestation for the given security level.
@@ -427,7 +434,9 @@ impl AttestationTransport for StubAttestationTransport {
         &self,
         _level: AttestationLevel,
     ) -> impl Future<Output = Result<(), BearDogError>> + Send {
-        ready(Ok(()))
+        ready(Err(BearDogError::not_yet_available(
+            STUB_ATTESTATION_MESSAGE,
+        )))
     }
 }
 
@@ -442,7 +451,9 @@ impl AttestationTransport for AndroidJniAttestationTransport {
         &self,
         _level: AttestationLevel,
     ) -> impl Future<Output = Result<(), BearDogError>> + Send {
-        ready(Ok(()))
+        ready(Err(BearDogError::not_yet_available(
+            ANDROID_ATTESTATION_JNI_MESSAGE,
+        )))
     }
 }
 
