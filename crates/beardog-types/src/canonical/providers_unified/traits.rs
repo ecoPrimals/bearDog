@@ -20,6 +20,7 @@ pub use other_traits::{
     UnifiedAiProvider, UnifiedMonitoringProvider, UnifiedNetworkProvider, UnifiedStorageProvider,
 };
 pub use security_traits::{
-    AuthenticationRequest, AuthenticationResponse, AuthorizationResponse, KeyType,
-    UnifiedHsmProvider, UnifiedSecurityProvider,
+    AttestationResponse, AuthenticationRequest, AuthenticationResponse, AuthorizationRequest,
+    AuthorizationResponse, BackupInfo, HsmDeviceInfo, KeyBackupSpec, KeyGenerationSpec, KeyInfo,
+    KeyType, KeyUsage, SecurityContext, UnifiedHsmProvider, UnifiedSecurityProvider,
 };

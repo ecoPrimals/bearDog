@@ -33,7 +33,7 @@ impl HsmKeyProvider for AndroidStrongBoxHsm {
                 HsmAlgorithm::EcdsaP256,
                 HsmAlgorithm::HmacSha256,
             ]),
-            hardware_backed: this.keystore.is_hardware_backed_keystore(),
+            hardware_backed: self.keystore.is_strongbox_available(),
             supports_key_export: false,
             max_keys: super::super::MAX_KEY_COUNT as u32,
         }
@@ -72,7 +72,7 @@ impl HsmKeyProvider for AndroidStrongBoxHsm {
             Ok(KeyHandle {
                 key_id,
                 algorithm: params.algorithm,
-                hardware_backed: this.keystore.is_hardware_backed_keystore(),
+                hardware_backed: this.keystore.is_strongbox_available(),
                 created_at_ms: u64::try_from(Utc::now().timestamp_millis()).unwrap_or(0),
             })
         }

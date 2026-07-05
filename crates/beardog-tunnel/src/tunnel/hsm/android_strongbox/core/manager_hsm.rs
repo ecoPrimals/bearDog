@@ -170,7 +170,7 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
                 Ok(ManagerKeyInfo {
                     key_id: key_id.clone(),
                     key_type: format!("{:?}", cached.key_type), // Convert KeyType enum to String
-                    is_hardware_backed: this.keystore.is_hardware_backed_keystore(),
+                    is_hardware_backed: this.keystore.is_strongbox_available(),
                 })
             } else {
                 Err(BearDogError::not_found(format!(
@@ -184,8 +184,9 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
     fn health_check(&self) -> impl Future<Output = Result<HealthStatus, BearDogError>> + Send {
         let this = self.clone();
         async move {
+            let health_status = this.health_monitor.get_health_status().await;
             let is_healthy =
-                this.keystore.is_strongbox_available() && this.health_monitor.is_healthy().await;
+                this.keystore.is_strongbox_available() && health_status.map(|h| h.is_healthy).unwrap_or(false);
 
             Ok(HealthStatus {
                 is_healthy,

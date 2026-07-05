@@ -114,7 +114,7 @@ impl AndroidStrongBoxHsm {
 
         let attestation_service = Arc::new(
             AndroidAttestationService::with_platform_attestation_transport(
-                config.attestation_level,
+                config.attestation_level.clone(),
             ),
         );
         let health_monitor = Arc::new(AndroidHealthMonitor::new());
