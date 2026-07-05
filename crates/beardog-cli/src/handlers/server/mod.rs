@@ -309,18 +309,26 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     // Best-effort orchestrator registry registration (non-fatal per PRIMAL IPC Protocol v3.1)
     attempt_orchestrator_registration(&socket_path, tcp_addr.as_deref()).await;
 
-    // ACME TLS gateway (gated by BEARDOG_TLS_MODE=acme)
-    if std::env::var(env_keys::ENV_TLS_MODE)
+    // Gatehouse mode: bearDog owns :443 (TLS) + :80 (ACME challenges + HTTPS redirect).
+    // Activated by BEARDOG_GATEHOUSE_MODE=true OR BEARDOG_TLS_MODE=acme.
+    let gatehouse_active = std::env::var(env_keys::ENV_GATEHOUSE_MODE)
         .ok()
-        .is_some_and(|v| v.eq_ignore_ascii_case("acme"))
-    {
+        .is_some_and(|v| v.eq_ignore_ascii_case("true") || v == "1")
+        || std::env::var(env_keys::ENV_TLS_MODE)
+            .ok()
+            .is_some_and(|v| v.eq_ignore_ascii_case("acme"));
+
+    if gatehouse_active {
         let gateway = start_acme_gateway().await?;
         let https_port = std::env::var(env_keys::ENV_HTTPS_PORT)
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(443u16);
         tokio::spawn(acme::serve_https_gateway(gateway.acceptor, https_port));
-        info!(port = https_port, "ACME HTTPS gateway spawned");
+        info!(
+            https_port,
+            "GATEHOUSE active: :443 TLS gateway + :80 ACME/redirect → songBird darkforest"
+        );
     }
 
     // Health socket: lightweight plaintext listener for monitoring probes.

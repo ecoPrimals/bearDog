@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! HTTP-01 challenge solver for ACME domain validation.
+//! HTTP-01 challenge solver and Gatehouse HTTP handler for ACME domain validation.
 //!
 //! Serves `/.well-known/acme-challenge/<token>` on port 80 to prove domain
-//! control during certificate issuance. The solver runs a lightweight HTTP
-//! server that responds only to ACME validation requests.
+//! control during certificate issuance. For all other requests, returns a
+//! 301 redirect to HTTPS (Gatehouse policy: port 80 is the drawbridge entry
+//! for ACME challenges, everything else crosses via :443).
 
 use crate::error::AcmeError;
 use std::collections::HashMap;
@@ -79,10 +80,12 @@ impl Http01Solver {
         challenges.get(token).cloned()
     }
 
-    /// Start the HTTP-01 challenge server on the given port.
+    /// Start the Gatehouse HTTP server on the given port.
     ///
-    /// This spawns a lightweight HTTP server that only responds to
-    /// `GET /.well-known/acme-challenge/<token>` requests.
+    /// Dual-purpose: serves ACME HTTP-01 challenges at
+    /// `/.well-known/acme-challenge/<token>`, and redirects all other
+    /// HTTP requests to HTTPS (301 Moved Permanently). This eliminates
+    /// the need for Caddy or any other HTTP→HTTPS redirect service.
     ///
     /// # Errors
     ///
@@ -90,7 +93,7 @@ impl Http01Solver {
     pub async fn serve(&self, port: u16) -> Result<(), AcmeError> {
         let addr = format!("0.0.0.0:{port}");
         let listener = TcpListener::bind(&addr).await?;
-        info!(port, "ACME HTTP-01 challenge server listening");
+        info!(port, "gatehouse HTTP server listening (ACME challenges + HTTPS redirect)");
 
         let challenges = Arc::clone(&self.challenges);
 
@@ -114,16 +117,22 @@ impl Http01Solver {
                 let path = request_line
                     .split_whitespace()
                     .nth(1)
-                    .unwrap_or("")
+                    .unwrap_or("/")
                     .to_string();
 
-                // Drain remaining headers
+                let mut host = String::new();
                 let mut header = String::new();
                 loop {
                     header.clear();
                     match reader.read_line(&mut header).await {
                         Ok(0) | Err(_) => break,
                         Ok(_) if header.trim().is_empty() => break,
+                        Ok(_) => {
+                            if let Some(val) = header.strip_prefix("Host:").or_else(|| header.strip_prefix("host:")) {
+                                host = val.trim().to_string();
+                            }
+                        }
+                        #[allow(unreachable_patterns)]
                         _ => {}
                     }
                 }
@@ -142,8 +151,13 @@ impl Http01Solver {
                     } else {
                         "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n".to_string()
                     }
+                } else if host.is_empty() {
+                    "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n".to_string()
                 } else {
-                    "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n".to_string()
+                    debug!(peer = %peer, host = %host, path = %path, "gatehouse: HTTP→HTTPS redirect");
+                    format!(
+                        "HTTP/1.1 301 Moved Permanently\r\nLocation: https://{host}{path}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+                    )
                 };
 
                 let stream = reader.into_inner();
