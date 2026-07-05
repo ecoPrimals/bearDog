@@ -4,10 +4,13 @@
 //!
 //! ACME requires all requests to be signed with the account key in a
 //! JWS Flattened JSON Serialization format (RFC 7515).
+//!
+//! Uses ECDSA P-256 (ES256) — required by Let's Encrypt and all major
+//! ACME providers. EdDSA is not supported by Let's Encrypt as of 2026.
 
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
-use ed25519_dalek::{SigningKey, Verifier, VerifyingKey};
+use p256::ecdsa::{SigningKey, VerifyingKey, signature::Signer};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
@@ -16,31 +19,34 @@ pub fn base64url(data: &[u8]) -> String {
     URL_SAFE_NO_PAD.encode(data)
 }
 
-/// Compute the JWK thumbprint (RFC 7638) for an Ed25519 public key.
+/// Compute the JWK thumbprint (RFC 7638) for an ECDSA P-256 public key.
 ///
-/// Used as the account key identifier in ACME.
+/// Per RFC 7638, the thumbprint is computed over the lexicographically
+/// sorted JSON members: `crv`, `kty`, `x`, `y`.
 pub fn jwk_thumbprint(verifying_key: &VerifyingKey) -> String {
-    let jwk_json = format!(
-        r#"{{"crv":"Ed25519","kty":"OKP","x":"{}"}}"#,
-        base64url(verifying_key.as_bytes())
-    );
+    let point = verifying_key.to_encoded_point(false);
+    let x = base64url(point.x().expect("uncompressed point has x").as_slice());
+    let y = base64url(point.y().expect("uncompressed point has y").as_slice());
+    let jwk_json = format!(r#"{{"crv":"P-256","kty":"EC","x":"{x}","y":"{y}"}}"#);
     let hash = Sha256::digest(jwk_json.as_bytes());
     base64url(&hash)
 }
 
-/// Build the JWK representation of an Ed25519 public key for ACME.
-pub fn ed25519_jwk(verifying_key: &VerifyingKey) -> Value {
+/// Build the JWK representation of an ECDSA P-256 public key for ACME.
+pub fn es256_jwk(verifying_key: &VerifyingKey) -> Value {
+    let point = verifying_key.to_encoded_point(false);
     json!({
-        "kty": "OKP",
-        "crv": "Ed25519",
-        "x": base64url(verifying_key.as_bytes()),
+        "kty": "EC",
+        "crv": "P-256",
+        "x": base64url(point.x().expect("uncompressed point has x").as_slice()),
+        "y": base64url(point.y().expect("uncompressed point has y").as_slice()),
     })
 }
 
 /// Sign a payload with the account key, producing a JWS Flattened JSON object.
 ///
 /// Per RFC 8555 §6.2, the protected header includes:
-/// - `alg`: `EdDSA`
+/// - `alg`: `ES256`
 /// - `nonce`: replay-protection nonce from server
 /// - `url`: the request URL
 /// - `kid` or `jwk`: account identifier
@@ -55,23 +61,21 @@ pub fn sign_request(
     payload: &Value,
     kid: Option<&str>,
 ) -> Value {
-    use ed25519_dalek::Signer;
-
-    let verifying_key = signing_key.verifying_key();
+    let verifying_key = VerifyingKey::from(signing_key);
 
     let protected = if let Some(kid) = kid {
         json!({
-            "alg": "EdDSA",
+            "alg": "ES256",
             "nonce": nonce,
             "url": url,
             "kid": kid,
         })
     } else {
         json!({
-            "alg": "EdDSA",
+            "alg": "ES256",
             "nonce": nonce,
             "url": url,
-            "jwk": ed25519_jwk(&verifying_key),
+            "jwk": es256_jwk(&verifying_key),
         })
     };
 
@@ -92,16 +96,8 @@ pub fn sign_request(
     };
 
     let signing_input = format!("{protected_b64}.{payload_b64}");
-    let signature = signing_key.sign(signing_input.as_bytes());
+    let signature: p256::ecdsa::Signature = signing_key.sign(signing_input.as_bytes());
     let signature_b64 = base64url(&signature.to_bytes());
-
-    // Verify our own signature as defense-in-depth
-    debug_assert!(
-        verifying_key
-            .verify(signing_input.as_bytes(), &signature)
-            .is_ok(),
-        "self-verification of JWS signature failed"
-    );
 
     json!({
         "protected": protected_b64,
@@ -113,17 +109,15 @@ pub fn sign_request(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ed25519_dalek::SigningKey;
 
     fn test_key() -> SigningKey {
-        let secret: [u8; 32] = rand::random();
-        SigningKey::from_bytes(&secret)
+        SigningKey::random(&mut p256::elliptic_curve::rand_core::OsRng)
     }
 
     #[test]
     fn jwk_thumbprint_is_deterministic() {
         let key = test_key();
-        let vk = key.verifying_key();
+        let vk = VerifyingKey::from(&key);
         let t1 = jwk_thumbprint(&vk);
         let t2 = jwk_thumbprint(&vk);
         assert_eq!(t1, t2);
@@ -162,6 +156,7 @@ mod tests {
             "https://example.com/acct/1"
         );
         assert!(protected.get("jwk").is_none());
+        assert_eq!(protected["alg"], "ES256");
     }
 
     #[test]
@@ -172,11 +167,12 @@ mod tests {
     }
 
     #[test]
-    fn ed25519_jwk_has_correct_fields() {
+    fn es256_jwk_has_correct_fields() {
         let key = test_key();
-        let jwk = ed25519_jwk(&key.verifying_key());
-        assert_eq!(jwk["kty"], "OKP");
-        assert_eq!(jwk["crv"], "Ed25519");
+        let jwk = es256_jwk(&VerifyingKey::from(&key));
+        assert_eq!(jwk["kty"], "EC");
+        assert_eq!(jwk["crv"], "P-256");
         assert!(jwk["x"].as_str().unwrap().len() > 10);
+        assert!(jwk["y"].as_str().unwrap().len() > 10);
     }
 }

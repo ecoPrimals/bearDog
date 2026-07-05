@@ -44,10 +44,12 @@ tracing = { workspace = true }
 thiserror = { workspace = true }
 url = { workspace = true }
 
+# CryptoProvider — defensive install in assert_installed()
+rustls-rustcrypto = { workspace = true }
+
 # Internal
 beardog-config = { workspace = true }
 beardog-errors = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
-rustls-rustcrypto = { workspace = true }

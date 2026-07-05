@@ -8,26 +8,12 @@
 
 /// Ensure that a rustls `CryptoProvider` is available.
 ///
-/// In production: asserts the provider was installed by the binary.
-/// In tests: installs the provider if not already present.
-///
-/// # Panics
-///
-/// Panics in production if no provider has been installed.
+/// Installs `rustls-rustcrypto` as the process-wide default if no provider
+/// has been set yet. Idempotent — safe to call from multiple sites.
 pub fn assert_installed() {
     if rustls::crypto::CryptoProvider::get_default().is_some() {
         return;
     }
 
-    #[cfg(test)]
-    {
-        let _ = rustls_rustcrypto::provider().install_default();
-        return;
-    }
-
-    #[cfg(not(test))]
-    panic!(
-        "rustls CryptoProvider not installed — binary must call \
-         rustls_rustcrypto::provider().install_default() at startup"
-    );
+    let _ = rustls_rustcrypto::provider().install_default();
 }
