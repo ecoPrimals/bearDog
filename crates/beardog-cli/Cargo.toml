@@ -42,6 +42,9 @@ workspace = true
 [dependencies.beardog-tunnel]
 path = "../beardog-tunnel"
 
+[dependencies.rustls-rustcrypto]
+workspace = true
+
 [dependencies.tokio]
 workspace = true
 features = ["rt", "rt-multi-thread", "macros", "net", "io-util", "io-std", "fs"]

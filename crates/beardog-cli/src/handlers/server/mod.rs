@@ -59,8 +59,16 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         info!(audit_dir = %dir.display(), "audit directory override");
     }
 
-    let use_abstract =
-        args.bind_mode == crate::BindMode::Abstract || args.r#abstract;
+    let use_abstract = match args.bind_mode {
+        crate::BindMode::Abstract => true,
+        crate::BindMode::Auto => {
+            args.r#abstract
+                || cfg!(target_os = "android")
+                || std::env::var("ANDROID_ROOT").is_ok()
+                || std::env::var("ANDROID_DATA").is_ok()
+        }
+        _ => args.r#abstract,
+    };
     let tcp_only = args.bind_mode == crate::BindMode::Tcp;
 
     if tcp_only && args.port.is_none() && args.listen.is_none() {

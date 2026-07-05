@@ -507,6 +507,7 @@ dependencies = [
  "predicates",
  "rand 0.9.4",
  "rpassword",
+ "rustls-rustcrypto",
  "serde",
  "serde_json",
  "serial_test",
