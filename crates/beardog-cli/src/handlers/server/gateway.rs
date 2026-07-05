@@ -7,9 +7,9 @@
 //! configured upstream (songBird `http.proxy` by default).
 //!
 //! The upstream is resolved from `BEARDOG_GATEWAY_UPSTREAM`:
-//! - `host:port` — TCP upstream (e.g., `127.0.0.1:7700`)
+//! - `host:port` — TCP upstream (e.g., `127.0.0.1:7780`)
 //! - `unix:/path/to/socket` — Unix domain socket
-//! - absent — default `127.0.0.1:7700` (songBird federation port)
+//! - absent — default `127.0.0.1:7780` (songBird drawbridge HTTP listener)
 
 use beardog_acme::HotReloadAcceptor;
 use beardog_config::env_keys;
@@ -38,11 +38,11 @@ impl Upstream {
                 #[cfg(not(unix))]
                 {
                     warn!(upstream = %val, "unix: upstream not supported on this platform, falling back to TCP");
-                    Self::Tcp("127.0.0.1:7700".into())
+                    Self::Tcp("127.0.0.1:7780".into())
                 }
             }
             Ok(val) if !val.is_empty() => Self::Tcp(val.into()),
-            _ => Self::Tcp("127.0.0.1:7700".into()),
+            _ => Self::Tcp("127.0.0.1:7780".into()),
         }
     }
 
