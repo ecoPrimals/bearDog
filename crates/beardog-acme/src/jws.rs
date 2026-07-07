@@ -6,7 +6,7 @@
 //! JWS Flattened JSON Serialization format (RFC 7515).
 //!
 //! Uses ECDSA P-256 (ES256) — required by Let's Encrypt and all major
-//! ACME providers. EdDSA is not supported by Let's Encrypt as of 2026.
+//! ACME providers. `EdDSA` is not supported by Let's Encrypt as of 2026.
 
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
@@ -23,6 +23,10 @@ pub fn base64url(data: &[u8]) -> String {
 ///
 /// Per RFC 7638, the thumbprint is computed over the lexicographically
 /// sorted JSON members: `crv`, `kty`, `x`, `y`.
+#[expect(
+    clippy::expect_used,
+    reason = "to_encoded_point(false) always yields uncompressed x/y"
+)]
 pub fn jwk_thumbprint(verifying_key: &VerifyingKey) -> String {
     let point = verifying_key.to_encoded_point(false);
     let x = base64url(point.x().expect("uncompressed point has x").as_slice());
@@ -33,6 +37,10 @@ pub fn jwk_thumbprint(verifying_key: &VerifyingKey) -> String {
 }
 
 /// Build the JWK representation of an ECDSA P-256 public key for ACME.
+#[expect(
+    clippy::expect_used,
+    reason = "to_encoded_point(false) always yields uncompressed x/y"
+)]
 pub fn es256_jwk(verifying_key: &VerifyingKey) -> Value {
     let point = verifying_key.to_encoded_point(false);
     json!({
