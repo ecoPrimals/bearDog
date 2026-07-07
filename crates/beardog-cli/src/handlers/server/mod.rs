@@ -40,6 +40,7 @@ use tracing::{info, warn};
 
 use self::acme::start_acme_gateway;
 use self::attestation::build_neural_attestation;
+use self::gateway::{bind_https_listener, serve_https_gateway};
 use self::health::run_health_socket;
 use self::registration::attempt_orchestrator_registration;
 use self::transport::neural_registration_address;
@@ -324,7 +325,13 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(443u16);
-        tokio::spawn(acme::serve_https_gateway(gateway.acceptor, https_port));
+
+        let listener = bind_https_listener(https_port).await?;
+
+        let shadow = beardog_acme::ShadowMetricsCollector::new();
+        let shadow_loop = shadow.clone();
+        tokio::spawn(async move { shadow_loop.run_parity_loop().await });
+        tokio::spawn(serve_https_gateway(gateway.acceptor, listener, Some(shadow)));
         info!(
             https_port,
             "GATEHOUSE active: :443 TLS gateway + :80 ACME/redirect → songBird darkforest"

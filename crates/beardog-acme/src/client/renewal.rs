@@ -59,7 +59,7 @@ impl AcmeClient {
     ///
     /// Returns `true` if the cert expires within `renewal_days_before_expiry`
     /// days, or if parsing fails (renewal as a safety fallback).
-    pub(super) fn needs_renewal(&self, pem: &str) -> bool {
+    pub fn needs_renewal(&self, pem: &str) -> bool {
         use rustls_pki_types::{CertificateDer, pem::PemObject};
         use x509_parser::prelude::{FromDer, X509Certificate};
 
@@ -94,5 +94,111 @@ impl AcmeClient {
                 true
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::storage::CertificateStore;
+    use std::time::Duration;
+
+    fn test_config(renewal_days: u32) -> super::super::AcmeConfig {
+        super::super::AcmeConfig {
+            directory_url: "https://example.com/dir".to_string(),
+            domains: vec!["test.example.com".to_string()],
+            contacts: vec![],
+            challenge_port: 8080,
+            renewal_days_before_expiry: renewal_days,
+            check_interval: Duration::from_secs(3600),
+        }
+    }
+
+    /// Build a self-signed P-256 certificate expiring in `valid_days` from now.
+    fn generate_cert_pem(valid_days: i64) -> String {
+        use p256::ecdsa::SigningKey;
+        use p256::elliptic_curve::rand_core::OsRng;
+        use p256::pkcs8::EncodePublicKey;
+        use x509_cert::builder::{Builder, CertificateBuilder, Profile};
+        use x509_cert::der::EncodePem;
+        use x509_cert::name::Name;
+        use x509_cert::serial_number::SerialNumber;
+        use x509_cert::spki::SubjectPublicKeyInfoOwned;
+        use x509_cert::time::Validity;
+
+        let signing_key = SigningKey::random(&mut OsRng);
+        let verifying_key = signing_key.verifying_key();
+
+        let serial = SerialNumber::from(42u32);
+        let subject: Name = "CN=test".parse().unwrap();
+
+        let now = std::time::SystemTime::now();
+        let not_before = x509_cert::time::Time::try_from(now).unwrap();
+
+        let future = if valid_days >= 0 {
+            now + Duration::from_secs(valid_days as u64 * 86_400)
+        } else {
+            now - Duration::from_secs(valid_days.unsigned_abs() * 86_400)
+        };
+        let not_after = x509_cert::time::Time::try_from(future).unwrap();
+        let validity = Validity {
+            not_before,
+            not_after,
+        };
+
+        let spki_der = verifying_key.to_public_key_der().unwrap();
+        let spki = SubjectPublicKeyInfoOwned::try_from(spki_der.as_bytes()).unwrap();
+
+        let cert = CertificateBuilder::new(
+            Profile::Root,
+            serial,
+            validity,
+            subject,
+            spki,
+            &signing_key,
+        )
+        .unwrap()
+        .build::<p256::ecdsa::DerSignature>()
+        .unwrap();
+
+        cert.to_pem(x509_cert::der::pem::LineEnding::LF).unwrap()
+    }
+
+    fn make_test_client(renewal_days: u32) -> super::super::AcmeClient {
+        let dir = tempfile::tempdir().unwrap();
+        let store = CertificateStore::new(dir.path()).unwrap();
+        super::super::AcmeClient::new_with_store(test_config(renewal_days), store).unwrap()
+    }
+
+    #[test]
+    fn needs_renewal_returns_false_for_fresh_cert() {
+        let client = make_test_client(30);
+        let pem = generate_cert_pem(90);
+        assert!(!client.needs_renewal(&pem));
+    }
+
+    #[test]
+    fn needs_renewal_returns_true_for_expiring_cert() {
+        let client = make_test_client(30);
+        let pem = generate_cert_pem(10);
+        assert!(client.needs_renewal(&pem));
+    }
+
+    #[test]
+    fn needs_renewal_returns_true_for_garbage_pem() {
+        let client = make_test_client(30);
+        assert!(client.needs_renewal("not a certificate"));
+    }
+
+    #[test]
+    fn needs_renewal_returns_true_for_empty_pem() {
+        let client = make_test_client(30);
+        assert!(client.needs_renewal(""));
+    }
+
+    #[test]
+    fn needs_renewal_just_outside_threshold() {
+        let client = make_test_client(30);
+        let pem = generate_cert_pem(60);
+        assert!(!client.needs_renewal(&pem));
     }
 }

@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 7, 2026 -- Wave 133e: Gatehouse Production Hardening
+
+#### P0 — Bind Failure Surfacing
+- **`:443` bind errors now fatal** — split `serve_https_gateway` into `bind_https_listener` (returns `Result`) + `serve_https_gateway` (infallible accept loop); bind failures surface at startup instead of vanishing in `tokio::spawn`
+
+#### P0 — Shadow Metrics Wired
+- **`ShadowMetricsCollector` live in gateway** — sovereign request latency/errors recorded per-connection in `serve_https_gateway`; TLS handshake and upstream connect failures tracked; `run_parity_loop` spawned automatically when gatehouse activates; enables automated 7-day parity gate for 134b Caddy→bearDog cutover
+
+#### P1 — `BindMode::Auto` Socket Path Divergence Fixed
+- **Platform-aware detection centralized** — `resolve_server_socket_path` in `transport.rs` now mirrors the Android auto-detection logic from `handle_server` (`cfg!(target_os = "android")` + `ANDROID_ROOT`/`ANDROID_DATA` env vars); previously, `Auto` in `mod.rs` selected abstract sockets on Android but `transport.rs` returned a filesystem path
+
+#### Test Coverage (8 new tests → 44 `beardog-acme`, 416 `beardog-cli`)
+- **HTTP→HTTPS redirect test** — synthetic HTTP request to `Http01Solver::serve()`, asserts 301 + `Location: https://`
+- **ACME challenge response test** — registered token returns 200 with correct key authorization
+- **400 Bad Request test** — non-challenge request without Host header returns 400
+- **`bind_https_listener` tests** — verifies successful bind on port 0 and failure on occupied port
+- **`needs_renewal` tests (5)** — fresh cert (90d), expiring cert (10d), garbage PEM, empty PEM, outside threshold (60d); certs generated via `p256`/`x509-cert` (no `ring`)
+
+#### Hygiene
+- **Stale comment fixed** — `rustls_provider.rs` doc updated to reflect self-healing provider install (no longer dev-dependency pattern)
+- **Unused re-export removed** — `acme.rs` no longer re-exports `serve_https_gateway` (imported directly from `gateway`)
+
 ### July 4, 2026 -- Wave 132c: Tower HTTP Gateway — ACME TLS Front
 
 #### ACME Gateway (P1 — sovereign HTTPS)

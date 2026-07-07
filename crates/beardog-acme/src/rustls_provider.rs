@@ -2,9 +2,9 @@
 
 //! Process-wide rustls `CryptoProvider` management.
 //!
-//! In production, the binary (`beardog-cli`) installs the provider via
-//! `rustls-rustcrypto` at startup. This module asserts it's available.
-//! In test mode, it installs the provider directly (via dev-dependency).
+//! The binary (`beardog-cli`) installs the provider via `rustls-rustcrypto`
+//! at startup. This module provides a self-healing fallback: if no provider
+//! is found, it attempts installation automatically.
 
 /// Ensure that a rustls `CryptoProvider` is available.
 ///

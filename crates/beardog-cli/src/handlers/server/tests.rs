@@ -3,6 +3,7 @@
 use crate::{BindMode, ServerArgs};
 use beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional;
 
+use super::gateway::bind_https_listener;
 use super::health::run_health_socket;
 use super::registration::attempt_orchestrator_registration;
 use super::transport::{
@@ -241,6 +242,21 @@ async fn health_socket_responds_to_plain_json_rpc() {
     assert_eq!(resp["result"]["status"], "alive");
     assert_eq!(resp["result"]["primal"], "beardog");
     assert!(resp["result"]["version"].is_string());
+}
+
+#[tokio::test]
+async fn bind_https_listener_succeeds_on_free_port() {
+    let listener = bind_https_listener(0).await.expect("bind port 0");
+    let local = listener.local_addr().expect("local_addr");
+    assert_ne!(local.port(), 0, "OS should assign a real port");
+}
+
+#[tokio::test]
+async fn bind_https_listener_fails_on_occupied_port() {
+    let first = bind_https_listener(0).await.expect("first bind");
+    let port = first.local_addr().expect("addr").port();
+    let result = bind_https_listener(port).await;
+    assert!(result.is_err(), "second bind to same port should fail");
 }
 
 #[tokio::test]

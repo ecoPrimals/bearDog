@@ -221,4 +221,124 @@ mod tests {
         assert!(solver.get_key_auth("a").await.is_none());
         assert!(solver.get_key_auth("b").await.is_some());
     }
+
+    #[tokio::test]
+    async fn serve_redirects_http_to_https() {
+        let solver = Http01Solver::new();
+        let port = portpicker::pick_unused_port().expect("free port");
+
+        let solver_clone = solver.clone();
+        tokio::spawn(async move {
+            let _ = solver_clone.serve(port).await;
+        });
+
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+
+        let mut stream = tokio::net::TcpStream::connect(format!("127.0.0.1:{port}"))
+            .await
+            .expect("connect");
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+        stream
+            .write_all(b"GET /some/path HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            .await
+            .expect("write");
+
+        let mut reader = BufReader::new(stream);
+        let mut status_line = String::new();
+        reader.read_line(&mut status_line).await.expect("read");
+        assert!(
+            status_line.contains("301"),
+            "expected 301, got: {status_line}"
+        );
+
+        let mut headers = String::new();
+        loop {
+            let mut line = String::new();
+            reader.read_line(&mut line).await.expect("read header");
+            if line.trim().is_empty() {
+                break;
+            }
+            headers.push_str(&line);
+        }
+        assert!(
+            headers.contains("Location: https://example.com/some/path"),
+            "expected redirect location, got: {headers}"
+        );
+    }
+
+    #[tokio::test]
+    async fn serve_responds_to_challenge_token() {
+        let solver = Http01Solver::new();
+        solver
+            .add_challenge(&ChallengeToken::new("testtoken".to_string(), "thumb"))
+            .await;
+
+        let port = portpicker::pick_unused_port().expect("free port");
+        let solver_clone = solver.clone();
+        tokio::spawn(async move {
+            let _ = solver_clone.serve(port).await;
+        });
+
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+
+        let mut stream = tokio::net::TcpStream::connect(format!("127.0.0.1:{port}"))
+            .await
+            .expect("connect");
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+        stream
+            .write_all(
+                b"GET /.well-known/acme-challenge/testtoken HTTP/1.1\r\nHost: example.com\r\n\r\n",
+            )
+            .await
+            .expect("write");
+
+        let mut reader = BufReader::new(stream);
+        let mut status_line = String::new();
+        reader.read_line(&mut status_line).await.expect("read");
+        assert!(
+            status_line.contains("200"),
+            "expected 200, got: {status_line}"
+        );
+
+        loop {
+            let mut line = String::new();
+            let n = reader.read_line(&mut line).await.expect("read");
+            if line.trim().is_empty() || n == 0 {
+                break;
+            }
+        }
+        let mut body = String::new();
+        reader.read_line(&mut body).await.expect("read body");
+        assert_eq!(body.trim(), "testtoken.thumb");
+    }
+
+    #[tokio::test]
+    async fn serve_returns_400_without_host_header() {
+        let solver = Http01Solver::new();
+        let port = portpicker::pick_unused_port().expect("free port");
+
+        let solver_clone = solver.clone();
+        tokio::spawn(async move {
+            let _ = solver_clone.serve(port).await;
+        });
+
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+
+        let mut stream = tokio::net::TcpStream::connect(format!("127.0.0.1:{port}"))
+            .await
+            .expect("connect");
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+        stream
+            .write_all(b"GET /page HTTP/1.1\r\n\r\n")
+            .await
+            .expect("write");
+
+        let mut reader = BufReader::new(stream);
+        let mut status_line = String::new();
+        reader.read_line(&mut status_line).await.expect("read");
+        assert!(
+            status_line.contains("400"),
+            "expected 400, got: {status_line}"
+        );
+    }
 }

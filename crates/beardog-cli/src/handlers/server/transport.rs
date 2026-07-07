@@ -23,10 +23,21 @@ pub fn resolve_effective_tcp_listen(port: Option<u16>, listen: Option<&str>) -> 
 /// Bind-mode priority: `--bind-mode abstract` (or legacy `--abstract`) → abstract
 /// namespace name. `--bind-mode tcp` → returns a placeholder (UDS is skipped
 /// later). `--bind-mode filesystem` or `auto` → family-aware filesystem path.
+///
+/// When `BindMode::Auto`, this mirrors the platform detection in `handle_server`
+/// — Android (by target or env) selects abstract sockets automatically.
 pub fn resolve_server_socket_path(args: &ServerArgs) -> String {
     let primal_name = resolve_primal_name();
-    let use_abstract =
-        args.bind_mode == crate::BindMode::Abstract || args.r#abstract;
+    let use_abstract = match args.bind_mode {
+        crate::BindMode::Abstract => true,
+        crate::BindMode::Auto => {
+            args.r#abstract
+                || cfg!(target_os = "android")
+                || std::env::var("ANDROID_ROOT").is_ok()
+                || std::env::var("ANDROID_DATA").is_ok()
+        }
+        _ => args.r#abstract,
+    };
 
     if use_abstract {
         let family = args.family_id.as_deref().unwrap_or("default");

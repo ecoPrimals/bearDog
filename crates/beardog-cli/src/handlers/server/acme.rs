@@ -5,8 +5,6 @@ use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tracing::{error, info};
 
-pub use super::gateway::serve_https_gateway;
-
 /// Supervisor result containing the TLS acceptor for the gateway.
 pub(super) struct AcmeGateway {
     pub acceptor: HotReloadAcceptor,
