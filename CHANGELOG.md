@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 8, 2026 -- Wave 134a: DRY + BUILD-DIV-01 Gate
+
+#### DRY Refactor
+- **`connection_handlers.rs` (705L → 655L)** — extracted `dispatch_by_protocol` helper from `handle_ribocipher_signal`; `SIGNAL_CLEAR` and `SIGNAL_MITO` branches were near-identical (~65 lines each); now both delegate to a shared dispatch method parameterized by `tier_label`
+
+#### BUILD-DIV-01 Prevention
+- **Pre-push git hook** — `.githooks/pre-push` enforces `cargo check --all-targets` before any push; catches used-but-unimplemented methods, missing test deps, and bench errors at the developer gate; bypassable with `--no-verify` for emergency pushes
+
 ### July 8, 2026 -- Wave 133h: Deep Debt — Module Splits + DRY + Deterministic Iteration
 
 #### Bug Fix

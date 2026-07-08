@@ -47,69 +47,8 @@ impl UnixSocketIpcServer {
                     "riboCipher: clear signal — routing"
                 );
 
-                match protocol_type {
-                    ribocipher::PROTO_NDJSON_JSONRPC => {
-                        self.handle_jsonrpc_universal("", stream).await
-                    }
-                    ribocipher::PROTO_BTSP_BINARY => {
-                        match btsp_handshake::perform_server_handshake(
-                            &mut stream,
-                            family_seed,
-                        )
-                        .await
-                        {
-                            Ok(session) => {
-                                info!(
-                                    session_id = %session.session_id,
-                                    cipher = %session.cipher.wire_name(),
-                                    "riboCipher→BTSP handshake succeeded"
-                                );
-                                self.handle_jsonrpc_btsp(stream, session).await
-                            }
-                            Err(e) => {
-                                warn!(error = %e, "riboCipher→BTSP handshake failed");
-                                Ok(())
-                            }
-                        }
-                    }
-                    ribocipher::PROTO_BTSP_JSONLINE => {
-                        let mut buf = Vec::with_capacity(512);
-                        let mut buf_reader = BufReader::new(stream);
-                        buf_reader.read_until(b'\n', &mut buf).await?;
-                        let line = String::from_utf8_lossy(&buf);
-                        if let Ok(hello) =
-                            serde_json::from_str::<btsp_handshake::ClientHello>(line.trim())
-                        {
-                            let stream = buf_reader.into_inner();
-                            self.handle_btsp_jsonline_connection(stream, &hello, family_seed)
-                                .await
-                        } else {
-                            warn!("riboCipher: BTSP JSON-line signal but invalid ClientHello");
-                            Ok(())
-                        }
-                    }
-                    ribocipher::PROTO_HTTP => {
-                        self.handle_http_universal("", stream).await
-                    }
-                    ribocipher::PROTO_PROBE => {
-                        let response = serde_json::json!({
-                            "status": "ok",
-                            "primal": "bearDog",
-                            "signal": "riboCipher-v1"
-                        });
-                        let msg = serde_json::to_string(&response)?;
-                        stream.write_all(format!("{msg}\n").as_bytes()).await?;
-                        stream.flush().await?;
-                        Ok(())
-                    }
-                    _ => {
-                        warn!(
-                            protocol_type = format!("0x{:02X}", protocol_type),
-                            "riboCipher: unknown protocol type in clear signal"
-                        );
-                        Ok(())
-                    }
-                }
+                self.dispatch_by_protocol(stream, protocol_type, family_seed, "clear")
+                    .await
             }
             ribocipher::SIGNAL_MITO => {
                 let mut tag = [0u8; 4];
@@ -123,69 +62,8 @@ impl UnixSocketIpcServer {
                         tag = format!("{:02X}{:02X}{:02X}{:02X}", tag[0], tag[1], tag[2], tag[3]),
                         "riboCipher: mito-beacon decoded — routing"
                     );
-                    match protocol_type {
-                        ribocipher::PROTO_NDJSON_JSONRPC => {
-                            self.handle_jsonrpc_universal("", stream).await
-                        }
-                        ribocipher::PROTO_PROBE => {
-                            let response = serde_json::json!({
-                                "status": "ok",
-                                "primal": "bearDog",
-                                "signal": "riboCipher-mito-v1"
-                            });
-                            let msg = serde_json::to_string(&response)?;
-                            stream.write_all(format!("{msg}\n").as_bytes()).await?;
-                            stream.flush().await?;
-                            Ok(())
-                        }
-                        ribocipher::PROTO_BTSP_BINARY => {
-                            match btsp_handshake::perform_server_handshake(
-                                &mut stream,
-                                family_seed,
-                            )
-                            .await
-                            {
-                                Ok(session) => {
-                                    info!(
-                                        session_id = %session.session_id,
-                                        cipher = %session.cipher.wire_name(),
-                                        "mito→BTSP handshake succeeded"
-                                    );
-                                    self.handle_jsonrpc_btsp(stream, session).await
-                                }
-                                Err(e) => {
-                                    warn!(error = %e, "mito→BTSP handshake failed");
-                                    Ok(())
-                                }
-                            }
-                        }
-                        ribocipher::PROTO_BTSP_JSONLINE => {
-                            let mut buf = Vec::with_capacity(512);
-                            let mut buf_reader = BufReader::new(stream);
-                            buf_reader.read_until(b'\n', &mut buf).await?;
-                            let line = String::from_utf8_lossy(&buf);
-                            if let Ok(hello) =
-                                serde_json::from_str::<btsp_handshake::ClientHello>(line.trim())
-                            {
-                                let stream = buf_reader.into_inner();
-                                self.handle_btsp_jsonline_connection(stream, &hello, family_seed)
-                                    .await
-                            } else {
-                                warn!("mito: BTSP JSON-line signal but invalid ClientHello");
-                                Ok(())
-                            }
-                        }
-                        ribocipher::PROTO_HTTP => {
-                            self.handle_http_universal("", stream).await
-                        }
-                        _ => {
-                            warn!(
-                                protocol_type = format!("0x{:02X}", protocol_type),
-                                "mito: decoded protocol type has no handler"
-                            );
-                            Ok(())
-                        }
-                    }
+                    self.dispatch_by_protocol(stream, protocol_type, family_seed, "mito")
+                        .await
                 } else {
                     warn!(
                         tag = format!("{:02X}{:02X}{:02X}{:02X}", tag[0], tag[1], tag[2], tag[3]),
@@ -202,6 +80,78 @@ impl UnixSocketIpcServer {
                 Ok(())
             }
             _ => unreachable!("is_signal_byte guards this branch"),
+        }
+    }
+
+    /// Dispatch to the appropriate handler based on the decoded riboCipher
+    /// protocol type. Shared by both clear and mito-beacon signal paths.
+    async fn dispatch_by_protocol(
+        &self,
+        mut stream: Box<dyn PlatformStream>,
+        protocol_type: u8,
+        family_seed: &btsp_handshake::FamilySeed,
+        tier_label: &str,
+    ) -> Result<()> {
+        match protocol_type {
+            ribocipher::PROTO_NDJSON_JSONRPC => {
+                self.handle_jsonrpc_universal("", stream).await
+            }
+            ribocipher::PROTO_BTSP_BINARY => {
+                match btsp_handshake::perform_server_handshake(&mut stream, family_seed).await {
+                    Ok(session) => {
+                        info!(
+                            session_id = %session.session_id,
+                            cipher = %session.cipher.wire_name(),
+                            "{tier_label}→BTSP handshake succeeded"
+                        );
+                        self.handle_jsonrpc_btsp(stream, session).await
+                    }
+                    Err(e) => {
+                        warn!(error = %e, "{tier_label}→BTSP handshake failed");
+                        Ok(())
+                    }
+                }
+            }
+            ribocipher::PROTO_BTSP_JSONLINE => {
+                let mut buf = Vec::with_capacity(512);
+                let mut buf_reader = BufReader::new(stream);
+                buf_reader.read_until(b'\n', &mut buf).await?;
+                let line = String::from_utf8_lossy(&buf);
+                if let Ok(hello) =
+                    serde_json::from_str::<btsp_handshake::ClientHello>(line.trim())
+                {
+                    let stream = buf_reader.into_inner();
+                    self.handle_btsp_jsonline_connection(stream, &hello, family_seed)
+                        .await
+                } else {
+                    warn!("{tier_label}: BTSP JSON-line signal but invalid ClientHello");
+                    Ok(())
+                }
+            }
+            ribocipher::PROTO_HTTP => self.handle_http_universal("", stream).await,
+            ribocipher::PROTO_PROBE => {
+                let signal_name = if tier_label == "mito" {
+                    "riboCipher-mito-v1"
+                } else {
+                    "riboCipher-v1"
+                };
+                let response = serde_json::json!({
+                    "status": "ok",
+                    "primal": "bearDog",
+                    "signal": signal_name
+                });
+                let msg = serde_json::to_string(&response)?;
+                stream.write_all(format!("{msg}\n").as_bytes()).await?;
+                stream.flush().await?;
+                Ok(())
+            }
+            _ => {
+                warn!(
+                    protocol_type = format!("0x{:02X}", protocol_type),
+                    "{tier_label}: unknown protocol type"
+                );
+                Ok(())
+            }
         }
     }
 
