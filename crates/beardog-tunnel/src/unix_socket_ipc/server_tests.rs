@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::{JsonRpcError, JsonRpcResponse, UnixSocketIpcServer};
+use super::UnixSocketIpcServer;
+use crate::unix_socket_ipc::types::{JsonRpcError, JsonRpcResponse};
 use crate::btsp_handshake::BtspSecurityMode;
 use crate::test_helpers::mocks::create_minimal_beardog_provider;
 use beardog_core::socket_config::IpcCapabilitySymlinksConfig;

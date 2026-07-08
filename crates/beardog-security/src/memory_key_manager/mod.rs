@@ -16,7 +16,7 @@ pub use metrics::{ExtendedMetrics, KeyManagerMetrics, OperationMetrics};
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
 use uuid::Uuid;
 
@@ -36,7 +36,7 @@ pub struct KeyMetadata {
 /// Provides secure in-memory key storage with encryption capabilities
 #[derive(Debug, Clone)]
 pub struct MemoryKeyManager {
-    keys: Arc<RwLock<HashMap<String, Vec<u8>>>>,
+    keys: Arc<RwLock<BTreeMap<String, Vec<u8>>>>,
 }
 
 impl MemoryKeyManager {
@@ -47,7 +47,7 @@ impl MemoryKeyManager {
     /// Creates a new instance
     pub fn new(_config: MemoryKeyConfig) -> Result<Self, BearDogError> {
         Ok(Self {
-            keys: Arc::new(RwLock::new(HashMap::with_capacity(100))),
+            keys: Arc::new(RwLock::new(BTreeMap::new())),
         })
     }
 

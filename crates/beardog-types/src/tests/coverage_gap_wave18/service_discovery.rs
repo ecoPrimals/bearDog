@@ -48,11 +48,14 @@ async fn dns_http_discovery_default_and_trait_methods() {
     );
 
     let cap = ServiceCapabilityType::DataStorage;
-    let by_cap = d
+    let by_cap_err = d
         .discover_by_capability(cap)
         .await
-        .expect("discover by capability");
-    assert!(by_cap.is_empty());
+        .expect_err("DNS SRV not wired in types crate");
+    assert!(
+        matches!(by_cap_err, DiscoveryError::BackendUnavailable { .. }),
+        "expected BackendUnavailable, got: {by_cap_err:?}"
+    );
 
     let by_name = d
         .discover_by_name("localhost")

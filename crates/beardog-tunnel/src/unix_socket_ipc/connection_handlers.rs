@@ -510,6 +510,148 @@ impl UnixSocketIpcServer {
             }
         }
     }
+
+    /// Route a parsed JSON-RPC request through the method gate and handler registry.
+    ///
+    /// Handles version validation, notification semantics (no response when `id`
+    /// is absent per JSON-RPC 2.0 spec section 4.1), auth method interception
+    /// (JH-0), pre-dispatch authorization, and error-code inference.
+    pub(super) async fn route_jsonrpc(
+        &self,
+        request: &super::types::JsonRpcRequest,
+        caller: &mut CallerContext,
+    ) -> Option<super::types::JsonRpcResponse> {
+        use crate::method_gate::{dispatch_auth_method, is_gate_handled_method};
+        use beardog_ipc::protocol::JSONRPC_VERSION;
+        use std::borrow::Cow;
+
+        debug!(method = %request.method, "JSON-RPC request");
+
+        if let Some(token) = request
+            .params
+            .as_ref()
+            .and_then(|p| p.get("_bearer_token"))
+            .and_then(serde_json::Value::as_str)
+        {
+            caller.bearer_token = Some(token.to_owned());
+        }
+
+        let id = request.id.clone().unwrap_or(serde_json::Value::Null);
+        let is_notification = request.id.is_none();
+
+        if request.jsonrpc != "2.0" {
+            if is_notification {
+                return None;
+            }
+            return Some(super::types::JsonRpcResponse {
+                jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
+                result: None,
+                error: Some(super::types::JsonRpcError::invalid_request(
+                    "Invalid JSON-RPC version (must be 2.0)",
+                )),
+                id,
+            });
+        }
+
+        if is_gate_handled_method(&request.method) {
+            if is_notification {
+                return None;
+            }
+            if let Some(result) = dispatch_auth_method(
+                &request.method,
+                &self.method_gate,
+                caller,
+                request.params.as_ref(),
+            ) {
+                return Some(super::types::JsonRpcResponse {
+                    jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
+                    result: Some(result),
+                    error: None,
+                    id,
+                });
+            }
+        }
+
+        if let Err(gate_error) = self.method_gate.check(&request.method, caller) {
+            if is_notification {
+                return None;
+            }
+            return Some(super::types::JsonRpcResponse {
+                jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
+                result: None,
+                error: Some(gate_error),
+                id,
+            });
+        }
+
+        let result: super::handlers::HandlerResult = self
+            .handler_registry
+            .route(
+                &request.method,
+                request.params.as_ref(),
+                &self.btsp_provider,
+            )
+            .await;
+
+        if is_notification {
+            return None;
+        }
+
+        Some(match result {
+            Ok(value) => super::types::JsonRpcResponse {
+                jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
+                result: Some(value),
+                error: None,
+                id,
+            },
+            Err(e) => {
+                let error = super::types::JsonRpcError {
+                    code: e.json_rpc_code(),
+                    message: e.to_string(),
+                    data: None,
+                };
+
+                super::types::JsonRpcResponse {
+                    jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
+                    result: None,
+                    error: Some(error),
+                    id,
+                }
+            }
+        })
+    }
+
+    /// Process one JSON-RPC request line and return the serialized response, or
+    /// `None` for notifications.
+    pub(super) async fn handle_one_jsonrpc_request_universal(
+        &self,
+        line: &str,
+        caller: &mut CallerContext,
+    ) -> Result<Option<String>> {
+        use beardog_ipc::protocol::JSONRPC_VERSION;
+        use std::borrow::Cow;
+
+        let request: super::types::JsonRpcRequest = match serde_json::from_str(line.trim()) {
+            Ok(req) => req,
+            Err(e) => {
+                warn!(error = %e, "Invalid JSON-RPC request");
+                let error_response = super::types::JsonRpcResponse {
+                    jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
+                    result: None,
+                    error: Some(super::types::JsonRpcError::parse_error(format!(
+                        "Parse error: {e}"
+                    ))),
+                    id: serde_json::Value::Null,
+                };
+                return Ok(Some(serde_json::to_string(&error_response)?));
+            }
+        };
+
+        match self.route_jsonrpc(&request, caller).await {
+            Some(resp) => Ok(Some(serde_json::to_string(&resp)?)),
+            None => Ok(None),
+        }
+    }
 }
 
 /// Detect a successful Phase 3 negotiate from a request/response pair and

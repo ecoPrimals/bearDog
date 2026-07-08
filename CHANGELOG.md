@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 8, 2026 -- Wave 133h: Deep Debt — Module Splits + DRY + Deterministic Iteration
+
+#### Bug Fix
+- **`dns_http_discovery_default_and_trait_methods` test fixed** — pre-existing failure in `beardog-types` Wave 18 test; `discover_by_capability` now correctly returns `Err(BackendUnavailable)` since DNS SRV resolver is a stub in the types crate; test assertion updated to match
+
+#### Module Splits (oversized file reduction)
+- **`graph_security/audit.rs` (798L) → 3 files** — `audit/mod.rs` (306L) orchestrator + data fetchers, `audit/chain_of_custody.rs` (277L) Ed25519 signature verification, `audit/scoring.rs` (199L) trust scoring + risk assessment + warning generation
+- **`modes/server.rs` (761L) → 2 files** — `server/mod.rs` (337L) run lifecycle + banner + shutdown, `server/registration.rs` (423L) Neural API + IPC registry + discovery registration
+- **`crypto_handlers_rsa.rs` (728L → 370L)** — DRY refactor: extracted `parse_sign_request`, `parse_verify_request`, `build_sign_response` shared helpers; each PKCS#1/PSS handler reduced to thin delegation
+- **`unix_socket_ipc/server.rs` (690L → 551L)** — moved `route_jsonrpc` and `handle_one_jsonrpc_request_universal` to `connection_handlers.rs` where they logically belong with other protocol handlers
+
+#### Deterministic Iteration
+- **`HashMap` → `BTreeMap`** in `key_rotation_manager.rs` and `memory_key_manager/mod.rs` — key listing APIs now return deterministic sorted order; no new dependencies
+
 ### July 7, 2026 -- Wave 133e: Gatehouse Production Hardening
 
 #### P0 — Bind Failure Surfacing

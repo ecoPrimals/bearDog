@@ -15,7 +15,7 @@ use beardog_types::hsm::{
     KeyRotationReason,
 };
 use chrono::Utc;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, error, info};
@@ -31,7 +31,7 @@ pub struct KeyRotationManager {
 
     /// In-memory metadata store
     /// In production, this would be backed by persistent storage
-    metadata_store: Arc<RwLock<HashMap<String, KeyMetadataWithLifecycle>>>,
+    metadata_store: Arc<RwLock<BTreeMap<String, KeyMetadataWithLifecycle>>>,
 
     /// Rotation events log for audit trail
     events_log: Arc<RwLock<Vec<KeyRotationEvent>>>,
@@ -42,7 +42,7 @@ impl KeyRotationManager {
     pub fn new(config: KeyRotationConfig) -> Self {
         Self {
             config,
-            metadata_store: Arc::new(RwLock::new(HashMap::new())),
+            metadata_store: Arc::new(RwLock::new(BTreeMap::new())),
             events_log: Arc::new(RwLock::new(Vec::new())),
         }
     }

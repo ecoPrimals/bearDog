@@ -13,11 +13,11 @@
 
 use super::{
     handlers::HandlerRegistry,
-    types::{JsonRpcError, JsonRpcRequest, JsonRpcResponse, Protocol},
+    types::{JsonRpcRequest, JsonRpcResponse, Protocol},
 };
 use crate::btsp_handshake::{self, BtspSecurityMode};
 use crate::btsp_provider::BeardogBtspProvider;
-use crate::method_gate::{CallerContext, MethodGate, dispatch_auth_method, is_gate_handled_method};
+use crate::method_gate::{CallerContext, MethodGate};
 use crate::platform::{
     PlatformListener, PlatformSocket, PlatformStream, PrefixedStream, Socket, SocketEndpoint,
 };
@@ -27,7 +27,6 @@ use beardog_core::socket_config::{
     IpcCapabilitySymlinksConfig, install_ipc_symlinks_at, remove_ipc_symlinks_at,
 };
 use beardog_ipc::protocol::JSONRPC_VERSION;
-use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
@@ -44,29 +43,27 @@ pub(super) const IPC_READ_TIMEOUT: Duration = Duration::from_secs(30);
 /// Unix socket IPC server for inter-primal communication
 pub struct UnixSocketIpcServer {
     /// Path to the Unix socket
-    socket_path: PathBuf,
+    pub(super) socket_path: PathBuf,
 
     /// wateringHole v3.1 capability-domain symlinks beside [`Self::socket_path`].
-    ipc_symlinks: IpcCapabilitySymlinksConfig,
+    pub(super) ipc_symlinks: IpcCapabilitySymlinksConfig,
 
     /// BTSP provider (provides all capabilities)
-    btsp_provider: Arc<BeardogBtspProvider>,
+    pub(super) btsp_provider: Arc<BeardogBtspProvider>,
 
     /// Modular handler registry for JSON-RPC methods
-    handler_registry: Arc<HandlerRegistry>,
+    pub(super) handler_registry: Arc<HandlerRegistry>,
 
     /// BTSP security mode (resolved at startup, checked per connection).
-    security_mode: BtspSecurityMode,
+    pub(super) security_mode: BtspSecurityMode,
 
     /// Pre-dispatch authorization gate (JH-0 ecosystem standard).
-    method_gate: MethodGate,
+    pub(super) method_gate: MethodGate,
 
     /// Server running state (using `RwLock` for compatibility)
     is_running: Arc<tokio::sync::RwLock<bool>>,
 
     /// Atomic readiness flag for lock-free checks
-    /// This allows other components to wait for readiness without filesystem polling
-    /// Avoids filesystem polling (readiness flag is a common IPC pattern)
     is_ready: Arc<std::sync::atomic::AtomicBool>,
 }
 
@@ -509,142 +506,6 @@ impl UnixSocketIpcServer {
         Ok(())
     }
 
-    /// Route a parsed JSON-RPC request through the method gate and handler registry.
-    ///
-    /// Handles version validation, notification semantics (no response when `id`
-    /// is absent per JSON-RPC 2.0 spec section 4.1), auth method interception
-    /// (JH-0), pre-dispatch authorization, and error-code inference.
-    async fn route_jsonrpc(
-        &self,
-        request: &JsonRpcRequest,
-        caller: &mut CallerContext,
-    ) -> Option<JsonRpcResponse> {
-        debug!(method = %request.method, "JSON-RPC request");
-
-        // JH-1: extract bearer token from _bearer_token param (biomeOS convention)
-        if let Some(token) = request
-            .params
-            .as_ref()
-            .and_then(|p| p.get("_bearer_token"))
-            .and_then(serde_json::Value::as_str)
-        {
-            caller.bearer_token = Some(token.to_owned());
-        }
-
-        let id = request.id.clone().unwrap_or(serde_json::Value::Null);
-        let is_notification = request.id.is_none();
-
-        if request.jsonrpc != "2.0" {
-            if is_notification {
-                return None;
-            }
-            return Some(JsonRpcResponse {
-                jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-                result: None,
-                error: Some(JsonRpcError::invalid_request(
-                    "Invalid JSON-RPC version (must be 2.0)",
-                )),
-                id,
-            });
-        }
-
-        // JH-0/JH-1: intercept gate-handled methods (auth introspection + ionic token lifecycle)
-        if is_gate_handled_method(&request.method) {
-            if is_notification {
-                return None;
-            }
-            if let Some(result) = dispatch_auth_method(
-                &request.method,
-                &self.method_gate,
-                caller,
-                request.params.as_ref(),
-            ) {
-                return Some(JsonRpcResponse {
-                    jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-                    result: Some(result),
-                    error: None,
-                    id,
-                });
-            }
-        }
-
-        // JH-0/JH-1: pre-dispatch authorization gate (real token verification)
-        if let Err(gate_error) = self.method_gate.check(&request.method, caller) {
-            if is_notification {
-                return None;
-            }
-            return Some(JsonRpcResponse {
-                jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-                result: None,
-                error: Some(gate_error),
-                id,
-            });
-        }
-
-        let result = self
-            .handler_registry
-            .route(
-                &request.method,
-                request.params.as_ref(),
-                &self.btsp_provider,
-            )
-            .await;
-
-        if is_notification {
-            return None;
-        }
-
-        Some(match result {
-            Ok(value) => JsonRpcResponse {
-                jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-                result: Some(value),
-                error: None,
-                id,
-            },
-            Err(e) => {
-                let error = JsonRpcError {
-                    code: e.json_rpc_code(),
-                    message: e.to_string(),
-                    data: None,
-                };
-
-                JsonRpcResponse {
-                    jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-                    result: None,
-                    error: Some(error),
-                    id,
-                }
-            }
-        })
-    }
-
-    /// Process one JSON-RPC request line and return the serialized response, or
-    /// `None` for notifications.
-    pub(super) async fn handle_one_jsonrpc_request_universal(
-        &self,
-        line: &str,
-        caller: &mut CallerContext,
-    ) -> Result<Option<String>> {
-        let request: JsonRpcRequest = match serde_json::from_str(line.trim()) {
-            Ok(req) => req,
-            Err(e) => {
-                warn!(error = %e, "Invalid JSON-RPC request");
-                let error_response = JsonRpcResponse {
-                    jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
-                    result: None,
-                    error: Some(JsonRpcError::parse_error(format!("Parse error: {e}"))),
-                    id: serde_json::Value::Null,
-                };
-                return Ok(Some(serde_json::to_string(&error_response)?));
-            }
-        };
-
-        match self.route_jsonrpc(&request, caller).await {
-            Some(resp) => Ok(Some(serde_json::to_string(&resp)?)),
-            None => Ok(None),
-        }
-    }
-
     /// Handle JSON-RPC request (public for testing).
     ///
     /// Uses a default `CallerContext::from_unix()` for backward compatibility
@@ -652,7 +513,10 @@ impl UnixSocketIpcServer {
     ///
     /// # Errors
     /// Returns error if unable to parse or handle the request
-    pub async fn handle_jsonrpc_request(&self, request_str: &str) -> Result<JsonRpcResponse> {
+    pub async fn handle_jsonrpc_request(
+        &self,
+        request_str: &str,
+    ) -> Result<JsonRpcResponse> {
         let request: JsonRpcRequest =
             serde_json::from_str(request_str).context("Failed to parse JSON-RPC request")?;
         let mut caller = CallerContext::from_unix();
@@ -660,9 +524,6 @@ impl UnixSocketIpcServer {
             .await
             .ok_or_else(|| anyhow::anyhow!("notification — no response expected"))
     }
-
-    // Legacy handle_http_connection() removed - HTTP protocol deprecated
-    // All clients should use JSON-RPC 2.0 over Unix socket
 }
 
 impl Drop for UnixSocketIpcServer {
