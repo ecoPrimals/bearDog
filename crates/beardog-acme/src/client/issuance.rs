@@ -181,10 +181,13 @@ impl AcmeClient {
     /// Returns DER-encoded CSR bytes and the ECDSA P-256 private key as PEM.
     /// Uses pure-Rust `p256` + `x509-cert` — zero C dependencies.
     pub(super) fn build_csr(&self) -> Result<(Vec<u8>, String), AcmeError> {
+        use x509_cert::der::asn1::Ia5String;
         use p256::ecdsa::SigningKey;
         use p256::pkcs8::EncodePrivateKey;
         use x509_cert::builder::{Builder, RequestBuilder};
         use x509_cert::der::Encode;
+        use x509_cert::ext::pkix::name::GeneralName;
+        use x509_cert::ext::pkix::SubjectAltName;
         use x509_cert::name::Name;
 
         let primary_domain = self
@@ -199,8 +202,23 @@ impl AcmeClient {
             .parse()
             .map_err(|e| AcmeError::CertParse(format!("invalid CN: {e}")))?;
 
-        let builder = RequestBuilder::new(subject, &signing_key)
+        let mut builder = RequestBuilder::new(subject, &signing_key)
             .map_err(|e| AcmeError::CertParse(format!("CSR builder: {e}")))?;
+
+        let san_names: Vec<GeneralName> = self
+            .config
+            .domains
+            .iter()
+            .map(|d| {
+                Ia5String::new(d)
+                    .map(GeneralName::DnsName)
+                    .map_err(|e| AcmeError::CertParse(format!("invalid SAN domain {d}: {e}")))
+            })
+            .collect::<Result<_, _>>()?;
+
+        builder
+            .add_extension(&SubjectAltName(san_names))
+            .map_err(|e| AcmeError::CertParse(format!("SAN extension: {e}")))?;
 
         let csr = builder
             .build::<p256::ecdsa::DerSignature>()
