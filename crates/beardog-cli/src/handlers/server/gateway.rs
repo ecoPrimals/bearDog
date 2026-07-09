@@ -67,25 +67,48 @@ enum UpstreamConn {
     Unix(tokio::net::UnixStream),
 }
 
-/// Start the HTTPS gateway on the given port using ACME-managed certificates.
+/// Bind the HTTPS gateway TCP listener on the given port.
 ///
-/// Terminates TLS and bidirectionally proxies cleartext HTTP to the upstream.
+/// Factored out of [`start_https_gateway`] so that port conflicts surface
+/// at the call site rather than inside a background `tokio::spawn`.
 ///
 /// # Errors
 ///
-/// Returns an error if the TCP listener cannot bind.
-pub async fn serve_https_gateway(
+/// Returns an error if the TCP listener cannot bind (port in use,
+/// insufficient privileges for `:443`, etc.).
+pub async fn bind_gateway_listener(bind_port: u16) -> Result<TcpListener, BearDogError> {
+    let addr = format!("0.0.0.0:{bind_port}");
+    TcpListener::bind(&addr).await.map_err(|e| {
+        BearDogError::system(format!("HTTPS gateway bind {addr}: {e}"))
+    })
+}
+
+/// Bind the HTTPS gateway listener, returning a handle to the accept loop.
+///
+/// The bind is performed eagerly so that port conflicts surface at startup
+/// rather than vanishing inside a background `tokio::spawn`.
+///
+/// # Errors
+///
+/// Returns an error if the TCP listener cannot bind (port in use,
+/// insufficient privileges for `:443`, etc.).
+pub async fn start_https_gateway(
     acceptor: HotReloadAcceptor,
     bind_port: u16,
-) -> Result<(), BearDogError> {
-    let addr = format!("0.0.0.0:{bind_port}");
-    let listener = TcpListener::bind(&addr).await.map_err(|e| {
-        BearDogError::system(format!("HTTPS gateway bind {addr}: {e}"))
-    })?;
+) -> Result<tokio::task::JoinHandle<()>, BearDogError> {
+    let listener = bind_gateway_listener(bind_port).await?;
 
     let upstream = Upstream::resolve();
     info!(port = bind_port, ?upstream, "HTTPS gateway listening (ACME TLS → upstream)");
 
+    Ok(tokio::spawn(async move { gateway_accept_loop(acceptor, listener, upstream).await }))
+}
+
+async fn gateway_accept_loop(
+    acceptor: HotReloadAcceptor,
+    listener: TcpListener,
+    upstream: Upstream,
+) {
     loop {
         let (tcp_stream, peer) = match listener.accept().await {
             Ok(conn) => conn,

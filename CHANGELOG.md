@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 9, 2026 -- Wave 134d: Upstream Regression Fixes + Test Restoration
+
+#### P0 — Gateway Bind Error Silencing (upstream regression from 579bc77)
+- **`start_https_gateway` pattern** — upstream `BUILD-DIV-02` fix consolidated `bind_https_listener` + `serve_https_gateway` into a single function spawned via `tokio::spawn`, silencing bind failures (`:443` port in use, insufficient privileges); restored eager bind via `bind_gateway_listener` + `start_https_gateway` that returns `JoinHandle` after successful bind, propagating errors at startup
+
+#### Test Restoration (8 tests restored)
+- **3 ACME integration tests** — `serve_redirects_http_to_https`, `serve_returns_acme_challenge_token`, `serve_returns_400_for_missing_host` restored to `challenge.rs` (removed by upstream 579bc77)
+- **2 gateway bind tests** — `bind_gateway_listener_succeeds_on_free_port`, `bind_gateway_listener_fails_on_occupied_port` adapted from removed `bind_https_listener` tests
+
+#### Clippy
+- **`doc_markdown` fix** — backticks added to `BEARDOG_TLS_MODE`, `:443`, `:80` in `ENV_GATEHOUSE_MODE` doc comment (introduced by upstream 579bc77)
+
 ### July 8, 2026 -- Wave 134a: DRY + BUILD-DIV-01 Gate
 
 #### DRY Refactor

@@ -324,7 +324,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(443u16);
-        tokio::spawn(gateway::serve_https_gateway(gateway.acceptor, https_port));
+        gateway::start_https_gateway(gateway.acceptor, https_port).await?;
         info!(
             https_port,
             "GATEHOUSE active: :443 TLS gateway + :80 ACME/redirect → songBird darkforest"
