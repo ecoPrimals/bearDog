@@ -85,7 +85,7 @@ pub const ENV_HTTPS_PORT: &str = "BEARDOG_HTTPS_PORT";
 /// Format: `host:port` or unix socket path prefixed with `unix:`.
 pub const ENV_GATEWAY_UPSTREAM: &str = "BEARDOG_GATEWAY_UPSTREAM";
 /// Gatehouse mode: activates bearDog as the sovereign external gateway
-/// (`:443` TLS + `:80` ACME/redirect). Equivalent to `BEARDOG_TLS_MODE=acme`.
+/// (:443 TLS + :80 ACME/redirect). Equivalent to BEARDOG_TLS_MODE=acme.
 pub const ENV_GATEHOUSE_MODE: &str = "BEARDOG_GATEHOUSE_MODE";
 /// RPC port.
 pub const ENV_RPC_PORT: &str = "BEARDOG_RPC_PORT";
