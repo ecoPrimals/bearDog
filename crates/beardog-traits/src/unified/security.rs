@@ -6,7 +6,7 @@ use super::{BearDogProvider, UnifiedTraitError};
 // async_trait no longer needed - using native fn
 use beardog_types::canonical::config::r#trait::BearDogConfig;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 /// Unified security provider trait
 pub trait SecurityProvider: BearDogProvider {
@@ -247,7 +247,7 @@ pub struct SecurityAuditEvent {
     /// The result value
     pub result: SecurityResult,
     /// Mapping of details
-    pub details: HashMap<String, serde_json::Value>,
+    pub details: BTreeMap<String, serde_json::Value>,
     /// The severity value
     pub severity: SecuritySeverity,
 }
@@ -266,7 +266,7 @@ pub enum SecurityResult {
 }
 
 /// Security severity levels
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SecuritySeverity {
     /// Represents low variant
     Low,
@@ -303,9 +303,9 @@ pub struct AuditStats {
     /// Number of `total_events`
     pub total_events: usize,
     /// Mapping of events by type
-    pub events_by_type: HashMap<String, usize>,
+    pub events_by_type: BTreeMap<String, usize>,
     /// Mapping of events by severity
-    pub events_by_severity: HashMap<SecuritySeverity, usize>,
+    pub events_by_severity: BTreeMap<SecuritySeverity, usize>,
     /// The success rate value
     pub success_rate: f64,
     /// The average events per day value
@@ -326,7 +326,7 @@ pub struct PolicyContext {
     /// The action value
     pub action: String,
     /// Mapping of environment
-    pub environment: HashMap<String, serde_json::Value>,
+    pub environment: BTreeMap<String, serde_json::Value>,
     /// Evaluation instant for time-bounded policies.
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
@@ -387,7 +387,7 @@ pub struct AuthenticationResult {
     /// Optional error message
     pub error_message: Option<String>,
     /// Mapping of metadata
-    pub metadata: HashMap<String, serde_json::Value>,
+    pub metadata: BTreeMap<String, serde_json::Value>,
 }
 
 /// Active session record including capability grants and expiry.
@@ -404,7 +404,7 @@ pub struct SecureSession {
     /// Collection of permissions
     pub permissions: Vec<String>,
     /// Mapping of metadata
-    pub metadata: HashMap<String, serde_json::Value>,
+    pub metadata: BTreeMap<String, serde_json::Value>,
     /// Whether `is_active` is enabled
     pub is_active: bool,
 }
@@ -600,7 +600,7 @@ mod tests {
             resource: None,
             action: Some("login".to_string()),
             result: SecurityResult::Success,
-            details: HashMap::new(),
+            details: BTreeMap::new(),
             severity: SecuritySeverity::Medium,
         };
 

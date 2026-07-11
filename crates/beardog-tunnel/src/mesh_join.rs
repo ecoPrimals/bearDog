@@ -164,7 +164,7 @@ mod tests {
     use crate::trust_handlers::handle_auth_exchange_trust;
     use tokio::net::TcpListener;
 
-    /// Full mesh_join E2E: real TCP, BTSP handshake, trust exchange, bidirectional
+    /// Full `mesh_join` E2E: real TCP, BTSP handshake, trust exchange, bidirectional
     /// registry population. Proves two gates can join the mesh via one call.
     #[tokio::test]
     async fn mesh_join_e2e_over_tcp() {

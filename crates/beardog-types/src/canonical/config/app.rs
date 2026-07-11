@@ -16,7 +16,7 @@
 //!
 //! ```rust
 //! use beardog_types::canonical::config::app::{CanonicalAppConfig, LogLevel};
-//! use std::collections::HashMap;
+//! use std::collections::BTreeMap;
 //!
 //! // Create development configuration
 //! let mut config = CanonicalAppConfig {
@@ -25,8 +25,8 @@
 //!     environment: "development".to_string(),
 //!     debug: true,
 //!     log_level: LogLevel::Debug,
-//!     features: HashMap::new(),
-//!     metadata: HashMap::new(),
+//!     features: BTreeMap::new(),
+//!     metadata: BTreeMap::new(),
 //! };
 //!
 //! // Enable feature flags
@@ -42,7 +42,7 @@
 //!
 //! ```rust
 //! use beardog_types::canonical::config::app::{CanonicalAppConfig, LogLevel};
-//! use std::collections::HashMap;
+//! use std::collections::BTreeMap;
 //!
 //! // Production configuration
 //! let config = CanonicalAppConfig {
@@ -51,8 +51,8 @@
 //!     environment: "production".to_string(),
 //!     debug: false,
 //!     log_level: LogLevel::Warn,  // Less verbose in production
-//!     features: HashMap::new(),
-//!     metadata: HashMap::new(),
+//!     features: BTreeMap::new(),
+//!     metadata: BTreeMap::new(),
 //! };
 //!
 //! assert!(!config.debug);
@@ -82,7 +82,7 @@
 //!
 //! ```rust
 //! use beardog_types::canonical::config::app::CanonicalAppConfig;
-//! use std::collections::HashMap;
+//! use std::collections::BTreeMap;
 //!
 //! let mut config = CanonicalAppConfig::default();
 //!
@@ -109,7 +109,7 @@
 //! when wrapped in `Arc<AppConfig>`.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Canonical application configuration - consolidates all app-related configs
 ///
@@ -130,7 +130,7 @@ use std::collections::HashMap;
 ///
 /// ```rust
 /// use beardog_types::canonical::config::app::{CanonicalAppConfig, LogLevel};
-/// use std::collections::HashMap;
+/// use std::collections::BTreeMap;
 ///
 /// // Create configuration
 /// let mut config = CanonicalAppConfig {
@@ -139,8 +139,8 @@ use std::collections::HashMap;
 ///     environment: "production".to_string(),
 ///     debug: false,
 ///     log_level: LogLevel::Info,
-///     features: HashMap::new(),
-///     metadata: HashMap::new(),
+///     features: BTreeMap::new(),
+///     metadata: BTreeMap::new(),
 /// };
 ///
 /// // Configure features
@@ -170,11 +170,11 @@ pub struct CanonicalAppConfig {
 
     /// Feature flags
     /// Mapping of features
-    pub features: HashMap<String, bool>,
+    pub features: BTreeMap<String, bool>,
 
     /// Metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Log levels for application logging

@@ -135,7 +135,7 @@ mod tests {
         let not_before = x509_cert::time::Time::try_from(now).unwrap();
 
         let future = if valid_days >= 0 {
-            now + Duration::from_secs(valid_days as u64 * 86_400)
+            now + Duration::from_secs(valid_days.cast_unsigned() * 86_400)
         } else {
             now - Duration::from_secs(valid_days.unsigned_abs() * 86_400)
         };

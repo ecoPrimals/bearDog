@@ -7,7 +7,7 @@
 
 use super::super::config::HybridIntelligenceConfig;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::time::{Duration, SystemTime};
 use uuid::Uuid;
 use beardog_errors::BearDogError;
@@ -87,7 +87,7 @@ pub struct DecisionContext {
     pub required_confidence: DecisionConfidence,
     
     /// Additional context metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Result of a decision process
@@ -138,7 +138,7 @@ pub struct AlternativeOption {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfidenceMetrics {
     /// Overall confidence distribution
-    pub confidence_distribution: HashMap<String, u32>,
+    pub confidence_distribution: BTreeMap<String, u32>,
     
     /// Average confidence score
     pub average_confidence: f64,
@@ -147,7 +147,7 @@ pub struct ConfidenceMetrics {
     pub confidence_trend: Vec<ConfidenceTrendPoint>,
     
     /// Model accuracy by confidence level
-    pub accuracy_by_confidence: HashMap<String, f64>,
+    pub accuracy_by_confidence: BTreeMap<String, f64>,
 }
 
 /// Point in confidence trend analysis
@@ -170,13 +170,13 @@ pub struct DecisionMetrics {
     pub total_decisions: u64,
     
     /// Decisions by confidence level
-    pub decisions_by_confidence: HashMap<String, u32>,
+    pub decisions_by_confidence: BTreeMap<String, u32>,
     
     /// Average processing time
     pub avg_processing_time: Duration,
     
     /// Success rate by confidence level
-    pub success_rate_by_confidence: HashMap<String, f64>,
+    pub success_rate_by_confidence: BTreeMap<String, f64>,
     
     /// Feedback statistics
     pub feedback_stats: FeedbackStatistics,
@@ -460,10 +460,10 @@ impl Default for DecisionEngine {
 impl Default for ConfidenceMetrics {
     fn default() -> Self {
         Self {
-            confidence_distribution: HashMap::new(),
+            confidence_distribution: BTreeMap::new(),
             average_confidence: 0.5,
             confidence_trend: Vec::new(),
-            accuracy_by_confidence: HashMap::new(),
+            accuracy_by_confidence: BTreeMap::new(),
         }
     }
 }
@@ -472,9 +472,9 @@ impl Default for DecisionMetrics {
     fn default() -> Self {
         Self {
             total_decisions: 0,
-            decisions_by_confidence: HashMap::new(),
+            decisions_by_confidence: BTreeMap::new(),
             avg_processing_time: Duration::from_millis(0),
-            success_rate_by_confidence: HashMap::new(),
+            success_rate_by_confidence: BTreeMap::new(),
             feedback_stats: FeedbackStatistics::default(),
         }
     }
@@ -507,7 +507,7 @@ impl DecisionContext {
             priority: 5,
             timeout: timeout_config.ai_decision_duration(),
             required_confidence: DecisionConfidence::Medium,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 }

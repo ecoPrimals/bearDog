@@ -24,7 +24,7 @@ use beardog_types::canonical::providers_unified::traits::{
 };
 use chrono::Utc;
 use serde_json::json;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::time::SystemTime;
 
 // ---------------------------------------------------------------------------
@@ -346,7 +346,7 @@ fn security_dtos_serde() {
         resource: None,
         action: None,
         result: SecurityResult::Denied,
-        details: HashMap::new(),
+        details: BTreeMap::new(),
         severity: SecuritySeverity::Critical,
     };
     serde_json::to_string(&ev).unwrap();
@@ -380,8 +380,8 @@ fn security_dtos_serde() {
     serde_json::to_string(&q).unwrap();
     let st = AuditStats {
         total_events: 0,
-        events_by_type: HashMap::new(),
-        events_by_severity: HashMap::new(),
+        events_by_type: BTreeMap::new(),
+        events_by_severity: BTreeMap::new(),
         success_rate: 0.0,
         average_events_per_day: 0.0,
         last_event_time: None,
@@ -392,7 +392,7 @@ fn security_dtos_serde() {
         session_id: None,
         resource: "r".into(),
         action: "a".into(),
-        environment: HashMap::new(),
+        environment: BTreeMap::new(),
         timestamp: Utc::now(),
     };
     serde_json::to_string(&pc).unwrap();
@@ -403,7 +403,7 @@ fn security_dtos_serde() {
         permissions: vec![],
         expires_at: None,
         error_message: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
     serde_json::to_string(&ar).unwrap();
     let ss = SecureSession {
@@ -412,7 +412,7 @@ fn security_dtos_serde() {
         created_at: Utc::now(),
         expires_at: Utc::now(),
         permissions: vec![],
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
         is_active: true,
     };
     serde_json::to_string(&ss).unwrap();
