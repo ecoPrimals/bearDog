@@ -373,7 +373,7 @@ panic = "abort"
 # default = ["btsp-api"]  # DEPRECATED: BTSP now uses Unix sockets
 default = []
 # FIDO2 support - Pure Rust (ecoBin compliant, zero C dependencies)
-fido2 = ["beardog-security/fido2", "dep:beardog-hid"]
+fido2 = ["beardog-security/fido2", "beardog-tunnel/ctap2", "dep:beardog-hid"]
 # mDNS discovery support for primal-to-primal runtime discovery
 mdns = ["beardog-core/mdns"]
 # BTSP HTTP API DEPRECATED - evolved to Unix socket JSON-RPC!

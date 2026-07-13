@@ -49,6 +49,7 @@ impl MethodHandler for Fido2Handler {
             "beardog.fido2.discover",
             "beardog.fido2.register",
             "beardog.fido2.authenticate",
+            "beardog.fido2.entropy",
         ]
     }
 
@@ -62,6 +63,7 @@ impl MethodHandler for Fido2Handler {
             "beardog.fido2.discover" => handle_fido2_discover(params).await,
             "beardog.fido2.register" => handle_fido2_register(params).await,
             "beardog.fido2.authenticate" => handle_fido2_authenticate(params).await,
+            "beardog.fido2.entropy" => handle_fido2_entropy(params).await,
             _ => Err(format!("Unknown FIDO2 method: {method}").into()),
         }
     }
@@ -274,7 +276,7 @@ async fn handle_fido2_authenticate(params: Option<&Value>) -> Result<Value, supe
 
         let device_path = resolve_device_path(_device_path).await?;
 
-        let _credential_id_bytes = BASE64
+        let credential_id_bytes = BASE64
             .decode(credential_id)
             .map_err(|e| format!("Invalid base64 credential_id: {e}"))?;
 
@@ -284,9 +286,8 @@ async fn handle_fido2_authenticate(params: Option<&Value>) -> Result<Value, supe
 
         let provider = create_ctap2_provider(&device_path, rp_id).await?;
 
-        let key_id = credential_id;
         let signature_bytes = provider
-            .sign_with_device(key_id, &challenge_bytes)
+            .authenticate_with_credential(&credential_id_bytes, &challenge_bytes)
             .await
             .map_err(|e| format!("GetAssertion failed: {e}"))?;
 
@@ -312,6 +313,97 @@ async fn handle_fido2_authenticate(params: Option<&Value>) -> Result<Value, supe
         Err(
             "FIDO2 feature not enabled — rebuild bearDog with --features fido2 to use \
              hardware security keys"
+                .to_string()
+                .into(),
+        )
+    }
+}
+
+/// Harvest hardware entropy from a FIDO2 device.
+///
+/// Generates a random challenge, requests a GetAssertion, and mixes the
+/// resulting signature bytes (which contain the authenticator's hardware RNG
+/// nonce) with the challenge via BLAKE3 to produce uniform entropy.
+///
+/// Requires physical presence (user must touch the security key).
+///
+/// # Parameters
+///
+/// - `rp_id` (string, required): relying party identifier
+/// - `credential_id` (string, required): base64-encoded credential ID from registration
+/// - `device_path` (string, optional): HID device path
+///
+/// # Returns
+///
+/// ```json
+/// {
+///   "entropy": "<base64, 32 bytes>",
+///   "source": "fido2_hardware",
+///   "tier": 2,
+///   "user_present": true
+/// }
+/// ```
+async fn handle_fido2_entropy(params: Option<&Value>) -> Result<Value, super::HandlerError> {
+    let params = params.ok_or("Missing params for beardog.fido2.entropy")?;
+
+    let rp_id = params
+        .get("rp_id")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: rp_id")?;
+
+    let credential_id = params
+        .get("credential_id")
+        .and_then(|v| v.as_str())
+        .ok_or("Missing required parameter: credential_id")?;
+
+    let _device_path = params.get("device_path").and_then(|v| v.as_str());
+
+    #[cfg(feature = "ctap2")]
+    {
+        use base64::Engine;
+        use base64::engine::general_purpose::STANDARD as BASE64;
+
+        let device_path = resolve_device_path(_device_path).await?;
+
+        let credential_id_bytes = BASE64
+            .decode(credential_id)
+            .map_err(|e| format!("Invalid base64 credential_id: {e}"))?;
+
+        let challenge: [u8; 32] = rand::random();
+
+        let provider = create_ctap2_provider(&device_path, rp_id).await?;
+
+        let signature_bytes = provider
+            .authenticate_with_credential(&credential_id_bytes, &challenge)
+            .await
+            .map_err(|e| format!("Entropy harvest failed: {e}"))?;
+
+        let entropy = blake3::keyed_hash(
+            blake3::hash(b"beardog_fido2_entropy_v1").as_bytes(),
+            &[challenge.as_slice(), signature_bytes.as_slice()].concat(),
+        );
+
+        info!(
+            rp_id,
+            entropy_len = 32,
+            sig_source_len = signature_bytes.len(),
+            "FIDO2 hardware entropy harvested (Tier 2)"
+        );
+
+        Ok(json!({
+            "entropy": BASE64.encode(entropy.as_bytes()),
+            "source": "fido2_hardware",
+            "tier": 2,
+            "user_present": true,
+        }))
+    }
+
+    #[cfg(not(feature = "ctap2"))]
+    {
+        let _ = (rp_id, credential_id);
+        Err(
+            "FIDO2 feature not enabled — rebuild bearDog with --features fido2 to use \
+             hardware entropy from security keys"
                 .to_string()
                 .into(),
         )
@@ -381,10 +473,11 @@ mod tests {
     fn fido2_handler_method_list() {
         let handler = Fido2Handler::new();
         let methods = handler.methods();
-        assert_eq!(methods.len(), 3);
+        assert_eq!(methods.len(), 4);
         assert!(methods.contains(&"beardog.fido2.discover"));
         assert!(methods.contains(&"beardog.fido2.register"));
         assert!(methods.contains(&"beardog.fido2.authenticate"));
+        assert!(methods.contains(&"beardog.fido2.entropy"));
     }
 
     #[tokio::test]
@@ -463,6 +556,30 @@ mod tests {
             .await
             .expect_err("no challenge");
         assert!(err.contains("challenge"));
+    }
+
+    #[tokio::test]
+    async fn fido2_entropy_requires_params() {
+        let err = handle_fido2_entropy(None).await.expect_err("no params");
+        assert!(err.contains("Missing params"));
+    }
+
+    #[tokio::test]
+    async fn fido2_entropy_requires_rp_id() {
+        let params = json!({"credential_id": "Y3JlZA=="});
+        let err = handle_fido2_entropy(Some(&params))
+            .await
+            .expect_err("no rp_id");
+        assert!(err.contains("rp_id"));
+    }
+
+    #[tokio::test]
+    async fn fido2_entropy_requires_credential_id() {
+        let params = json!({"rp_id": "primals.eco"});
+        let err = handle_fido2_entropy(Some(&params))
+            .await
+            .expect_err("no credential_id");
+        assert!(err.contains("credential_id"));
     }
 
     #[tokio::test]

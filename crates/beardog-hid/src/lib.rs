@@ -142,22 +142,9 @@ pub async fn discover() -> Result<Vec<HidDeviceInfo>, beardog_errors::BearDogErr
         linux::discover_hidraw().await
     }
 
-    #[cfg(target_os = "android")]
+    #[cfg(not(target_os = "linux"))]
     {
-        // Planned: Integrate with crates/beardog-tunnel/src/tunnel/hsm/android_strongbox/ for
-        // Pure Rust JNI HID access on Android. Phase 2 work.
-        compile_error!(
-            "Android support: integrate with existing android_strongbox module (Pure Rust JNI)"
-        );
-    }
-
-    #[cfg(not(any(target_os = "linux", target_os = "android")))]
-    {
-        compile_error!(
-            "Unsupported platform for Pure Rust HID. \
-             Supported: Linux (/dev/hidraw), Android (StrongBox). \
-             To add support: implement Pure Rust HID access for your platform."
-        );
+        Ok(Vec::new())
     }
 }
 
@@ -202,7 +189,7 @@ pub async fn open_device(path: &str) -> Result<HidDeviceBackend, beardog_errors:
     #[cfg(not(target_os = "linux"))]
     {
         let _ = path; // Suppress unused warning
-        Err(beardog_errors::BearDogError::unsupported(
+        Err(beardog_errors::BearDogError::unsupported_platform(
             "HID device opening not yet implemented for this platform",
         ))
     }

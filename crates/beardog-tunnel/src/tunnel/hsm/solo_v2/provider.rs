@@ -316,63 +316,46 @@ impl SoloV2Provider {
         }
     }
 
-    /// Sign data using a key on the Solo V2 device
-    ///
-    /// # Arguments
-    ///
-    /// * `key_id` - The ID of the key to use for signing
-    /// * `data` - The data to sign
-    ///
-    /// # Returns
-    ///
-    /// The signature bytes
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if:
-    /// - Key not found
-    /// - Device not connected
-    /// - PIN verification fails
-    /// - Signing operation fails
-    ///
-    /// # Note
-    ///
-    /// With the `ctap2` feature enabled, this sends a real CTAP2 `GetAssertion`
-    /// command via `HidCtap2Transport`. Without the feature, returns a capability error.
-    /// Full PIN/UV verification requires Phase 2 `ClientPIN` protocol.
-    /// 4. Signature extraction
+    /// Sign data using a key on the Solo V2 device (requires prior registration
+    /// in the same provider session — use [`Self::authenticate_with_credential`]
+    /// for stateless assertion with a known `credential_id`).
     pub async fn sign_with_device(
         &self,
         key_id: &str,
         _data: &[u8],
     ) -> Result<Vec<u8>, BearDogError> {
-        // Get key handle
         let handles = self.key_handles.read().await;
-        let _handle = handles
+        let handle = handles
             .get(key_id)
             .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))?
             .clone();
         drop(handles);
 
-        // Check device connection
+        self.authenticate_with_credential(&handle.credential_id, _data)
+            .await
+    }
+
+    /// Stateless CTAP2 `GetAssertion` — takes raw `credential_id` bytes directly.
+    ///
+    /// Unlike [`Self::sign_with_device`], this does not require the credential
+    /// to have been registered in the same provider session. The CTAP2 protocol
+    /// uses the `credential_id` as an allow-list entry, so the authenticator
+    /// looks up the credential internally.
+    pub async fn authenticate_with_credential(
+        &self,
+        credential_id: &[u8],
+        data: &[u8],
+    ) -> Result<Vec<u8>, BearDogError> {
         if !self.device_info.is_connected {
             return Err(BearDogError::system(
                 "Solo V2 device not connected".to_string(),
             ));
         }
 
-        // Real CTAP2 signing implementation:
-        // 1. Verify PIN if device requires it
-        // 2. Send CTAP2 authenticatorGetAssertion with credential ID
-        // 3. Handle user presence verification (touch/biometric)
-        // 4. Extract signature from assertion response
-
         #[cfg(feature = "ctap2")]
         {
-            // CTAP2 signing implementation
             use sha2::{Digest, Sha256};
 
-            // Step 1: Verify PIN if needed
             let pin_auth = {
                 let pin_config = self.pin_config.read().await;
                 pin_config
@@ -381,31 +364,33 @@ impl SoloV2Provider {
                     .map(|pin| pin.as_bytes().to_vec())
             };
 
-            // Step 2: Prepare assertion parameters
             let rp_id = &self.config.relying_party_id;
             let client_data_hash = {
                 let mut hasher = Sha256::new();
-                hasher.update(_data);
+                hasher.update(data);
                 hasher.finalize().to_vec()
             };
 
-            // Step 3: Send CTAP2 GetAssertion command with credential ID
             let result = self
                 .ctap2_get_assertion(
                     rp_id,
                     &client_data_hash,
-                    &_handle.credential_id,
+                    credential_id,
                     pin_auth.as_deref(),
                 )
                 .await?;
 
-            // Step 4: Extract and return signature
-            info!("Signed data using Solo V2 device, key: {}", key_id);
+            info!(
+                cred_len = credential_id.len(),
+                sig_len = result.signature.len(),
+                "CTAP2 GetAssertion complete (hardware-attested)"
+            );
             Ok(result.signature)
         }
 
         #[cfg(not(feature = "ctap2"))]
         {
+            let _ = (credential_id, data);
             Err(BearDogError::requires_capability(
                 "ctap2",
                 "Solo V2 signing requires the ctap2 Cargo feature, a CTAP2 transport, and a connected device; enable with --features ctap2 or use a software HSM for development",

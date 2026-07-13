@@ -38,6 +38,9 @@ pub struct GetAssertionResponse {
 
 /// Build a CTAP2 `authenticatorMakeCredential` message body: `[cmd][CBOR map]`.
 ///
+/// When `enable_hmac_secret` is true, the `hmac-secret` extension is requested
+/// so the credential can later produce hardware-bound HMAC outputs for entropy.
+///
 /// # Errors
 ///
 /// Returns an error if CBOR encoding fails (should not occur for bounded inputs).
@@ -48,6 +51,27 @@ pub fn build_make_credential(
     client_data_hash: &[u8],
     alg: i64,
     pin_uv_auth: Option<(&[u8], u64)>,
+) -> Result<Vec<u8>, BearDogError> {
+    build_make_credential_ext(
+        rp_id,
+        user_id,
+        user_name,
+        client_data_hash,
+        alg,
+        pin_uv_auth,
+        false,
+    )
+}
+
+/// Extended `MakeCredential` builder with hmac-secret extension support.
+pub fn build_make_credential_ext(
+    rp_id: &str,
+    user_id: &[u8],
+    user_name: &str,
+    client_data_hash: &[u8],
+    alg: i64,
+    pin_uv_auth: Option<(&[u8], u64)>,
+    enable_hmac_secret: bool,
 ) -> Result<Vec<u8>, BearDogError> {
     let mut map: Vec<(CborValue, CborValue)> = Vec::new();
 
@@ -99,6 +123,15 @@ pub fn build_make_credential(
         ),
     ]);
     map.push((CborValue::Integer(4.into()), CborValue::Array(vec![param])));
+
+    // 6: extensions (hmac-secret for hardware entropy)
+    if enable_hmac_secret {
+        let extensions = CborValue::Map(vec![(
+            CborValue::Text("hmac-secret".to_string()),
+            CborValue::Bool(true),
+        )]);
+        map.push((CborValue::Integer(6.into()), extensions));
+    }
 
     // 7: options (resident key + user presence)
     let opts = CborValue::Map(vec![

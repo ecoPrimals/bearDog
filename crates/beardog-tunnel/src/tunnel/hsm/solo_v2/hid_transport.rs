@@ -287,8 +287,8 @@ async fn read_ctaphid_ctap_response<D: HidDevice + ?Sized>(
 /// Test-only mock CTAP2 transport (deterministic CBOR payloads for provider tests).
 #[cfg(test)]
 pub struct MockCtap2Transport {
-    make_cred_response: Vec<u8>,
-    get_assertion_response: Vec<u8>,
+    pub(crate) make_cred_response: Vec<u8>,
+    pub(crate) get_assertion_response: Vec<u8>,
 }
 
 #[cfg(test)]
@@ -346,6 +346,7 @@ async fn mock_send_receive(
     mock: &mut MockCtap2Transport,
     command: &[u8],
 ) -> Result<Vec<u8>, BearDogError> {
+    use super::ctap2_protocol::{CTAP2_GET_ASSERTION, CTAP2_MAKE_CREDENTIAL};
     match command.first() {
         Some(&x) if x == CTAP2_MAKE_CREDENTIAL => Ok(mock.make_cred_response.clone()),
         Some(&x) if x == CTAP2_GET_ASSERTION => Ok(mock.get_assertion_response.clone()),
