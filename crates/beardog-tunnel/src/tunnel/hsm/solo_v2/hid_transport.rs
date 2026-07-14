@@ -21,6 +21,7 @@ const CONT_PAYLOAD_MAX: usize = 59;
 #[derive(Clone, Copy)]
 enum CtapHidCommand {
     Msg = 0x83,
+    Cbor = 0x90,
     Init = 0x86,
     Error = 0xBF,
     Keepalive = 0xBB,
@@ -161,7 +162,7 @@ async fn send_ctaphid_message<D: HidDevice + ?Sized>(
         cid_b[1],
         cid_b[2],
         cid_b[3],
-        CtapHidCommand::Msg as u8,
+        CtapHidCommand::Cbor as u8,
         bcnt_hi,
         bcnt_lo,
     ];
@@ -194,9 +195,9 @@ async fn send_ctaphid_message<D: HidDevice + ?Sized>(
     Ok(())
 }
 
-/// Read a full CTAP2 payload (`[status][CBOR...]`) from `CTAPHID_MSG` response packets.
+/// Read a full CTAP2 payload (`[status][CBOR...]`) from `CTAPHID_CBOR`/`CTAPHID_MSG` response packets.
 ///
-/// First packet: `[CID][0x83][BCNTH][BCNTL][payload ≤57]`. Continuation: `[CID][SEQ][payload ≤59]`.
+/// First packet: `[CID][0x90|0x83][BCNTH][BCNTL][payload ≤57]`. Continuation: `[CID][SEQ][payload ≤59]`.
 async fn read_ctaphid_ctap_response<D: HidDevice + ?Sized>(
     device: &mut D,
     expected_cid: u32,
@@ -255,9 +256,9 @@ async fn read_ctaphid_ctap_response<D: HidDevice + ?Sized>(
         }
 
         if assembled.is_empty() {
-            if b4 != CtapHidCommand::Msg as u8 {
+            if b4 != CtapHidCommand::Cbor as u8 && b4 != CtapHidCommand::Msg as u8 {
                 return Err(BearDogError::system(format!(
-                    "Expected CTAPHID MSG (0x83), got 0x{b4:02x}"
+                    "Expected CTAPHID CBOR (0x90) or MSG (0x83), got 0x{b4:02x}"
                 )));
             }
             if n < 7 {
