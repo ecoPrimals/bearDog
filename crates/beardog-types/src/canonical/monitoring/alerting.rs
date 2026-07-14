@@ -7,7 +7,7 @@
 use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::Duration;
 
 use super::MonitoringConfigValidation;
@@ -91,10 +91,10 @@ pub struct AlertRule {
     pub duration: Duration,
     /// Labels
     /// Mapping of labels
-    pub labels: HashMap<String, String>,
+    pub labels: BTreeMap<String, String>,
     /// Annotations
     /// Mapping of annotations
-    pub annotations: HashMap<String, String>,
+    pub annotations: BTreeMap<String, String>,
 }
 
 /// Alert conditions
@@ -130,7 +130,7 @@ pub enum AlertCondition {
         /// Expression language snippet evaluated by the alerting engine.
         expression: String,
         /// Bound parameters for the expression.
-        parameters: HashMap<String, serde_json::Value>,
+        parameters: BTreeMap<String, serde_json::Value>,
     },
 }
 
@@ -191,7 +191,7 @@ pub struct AlertNotificationConfig {
     pub channels: Vec<NotificationChannel>,
     /// Templates
     /// Mapping of templates
-    pub templates: HashMap<String, NotificationTemplate>,
+    pub templates: BTreeMap<String, NotificationTemplate>,
     /// Routing
     /// The routing value
     pub routing: NotificationRouting,
@@ -202,7 +202,7 @@ impl Default for AlertNotificationConfig {
         Self {
             enabled: true,
             channels: Vec::new(),
-            templates: HashMap::new(),
+            templates: BTreeMap::new(),
             routing: NotificationRouting::default(),
         }
     }
@@ -218,7 +218,7 @@ pub struct NotificationChannel {
     /// The channel type value
     pub channel_type: NotificationChannelType,
     /// Config
-    pub config: HashMap<String, serde_json::Value>,
+    pub config: BTreeMap<String, serde_json::Value>,
     /// Enabled
     /// Whether feature is enabled
     pub enabled: bool,

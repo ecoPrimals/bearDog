@@ -9,7 +9,7 @@
 use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::io::ErrorKind;
 use std::time::Duration;
 
@@ -73,7 +73,7 @@ pub struct DeviceInfo {
     pub capabilities: Vec<String>,
     /// Additional device metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 ///
@@ -215,8 +215,8 @@ impl DeviceManager {
     fn build_device_metadata_with(
         device_id: &str,
         get: &impl Fn(&str) -> Option<String>,
-    ) -> HashMap<String, String> {
-        let mut map = HashMap::new();
+    ) -> BTreeMap<String, String> {
+        let mut map = BTreeMap::new();
 
         map.insert("device_id".to_string(), device_id.to_string());
         map.insert(
@@ -495,7 +495,7 @@ impl DeviceManager {
                 // Check for StrongBox support
                 let strongbox_available = self.has_strongbox_support(&device_id);
 
-                let mut metadata = HashMap::new();
+                let mut metadata = BTreeMap::new();
                 metadata.insert("adb_id".to_string(), device_id.clone());
                 metadata.insert("api_level".to_string(), api_level);
                 metadata.insert("model".to_string(), model.clone());

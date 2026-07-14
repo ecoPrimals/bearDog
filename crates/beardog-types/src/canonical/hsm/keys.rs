@@ -6,7 +6,7 @@ use crate::constants::time;
 // Provides definitions for HSM keys, metadata, and lifecycle management
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 #[expect(
@@ -172,7 +172,7 @@ pub struct KeyMetadata {
     pub tags: Vec<String>,
     /// Custom attributes
     /// Mapping of attributes
-    pub attributes: HashMap<String, String>,
+    pub attributes: BTreeMap<String, String>,
     /// Key version
     /// Number of version
     pub version: u32,
@@ -187,7 +187,7 @@ impl Default for KeyMetadata {
             description: None,
             owner: "system".to_string(),
             tags: Vec::new(),
-            attributes: HashMap::new(),
+            attributes: BTreeMap::new(),
             version: 1,
             parent_key_id: None,
         }
@@ -332,7 +332,7 @@ pub struct KeyOperationRequest {
     pub input_data: Vec<u8>,
     /// Additional parameters
     /// Mapping of parameters
-    pub parameters: HashMap<String, String>,
+    pub parameters: BTreeMap<String, String>,
     /// Idempotency / tracing token echoed in HSM audit logs.
     pub request_id: String,
 }
@@ -380,7 +380,7 @@ pub struct KeyOperationResponse {
     pub output_data: Vec<u8>,
     /// Operation metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
     /// Processing time in milliseconds
     pub processing_time_ms: u64,
 }

@@ -5,7 +5,7 @@
 // Fundamental provider configuration types and enums.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Core provider settings
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -38,7 +38,7 @@ pub struct CoreProviderSettings {
 
     /// Provider metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, serde_json::Value>,
+    pub metadata: BTreeMap<String, serde_json::Value>,
 
     /// Collection of tags
     pub tags: Vec<String>,

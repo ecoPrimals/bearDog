@@ -83,7 +83,7 @@ mod ml_models_gap_tests {
         let _ = PredictionValue::AnomalyScore(0.8);
         let _ = PredictionValue::Custom(serde_json::json!({"key": "value"}));
 
-        let mut probs = std::collections::HashMap::new();
+        let mut probs = std::collections::BTreeMap::new();
         probs.insert("class_a".to_string(), 0.7);
         let _ = PredictionValue::Probability(probs);
     }

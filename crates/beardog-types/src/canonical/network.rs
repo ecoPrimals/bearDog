@@ -8,7 +8,7 @@ use crate::constants::domains::network::addresses::WILDCARD_IPV4;
 use beardog_config::domains::network_ports::DEFAULT_API_PORT;
 use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::Duration;
 
 /// Bind address, port, TLS, pooling, and timeout settings for network listeners and clients.
@@ -183,7 +183,7 @@ pub struct BackendServer {
     pub enabled: bool,
     /// Server metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Health check configuration

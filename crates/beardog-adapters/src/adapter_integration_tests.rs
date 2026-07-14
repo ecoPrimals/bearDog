@@ -8,7 +8,7 @@ use crate::{
     AIIntegrationResponse, AIResponseMetadata, AdapterConfig, CapabilityRequest,
     CapabilityResponse, UniversalAdapter, VendorDiscoveryContext,
 };
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // ============================================================================
 // Test 1: AdapterConfig Default Values
@@ -75,7 +75,7 @@ fn test_adapter_config_serialization() {
 
 #[test]
 fn test_capability_request_construction() {
-    let mut params = HashMap::new();
+    let mut params = BTreeMap::new();
     params.insert("key1".to_string(), "value1".to_string());
     params.insert("key2".to_string(), "value2".to_string());
 
@@ -103,7 +103,7 @@ fn test_capability_response_success() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: adapters
     // TEST_PRIORITY: normal
-    let mut metadata = HashMap::new();
+    let mut metadata = BTreeMap::new();
     metadata.insert("provider".to_string(), "test_provider".to_string());
 
     let response = CapabilityResponse {
@@ -135,7 +135,7 @@ fn test_capability_response_error() {
         success: false,
         data: None,
         error: Some("Operation failed".to_string()),
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
 
     assert!(!response.success);
@@ -212,14 +212,6 @@ fn test_vendor_discovery_context_defaults() {
 
     assert_eq!(context.discovery_method, "capability_based");
     assert_eq!(context.priority, 1);
-    // Capacity may vary based on HashMap implementation
-    assert!(
-        context.context.capacity() >= 16,
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: adapters
-        // TEST_PRIORITY: normal
-        "Context should have at least 16 capacity"
-    );
     assert!(context.context.is_empty());
 }
 
@@ -229,7 +221,7 @@ fn test_vendor_discovery_context_defaults() {
 
 #[test]
 fn test_vendor_discovery_context_with_data() {
-    let mut ctx_data = HashMap::new();
+    let mut ctx_data = BTreeMap::new();
     ctx_data.insert("region".to_string(), "us-west-2".to_string());
     ctx_data.insert("environment".to_string(), "production".to_string());
 

@@ -25,7 +25,7 @@ use super::canonical_core::CanonicalType;
 ///
 /// ```rust,no_run
 /// use beardog_types::canonical::{SecurityAuditEvent, AuditOutcome};
-/// use std::collections::HashMap;
+/// use std::collections::BTreeMap;
 ///
 /// // Record a successful login
 /// let event = SecurityAuditEvent {
@@ -36,7 +36,7 @@ use super::canonical_core::CanonicalType;
 ///     action: "login".to_string(),
 ///     outcome: AuditOutcome::Success,
 ///     timestamp: chrono::Utc::now(),
-///     metadata: HashMap::from([
+///     metadata: BTreeMap::from([
 ///         ("ip_address".to_string(), serde_json::json!("192.168.1.1")),
 ///         ("user_agent".to_string(), serde_json::json!("Mozilla/5.0")),
 ///     ]),
@@ -69,9 +69,9 @@ use super::canonical_core::CanonicalType;
 ///
 /// ```rust,no_run
 /// use beardog_types::canonical::SecurityAuditEvent;
-/// use std::collections::HashMap;
+/// use std::collections::BTreeMap;
 ///
-/// let mut metadata = HashMap::new();
+/// let mut metadata = BTreeMap::new();
 /// metadata.insert("ip_address".to_string(), serde_json::json!("192.168.1.1"));
 /// metadata.insert("session_id".to_string(), serde_json::json!("abc123"));
 /// metadata.insert("risk_score".to_string(), serde_json::json!(0.2));
@@ -109,7 +109,7 @@ pub struct SecurityAuditEvent {
     pub timestamp: chrono::DateTime<chrono::Utc>,
     /// Additional event-specific metadata
     /// The metadata value
-    pub metadata: std::collections::HashMap<String, serde_json::Value>,
+    pub metadata: std::collections::BTreeMap<String, serde_json::Value>,
 }
 
 /// Audit outcome
@@ -135,7 +135,7 @@ impl Default for SecurityAuditEvent {
             action: "unknown".to_string(),
             outcome: AuditOutcome::Error,
             timestamp: chrono::Utc::now(),
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::BTreeMap::new(),
         }
     }
 }

@@ -12,7 +12,7 @@
 #[cfg(test)]
 mod adapter_operations {
     use crate::{AdapterConfig, CapabilityRequest, UniversalAdapter};
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
     #[test]
     fn test_adapter_creation() {
@@ -78,7 +78,7 @@ mod adapter_operations {
 
     #[test]
     fn test_capability_request_creation() {
-        let mut params = HashMap::new();
+        let mut params = BTreeMap::new();
         params.insert("key1".to_string(), "value1".to_string());
 
         let request = CapabilityRequest {
@@ -97,7 +97,7 @@ mod adapter_operations {
         let request = CapabilityRequest {
             capability: "security".to_string(),
             operation: "encrypt".to_string(),
-            parameters: HashMap::new(),
+            parameters: BTreeMap::new(),
         };
 
         let json = serde_json::to_string(&request).expect("Should serialize");
@@ -107,7 +107,7 @@ mod adapter_operations {
 
     #[test]
     fn test_capability_request_with_multiple_params() {
-        let mut params = HashMap::new();
+        let mut params = BTreeMap::new();
         params.insert("param1".to_string(), "value1".to_string());
         params.insert("param2".to_string(), "value2".to_string());
         params.insert("param3".to_string(), "value3".to_string());
@@ -126,7 +126,7 @@ mod adapter_operations {
         let request = CapabilityRequest {
             capability: "test".to_string(),
             operation: "no_params".to_string(),
-            parameters: HashMap::new(),
+            parameters: BTreeMap::new(),
         };
 
         assert!(request.parameters.is_empty());
@@ -190,7 +190,7 @@ mod adapter_operations {
         let request1 = CapabilityRequest {
             capability: "test".to_string(),
             operation: "op".to_string(),
-            parameters: HashMap::new(),
+            parameters: BTreeMap::new(),
         };
         let request2 = request1.clone();
 
@@ -245,7 +245,7 @@ mod adapter_operations {
 
     #[test]
     fn test_capability_request_large_params() {
-        let mut params = HashMap::new();
+        let mut params = BTreeMap::new();
         for i in 0..100 {
             params.insert(format!("param{i}"), format!("value{i}"));
         }
@@ -273,7 +273,7 @@ mod adapter_operations {
 
     #[test]
     fn test_capability_request_special_characters() {
-        let mut params = HashMap::new();
+        let mut params = BTreeMap::new();
         params.insert("key!@#$%".to_string(), "value^&*()".to_string());
 
         let request = CapabilityRequest {
@@ -307,7 +307,7 @@ mod adapter_operations {
         let request = CapabilityRequest {
             capability: String::new(),
             operation: String::new(),
-            parameters: HashMap::new(),
+            parameters: BTreeMap::new(),
         };
 
         assert!(request.capability.is_empty());

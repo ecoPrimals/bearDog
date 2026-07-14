@@ -8,7 +8,7 @@
 #[cfg(test)]
 mod adapter_coverage_tests {
     use super::super::*;
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
     /// `TEST_CATEGORY`: unit
     /// `TEST_DOMAIN`: adapters
@@ -21,7 +21,7 @@ mod adapter_coverage_tests {
         let invalid_request = CapabilityRequest {
             capability: String::new(),
             operation: "execute".to_string(),
-            parameters: HashMap::new(),
+            parameters: BTreeMap::new(),
         };
 
         // Should handle empty capability name
@@ -175,7 +175,7 @@ mod adapter_coverage_tests {
         let request = CapabilityRequest {
             capability: "nonexistent".to_string(),
             operation: "execute".to_string(),
-            parameters: HashMap::new(),
+            parameters: BTreeMap::new(),
         };
 
         // Should handle missing capability gracefully
@@ -191,7 +191,7 @@ mod adapter_coverage_tests {
         let valid_request = CapabilityRequest {
             capability: "encryption".to_string(),
             operation: "encrypt".to_string(),
-            parameters: HashMap::new(),
+            parameters: BTreeMap::new(),
         };
 
         assert!(!valid_request.capability.is_empty());

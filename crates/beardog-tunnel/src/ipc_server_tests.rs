@@ -146,7 +146,7 @@ fn test_capability_request_serialization() -> Result<(), BearDogError> {
             algorithms: vec!["ChaCha20".to_string()],
             key_types: vec!["X25519".to_string()],
         },
-        params: std::collections::HashMap::new(),
+        params: std::collections::BTreeMap::new(),
         request_id: "req_123".to_string(),
     };
 
@@ -179,7 +179,7 @@ async fn handle_message_capability_request_ok() -> Result<(), BearDogError> {
             algorithms: vec!["aes".to_string()],
             key_types: vec!["x25519".to_string()],
         },
-        params: std::collections::HashMap::new(),
+        params: std::collections::BTreeMap::new(),
         request_id: "r1".to_string(),
     };
     let out =
@@ -328,7 +328,7 @@ async fn handle_message_capability_request_err_returns_none() {
             algorithms: vec!["aes".to_string()],
             key_types: vec!["x25519".to_string()],
         },
-        params: std::collections::HashMap::new(),
+        params: std::collections::BTreeMap::new(),
         request_id: "fail-cap".to_string(),
     };
     let out =

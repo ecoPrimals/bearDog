@@ -2,7 +2,7 @@
 
 use super::*;
 use beardog_core::capabilities::{Capability, IpcEndpoint};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::Notify;
@@ -378,14 +378,14 @@ async fn test_register_uses_default_socket_path_when_no_unix_endpoint() {
         provides: vec![Capability::Custom {
             name: "custom_cap".to_string(),
             version: "1".to_string(),
-            properties: HashMap::new(),
+            properties: BTreeMap::new(),
         }],
         requires: vec![],
         endpoints: vec![IpcEndpoint::Http {
             bind_addr: "127.0.0.1:9".to_string(),
             tls: false,
         }],
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
     client
         .register(&caps)

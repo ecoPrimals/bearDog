@@ -6,7 +6,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Full-fidelity ML model record including metrics, features, and lifecycle timestamps.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,7 +48,7 @@ pub struct MlModel {
     /// Latest offline evaluation metrics for this artifact.
     pub performance_metrics: ModelPerformanceMetrics,
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Types of machine learning models
@@ -135,9 +135,9 @@ pub struct ModelPrediction {
     /// Normalized confidence for the top prediction or marginal.
     pub confidence: f64,
     /// Mapping of probability scores
-    pub probability_scores: HashMap<String, f64>,
+    pub probability_scores: BTreeMap<String, f64>,
     /// Mapping of feature importance
-    pub feature_importance: HashMap<String, f64>,
+    pub feature_importance: BTreeMap<String, f64>,
     /// Time spent computing this prediction on the serving path.
     pub prediction_time_ms: u64,
     /// The model version value
@@ -159,7 +159,7 @@ pub enum PredictionValue {
     Numeric(f64),
 
     /// Probability distribution
-    Probability(HashMap<String, f64>),
+    Probability(BTreeMap<String, f64>),
 
     /// Anomaly score
     AnomalyScore(f64),
@@ -174,7 +174,7 @@ pub struct ModelTrainingConfig {
     /// The algorithm value
     pub algorithm: String,
     /// Mapping of hyperparameters
-    pub hyperparameters: HashMap<String, serde_json::Value>,
+    pub hyperparameters: BTreeMap<String, serde_json::Value>,
     /// The training data path value
     pub training_data_path: String,
     /// Fraction of data reserved for validation (0.0–1.0).
@@ -226,7 +226,7 @@ impl MlModel {
             last_updated: now,
             is_active: false,
             performance_metrics: ModelPerformanceMetrics::default(),
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 
@@ -408,8 +408,8 @@ impl ModelPrediction {
             model_id: model_id.to_string(),
             prediction,
             confidence,
-            probability_scores: HashMap::new(),
-            feature_importance: HashMap::new(),
+            probability_scores: BTreeMap::new(),
+            feature_importance: BTreeMap::new(),
             prediction_time_ms: 0,
             model_version: "1.0.0".to_string(),
             timestamp: Utc::now(),

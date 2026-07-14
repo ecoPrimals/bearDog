@@ -7,7 +7,7 @@
 use crate::threat::types::IndicatorType;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Threat severity levels
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -127,7 +127,7 @@ pub struct ThreatIndicator {
     pub source: String,
     pub timestamp: DateTime<Utc>,
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
     /// The created at value
     pub created_at: DateTime<Utc>,
     /// Optional expires at
@@ -165,5 +165,5 @@ pub struct ThreatIntelligenceIndicator {
     pub last_seen: chrono::DateTime<chrono::Utc>,
     /// Additional metadata
     /// The metadata value
-    pub metadata: std::collections::HashMap<String, String>,
+    pub metadata: std::collections::BTreeMap<String, String>,
 }

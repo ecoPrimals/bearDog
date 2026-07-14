@@ -8,7 +8,7 @@ use beardog_errors::improved_results::OperationContext;
 use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -268,10 +268,10 @@ pub struct SecurityAuditEvent {
     pub risk_level: RiskLevel,
 
     /// Additional details
-    pub details: HashMap<String, String>,
+    pub details: BTreeMap<String, String>,
 
     /// Metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 
     /// Event timestamp
     pub timestamp: DateTime<Utc>,
@@ -289,8 +289,8 @@ impl Default for SecurityAuditEvent {
             success: false,
             result: false,
             risk_level: RiskLevel::Low,
-            details: HashMap::new(),
-            metadata: HashMap::new(),
+            details: BTreeMap::new(),
+            metadata: BTreeMap::new(),
             timestamp: Utc::now(),
         }
     }
@@ -326,7 +326,7 @@ pub struct ComponentHealth {
     pub last_check: DateTime<Utc>,
 
     /// Health metrics
-    pub metrics: HashMap<String, f64>,
+    pub metrics: BTreeMap<String, f64>,
 }
 
 /// Security provider health
@@ -342,7 +342,7 @@ pub struct SecurityProviderHealth {
     pub status: String,
 
     /// Component metadata
-    pub metadata: HashMap<String, ComponentHealth>,
+    pub metadata: BTreeMap<String, ComponentHealth>,
 
     /// Uptime in seconds
     pub uptime_seconds: u64,
@@ -395,7 +395,7 @@ pub struct SecurityProviderMetrics {
     pub rate_limit_violations: u64,
 
     /// Rate limit violations per user
-    pub rate_limit_violations_per_user: HashMap<String, u64>,
+    pub rate_limit_violations_per_user: BTreeMap<String, u64>,
 
     /// MFA tokens generated
     pub mfa_tokens_generated: u64,
@@ -697,7 +697,7 @@ pub fn create_migration_context() -> OperationContext {
         completed_at: Utc::now(),
         component: "beardog-security".to_string(),
         initiator: "migration".to_string(),
-        metadata: HashMap::with_capacity(16),
+        metadata: BTreeMap::new(),
     }
 }
 

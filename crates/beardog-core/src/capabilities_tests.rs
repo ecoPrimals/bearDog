@@ -15,7 +15,7 @@ fn expected_primal_name() -> String {
 mod capability_unit_tests {
     use super::super::*;
     use super::expected_primal_name;
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
     // ============================================================================
     // Unit Tests - Capability Manifest
@@ -199,7 +199,7 @@ mod capability_unit_tests {
 
     #[test]
     fn test_capability_custom_serialization() {
-        let mut properties = HashMap::new();
+        let mut properties = BTreeMap::new();
         properties.insert("key1".to_string(), "value1".to_string());
 
         let cap = Capability::Custom {
@@ -225,7 +225,7 @@ mod capability_unit_tests {
                 algorithms: vec!["any".to_string()],
                 key_types: vec!["any".to_string()],
             },
-            params: HashMap::new(),
+            params: BTreeMap::new(),
             request_id: "req_123".to_string(),
         };
 
@@ -336,7 +336,7 @@ mod capability_unit_tests {
 
     #[test]
     fn test_capability_request_with_complex_params() {
-        let mut params = HashMap::new();
+        let mut params = BTreeMap::new();
         params.insert(
             "nested".to_string(),
             serde_json::json!({
@@ -412,7 +412,7 @@ mod capability_e2e_tests {
                 algorithms: vec!["ChaCha20Poly1305".to_string()],
                 key_types: vec!["X25519".to_string()],
             },
-            params: std::collections::HashMap::from([(
+            params: std::collections::BTreeMap::from([(
                 "plaintext".to_string(),
                 serde_json::json!("test data"),
             )]),
@@ -433,7 +433,7 @@ mod capability_e2e_tests {
             capability: Capability::TrustEvaluation {
                 trust_models: vec!["family_based".to_string()],
             },
-            params: std::collections::HashMap::from([(
+            params: std::collections::BTreeMap::from([(
                 "peer_family_id".to_string(),
                 serde_json::json!("nat0"),
             )]),
@@ -460,7 +460,7 @@ mod capability_e2e_tests {
             }],
             requires: vec![],
             endpoints: vec![],
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::BTreeMap::new(),
         };
 
         let encryption_request = Capability::Encryption {
@@ -594,7 +594,7 @@ mod capability_chaos_tests {
             provides.push(Capability::Custom {
                 name: format!("capability_{i}"),
                 version: "1.0.0".to_string(),
-                properties: std::collections::HashMap::new(),
+                properties: std::collections::BTreeMap::new(),
             });
         }
 
@@ -605,7 +605,7 @@ mod capability_chaos_tests {
             provides,
             requires: vec![],
             endpoints: vec![],
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::BTreeMap::new(),
         };
 
         // Should handle large capability lists
@@ -698,7 +698,7 @@ mod capability_fault_tests {
 
     #[test]
     fn test_fault_very_large_json() {
-        let mut large_metadata = std::collections::HashMap::new();
+        let mut large_metadata = std::collections::BTreeMap::new();
         for i in 0..10000 {
             large_metadata.insert(format!("key_{i}"), format!("value_{i}"));
         }
@@ -758,7 +758,7 @@ mod capability_fault_tests {
             ],
             requires: vec![],
             endpoints: vec![],
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::BTreeMap::new(),
         };
 
         // Should handle duplicate capability types

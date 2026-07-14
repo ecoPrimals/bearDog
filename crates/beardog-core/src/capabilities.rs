@@ -11,7 +11,7 @@
 
 use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use beardog_types::constants::domains::network::ipc_discovery;
 
@@ -37,7 +37,7 @@ pub struct BearDogCapabilities {
     pub endpoints: Vec<IpcEndpoint>,
 
     /// Metadata (version, build info, etc)
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Generic capability descriptor
@@ -95,7 +95,7 @@ pub enum Capability {
         /// Capability version
         version: String,
         /// Custom properties specific to this capability
-        properties: HashMap<String, String>,
+        properties: BTreeMap<String, String>,
     },
 }
 
@@ -138,7 +138,7 @@ pub struct CapabilityRequest {
     pub capability: Capability,
 
     /// Request-specific parameters
-    pub params: HashMap<String, serde_json::Value>,
+    pub params: BTreeMap<String, serde_json::Value>,
 
     /// Request ID for correlation
     pub request_id: String,
@@ -176,7 +176,7 @@ impl BearDogCapabilities {
     /// Create `BearDog`'s capability manifest
     #[must_use]
     pub fn new(family_id: Option<String>, node_id: String) -> Self {
-        let mut metadata = HashMap::new();
+        let mut metadata = BTreeMap::new();
         metadata.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
         metadata.insert("primal_type".to_string(), "security".to_string());
         metadata.insert("wire_format".to_string(), "ndjson".to_string());

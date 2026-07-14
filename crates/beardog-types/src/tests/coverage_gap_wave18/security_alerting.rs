@@ -119,8 +119,8 @@ fn unified_alerting_validate_happy_and_error_paths() {
         },
         severity: AlertSeverity::High,
         duration: Duration::from_secs(5),
-        labels: std::collections::HashMap::new(),
-        annotations: std::collections::HashMap::new(),
+        labels: std::collections::BTreeMap::new(),
+        annotations: std::collections::BTreeMap::new(),
     });
     MonitoringConfigValidation::validate(&a3).expect_err("empty rule name");
 
@@ -133,8 +133,8 @@ fn unified_alerting_validate_happy_and_error_paths() {
         },
         severity: AlertSeverity::Low,
         duration: Duration::ZERO,
-        labels: std::collections::HashMap::new(),
-        annotations: std::collections::HashMap::new(),
+        labels: std::collections::BTreeMap::new(),
+        annotations: std::collections::BTreeMap::new(),
     });
     MonitoringConfigValidation::validate(&a4).expect_err("zero duration");
 
@@ -197,7 +197,7 @@ fn key_derivation_config_validate_ok_at_defaults() {
 
 #[test]
 fn alerting_custom_condition_serde() {
-    let mut params = std::collections::HashMap::new();
+    let mut params = std::collections::BTreeMap::new();
     params.insert("k".to_string(), serde_json::json!(1));
     let c = AlertCondition::Custom {
         expression: "1 > 0".to_string(),

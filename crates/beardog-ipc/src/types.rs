@@ -3,7 +3,7 @@
 //! Type definitions for Primal IPC Protocol
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Service capability types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -65,7 +65,7 @@ pub struct ServiceInfo {
     pub available: bool,
     /// Additional metadata
     #[serde(default)]
-    pub metadata: HashMap<String, serde_json::Value>,
+    pub metadata: BTreeMap<String, serde_json::Value>,
 }
 
 const fn default_true() -> bool {
@@ -82,7 +82,7 @@ pub struct DiscoveryQuery {
     pub capabilities: Vec<String>,
     /// Additional filters
     #[serde(default)]
-    pub filters: HashMap<String, serde_json::Value>,
+    pub filters: BTreeMap<String, serde_json::Value>,
 }
 
 impl DiscoveryQuery {
@@ -91,7 +91,7 @@ impl DiscoveryQuery {
         Self {
             primal: None,
             capabilities: Vec::new(),
-            filters: HashMap::new(),
+            filters: BTreeMap::new(),
         }
     }
 
@@ -100,7 +100,7 @@ impl DiscoveryQuery {
         Self {
             primal: Some(name.to_string()),
             capabilities: Vec::new(),
-            filters: HashMap::new(),
+            filters: BTreeMap::new(),
         }
     }
 
@@ -109,7 +109,7 @@ impl DiscoveryQuery {
         Self {
             primal: None,
             capabilities: vec![cap.as_str().to_string()],
-            filters: HashMap::new(),
+            filters: BTreeMap::new(),
         }
     }
 
@@ -217,7 +217,7 @@ mod tests {
             capabilities: vec!["crypto".to_string()],
             version: "1.0".to_string(),
             available: true,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         };
         let json = serde_json::to_string(&info).expect("serialize ServiceInfo");
         let restored: ServiceInfo = serde_json::from_str(&json).expect("deserialize ServiceInfo");
@@ -234,7 +234,7 @@ mod tests {
 
     #[test]
     fn test_service_info_with_metadata() {
-        let mut meta = HashMap::new();
+        let mut meta = BTreeMap::new();
         meta.insert("desc".to_string(), serde_json::json!("test"));
         let info = ServiceInfo {
             name: "x".to_string(),

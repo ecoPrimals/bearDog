@@ -5,7 +5,7 @@
 // This module provides functionality for the BearDog ecosystem.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Genetic contribution from a primal component to the ecosystem
 ///
@@ -28,7 +28,7 @@ pub struct EcosystemGeneticContribution {
     pub compatibility_score: f64,
     /// Additional metadata about the primal component and its capabilities
     /// Mapping of primal metadata
-    pub primal_metadata: HashMap<String, serde_json::Value>,
+    pub primal_metadata: BTreeMap<String, serde_json::Value>,
 }
 
 /// Genetic trait that can be inherited and combined
@@ -50,7 +50,7 @@ pub struct GeneticTrait {
     /// Capabilities required for this trait to function
     pub required_capabilities: Vec<EcosystemCapability>,
     /// Additional trait-specific configuration
-    pub trait_config: HashMap<String, serde_json::Value>,
+    pub trait_config: BTreeMap<String, serde_json::Value>,
 }
 
 /// Hybrid node in the ecosystem genetic network
@@ -325,7 +325,7 @@ pub struct EcosystemSpawningOperation {
     /// Blueprint selected for spawning
     pub selected_blueprint: Option<EcosystemGeneticBlueprint>,
     /// Reserved resources for this operation
-    pub resource_reservations: HashMap<String, serde_json::Value>,
+    pub resource_reservations: BTreeMap<String, serde_json::Value>,
     /// Errors encountered during spawning
     pub error_messages: Vec<String>,
     /// When the operation started

@@ -6,7 +6,7 @@
 //! have gaps in test coverage.
 
 use crate::{AdapterConfig, CapabilityResponse, UniversalAdapter};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // TEST_CATEGORY: unit
 // TEST_DOMAIN: adapters
@@ -139,7 +139,7 @@ fn test_capability_response_success() {
         success: true,
         data: Some(serde_json::json!({"key": "value"})),
         error: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
 
     assert!(response.success);
@@ -156,7 +156,7 @@ fn test_capability_response_error() {
         success: false,
         data: None,
         error: Some("Test error".to_string()),
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
 
     assert!(!response.success);
@@ -169,7 +169,7 @@ fn test_capability_response_error() {
 // TEST_PRIORITY: normal
 #[test]
 fn test_capability_response_metadata() {
-    let mut metadata = HashMap::new();
+    let mut metadata = BTreeMap::new();
     metadata.insert("key".to_string(), "value".to_string());
 
     let response = CapabilityResponse {
@@ -192,7 +192,7 @@ fn test_capability_response_clone() {
         success: true,
         data: Some(serde_json::json!({"test": "data"})),
         error: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
 
     let response2 = response1.clone();
@@ -208,7 +208,7 @@ fn test_capability_response_serialization() {
         success: true,
         data: Some(serde_json::json!({"key": "value"})),
         error: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
 
     let json = serde_json::to_string(&response).expect("Should serialize");
@@ -287,7 +287,7 @@ fn test_capability_response_with_complex_data() {
             }
         })),
         error: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
 
     assert!(response.data.is_some());

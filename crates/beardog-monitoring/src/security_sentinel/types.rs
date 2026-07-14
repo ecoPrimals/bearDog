@@ -8,7 +8,7 @@
 use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // ============================================================
 // Threat Levels
@@ -297,7 +297,7 @@ pub struct ThreatIndicator {
     pub detected_at: DateTime<Utc>,
 
     /// Associated metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 impl Default for ThreatIndicator {
@@ -308,7 +308,7 @@ impl Default for ThreatIndicator {
             severity: 0.0,
             description: String::new(),
             detected_at: Utc::now(),
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 }

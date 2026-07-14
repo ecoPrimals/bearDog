@@ -6,7 +6,7 @@
 use beardog_errors::BearDogError;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::path::Path;
 use uuid::Uuid;
 
@@ -35,8 +35,8 @@ pub struct OperationReceipt {
     pub hsm_info: Option<HsmInfo>,
 
     /// Optional metadata (extensible)
-    #[serde(skip_serializing_if = "HashMap::is_empty")]
-    pub metadata: HashMap<String, serde_json::Value>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub metadata: BTreeMap<String, serde_json::Value>,
 
     /// Cryptographic signature for verification (future)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -119,7 +119,7 @@ impl OperationReceipt {
             result: OperationResult::Success,
             key_info: None,
             hsm_info: None,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             signature: None,
             previous_receipt_id: None,
         }
@@ -136,7 +136,7 @@ impl OperationReceipt {
             },
             key_info: None,
             hsm_info: None,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             signature: None,
             previous_receipt_id: None,
         }
@@ -303,7 +303,7 @@ mod tests {
             result: OperationResult::Success,
             key_info: None,
             hsm_info: None,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             signature: None,
             previous_receipt_id: None,
         };

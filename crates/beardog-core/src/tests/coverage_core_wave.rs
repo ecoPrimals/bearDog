@@ -2,7 +2,7 @@
 
 //! Additional coverage for socket resolution, capability matching, and discovery query helpers.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::time::Duration;
 
 use crate::capabilities::{BearDogCapabilities, Capability, CapabilityResponse, ResponseStatus};
@@ -84,7 +84,7 @@ fn provides_capability_custom_not_in_default_manifest() {
     let c = Capability::Custom {
         name: "plugin_a".to_string(),
         version: "1".to_string(),
-        properties: HashMap::new(),
+        properties: BTreeMap::new(),
     };
     assert!(!caps.provides_capability(&c));
 }
@@ -242,7 +242,7 @@ fn capability_request_serde_roundtrip() {
         capability: Capability::Discovery {
             protocols: vec!["mdns".to_string()],
         },
-        params: HashMap::new(),
+        params: BTreeMap::new(),
         request_id: "rid-1".to_string(),
     };
     let j = serde_json::to_string(&req).expect("ser");

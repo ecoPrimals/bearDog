@@ -65,7 +65,7 @@ mod lib_coverage_tests;
 use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::time::{Duration, Instant};
 use tokio::time::timeout;
 
@@ -107,7 +107,7 @@ pub struct CapabilityRequest {
     /// The operation value
     pub operation: String,
     /// Mapping of parameters
-    pub parameters: HashMap<String, String>,
+    pub parameters: BTreeMap<String, String>,
 }
 
 /// Capability response structure
@@ -120,7 +120,7 @@ pub struct CapabilityResponse {
     /// Optional error
     pub error: Option<String>,
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// AI integration response metadata
@@ -173,7 +173,7 @@ pub struct VendorDiscoveryContext {
     /// Number of priority
     pub priority: u32,
     /// Mapping of context
-    pub context: HashMap<String, String>,
+    pub context: BTreeMap<String, String>,
 }
 
 impl Default for VendorDiscoveryContext {
@@ -181,7 +181,7 @@ impl Default for VendorDiscoveryContext {
         Self {
             discovery_method: "capability_based".to_string(),
             priority: 1,
-            context: HashMap::with_capacity(16),
+            context: BTreeMap::new(),
         }
     }
 }
@@ -228,7 +228,7 @@ impl UniversalAdapter {
                 success: false,
                 data: None,
                 error: Some("Capability not available".to_string()),
-                metadata: HashMap::new(),
+                metadata: BTreeMap::new(),
             });
         }
 
@@ -364,7 +364,7 @@ mod tests {
         let request = CapabilityRequest {
             capability: "test".to_string(),
             operation: "execute".to_string(),
-            parameters: HashMap::new(),
+            parameters: BTreeMap::new(),
         };
 
         let err = adapter

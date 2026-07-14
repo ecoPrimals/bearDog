@@ -11,6 +11,7 @@
 //! - Configuration validation
 
 use super::*;
+use std::collections::BTreeMap;
 
 // ============================================================================
 // Test 1: Adapter Configuration Validation
@@ -67,7 +68,7 @@ fn test_adapter_config_serialization_roundtrip() {
 
 #[test]
 fn test_capability_request_creation_and_serialization() {
-    let mut params = HashMap::new();
+    let mut params = BTreeMap::new();
     params.insert("key_id".to_string(), "test-key-123".to_string());
     params.insert("algorithm".to_string(), "RSA-2048".to_string());
 
@@ -105,7 +106,7 @@ fn test_capability_request_creation_and_serialization() {
 
 #[test]
 fn test_capability_response_success_structure() {
-    let mut metadata = HashMap::new();
+    let mut metadata = BTreeMap::new();
     metadata.insert("provider".to_string(), "test-hsm".to_string());
     metadata.insert("duration_ms".to_string(), "45".to_string());
 
@@ -141,7 +142,7 @@ fn test_capability_response_success_structure() {
 
 #[test]
 fn test_capability_response_error_structure() {
-    let mut metadata = HashMap::new();
+    let mut metadata = BTreeMap::new();
     metadata.insert("error_code".to_string(), "KEY_NOT_FOUND".to_string());
 
     let response = CapabilityResponse {
@@ -245,7 +246,7 @@ fn test_vendor_discovery_context_creation() {
     let context = VendorDiscoveryContext {
         discovery_method: "auto".to_string(),
         priority: 1,
-        context: HashMap::new(),
+        context: BTreeMap::new(),
     };
 
     assert_eq!(context.discovery_method, "auto");
@@ -318,7 +319,7 @@ fn test_capability_request_with_empty_parameters() {
         // TEST_PRIORITY: normal
         capability: "health.check".to_string(),
         operation: "ping".to_string(),
-        parameters: HashMap::new(),
+        parameters: BTreeMap::new(),
     };
 
     assert_eq!(request.capability, "health.check");
@@ -344,7 +345,7 @@ fn test_capability_request_with_empty_parameters() {
 // TEST_PRIORITY: normal
 #[test]
 fn test_capability_response_metadata_is_extensible() {
-    let mut metadata = HashMap::new();
+    let mut metadata = BTreeMap::new();
     metadata.insert("provider".to_string(), "aws-kms".to_string());
     metadata.insert("region".to_string(), "us-east-1".to_string());
     metadata.insert("key_arn".to_string(), "arn:aws:kms:...".to_string());

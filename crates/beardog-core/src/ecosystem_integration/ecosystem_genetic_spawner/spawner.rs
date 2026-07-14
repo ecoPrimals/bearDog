@@ -189,7 +189,7 @@ impl EcosystemGeneticSpawner {
             progress_percentage: 0.0,
             genetic_blueprints: Vec::new(),
             selected_blueprint: None,
-            resource_reservations: std::collections::HashMap::default(),
+            resource_reservations: std::collections::BTreeMap::default(),
             error_messages: Vec::new(),
             started_at: chrono::Utc::now(),
             completed_at: None,

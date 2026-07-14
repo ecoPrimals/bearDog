@@ -44,8 +44,9 @@ pub struct PinToken {
 }
 
 impl PinToken {
-    /// Compute `pinUvAuthParam` for a given message (e.g. clientDataHash).
+    /// Compute `pinUvAuthParam` for a given message (e.g. `clientDataHash`).
     /// Returns `left(HMAC-SHA-256(pinToken, message), 16)`.
+    #[expect(clippy::expect_used, reason = "HMAC-SHA-256 new_from_slice accepts any key length — infallible")]
     pub fn authenticate(&self, message: &[u8]) -> Vec<u8> {
         let mut mac =
             Hmac::<Sha256>::new_from_slice(&self.token).expect("HMAC accepts any key length");
@@ -275,7 +276,8 @@ fn encrypt_pin(shared_secret: &[u8; 32], pin: &str) -> Result<Vec<u8>, BearDogEr
     aes256_cbc_encrypt_zero_iv(shared_secret, &padded)
 }
 
-/// left(HMAC-SHA-256(key, message), 16)
+/// `left(HMAC-SHA-256(key, message), 16)`
+#[expect(clippy::expect_used, reason = "HMAC-SHA-256 new_from_slice accepts any key length — infallible")]
 fn left_hmac_sha256(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
     let mut mac = Hmac::<Sha256>::new_from_slice(key).expect("HMAC accepts any key length");
     mac.update(message);
@@ -343,9 +345,10 @@ fn aes256_cbc_decrypt_zero_iv(key: &[u8; 32], ciphertext: &[u8]) -> Result<Vec<u
     Ok(plaintext)
 }
 
-/// Encode a P-256 public key as a COSE_Key for ClientPIN keyAgreement.
-/// Solo 2 requires `alg` = -25 (ECDH-ES+HKDF-256) for keyAgreement keys.
+/// Encode a P-256 public key as a `COSE_Key` for `ClientPIN` `keyAgreement`.
+/// Solo 2 requires `alg` = -25 (`ECDH-ES+HKDF-256`) for `keyAgreement` keys.
 /// Keys in canonical CBOR order: positive ascending (1, 3), negative ascending (-1, -2, -3).
+#[expect(clippy::expect_used, reason = "to_encoded_point(false) returns uncompressed point — x/y always present")]
 fn encode_public_key_cose(key: &PublicKey) -> CborValue {
     let point = key.to_encoded_point(false); // uncompressed
     let x = point.x().expect("valid P-256 point has x coordinate");

@@ -6,7 +6,7 @@
 //! definitions from across the codebase.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Comprehensive service metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -15,10 +15,10 @@ pub struct ServiceMetadata {
     pub tags: Vec<String>,
     
     /// Service labels for identification
-    pub labels: HashMap<String, String>,
+    pub labels: BTreeMap<String, String>,
     
     /// Service annotations for additional information
-    pub annotations: HashMap<String, String>,
+    pub annotations: BTreeMap<String, String>,
     
     /// Service owner information
     pub owner: Option<ServiceOwner>,
@@ -39,7 +39,7 @@ pub struct ServiceMetadata {
     pub deployment: Option<DeploymentInfo>,
     
     /// Custom metadata fields
-    pub custom_fields: HashMap<String, serde_json::Value>,
+    pub custom_fields: BTreeMap<String, serde_json::Value>,
 }
 
 /// Service owner information
@@ -296,22 +296,22 @@ pub struct ScalingConfig {
     pub target_memory_utilization: Option<f64>,
     
     /// Custom scaling metrics
-    pub custom_metrics: HashMap<String, f64>,
+    pub custom_metrics: BTreeMap<String, f64>,
 }
 
 impl Default for ServiceMetadata {
     fn default() -> Self {
         Self {
             tags: Vec::new(),
-            labels: HashMap::new(),
-            annotations: HashMap::new(),
+            labels: BTreeMap::new(),
+            annotations: BTreeMap::new(),
             owner: None,
             contacts: Vec::new(),
             documentation: Vec::new(),
             sla: None,
             resource_requirements: None,
             deployment: None,
-            custom_fields: HashMap::new(),
+            custom_fields: BTreeMap::new(),
         }
     }
 }

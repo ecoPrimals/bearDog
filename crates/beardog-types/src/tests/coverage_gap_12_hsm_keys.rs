@@ -5,7 +5,7 @@
 #[cfg(test)]
 mod hsm_keys_methods_tests {
     use crate::canonical::hsm::keys::*;
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
     use std::time::{Duration, SystemTime};
 
     #[test]
@@ -194,7 +194,7 @@ mod hsm_keys_methods_tests {
             key_id: "key-1".into(),
             operation: KeyOperation::Encrypt,
             input_data: vec![1, 2, 3],
-            parameters: HashMap::new(),
+            parameters: BTreeMap::new(),
             request_id: "req-1".into(),
         };
         assert_eq!(r.key_id, "key-1");
@@ -207,7 +207,7 @@ mod hsm_keys_methods_tests {
             request_id: "req-1".into(),
             result: OperationResult::Success,
             output_data: vec![4, 5, 6],
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             processing_time_ms: 42,
         };
         assert_eq!(r.processing_time_ms, 42);

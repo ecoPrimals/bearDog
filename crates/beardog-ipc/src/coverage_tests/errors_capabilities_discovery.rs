@@ -4,7 +4,7 @@
 
 use crate::error::{IpcError, IpcResult};
 use crate::types::{Capability, DiscoveryQuery, ServiceInfo};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // ============================================================================
 // IpcError comprehensive tests
@@ -183,7 +183,7 @@ fn test_service_info_serialization_roundtrip() {
         capabilities: vec!["crypto".to_string(), "btsp".to_string()],
         version: "0.9.0".to_string(),
         available: true,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
     let json = serde_json::to_string(&info).unwrap();
     let restored: ServiceInfo = serde_json::from_str(&json).unwrap();
@@ -210,7 +210,7 @@ fn test_service_info_not_available() {
 
 #[test]
 fn test_service_info_with_metadata() {
-    let mut metadata = HashMap::new();
+    let mut metadata = BTreeMap::new();
     metadata.insert("description".to_string(), serde_json::json!("Test service"));
     let info = ServiceInfo {
         name: "test".to_string(),
@@ -232,7 +232,7 @@ fn test_service_info_debug() {
         capabilities: vec![],
         version: "1.0".to_string(),
         available: true,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
     let debug = format!("{info:?}");
     assert!(debug.contains("test"));

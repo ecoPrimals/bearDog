@@ -141,9 +141,9 @@ fn test_session_config_validation_edge_cases() {
 #[test]
 fn test_security_audit_event_metadata() {
     use serde_json::Value;
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
-    let mut metadata = HashMap::new();
+    let mut metadata = BTreeMap::new();
     metadata.insert(
         "ip_address".to_string(),
         Value::String("192.168.1.1".to_string()),

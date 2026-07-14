@@ -15,7 +15,7 @@
 //! - Serialization/deserialization
 
 use super::*;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // ============================================================================
 // AdapterConfig Tests
@@ -76,7 +76,7 @@ fn test_adapter_config_serialization() {
 
 #[test]
 fn test_capability_request_creation() {
-    let mut params = HashMap::new();
+    let mut params = BTreeMap::new();
     params.insert("key1".to_string(), "value1".to_string());
 
     let request = CapabilityRequest {
@@ -96,7 +96,7 @@ fn test_capability_request_empty_parameters() {
     let request = CapabilityRequest {
         capability: "test".to_string(),
         operation: "test_op".to_string(),
-        parameters: HashMap::new(),
+        parameters: BTreeMap::new(),
     };
 
     assert!(request.parameters.is_empty());
@@ -107,7 +107,7 @@ fn test_capability_request_serialization() {
     let request = CapabilityRequest {
         capability: "signing".to_string(),
         operation: "sign".to_string(),
-        parameters: HashMap::new(),
+        parameters: BTreeMap::new(),
     };
 
     let serialized = serde_json::to_string(&request).expect("Serialization should succeed");
@@ -123,7 +123,7 @@ fn test_capability_request_clone() {
     let request1 = CapabilityRequest {
         capability: "test".to_string(),
         operation: "op".to_string(),
-        parameters: HashMap::new(),
+        parameters: BTreeMap::new(),
     };
 
     let request2 = request1.clone();
@@ -141,7 +141,7 @@ fn test_capability_response_success() {
         success: true,
         data: Some(serde_json::json!({"result": "ok"})),
         error: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
 
     // TEST_CATEGORY: unit
@@ -161,7 +161,7 @@ fn test_capability_response_error() {
         success: false,
         data: None,
         error: Some("Test error".to_string()),
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
 
     assert!(!response.success);
@@ -174,7 +174,7 @@ fn test_capability_response_error() {
 
 #[test]
 fn test_capability_response_with_metadata() {
-    let mut metadata = HashMap::new();
+    let mut metadata = BTreeMap::new();
     metadata.insert("execution_time".to_string(), "100ms".to_string());
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: adapters
@@ -204,7 +204,7 @@ fn test_capability_response_serialization() {
         success: true,
         data: Some(serde_json::json!({"key": "value"})),
         error: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
 
     let serialized = serde_json::to_string(&response).expect("Serialization should succeed");
@@ -223,7 +223,7 @@ fn test_capability_response_clone() {
         success: true,
         data: None,
         error: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: adapters
@@ -396,15 +396,12 @@ fn test_vendor_discovery_context_default() {
 
     assert_eq!(context.discovery_method, "capability_based");
     assert_eq!(context.priority, 1);
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: adapters
-    // TEST_PRIORITY: normal
-    assert!(context.context.capacity() >= 16); // HashMap reserves at least 16
+    assert!(context.context.is_empty());
 }
 
 #[test]
 fn test_vendor_discovery_context_custom() {
-    let mut ctx_map = HashMap::new();
+    let mut ctx_map = BTreeMap::new();
     ctx_map.insert("region".to_string(), "us-west-2".to_string());
 
     let context = VendorDiscoveryContext {
@@ -429,7 +426,7 @@ fn test_vendor_discovery_context_serialization() {
     let context = VendorDiscoveryContext {
         discovery_method: "service_mesh".to_string(),
         priority: 5,
-        context: HashMap::new(),
+        context: BTreeMap::new(),
     };
 
     let serialized = serde_json::to_string(&context).expect("Serialization should succeed");
@@ -521,7 +518,7 @@ async fn test_universal_adapter_execute_unregistered_capability() {
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: adapters
         // TEST_PRIORITY: normal
-        parameters: HashMap::new(),
+        parameters: BTreeMap::new(),
     };
 
     let response = adapter
@@ -545,7 +542,7 @@ async fn test_universal_adapter_execute_registered_capability() {
     let request = CapabilityRequest {
         capability: "test".to_string(),
         operation: "execute".to_string(),
-        parameters: HashMap::new(),
+        parameters: BTreeMap::new(),
     };
 
     let err = adapter
@@ -571,7 +568,7 @@ async fn test_universal_adapter_caching_enabled() {
     let request = CapabilityRequest {
         capability: "test".to_string(),
         operation: "cached_op".to_string(),
-        parameters: HashMap::new(),
+        parameters: BTreeMap::new(),
     };
 
     // IPC dispatch not wired — both calls return not_yet_available;
@@ -602,7 +599,7 @@ async fn test_universal_adapter_caching_disabled() {
     let request = CapabilityRequest {
         capability: "test".to_string(),
         operation: "no_cache_op".to_string(),
-        parameters: HashMap::new(),
+        parameters: BTreeMap::new(),
     };
 
     let err = adapter
@@ -620,7 +617,7 @@ async fn test_universal_adapter_request_with_parameters() {
     let mut adapter = UniversalAdapter::new(AdapterConfig::default());
     adapter.register_capability("encryption".to_string(), "http://encrypt.svc".to_string());
 
-    let mut params = HashMap::new();
+    let mut params = BTreeMap::new();
     params.insert("algorithm".to_string(), "AES-256-GCM".to_string());
     params.insert("key_id".to_string(), "key-123".to_string());
 
@@ -646,7 +643,7 @@ async fn test_universal_adapter_retry_metadata() {
     let request = CapabilityRequest {
         capability: "test".to_string(),
         operation: "normal_op".to_string(),
-        parameters: HashMap::new(),
+        parameters: BTreeMap::new(),
     };
 
     let err = adapter
@@ -685,7 +682,7 @@ async fn test_universal_adapter_empty_capability_name() {
     let request = CapabilityRequest {
         capability: String::new(),
         operation: "test".to_string(),
-        parameters: HashMap::new(),
+        parameters: BTreeMap::new(),
     };
 
     let err = adapter
@@ -707,7 +704,7 @@ async fn test_universal_adapter_special_characters_in_capability() {
     let request = CapabilityRequest {
         capability: special_cap,
         operation: "test".to_string(),
-        parameters: HashMap::new(),
+        parameters: BTreeMap::new(),
     };
 
     let err = adapter
@@ -722,7 +719,7 @@ async fn test_universal_adapter_large_parameters() {
     let mut adapter = UniversalAdapter::new(AdapterConfig::default());
     adapter.register_capability("test".to_string(), "http://test.com".to_string());
 
-    let mut params = HashMap::new();
+    let mut params = BTreeMap::new();
     for i in 0..100 {
         params.insert(format!("key_{i}"), format!("value_{i}"));
     }
@@ -779,7 +776,7 @@ fn test_capability_response_debug_format() {
         success: true,
         data: None,
         error: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
 
     let debug_str = format!("{response:?}");
