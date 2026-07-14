@@ -483,27 +483,31 @@ async fn ceremony_register_with_pin(
         .await
         .map_err(|e| format!("Failed to open HID device: {e}"))?;
 
-    // Step 1: Set PIN on the authenticator (idempotent if already set — will
-    // return an error we handle gracefully)
-    info!("Setting PIN on authenticator...");
-    match client_pin::set_pin(&mut device, pin).await {
-        Ok(()) => info!("PIN set successfully"),
+    // Try getPinToken first (handles case where PIN is already set).
+    // If that fails (PIN not set), set the PIN, then get the token.
+    info!("Attempting to get pinUvAuthToken (assumes PIN already set)...");
+    let pin_token = match client_pin::get_pin_token(&mut device, pin).await {
+        Ok(token) => {
+            info!("pinUvAuthToken obtained (PIN was already set)");
+            token
+        }
         Err(e) => {
             let msg = format!("{e}");
-            if msg.contains("0x34") {
-                // CTAP2_ERR_PIN_AUTH_INVALID or PIN already set — try getting token
-                info!("PIN may already be set, proceeding to get token");
+            if msg.contains("0x2C") || msg.contains("PIN_NOT_SET") || msg.contains("0x35") {
+                // PIN not set or auth blocked — set it first
+                info!("PIN not set, setting now...");
+                client_pin::set_pin(&mut device, pin)
+                    .await
+                    .map_err(|e2| format!("Failed to set PIN: {e2}"))?;
+                info!("PIN set, getting token...");
+                client_pin::get_pin_token(&mut device, pin)
+                    .await
+                    .map_err(|e2| format!("Failed to get PIN token after set: {e2}"))?
             } else {
-                return Err(format!("Failed to set PIN: {e}"));
+                return Err(format!("ClientPIN failed: {msg}"));
             }
         }
-    }
-
-    // Step 2: Get pinUvAuthToken
-    info!("Getting pinUvAuthToken...");
-    let pin_token = client_pin::get_pin_token(&mut device, pin)
-        .await
-        .map_err(|e| format!("Failed to get PIN token: {e}"))?;
+    };
 
     // Step 3: Build MakeCredential with pinUvAuthParam
     let client_data_hash = [0u8; 32]; // Ceremony uses zero hash (not browser-bound)

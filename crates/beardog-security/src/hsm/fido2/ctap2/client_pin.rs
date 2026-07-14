@@ -135,14 +135,10 @@ pub async fn set_pin<D: HidDevice + ?Sized>(
     ciborium::into_writer(&cmd_map, &mut body)
         .map_err(|e| BearDogError::system(format!("ClientPIN CBOR encode: {e}")))?;
 
-    let response = send_ctap2_command(device, cid, Ctap2Command::ClientPin, &body).await?;
+    debug!("setPIN CBOR payload ({} bytes): {:02x?}", body.len(), &body);
 
-    if response.is_empty() || response[0] != 0x00 {
-        let status = response.first().copied().unwrap_or(0xFF);
-        return Err(BearDogError::system(format!(
-            "setPIN rejected by authenticator: status 0x{status:02x}"
-        )));
-    }
+    // send_ctap2_command returns Ok only if status == 0x00; payload is empty for setPIN.
+    let _response = send_ctap2_command(device, cid, Ctap2Command::ClientPin, &body).await?;
 
     info!("PIN set successfully on authenticator");
     Ok(())
@@ -209,23 +205,19 @@ pub async fn get_pin_token<D: HidDevice + ?Sized>(
     ciborium::into_writer(&cmd_map, &mut body)
         .map_err(|e| BearDogError::system(format!("ClientPIN CBOR encode: {e}")))?;
 
+    debug!("getPinToken CBOR payload ({} bytes): {:02x?}", body.len(), &body);
+
+    // send_ctap2_command returns Ok only if status == 0x00; response is raw CBOR payload
     let response = send_ctap2_command(device, cid, Ctap2Command::ClientPin, &body).await?;
 
-    // Step 6: Parse and decrypt pinToken
     if response.is_empty() {
         return Err(BearDogError::system(
-            "Empty response from getPinToken".to_string(),
+            "Empty CBOR response from getPinToken".to_string(),
         ));
-    }
-    if response[0] != 0x00 {
-        return Err(BearDogError::system(format!(
-            "getPinToken failed: status 0x{:02x}",
-            response[0]
-        )));
     }
 
     // Parse CBOR response: map with key 2 = pinUvAuthToken (encrypted)
-    let cbor: CborValue = ciborium::from_reader(&response[1..])
+    let cbor: CborValue = ciborium::from_reader(response.as_slice())
         .map_err(|e| BearDogError::system(format!("getPinToken CBOR decode: {e}")))?;
 
     let encrypted_token = extract_bytes_from_map(&cbor, 2)?;
@@ -264,14 +256,8 @@ pub async fn get_retries<D: HidDevice + ?Sized>(
 
     let response = send_ctap2_command(device, cid, Ctap2Command::ClientPin, &body).await?;
 
-    if response.is_empty() || response[0] != 0x00 {
-        let status = response.first().copied().unwrap_or(0xFF);
-        return Err(BearDogError::system(format!(
-            "getRetries failed: status 0x{status:02x}"
-        )));
-    }
-
-    let cbor: CborValue = ciborium::from_reader(&response[1..])
+    // send_ctap2_command returns Ok only if status == 0x00; response is raw CBOR payload
+    let cbor: CborValue = ciborium::from_reader(response.as_slice())
         .map_err(|e| BearDogError::system(format!("getRetries CBOR decode: {e}")))?;
 
     extract_integer_from_map(&cbor, 3)
@@ -301,15 +287,8 @@ async fn get_key_agreement<D: HidDevice + ?Sized>(
 
     let response = send_ctap2_command(device, cid, Ctap2Command::ClientPin, &body).await?;
 
-    if response.is_empty() || response[0] != 0x00 {
-        let status = response.first().copied().unwrap_or(0xFF);
-        return Err(BearDogError::system(format!(
-            "getKeyAgreement failed: status 0x{status:02x}"
-        )));
-    }
-
-    // Parse CBOR: response map key 1 = keyAgreement (COSE_Key)
-    let cbor: CborValue = ciborium::from_reader(&response[1..])
+    // send_ctap2_command already checks status; response is raw CBOR payload
+    let cbor: CborValue = ciborium::from_reader(response.as_slice())
         .map_err(|e| BearDogError::system(format!("getKeyAgreement CBOR decode: {e}")))?;
 
     parse_cose_p256_pubkey(&cbor)
@@ -402,31 +381,33 @@ fn aes256_cbc_decrypt_zero_iv(key: &[u8; 32], ciphertext: &[u8]) -> Result<Vec<u
     Ok(plaintext)
 }
 
-/// Encode a P-256 public key as a COSE_Key (EC2, P-256) CBOR map.
+/// Encode a P-256 public key as a COSE_Key for ClientPIN keyAgreement.
+/// Solo 2 requires `alg` = -25 (ECDH-ES+HKDF-256) for keyAgreement keys.
+/// Keys in canonical CBOR order: positive ascending (1, 3), negative ascending (-1, -2, -3).
 fn encode_public_key_cose(key: &PublicKey) -> CborValue {
     let point = key.to_encoded_point(false); // uncompressed
     let x = point.x().expect("valid P-256 point has x coordinate");
     let y = point.y().expect("valid P-256 point has y coordinate");
 
     CborValue::Map(vec![
-        // kty: EC2 (2)
+        // kty: EC2 (2) — COSE key label 1
         (CborValue::Integer(1.into()), CborValue::Integer(2.into())),
-        // alg: ES256 (-7)
+        // alg: ECDH-ES+HKDF-256 (-25) — COSE key label 3
         (
             CborValue::Integer(3.into()),
-            CborValue::Integer((-7_i64).into()),
+            CborValue::Integer((-25_i64).into()),
         ),
-        // crv: P-256 (1)
+        // crv: P-256 (1) — COSE key label -1
         (
             CborValue::Integer((-1_i64).into()),
             CborValue::Integer(1.into()),
         ),
-        // x coordinate
+        // x coordinate — COSE key label -2
         (
             CborValue::Integer((-2_i64).into()),
             CborValue::Bytes(x.to_vec()),
         ),
-        // y coordinate
+        // y coordinate — COSE key label -3
         (
             CborValue::Integer((-3_i64).into()),
             CborValue::Bytes(y.to_vec()),

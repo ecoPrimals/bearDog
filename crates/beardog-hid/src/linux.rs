@@ -47,6 +47,9 @@ use tokio::fs::{File, OpenOptions, read_dir, read_to_string};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tracing::{debug, trace, warn};
 
+/// Read timeout for non-blocking-style polling on a blocking fd.
+const READ_POLL_TIMEOUT_MS: u64 = 200;
+
 /// Linux HID device via `/dev/hidraw`
 ///
 /// Provides Pure Rust access to HID devices using standard file I/O.
@@ -96,11 +99,12 @@ impl LinuxHidDevice {
     pub async fn open(path: &str) -> Result<Self, BearDogError> {
         debug!("Opening HID device: {}", path);
 
-        // Pure Rust file I/O - no C libraries!
+        // Blocking I/O (matches libfido2 behavior). Required for multi-packet
+        // CTAPHID writes — O_NONBLOCK causes USB OUT URB races where the device
+        // processes incomplete commands.
         let device = OpenOptions::new()
             .read(true)
             .write(true)
-            .custom_flags(libc::O_NONBLOCK) // Only libc usage - for flags
             .open(path)
             .await
             .map_err(|e| {
@@ -198,21 +202,23 @@ impl HidDevice for LinuxHidDevice {
 
     /// Read HID report from device (Pure Rust).
     ///
-    /// Returns `Ok(0)` when no data is available (non-blocking `EAGAIN`/`WouldBlock`)
+    /// Uses a short timeout to emulate non-blocking behavior on a blocking fd.
+    /// Returns `Ok(0)` when no data arrives within the timeout window,
     /// so callers can poll in a loop without treating absence as a hard error.
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, BearDogError> {
         trace!("Reading up to {} bytes from HID device", buf.len());
 
-        match self.device.read(buf).await {
-            Ok(n) => {
+        let timeout = tokio::time::Duration::from_millis(READ_POLL_TIMEOUT_MS);
+        match tokio::time::timeout(timeout, self.device.read(buf)).await {
+            Ok(Ok(n)) => {
                 trace!("Read {} bytes from HID device", n);
                 Ok(n)
             }
-            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                trace!("HID read: WouldBlock (no data yet)");
+            Ok(Err(e)) => Err(BearDogError::io_error(&format!("HID read failed: {e}"))),
+            Err(_elapsed) => {
+                trace!("HID read: timeout (no data within {}ms)", READ_POLL_TIMEOUT_MS);
                 Ok(0)
             }
-            Err(e) => Err(BearDogError::io_error(&format!("HID read failed: {e}"))),
         }
     }
 

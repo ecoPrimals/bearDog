@@ -145,136 +145,191 @@ pub async fn send_ctap2_command<D: beardog_hid::HidDevice + ?Sized>(
 
     debug!("CTAP2 packet: {:02x?}", &packet);
 
-    // Wrap in CTAPHID_CBOR frame
-    // Format: [CID (4 bytes)] [CMD: 0x90] [LEN_H] [LEN_L] [DATA...]
-    // CTAPHID_CBOR (0x90) is the correct channel for CTAP2 commands (ClientPIN, etc).
+    // Send via CTAPHID_CBOR with multi-packet framing.
+    // Init packet: [CID(4)][0x90][BCNTH][BCNTL][payload ≤57]
+    // Continuation: [CID(4)][SEQ][payload ≤59]
     let cid_bytes = cid.to_be_bytes();
-    let mut hid_packet = vec![cid_bytes[0], cid_bytes[1], cid_bytes[2], cid_bytes[3]];
-    hid_packet.push(CtapHidCommand::Cbor as u8); // CTAPHID_CBOR
+    let total_len = packet.len() as u16;
 
-    let len = packet.len() as u16;
-    hid_packet.push((len >> 8) as u8); // Length high byte
-    hid_packet.push((len & 0xFF) as u8); // Length low byte
+    // Build and send initialization packet (up to 57 bytes of payload)
+    let first_payload_max = HID_PACKET_SIZE - 7; // 57
+    let first_take = packet.len().min(first_payload_max);
 
-    hid_packet.extend_from_slice(&packet);
-
-    // Pad to HID report size (64 bytes)
-    while hid_packet.len() < 64 {
-        hid_packet.push(0);
+    let mut init_pkt = Vec::with_capacity(HID_PACKET_SIZE);
+    init_pkt.extend_from_slice(&cid_bytes);
+    init_pkt.push(CtapHidCommand::Cbor as u8);
+    init_pkt.push((total_len >> 8) as u8);
+    init_pkt.push((total_len & 0xFF) as u8);
+    init_pkt.extend_from_slice(&packet[..first_take]);
+    while init_pkt.len() < HID_PACKET_SIZE {
+        init_pkt.push(0);
     }
 
-    debug!("HID packet (first 16 bytes): {:02x?}", &hid_packet[..16]);
+    debug!("   Init pkt ({} bytes): {:02x?}", init_pkt.len(), &init_pkt[..12.min(init_pkt.len())]);
 
-    // Send the packet
     device
-        .write(&hid_packet)
+        .write(&init_pkt)
         .await
         .map_err(|e| BearDogError::system(format!("HID write failed: {e}")))?;
 
-    debug!("✅ Sent {} bytes to device", hid_packet.len());
+    // Send continuation packets if payload exceeds 57 bytes
+    let mut offset = first_take;
+    let mut seq: u8 = 0;
+    let cont_payload_max = HID_PACKET_SIZE - 5; // 59
 
-    // Read response with multiple attempts (device might send keepalive)
-    debug!("📥 Reading response (with retry for keepalive)...");
+    while offset < packet.len() {
 
-    let mut total_response = Vec::new();
+        let take = (packet.len() - offset).min(cont_payload_max);
+        let mut cont_pkt = Vec::with_capacity(HID_PACKET_SIZE);
+        cont_pkt.extend_from_slice(&cid_bytes);
+        cont_pkt.push(seq);
+        cont_pkt.extend_from_slice(&packet[offset..offset + take]);
+        while cont_pkt.len() < HID_PACKET_SIZE {
+            cont_pkt.push(0);
+        }
+
+        debug!(
+            "   Cont pkt seq={} ({} bytes payload): {:02x?}",
+            seq, take, &cont_pkt[..12.min(cont_pkt.len())]
+        );
+
+        device
+            .write(&cont_pkt)
+            .await
+            .map_err(|e| BearDogError::system(format!("HID continuation write failed: {e}")))?;
+
+        offset += take;
+        seq = seq.wrapping_add(1);
+    }
+
+    debug!(
+        "✅ Sent CTAP2 command ({} bytes, {} packet(s))",
+        packet.len(),
+        1 + u32::from(seq)
+    );
+
+    // Read multi-packet response with keepalive support.
+    // Init packet: [CID(4)][CMD(1)][BCNTH(1)][BCNTL(1)][payload ≤57]
+    // Continuation: [CID(4)][SEQ(1)][payload ≤59]
+    debug!("📥 Reading response (multi-packet + keepalive)...");
+
+    let mut assembled: Vec<u8> = Vec::new();
+    let mut total_len: Option<usize> = None;
+    let mut next_seq: u8 = 0;
 
     for attempt in 1..=MAX_KEEPALIVE_ATTEMPTS {
-        let mut response_buf = vec![0u8; HID_PACKET_SIZE];
-        let bytes_read = device
-            .read(&mut response_buf)
+        let mut buf = vec![0u8; HID_PACKET_SIZE];
+        let n = device
+            .read(&mut buf)
             .await
             .map_err(|e| BearDogError::system(format!("HID read failed: {e}")))?;
 
-        if bytes_read == 0 {
+        if n == 0 {
             debug!(
-                "   Attempt {}/{}: No data yet — polling in {}ms",
+                "   Attempt {}/{}: No data — polling in {}ms",
                 attempt, MAX_KEEPALIVE_ATTEMPTS, HID_READ_TIMEOUT_MS
             );
             tokio::time::sleep(tokio::time::Duration::from_millis(HID_READ_TIMEOUT_MS)).await;
             continue;
         }
 
-        debug!(
-            "   Attempt {}/{}: Got {} bytes",
-            attempt, MAX_KEEPALIVE_ATTEMPTS, bytes_read
-        );
-        debug!(
-            "   Data: {:02x?}",
-            &response_buf[..bytes_read.min(DEBUG_PREVIEW_SIZE)]
-        );
+        if n < 5 {
+            return Err(BearDogError::system(format!(
+                "CTAPHID response too short: {n} bytes"
+            )));
+        }
 
-        // Check command byte
-        if bytes_read >= HID_MIN_RESPONSE_SIZE {
-            let response_cmd = response_buf[4];
+        let b4 = buf[4];
 
-            // Check for keepalive (authenticator still processing, awaiting user touch)
-            if response_cmd == CtapHidCommand::Keepalive.as_u8() {
-                debug!("   📡 Keepalive — authenticator awaiting user presence");
-                tokio::time::sleep(tokio::time::Duration::from_millis(HID_READ_TIMEOUT_MS)).await;
-                continue;
+        // Keepalive — authenticator still processing / awaiting user presence
+        if b4 == CtapHidCommand::Keepalive.as_u8() {
+            debug!("   📡 Keepalive — awaiting user presence");
+            tokio::time::sleep(tokio::time::Duration::from_millis(HID_READ_TIMEOUT_MS)).await;
+            continue;
+        }
+
+        // Error packet
+        if b4 == CtapHidCommand::Error.as_u8() {
+            let code = if n > 7 { buf[7] } else { 0 };
+            return Err(BearDogError::system(format!(
+                "CTAPHID error: 0x{code:02X}"
+            )));
+        }
+
+        if assembled.is_empty() {
+            // First (initialization) packet
+            if b4 != CtapHidCommand::Cbor.as_u8() {
+                return Err(BearDogError::system(format!(
+                    "Expected CTAPHID_CBOR (0x90), got 0x{b4:02x}"
+                )));
             }
-
-            // Check for error
-            if response_cmd == CtapHidCommand::Error.as_u8() {
-                warn!("   ❌ Device returned error packet");
-                if bytes_read >= 8 {
-                    let error_code = response_buf[7];
-                    return Err(BearDogError::system(format!(
-                        "Device error: 0x{error_code:02X}"
-                    )));
-                }
+            if n < 7 {
+                return Err(BearDogError::system(
+                    "CTAPHID init packet missing length".to_string(),
+                ));
             }
-
-            // Got actual response
-            total_response = response_buf[..bytes_read].to_vec();
-            debug!("✅ Got response after {} attempt(s)", attempt);
-            break;
+            let bcnt = ((buf[5] as usize) << 8) | (buf[6] as usize);
+            total_len = Some(bcnt);
+            let first_payload_max = HID_PACKET_SIZE - 7; // 57 bytes
+            let take = bcnt.min(first_payload_max).min(n - 7);
+            assembled.extend_from_slice(&buf[7..7 + take]);
+            debug!(
+                "   Init packet: bcnt={bcnt}, got {take} bytes (attempt {attempt})"
+            );
+            if assembled.len() >= bcnt {
+                break;
+            }
+        } else {
+            // Continuation packet: [CID(4)][SEQ(1)][payload ≤59]
+            let bcnt = total_len.unwrap_or(0);
+            if b4 != next_seq {
+                return Err(BearDogError::system(format!(
+                    "CTAPHID bad seq: got 0x{b4:02x}, want 0x{next_seq:02x}"
+                )));
+            }
+            let remaining = bcnt.saturating_sub(assembled.len());
+            let cont_payload_max = HID_PACKET_SIZE - 5; // 59 bytes
+            let take = remaining.min(cont_payload_max).min(n - 5);
+            assembled.extend_from_slice(&buf[5..5 + take]);
+            next_seq = next_seq.wrapping_add(1);
+            debug!(
+                "   Continuation seq={}: +{take} bytes, total={}/{}",
+                b4,
+                assembled.len(),
+                bcnt
+            );
+            if assembled.len() >= bcnt {
+                break;
+            }
         }
     }
 
-    if total_response.is_empty() {
-        warn!(
-            "⏱️  Device timeout - no response after {} attempts",
-            MAX_KEEPALIVE_ATTEMPTS
-        );
+    if assembled.is_empty() {
         return Err(BearDogError::system(
-            "Device timeout - no response received".to_string(),
+            "CTAPHID timeout — no response received".to_string(),
         ));
     }
 
-    let bytes_read = total_response.len();
-    let response_buf = total_response;
-
-    // Parse HID response
-    // Format: [CID (4)] [CMD] [LEN_H] [LEN_L] [DATA...]
-    if bytes_read < 7 {
+    let total = total_len.unwrap_or(assembled.len());
+    if assembled.len() < total {
         return Err(BearDogError::system(format!(
-            "Response too short: {bytes_read} bytes"
+            "CTAPHID incomplete: got {} of {total} bytes",
+            assembled.len()
         )));
     }
 
-    // Extract length
-    let response_len = ((response_buf[5] as usize) << 8) | (response_buf[6] as usize);
-
-    // Extract CTAP2 response (skip HID header)
-    let ctap_response = &response_buf[7..std::cmp::min(7 + response_len, bytes_read)];
-
-    if ctap_response.is_empty() {
-        return Err(BearDogError::system("Empty CTAP2 response".to_string()));
-    }
-
-    // First byte is status code
-    let status = Ctap2Status::from_byte(ctap_response[0]);
-    debug!("CTAP2 Status: {:?} (0x{:02X})", status, ctap_response[0]);
+    // First byte of assembled payload is the CTAP2 status code
+    let status = Ctap2Status::from_byte(assembled[0]);
+    debug!("CTAP2 Status: {:?} (0x{:02X})", status, assembled[0]);
 
     if !status.is_success() {
         return Err(BearDogError::system(format!(
             "CTAP2 error: {} (0x{:02X})",
             status.to_error_message(),
-            ctap_response[0]
+            assembled[0]
         )));
     }
 
     // Return payload (everything after status byte)
-    Ok(ctap_response[1..].to_vec())
+    Ok(assembled[1..].to_vec())
 }
