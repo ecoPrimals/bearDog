@@ -5,11 +5,12 @@
 //! This module defines constants for the FIDO2 CTAP2 protocol implementation.
 //! All magic numbers are centralized here for maintainability and clarity.
 
-/// Maximum number of attempts to read keepalive packets before timing out
-pub const MAX_KEEPALIVE_ATTEMPTS: usize = 10;
+/// Maximum number of attempts to read keepalive packets before timing out.
+/// CTAP2 spec allows up to 30s for user presence — at 200ms per poll this is 150 attempts.
+pub const MAX_KEEPALIVE_ATTEMPTS: usize = 150;
 
-/// HID read timeout in milliseconds per attempt
-pub const HID_READ_TIMEOUT_MS: u64 = 1000;
+/// HID read poll interval in milliseconds (sleep between non-blocking reads)
+pub const HID_READ_TIMEOUT_MS: u64 = 200;
 
 /// Standard HID packet size in bytes
 pub const HID_PACKET_SIZE: usize = 64;

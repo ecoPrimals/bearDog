@@ -3,7 +3,8 @@
 //! CTAPHID framing and CTAP2 command I/O over HID.
 
 use super::super::constants::{
-    DEBUG_PREVIEW_SIZE, HID_MIN_RESPONSE_SIZE, HID_PACKET_SIZE, MAX_KEEPALIVE_ATTEMPTS,
+    DEBUG_PREVIEW_SIZE, HID_MIN_RESPONSE_SIZE, HID_PACKET_SIZE, HID_READ_TIMEOUT_MS,
+    MAX_KEEPALIVE_ATTEMPTS,
 };
 use super::types::{Ctap2Command, Ctap2Status, CtapHidCommand};
 use beardog_errors::BearDogError;
@@ -51,12 +52,19 @@ pub async fn ctaphid_init<D: beardog_hid::HidDevice + ?Sized>(
 
     debug!("📤 Sent CTAPHID_INIT");
 
-    // Read response
+    // Read response (with poll loop for non-blocking HID)
     let mut response = vec![0u8; 64];
-    let bytes_read = device
-        .read(&mut response)
-        .await
-        .map_err(|e| BearDogError::system(format!("CTAPHID_INIT read failed: {e}")))?;
+    let mut bytes_read = 0;
+    for _poll in 0..25 {
+        bytes_read = device
+            .read(&mut response)
+            .await
+            .map_err(|e| BearDogError::system(format!("CTAPHID_INIT read failed: {e}")))?;
+        if bytes_read > 0 {
+            break;
+        }
+        tokio::time::sleep(tokio::time::Duration::from_millis(HID_READ_TIMEOUT_MS)).await;
+    }
 
     if bytes_read == 0 {
         return Err(BearDogError::system("CTAPHID_INIT timeout".to_string()));
@@ -179,9 +187,10 @@ pub async fn send_ctap2_command<D: beardog_hid::HidDevice + ?Sized>(
 
         if bytes_read == 0 {
             debug!(
-                "   Attempt {}/{}: No data (timeout)",
-                attempt, MAX_KEEPALIVE_ATTEMPTS
+                "   Attempt {}/{}: No data yet — polling in {}ms",
+                attempt, MAX_KEEPALIVE_ATTEMPTS, HID_READ_TIMEOUT_MS
             );
+            tokio::time::sleep(tokio::time::Duration::from_millis(HID_READ_TIMEOUT_MS)).await;
             continue;
         }
 
@@ -198,10 +207,11 @@ pub async fn send_ctap2_command<D: beardog_hid::HidDevice + ?Sized>(
         if bytes_read >= HID_MIN_RESPONSE_SIZE {
             let response_cmd = response_buf[4];
 
-            // Check for keepalive
+            // Check for keepalive (authenticator still processing, awaiting user touch)
             if response_cmd == CtapHidCommand::Keepalive.as_u8() {
-                debug!("   📡 Keepalive packet - waiting for actual response...");
-                continue; // Keep reading
+                debug!("   📡 Keepalive — authenticator awaiting user presence");
+                tokio::time::sleep(tokio::time::Duration::from_millis(HID_READ_TIMEOUT_MS)).await;
+                continue;
             }
 
             // Check for error

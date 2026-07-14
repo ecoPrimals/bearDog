@@ -188,18 +188,24 @@ impl HidDevice for LinuxHidDevice {
         Ok(report.len())
     }
 
-    /// Read HID report from device (Pure Rust)
+    /// Read HID report from device (Pure Rust).
+    ///
+    /// Returns `Ok(0)` when no data is available (non-blocking `EAGAIN`/`WouldBlock`)
+    /// so callers can poll in a loop without treating absence as a hard error.
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, BearDogError> {
         trace!("Reading up to {} bytes from HID device", buf.len());
 
-        let n = self
-            .device
-            .read(buf)
-            .await
-            .map_err(|e| BearDogError::io_error(&format!("HID read failed: {e}")))?;
-
-        trace!("Read {} bytes from HID device", n);
-        Ok(n)
+        match self.device.read(buf).await {
+            Ok(n) => {
+                trace!("Read {} bytes from HID device", n);
+                Ok(n)
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                trace!("HID read: WouldBlock (no data yet)");
+                Ok(0)
+            }
+            Err(e) => Err(BearDogError::io_error(&format!("HID read failed: {e}"))),
+        }
     }
 
     fn info(&self) -> &HidDeviceInfo {

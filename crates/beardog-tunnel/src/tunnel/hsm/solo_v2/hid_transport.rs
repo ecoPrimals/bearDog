@@ -13,7 +13,9 @@ use rand::RngCore;
 use tracing::{debug, warn};
 
 const HID_PACKET_SIZE: usize = 64;
-const MAX_KEEPALIVE_ATTEMPTS: usize = 32;
+/// 150 attempts * 200ms = 30s max (CTAP2 spec allows 30s for user presence)
+const MAX_KEEPALIVE_ATTEMPTS: usize = 150;
+const POLL_INTERVAL_MS: u64 = 200;
 const FIRST_PAYLOAD_MAX: usize = 57;
 const CONT_PAYLOAD_MAX: usize = 59;
 
@@ -93,10 +95,17 @@ async fn ctaphid_init<D: HidDevice + ?Sized>(device: &mut D) -> Result<u32, Bear
         .map_err(|e| BearDogError::system(format!("CTAPHID_INIT write failed: {e}")))?;
 
     let mut response = vec![0u8; HID_PACKET_SIZE];
-    let bytes_read = device
-        .read(&mut response)
-        .await
-        .map_err(|e| BearDogError::system(format!("CTAPHID_INIT read failed: {e}")))?;
+    let mut bytes_read = 0;
+    for _poll in 0..25 {
+        bytes_read = device
+            .read(&mut response)
+            .await
+            .map_err(|e| BearDogError::system(format!("CTAPHID_INIT read failed: {e}")))?;
+        if bytes_read > 0 {
+            break;
+        }
+        tokio::time::sleep(tokio::time::Duration::from_millis(POLL_INTERVAL_MS)).await;
+    }
 
     if bytes_read < 19 {
         return Err(BearDogError::system(format!(
@@ -199,7 +208,8 @@ async fn read_ctaphid_ctap_response<D: HidDevice + ?Sized>(
 
         if n < 5 {
             if n == 0 {
-                debug!("CTAPHID read attempt {attempt}: empty");
+                debug!("CTAPHID read attempt {attempt}: empty — polling in {POLL_INTERVAL_MS}ms");
+                tokio::time::sleep(tokio::time::Duration::from_millis(POLL_INTERVAL_MS)).await;
                 continue;
             }
             return Err(BearDogError::system(format!(
@@ -215,7 +225,8 @@ async fn read_ctaphid_ctap_response<D: HidDevice + ?Sized>(
 
         let b4 = buf[4];
         if b4 == CtapHidCommand::Keepalive as u8 {
-            debug!("CTAPHID keepalive");
+            debug!("CTAPHID keepalive — authenticator awaiting user presence");
+            tokio::time::sleep(tokio::time::Duration::from_millis(POLL_INTERVAL_MS)).await;
             continue;
         }
         if b4 == CtapHidCommand::Error as u8 {
