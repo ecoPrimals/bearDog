@@ -25,8 +25,6 @@
 //! cargo run --example test_ctap2_getinfo --features fido2
 //! ```
 
-use beardog_hid::HidDevice;
-
 #[tokio::main]
 async fn main() -> Result<(), beardog_errors::BearDogError> {
     // Initialize logging

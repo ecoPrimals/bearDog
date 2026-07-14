@@ -109,31 +109,11 @@ pub async fn set_pin<D: HidDevice + ?Sized>(
     // Step 6: Build and send setPIN command
     let platform_key_cbor = encode_public_key_cose(&ephemeral_public);
 
-    let cmd_map = CborValue::Map(vec![
-        // pinUvAuthProtocol (key 1)
-        (
-            CborValue::Integer(1.into()),
-            CborValue::Integer(PIN_PROTOCOL.into()),
-        ),
-        // subCommand (key 2)
-        (
-            CborValue::Integer(2.into()),
-            CborValue::Integer((SubCommand::SetPin as u64).into()),
-        ),
-        // keyAgreement (key 3) — platform's ephemeral public key in COSE format
+    let body = encode_client_pin_cmd(SubCommand::SetPin, vec![
         (CborValue::Integer(3.into()), platform_key_cbor),
-        // pinUvAuthParam (key 4)
-        (
-            CborValue::Integer(4.into()),
-            CborValue::Bytes(pin_uv_auth_param),
-        ),
-        // newPinEnc (key 5)
+        (CborValue::Integer(4.into()), CborValue::Bytes(pin_uv_auth_param)),
         (CborValue::Integer(5.into()), CborValue::Bytes(new_pin_enc)),
-    ]);
-
-    let mut body = Vec::new();
-    ciborium::into_writer(&cmd_map, &mut body)
-        .map_err(|e| BearDogError::system(format!("ClientPIN CBOR encode: {e}")))?;
+    ])?;
 
     debug!("setPIN CBOR payload ({} bytes): {:02x?}", body.len(), &body);
 
@@ -184,26 +164,10 @@ pub async fn get_pin_token<D: HidDevice + ?Sized>(
     // Step 5: Build and send getPinToken command
     let platform_key_cbor = encode_public_key_cose(&ephemeral_public);
 
-    let cmd_map = CborValue::Map(vec![
-        (
-            CborValue::Integer(1.into()),
-            CborValue::Integer(PIN_PROTOCOL.into()),
-        ),
-        (
-            CborValue::Integer(2.into()),
-            CborValue::Integer((SubCommand::GetPinToken as u64).into()),
-        ),
+    let body = encode_client_pin_cmd(SubCommand::GetPinToken, vec![
         (CborValue::Integer(3.into()), platform_key_cbor),
-        // pinHashEnc (key 6)
-        (
-            CborValue::Integer(6.into()),
-            CborValue::Bytes(pin_hash_enc),
-        ),
-    ]);
-
-    let mut body = Vec::new();
-    ciborium::into_writer(&cmd_map, &mut body)
-        .map_err(|e| BearDogError::system(format!("ClientPIN CBOR encode: {e}")))?;
+        (CborValue::Integer(6.into()), CborValue::Bytes(pin_hash_enc)),
+    ])?;
 
     debug!("getPinToken CBOR payload ({} bytes): {:02x?}", body.len(), &body);
 
@@ -239,21 +203,7 @@ pub async fn get_retries<D: HidDevice + ?Sized>(
 ) -> Result<u64, BearDogError> {
     let cid = ctaphid_init(device).await?;
 
-    let cmd_map = CborValue::Map(vec![
-        (
-            CborValue::Integer(1.into()),
-            CborValue::Integer(PIN_PROTOCOL.into()),
-        ),
-        (
-            CborValue::Integer(2.into()),
-            CborValue::Integer((SubCommand::GetRetries as u64).into()),
-        ),
-    ]);
-
-    let mut body = Vec::new();
-    ciborium::into_writer(&cmd_map, &mut body)
-        .map_err(|e| BearDogError::system(format!("ClientPIN CBOR encode: {e}")))?;
-
+    let body = encode_client_pin_cmd(SubCommand::GetRetries, vec![])?;
     let response = send_ctap2_command(device, cid, Ctap2Command::ClientPin, &body).await?;
 
     // send_ctap2_command returns Ok only if status == 0x00; response is raw CBOR payload
@@ -265,29 +215,41 @@ pub async fn get_retries<D: HidDevice + ?Sized>(
 
 // --- Internal helpers ---
 
-/// Get the authenticator's key agreement public key (COSE_Key).
-async fn get_key_agreement<D: HidDevice + ?Sized>(
-    device: &mut D,
-    cid: u32,
-) -> Result<PublicKey, BearDogError> {
-    let cmd_map = CborValue::Map(vec![
+/// Encode a ClientPIN CBOR command with the given subcommand and optional extra fields.
+///
+/// All ClientPIN commands share the same base structure:
+/// `{ 1: pinUvAuthProtocol, 2: subCommand, ...extra }`.
+fn encode_client_pin_cmd(
+    sub: SubCommand,
+    extra: Vec<(CborValue, CborValue)>,
+) -> Result<Vec<u8>, BearDogError> {
+    let mut entries = vec![
         (
             CborValue::Integer(1.into()),
             CborValue::Integer(PIN_PROTOCOL.into()),
         ),
         (
             CborValue::Integer(2.into()),
-            CborValue::Integer((SubCommand::GetKeyAgreement as u64).into()),
+            CborValue::Integer((sub as u64).into()),
         ),
-    ]);
+    ];
+    entries.extend(extra);
 
+    let cmd_map = CborValue::Map(entries);
     let mut body = Vec::new();
     ciborium::into_writer(&cmd_map, &mut body)
         .map_err(|e| BearDogError::system(format!("ClientPIN CBOR encode: {e}")))?;
+    Ok(body)
+}
 
+/// Get the authenticator's key agreement public key (COSE_Key).
+async fn get_key_agreement<D: HidDevice + ?Sized>(
+    device: &mut D,
+    cid: u32,
+) -> Result<PublicKey, BearDogError> {
+    let body = encode_client_pin_cmd(SubCommand::GetKeyAgreement, vec![])?;
     let response = send_ctap2_command(device, cid, Ctap2Command::ClientPin, &body).await?;
 
-    // send_ctap2_command already checks status; response is raw CBOR payload
     let cbor: CborValue = ciborium::from_reader(response.as_slice())
         .map_err(|e| BearDogError::system(format!("getKeyAgreement CBOR decode: {e}")))?;
 

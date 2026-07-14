@@ -532,6 +532,7 @@ impl SoloV2Provider {
 
             let parsed = parse_get_assertion_response(&timed.payload)?;
 
+            let reaction_ns = timed.timing.reaction_ns();
             taps.push(CeremonyTap {
                 index: i,
                 challenge: challenge.to_vec(),
@@ -541,7 +542,7 @@ impl SoloV2Provider {
 
             info!(
                 tap = i + 1,
-                reaction_ms = taps.last().unwrap().timing.reaction_ns() / 1_000_000,
+                reaction_ms = reaction_ns / 1_000_000,
                 "Ceremony: tap received"
             );
         }

@@ -2,10 +2,7 @@
 
 //! CTAPHID framing and CTAP2 command I/O over HID.
 
-use super::super::constants::{
-    DEBUG_PREVIEW_SIZE, HID_MIN_RESPONSE_SIZE, HID_PACKET_SIZE, HID_READ_TIMEOUT_MS,
-    MAX_KEEPALIVE_ATTEMPTS,
-};
+use super::super::constants::{HID_PACKET_SIZE, HID_READ_TIMEOUT_MS, MAX_KEEPALIVE_ATTEMPTS};
 use super::types::{Ctap2Command, Ctap2Status, CtapHidCommand};
 use beardog_errors::BearDogError;
 use tracing::{debug, info, warn};

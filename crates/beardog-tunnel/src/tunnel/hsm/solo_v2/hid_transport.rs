@@ -14,9 +14,15 @@ use rand::RngCore;
 use tracing::{debug, warn};
 
 const HID_PACKET_SIZE: usize = 64;
+/// 300 attempts * 200ms = 60s max (generous for user presence + replug)
 const MAX_KEEPALIVE_ATTEMPTS: usize = 300;
+const POLL_INTERVAL_MS: u64 = 200;
 const FIRST_PAYLOAD_MAX: usize = 57;
 const CONT_PAYLOAD_MAX: usize = 59;
+const CTAPHID_BROADCAST_CID: [u8; 4] = [0xFF, 0xFF, 0xFF, 0xFF];
+const CTAPHID_INIT_NONCE_LEN: usize = 8;
+const CTAPHID_POST_INIT_DELAY_MS: u64 = 50;
+const CTAPHID_MAX_MESSAGE_SIZE: usize = 7609;
 
 #[repr(u8)]
 #[derive(Clone, Copy)]
@@ -128,12 +134,13 @@ impl Ctap2Transport for HidCtap2Transport {
 async fn ctaphid_init<D: HidDevice + ?Sized>(device: &mut D) -> Result<u32, BearDogError> {
     // Send CTAPHID_CANCEL on broadcast CID to abort any pending transaction
     // from a previous timed-out session, then drain stale response packets.
-    let mut cancel_pkt = vec![0xFF, 0xFF, 0xFF, 0xFF, CtapHidCommand::Cancel as u8, 0x00, 0x00];
+    let mut cancel_pkt = Vec::from(CTAPHID_BROADCAST_CID);
+    cancel_pkt.extend([CtapHidCommand::Cancel as u8, 0x00, 0x00]);
     while cancel_pkt.len() < HID_PACKET_SIZE {
         cancel_pkt.push(0);
     }
     let _ = device.write(&cancel_pkt).await;
-    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    tokio::time::sleep(std::time::Duration::from_millis(CTAPHID_POST_INIT_DELAY_MS)).await;
 
     let mut drain_buf = vec![0u8; HID_PACKET_SIZE];
     for _ in 0..5 {
@@ -145,10 +152,10 @@ async fn ctaphid_init<D: HidDevice + ?Sized>(device: &mut D) -> Result<u32, Bear
         }
     }
 
-    let mut nonce = [0u8; 8];
+    let mut nonce = [0u8; CTAPHID_INIT_NONCE_LEN];
     rand::rng().fill_bytes(&mut nonce);
 
-    let mut packet = vec![0xFF, 0xFF, 0xFF, 0xFF];
+    let mut packet = Vec::from(CTAPHID_BROADCAST_CID);
     packet.push(CtapHidCommand::Init as u8);
     packet.push(0x00);
     packet.push(0x08);
@@ -176,7 +183,7 @@ async fn ctaphid_init<D: HidDevice + ?Sized>(device: &mut D) -> Result<u32, Bear
                     || msg.contains("temporarily unavailable")
                     || msg.contains("WouldBlock")
                 {
-                    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                    tokio::time::sleep(std::time::Duration::from_millis(CTAPHID_POST_INIT_DELAY_MS)).await;
                     continue;
                 }
                 return Err(BearDogError::system(format!("CTAPHID_INIT read failed: {e}")));
@@ -202,7 +209,7 @@ async fn ctaphid_init<D: HidDevice + ?Sized>(device: &mut D) -> Result<u32, Bear
     }
 
     let cid = u32::from_be_bytes([response[15], response[16], response[17], response[18]]);
-    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    tokio::time::sleep(tokio::time::Duration::from_millis(CTAPHID_POST_INIT_DELAY_MS)).await;
     Ok(cid)
 }
 
@@ -213,7 +220,7 @@ async fn send_ctaphid_message<D: HidDevice + ?Sized>(
 ) -> Result<(), BearDogError> {
     let cid_b = cid.to_be_bytes();
     let total_len = message.len();
-    if total_len > 7609 {
+    if total_len > CTAPHID_MAX_MESSAGE_SIZE {
         return Err(BearDogError::system(format!(
             "CTAP inner message too large: {total_len}"
         )));
