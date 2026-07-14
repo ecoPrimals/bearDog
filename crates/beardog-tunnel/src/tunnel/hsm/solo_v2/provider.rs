@@ -463,6 +463,205 @@ impl SoloV2Provider {
             signature: parsed.signature,
         })
     }
+
+    /// Run a tap-sequence ceremony: loop N `GetAssertion` commands, each requiring
+    /// physical user presence (touch), and collect both the hardware RNG signatures
+    /// and human temporal entropy from the timing of each tap.
+    ///
+    /// The client experience: "tap repeatedly as fast as you can for N taps."
+    /// The protocol is strictly serial — one command, one touch, one response — but
+    /// the next command is issued immediately after each response, creating a rapid-fire
+    /// tap sequence.
+    #[cfg(feature = "ctap2")]
+    pub async fn ceremony_tap_sequence(
+        &self,
+        credential_id: &[u8],
+        tap_count: usize,
+        purpose: &str,
+    ) -> Result<CeremonyResult, BearDogError> {
+        use sha2::{Digest, Sha256};
+        use std::time::Instant;
+
+        if tap_count == 0 || tap_count > 20 {
+            return Err(BearDogError::system(format!(
+                "tap_count must be 1..=20, got {tap_count}"
+            )));
+        }
+
+        let transport = self.ctap_transport.as_ref().ok_or_else(|| {
+            BearDogError::system(
+                "CTAP2 transport not configured; use SoloV2Provider::with_ctap2_transport or with_hid_device_path"
+                    .to_string(),
+            )
+        })?;
+
+        let rp_id = &self.config.relying_party_id;
+        let pin_auth = {
+            let pin_config = self.pin_config.read().await;
+            pin_config
+                .cached_pin
+                .as_ref()
+                .map(|pin| pin.as_bytes().to_vec())
+        };
+        let pin_uv = pin_auth.as_deref().map(|p| (p, 1_u64));
+
+        let ceremony_start = Instant::now();
+        let mut taps: Vec<CeremonyTap> = Vec::with_capacity(tap_count);
+
+        for i in 0..tap_count {
+            let challenge: [u8; 32] = rand::random();
+
+            let client_data_hash = {
+                let mut hasher = Sha256::new();
+                hasher.update(&challenge);
+                hasher.finalize().to_vec()
+            };
+
+            let cmd = build_get_assertion(rp_id, &client_data_hash, &[credential_id], pin_uv)?;
+
+            info!(
+                tap = i + 1,
+                total = tap_count,
+                purpose,
+                "Ceremony: awaiting tap..."
+            );
+
+            let mut guard = transport.lock().await;
+            let timed = guard.send_receive_timed(&cmd).await?;
+            drop(guard);
+
+            let parsed = parse_get_assertion_response(&timed.payload)?;
+
+            taps.push(CeremonyTap {
+                index: i,
+                challenge: challenge.to_vec(),
+                signature: parsed.signature,
+                timing: timed.timing,
+            });
+
+            info!(
+                tap = i + 1,
+                reaction_ms = taps.last().unwrap().timing.reaction_ns() / 1_000_000,
+                "Ceremony: tap received"
+            );
+        }
+
+        let total_duration_ms =
+            ceremony_start.elapsed().as_millis() as u64;
+
+        Ok(CeremonyResult {
+            taps,
+            taps_requested: tap_count,
+            total_duration_ms,
+            purpose: purpose.to_string(),
+        })
+    }
+}
+
+/// A single tap in a ceremony sequence.
+#[cfg(feature = "ctap2")]
+pub struct CeremonyTap {
+    /// Zero-based tap index within the ceremony.
+    pub index: usize,
+    /// Fresh OS-RNG challenge sent for this tap (Tier 1).
+    pub challenge: Vec<u8>,
+    /// Signature from the authenticator containing hardware RNG nonce (Tier 2).
+    pub signature: Vec<u8>,
+    /// Transport-layer timing metadata (Tier 3 human temporal entropy).
+    pub timing: super::hid_transport::TapTimingEntropy,
+}
+
+/// Result of a completed tap-sequence ceremony.
+#[cfg(feature = "ctap2")]
+pub struct CeremonyResult {
+    /// All taps collected during the ceremony.
+    pub taps: Vec<CeremonyTap>,
+    /// How many taps were originally requested.
+    pub taps_requested: usize,
+    /// Total wall-clock duration of the ceremony in milliseconds.
+    pub total_duration_ms: u64,
+    /// Caller-supplied purpose label (e.g. `"loam_seed"`, `"entropy_harvest"`).
+    pub purpose: String,
+}
+
+#[cfg(feature = "ctap2")]
+impl CeremonyResult {
+    /// Number of taps actually completed.
+    #[must_use]
+    pub fn taps_completed(&self) -> usize {
+        self.taps.len()
+    }
+
+    /// Inter-tap intervals in nanoseconds.
+    #[must_use]
+    pub fn inter_tap_intervals_ns(&self) -> Vec<u64> {
+        self.taps
+            .windows(2)
+            .map(|w| {
+                w[1].timing
+                    .response_received_ns
+                    .saturating_sub(w[0].timing.response_received_ns)
+            })
+            .collect()
+    }
+
+    /// Inter-tap intervals in milliseconds (for display).
+    #[must_use]
+    pub fn inter_tap_intervals_ms(&self) -> Vec<u64> {
+        self.inter_tap_intervals_ns()
+            .iter()
+            .map(|ns| ns / 1_000_000)
+            .collect()
+    }
+
+    /// Mean human reaction time in milliseconds (keepalive/command → response).
+    #[must_use]
+    pub fn mean_reaction_ms(&self) -> u64 {
+        if self.taps.is_empty() {
+            return 0;
+        }
+        let sum: u64 = self.taps.iter().map(|t| t.timing.reaction_ns()).sum();
+        sum / (self.taps.len() as u64) / 1_000_000
+    }
+
+    /// Standard deviation of reaction times in milliseconds (jitter = entropy quality).
+    #[must_use]
+    pub fn reaction_jitter_ms(&self) -> u64 {
+        if self.taps.len() < 2 {
+            return 0;
+        }
+        let mean_ns = {
+            let sum: u64 = self.taps.iter().map(|t| t.timing.reaction_ns()).sum();
+            sum / self.taps.len() as u64
+        };
+        let variance: u64 = self
+            .taps
+            .iter()
+            .map(|t| {
+                let diff = t.timing.reaction_ns() as i128 - mean_ns as i128;
+                (diff * diff) as u64
+            })
+            .sum::<u64>()
+            / (self.taps.len() as u64 - 1);
+        let std_dev_ns = (variance as f64).sqrt() as u64;
+        std_dev_ns / 1_000_000
+    }
+
+    /// Rough estimate of timing entropy bits (log2 of inter-tap jitter range).
+    #[must_use]
+    pub fn timing_entropy_bits_estimate(&self) -> u32 {
+        let intervals = self.inter_tap_intervals_ns();
+        if intervals.len() < 2 {
+            return 0;
+        }
+        let min = intervals.iter().copied().min().unwrap_or(0);
+        let max = intervals.iter().copied().max().unwrap_or(0);
+        let range_us = (max.saturating_sub(min)) / 1_000;
+        if range_us == 0 {
+            return 0;
+        }
+        (range_us as f64).log2() as u32
+    }
 }
 
 /// CTAP2 `MakeCredential` result
