@@ -321,7 +321,7 @@ async fn handle_fido2_authenticate(params: Option<&Value>) -> Result<Value, supe
 
 /// Harvest hardware entropy from a FIDO2 device.
 ///
-/// Generates a random challenge, requests a GetAssertion, and mixes the
+/// Generates a random challenge, requests a `GetAssertion`, and mixes the
 /// resulting signature bytes (which contain the authenticator's hardware RNG
 /// nonce) with the challenge via BLAKE3 to produce uniform entropy.
 ///

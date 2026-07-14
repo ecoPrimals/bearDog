@@ -43,16 +43,17 @@ use super::types::{HidDevice, HidDeviceInfo, ProductId, VendorId};
 use beardog_errors::BearDogError;
 use std::fmt;
 use std::path::PathBuf;
-use tokio::fs::{File, OpenOptions, read_dir, read_to_string};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use std::sync::{Arc, Mutex as StdMutex};
+use tokio::fs::{read_dir, read_to_string};
 use tracing::{debug, trace, warn};
 
-/// Linux HID device via `/dev/hidraw`
+/// Linux HID device via `/dev/hidraw`.
 ///
-/// Provides Pure Rust access to HID devices using standard file I/O.
+/// Uses blocking I/O behind [`tokio::task::spawn_blocking`] — the correct
+/// pattern for character device files that don't support `epoll`/`io_uring`.
 pub struct LinuxHidDevice {
-    /// Async file handle to `/dev/hidrawN`
-    device: File,
+    /// Blocking file handle wrapped for cross-thread `spawn_blocking` use.
+    file: Arc<StdMutex<std::fs::File>>,
 
     /// Device metadata
     info: HidDeviceInfo,
@@ -94,23 +95,24 @@ impl LinuxHidDevice {
     /// }
     /// ```
     pub async fn open(path: &str) -> Result<Self, BearDogError> {
-        debug!("Opening HID device: {}", path);
+        debug!("Opening HID device (blocking mode): {}", path);
 
-        // Pure Rust file I/O - no C libraries!
-        let device = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .custom_flags(libc::O_NONBLOCK) // Only libc usage - for flags
-            .open(path)
-            .await
-            .map_err(|e| {
-                  BearDogError::io_error(&format!(
-                    "Failed to open HID device {path}: {e}. \
-                     Check permissions and udev rules."
-                ))
-            })?;
+        let path_owned = path.to_string();
+        let file = tokio::task::spawn_blocking(move || {
+            std::fs::OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open(&path_owned)
+                .map_err(|e| {
+                    BearDogError::io_error(&format!(
+                        "Failed to open HID device {path_owned}: {e}. \
+                         Check permissions and udev rules."
+                    ))
+                })
+        })
+        .await
+        .map_err(|e| BearDogError::system(format!("spawn_blocking join: {e}")))??;
 
-        // Read device metadata from sysfs (Pure Rust)
         let info = Self::read_device_info(path).await?;
 
         debug!(
@@ -118,7 +120,10 @@ impl LinuxHidDevice {
             info.manufacturer, info.product, info.vendor_id, info.product_id
         );
 
-        Ok(Self { device, info })
+        Ok(Self {
+            file: Arc::new(StdMutex::new(file)),
+            info,
+        })
     }
 
     /// Read device info from `/sys/class/hidraw/` (Pure Rust)
@@ -176,36 +181,61 @@ impl LinuxHidDevice {
 }
 
 impl HidDevice for LinuxHidDevice {
-    /// Write HID report to device (Pure Rust)
+    /// Write HID report to device via `spawn_blocking`.
+    ///
+    /// Linux hidraw requires a report ID byte prefix on every write.
+    /// FIDO2 devices use unnumbered reports, so we prepend `0x00`.
     async fn write(&mut self, report: &[u8]) -> Result<usize, BearDogError> {
-        trace!("Writing {} bytes to HID device", report.len());
+        trace!("Writing {} bytes to HID device (+ report ID prefix)", report.len());
 
-        self.device
-            .write_all(report)
-            .await
-            .map_err(|e| BearDogError::io_error(&format!("HID write failed: {e}")))?;
+        let mut frame = Vec::with_capacity(1 + report.len());
+        frame.push(0x00);
+        frame.extend_from_slice(report);
 
-        Ok(report.len())
+        let file = Arc::clone(&self.file);
+        let data_len = report.len();
+        tokio::task::spawn_blocking(move || {
+            use std::io::Write;
+            let mut f = file.lock().map_err(|e| {
+                BearDogError::system(format!("HID mutex poisoned: {e}"))
+            })?;
+            f.write_all(&frame)
+                .map_err(|e| BearDogError::io_error(&format!("HID write failed: {e}")))?;
+            Ok::<_, BearDogError>(data_len)
+        })
+        .await
+        .map_err(|e| BearDogError::system(format!("spawn_blocking join: {e}")))?
     }
 
-    /// Read HID report from device (Pure Rust).
+    /// Read HID report from device via `spawn_blocking`.
     ///
-    /// Returns `Ok(0)` when no data is available (non-blocking `EAGAIN`/`WouldBlock`)
-    /// so callers can poll in a loop without treating absence as a hard error.
+    /// Uses blocking I/O — the kernel will block until data arrives or an error
+    /// occurs. Returns `Ok(0)` for `WouldBlock` only if the fd was opened
+    /// non-blocking (which we no longer do).
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, BearDogError> {
         trace!("Reading up to {} bytes from HID device", buf.len());
 
-        match self.device.read(buf).await {
-            Ok(n) => {
-                trace!("Read {} bytes from HID device", n);
-                Ok(n)
+        let file = Arc::clone(&self.file);
+        let len = buf.len();
+        let result = tokio::task::spawn_blocking(move || {
+            use std::io::Read;
+            let mut f = file.lock().map_err(|e| {
+                BearDogError::system(format!("HID mutex poisoned: {e}"))
+            })?;
+            let mut local_buf = vec![0u8; len];
+            match f.read(&mut local_buf) {
+                Ok(n) => Ok((n, local_buf)),
+                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => Ok((0, local_buf)),
+                Err(e) => Err(BearDogError::io_error(&format!("HID read failed: {e}"))),
             }
-            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                trace!("HID read: WouldBlock (no data yet)");
-                Ok(0)
-            }
-            Err(e) => Err(BearDogError::io_error(&format!("HID read failed: {e}"))),
-        }
+        })
+        .await
+        .map_err(|e| BearDogError::system(format!("spawn_blocking join: {e}")))?;
+
+        let (n, local_buf) = result?;
+        buf[..n].copy_from_slice(&local_buf[..n]);
+        trace!("Read {n} bytes from HID device");
+        Ok(n)
     }
 
     fn info(&self) -> &HidDeviceInfo {

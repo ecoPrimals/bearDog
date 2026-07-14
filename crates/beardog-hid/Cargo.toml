@@ -18,9 +18,6 @@ beardog-errors = { path = "../beardog-errors" }
 tokio = { workspace = true, features = ["rt", "macros", "fs", "io-util"] }
 tracing = { workspace = true }
 
-# System interface only (acceptable per ecoBin) - used only for O_NONBLOCK flag
-libc = { workspace = true }
-
 [dev-dependencies]
 tokio = { workspace = true, features = ["rt", "macros", "fs", "io-util"] }
 tempfile = { workspace = true }

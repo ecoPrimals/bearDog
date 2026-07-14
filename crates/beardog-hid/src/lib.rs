@@ -13,7 +13,7 @@
 //! - ✅ No `libusb` (C library)
 //! - ✅ Direct `/dev/hidraw` access on Linux (Pure Rust file I/O)
 //! - ✅ JNI bindings for Android (Pure Rust)
-//! - ✅ Only `libc` for system flags (acceptable per ecoBin spec)
+//! - ✅ Zero `libc` dependency — pure `std::fs` + `spawn_blocking`
 //!
 //! # Platform Support
 //!

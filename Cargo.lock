@@ -671,7 +671,6 @@ name = "beardog-hid"
 version = "0.9.0"
 dependencies = [
  "beardog-errors",
- "libc",
  "tempfile",
  "tokio",
  "tracing",
