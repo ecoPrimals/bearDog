@@ -16,6 +16,8 @@
 //! Uses Pure Rust beardog-hid for HID communication (ecoBin compliant).
 
 #[cfg(feature = "fido2")]
+use beardog_hid::HidDevice;
+#[cfg(feature = "fido2")]
 use beardog_security::hsm::fido2::discovery;
 
 #[tokio::main]
@@ -131,7 +133,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
             let mut response = vec![0u8; 64];
 
             // Use tokio timeout for read
-            let read_result = tokio::time::timeout(
+            let read_result: Result<Result<usize, _>, _> = tokio::time::timeout(
                 tokio::time::Duration::from_secs(1),
                 hid_device.read(&mut response),
             )
