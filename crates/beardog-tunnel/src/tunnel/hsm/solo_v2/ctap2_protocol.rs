@@ -133,11 +133,11 @@ pub fn build_make_credential_ext(
         map.push((CborValue::Integer(6.into()), extensions));
     }
 
-    // 7: options (resident key + user presence)
-    let opts = CborValue::Map(vec![
-        (CborValue::Text("rk".to_string()), CborValue::Bool(true)),
-        (CborValue::Text("up".to_string()), CborValue::Bool(true)),
-    ]);
+    // 7: options (resident key — `up` is MakeCredential-implicit, not a valid option here)
+    let opts = CborValue::Map(vec![(
+        CborValue::Text("rk".to_string()),
+        CborValue::Bool(true),
+    )]);
     map.push((CborValue::Integer(7.into()), opts));
 
     if let Some((param, protocol)) = pin_uv_auth {

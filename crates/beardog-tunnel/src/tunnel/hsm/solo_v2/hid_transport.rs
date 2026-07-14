@@ -13,7 +13,7 @@ use rand::RngCore;
 use tracing::{debug, warn};
 
 const HID_PACKET_SIZE: usize = 64;
-const MAX_KEEPALIVE_ATTEMPTS: usize = 150;
+const MAX_KEEPALIVE_ATTEMPTS: usize = 300;
 const FIRST_PAYLOAD_MAX: usize = 57;
 const CONT_PAYLOAD_MAX: usize = 59;
 
