@@ -100,8 +100,12 @@ ndk-context = "0.1"
 proptest = { workspace = true }
 tempfile = { workspace = true }
 
+[dependencies.p256]
+workspace = true
+optional = true
+
 [features]
-fido2 = ["dep:beardog-hid", "dep:ciborium"]
+fido2 = ["dep:beardog-hid", "dep:ciborium", "dep:p256"]
 mobile = []
 # Simulated PQC (random bytes, not real cryptography). OFF by default.
 pqc-simulation = []

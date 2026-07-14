@@ -175,6 +175,8 @@ async fn handle_fido2_register(params: Option<&Value>) -> Result<Value, super::H
 
     let _device_path = params.get("device_path").and_then(|v| v.as_str());
 
+    let _pin = params.get("pin").and_then(|v| v.as_str());
+
     #[cfg(feature = "ctap2")]
     {
         use base64::Engine;
@@ -186,6 +188,32 @@ async fn handle_fido2_register(params: Option<&Value>) -> Result<Value, super::H
             .decode(user_id)
             .map_err(|e| format!("Invalid base64 user_id: {e}"))?;
 
+        // If a PIN is provided, run ClientPIN ceremony then MakeCredential with token
+        if let Some(pin) = _pin {
+            let result = ceremony_register_with_pin(
+                &device_path, rp_id, &_user_id_bytes, user_name, pin,
+            )
+            .await
+            .map_err(|e| format!("MakeCredential (PIN ceremony): {e}"))?;
+
+            let credential_id_b64 = BASE64.encode(&result.0);
+            let public_key_b64 = BASE64.encode(&result.1);
+
+            info!(
+                rp_id,
+                credential_id_len = result.0.len(),
+                "FIDO2 credential registered (PIN ceremony)"
+            );
+
+            return Ok(json!({
+                "credential_id": credential_id_b64,
+                "public_key": public_key_b64,
+                "rp_id": rp_id,
+                "user_name": user_name,
+            }));
+        }
+
+        // Standard path (no PIN)
         let provider = create_ctap2_provider(&device_path, rp_id).await?;
 
         use crate::tunnel::hsm::solo_v2::types::KeyType;
@@ -429,6 +457,79 @@ async fn resolve_device_path(explicit: Option<&str>) -> Result<String, String> {
                 .to_string(),
         )?;
     Ok(fido2_device.path)
+}
+
+/// Full PIN-ceremony credential registration: set PIN → get token → MakeCredential.
+///
+/// Returns `(credential_id, public_key_cose)` on success.
+#[cfg(feature = "ctap2")]
+async fn ceremony_register_with_pin(
+    device_path: &str,
+    rp_id: &str,
+    user_id: &[u8],
+    user_name: &str,
+    pin: &str,
+) -> Result<(Vec<u8>, Vec<u8>), String> {
+    use beardog_security::hsm::fido2::ctap2::client_pin;
+    use crate::tunnel::hsm::solo_v2::ctap2_protocol::{
+        build_make_credential, parse_make_credential_response,
+    };
+    use crate::tunnel::hsm::solo_v2::HidCtap2Transport;
+    use crate::tunnel::hsm::solo_v2::Ctap2Transport;
+
+    info!(device_path, "Opening HID device for PIN ceremony");
+
+    let mut device = beardog_hid::open_device(device_path)
+        .await
+        .map_err(|e| format!("Failed to open HID device: {e}"))?;
+
+    // Step 1: Set PIN on the authenticator (idempotent if already set — will
+    // return an error we handle gracefully)
+    info!("Setting PIN on authenticator...");
+    match client_pin::set_pin(&mut device, pin).await {
+        Ok(()) => info!("PIN set successfully"),
+        Err(e) => {
+            let msg = format!("{e}");
+            if msg.contains("0x34") {
+                // CTAP2_ERR_PIN_AUTH_INVALID or PIN already set — try getting token
+                info!("PIN may already be set, proceeding to get token");
+            } else {
+                return Err(format!("Failed to set PIN: {e}"));
+            }
+        }
+    }
+
+    // Step 2: Get pinUvAuthToken
+    info!("Getting pinUvAuthToken...");
+    let pin_token = client_pin::get_pin_token(&mut device, pin)
+        .await
+        .map_err(|e| format!("Failed to get PIN token: {e}"))?;
+
+    // Step 3: Build MakeCredential with pinUvAuthParam
+    let client_data_hash = [0u8; 32]; // Ceremony uses zero hash (not browser-bound)
+    let pin_uv_auth_param = pin_token.authenticate(&client_data_hash);
+    let pin_uv = Some((pin_uv_auth_param.as_slice(), 1_u64));
+
+    let cmd =
+        build_make_credential(rp_id, user_id, user_name, &client_data_hash, -8, pin_uv)
+            .map_err(|e| format!("Failed to build MakeCredential: {e}"))?;
+
+    // Step 4: Send via CTAP2 transport (reopen for fresh channel)
+    info!("Sending MakeCredential (touch key when it blinks!)...");
+    let mut transport = HidCtap2Transport::open(device_path)
+        .await
+        .map_err(|e| format!("Transport init failed: {e}"))?;
+
+    let response = transport
+        .send_receive(&cmd)
+        .await
+        .map_err(|e| format!("MakeCredential transport error: {e}"))?;
+
+    // Step 5: Parse response
+    let parsed = parse_make_credential_response(&response)
+        .map_err(|e| format!("MakeCredential parse error: {e}"))?;
+
+    Ok((parsed.credential_id, parsed.raw_cose_public_key))
 }
 
 #[cfg(feature = "ctap2")]

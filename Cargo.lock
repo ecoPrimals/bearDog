@@ -778,6 +778,7 @@ dependencies = [
  "hex",
  "hmac 0.12.1",
  "ndk-context",
+ "p256 0.13.2",
  "pbkdf2",
  "proptest",
  "rand 0.9.4",

@@ -145,12 +145,12 @@ pub async fn send_ctap2_command<D: beardog_hid::HidDevice + ?Sized>(
 
     debug!("CTAP2 packet: {:02x?}", &packet);
 
-    // Wrap in CTAPHID_MSG frame
-    // Format: [CID (4 bytes)] [CMD: 0x83] [LEN_H] [LEN_L] [DATA...]
-    // Note: Using CTAPHID_MSG (0x83) as it's more widely supported than CTAPHID_CBOR (0x90)
+    // Wrap in CTAPHID_CBOR frame
+    // Format: [CID (4 bytes)] [CMD: 0x90] [LEN_H] [LEN_L] [DATA...]
+    // CTAPHID_CBOR (0x90) is the correct channel for CTAP2 commands (ClientPIN, etc).
     let cid_bytes = cid.to_be_bytes();
     let mut hid_packet = vec![cid_bytes[0], cid_bytes[1], cid_bytes[2], cid_bytes[3]];
-    hid_packet.push(CtapHidCommand::Msg as u8); // CTAPHID_MSG
+    hid_packet.push(CtapHidCommand::Cbor as u8); // CTAPHID_CBOR
 
     let len = packet.len() as u16;
     hid_packet.push((len >> 8) as u8); // Length high byte

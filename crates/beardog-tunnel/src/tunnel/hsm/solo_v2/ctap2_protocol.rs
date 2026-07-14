@@ -133,9 +133,13 @@ pub fn build_make_credential_ext(
         map.push((CborValue::Integer(6.into()), extensions));
     }
 
-    // 7: options (resident key + user presence)
+    // 7: options
+    // Solo 2 firmware ≥2.3 requires PIN for rk=true (discoverable credentials).
+    // For ecoPrimals entropy ceremony, non-discoverable credentials (rk=false)
+    // suffice — we store the credential_id in our depot, not on the key.
+    let rk = pin_uv_auth.is_some();
     let opts = CborValue::Map(vec![
-        (CborValue::Text("rk".to_string()), CborValue::Bool(true)),
+        (CborValue::Text("rk".to_string()), CborValue::Bool(rk)),
         (CborValue::Text("up".to_string()), CborValue::Bool(true)),
     ]);
     map.push((CborValue::Integer(7.into()), opts));

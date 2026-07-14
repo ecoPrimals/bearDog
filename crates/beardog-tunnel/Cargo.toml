@@ -113,7 +113,7 @@ pkcs11-provider = []
 # `usb-discovery`: HID enumeration for discovery (optional; uses `beardog-hid`).
 solo-v2 = ["dep:ciborium"]
 usb-discovery = ["dep:beardog-hid"]
-ctap2 = ["solo-v2", "dep:beardog-hid"]
+ctap2 = ["solo-v2", "dep:beardog-hid", "beardog-security/fido2"]
 tls-x509 = ["dep:x509-parser"]
 tls-server = ["dep:rustls", "dep:tokio-rustls", "dep:rustls-pki-types", "dep:rustls-rustcrypto"]
 
