@@ -13,7 +13,7 @@ use rand::RngCore;
 use tracing::{debug, warn};
 
 const HID_PACKET_SIZE: usize = 64;
-const MAX_KEEPALIVE_ATTEMPTS: usize = 32;
+const MAX_KEEPALIVE_ATTEMPTS: usize = 150;
 const FIRST_PAYLOAD_MAX: usize = 57;
 const CONT_PAYLOAD_MAX: usize = 59;
 
@@ -93,10 +93,26 @@ async fn ctaphid_init<D: HidDevice + ?Sized>(device: &mut D) -> Result<u32, Bear
         .map_err(|e| BearDogError::system(format!("CTAPHID_INIT write failed: {e}")))?;
 
     let mut response = vec![0u8; HID_PACKET_SIZE];
-    let bytes_read = device
-        .read(&mut response)
-        .await
-        .map_err(|e| BearDogError::system(format!("CTAPHID_INIT read failed: {e}")))?;
+    let mut bytes_read = 0;
+    for _init_attempt in 0..20 {
+        match device.read(&mut response).await {
+            Ok(n) => {
+                bytes_read = n;
+                break;
+            }
+            Err(e) => {
+                let msg = e.to_string();
+                if msg.contains("os error 11")
+                    || msg.contains("temporarily unavailable")
+                    || msg.contains("WouldBlock")
+                {
+                    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                    continue;
+                }
+                return Err(BearDogError::system(format!("CTAPHID_INIT read failed: {e}")));
+            }
+        }
+    }
 
     if bytes_read < 19 {
         return Err(BearDogError::system(format!(
@@ -192,14 +208,27 @@ async fn read_ctaphid_ctap_response<D: HidDevice + ?Sized>(
 
     for attempt in 1..=MAX_KEEPALIVE_ATTEMPTS {
         let mut buf = vec![0u8; HID_PACKET_SIZE];
-        let n = device
-            .read(&mut buf)
-            .await
-            .map_err(|e| BearDogError::system(format!("CTAPHID read failed: {e}")))?;
+        let n = match device.read(&mut buf).await {
+            Ok(n) => n,
+            Err(e) => {
+                let msg = e.to_string();
+                if msg.contains("os error 11")
+                    || msg.contains("temporarily unavailable")
+                    || msg.contains("EAGAIN")
+                    || msg.contains("WouldBlock")
+                {
+                    debug!("CTAPHID read attempt {attempt}: EAGAIN (waiting for user touch)");
+                    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+                    continue;
+                }
+                return Err(BearDogError::system(format!("CTAPHID read failed: {e}")));
+            }
+        };
 
         if n < 5 {
             if n == 0 {
                 debug!("CTAPHID read attempt {attempt}: empty");
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                 continue;
             }
             return Err(BearDogError::system(format!(

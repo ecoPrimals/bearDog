@@ -25,6 +25,8 @@
 //! cargo run --example test_ctap2_getinfo --features fido2
 //! ```
 
+use beardog_hid::HidDevice;
+
 #[tokio::main]
 async fn main() -> Result<(), beardog_errors::BearDogError> {
     // Initialize logging
@@ -140,7 +142,8 @@ async fn run_ctap2_test() -> Result<(), beardog_errors::BearDogError> {
                             println!("Response: {n} bytes");
                             // Full CBOR parsing would go here
                             // For now, just show raw response
-                            println!("Raw (first 64 bytes): {:02x?}", &response[..n.min(64)]);
+                            let end = std::cmp::min(n, 64);
+                            println!("Raw (first {end} bytes): {:02x?}", &response[..end]);
                         } else {
                             println!("GetInfo returned error status: 0x{status:02x}");
                         }
