@@ -47,9 +47,6 @@ use tokio::fs::{File, OpenOptions, read_dir, read_to_string};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tracing::{debug, trace, warn};
 
-/// Read timeout for non-blocking-style polling on a blocking fd.
-const READ_POLL_TIMEOUT_MS: u64 = 200;
-
 /// Linux HID device via `/dev/hidraw`
 ///
 /// Provides Pure Rust access to HID devices using standard file I/O.
@@ -99,12 +96,11 @@ impl LinuxHidDevice {
     pub async fn open(path: &str) -> Result<Self, BearDogError> {
         debug!("Opening HID device: {}", path);
 
-        // Blocking I/O (matches libfido2 behavior). Required for multi-packet
-        // CTAPHID writes — O_NONBLOCK causes USB OUT URB races where the device
-        // processes incomplete commands.
+        // Pure Rust file I/O - no C libraries!
         let device = OpenOptions::new()
             .read(true)
             .write(true)
+            .custom_flags(libc::O_NONBLOCK) // Only libc usage - for flags
             .open(path)
             .await
             .map_err(|e| {
@@ -180,18 +176,17 @@ impl LinuxHidDevice {
 }
 
 impl HidDevice for LinuxHidDevice {
-    /// Write HID report to device (Pure Rust).
+    /// Write HID report to device (Pure Rust)
     ///
-    /// Linux hidraw requires a Report ID byte prefix. For FIDO2/CTAP devices
-    /// (no numbered reports), this is `0x00`. The kernel strips it before
-    /// sending to the device — callers pass raw CTAPHID packets without it.
+    /// Linux hidraw requires a report ID prefix byte. For devices without numbered
+    /// reports (all FIDO2/CTAPHID devices), this is `0x00`. The kernel strips it
+    /// before sending to the USB device.
     async fn write(&mut self, report: &[u8]) -> Result<usize, BearDogError> {
         trace!("Writing {} bytes to HID device (+ report ID prefix)", report.len());
 
         let mut buf = Vec::with_capacity(1 + report.len());
-        buf.push(0x00); // HID Report ID (0 = default for unnumbered reports)
+        buf.push(0x00);
         buf.extend_from_slice(report);
-
         self.device
             .write_all(&buf)
             .await
@@ -200,26 +195,18 @@ impl HidDevice for LinuxHidDevice {
         Ok(report.len())
     }
 
-    /// Read HID report from device (Pure Rust).
-    ///
-    /// Uses a short timeout to emulate non-blocking behavior on a blocking fd.
-    /// Returns `Ok(0)` when no data arrives within the timeout window,
-    /// so callers can poll in a loop without treating absence as a hard error.
+    /// Read HID report from device (Pure Rust)
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, BearDogError> {
         trace!("Reading up to {} bytes from HID device", buf.len());
 
-        let timeout = tokio::time::Duration::from_millis(READ_POLL_TIMEOUT_MS);
-        match tokio::time::timeout(timeout, self.device.read(buf)).await {
-            Ok(Ok(n)) => {
-                trace!("Read {} bytes from HID device", n);
-                Ok(n)
-            }
-            Ok(Err(e)) => Err(BearDogError::io_error(&format!("HID read failed: {e}"))),
-            Err(_elapsed) => {
-                trace!("HID read: timeout (no data within {}ms)", READ_POLL_TIMEOUT_MS);
-                Ok(0)
-            }
-        }
+        let n = self
+            .device
+            .read(buf)
+            .await
+            .map_err(|e| BearDogError::io_error(&format!("HID read failed: {e}")))?;
+
+        trace!("Read {} bytes from HID device", n);
+        Ok(n)
     }
 
     fn info(&self) -> &HidDeviceInfo {

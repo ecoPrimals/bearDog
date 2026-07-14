@@ -5,6 +5,7 @@
 //! CTAPHID framing follows FIDO Client to Authenticator Protocol (HID).
 
 use std::future::Future;
+use std::time::Instant;
 
 use super::transport::Ctap2Transport;
 use beardog_errors::BearDogError;
@@ -13,9 +14,7 @@ use rand::RngCore;
 use tracing::{debug, warn};
 
 const HID_PACKET_SIZE: usize = 64;
-/// 150 attempts * 200ms = 30s max (CTAP2 spec allows 30s for user presence)
-const MAX_KEEPALIVE_ATTEMPTS: usize = 150;
-const POLL_INTERVAL_MS: u64 = 200;
+const MAX_KEEPALIVE_ATTEMPTS: usize = 300;
 const FIRST_PAYLOAD_MAX: usize = 57;
 const CONT_PAYLOAD_MAX: usize = 59;
 
@@ -25,8 +24,47 @@ enum CtapHidCommand {
     Msg = 0x83,
     Cbor = 0x90,
     Init = 0x86,
+    Cancel = 0x91,
     Error = 0xBF,
     Keepalive = 0xBB,
+}
+
+/// Timing metadata captured during a CTAP2 response read.
+///
+/// Used by the tap-sequence ceremony to harvest human temporal entropy
+/// alongside hardware RNG nonces from each touch event.
+#[derive(Debug, Clone)]
+pub struct TapTimingEntropy {
+    /// Nanoseconds since an arbitrary epoch when the command was sent.
+    pub command_sent_ns: u64,
+    /// Nanoseconds when the first keepalive packet arrived (device acknowledged the command).
+    /// `None` if the device responded before any keepalive.
+    pub first_keepalive_ns: Option<u64>,
+    /// Nanoseconds when the final CTAP2 response was fully assembled.
+    pub response_received_ns: u64,
+    /// Total EAGAIN retries (OS/USB scheduling jitter).
+    pub eagain_count: u32,
+    /// Total CTAPHID keepalive packets received (device processing time indicator).
+    pub keepalive_count: u32,
+}
+
+impl TapTimingEntropy {
+    /// Human reaction latency in nanoseconds (first keepalive → response).
+    /// Returns the full command-to-response span if no keepalive was observed.
+    #[must_use]
+    pub fn reaction_ns(&self) -> u64 {
+        self.response_received_ns
+            .saturating_sub(self.first_keepalive_ns.unwrap_or(self.command_sent_ns))
+    }
+}
+
+/// A CTAP2 response payload with associated timing metadata.
+#[derive(Debug, Clone)]
+pub struct CtapResponseWithTiming {
+    /// Raw CTAP2 response bytes (`[status][CBOR...]`).
+    pub payload: Vec<u8>,
+    /// Timing captured during the response read.
+    pub timing: TapTimingEntropy,
 }
 
 /// HID-backed CTAP2 transport using `beardog-hid` (pure Rust).
@@ -63,9 +101,19 @@ async fn hid_send_receive(
     transport: &mut HidCtap2Transport,
     command: &[u8],
 ) -> Result<Vec<u8>, BearDogError> {
+    let result = hid_send_receive_timed(transport, command).await?;
+    Ok(result.payload)
+}
+
+async fn hid_send_receive_timed(
+    transport: &mut HidCtap2Transport,
+    command: &[u8],
+) -> Result<CtapResponseWithTiming, BearDogError> {
     let cid = transport.ensure_channel().await?;
+    let epoch = Instant::now();
+    let command_sent_ns = epoch.elapsed().as_nanos() as u64;
     send_ctaphid_message(&mut transport.device, cid, command).await?;
-    read_ctaphid_ctap_response(&mut transport.device, cid).await
+    read_ctaphid_ctap_response_timed(&mut transport.device, cid, epoch, command_sent_ns).await
 }
 
 impl Ctap2Transport for HidCtap2Transport {
@@ -78,6 +126,25 @@ impl Ctap2Transport for HidCtap2Transport {
 }
 
 async fn ctaphid_init<D: HidDevice + ?Sized>(device: &mut D) -> Result<u32, BearDogError> {
+    // Send CTAPHID_CANCEL on broadcast CID to abort any pending transaction
+    // from a previous timed-out session, then drain stale response packets.
+    let mut cancel_pkt = vec![0xFF, 0xFF, 0xFF, 0xFF, CtapHidCommand::Cancel as u8, 0x00, 0x00];
+    while cancel_pkt.len() < HID_PACKET_SIZE {
+        cancel_pkt.push(0);
+    }
+    let _ = device.write(&cancel_pkt).await;
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+
+    let mut drain_buf = vec![0u8; HID_PACKET_SIZE];
+    for _ in 0..5 {
+        match device.read(&mut drain_buf).await {
+            Ok(n) if n > 0 => {
+                debug!("ctaphid_init: drained {} stale bytes (cmd=0x{:02x})", n, drain_buf[4]);
+            }
+            _ => break,
+        }
+    }
+
     let mut nonce = [0u8; 8];
     rand::rng().fill_bytes(&mut nonce);
 
@@ -97,15 +164,24 @@ async fn ctaphid_init<D: HidDevice + ?Sized>(device: &mut D) -> Result<u32, Bear
 
     let mut response = vec![0u8; HID_PACKET_SIZE];
     let mut bytes_read = 0;
-    for _poll in 0..25 {
-        bytes_read = device
-            .read(&mut response)
-            .await
-            .map_err(|e| BearDogError::system(format!("CTAPHID_INIT read failed: {e}")))?;
-        if bytes_read > 0 {
-            break;
+    for _init_attempt in 0..20 {
+        match device.read(&mut response).await {
+            Ok(n) => {
+                bytes_read = n;
+                break;
+            }
+            Err(e) => {
+                let msg = e.to_string();
+                if msg.contains("os error 11")
+                    || msg.contains("temporarily unavailable")
+                    || msg.contains("WouldBlock")
+                {
+                    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                    continue;
+                }
+                return Err(BearDogError::system(format!("CTAPHID_INIT read failed: {e}")));
+            }
         }
-        tokio::time::sleep(tokio::time::Duration::from_millis(POLL_INTERVAL_MS)).await;
     }
 
     if bytes_read < 19 {
@@ -189,16 +265,19 @@ async fn send_ctaphid_message<D: HidDevice + ?Sized>(
 }
 
 /// Read a full CTAP2 payload (`[status][CBOR...]`) from `CTAPHID_CBOR`/`CTAPHID_MSG` response packets.
-///
-/// First packet: `[CID][0x90|0x83][BCNTH][BCNTL][payload ≤57]`. Continuation: `[CID][SEQ][payload ≤59]`.
-async fn read_ctaphid_ctap_response<D: HidDevice + ?Sized>(
+async fn read_ctaphid_ctap_response_timed<D: HidDevice + ?Sized>(
     device: &mut D,
     expected_cid: u32,
-) -> Result<Vec<u8>, BearDogError> {
+    epoch: Instant,
+    command_sent_ns: u64,
+) -> Result<CtapResponseWithTiming, BearDogError> {
     let mut assembled: Vec<u8> = Vec::new();
     let mut total_len: Option<usize> = None;
-    // Next expected continuation sequence (0 for first continuation frame).
     let mut next_seq: u8 = 0;
+
+    let mut eagain_count: u32 = 0;
+    let mut keepalive_count: u32 = 0;
+    let mut first_keepalive_ns: Option<u64> = None;
 
     for attempt in 1..=MAX_KEEPALIVE_ATTEMPTS {
         let mut buf = vec![0u8; HID_PACKET_SIZE];
@@ -211,6 +290,7 @@ async fn read_ctaphid_ctap_response<D: HidDevice + ?Sized>(
                     || msg.contains("EAGAIN")
                     || msg.contains("WouldBlock")
                 {
+                    eagain_count += 1;
                     debug!("CTAPHID read attempt {attempt}: EAGAIN (waiting for user touch)");
                     tokio::time::sleep(std::time::Duration::from_millis(200)).await;
                     continue;
@@ -221,8 +301,9 @@ async fn read_ctaphid_ctap_response<D: HidDevice + ?Sized>(
 
         if n < 5 {
             if n == 0 {
-                debug!("CTAPHID read attempt {attempt}: empty — polling in {POLL_INTERVAL_MS}ms");
-                tokio::time::sleep(tokio::time::Duration::from_millis(POLL_INTERVAL_MS)).await;
+                eagain_count += 1;
+                debug!("CTAPHID read attempt {attempt}: empty");
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                 continue;
             }
             return Err(BearDogError::system(format!(
@@ -238,8 +319,11 @@ async fn read_ctaphid_ctap_response<D: HidDevice + ?Sized>(
 
         let b4 = buf[4];
         if b4 == CtapHidCommand::Keepalive as u8 {
-            debug!("CTAPHID keepalive — authenticator awaiting user presence");
-            tokio::time::sleep(tokio::time::Duration::from_millis(POLL_INTERVAL_MS)).await;
+            keepalive_count += 1;
+            if first_keepalive_ns.is_none() {
+                first_keepalive_ns = Some(epoch.elapsed().as_nanos() as u64);
+            }
+            debug!("CTAPHID keepalive");
             continue;
         }
         if b4 == CtapHidCommand::Error as u8 {
@@ -270,7 +354,16 @@ async fn read_ctaphid_ctap_response<D: HidDevice + ?Sized>(
             }
             assembled.extend_from_slice(&buf[7..7 + take]);
             if assembled.len() == bcnt {
-                return Ok(assembled);
+                return Ok(CtapResponseWithTiming {
+                    payload: assembled,
+                    timing: TapTimingEntropy {
+                        command_sent_ns,
+                        first_keepalive_ns,
+                        response_received_ns: epoch.elapsed().as_nanos() as u64,
+                        eagain_count,
+                        keepalive_count,
+                    },
+                });
             }
         } else {
             let bcnt = total_len.ok_or_else(|| {
@@ -291,7 +384,16 @@ async fn read_ctaphid_ctap_response<D: HidDevice + ?Sized>(
             assembled.extend_from_slice(&buf[5..5 + take]);
             next_seq = next_seq.wrapping_add(1);
             if assembled.len() == bcnt {
-                return Ok(assembled);
+                return Ok(CtapResponseWithTiming {
+                    payload: assembled,
+                    timing: TapTimingEntropy {
+                        command_sent_ns,
+                        first_keepalive_ns,
+                        response_received_ns: epoch.elapsed().as_nanos() as u64,
+                        eagain_count,
+                        keepalive_count,
+                    },
+                });
             }
         }
 
@@ -406,6 +508,39 @@ async fn ctap2_backend_send_receive(
         Ctap2TransportBackend::Hid(t) => hid_send_receive(t, command).await,
         #[cfg(test)]
         Ctap2TransportBackend::Mock(t) => mock_send_receive(t, command).await,
+    }
+}
+
+async fn ctap2_backend_send_receive_timed(
+    backend: &mut Ctap2TransportBackend,
+    command: &[u8],
+) -> Result<CtapResponseWithTiming, BearDogError> {
+    match backend {
+        Ctap2TransportBackend::Hid(t) => hid_send_receive_timed(t, command).await,
+        #[cfg(test)]
+        Ctap2TransportBackend::Mock(t) => {
+            let payload = mock_send_receive(t, command).await?;
+            Ok(CtapResponseWithTiming {
+                payload,
+                timing: TapTimingEntropy {
+                    command_sent_ns: 0,
+                    first_keepalive_ns: Some(1_000_000),
+                    response_received_ns: 350_000_000,
+                    eagain_count: 5,
+                    keepalive_count: 3,
+                },
+            })
+        }
+    }
+}
+
+impl Ctap2TransportBackend {
+    /// Send a CTAP2 command and receive response with timing metadata.
+    pub async fn send_receive_timed(
+        &mut self,
+        command: &[u8],
+    ) -> Result<CtapResponseWithTiming, BearDogError> {
+        ctap2_backend_send_receive_timed(self, command).await
     }
 }
 
