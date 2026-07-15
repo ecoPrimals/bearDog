@@ -6,7 +6,7 @@
 //! These types are designed to work across JSON-RPC, HTTP, and any future protocols.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 /// Supported encryption algorithms
@@ -239,7 +239,7 @@ pub struct KeyGenOptions {
 
     /// Additional metadata
     #[serde(default)]
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Service capabilities

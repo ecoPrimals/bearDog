@@ -19,7 +19,7 @@ use beardog_types::canonical::monitoring::{
     FilterOperator, MonitoringEnvironment, NotificationChannelType,
     metrics::{CustomMetricType, MetricExporter},
 };
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // ============================================================================
 // MonitoringEnvironment Tests
@@ -112,7 +112,7 @@ fn test_metric_exporter_cloudwatch() {
 
 #[test]
 fn test_metric_exporter_custom() {
-    let mut config = HashMap::new();
+    let mut config = BTreeMap::new();
     config.insert("endpoint".to_string(), serde_json::json!("http://custom"));
 
     let exporter = MetricExporter::Custom {
@@ -134,7 +134,7 @@ fn test_metric_exporter_clone() {
 
 #[test]
 fn test_metric_exporter_custom_clone() {
-    let mut config = HashMap::new();
+    let mut config = BTreeMap::new();
     config.insert("key".to_string(), serde_json::json!("value"));
 
     let exporter1 = MetricExporter::Custom {
@@ -170,7 +170,7 @@ fn test_metric_exporter_serialization() {
 // TEST_DOMAIN: core
 // TEST_PRIORITY: normal
 fn test_metric_exporter_custom_serialization() {
-    let mut config = HashMap::new();
+    let mut config = BTreeMap::new();
     config.insert("url".to_string(), serde_json::json!("http://test"));
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core

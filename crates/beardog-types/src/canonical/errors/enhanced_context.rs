@@ -10,7 +10,7 @@
 use beardog_errors::BearDogError;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 /// **Enhanced Error Context**
@@ -74,10 +74,10 @@ pub struct OperationalContext {
     pub user_context: Option<String>,
     
     /// System resource state
-    pub resource_state: HashMap<String, String>,
+    pub resource_state: BTreeMap<String, String>,
     
     /// Configuration values relevant to the error
-    pub relevant_config: HashMap<String, String>,
+    pub relevant_config: BTreeMap<String, String>,
 }
 
 /// Recovery guidance and recommendations
@@ -106,22 +106,22 @@ pub struct RecoveryGuidance {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiagnosticInfo {
     /// System metrics at time of error
-    pub system_metrics: HashMap<String, f64>,
+    pub system_metrics: BTreeMap<String, f64>,
     
     /// Relevant log entries
     pub log_entries: Vec<String>,
     
     /// Configuration values that may be relevant
-    pub config_snapshot: HashMap<String, String>,
+    pub config_snapshot: BTreeMap<String, String>,
     
     /// Network connectivity status
     pub network_status: Option<String>,
     
     /// Resource availability
-    pub resource_availability: HashMap<String, bool>,
+    pub resource_availability: BTreeMap<String, bool>,
     
     /// Performance indicators
-    pub performance_indicators: HashMap<String, f64>,
+    pub performance_indicators: BTreeMap<String, f64>,
 }
 
 /// Error severity levels with operational implications
@@ -168,11 +168,11 @@ impl EnhancedErrorContext {
         config_value: &str,
         component: &str,
     ) -> Self {
-        let mut context = HashMap::new();
+        let mut context = BTreeMap::new();
         context.insert("config_key".to_string(), config_key.to_string());
         context.insert("config_value".to_string(), config_value.to_string());
         
-        let mut relevant_config = HashMap::new();
+        let mut relevant_config = BTreeMap::new();
         relevant_config.insert(config_key.to_string(), config_value.to_string());
         
         Self {
@@ -189,7 +189,7 @@ impl EnhancedErrorContext {
                 operation: "configuration_validation".to_string(),
                 request_id: None,
                 user_context: None,
-                resource_state: HashMap::new(),
+                resource_state: BTreeMap::new(),
                 relevant_config,
             },
             recovery: RecoveryGuidance {
@@ -212,12 +212,12 @@ impl EnhancedErrorContext {
                 ],
             },
             diagnostics: DiagnosticInfo {
-                system_metrics: HashMap::new(),
+                system_metrics: BTreeMap::new(),
                 log_entries: Vec::new(),
                 config_snapshot: relevant_config.clone(),
                 network_status: None,
-                resource_availability: HashMap::new(),
-                performance_indicators: HashMap::new(),
+                resource_availability: BTreeMap::new(),
+                performance_indicators: BTreeMap::new(),
             },
             related_errors: Vec::new(),
         }
@@ -244,8 +244,8 @@ impl EnhancedErrorContext {
                 operation: operation.to_string(),
                 request_id: None,
                 user_context: user_context.map(|s| s.to_string()),
-                resource_state: HashMap::new(),
-                relevant_config: HashMap::new(),
+                resource_state: BTreeMap::new(),
+                relevant_config: BTreeMap::new(),
             },
             recovery: RecoveryGuidance {
                 immediate_actions: vec![
@@ -270,12 +270,12 @@ impl EnhancedErrorContext {
                 ],
             },
             diagnostics: DiagnosticInfo {
-                system_metrics: HashMap::new(),
+                system_metrics: BTreeMap::new(),
                 log_entries: Vec::new(),
-                config_snapshot: HashMap::new(),
+                config_snapshot: BTreeMap::new(),
                 network_status: None,
-                resource_availability: HashMap::new(),
-                performance_indicators: HashMap::new(),
+                resource_availability: BTreeMap::new(),
+                performance_indicators: BTreeMap::new(),
             },
             related_errors: Vec::new(),
         }
@@ -288,7 +288,7 @@ impl EnhancedErrorContext {
         operation: &str,
         component: &str,
     ) -> Self {
-        let mut resource_state = HashMap::new();
+        let mut resource_state = BTreeMap::new();
         resource_state.insert("endpoint".to_string(), endpoint.to_string());
         
         Self {
@@ -306,7 +306,7 @@ impl EnhancedErrorContext {
                 request_id: None,
                 user_context: None,
                 resource_state,
-                relevant_config: HashMap::new(),
+                relevant_config: BTreeMap::new(),
             },
             recovery: RecoveryGuidance {
                 immediate_actions: vec![
@@ -330,12 +330,12 @@ impl EnhancedErrorContext {
                 ],
             },
             diagnostics: DiagnosticInfo {
-                system_metrics: HashMap::new(),
+                system_metrics: BTreeMap::new(),
                 log_entries: Vec::new(),
-                config_snapshot: HashMap::new(),
+                config_snapshot: BTreeMap::new(),
                 network_status: Some("checking".to_string()),
-                resource_availability: HashMap::new(),
-                performance_indicators: HashMap::new(),
+                resource_availability: BTreeMap::new(),
+                performance_indicators: BTreeMap::new(),
             },
             related_errors: Vec::new(),
         }
@@ -414,7 +414,7 @@ impl ErrorContextBuilder {
         threshold_ms: u64,
         component: &str,
     ) -> EnhancedErrorContext {
-        let mut performance_indicators = HashMap::new();
+        let mut performance_indicators = BTreeMap::new();
         performance_indicators.insert("duration_ms".to_string(), duration_ms as f64);
         performance_indicators.insert("threshold_ms".to_string(), threshold_ms as f64);
         performance_indicators.insert("performance_ratio".to_string(), 
@@ -435,8 +435,8 @@ impl ErrorContextBuilder {
                 operation: operation.to_string(),
                 request_id: None,
                 user_context: None,
-                resource_state: HashMap::new(),
-                relevant_config: HashMap::new(),
+                resource_state: BTreeMap::new(),
+                relevant_config: BTreeMap::new(),
             },
             recovery: RecoveryGuidance {
                 immediate_actions: vec![
@@ -460,11 +460,11 @@ impl ErrorContextBuilder {
                 ],
             },
             diagnostics: DiagnosticInfo {
-                system_metrics: HashMap::new(),
+                system_metrics: BTreeMap::new(),
                 log_entries: Vec::new(),
-                config_snapshot: HashMap::new(),
+                config_snapshot: BTreeMap::new(),
                 network_status: None,
-                resource_availability: HashMap::new(),
+                resource_availability: BTreeMap::new(),
                 performance_indicators,
             },
             related_errors: Vec::new(),

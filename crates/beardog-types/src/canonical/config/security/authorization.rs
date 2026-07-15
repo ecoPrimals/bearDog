@@ -6,7 +6,7 @@
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// **CANONICAL AUTHORIZATION CONFIGURATION**
 ///
@@ -21,15 +21,15 @@ pub struct CanonicalAuthorizationConfig {
 
     /// Role definitions
     /// Mapping of roles
-    pub roles: HashMap<String, RoleConfig>,
+    pub roles: BTreeMap<String, RoleConfig>,
 
     /// Permission definitions
     /// Mapping of permissions
-    pub permissions: HashMap<String, PermissionConfig>,
+    pub permissions: BTreeMap<String, PermissionConfig>,
 
     /// Resource-based access control rules
     /// Mapping of resource rules
-    pub resource_rules: HashMap<String, ResourceRuleConfig>,
+    pub resource_rules: BTreeMap<String, ResourceRuleConfig>,
 
     /// Enable attribute-based access control (ABAC)
     /// Whether `enable_abac` is enabled
@@ -57,9 +57,9 @@ impl Default for CanonicalAuthorizationConfig {
         Self {
             enable_rbac: true,
             default_role: "user".to_string(),
-            roles: HashMap::new(),
-            permissions: HashMap::new(),
-            resource_rules: HashMap::new(),
+            roles: BTreeMap::new(),
+            permissions: BTreeMap::new(),
+            resource_rules: BTreeMap::new(),
             enable_abac: false,
             abac_policies: Vec::new(),
             enable_auth_cache: true,
@@ -229,7 +229,7 @@ pub struct ResourceRuleConfig {
 
     /// Additional conditions
     /// Mapping of conditions
-    pub conditions: HashMap<String, String>,
+    pub conditions: BTreeMap<String, String>,
 }
 
 /// Attribute-based access control policy configuration
@@ -245,18 +245,18 @@ pub struct AbacPolicyConfig {
 
     /// Subject attributes (user properties)
     /// Mapping of subject attributes
-    pub subject_attributes: HashMap<String, String>,
+    pub subject_attributes: BTreeMap<String, String>,
 
     /// Resource attributes
     /// Mapping of resource attributes
-    pub resource_attributes: HashMap<String, String>,
+    pub resource_attributes: BTreeMap<String, String>,
 
     /// The action value
     pub action: String,
 
     /// Environment attributes (time, location, etc.)
     /// Mapping of environment attributes
-    pub environment_attributes: HashMap<String, String>,
+    pub environment_attributes: BTreeMap<String, String>,
 
     /// Policy decision (allow/deny)
     /// The decision value
@@ -380,7 +380,7 @@ mod tests {
             resource_pattern: "/x/*".to_string(),
             required_permissions: vec!["p".to_string()],
             methods: vec!["GET".to_string()],
-            conditions: HashMap::from([("k".to_string(), "v".to_string())]),
+            conditions: BTreeMap::from([("k".to_string(), "v".to_string())]),
         };
         json_eq(
             &rule,
@@ -390,10 +390,10 @@ mod tests {
         let abac = AbacPolicyConfig {
             name: "pol".to_string(),
             description: "d".to_string(),
-            subject_attributes: HashMap::from([("s".to_string(), "1".to_string())]),
-            resource_attributes: HashMap::new(),
+            subject_attributes: BTreeMap::from([("s".to_string(), "1".to_string())]),
+            resource_attributes: BTreeMap::new(),
             action: "read".to_string(),
-            environment_attributes: HashMap::new(),
+            environment_attributes: BTreeMap::new(),
             decision: "allow".to_string(),
         };
         json_eq(

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 // **SUPPORTING TYPES** - Data structures used by provider traits
@@ -162,7 +162,7 @@ pub struct SystemEvent {
     /// Type of event (e.g., "`service_started`", "`error_occurred`")
     pub event_type: String,
     /// Event data as key-value pairs
-    pub data: HashMap<String, serde_json::Value>,
+    pub data: BTreeMap<String, serde_json::Value>,
     /// Timestamp when the event occurred
     pub timestamp: std::time::SystemTime,
 }
@@ -171,7 +171,7 @@ pub struct SystemEvent {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseResult {
     /// Query result rows as key-value pairs
-    pub rows: Vec<HashMap<String, serde_json::Value>>,
+    pub rows: Vec<BTreeMap<String, serde_json::Value>>,
     /// Number of rows affected by the operation
     pub affected_rows: usize,
     /// Execution time in milliseconds
@@ -186,7 +186,7 @@ pub struct HttpRequest {
     /// HTTP method (GET, POST, PUT, DELETE, etc.)
     pub method: String,
     /// Request headers as key-value pairs
-    pub headers: HashMap<String, String>,
+    pub headers: BTreeMap<String, String>,
     /// Optional request body
     pub body: Option<Vec<u8>>,
     /// Request timeout in milliseconds
@@ -199,7 +199,7 @@ pub struct HttpResponse {
     /// HTTP status code
     pub status_code: u16,
     /// Response headers as key-value pairs
-    pub headers: HashMap<String, String>,
+    pub headers: BTreeMap<String, String>,
     /// Response body
     pub body: Vec<u8>,
     /// Response time in milliseconds
@@ -242,7 +242,7 @@ pub struct WorkflowStep {
     /// Action to be performed
     pub action: String,
     /// Step parameters as key-value pairs
-    pub parameters: HashMap<String, serde_json::Value>,
+    pub parameters: BTreeMap<String, serde_json::Value>,
 }
 
 /// Workflow execution result
@@ -253,7 +253,7 @@ pub struct WorkflowResult {
     /// Final execution status
     pub status: WorkflowStatus,
     /// Workflow output data
-    pub output: HashMap<String, serde_json::Value>,
+    pub output: BTreeMap<String, serde_json::Value>,
     /// Total execution time in milliseconds
     pub execution_time_ms: u64,
 }
@@ -333,7 +333,7 @@ pub struct AdapterRequest {
     /// Type of operation to perform
     pub operation_type: String,
     /// Operation parameters
-    pub parameters: HashMap<String, serde_json::Value>,
+    pub parameters: BTreeMap<String, serde_json::Value>,
     /// Operation timeout in milliseconds
     pub timeout_ms: u64,
 }
@@ -486,9 +486,9 @@ pub struct ProviderMetrics {
     /// Metrics collection timestamp
     pub timestamp: SystemTime,
     /// Metric values
-    pub metrics: HashMap<String, f64>,
+    pub metrics: BTreeMap<String, f64>,
     /// Metric metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Provider capability description
@@ -508,11 +508,11 @@ pub struct ProviderCapability {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderConfiguration {
     /// Configuration parameters
-    pub parameters: HashMap<String, serde_json::Value>,
+    pub parameters: BTreeMap<String, serde_json::Value>,
     /// Configuration version
     pub version: String,
     /// Configuration metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Provider type enumeration
@@ -548,7 +548,7 @@ pub struct AuthenticationRequest {
     /// Authentication method
     pub method: String,
     /// Authentication data
-    pub data: HashMap<String, serde_json::Value>,
+    pub data: BTreeMap<String, serde_json::Value>,
 }
 
 /// Authentication response structure
@@ -570,5 +570,5 @@ pub struct AuthorizationResponse {
     /// Granted permissions
     pub permissions: Vec<String>,
     /// Authorization context
-    pub context: HashMap<String, String>,
+    pub context: BTreeMap<String, String>,
 }

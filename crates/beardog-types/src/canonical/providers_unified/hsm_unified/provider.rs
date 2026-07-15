@@ -11,7 +11,7 @@ use crate::canonical::providers_unified::traits::consolidated::{
     ProviderType, HealthStatus, ProviderCapability
 };
 use beardog_errors::BearDogError;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 /// **Unified HSM Provider**
@@ -128,8 +128,8 @@ impl ConsolidatedProvider for HsmUnifiedProvider {
     async fn metrics(&self) -> Result<ProviderMetrics, Self::Error> {
         Ok(ProviderMetrics {
             timestamp: SystemTime::now(),
-            metrics: HashMap::new(),
-            metadata: HashMap::new(),
+            metrics: BTreeMap::new(),
+            metadata: BTreeMap::new(),
         })
     }
 

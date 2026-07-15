@@ -279,10 +279,6 @@ impl PlatformPaths {
     }
 }
 
-/// Deprecated alias for [`PlatformPaths`].
-#[deprecated(since = "0.9.0", note = "use `PlatformPaths` instead")]
-pub type BiomeOSPaths = PlatformPaths;
-
 /// Platform detection errors
 #[derive(Debug, Error)]
 pub enum PlatformError {

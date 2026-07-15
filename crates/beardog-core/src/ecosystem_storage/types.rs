@@ -222,14 +222,3 @@ impl EcosystemStorageRequest {
     }
 }
 
-// MIGRATION NOTE: These constants are still in use in manager.rs
-// They will be migrated when manager.rs is updated to use canonical constants
-// Use: beardog_types::constants::domains::storage::*
-/// Deprecated: Error message for unavailable storage backend
-///
-/// Use `beardog_types::constants::domains::storage::messages::NO_BACKEND_AVAILABLE` instead.
-#[deprecated(
-    since = "3.6.0",
-    note = "Use beardog_types::constants::domains::storage::messages::NO_BACKEND_AVAILABLE"
-)]
-pub const STORAGE_BACKEND_AVAILABLE: &str = "No storage backend available";

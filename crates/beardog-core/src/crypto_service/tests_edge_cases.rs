@@ -281,7 +281,7 @@ async fn test_generate_key_various_algorithms() {
             use_hsm: false,
             use_genetic: false,
             purpose: None,
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::BTreeMap::new(),
         };
 
         let result = service.generate_key(algo, options).await;
@@ -427,7 +427,7 @@ async fn test_rapid_key_generation() {
             use_hsm: false,
             use_genetic: false,
             purpose: None,
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::BTreeMap::new(),
         };
 
         let result = service.generate_key(KeyAlgorithm::Aes256, options).await;

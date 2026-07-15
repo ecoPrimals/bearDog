@@ -11,7 +11,7 @@
 use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::Duration;
 
 use super::{BatchConfig, MonitoringConfigValidation, RetentionPolicy, StorageBackend};
@@ -74,7 +74,7 @@ pub struct UnifiedMetricsConfig {
     /// **CUSTOM METRICS**
     /// Custom metric configurations by name
     /// Mapping of custom metrics
-    pub custom_metrics: HashMap<String, CustomMetricConfig>,
+    pub custom_metrics: BTreeMap<String, CustomMetricConfig>,
 }
 
 impl Default for UnifiedMetricsConfig {
@@ -96,7 +96,7 @@ impl Default for UnifiedMetricsConfig {
             trend_analysis: TrendAnalysisConfig::default(),
             storage: MetricStorageConfig::default(),
             export: MetricExportConfig::default(),
-            custom_metrics: HashMap::new(),
+            custom_metrics: BTreeMap::new(),
         }
     }
 }
@@ -111,7 +111,7 @@ pub struct CounterConfig {
     pub prefix: String,
     /// Default labels to apply to all counter metrics
     /// Mapping of labels
-    pub labels: HashMap<String, String>,
+    pub labels: BTreeMap<String, String>,
     /// Whether `rate_calculation` is enabled
     pub rate_calculation: bool,
 }
@@ -121,7 +121,7 @@ impl Default for CounterConfig {
         Self {
             enabled: true,
             prefix: "beardog_counter".to_string(),
-            labels: HashMap::new(),
+            labels: BTreeMap::new(),
             rate_calculation: true,
         }
     }
@@ -137,7 +137,7 @@ pub struct GaugeConfig {
     pub prefix: String,
     /// Default labels to apply to all gauge metrics
     /// Mapping of labels
-    pub labels: HashMap<String, String>,
+    pub labels: BTreeMap<String, String>,
     /// Whether to apply smoothing to gauge values
     /// Whether smoothing is enabled
     pub smoothing: bool,
@@ -150,7 +150,7 @@ impl Default for GaugeConfig {
         Self {
             enabled: true,
             prefix: "beardog_gauge".to_string(),
-            labels: HashMap::new(),
+            labels: BTreeMap::new(),
             smoothing: false,
             smoothing_factor: std::env::var(env_keys::ENV_METRICS_SMOOTHING_FACTOR)
                 .ok()
@@ -170,7 +170,7 @@ pub struct HistogramConfig {
     pub prefix: String,
     /// Default labels to apply to all histogram metrics
     /// Mapping of labels
-    pub labels: HashMap<String, String>,
+    pub labels: BTreeMap<String, String>,
     /// Collection of buckets
     pub buckets: Vec<f64>,
     /// Maximum number of histogram buckets
@@ -183,7 +183,7 @@ impl Default for HistogramConfig {
         Self {
             enabled: true,
             prefix: "beardog_histogram".to_string(),
-            labels: HashMap::new(),
+            labels: BTreeMap::new(),
             buckets: vec![
                 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0,
             ],
@@ -205,7 +205,7 @@ pub struct SummaryConfig {
     pub prefix: String,
     /// Default labels to apply to all summary metrics
     /// Mapping of labels
-    pub labels: HashMap<String, String>,
+    pub labels: BTreeMap<String, String>,
     /// Collection of quantiles
     pub quantiles: Vec<f64>,
     /// The max age value
@@ -217,7 +217,7 @@ impl Default for SummaryConfig {
         Self {
             enabled: true,
             prefix: "beardog_summary".to_string(),
-            labels: HashMap::new(),
+            labels: BTreeMap::new(),
             quantiles: vec![0.5, 0.9, 0.95, 0.99],
             max_age: Duration::from_secs(600),
         }
@@ -351,7 +351,7 @@ pub struct MetricFilteringConfig {
     pub exclude_patterns: Vec<String>,
     /// Label Filters
     /// Mapping of label filters
-    pub label_filters: HashMap<String, String>,
+    pub label_filters: BTreeMap<String, String>,
     /// Value Filters
     /// Collection of value filters
     pub value_filters: Vec<ValueFilter>,
@@ -682,7 +682,7 @@ pub enum MetricExporter {
         /// Name of the custom backend
         name: String,
         /// Backend-specific configuration parameters
-        config: HashMap<String, serde_json::Value>,
+        config: BTreeMap<String, serde_json::Value>,
     },
 }
 
@@ -697,7 +697,7 @@ pub struct CustomMetricConfig {
     pub metric_type: CustomMetricType,
     /// Labels
     /// Mapping of labels
-    pub labels: HashMap<String, String>,
+    pub labels: BTreeMap<String, String>,
     /// Collection Function
     /// The collection function value
     pub collection_function: String,

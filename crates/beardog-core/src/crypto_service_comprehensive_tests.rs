@@ -504,7 +504,7 @@ mod key_generation_tests {
                     use_hsm: false,
                     use_genetic: false,
                     purpose: Some("encryption".to_string()),
-                    metadata: std::collections::HashMap::new(),
+                    metadata: std::collections::BTreeMap::new(),
                 },
             )
             .await;
@@ -528,7 +528,7 @@ mod key_generation_tests {
                     use_hsm: false,
                     use_genetic: false,
                     purpose: Some("signing".to_string()),
-                    metadata: std::collections::HashMap::new(),
+                    metadata: std::collections::BTreeMap::new(),
                 },
             )
             .await;
@@ -543,7 +543,7 @@ mod key_generation_tests {
         let config = CryptoServiceConfig::default();
         let service = BearDogCryptoService::new(config).expect("Failed to create service");
 
-        let mut metadata = std::collections::HashMap::new();
+        let mut metadata = std::collections::BTreeMap::new();
         metadata.insert("owner".to_string(), "test-user".to_string());
         metadata.insert("environment".to_string(), "test".to_string());
 

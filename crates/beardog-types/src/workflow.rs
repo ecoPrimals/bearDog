@@ -6,7 +6,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use uuid::Uuid;
 
 /// Workflow definition
@@ -29,7 +29,7 @@ pub struct Workflow {
     /// Collection of triggers
     pub triggers: Vec<WorkflowTrigger>,
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
     /// Timestamp when the workflow was created
     /// The created at value
     pub created_at: DateTime<Utc>,
@@ -59,7 +59,7 @@ pub struct WorkflowExecution {
     pub step_executions: Vec<StepExecution>,
     /// Runtime context and variables
     /// Mapping of context
-    pub context: HashMap<String, serde_json::Value>,
+    pub context: BTreeMap<String, serde_json::Value>,
     /// Error message if execution failed
     /// Optional error message
     pub error_message: Option<String>,
@@ -76,7 +76,7 @@ pub struct WorkflowStep {
     /// The step type value
     pub step_type: StepType,
     /// Step-specific configuration parameters
-    pub configuration: HashMap<String, serde_json::Value>,
+    pub configuration: BTreeMap<String, serde_json::Value>,
     /// Collection of dependencies
     pub dependencies: Vec<String>,
     /// Optional timeout in seconds for this workflow step
@@ -120,7 +120,7 @@ pub struct WorkflowTrigger {
     /// The trigger type value
     pub trigger_type: TriggerType,
     /// Trigger-specific configuration
-    pub configuration: HashMap<String, serde_json::Value>,
+    pub configuration: BTreeMap<String, serde_json::Value>,
     /// Whether this trigger is currently active
     /// Whether feature is enabled
     pub enabled: bool,
@@ -233,7 +233,7 @@ impl Default for Workflow {
             version: "1.0.0".to_string(),
             steps: vec![],
             triggers: vec![],
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
         }
@@ -249,7 +249,7 @@ impl Default for WorkflowExecution {
             started_at: Utc::now(),
             completed_at: None,
             step_executions: vec![],
-            context: HashMap::new(),
+            context: BTreeMap::new(),
             error_message: None,
         }
     }

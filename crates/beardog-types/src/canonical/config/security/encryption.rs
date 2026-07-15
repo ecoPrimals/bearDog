@@ -6,7 +6,7 @@
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// **CANONICAL ENCRYPTION CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -143,7 +143,7 @@ pub struct HsmEncryptionConfig {
 
     /// HSM configuration parameters
     /// Mapping of parameters
-    pub parameters: HashMap<String, String>,
+    pub parameters: BTreeMap<String, String>,
 }
 
 impl Default for HsmEncryptionConfig {
@@ -151,7 +151,7 @@ impl Default for HsmEncryptionConfig {
         Self {
             enabled: false,
             provider: "software".to_string(),
-            parameters: HashMap::new(),
+            parameters: BTreeMap::new(),
         }
     }
 }

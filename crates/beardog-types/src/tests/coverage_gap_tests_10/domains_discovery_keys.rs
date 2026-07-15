@@ -44,7 +44,7 @@ mod security_domain_mod_tests_extra {
 // ===========================================================================
 mod authorization_tests_extra {
     use crate::canonical::config::security::authorization::*;
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
     #[test]
     fn test_canonical_authorization_config_default() {
@@ -58,7 +58,7 @@ mod authorization_tests_extra {
             resource_pattern: "/api/users/*".to_string(),
             required_permissions: vec!["read".to_string()],
             methods: vec!["GET".to_string()],
-            conditions: HashMap::default(),
+            conditions: BTreeMap::default(),
         };
         let _ = format!("{c:?}");
     }
@@ -68,10 +68,10 @@ mod authorization_tests_extra {
         let c = AbacPolicyConfig {
             name: "test_policy".to_string(),
             description: "A test policy".to_string(),
-            subject_attributes: HashMap::default(),
-            resource_attributes: HashMap::default(),
+            subject_attributes: BTreeMap::default(),
+            resource_attributes: BTreeMap::default(),
             action: "read".to_string(),
-            environment_attributes: HashMap::default(),
+            environment_attributes: BTreeMap::default(),
             decision: "allow".to_string(),
         };
         let _ = format!("{c:?}");

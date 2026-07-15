@@ -5,7 +5,7 @@
 //! This module defines request/response parameters for BTSP RPC methods.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use super::{Transport, TrustMode, TunnelProtocol};
 
@@ -252,7 +252,7 @@ pub struct TunnelSendHttpParams {
 
     /// HTTP headers
     #[serde(default)]
-    pub headers: HashMap<String, String>,
+    pub headers: BTreeMap<String, String>,
 
     /// Request body (base64-encoded)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -266,7 +266,7 @@ pub struct TunnelSendHttpResponse {
     pub status: u16,
 
     /// Response headers
-    pub headers: HashMap<String, String>,
+    pub headers: BTreeMap<String, String>,
 
     /// Response body (base64-encoded)
     pub body: String,
@@ -510,7 +510,7 @@ mod tests {
 
     #[test]
     fn test_tunnel_send_http_params() {
-        let mut headers = HashMap::new();
+        let mut headers = BTreeMap::new();
         headers.insert("content-type".into(), "application/json".into());
 
         let params = TunnelSendHttpParams {
@@ -529,7 +529,7 @@ mod tests {
 
     #[test]
     fn test_tunnel_send_http_response() {
-        let mut headers = HashMap::new();
+        let mut headers = BTreeMap::new();
         headers.insert("content-type".into(), "application/json".into());
 
         let response = TunnelSendHttpResponse {
