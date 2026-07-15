@@ -4,7 +4,7 @@
 
 //! # `BearDog` Tower Atomic
 //!
-//! **Tower Atomic** = Unix socket-based JSON-RPC for inter-primal communication
+//! **Tower Atomic** = IPC-based JSON-RPC for inter-primal communication
 //!
 //! ## Purpose
 //!
@@ -15,7 +15,12 @@
 //!
 //! - **`BearDog`**: Crypto only (ed25519, x25519, chacha20, blake3)
 //! - **Network transport primal**: TLS/HTTP gateway (discovered at runtime)
-//! - **Tower Atomic**: Inter-primal glue (Unix sockets, JSON-RPC)
+//! - **Tower Atomic**: Inter-primal glue (IPC sockets, JSON-RPC)
+//!
+//! ## Platform Support
+//!
+//! - **Unix/macOS/Android**: Unix domain sockets (default)
+//! - **Windows**: TCP loopback (`127.0.0.1`) via `TransportEndpoint::Tcp`
 //!
 //! ## Example
 //!
@@ -46,7 +51,7 @@
 //!
 //! ```text
 //! ┌─────────────┐                          ┌─────────────┐
-//! │  This primal │  Unix Socket JSON-RPC   │ HTTP peer   │
+//! │  This primal │   IPC Socket JSON-RPC   │ HTTP peer   │
 //! │   (Crypto)   │ ───────────────────────> │ (discovered)│
 //! └─────────────┘                          └─────────────┘
 //!       ↓                                         ↓
@@ -56,23 +61,79 @@
 
 use serde::Deserialize;
 use serde_json::{Value, json};
-use std::path::Path;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-use tokio::net::UnixStream;
+use std::pin::Pin;
+use std::task::{Context, Poll};
+use tokio::io::{self, AsyncBufReadExt, AsyncRead, AsyncWrite, AsyncWriteExt, BufReader, ReadBuf};
 use tracing::{debug, info, warn};
+
+#[cfg(unix)]
+use std::path::Path;
 
 mod error;
 pub use error::{Error, Result};
 
+#[cfg(unix)]
 mod discovery;
+#[cfg(unix)]
 use discovery::discover_primal_socket;
+
+/// Platform-agnostic IPC stream: UDS on Unix, TCP on all platforms.
+enum IpcStream {
+    #[cfg(unix)]
+    Unix(tokio::net::UnixStream),
+    Tcp(tokio::net::TcpStream),
+}
+
+impl AsyncRead for IpcStream {
+    fn poll_read(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<io::Result<()>> {
+        match self.get_mut() {
+            #[cfg(unix)]
+            Self::Unix(s) => Pin::new(s).poll_read(cx, buf),
+            Self::Tcp(s) => Pin::new(s).poll_read(cx, buf),
+        }
+    }
+}
+
+impl AsyncWrite for IpcStream {
+    fn poll_write(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &[u8],
+    ) -> Poll<io::Result<usize>> {
+        match self.get_mut() {
+            #[cfg(unix)]
+            Self::Unix(s) => Pin::new(s).poll_write(cx, buf),
+            Self::Tcp(s) => Pin::new(s).poll_write(cx, buf),
+        }
+    }
+
+    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+        match self.get_mut() {
+            #[cfg(unix)]
+            Self::Unix(s) => Pin::new(s).poll_flush(cx),
+            Self::Tcp(s) => Pin::new(s).poll_flush(cx),
+        }
+    }
+
+    fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+        match self.get_mut() {
+            #[cfg(unix)]
+            Self::Unix(s) => Pin::new(s).poll_shutdown(cx),
+            Self::Tcp(s) => Pin::new(s).poll_shutdown(cx),
+        }
+    }
+}
 
 /// Tower Atomic client for inter-primal communication
 ///
-/// Uses Unix sockets and JSON-RPC 2.0 for fast, secure IPC.
+/// Uses platform-native IPC (Unix domain sockets on Unix, TCP loopback on
+/// Windows) and JSON-RPC 2.0 for fast, secure inter-primal communication.
 pub struct Client {
-    /// Unix socket stream
-    stream: UnixStream,
+    stream: IpcStream,
     /// Target primal name
     primal_name: String,
     /// Request ID counter
@@ -80,19 +141,16 @@ pub struct Client {
 }
 
 impl Client {
-    /// Connect to a primal via Unix socket
+    /// Connect to a primal via platform-native IPC.
     ///
-    /// # Discovery
-    ///
-    /// Automatically discovers the primal's Unix socket path:
-    /// 1. Check `XDG_RUNTIME_DIR` (/run/user/1000/ecoPrimals/)
-    /// 2. Check HOME (~/.local/share/ecoPrimals/)
-    /// 3. Check /var/run/ecoPrimals/
+    /// On Unix, discovers the primal's socket path via the 5-tier standard.
+    /// On Windows, callers should use [`Self::connect_endpoint`] with a
+    /// `TransportEndpoint::Tcp` endpoint instead.
     ///
     /// # Errors
     ///
-    /// Returns [`Error::PrimalNotFound`] if the primal's Unix socket cannot be located, or
-    /// [`Error::ConnectionFailed`] if the socket connection fails.
+    /// Returns [`Error::PrimalNotFound`] if the primal's socket cannot be located, or
+    /// [`Error::ConnectionFailed`] if the connection fails.
     ///
     /// # Example
     ///
@@ -106,15 +164,15 @@ impl Client {
     ///     Ok(())
     /// }
     /// ```
+    #[cfg(unix)]
     pub async fn connect(primal_name: &str) -> Result<Self> {
         info!(
-            "🔌 Connecting via Tower Atomic (socket key: {})",
+            "Connecting via Tower Atomic (socket key: {})",
             primal_name
         );
 
-        // Discover primal's Unix socket
         let socket_path = discover_primal_socket(primal_name).await?;
-        debug!("📍 Found socket at: {:?}", socket_path);
+        debug!("Found socket at: {:?}", socket_path);
 
         Self::connect_unix_path(&socket_path, primal_name).await
     }
@@ -126,15 +184,37 @@ impl Client {
     /// # Errors
     ///
     /// Returns [`Error::ConnectionFailed`] if the Unix socket cannot be opened.
+    #[cfg(unix)]
     pub async fn connect_unix_path(socket_path: &Path, peer_label: &str) -> Result<Self> {
-        use beardog_types::constants::domains::network::ribocipher;
-
-        let mut stream = UnixStream::connect(socket_path).await.map_err(|e| {
+        let stream = tokio::net::UnixStream::connect(socket_path).await.map_err(|e| {
             Error::ConnectionFailed(format!(
                 "Failed to connect Tower Atomic peer `{peer_label}` at {}: {e}",
                 socket_path.display()
             ))
         })?;
+
+        Self::finish_connect(IpcStream::Unix(stream), peer_label).await
+    }
+
+    /// Connect to a TCP endpoint (cross-platform, used on Windows or when
+    /// `TransportEndpoint::Tcp` is resolved).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::ConnectionFailed`] if the TCP connection fails.
+    pub async fn connect_tcp(host: &str, port: u16, peer_label: &str) -> Result<Self> {
+        let stream = tokio::net::TcpStream::connect((host, port)).await.map_err(|e| {
+            Error::ConnectionFailed(format!(
+                "Failed to connect Tower Atomic peer `{peer_label}` at {host}:{port}: {e}"
+            ))
+        })?;
+
+        Self::finish_connect(IpcStream::Tcp(stream), peer_label).await
+    }
+
+    /// Send the `riboCipher` protocol signal and finalize the `Client`.
+    async fn finish_connect(mut stream: IpcStream, peer_label: &str) -> Result<Self> {
+        use beardog_types::constants::domains::network::ribocipher;
 
         stream
             .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
@@ -143,7 +223,7 @@ impl Client {
                 Error::ConnectionFailed(format!("Failed to send riboCipher signal: {e}"))
             })?;
 
-        info!("✅ Tower Atomic connected ({peer_label})");
+        info!("Tower Atomic connected ({peer_label})");
 
         Ok(Self {
             stream,
@@ -154,24 +234,26 @@ impl Client {
 
     /// Connect via a structured [`TransportEndpoint`].
     ///
-    /// UDS endpoints connect directly. TCP endpoints are not supported
-    /// by Tower Atomic (UDS-only by design); callers should use
-    /// `beardog_ipc::connect_transport()` for TCP.
+    /// UDS endpoints connect on Unix; TCP endpoints connect on all platforms.
     ///
     /// # Errors
     ///
-    /// Returns [`Error::ConnectionFailed`] if the endpoint is not UDS
-    /// or the socket cannot be opened.
+    /// Returns [`Error::ConnectionFailed`] if the endpoint type is unsupported
+    /// on the current platform or the connection fails.
     pub async fn connect_endpoint(
         endpoint: &beardog_types::btsp::TransportEndpoint,
         peer_label: &str,
     ) -> Result<Self> {
         match endpoint {
+            #[cfg(unix)]
             beardog_types::btsp::TransportEndpoint::Uds { path } => {
                 Self::connect_unix_path(path, peer_label).await
             }
+            beardog_types::btsp::TransportEndpoint::Tcp { host, port } => {
+                Self::connect_tcp(host, *port, peer_label).await
+            }
             other => Err(Error::ConnectionFailed(format!(
-                "Tower Atomic requires UDS transport, got: {other}"
+                "Unsupported transport for Tower Atomic on this platform: {other}"
             ))),
         }
     }
@@ -318,18 +400,18 @@ mod tests {
     use super::*;
     use serde_json::json;
     use std::sync::Arc;
-    use tempfile::tempdir;
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-    use tokio::net::UnixListener;
     use tokio::sync::Notify;
 
+    #[cfg(unix)]
     #[tokio::test]
-    async fn test_connect_to_mock_primal() {
-        // Create temporary Unix socket
+    async fn test_connect_to_mock_primal_uds() {
+        use tempfile::tempdir;
+        use tokio::net::UnixListener;
+
         let dir = tempdir().expect("tempdir for mock primal socket");
         let socket_path = dir.path().join("mock_primal.sock");
 
-        // Start mock server
         let listener = UnixListener::bind(&socket_path).expect("bind mock primal unix listener");
         let server_socket_path = socket_path.clone();
 
@@ -350,7 +432,6 @@ mod tests {
                     .await
                     .expect("mock server reads JSON-RPC line");
 
-                // Echo back success response
                 let response = json!({
                     "jsonrpc": "2.0",
                     "result": { "status": "ok" },
@@ -373,22 +454,87 @@ mod tests {
 
         ready.notified().await;
 
-        // Connect directly to socket (bypass discovery for test)
-        let stream = UnixStream::connect(&server_socket_path)
+        let stream = tokio::net::UnixStream::connect(&server_socket_path)
             .await
             .expect("client connects to mock primal");
         let mut client = Client {
-            stream,
+            stream: IpcStream::Unix(stream),
             primal_name: "mock_primal".to_string(),
             request_id: 0,
         };
 
-        // Call method
         let response = client
             .call("test.method", json!({"param": "value"}))
             .await
             .expect("JSON-RPC call to mock primal succeeds");
 
         assert_eq!(response["status"], "ok");
+    }
+
+    #[tokio::test]
+    async fn test_connect_to_mock_primal_tcp() {
+        use tokio::io::AsyncReadExt;
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind TCP listener");
+        let addr = listener.local_addr().expect("local_addr");
+
+        let ready = Arc::new(Notify::new());
+        tokio::spawn({
+            let ready_tx = Arc::clone(&ready);
+            async move {
+                ready_tx.notify_one();
+                let (mut stream, _) = listener
+                    .accept()
+                    .await
+                    .expect("mock TCP server accepts connection");
+
+                // `finish_connect` sends a 2-byte riboCipher prefix; consume it.
+                let mut prefix = [0u8; 2];
+                stream
+                    .read_exact(&mut prefix)
+                    .await
+                    .expect("mock TCP server reads riboCipher prefix");
+
+                let mut reader = BufReader::new(&mut stream);
+                let mut request = String::new();
+                reader
+                    .read_line(&mut request)
+                    .await
+                    .expect("mock TCP server reads JSON-RPC line");
+
+                let response = json!({
+                    "jsonrpc": "2.0",
+                    "result": { "data": 42 },
+                    "id": 1
+                });
+                stream
+                    .write_all(
+                        serde_json::to_string(&response)
+                            .expect("JSON-RPC response serializes")
+                            .as_bytes(),
+                    )
+                    .await
+                    .expect("mock TCP server writes response body");
+                stream
+                    .write_all(b"\n")
+                    .await
+                    .expect("mock TCP server writes newline");
+            }
+        });
+
+        ready.notified().await;
+
+        let mut client = Client::connect_tcp("127.0.0.1", addr.port(), "mock_tcp")
+            .await
+            .expect("TCP connect succeeds");
+
+        let response = client
+            .call("test.method", json!({"param": "value"}))
+            .await
+            .expect("JSON-RPC call via TCP succeeds");
+
+        assert_eq!(response["data"], 42);
     }
 }
