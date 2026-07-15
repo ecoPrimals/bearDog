@@ -1,14 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Domain capability vectors: network, storage, compute, performance, environment, system, entropy.
-#![allow(
-    dead_code,
-    reason = "types are part of the public serde surface; not all variants instantiated in tests"
-)]
-// Types are part of the public serde surface; this crate does not instantiate every snapshot in tests.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::constants::defaults;
 
@@ -263,13 +258,13 @@ pub struct CapabilityRequirements {
     pub compliance_requirements: Vec<String>,
     /// Hardware requirements
     /// Mapping of hardware requirements
-    pub hardware_requirements: HashMap<String, String>,
+    pub hardware_requirements: BTreeMap<String, String>,
     /// Software requirements
     /// Mapping of software requirements
-    pub software_requirements: HashMap<String, String>,
+    pub software_requirements: BTreeMap<String, String>,
     /// Network requirements
     /// Mapping of network requirements
-    pub network_requirements: HashMap<String, String>,
+    pub network_requirements: BTreeMap<String, String>,
     /// Optional features
     /// Collection of optional features
     pub optional_features: Vec<String>,
@@ -282,9 +277,9 @@ impl Default for CapabilityRequirements {
             security_requirements: SecurityCapabilities::default(),
             performance_requirements: PerformanceCapabilities::default(),
             compliance_requirements: vec!["SOC2".to_string()],
-            hardware_requirements: HashMap::new(),
-            software_requirements: HashMap::new(),
-            network_requirements: HashMap::new(),
+            hardware_requirements: BTreeMap::new(),
+            software_requirements: BTreeMap::new(),
+            network_requirements: BTreeMap::new(),
             optional_features: Vec::new(),
         }
     }

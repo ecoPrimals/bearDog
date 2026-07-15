@@ -5,7 +5,7 @@ use crate::auth::proof_verifier::PlaceholderProofVerifier;
 use crate::auth::types::*;
 use beardog_errors::BearDogError;
 use chrono::Utc;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[tokio::test]
 
@@ -91,7 +91,7 @@ async fn test_proof_verification() -> Result<(), BearDogError> {
     let operation = CrossNodeOperation {
         operation_type: OperationType::Read,
         target_resource: "test-resource".to_string(),
-        parameters: HashMap::new(),
+        parameters: BTreeMap::new(),
         requester_signature: "test-signature".to_string(),
     };
 
@@ -115,7 +115,7 @@ async fn test_proof_verification() -> Result<(), BearDogError> {
 // TEST_PRIORITY: normal
 #[tokio::test]
 async fn test_consensus_calculation() -> Result<(), BearDogError> {
-    let mut votes = HashMap::new();
+    let mut votes = BTreeMap::new();
     votes.insert("node1".to_string(), true);
     votes.insert("node2".to_string(), true);
     votes.insert("node3".to_string(), false);

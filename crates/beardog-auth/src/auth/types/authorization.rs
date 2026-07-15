@@ -6,7 +6,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Policy bundle governing cross-node proof checks, spawning, and optional quorum approval.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -263,7 +263,7 @@ pub struct CrossNodeOperation {
     /// The target resource value
     pub target_resource: String,
     /// Mapping of parameters
-    pub parameters: HashMap<String, String>,
+    pub parameters: BTreeMap<String, String>,
     /// The requester signature value
     pub requester_signature: String,
 }
@@ -273,7 +273,7 @@ impl Default for CrossNodeOperation {
         Self {
             operation_type: OperationType::Read,
             target_resource: String::new(),
-            parameters: HashMap::new(),
+            parameters: BTreeMap::new(),
             requester_signature: String::new(),
         }
     }
@@ -311,7 +311,7 @@ pub struct ConsensusResult {
     /// Whether `consensus_reached` is enabled
     pub consensus_reached: bool,
     /// Mapping of votes
-    pub votes: HashMap<String, bool>,
+    pub votes: BTreeMap<String, bool>,
     /// The final score value
     pub final_score: f64,
     /// Collection of participating nodes
@@ -477,7 +477,7 @@ mod tests {
 
     #[test]
     fn test_cross_node_operation_creation() {
-        let mut params = HashMap::new();
+        let mut params = BTreeMap::new();
         params.insert("key1".to_string(), "value1".to_string());
 
         let op = CrossNodeOperation {
@@ -524,7 +524,7 @@ mod tests {
     // ConsensusResult tests
     #[test]
     fn test_consensus_result_reached() {
-        let mut votes = HashMap::new();
+        let mut votes = BTreeMap::new();
         votes.insert("node1".to_string(), true);
         votes.insert("node2".to_string(), true);
         votes.insert("node3".to_string(), false);
@@ -548,7 +548,7 @@ mod tests {
 
     #[test]
     fn test_consensus_result_not_reached() {
-        let mut votes = HashMap::new();
+        let mut votes = BTreeMap::new();
         votes.insert("node1".to_string(), false);
         votes.insert("node2".to_string(), false);
 
@@ -567,7 +567,7 @@ mod tests {
     fn test_consensus_result_serialization() {
         let result = ConsensusResult {
             consensus_reached: true,
-            votes: HashMap::new(),
+            votes: BTreeMap::new(),
             final_score: 1.0,
             participating_nodes: vec![],
         };

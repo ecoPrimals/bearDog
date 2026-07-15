@@ -11,7 +11,7 @@ use crate::compliance::types::{
 };
 use beardog_errors::BearDogError;
 use chrono::Utc;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use tracing::{error, info};
 use uuid::Uuid;
 
@@ -284,7 +284,7 @@ impl ComplianceHandler {
             100.0
         };
 
-        let mut standards_compliance = HashMap::with_capacity(self.enabled_standards.len());
+        let mut standards_compliance = BTreeMap::new();
         for standard in &self.enabled_standards {
             standards_compliance.insert(standard.clone(), score);
         }

@@ -6,7 +6,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // String stand-ins below; replace with `crate::auth` types when unified.
 
@@ -49,7 +49,7 @@ pub struct VerificationContext {
     /// Optional required permission
     pub required_permission: Option<ResourcePermission>,
     /// Mapping of context data
-    pub context_data: HashMap<String, String>,
+    pub context_data: BTreeMap<String, String>,
 }
 
 /// Aggregate counters for monitoring verifier health and cache effectiveness.
@@ -165,7 +165,7 @@ mod tests {
         let mut context = VerificationContext {
             genetics: Some("genetics-data".to_string()),
             required_permission: None,
-            context_data: HashMap::new(),
+            context_data: BTreeMap::new(),
         };
 
         context
@@ -182,7 +182,7 @@ mod tests {
         let context = VerificationContext {
             genetics: None,
             required_permission: Some("admin".to_string()),
-            context_data: HashMap::new(),
+            context_data: BTreeMap::new(),
         };
 
         assert!(context.genetics.is_none());
@@ -289,7 +289,7 @@ mod tests {
         let context = VerificationContext {
             genetics: None,
             required_permission: None,
-            context_data: HashMap::new(),
+            context_data: BTreeMap::new(),
         };
 
         assert!(context.genetics.is_none());

@@ -10,7 +10,7 @@ use crate::constants::defaults;
 use crate::constants::time;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::Duration;
 
 use super::MonitoringConfigValidation;
@@ -35,7 +35,7 @@ pub struct CoreMonitoringConfig {
     pub instance_id: String,
     /// Tags
     /// Mapping of tags
-    pub tags: HashMap<String, String>,
+    pub tags: BTreeMap<String, String>,
     /// Sampling Rate
     /// The sampling rate value
     pub sampling_rate: f64,
@@ -55,7 +55,7 @@ impl Default for CoreMonitoringConfig {
             environment: "development".to_string(),
             version: "4.0.0".to_string(),
             instance_id: "beardog-instance".to_string(),
-            tags: HashMap::new(),
+            tags: BTreeMap::new(),
             sampling_rate: std::env::var(env_keys::ENV_MONITORING_SAMPLING_RATE)
                 .ok()
                 .and_then(|v| v.parse().ok())
@@ -217,7 +217,7 @@ pub enum StorageBackend {
         /// Backend type identifier
         backend_type: String,
         /// Custom configuration parameters
-        config: HashMap<String, serde_json::Value>,
+        config: BTreeMap<String, serde_json::Value>,
     },
 }
 
@@ -258,7 +258,7 @@ pub enum FilterAction {
         /// Built-in transform name (e.g. `drop_labels`, `sample`).
         operation: String,
         /// Transform-specific JSON parameters.
-        parameters: HashMap<String, serde_json::Value>,
+        parameters: BTreeMap<String, serde_json::Value>,
     },
 }
 
@@ -630,7 +630,7 @@ mod monitoring_core_coverage_tests {
 
         let fa = FilterAction::Transform {
             operation: "sample".to_string(),
-            parameters: std::collections::HashMap::new(),
+            parameters: std::collections::BTreeMap::new(),
         };
         let v2 = serde_json::to_value(&fa).expect("ser");
         let back2: FilterAction = serde_json::from_value(v2).expect("de");

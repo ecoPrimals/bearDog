@@ -13,7 +13,7 @@ impl BearDogCore {
     /// Without `hsm-integration` feature, this is a no-op (software-only crypto).
     #[cfg_attr(
         not(test),
-        allow(dead_code, reason = "called only from ecosystem orchestration tests")
+        expect(dead_code, reason = "called only from ecosystem orchestration tests")
     )]
     #[expect(clippy::unused_self, reason = "trait conformance requires &self")]
     pub(crate) fn initialize_hsm_providers(&self) -> Result<(), BearDogError> {
@@ -27,7 +27,7 @@ impl BearDogCore {
     /// Without `hsm-integration` feature, this is a no-op.
     #[cfg_attr(
         not(test),
-        allow(dead_code, reason = "called only from ecosystem orchestration tests")
+        expect(dead_code, reason = "called only from ecosystem orchestration tests")
     )]
     #[expect(clippy::unused_self, reason = "trait conformance requires &self")]
     pub(crate) fn shutdown_hsm_providers(&self) -> Result<(), BearDogError> {
@@ -41,7 +41,7 @@ impl BearDogCore {
     /// software-only crypto path has no hardware dependencies to fail.
     #[cfg_attr(
         not(test),
-        allow(dead_code, reason = "called only from ecosystem orchestration tests")
+        expect(dead_code, reason = "called only from ecosystem orchestration tests")
     )]
     #[expect(clippy::unused_self, reason = "trait conformance requires &self")]
     pub(crate) fn check_hsm_health(&self) -> HealthStatus {

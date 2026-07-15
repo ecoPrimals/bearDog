@@ -23,7 +23,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use uuid::Uuid;
 
 // Re-export capability types from canonical location
@@ -86,7 +86,7 @@ pub struct UnifiedServiceDefinition {
     pub updated_at: DateTime<Utc>,
     
     /// Additional metadata key-value pairs
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Unified capability definition that replaces scattered capability types
@@ -105,7 +105,7 @@ pub struct UnifiedCapability {
     pub required_permissions: Vec<String>,
     
     /// Capability-specific configuration
-    pub configuration: HashMap<String, serde_json::Value>,
+    pub configuration: BTreeMap<String, serde_json::Value>,
     
     /// Performance characteristics
     pub performance_metrics: Option<CapabilityPerformanceMetrics>,
@@ -123,7 +123,7 @@ pub enum ServiceDependency {
         /// Reason this dependency is required
         reason: String,
         /// Optional specific configuration requirements
-        requirements: Option<HashMap<String, serde_json::Value>>,
+        requirements: Option<BTreeMap<String, serde_json::Value>>,
     },
     /// Optional dependency - service can function without this but benefits from it
     Optional {
@@ -221,7 +221,7 @@ impl Default for UnifiedServiceDefinition {
             dependencies: Vec::new(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 }
@@ -306,7 +306,7 @@ mod tests {
             name: "Authentication".to_string(),
             description: "User authentication capability".to_string(),
             required_permissions: vec!["auth.read".to_string()],
-            configuration: HashMap::new(),
+            configuration: BTreeMap::new(),
             performance_metrics: None,
         };
         

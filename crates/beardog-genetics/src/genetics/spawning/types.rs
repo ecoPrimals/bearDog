@@ -6,7 +6,7 @@
 
 use beardog_auth::auth::{BearDogGenetics, NodeCapability, SecurityClearance};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Inputs for spawning: desired capabilities, clearance, and optional parent genomes.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,13 +43,13 @@ pub struct SpawnResult {
     /// Collection of messages
     pub messages: Vec<String>,
     /// Mapping of metrics
-    pub metrics: HashMap<String, f64>,
+    pub metrics: BTreeMap<String, f64>,
 }
 
 impl SpawnResult {
     /// Success operation.
     #[must_use]
-    pub fn success(genetics: BearDogGenetics, metrics: HashMap<String, f64>) -> Self {
+    pub fn success(genetics: BearDogGenetics, metrics: BTreeMap<String, f64>) -> Self {
         Self {
             genetics,
             success: true,
@@ -65,7 +65,7 @@ impl SpawnResult {
             genetics: BearDogGenetics::default(),
             success: false,
             messages: vec![error_message.to_string()],
-            metrics: HashMap::new(),
+            metrics: BTreeMap::new(),
         }
     }
 }
@@ -124,7 +124,7 @@ mod tests {
     #[test]
     fn test_spawn_result_success() {
         let genetics = BearDogGenetics::default();
-        let mut metrics = HashMap::new();
+        let mut metrics = BTreeMap::new();
         metrics.insert("duration_ms".to_string(), 100.0);
 
         let result = SpawnResult::success(genetics, metrics);
@@ -160,7 +160,7 @@ mod tests {
     #[test]
     fn test_spawn_result_with_metrics() {
         let genetics = BearDogGenetics::default();
-        let mut metrics = HashMap::new();
+        let mut metrics = BTreeMap::new();
         metrics.insert("generation_time".to_string(), 250.5);
         metrics.insert("entropy_used".to_string(), 1024.0);
         metrics.insert("fitness_score".to_string(), 0.95);

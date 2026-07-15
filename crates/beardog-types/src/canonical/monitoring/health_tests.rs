@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::canonical::monitoring::MonitoringConfigValidation;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::Duration;
 
 fn sample_valid_config() -> UnifiedHealthConfig {
@@ -15,7 +15,7 @@ fn sample_valid_config() -> UnifiedHealthConfig {
         name: "api".to_string(),
         url: "https://example/health".to_string(),
         method: HttpMethod::GET,
-        headers: std::collections::HashMap::from([("x-test".to_string(), "1".to_string())]),
+        headers: std::collections::BTreeMap::from([("x-test".to_string(), "1".to_string())]),
         expected_status: vec![200],
         expected_body: None,
         timeout: Some(Duration::from_secs(3)),
@@ -113,7 +113,7 @@ fn escalation_condition_serde_roundtrip() {
         EscalationCondition::FailurePercentage(12.5),
         EscalationCondition::Custom {
             condition: "x".into(),
-            parameters: HashMap::from([("k".into(), serde_json::json!(1))]),
+            parameters: BTreeMap::from([("k".into(), serde_json::json!(1))]),
         },
     ];
     for c in cases {
@@ -126,13 +126,13 @@ fn escalation_condition_serde_roundtrip() {
 
 #[test]
 fn custom_check_and_full_config_json_roundtrip() {
-    let mut custom = HashMap::new();
+    let mut custom = BTreeMap::new();
     custom.insert(
         "k".into(),
         CustomHealthCheckConfig {
             name: "c".into(),
             check_type: "exec".into(),
-            config: HashMap::from([("p".into(), serde_json::json!(true))]),
+            config: BTreeMap::from([("p".into(), serde_json::json!(true))]),
             timeout: Duration::from_secs(1),
             interval: Duration::from_secs(2),
         },

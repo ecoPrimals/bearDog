@@ -11,7 +11,7 @@ use beardog_errors::BearDogError;
 // Removed unused HealthStatus import
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use tracing::debug;
 
 /// Information about a software license
@@ -30,7 +30,7 @@ pub struct LicenseInfo {
     /// Capabilities granted by this license
     pub capabilities: Vec<String>,
     /// Restrictions imposed by this license
-    pub restrictions: HashMap<String, String>,
+    pub restrictions: BTreeMap<String, String>,
 }
 
 /// Result of license validation check
@@ -121,7 +121,7 @@ mod tests {
             issued_at: Utc::now(),
             expires_at: None,
             capabilities: vec!["test".to_string()],
-            restrictions: HashMap::new(),
+            restrictions: BTreeMap::new(),
         };
 
         let json = serde_json::to_string(&license)?;

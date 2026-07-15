@@ -5,7 +5,7 @@
 //! Provides audit logging types for HSM operations.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 /// HSM audit event
@@ -21,7 +21,7 @@ pub struct AuditEvent {
     pub timestamp: SystemTime,
 
     /// Additional event metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 impl AuditEvent {
@@ -31,7 +31,7 @@ impl AuditEvent {
         Self {
             event_type: event_type.into(),
             timestamp: SystemTime::now(),
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 

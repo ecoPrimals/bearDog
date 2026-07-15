@@ -413,7 +413,7 @@ impl CapabilitiesHandler {
     /// This mirrors the conventional `discover_capabilities` format, enabling
     /// uniform capability discovery across all primals. Includes a signed
     /// attestation so ecosystem discovery can verify authenticity.
-    #[allow(clippy::items_after_statements)]
+    #[expect(clippy::items_after_statements, reason = "CAPABILITIES const placed near its usage for readability")]
     async fn handle_discover_capabilities(&self) -> Result<serde_json::Value, String> {
         info!("discover_capabilities requested");
 

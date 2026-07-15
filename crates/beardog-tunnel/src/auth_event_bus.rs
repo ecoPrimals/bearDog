@@ -3,7 +3,7 @@
 //! Auth event bus for cross-gate trust provenance.
 //!
 //! Provides a bounded, poll-based event log for trust lifecycle events.
-//! Subscribers (e.g. rhizoCrypt's `MeshEventListener`) poll via `auth.events.poll`
+//! Subscribers (e.g. a mesh trust listener) poll via `auth.events.poll`
 //! to receive events since a given timestamp.
 //!
 //! The bus stores events in a bounded ring buffer (oldest evicted when full).
@@ -27,7 +27,7 @@ use tokio::sync::broadcast;
 
 const DEFAULT_CAPACITY: usize = 10_000;
 
-/// Auth event kind — maps 1:1 to rhizoCrypt's `MeshTrustEvent` variants.
+/// Auth event kind — maps 1:1 to the ecosystem `MeshTrustEvent` variants.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", content = "payload")]
 pub enum AuthEventKind {

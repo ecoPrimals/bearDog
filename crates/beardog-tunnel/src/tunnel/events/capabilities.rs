@@ -5,7 +5,7 @@
 // This module provides functionality for the BearDog ecosystem.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 /// Capabilities advertised by a tunnel endpoint
@@ -35,7 +35,7 @@ pub struct CryptographicProof {
     /// When the proof was generated
     pub timestamp: SystemTime,
     /// Mapping of capabilities
-    pub capabilities: HashMap<String, String>,
+    pub capabilities: BTreeMap<String, String>,
 }
 
 /// Trust indicators for peer evaluation

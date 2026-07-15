@@ -200,7 +200,7 @@ mod tests {
             user_id: Some("u1".to_string()),
             key_id: Some("k1".to_string()),
             result: OperationResult::Success,
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::BTreeMap::new(),
         }
     }
 

@@ -237,7 +237,7 @@ pub struct TimeoutConfig {
     pub default_timeout: Duration,
 
     /// Operation-specific timeouts
-    pub operation_timeouts: std::collections::HashMap<String, Duration>,
+    pub operation_timeouts: std::collections::BTreeMap<String, Duration>,
 
     /// Timeout escalation enabled
     /// Whether escalation is enabled
@@ -249,7 +249,7 @@ impl Default for TimeoutConfig {
         Self {
             enabled: true,
             default_timeout: Duration::from_secs(30),
-            operation_timeouts: std::collections::HashMap::new(),
+            operation_timeouts: std::collections::BTreeMap::new(),
             escalation_enabled: false,
         }
     }

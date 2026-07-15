@@ -4,7 +4,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Audit log entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -20,7 +20,7 @@ pub struct AuditLogEntry {
     /// Outcome of the operation
     pub result: OperationResult,
     /// Additional context about the operation
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 impl AuditLogEntry {
@@ -32,7 +32,7 @@ impl AuditLogEntry {
             user_id: None,
             key_id: Some(key_id.into()),
             result: OperationResult::Success,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 
@@ -44,7 +44,7 @@ impl AuditLogEntry {
             user_id: None,
             key_id: None,
             result: OperationResult::Failure(error.into()),
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 }

@@ -10,7 +10,7 @@ use crate::ecosystem_storage::{
 };
 use beardog_errors::BearDogError;
 use chrono::Utc;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -51,7 +51,7 @@ impl StorageBackend for TestBackend {
                 request_id: request.request_id,
                 status: StorageStatus::Failed,
                 data: None,
-                metadata: HashMap::new(),
+                metadata: BTreeMap::new(),
                 timestamp: Utc::now(),
                 duration_ms: 0,
                 error_message: Some("missing".to_string()),
@@ -75,7 +75,7 @@ impl StorageBackend for TestBackend {
                 StorageStatus::Failed
             },
             data: None,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             timestamp: Utc::now(),
             duration_ms: 0,
             error_message: None,

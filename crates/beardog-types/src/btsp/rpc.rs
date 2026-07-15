@@ -358,7 +358,7 @@ pub struct SessionNegotiateResponse {
 ///
 /// Exports session keys for a verified BTSP session, encrypted under the
 /// caller's X25519 ephemeral public key via ChaCha20-Poly1305. This
-/// completes the relay path (BTSP-BARRACUDA-WIRE): after the relay primal
+/// completes the relay path: after the relay primal
 /// calls `btsp.server.verify`, it calls `export_keys` to obtain the
 /// session keys needed for post-handshake stream encryption.
 ///

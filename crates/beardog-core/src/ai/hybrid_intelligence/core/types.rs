@@ -7,7 +7,7 @@ use super::super::learning::PredictionHorizon;
 use beardog_types::canonical::HealthStatus;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use uuid::Uuid;
 
 /// Decision context information
@@ -81,7 +81,7 @@ pub struct IntelligenceEvent {
     pub event_type: IntelligenceEventType,
     /// Event data
     /// Mapping of data
-    pub data: HashMap<String, serde_json::Value>,
+    pub data: BTreeMap<String, serde_json::Value>,
     /// Event timestamp
     pub timestamp: DateTime<Utc>,
 }
@@ -165,7 +165,7 @@ pub struct DecisionResult {
     /// Decision timestamp
     pub timestamp: DateTime<Utc>,
     /// Additional contextual data used to make the decision
-    pub context: HashMap<String, serde_json::Value>,
+    pub context: BTreeMap<String, serde_json::Value>,
 }
 
 /// System status information for the hybrid intelligence system

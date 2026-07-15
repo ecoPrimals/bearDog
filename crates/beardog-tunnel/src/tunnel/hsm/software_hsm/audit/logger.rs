@@ -158,7 +158,7 @@ impl DefaultAuditLogger {
         key_id: Option<String>,
         success: bool,
         error_message: Option<String>,
-        details: std::collections::HashMap<String, String>,
+        details: std::collections::BTreeMap<String, String>,
     ) -> Result<(), BearDogError> {
         let entry = AuditLogEntry {
             timestamp: chrono::Utc::now(),
@@ -193,7 +193,7 @@ impl DefaultAuditLogger {
             key_id.map(std::string::ToString::to_string),
             true,
             None,
-            std::collections::HashMap::new(),
+            std::collections::BTreeMap::new(),
         )
         .await
     }
@@ -215,7 +215,7 @@ impl DefaultAuditLogger {
             key_id.map(std::string::ToString::to_string),
             false,
             Some(error.to_string()),
-            std::collections::HashMap::new(),
+            std::collections::BTreeMap::new(),
         )
         .await
     }
@@ -231,7 +231,7 @@ impl DefaultAuditLogger {
         algorithm: &str,
         success: bool,
     ) -> Result<(), BearDogError> {
-        let mut details = std::collections::HashMap::new();
+        let mut details = std::collections::BTreeMap::new();
         details.insert("key_type".to_string(), key_type.to_string());
         details.insert("algorithm".to_string(), algorithm.to_string());
 
@@ -262,7 +262,7 @@ impl DefaultAuditLogger {
             Some(key_id.to_string()),
             success,
             error_message.map(std::string::ToString::to_string),
-            std::collections::HashMap::new(),
+            std::collections::BTreeMap::new(),
         )
         .await
     }
@@ -275,7 +275,7 @@ impl DefaultAuditLogger {
         &self,
         operation: CryptoOperationLog,
     ) -> Result<(), BearDogError> {
-        let mut details = std::collections::HashMap::new();
+        let mut details = std::collections::BTreeMap::new();
         details.insert("algorithm".to_string(), operation.algorithm.clone());
         details.insert(
             "data_size_bytes".to_string(),
@@ -306,7 +306,7 @@ impl DefaultAuditLogger {
         event_type: &str,
         severity: &str,
         description: &str,
-        additional_info: std::collections::HashMap<String, String>,
+        additional_info: std::collections::BTreeMap<String, String>,
     ) -> Result<(), BearDogError> {
         let mut details = additional_info;
         details.insert("severity".to_string(), severity.to_string());
@@ -464,7 +464,7 @@ mod tests {
         logger.log_crypto_operation(crypto).await.expect("crypto");
 
         logger
-            .log_security_event("alert", "high", "desc", std::collections::HashMap::new())
+            .log_security_event("alert", "high", "desc", std::collections::BTreeMap::new())
             .await
             .expect("sec");
 

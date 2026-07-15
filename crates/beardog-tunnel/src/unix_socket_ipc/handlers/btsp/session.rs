@@ -122,7 +122,7 @@ impl BtspHandler {
     /// Export session keys for a verified session, wrapped under the caller's
     /// X25519 ephemeral public key.
     ///
-    /// This completes the BTSP relay path (BTSP-BARRACUDA-WIRE): after
+    /// This completes the BTSP relay path: after
     /// `btsp.server.verify` succeeds, the relay primal calls `export_keys`
     /// to retrieve the session keys encrypted so they never appear in
     /// plaintext in a JSON-RPC response.

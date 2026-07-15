@@ -188,7 +188,7 @@ async fn test_license_info_creation() {
         issued_at: chrono::Utc::now(),
         expires_at: None,
         capabilities: vec!["security".to_string(), "crypto".to_string()],
-        restrictions: std::collections::HashMap::new(),
+        restrictions: std::collections::BTreeMap::new(),
     };
 
     assert_eq!(license.license_id, "test-license-123");
@@ -209,7 +209,7 @@ async fn test_license_info_with_expiry() {
         issued_at: now,
         expires_at: Some(future),
         capabilities: vec!["security".to_string()],
-        restrictions: std::collections::HashMap::new(),
+        restrictions: std::collections::BTreeMap::new(),
     };
 
     assert!(license.expires_at.is_some());
@@ -218,7 +218,7 @@ async fn test_license_info_with_expiry() {
 
 #[tokio::test]
 async fn test_license_info_with_restrictions() {
-    let mut restrictions = std::collections::HashMap::new();
+    let mut restrictions = std::collections::BTreeMap::new();
     restrictions.insert("rate_limit".to_string(), "1000/hour".to_string());
     restrictions.insert("max_users".to_string(), "100".to_string());
 
@@ -243,7 +243,7 @@ async fn test_license_info_serialization() {
         issued_at: chrono::Utc::now(),
         expires_at: None,
         capabilities: vec!["security".to_string()],
-        restrictions: std::collections::HashMap::new(),
+        restrictions: std::collections::BTreeMap::new(),
     };
 
     // Test serialization

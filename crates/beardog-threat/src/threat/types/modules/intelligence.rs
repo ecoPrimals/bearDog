@@ -7,7 +7,7 @@
 
 use super::core::{ThreatIndicator, IndicatorType};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 /// Threat intelligence feed configuration and data
@@ -36,7 +36,7 @@ pub struct ThreatIntelligenceFeed {
     /// Authentication configuration
     pub auth_config: FeedAuthConfig,
     /// Feed-specific metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
     
     // Compatibility fields
     /// ID field (compatibility - alias for feed_id)
@@ -80,7 +80,7 @@ pub struct FeedAuthConfig {
     /// Password (if applicable) - should be encrypted
     pub password: Option<String>,
     /// Additional headers
-    pub headers: HashMap<String, String>,
+    pub headers: BTreeMap<String, String>,
 }
 
 /// Authentication types for feeds
@@ -124,9 +124,9 @@ pub struct MlModel {
     /// Whether the model is currently active
     pub is_active: bool,
     /// Model-specific configuration
-    pub config: HashMap<String, String>,
+    pub config: BTreeMap<String, String>,
     /// Feature importance scores
-    pub feature_importance: HashMap<String, f64>,
+    pub feature_importance: BTreeMap<String, f64>,
     
     // Compatibility fields
     /// ID field (compatibility - alias for model_id)
@@ -331,7 +331,7 @@ pub struct HuntMatch {
     /// Match confidence score (0.0 - 1.0)
     pub confidence: f64,
     /// Context information
-    pub context: HashMap<String, String>,
+    pub context: BTreeMap<String, String>,
     /// Related threat indicators
     pub indicators: Vec<ThreatIndicator>,
     /// Match timestamp
@@ -360,7 +360,7 @@ impl Default for FeedAuthConfig {
             api_key: None,
             username: None,
             password: None,
-            headers: HashMap::new(),
+            headers: BTreeMap::new(),
         }
     }
 } 

@@ -9,7 +9,7 @@
 // Note: BearDogError available for future extensions (use Result<T, BearDogError>)
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::{Duration, SystemTime};
 
 /// Symbiotic coordination models - replaces primary/replica hierarchical patterns
@@ -33,7 +33,7 @@ pub enum SymbioticCoordination {
     
     /// Contextual coordination based on expertise and situation
     Contextual {
-        context_mapping: HashMap<String, String>,
+        context_mapping: BTreeMap<String, String>,
         expertise_areas: Vec<ExpertiseArea>,
         coordination_triggers: Vec<CoordinationTrigger>,
         fallback_coordinator: Option<String>,
@@ -80,8 +80,8 @@ pub struct DistributedProtocol {
 pub enum ConsensusMechanism {
     Unanimous,
     Majority,
-    Weighted(HashMap<String, f64>),
-    Expertise(HashMap<String, Vec<String>>),
+    Weighted(BTreeMap<String, f64>),
+    Expertise(BTreeMap<String, Vec<String>>),
     Adaptive(AdaptiveConsensusConfig),
 }
 
@@ -155,8 +155,8 @@ pub struct CollaborationGroup {
 /// Framework for collaborative decision making
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DecisionFramework {
-    pub decision_types: HashMap<String, DecisionProcess>,
-    pub authority_matrix: HashMap<String, Vec<String>>,
+    pub decision_types: BTreeMap<String, DecisionProcess>,
+    pub authority_matrix: BTreeMap<String, Vec<String>>,
     pub escalation_procedures: Vec<String>,
     pub audit_requirements: Vec<String>,
 }
@@ -182,7 +182,7 @@ pub struct ConflictResolutionProtocol {
 /// Model for sharing resources
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ResourceSharingModel {
-    pub sharing_policies: HashMap<String, SharingPolicy>,
+    pub sharing_policies: BTreeMap<String, SharingPolicy>,
     pub allocation_algorithms: Vec<String>,
     pub usage_monitoring: bool,
     pub fairness_metrics: Vec<String>,
@@ -193,7 +193,7 @@ pub struct ResourceSharingModel {
 pub struct SharingPolicy {
     pub resource_type: String,
     pub allocation_method: AllocationMethod,
-    pub usage_limits: HashMap<String, f64>,
+    pub usage_limits: BTreeMap<String, f64>,
     pub priority_rules: Vec<String>,
 }
 
@@ -261,7 +261,7 @@ pub struct CollaborationTerms {
     pub duration: Duration,
     pub objectives: Vec<String>,
     pub success_criteria: Vec<String>,
-    pub resource_commitments: HashMap<String, f64>,
+    pub resource_commitments: BTreeMap<String, f64>,
     pub communication_protocols: Vec<String>,
 }
 
@@ -311,7 +311,7 @@ pub struct CoordinationPreferences {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ContributionHistory {
     pub total_contributions: u64,
-    pub contribution_types: HashMap<String, u64>,
+    pub contribution_types: BTreeMap<String, u64>,
     pub quality_ratings: Vec<f64>,
     pub collaboration_feedback: Vec<String>,
 }
@@ -347,13 +347,13 @@ pub enum FailureHandlingStrategy {
 pub struct AdaptiveConsensusConfig {
     pub adaptation_triggers: Vec<String>,
     pub consensus_methods: Vec<ConsensusMechanism>,
-    pub switching_criteria: HashMap<String, f64>,
+    pub switching_criteria: BTreeMap<String, f64>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DynamicLoadBalancingConfig {
     pub metrics: Vec<String>,
-    pub weights: HashMap<String, f64>,
+    pub weights: BTreeMap<String, f64>,
     pub adaptation_interval: Duration,
     pub rebalancing_threshold: f64,
 }
@@ -363,7 +363,7 @@ pub struct RotationRecord {
     pub coordinator: String,
     pub start_time: SystemTime,
     pub end_time: Option<SystemTime>,
-    pub performance_metrics: HashMap<String, f64>,
+    pub performance_metrics: BTreeMap<String, f64>,
     pub handoff_quality: f64,
 }
 

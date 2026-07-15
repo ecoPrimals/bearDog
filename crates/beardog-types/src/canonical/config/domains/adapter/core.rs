@@ -4,7 +4,7 @@
 
 use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -34,7 +34,7 @@ pub struct CoreAdapterConfig {
     pub registry_enabled: bool,
 
     /// Adapter metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Adapter type enumeration
@@ -115,7 +115,7 @@ impl CoreAdapterConfig {
             max_connections: Self::DEFAULT_MAX_CONNECTIONS,
             connection_timeout: Duration::from_secs(Self::DEFAULT_CONNECTION_TIMEOUT_SECS),
             registry_enabled: true,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 
@@ -142,7 +142,7 @@ impl CoreAdapterConfig {
                     .unwrap_or(Self::DEFAULT_CONNECTION_TIMEOUT_SECS),
             ),
             registry_enabled: true,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 }

@@ -5,7 +5,7 @@
 // Extensive test coverage for production metrics collection and reporting
 
 use super::metrics::*;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[test]
 fn test_metrics_config_default() {
@@ -21,7 +21,7 @@ fn test_metrics_config_custom() {
         retention_count: 5000,
         enable_streaming: true,
         batch_size: 200,
-        labels: HashMap::new(),
+        labels: BTreeMap::new(),
     };
 
     assert!(config.enable_streaming);
@@ -34,7 +34,7 @@ fn test_metrics_config_with_labels() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: types
     // TEST_PRIORITY: normal
-    let mut labels = HashMap::new();
+    let mut labels = BTreeMap::new();
     labels.insert("environment".to_string(), "production".to_string());
     labels.insert("region".to_string(), "us-west-2".to_string());
 
@@ -67,7 +67,7 @@ fn test_current_metrics_creation() {
         active_connections: 150,
         latency_ms: 25.5,
         error_rate_percent: 0.01,
-        custom_metrics: HashMap::new(),
+        custom_metrics: BTreeMap::new(),
     };
 
     assert_eq!(metrics.cpu_usage_percent, 45.5);
@@ -79,7 +79,7 @@ fn test_current_metrics_creation() {
 
 #[test]
 fn test_current_metrics_with_custom() {
-    let mut custom_metrics = HashMap::new();
+    let mut custom_metrics = BTreeMap::new();
     custom_metrics.insert("cache_hit_rate".to_string(), 0.95);
     custom_metrics.insert("queue_depth".to_string(), 42.0);
 
@@ -124,7 +124,7 @@ fn test_metrics_collector_lifecycle() {
         // TEST_DOMAIN: types
         // TEST_PRIORITY: normal
         batch_size: 50,
-        labels: HashMap::new(),
+        labels: BTreeMap::new(),
     };
 
     let mut collector = ProductionMetricsCollector::new(config);
@@ -162,7 +162,7 @@ fn test_current_metrics_serialization() {
         active_connections: 200,
         latency_ms: 30.0,
         error_rate_percent: 0.1,
-        custom_metrics: HashMap::new(),
+        custom_metrics: BTreeMap::new(),
     };
 
     let json = serde_json::to_string(&metrics).unwrap();

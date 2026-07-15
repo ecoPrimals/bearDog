@@ -398,7 +398,7 @@ fn test_metrics_collection_over_time() {
             // TEST_PRIORITY: normal
             latency_ms: (f64::from(i)).mul_add(0.5, 10.0),
             error_rate_percent: 0.1,
-            custom_metrics: std::collections::HashMap::new(),
+            custom_metrics: std::collections::BTreeMap::new(),
         };
         collector.add_metrics_to_history(metrics);
     }
@@ -480,7 +480,7 @@ fn test_concurrent_metric_collection_simulation() {
             active_connections: i,
             latency_ms: (f64::from(i)) * 0.5,
             error_rate_percent: 0.1,
-            custom_metrics: std::collections::HashMap::new(),
+            custom_metrics: std::collections::BTreeMap::new(),
         };
         collector.add_metrics_to_history(metrics);
     }

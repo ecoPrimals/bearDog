@@ -17,7 +17,7 @@ use super::model::{CoordinationConfig, CoordinationModel};
 use super::supporting::{AdaptiveHierarchy, NaturalLeadership};
 use super::transition_health::{CoordinationHealthConfig, CoordinationTransitionConfig};
 use beardog_errors::BearDogError;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -67,7 +67,7 @@ impl CoordinationConfig {
         Self {
             coordination_model: CoordinationModel::Distributed {
                 consensus_type: ConsensusType::Majority,
-                participation_weights: HashMap::new(),
+                participation_weights: BTreeMap::new(),
                 decision_thresholds: DecisionThresholds {
                     routine_threshold: 0.5,
                     significant_threshold: 0.6,

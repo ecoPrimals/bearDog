@@ -9,7 +9,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // ============================================================================
 // CONFIGURATION TYPES - Imported from canonical location
@@ -356,7 +356,7 @@ pub struct ComplianceMetrics {
     /// Weighted score across enabled standards.
     pub overall_score: f64,
     /// Per-standard scores for heatmaps or drill-down.
-    pub standards_compliance: HashMap<ComplianceStandard, f64>,
+    pub standards_compliance: BTreeMap<ComplianceStandard, f64>,
     /// Latest violations kept for trending widgets.
     pub recent_violations: Vec<ComplianceViolation>,
     /// Number of rows currently retained in the handler audit trail.

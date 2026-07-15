@@ -184,8 +184,8 @@ impl Transport {
 
 /// Ecosystem-standard transport endpoint.
 ///
-/// Wire-compatible with `songbird_types::TransportEndpoint` and
-/// `sourdough_core::TransportEndpoint` — same serde tagged JSON format:
+/// Ecosystem-standard serde tagged JSON format, wire-compatible with
+/// all primal transport endpoints:
 ///
 /// ```json
 /// { "transport": "uds", "path": "/run/user/1000/biomeos/beardog.sock" }

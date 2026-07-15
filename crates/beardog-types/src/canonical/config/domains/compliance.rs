@@ -45,7 +45,7 @@ pub struct ConsolidatedComplianceConfiguration {
 }
 
 /// Compliance standards supported by `BearDog`
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum ComplianceStandard {
     /// General Data Protection Regulation (EU)
     Gdpr,

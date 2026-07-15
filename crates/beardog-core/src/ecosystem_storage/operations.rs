@@ -5,7 +5,7 @@
 use super::types::{StorageOperation, StorageStatus};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use uuid::Uuid;
 
 /// Storage request
@@ -23,7 +23,7 @@ pub struct StorageRequest {
     pub data: Option<Vec<u8>>,
     /// Request metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
     /// Request timestamp
     pub timestamp: DateTime<Utc>,
     /// Request timeout in seconds
@@ -46,7 +46,7 @@ pub struct StorageResponse {
     pub data: Option<Vec<u8>>,
     /// Response metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
     /// Response timestamp
     pub timestamp: DateTime<Utc>,
     /// Operation duration in milliseconds
@@ -69,7 +69,7 @@ impl StorageRequest {
             operation,
             key,
             data: None,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             timestamp: Utc::now(),
             timeout_secs: None,
             source_key: None,
@@ -85,7 +85,7 @@ impl StorageRequest {
             operation: StorageOperation::Store,
             key,
             data: Some(data),
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             timestamp: Utc::now(),
             timeout_secs: None,
             source_key: None,
@@ -121,7 +121,7 @@ impl StorageResponse {
             request_id,
             status: StorageStatus::Success,
             data,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             timestamp: Utc::now(),
             duration_ms: 0,
             error_message: None,
@@ -136,7 +136,7 @@ impl StorageResponse {
             request_id,
             status: StorageStatus::Failed,
             data: None,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             timestamp: Utc::now(),
             duration_ms: 0,
             error_message: Some(error_message),

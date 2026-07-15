@@ -17,7 +17,7 @@
 use crate::ecosystem_storage::operations::{StorageRequest, StorageResponse};
 use crate::ecosystem_storage::types::{StorageOperation, StorageStatus};
 use chrono::Utc;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use uuid::Uuid;
 
 #[test]
@@ -74,7 +74,7 @@ fn test_storage_request_serialization() {
         operation: StorageOperation::Store,
         key: "test-key".to_string(),
         data: Some(vec![1, 2, 3]),
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
         timestamp: Utc::now(),
         timeout_secs: Some(30),
         source_key: None,
@@ -91,7 +91,7 @@ fn test_storage_request_serialization() {
 
 #[test]
 fn test_storage_request_with_metadata() {
-    let mut metadata = HashMap::new();
+    let mut metadata = BTreeMap::new();
     metadata.insert("content-type".to_string(), "application/json".to_string());
     metadata.insert("author".to_string(), "test-user".to_string());
 
@@ -153,7 +153,7 @@ fn test_storage_response_serialization() {
         request_id: Uuid::new_v4(),
         status: StorageStatus::Success,
         data: Some(vec![1, 2, 3]),
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
         timestamp: Utc::now(),
         duration_ms: 25,
         error_message: None,
@@ -170,7 +170,7 @@ fn test_storage_response_serialization() {
 
 #[test]
 fn test_storage_response_with_metadata() {
-    let mut metadata = HashMap::new();
+    let mut metadata = BTreeMap::new();
     metadata.insert("checksum".to_string(), "abc123".to_string());
     metadata.insert("version".to_string(), "1".to_string());
 
@@ -264,7 +264,7 @@ fn test_error_conditions() {
         request_id,
         status: StorageStatus::Timeout,
         data: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
         timestamp: Utc::now(),
         duration_ms: 5000,
         error_message: Some("Operation timed out".to_string()),
@@ -275,7 +275,7 @@ fn test_error_conditions() {
         request_id,
         status: StorageStatus::Cancelled,
         data: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
         timestamp: Utc::now(),
         duration_ms: 100,
         error_message: Some("Operation cancelled by user".to_string()),
@@ -293,7 +293,7 @@ fn storage_request_json_roundtrip_preserves_shape() {
         operation: StorageOperation::Copy,
         key: "k".to_string(),
         data: Some(vec![1, 2]),
-        metadata: HashMap::from([("m".to_string(), "v".to_string())]),
+        metadata: BTreeMap::from([("m".to_string(), "v".to_string())]),
         timestamp: Utc::now(),
         timeout_secs: Some(99),
         source_key: Some("a".to_string()),
@@ -311,7 +311,7 @@ fn storage_response_json_roundtrip_preserves_shape() {
         request_id: Uuid::new_v4(),
         status: StorageStatus::InProgress,
         data: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
         timestamp: Utc::now(),
         duration_ms: 42,
         error_message: None,

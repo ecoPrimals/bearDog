@@ -22,7 +22,7 @@ mod tests {
         UniversalCapabilityDiscovery,
     };
     use beardog_types::canonical::capabilities::ServiceCapabilityType;
-    use std::collections::HashMap;
+    use std::collections::{BTreeMap, HashMap};
 
     /// Create a test self-identity
     fn create_test_identity() -> SelfIdentity {
@@ -33,7 +33,7 @@ mod tests {
             capabilities: vec![ServiceCapabilityType::Security],
             endpoint: "https://test.example.com".to_string(),
             health_status: HealthStatus::Healthy,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 

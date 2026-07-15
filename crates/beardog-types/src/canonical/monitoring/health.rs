@@ -8,7 +8,7 @@
 use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::Duration;
 
 use super::MonitoringConfigValidation;
@@ -45,7 +45,7 @@ pub struct UnifiedHealthConfig {
     pub service_checks: ServiceHealthCheckConfig,
     /// Custom Checks
     /// Mapping of custom checks
-    pub custom_checks: HashMap<String, CustomHealthCheckConfig>,
+    pub custom_checks: BTreeMap<String, CustomHealthCheckConfig>,
 
     /// **MONITORING SETTINGS**
     /// The monitoring value
@@ -86,7 +86,7 @@ impl Default for UnifiedHealthConfig {
             tcp_checks: TcpHealthCheckConfig::default(),
             database_checks: DatabaseHealthCheckConfig::default(),
             service_checks: ServiceHealthCheckConfig::default(),
-            custom_checks: HashMap::new(),
+            custom_checks: BTreeMap::new(),
             monitoring: HealthMonitoringConfig::default(),
             alerting: HealthAlertingConfig::default(),
             recovery: HealthRecoveryConfig::default(),
@@ -148,7 +148,7 @@ pub struct HttpEndpoint {
     pub method: HttpMethod,
     /// Headers
     /// Mapping of headers
-    pub headers: HashMap<String, String>,
+    pub headers: BTreeMap<String, String>,
     /// Expected Status
     /// Current status of the expected
     pub expected_status: Vec<u16>,
@@ -344,7 +344,7 @@ pub struct ServiceEndpoint {
     pub timeout: Option<Duration>,
     /// Metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Service types
@@ -377,7 +377,7 @@ pub struct CustomHealthCheckConfig {
     /// The check type value
     pub check_type: String,
     /// Config
-    pub config: HashMap<String, serde_json::Value>,
+    pub config: BTreeMap<String, serde_json::Value>,
     /// Timeout
     pub timeout: Duration,
     /// Interval
@@ -487,7 +487,7 @@ pub enum EscalationCondition {
         /// Condition expression or identifier
         condition: String,
         /// Condition-specific parameters
-        parameters: HashMap<String, serde_json::Value>,
+        parameters: BTreeMap<String, serde_json::Value>,
     },
 }
 
@@ -553,7 +553,7 @@ pub struct RecoveryAction {
     /// The action type value
     pub action_type: RecoveryActionType,
     /// Config
-    pub config: HashMap<String, serde_json::Value>,
+    pub config: BTreeMap<String, serde_json::Value>,
     /// Timeout
     pub timeout: Duration,
 }

@@ -21,7 +21,7 @@ use tokio::sync::RwLock;
 const DEFAULT_SESSION_LIFETIME_SECS: u64 = 3600;
 #[cfg_attr(
     not(test),
-    allow(dead_code, reason = "used only in session-lifetime tests")
+    expect(dead_code, reason = "used only in session-lifetime tests")
 )]
 const DEFAULT_EXTENDED_SESSION_LIFETIME_SECS: u64 = 7200;
 

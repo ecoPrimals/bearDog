@@ -156,7 +156,7 @@ pub mod utils;
 // Existing handlers
 pub mod btsp;
 pub mod capabilities;
-pub mod capability_call; // capability.call routing dispatcher (Songbird federation bridge)
+pub mod capability_call; // capability.call routing dispatcher (federation bridge)
 pub mod crypto; // Refactored crypto handlers module (domain-based organization)
 pub mod crypto_handler; // Crypto RPC handler (routes to crypto module)
 pub mod encryption;

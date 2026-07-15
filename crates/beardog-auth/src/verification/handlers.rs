@@ -121,13 +121,13 @@ pub fn default_stub_registry() -> VerificationHandlerRegistry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
     fn empty_context() -> VerificationContext {
         VerificationContext {
             genetics: None,
             required_permission: None,
-            context_data: HashMap::new(),
+            context_data: BTreeMap::new(),
         }
     }
 

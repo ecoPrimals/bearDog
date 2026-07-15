@@ -11,7 +11,7 @@ use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::ServiceCapabilityType;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
@@ -70,7 +70,7 @@ pub struct SelfIdentity {
     /// Current health status
     pub health_status: HealthStatus,
     /// Additional service metadata
-    pub metadata: HashMap<String, serde_json::Value>,
+    pub metadata: BTreeMap<String, serde_json::Value>,
 }
 
 /// Health status of a service or component
@@ -197,7 +197,7 @@ impl UniversalCapabilityDiscovery {
         let mapped: Vec<DiscoveredService> = found
             .into_iter()
             .map(|r| {
-                let meta: HashMap<String, serde_json::Value> = r
+                let meta: BTreeMap<String, serde_json::Value> = r
                     .metadata
                     .into_iter()
                     .map(|(k, v)| (k, serde_json::Value::String(v)))
@@ -415,7 +415,7 @@ pub struct DiscoveredService {
     /// Current health status of the service
     pub health_status: HealthStatus,
     /// Additional service metadata
-    pub metadata: HashMap<String, serde_json::Value>,
+    pub metadata: BTreeMap<String, serde_json::Value>,
     /// Timestamp when the service was discovered
     pub discovered_at: chrono::DateTime<chrono::Utc>,
 }
@@ -428,7 +428,7 @@ impl Default for DiscoveredService {
             endpoint: String::new(),
             capabilities: vec![],
             health_status: HealthStatus::Unknown,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             discovered_at: chrono::Utc::now(),
         }
     }
@@ -479,7 +479,7 @@ impl SelfIdentity {
             capabilities,
             endpoint,
             health_status: HealthStatus::Healthy,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 
@@ -512,7 +512,7 @@ impl SelfIdentity {
             capabilities,
             endpoint: endpoint.into(),
             health_status: HealthStatus::Healthy,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 }

@@ -2,7 +2,7 @@
 
 //! `capability.call` routing dispatcher.
 //!
-//! Translates biomeOS/Songbird orchestrator calls of the form:
+//! Translates ecosystem orchestrator calls of the form:
 //!
 //! ```json
 //! {"method": "capability.call", "params": {
@@ -15,7 +15,7 @@
 //! into concrete bearDog method calls (`tls.sign_handshake`) by re-dispatching
 //! through the existing `HandlerRegistry`.
 //!
-//! This bridges Songbird's capability-based RPC convention to bearDog's
+//! This bridges the ecosystem capability-based RPC convention to bearDog's
 //! semantic method namespace, enabling cross-gate federation handshakes.
 
 use super::{HandlerRegistry, HandlerResult, MethodHandler};

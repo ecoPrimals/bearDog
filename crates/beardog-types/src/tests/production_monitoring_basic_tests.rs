@@ -594,7 +594,7 @@ fn test_system_metrics_collector_history() {
             active_connections: 100,
             latency_ms: 10.0,
             error_rate_percent: 0.1,
-            custom_metrics: std::collections::HashMap::new(),
+            custom_metrics: std::collections::BTreeMap::new(),
         };
         collector.add_metrics_to_history(metrics);
     }
@@ -622,7 +622,7 @@ fn test_system_metrics_collector_history_retention() {
             active_connections: 100,
             latency_ms: 10.0,
             error_rate_percent: 0.1,
-            custom_metrics: std::collections::HashMap::new(),
+            custom_metrics: std::collections::BTreeMap::new(),
         };
         collector.add_metrics_to_history(metrics);
     }
@@ -650,7 +650,7 @@ fn test_system_metrics_collector_clear_history() {
             active_connections: 100,
             latency_ms: 10.0,
             error_rate_percent: 0.1,
-            custom_metrics: std::collections::HashMap::new(),
+            custom_metrics: std::collections::BTreeMap::new(),
         };
         collector.add_metrics_to_history(metrics);
     }

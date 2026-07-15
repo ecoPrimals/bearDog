@@ -20,7 +20,7 @@
 
 use beardog_config::env_keys;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::Duration;
 
 /// Canonical discovery configuration for all discovery types
@@ -125,7 +125,7 @@ pub struct DiscoveryConfig {
     ///
     /// Key-value pairs attached to this service when registering.
     /// Examples: version, region, capabilities, tags.
-    pub service_metadata: HashMap<String, String>,
+    pub service_metadata: BTreeMap<String, String>,
 
     // ═══════════════════════════════════════════════════════
     // Features
@@ -150,7 +150,7 @@ impl Default for DiscoveryConfig {
             endpoints: vec![],
             health_check_interval: Duration::from_secs(60),
             auto_register: true,
-            service_metadata: HashMap::new(),
+            service_metadata: BTreeMap::new(),
             predictive_enabled: false,
         }
     }
@@ -195,7 +195,7 @@ impl DiscoveryConfig {
             endpoints: vec![],
             health_check_interval: Duration::from_secs(1),
             auto_register: false,
-            service_metadata: HashMap::new(),
+            service_metadata: BTreeMap::new(),
             predictive_enabled: false,
         }
     }

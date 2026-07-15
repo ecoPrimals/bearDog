@@ -9,7 +9,7 @@
 use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 ///
 /// Configures how metrics are collected, stored, and reported in production environments.
@@ -28,7 +28,7 @@ pub struct MetricsConfig {
     /// Number of `batch_size`
     pub batch_size: usize,
     /// Mapping of labels
-    pub labels: HashMap<String, String>,
+    pub labels: BTreeMap<String, String>,
 }
 
 impl Default for MetricsConfig {
@@ -42,7 +42,7 @@ impl Default for MetricsConfig {
             retention_count: 1000,
             enable_streaming: true,
             batch_size: 100,
-            labels: HashMap::new(),
+            labels: BTreeMap::new(),
         }
     }
 }
@@ -76,7 +76,7 @@ pub struct CurrentMetrics {
     pub error_rate_percent: f64,
     /// Additional custom metrics
     /// Mapping of custom metrics
-    pub custom_metrics: HashMap<String, f64>,
+    pub custom_metrics: BTreeMap<String, f64>,
 }
 
 /// Production metrics collector
@@ -176,7 +176,7 @@ impl ProductionMetricsCollector {
             active_connections: 150,
             latency_ms: 12.5,
             error_rate_percent: 0.1,
-            custom_metrics: HashMap::new(),
+            custom_metrics: BTreeMap::new(),
         };
 
         // Store in history if collection is active
@@ -230,7 +230,7 @@ mod tests {
 
     #[test]
     fn test_metrics_config_custom() {
-        let mut labels = HashMap::new();
+        let mut labels = BTreeMap::new();
         labels.insert("env".to_string(), "prod".to_string());
 
         let config = MetricsConfig {
@@ -255,7 +255,7 @@ mod tests {
 
     #[test]
     fn test_current_metrics_creation() {
-        let mut custom = HashMap::new();
+        let mut custom = BTreeMap::new();
         custom.insert("queue_depth".to_string(), 100.0);
 
         let metrics = CurrentMetrics {
@@ -340,7 +340,7 @@ mod tests {
             active_connections: 25,
             latency_ms: 10.0,
             error_rate_percent: 0.05,
-            custom_metrics: HashMap::new(),
+            custom_metrics: BTreeMap::new(),
         };
 
         let json = serde_json::to_string(&metrics);

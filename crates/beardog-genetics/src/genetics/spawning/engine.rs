@@ -8,7 +8,7 @@ use super::types::{SpawnRequest, SpawnResult};
 use beardog_auth::auth::BearDogGenetics;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::config::GeneticsConfig;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use tracing::{debug, info};
 use uuid::Uuid;
 
@@ -279,8 +279,8 @@ impl GeneticSpawningEngine {
         Ok((base_score + capability_score + generation_bonus).min(1.0))
     }
 
-    fn collect_metrics(&self) -> HashMap<String, f64> {
-        let mut metrics = HashMap::with_capacity(16);
+    fn collect_metrics(&self) -> BTreeMap<String, f64> {
+        let mut metrics = BTreeMap::new();
         metrics.insert("spawn_time_ms".to_string(), 150.0);
         metrics.insert("memory_usage_mb".to_string(), 2.5);
         metrics.insert("cpu_usage_percent".to_string(), 5.0);

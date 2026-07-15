@@ -14,7 +14,7 @@ use crate::constants::time;
 use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 
 /// **SIMPLIFIED CONFIGURATION** - Lightweight alternative for simple deployments
@@ -55,7 +55,7 @@ pub struct SimplifiedBearDogConfig {
     /// Monitoring settings
     pub monitoring: MonitoringSettings,
     /// Feature flags
-    pub features: HashMap<String, bool>,
+    pub features: BTreeMap<String, bool>,
     /// Performance settings
     pub performance: PerformanceSettings,
 }
@@ -202,7 +202,7 @@ impl Default for PerformanceSettings {
 
 impl Default for SimplifiedBearDogConfig {
     fn default() -> Self {
-        let mut features = HashMap::new();
+        let mut features = BTreeMap::new();
         features.insert("security_enhanced".to_string(), true);
         features.insert("performance_optimized".to_string(), true);
         features.insert("monitoring_enabled".to_string(), true);

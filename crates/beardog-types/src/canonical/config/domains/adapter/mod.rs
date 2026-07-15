@@ -274,7 +274,7 @@ pub mod migration {
             endpoints,
             health_check_interval: Duration::from_secs(60),
             auto_register: true,
-            service_metadata: std::collections::HashMap::new(),
+            service_metadata: std::collections::BTreeMap::new(),
             predictive_enabled: false,
         }
     }

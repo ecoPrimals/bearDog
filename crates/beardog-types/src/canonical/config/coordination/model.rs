@@ -18,7 +18,7 @@ use super::supporting::{
 };
 use super::transition_health::{CoordinationHealthConfig, CoordinationTransitionConfig};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -50,7 +50,7 @@ pub enum CoordinationModel {
     Distributed {
         /// Type of consensus mechanism used
         consensus_type: ConsensusType,
-        participation_weights: HashMap<String, f64>,
+        participation_weights: BTreeMap<String, f64>,
         decision_thresholds: DecisionThresholds,
         consensus_timeout: Duration,
     },
@@ -71,7 +71,7 @@ pub enum CoordinationModel {
         context_evaluation: ContextEvaluation,
         authority_delegation: AuthorityDelegation,
         /// Current context and authority assignments
-        current_assignments: HashMap<Arc<str>, Arc<str>>,
+        current_assignments: BTreeMap<Arc<str>, Arc<str>>,
     },
 
     /// Shared decision making with mutual cooperation

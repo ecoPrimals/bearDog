@@ -6,7 +6,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Overall system health status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
@@ -43,7 +43,7 @@ pub struct HealthCheck {
     pub duration_ms: u64,
     /// Details
     /// Mapping of details
-    pub details: HashMap<String, String>,
+    pub details: BTreeMap<String, String>,
 }
 
 /// Aggregated health for one logical service and its constituent checks.
@@ -214,7 +214,7 @@ mod tests {
             message: Some("All connections active".to_string()),
             timestamp: Utc::now(),
             duration_ms: 45,
-            details: HashMap::new(),
+            details: BTreeMap::new(),
         };
 
         assert_eq!(check.name, "database");
@@ -225,7 +225,7 @@ mod tests {
 
     #[test]
     fn test_health_check_with_details() {
-        let mut details = HashMap::new();
+        let mut details = BTreeMap::new();
         details.insert("connection_pool".to_string(), "10/10".to_string());
         details.insert("response_time_ms".to_string(), "12".to_string());
 
@@ -281,7 +281,7 @@ mod tests {
             message: None,
             timestamp: Utc::now(),
             duration_ms: 10,
-            details: HashMap::new(),
+            details: BTreeMap::new(),
         };
 
         let check2 = HealthCheck {
@@ -290,7 +290,7 @@ mod tests {
             message: Some("Slow response".to_string()),
             timestamp: Utc::now(),
             duration_ms: 150,
-            details: HashMap::new(),
+            details: BTreeMap::new(),
         };
 
         let service = ServiceHealth {
@@ -417,7 +417,7 @@ mod tests {
             message: Some("OK".to_string()),
             timestamp: Utc::now(),
             duration_ms: 5,
-            details: HashMap::new(),
+            details: BTreeMap::new(),
         };
 
         let json = serde_json::to_string(&check);

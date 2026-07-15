@@ -105,7 +105,7 @@ mod resilience_methods_tests {
 mod monitoring_core_methods_tests {
     use crate::canonical::monitoring::MonitoringConfigValidation;
     use crate::canonical::monitoring::core::*;
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
     use std::time::Duration;
 
     #[test]
@@ -133,7 +133,7 @@ mod monitoring_core_methods_tests {
         };
         let _ = StorageBackend::Custom {
             backend_type: "custom".to_string(),
-            config: HashMap::new(),
+            config: BTreeMap::new(),
         };
     }
 
@@ -166,7 +166,7 @@ mod monitoring_core_methods_tests {
         let _ = FilterAction::Exclude;
         let _ = FilterAction::Transform {
             operation: "add_prefix".to_string(),
-            parameters: HashMap::new(),
+            parameters: BTreeMap::new(),
         };
     }
 

@@ -7,7 +7,7 @@
 use crate::canonical::traits::RetryStrategy;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -29,7 +29,7 @@ pub struct ClientConfiguration {
     )]
     pub user_agent: Arc<str>,
     /// Default headers
-    pub default_headers: HashMap<String, String>,
+    pub default_headers: BTreeMap<String, String>,
     /// Retry configuration
     pub retry: RetryConfiguration,
 }
@@ -69,7 +69,7 @@ impl Default for ClientConfiguration {
                 )
                 .as_str(),
             ),
-            default_headers: HashMap::new(),
+            default_headers: BTreeMap::new(),
             retry: RetryConfiguration {
                 max_attempts: crate::constants::domains::system::defaults::DEFAULT_MAX_RETRIES,
                 base_delay_ms: crate::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE

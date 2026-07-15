@@ -6,7 +6,7 @@ use crate::health_status::{
     HealthCheck, HealthStatus, HealthSummary, ServiceHealth, SystemHealthReport,
 };
 use chrono::Utc;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[cfg(test)]
 mod health_status_tests {
@@ -84,7 +84,7 @@ mod health_check_tests {
             message: Some("All good".to_string()),
             timestamp: Utc::now(),
             duration_ms: 42,
-            details: HashMap::new(),
+            details: BTreeMap::new(),
         }
     }
 
@@ -103,7 +103,7 @@ mod health_check_tests {
 
     #[test]
     fn test_health_check_with_details() {
-        let mut details = HashMap::new();
+        let mut details = BTreeMap::new();
         details.insert("key1".to_string(), "value1".to_string());
         details.insert("key2".to_string(), "value2".to_string());
 
@@ -144,7 +144,7 @@ mod health_check_tests {
             message: None,
             timestamp: Utc::now(),
             duration_ms: 0,
-            details: HashMap::new(),
+            details: BTreeMap::new(),
             // TEST_CATEGORY: integration
             // TEST_DOMAIN: types
             // TEST_PRIORITY: normal
@@ -212,7 +212,7 @@ mod health_check_tests {
                 message: None,
                 timestamp: Utc::now(),
                 duration_ms: 100,
-                details: HashMap::new(),
+                details: BTreeMap::new(),
                 // TEST_CATEGORY: integration
                 // TEST_DOMAIN: types
                 // TEST_PRIORITY: normal
@@ -264,7 +264,7 @@ mod service_health_tests {
             message: None,
             timestamp: Utc::now(),
             duration_ms: 25,
-            details: HashMap::new(),
+            details: BTreeMap::new(),
         };
 
         let service = ServiceHealth {
@@ -292,7 +292,7 @@ mod service_health_tests {
                 message: None,
                 timestamp: Utc::now(),
                 duration_ms: 10,
-                details: HashMap::new(),
+                details: BTreeMap::new(),
             },
             HealthCheck {
                 // TEST_CATEGORY: integration
@@ -303,7 +303,7 @@ mod service_health_tests {
                 message: Some("Slow response".to_string()),
                 timestamp: Utc::now(),
                 duration_ms: 500,
-                details: HashMap::new(),
+                details: BTreeMap::new(),
             },
         ];
 
@@ -491,7 +491,7 @@ mod health_integration_tests {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: types
         // TEST_PRIORITY: normal
-        let details = HashMap::new();
+        let details = BTreeMap::new();
 
         let check = HealthCheck {
             name: "database_connection".to_string(),

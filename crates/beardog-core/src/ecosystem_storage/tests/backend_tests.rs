@@ -23,7 +23,7 @@ use crate::ecosystem_storage::{
 };
 use beardog_errors::BearDogError;
 use chrono::Utc;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use uuid::Uuid;
 
 // =============================================================================
@@ -62,7 +62,7 @@ impl StorageBackend for MockStorageBackend {
             request_id: request.request_id,
             status: StorageStatus::Success,
             data: None,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             timestamp: Utc::now(),
             duration_ms: 10,
             error_message: None,
@@ -87,7 +87,7 @@ impl StorageBackend for MockStorageBackend {
                 StorageStatus::Failed
             },
             data,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             timestamp: Utc::now(),
             duration_ms: 5,
             error_message: if found {
@@ -115,7 +115,7 @@ impl StorageBackend for MockStorageBackend {
                 StorageStatus::Failed
             },
             data: None,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             timestamp: Utc::now(),
             duration_ms: 5,
             error_message: if removed {
@@ -249,7 +249,7 @@ fn test_mock_backend_store_and_retrieve() {
         operation: StorageOperation::Store,
         key: "test-key".to_string(),
         data: Some(b"test-value".to_vec()),
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
         timestamp: Utc::now(),
         timeout_secs: None,
         source_key: None,
@@ -264,7 +264,7 @@ fn test_mock_backend_store_and_retrieve() {
         operation: StorageOperation::Retrieve,
         key: "test-key".to_string(),
         data: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
         timestamp: Utc::now(),
         timeout_secs: None,
         source_key: None,
@@ -287,7 +287,7 @@ fn test_mock_backend_retrieve_nonexistent() {
         operation: StorageOperation::Retrieve,
         key: "nonexistent-key".to_string(),
         data: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
         timestamp: Utc::now(),
         timeout_secs: None,
         source_key: None,
@@ -312,7 +312,7 @@ fn test_mock_backend_delete() {
         operation: StorageOperation::Store,
         key: "delete-test".to_string(),
         data: Some(b"delete-value".to_vec()),
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
         timestamp: Utc::now(),
         timeout_secs: None,
         source_key: None,
@@ -326,7 +326,7 @@ fn test_mock_backend_delete() {
         operation: StorageOperation::Delete,
         key: "delete-test".to_string(),
         data: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
         timestamp: Utc::now(),
         timeout_secs: None,
         source_key: None,
@@ -344,7 +344,7 @@ fn test_mock_backend_delete() {
         operation: StorageOperation::Retrieve,
         key: "delete-test".to_string(),
         data: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
         timestamp: Utc::now(),
         timeout_secs: None,
         source_key: None,
@@ -368,7 +368,7 @@ fn test_mock_backend_list() {
             operation: StorageOperation::Store,
             key: format!("item-{}", i),
             data: Some(format!("value-{}", i).into_bytes()),
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             timestamp: Utc::now(),
             timeout_secs: None,
             source_key: None,
@@ -382,7 +382,7 @@ fn test_mock_backend_list() {
         operation: StorageOperation::List,
         key: String::new(),
         data: None,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
         timestamp: Utc::now(),
         timeout_secs: None,
         source_key: None,
@@ -425,7 +425,7 @@ fn test_mock_backend_failure_modes() {
         operation: StorageOperation::Store,
         key: "test".to_string(),
         data: Some(b"data".to_vec()),
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
         timestamp: Utc::now(),
         timeout_secs: None,
         source_key: None,
@@ -459,7 +459,7 @@ fn test_storage_location_format() {
         operation: StorageOperation::Store,
         key: "location-key".to_string(),
         data: Some(b"data".to_vec()),
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
         timestamp: Utc::now(),
         timeout_secs: None,
         source_key: None,
