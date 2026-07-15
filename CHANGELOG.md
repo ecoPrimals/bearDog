@@ -9,6 +9,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 15, 2026 -- Wave 141a: Cross-Architecture Adoption + Deep Evolution
+
+#### Cross-Platform Transport (per-primal handoff from eastGate overwatch)
+- **`beardog-tower-atomic` cross-arch** — `IpcStream` enum replaces direct `UnixStream`; `#[cfg(unix)]` guards on UDS paths; new `connect_tcp()` for Windows; `connect_endpoint()` now supports `TransportEndpoint::Tcp`; `cargo check --target x86_64-pc-windows-gnu` passes
+- **TCP integration test** — new `test_connect_to_mock_primal_tcp` validates cross-platform IPC path
+
+#### Sovereignty Hardening
+- **Removed hardcoded `songBird`** from production gatehouse log (P0 sovereignty violation)
+- **Scrubbed cross-primal name references** in 7 files: `auth_event_bus.rs`, `capability_call.rs`, `btsp/session.rs`, `btsp/rpc.rs`, `btsp/transport.rs`, `handlers/mod.rs`
+
+#### BTreeMap Batch 3 (deterministic serialization)
+- **54 HashMap fields → BTreeMap** across 31 production files for deterministic IPC/wire serialization (self_discovery, services, metrics, health, threat intel, coordination, monitoring, capabilities, compliance, auth, genetics, HSM audit) + 14 test files updated
+- Added `PartialOrd, Ord` to `ComplianceStandard` for BTreeMap key ordering
+
+#### Test Extraction (1,157 LOC from production files)
+- **`api_server/mod.rs` → `api_server_tests.rs`** (368 LOC)
+- **`client/lib.rs` → `lib_tests.rs`** (298 LOC)
+- **`auth/ecosystem.rs` → `ecosystem_tests.rs`** (270 LOC)
+- **`discovery/mdns.rs` → `mdns_tests.rs`** (221 LOC)
+
+#### Lint Hygiene
+- **`allow(dead_code)` → `expect(dead_code)`** in `infrastructure.rs`, `session.rs`, `hsm_management.rs`
+- **`allow(clippy::*)` → `expect(clippy::*)`** in `hsm_key_provider_backend.rs`, `capabilities.rs`
+- Removed stale dead-code suppression from `infrastructure.rs` (no longer needed after BTreeMap migration)
+
+### July 12, 2026 -- Waves 138b–139b: FIDO2 Ceremony + Wire Type Hardening
+
+#### FIDO2/CTAP2 (Wave 138b)
+- **P0 `HIDRAW-REPORT-ID`** — prepend `0x00` to Linux hidraw writes for unnumbered reports
+- **P1 `HID-BLOCKING-IO`** — `std::fs::File` + `spawn_blocking` replaces incorrect `tokio::fs::File` for device I/O; `libc` dependency removed
+- **FIDO2 IPC handler split** — monolithic 897L `fido2.rs` → 8 focused modules (`mod`, `discover`, `register`, `authenticate`, `entropy`, `ceremony`, `helpers`, `tests`)
+- **DRY `encode_client_pin_cmd`** — shared CBOR command builder in `client_pin.rs`
+- **Named constants** — `CTAPHID_BROADCAST_CID`, `CTAPHID_MAX_MESSAGE_SIZE`, etc. in `hid_transport.rs`
+- **PIN error fix** — `0x2C` no longer misclassified as `PIN_NOT_SET` (`0x35`)
+
+#### Wire Type Hardening (Wave 139a–139b)
+- **BTreeMap batches 1–2** — 61 HashMap fields → BTreeMap across 15 production files
+- **Orphan cleanup** — deleted broken `consensus.rs`, removed deprecated `BiomeOSPaths` alias and `STORAGE_BACKEND_AVAILABLE` constant
+- **Test extraction** — `primitives.rs` → `primitives_tests.rs` (200 LOC)
+
 ### July 9, 2026 -- Wave 134d: Upstream Regression Fixes + Test Restoration
 
 #### P0 — Gateway Bind Error Silencing (upstream regression from 579bc77)

@@ -1,6 +1,6 @@
 # BearDog Specifications
 
-**Last Updated**: Jul 4, 2026
+**Last Updated**: Jul 15, 2026
 **Version**: 0.9.0
 **Status**: Production Ready
 **Crates**: 29 | **Tests**: 13,884+ passing | **Coverage**: 90.51% (llvm-cov line coverage)
@@ -116,7 +116,7 @@ Older cross-team drafts that previously appeared under paths like `otherTeams/` 
 
 ---
 
-## Current JSON-RPC Methods (226)
+## Current JSON-RPC Methods (229)
 
 | Category | Methods | Examples |
 |----------|---------|---------|
@@ -158,4 +158,4 @@ Historical experiment write-ups from the cryptographic foundation phase are **no
 
 ---
 
-**Last Updated**: Jul 4, 2026
+**Last Updated**: Jul 15, 2026
