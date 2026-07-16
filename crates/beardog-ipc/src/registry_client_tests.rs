@@ -22,7 +22,7 @@ mod suite {
 
         // Client doesn't know or care what's on the other end
         // Could be Songbird, Consul, etcd, custom - it adapts universally
-        assert_eq!(client.socket_path, PathBuf::from("/tmp/any-registry.sock"));
+        assert_eq!(client.socket_path(), PathBuf::from("/tmp/any-registry.sock"));
 
         // No vendor-specific methods
         // No primal-specific knowledge
@@ -33,21 +33,21 @@ mod suite {
     fn test_works_with_songbird_socket() {
         // Works with Songbird
         let client = PrimalRegistryClient::new(PathBuf::from("/tmp/songbird-nat0.sock"));
-        assert_eq!(client.socket_path, PathBuf::from("/tmp/songbird-nat0.sock"));
+        assert_eq!(client.socket_path(), PathBuf::from("/tmp/songbird-nat0.sock"));
     }
 
     #[test]
     fn test_works_with_consul_socket() {
         // Works with Consul
         let client = PrimalRegistryClient::new(PathBuf::from("/tmp/consul-nat0.sock"));
-        assert_eq!(client.socket_path, PathBuf::from("/tmp/consul-nat0.sock"));
+        assert_eq!(client.socket_path(), PathBuf::from("/tmp/consul-nat0.sock"));
     }
 
     #[test]
     fn test_works_with_etcd_socket() {
         // Works with etcd
         let client = PrimalRegistryClient::new(PathBuf::from("/tmp/etcd-nat0.sock"));
-        assert_eq!(client.socket_path, PathBuf::from("/tmp/etcd-nat0.sock"));
+        assert_eq!(client.socket_path(), PathBuf::from("/tmp/etcd-nat0.sock"));
     }
 
     #[test]
@@ -55,7 +55,7 @@ mod suite {
         // Works with custom/future registries
         let client = PrimalRegistryClient::new(PathBuf::from("/tmp/my-custom-registry.sock"));
         assert_eq!(
-            client.socket_path,
+            client.socket_path(),
             PathBuf::from("/tmp/my-custom-registry.sock")
         );
     }
@@ -179,14 +179,14 @@ mod suite {
     #[test]
     fn test_empty_socket_path() {
         let client = PrimalRegistryClient::new(PathBuf::from(""));
-        assert_eq!(client.socket_path, PathBuf::from(""));
+        assert_eq!(client.socket_path(), PathBuf::from(""));
     }
 
     #[test]
     fn test_absolute_socket_path() {
         let client = PrimalRegistryClient::new(PathBuf::from("/absolute/path/to/registry.sock"));
         assert_eq!(
-            client.socket_path,
+            client.socket_path(),
             PathBuf::from("/absolute/path/to/registry.sock")
         );
     }
@@ -195,7 +195,7 @@ mod suite {
     fn test_relative_socket_path() {
         let client = PrimalRegistryClient::new(PathBuf::from("./relative/registry.sock"));
         assert_eq!(
-            client.socket_path,
+            client.socket_path(),
             PathBuf::from("./relative/registry.sock")
         );
     }
@@ -204,7 +204,7 @@ mod suite {
     fn test_socket_path_with_special_chars() {
         let client = PrimalRegistryClient::new(PathBuf::from("/tmp/registry-nat0_v2.0.sock"));
         assert_eq!(
-            client.socket_path,
+            client.socket_path(),
             PathBuf::from("/tmp/registry-nat0_v2.0.sock")
         );
     }
@@ -289,7 +289,7 @@ mod suite {
         for _ in 0..100 {
             let random_name = format!("/tmp/registry-{}.sock", rng.random::<u32>());
             let client = PrimalRegistryClient::new(PathBuf::from(&random_name));
-            assert_eq!(client.socket_path, PathBuf::from(&random_name));
+            assert_eq!(client.socket_path(), PathBuf::from(&random_name));
         }
     }
 

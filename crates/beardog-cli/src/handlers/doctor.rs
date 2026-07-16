@@ -202,13 +202,15 @@ async fn check_server_connectivity() -> HealthCheck {
     let socket_path = discover_socket_path();
 
     if std::path::Path::new(&socket_path).exists() {
-        // Try to connect
-        match tokio::net::UnixStream::connect(&socket_path).await {
+        let endpoint = beardog_types::btsp::TransportEndpoint::Uds {
+            path: std::path::PathBuf::from(&socket_path),
+        };
+        match beardog_ipc::connect_raw(&endpoint).await {
             Ok(_) => HealthCheck {
                 name: "Server Connectivity".to_string(),
                 healthy: true,
                 message: "Server is running and accepting connections".to_string(),
-                details: Some(format!("Socket: {socket_path}")),
+                details: Some(format!("Endpoint: {endpoint}")),
             },
             Err(e) => HealthCheck {
                 name: "Server Connectivity".to_string(),

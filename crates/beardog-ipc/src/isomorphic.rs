@@ -439,6 +439,47 @@ pub fn ipc_endpoint_to_transport(ep: &IpcEndpoint) -> beardog_types::btsp::Trans
     }
 }
 
+/// Open a raw transport connection without sending any protocol prefix.
+///
+/// Use this when the caller manages its own `riboCipher` signal or sends
+/// a different protocol prefix (e.g. health probes, registry clients).
+/// For the standard JSON-RPC path, prefer [`connect_transport`] which
+/// includes the `riboCipher` signal automatically.
+///
+/// # Errors
+///
+/// Returns an error if the connection cannot be established, or if the
+/// endpoint transport type is not supported for outbound connections.
+pub async fn connect_raw(
+    endpoint: &beardog_types::btsp::TransportEndpoint,
+) -> Result<IpcStream> {
+    use beardog_types::btsp::TransportEndpoint;
+
+    debug!(endpoint = %endpoint, "raw transport connect (no protocol prefix)");
+
+    match endpoint {
+        TransportEndpoint::Uds { path } => {
+            let stream = UnixStream::connect(path)
+                .await
+                .context(format!("Failed to connect to UDS: {}", path.display()))?;
+            Ok(IpcStream::Unix(stream))
+        }
+        TransportEndpoint::Tcp { host, port } => {
+            let addr = format!("{host}:{port}");
+            let stream = TcpStream::connect(&addr)
+                .await
+                .context(format!("Failed to connect to TCP: {addr}"))?;
+            Ok(IpcStream::Tcp(stream))
+        }
+        TransportEndpoint::MeshRelay {
+            peer_id,
+            capability,
+        } => Err(anyhow::anyhow!(
+            "mesh_relay transport not yet supported for outbound connections (peer={peer_id}, cap={capability})"
+        )),
+    }
+}
+
 /// Connect to a primal via a Unix socket path (convenience wrapper).
 ///
 /// # Errors

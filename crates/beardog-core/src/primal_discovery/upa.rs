@@ -16,8 +16,6 @@ impl PrimalDiscovery {
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
         info!("🔍 UPA registry discovery at: {}", registry_addr);
 
-        let socket_path = registry_addr.trim_start_matches("unix://");
-
         let capability = if query.capabilities.is_empty() {
             "generic".to_string()
         } else {
@@ -34,7 +32,16 @@ impl PrimalDiscovery {
             "id": 1
         });
 
-        match tokio::net::UnixStream::connect(socket_path).await {
+        let socket_path = registry_addr.trim_start_matches("unix://");
+
+        #[cfg(unix)]
+        let connect_result = tokio::net::UnixStream::connect(socket_path).await;
+        #[cfg(not(unix))]
+        let connect_result: Result<tokio::net::TcpStream, std::io::Error> = Err(
+            std::io::Error::new(std::io::ErrorKind::Unsupported, "UDS not available on this platform")
+        );
+
+        match connect_result {
             Ok(mut stream) => {
                 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 

@@ -42,12 +42,13 @@
 
 use anyhow::{Context, Result};
 use beardog_config::env_keys;
+use beardog_types::btsp::TransportEndpoint;
 use beardog_types::constants::domains::network::ipc_discovery::{
     BEARDOG_CAPABILITY_DOMAIN, resolve_biomeos_ipc_subdir_from_optional,
 };
 use serde_json::json;
+use std::path::PathBuf;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::UnixStream;
 use tracing::{debug, info, warn};
 
 /// Register `BearDog`'s capabilities with Neural API
@@ -187,8 +188,6 @@ pub async fn send_primal_announce(
     methods: &[String],
     signed_attestation: Option<&serde_json::Value>,
 ) -> Result<()> {
-    use beardog_types::constants::domains::network::ribocipher;
-
     info!(
         target_socket = biomeos_socket,
         primal = primal_name,
@@ -231,13 +230,12 @@ pub async fn send_primal_announce(
 
     let request_str = serde_json::to_string(&request)?;
 
-    let mut stream = UnixStream::connect(biomeos_socket)
+    let endpoint = TransportEndpoint::Uds {
+        path: PathBuf::from(biomeos_socket),
+    };
+    let mut stream = crate::isomorphic::connect_transport(&endpoint)
         .await
         .context(format!("Failed to connect to biomeOS at {biomeos_socket}"))?;
-
-    stream
-        .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
-        .await?;
 
     stream.write_all(request_str.as_bytes()).await?;
     stream.write_all(b"\n").await?;
@@ -378,8 +376,6 @@ fn default_announce_latency_estimates(capabilities: &[String]) -> serde_json::Va
 
 /// Register a single capability with Neural API
 async fn register_capability(neural_socket: &str, capability: serde_json::Value) -> Result<()> {
-    use beardog_types::constants::domains::network::ribocipher;
-
     let cap_name = capability["capability"].as_str().unwrap_or("unknown");
     debug!("📤 Registering capability: {}", cap_name);
 
@@ -393,16 +389,15 @@ async fn register_capability(neural_socket: &str, capability: serde_json::Value)
     let request_str = serde_json::to_string(&request)?;
     debug!("📤 Sending registration: {}", request_str);
 
-    // Connect to Neural API
-    let mut stream = UnixStream::connect(neural_socket).await.context(format!(
-        "Failed to connect to Neural API at {neural_socket}"
-    ))?;
+    let neural_endpoint = TransportEndpoint::Uds {
+        path: PathBuf::from(neural_socket),
+    };
+    let mut stream = crate::isomorphic::connect_transport(&neural_endpoint)
+        .await
+        .context(format!(
+            "Failed to connect to Neural API at {neural_socket}"
+        ))?;
 
-    stream
-        .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
-        .await?;
-
-    // Send registration request
     stream.write_all(request_str.as_bytes()).await?;
     stream.write_all(b"\n").await?;
 

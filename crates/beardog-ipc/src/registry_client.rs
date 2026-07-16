@@ -37,15 +37,16 @@
 //!
 //! Instead of N primal-specific clients, we have 1 universal client that adapts to any registry
 
+use crate::isomorphic::{IpcStream, connect_raw};
 use crate::protocol::JSONRPC_VERSION;
 use beardog_config::env_keys;
 use beardog_core::capabilities::{BearDogCapabilities, Capability};
 use beardog_errors::BearDogError;
+use beardog_types::btsp::TransportEndpoint;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::path::PathBuf;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-use tokio::net::UnixStream;
 use tracing::{debug, error, info, warn};
 
 /// Tier-3/4 fallback: registry UDS when the capability manifest has no Unix endpoint.
@@ -126,7 +127,7 @@ pub struct PrimalInfo {
 
 /// Universal Primal Registry Client
 ///
-/// Connects to ANY registry that speaks JSON-RPC 2.0 over Unix sockets
+/// Connects to ANY registry that speaks JSON-RPC 2.0 over transport-agnostic IPC
 ///
 /// # Zero Vendor Hardcoding
 ///
@@ -137,52 +138,68 @@ pub struct PrimalInfo {
 /// - Custom registries
 /// - ANY system that speaks JSON-RPC 2.0
 pub struct PrimalRegistryClient {
-    socket_path: PathBuf,
-    stream: Option<UnixStream>,
+    endpoint: TransportEndpoint,
+    stream: Option<IpcStream>,
     request_id: u64,
 }
 
 impl PrimalRegistryClient {
-    /// Create a new registry client
+    /// Create a new registry client from a socket path.
     ///
-    /// # Arguments
-    ///
-    /// * `socket_path` - Path to registry's Unix socket
+    /// The path is wrapped in a [`TransportEndpoint::Uds`] for transport dispatch.
     ///
     /// # Zero Assumptions
     ///
-    /// We don't know or care what's on the other end of this socket.
+    /// We don't know or care what's on the other end of this endpoint.
     /// Could be any registry implementation that speaks the wire protocol.
-    pub const fn new(socket_path: PathBuf) -> Self {
+    pub fn new(socket_path: PathBuf) -> Self {
         Self {
-            socket_path,
+            endpoint: TransportEndpoint::Uds { path: socket_path },
             stream: None,
             request_id: 0,
         }
     }
 
-    /// Connect to registry
-    ///
-    /// Establishes Unix socket connection to ANY JSON-RPC 2.0 registry
+    /// Create a registry client from an explicit [`TransportEndpoint`].
+    pub fn from_endpoint(endpoint: TransportEndpoint) -> Self {
+        Self {
+            endpoint,
+            stream: None,
+            request_id: 0,
+        }
+    }
+
+    /// Connect to registry via transport-agnostic IPC.
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when the Unix socket connection fails.
+    /// Returns [`BearDogError`] when the transport connection fails.
     pub async fn connect(&mut self) -> Result<(), BearDogError> {
-        info!("🔌 Connecting to primal registry at {:?}", self.socket_path);
+        info!(endpoint = %self.endpoint, "Connecting to primal registry");
 
-        let stream = UnixStream::connect(&self.socket_path).await.map_err(|e| {
+        let stream = connect_raw(&self.endpoint).await.map_err(|e| {
             BearDogError::system(format!(
-                "Failed to connect to registry at {}: {}",
-                self.socket_path.display(),
-                e
+                "Failed to connect to registry at {}: {e}",
+                self.endpoint,
             ))
         })?;
 
         self.stream = Some(stream);
-        info!("✅ Connected to primal registry");
+        info!("Connected to primal registry");
 
         Ok(())
+    }
+
+    /// The underlying socket path (if the endpoint is UDS).
+    ///
+    /// Returns the path for UDS endpoints; panics on non-UDS (test-only usage).
+    #[cfg(test)]
+    #[must_use]
+    pub fn socket_path(&self) -> &std::path::Path {
+        match &self.endpoint {
+            TransportEndpoint::Uds { path } => path,
+            _ => panic!("socket_path() called on non-UDS endpoint"),
+        }
     }
 
     /// Register with registry

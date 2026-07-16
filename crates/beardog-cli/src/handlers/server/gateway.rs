@@ -14,57 +14,50 @@
 use beardog_acme::HotReloadAcceptor;
 use beardog_config::env_keys;
 use beardog_errors::BearDogError;
-use std::sync::Arc;
+use beardog_types::btsp::TransportEndpoint;
+use std::path::PathBuf;
 use tokio::io::AsyncWriteExt;
-use tokio::net::{TcpListener, TcpStream};
+use tokio::net::TcpListener;
 use tracing::{debug, info, warn};
 
-/// Upstream target for proxied HTTP traffic.
-#[derive(Debug, Clone)]
-enum Upstream {
-    Tcp(Arc<str>),
-    #[cfg(unix)]
-    Unix(Arc<str>),
-}
-
-impl Upstream {
-    fn resolve() -> Self {
-        match std::env::var(env_keys::ENV_GATEWAY_UPSTREAM) {
-            Ok(val) if val.starts_with("unix:") => {
-                #[cfg(unix)]
-                {
-                    Self::Unix(val.strip_prefix("unix:").unwrap_or(&val).into())
-                }
-                #[cfg(not(unix))]
-                {
-                    warn!(upstream = %val, "unix: upstream not supported on this platform, falling back to TCP");
-                    Self::Tcp("127.0.0.1:7780".into())
-                }
-            }
-            Ok(val) if !val.is_empty() => Self::Tcp(val.into()),
-            _ => Self::Tcp("127.0.0.1:7780".into()),
-        }
-    }
-
-    async fn connect(&self) -> std::io::Result<UpstreamConn> {
-        match self {
-            Self::Tcp(addr) => {
-                let stream = TcpStream::connect(addr.as_ref()).await?;
-                Ok(UpstreamConn::Tcp(stream))
-            }
+fn resolve_upstream() -> TransportEndpoint {
+    match std::env::var(env_keys::ENV_GATEWAY_UPSTREAM) {
+        Ok(val) if val.starts_with("unix:") => {
+            let path = val.strip_prefix("unix:").unwrap_or(&val);
             #[cfg(unix)]
-            Self::Unix(path) => {
-                let stream = tokio::net::UnixStream::connect(path.as_ref()).await?;
-                Ok(UpstreamConn::Unix(stream))
+            {
+                TransportEndpoint::Uds {
+                    path: PathBuf::from(path),
+                }
+            }
+            #[cfg(not(unix))]
+            {
+                warn!(upstream = %val, "unix: upstream not supported on this platform, falling back to TCP");
+                TransportEndpoint::Tcp {
+                    host: "127.0.0.1".to_string(),
+                    port: 7780,
+                }
             }
         }
+        Ok(val) if !val.is_empty() => {
+            if let Some((host, port_str)) = val.rsplit_once(':')
+                && let Ok(port) = port_str.parse::<u16>()
+            {
+                return TransportEndpoint::Tcp {
+                    host: host.to_string(),
+                    port,
+                };
+            }
+            TransportEndpoint::Tcp {
+                host: val,
+                port: 7780,
+            }
+        }
+        _ => TransportEndpoint::Tcp {
+            host: "127.0.0.1".to_string(),
+            port: 7780,
+        },
     }
-}
-
-enum UpstreamConn {
-    Tcp(TcpStream),
-    #[cfg(unix)]
-    Unix(tokio::net::UnixStream),
 }
 
 /// Start the HTTPS gateway on the given port using ACME-managed certificates.
@@ -83,8 +76,8 @@ pub async fn serve_https_gateway(
         BearDogError::system(format!("HTTPS gateway bind {addr}: {e}"))
     })?;
 
-    let upstream = Upstream::resolve();
-    info!(port = bind_port, ?upstream, "HTTPS gateway listening (ACME TLS → upstream)");
+    let upstream = resolve_upstream();
+    info!(port = bind_port, upstream = %upstream, "HTTPS gateway listening (ACME TLS → upstream)");
 
     loop {
         let (tcp_stream, peer) = match listener.accept().await {
@@ -106,7 +99,7 @@ pub async fn serve_https_gateway(
                 }
             };
 
-            let upstream_conn = match upstream.connect().await {
+            let mut upstream_conn = match beardog_ipc::connect_raw(&upstream).await {
                 Ok(c) => c,
                 Err(e) => {
                     warn!(peer = %peer, error = %e, "upstream connect failed");
@@ -118,25 +111,12 @@ pub async fn serve_https_gateway(
                 }
             };
 
-            match upstream_conn {
-                UpstreamConn::Tcp(upstream_tcp) => {
-                    let (mut tls_read, mut tls_write) = tokio::io::split(tls_stream);
-                    let (mut up_read, mut up_write) = tokio::io::split(upstream_tcp);
-                    let _result = tokio::join!(
-                        tokio::io::copy(&mut tls_read, &mut up_write),
-                        tokio::io::copy(&mut up_read, &mut tls_write),
-                    );
-                }
-                #[cfg(unix)]
-                UpstreamConn::Unix(upstream_unix) => {
-                    let (mut tls_read, mut tls_write) = tokio::io::split(tls_stream);
-                    let (mut up_read, mut up_write) = tokio::io::split(upstream_unix);
-                    let _result = tokio::join!(
-                        tokio::io::copy(&mut tls_read, &mut up_write),
-                        tokio::io::copy(&mut up_read, &mut tls_write),
-                    );
-                }
-            }
+            let (mut tls_read, mut tls_write) = tokio::io::split(tls_stream);
+            let (mut up_read, mut up_write) = tokio::io::split(&mut upstream_conn);
+            let _result = tokio::join!(
+                tokio::io::copy(&mut tls_read, &mut up_write),
+                tokio::io::copy(&mut up_read, &mut tls_write),
+            );
             debug!(peer = %peer, "gateway connection closed");
         });
     }

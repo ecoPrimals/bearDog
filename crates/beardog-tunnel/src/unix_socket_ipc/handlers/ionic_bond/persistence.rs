@@ -274,11 +274,14 @@ impl CapabilityDiscoveryBondPersistence {
                 source: e,
             })?;
 
-        let mut stream = tokio::net::UnixStream::connect(endpoint)
+        let te = beardog_types::btsp::TransportEndpoint::Uds {
+            path: std::path::PathBuf::from(endpoint),
+        };
+        let mut stream = beardog_ipc::connect_raw(&te)
             .await
             .map_err(|e| BondPersistenceError::Io {
                 context: "connect to ledger",
-                source: e,
+                source: std::io::Error::new(std::io::ErrorKind::ConnectionRefused, e.to_string()),
             })?;
 
         stream

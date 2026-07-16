@@ -58,7 +58,7 @@ fn test_zero_vendor_hardcoding() {
     let path = std::env::temp_dir().join("any-registry.sock");
     let client = PrimalRegistryClient::new(path.clone());
 
-    assert_eq!(client.socket_path, path);
+    assert_eq!(client.socket_path(), path);
 }
 
 #[tokio::test]

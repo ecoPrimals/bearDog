@@ -7,6 +7,7 @@
 mod witness_tests {
     use crate::genesis::types::PhysicalChannelType;
     use crate::genesis::witness::*;
+    use ed25519_dalek::{Signer, SigningKey};
     use std::time::{SystemTime, UNIX_EPOCH};
 
     fn current_timestamp() -> u64 {
@@ -14,6 +15,28 @@ mod witness_tests {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs()
+    }
+
+    fn create_signed_witness(device_id: &str, node_id: &str) -> GenesisWitness {
+        let signing_key = SigningKey::from_bytes(&[42u8; 32]);
+        let public_key = signing_key.verifying_key().to_bytes().to_vec();
+        let timestamp = current_timestamp();
+
+        let mut hasher = blake3::Hasher::new();
+        hasher.update(node_id.as_bytes());
+        hasher.update(&timestamp.to_le_bytes());
+        hasher.update(device_id.as_bytes());
+        let message = hasher.finalize();
+
+        let signature = signing_key.sign(message.as_bytes()).to_bytes().to_vec();
+
+        GenesisWitness::new(
+            device_id.to_string(),
+            public_key,
+            PhysicalChannelType::HardwareKey,
+            timestamp,
+            signature,
+        )
     }
 
     #[test]
@@ -96,13 +119,7 @@ mod witness_tests {
     #[test]
     fn test_verifier_default_is_permissive() {
         let verifier = GenesisWitnessVerifier::default();
-        let witness = GenesisWitness::new(
-            "any-dev".to_string(),
-            vec![0u8; 32],
-            PhysicalChannelType::HardwareKey,
-            current_timestamp(),
-            vec![0u8; 64],
-        );
+        let witness = create_signed_witness("any-dev", "node-1");
         assert!(verifier.verify(&witness, "node-1").is_ok());
     }
 

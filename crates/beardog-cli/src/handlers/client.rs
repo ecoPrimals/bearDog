@@ -10,11 +10,11 @@ use beardog_errors::{
     ApiErrorCategory, BearDogError, BusinessErrorCategory, NetworkErrorCategory,
     SystemErrorCategory,
 };
+use beardog_types::btsp::TransportEndpoint;
 use serde_json::json;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-use tokio::net::UnixStream;
 use tracing::{error, info};
 
 fn default_local_socket_parent_dir() -> std::path::PathBuf {
@@ -55,28 +55,19 @@ fn discover_socket_path_with(get: impl Fn(&str) -> Option<String>) -> String {
 ///
 /// Returns an error if the Unix socket cannot be opened, or sending/receiving IPC commands fails.
 pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
-    use beardog_types::constants::domains::network::ribocipher;
-
     info!("🐻🐕 BearDog Client Mode");
     info!("   Connecting to: {}", args.socket);
     info!("");
 
-    // Store the socket path for later use
     let _ = ACTIVE_SOCKET.set(args.socket.clone());
 
-    // Connect to server
-    let mut stream = UnixStream::connect(&args.socket)
+    let endpoint = TransportEndpoint::Uds {
+        path: PathBuf::from(&args.socket),
+    };
+    let stream = beardog_ipc::connect_transport(&endpoint)
         .await
         .map_err(|e| BearDogError::Network {
-            message: format!("Failed to connect to server: {e}"),
-            category: NetworkErrorCategory::default(),
-        })?;
-
-    stream
-        .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
-        .await
-        .map_err(|e| BearDogError::Network {
-            message: format!("Failed to send riboCipher signal: {e}"),
+            message: format!("Failed to connect to server via {endpoint}: {e}"),
             category: NetworkErrorCategory::default(),
         })?;
 
@@ -98,7 +89,7 @@ pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
     info!("Type 'help' for available commands, 'exit' to quit");
     info!("");
 
-    let (reader, mut writer) = stream.into_split();
+    let (reader, mut writer) = tokio::io::split(stream);
     let mut reader = BufReader::new(reader);
     let stdin = tokio::io::stdin();
     let mut stdin_reader = BufReader::new(stdin);
@@ -154,34 +145,27 @@ pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
     Ok(())
 }
 
-async fn execute_command(_stream: &UnixStream, command: &str) -> Result<(), BearDogError> {
+async fn execute_command<S>(_stream: &S, command: &str) -> Result<(), BearDogError> {
     execute_command_on_socket(&discover_socket_path(), command).await
 }
 
-/// Run one JSON-RPC command on a concrete Unix socket path (used by tests; same behavior as `execute_command`).
+/// Run one JSON-RPC command on a concrete socket path (used by tests; same behavior as `execute_command`).
 async fn execute_command_on_socket(
     socket_path: impl AsRef<Path>,
     command: &str,
 ) -> Result<(), BearDogError> {
-    use beardog_types::constants::domains::network::ribocipher;
-
-    let new_stream = UnixStream::connect(socket_path.as_ref())
+    let endpoint = TransportEndpoint::Uds {
+        path: socket_path.as_ref().to_path_buf(),
+    };
+    let stream = beardog_ipc::connect_transport(&endpoint)
         .await
         .map_err(|e| BearDogError::Network {
-            message: format!("Failed to connect for command: {e}"),
+            message: format!("Failed to connect for command via {endpoint}: {e}"),
             category: NetworkErrorCategory::default(),
         })?;
 
-    let (reader, mut writer) = new_stream.into_split();
+    let (reader, mut writer) = tokio::io::split(stream);
     let mut reader = BufReader::new(reader);
-
-    writer
-        .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
-        .await
-        .map_err(|e| BearDogError::Network {
-            message: format!("Failed to send riboCipher signal: {e}"),
-            category: NetworkErrorCategory::default(),
-        })?;
 
     let response = send_command(&mut writer, &mut reader, command).await?;
     let output = serde_json::to_string_pretty(&response)
@@ -217,8 +201,8 @@ fn build_jsonrpc_request(command: &str) -> Result<serde_json::Value, BearDogErro
 }
 
 async fn send_command(
-    writer: &mut tokio::net::unix::OwnedWriteHalf,
-    reader: &mut BufReader<tokio::net::unix::OwnedReadHalf>,
+    writer: &mut (impl tokio::io::AsyncWrite + Unpin),
+    reader: &mut (impl tokio::io::AsyncBufRead + Unpin),
     command: &str,
 ) -> Result<serde_json::Value, BearDogError> {
     let request = build_jsonrpc_request(command)?;

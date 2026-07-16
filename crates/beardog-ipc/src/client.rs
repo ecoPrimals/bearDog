@@ -2,21 +2,23 @@
 
 //! IPC registry client (Primal IPC Protocol)
 //!
-//! JSON-RPC 2.0 over Unix socket to an orchestrator-agnostic service registry (`ipc.*` methods).
+//! JSON-RPC 2.0 over transport-agnostic IPC to an orchestrator-agnostic service registry (`ipc.*` methods).
 
 use crate::{
     DISCOVERY_SOCKET_FALLBACK, IpcSocketDiscoveryOptions,
     error::{IpcError, IpcResult},
+    isomorphic::connect_raw,
     protocol::{JsonRpcRequest, JsonRpcResponse},
     resolve_ipc_socket_from_options,
     types::{Capability, ServiceInfo},
 };
+use beardog_types::btsp::TransportEndpoint;
 use serde::Deserialize;
 use serde_json::json;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::UnixStream;
 use tokio::sync::RwLock;
 use tokio::time::{Duration, interval};
 use tracing::{debug, info, warn};
@@ -42,11 +44,11 @@ impl OrchestratorRegistryClient {
         }
     }
 
-    /// Connect to the IPC registry (validates socket exists)
+    /// Connect to the IPC registry (validates transport is reachable).
     ///
     /// # Errors
     ///
-    /// Returns [`IpcError::Connection`] when the Unix socket cannot be opened.
+    /// Returns [`IpcError::Connection`] when the transport endpoint cannot be opened.
     pub async fn connect() -> IpcResult<Self> {
         let socket_path = resolve_ipc_socket_from_options(&IpcSocketDiscoveryOptions::from_env());
         let client = Self {
@@ -55,17 +57,16 @@ impl OrchestratorRegistryClient {
             primal_name: Arc::new(RwLock::new(None)),
         };
 
-        // Test connection
-        let _stream = UnixStream::connect(&client.socket_path)
+        let endpoint = client.endpoint();
+        let _stream = connect_raw(&endpoint)
             .await
             .map_err(|e| {
                 IpcError::Connection(format!(
-                    "Cannot connect to IPC registry at {}: {}",
-                    client.socket_path, e
+                    "Cannot connect to IPC registry at {endpoint}: {e}",
                 ))
             })?;
 
-        info!(socket_path = %client.socket_path, "Connected to IPC registry");
+        info!(endpoint = %endpoint, "Connected to IPC registry");
         Ok(client)
     }
 
@@ -325,20 +326,25 @@ impl OrchestratorRegistryClient {
 
     // Internal methods
 
+    fn endpoint(&self) -> TransportEndpoint {
+        TransportEndpoint::Uds {
+            path: PathBuf::from(&self.socket_path),
+        }
+    }
+
     async fn send_request(&self, request: JsonRpcRequest) -> IpcResult<JsonRpcResponse> {
         use beardog_types::constants::domains::network::ribocipher;
 
-        let mut stream = UnixStream::connect(&self.socket_path)
+        let endpoint = self.endpoint();
+        let mut stream = connect_raw(&endpoint)
             .await
-            .map_err(|e| IpcError::Connection(format!("Failed to connect: {e}")))?;
+            .map_err(|e| IpcError::Connection(format!("Failed to connect to {endpoint}: {e}")))?;
 
-        // riboCipher: signal clear NDJSON JSON-RPC
         stream
             .write_all(&ribocipher::clear_signal(ribocipher::PROTO_NDJSON_JSONRPC))
             .await
             .map_err(IpcError::Io)?;
 
-        // Serialize and send request
         let request_json =
             serde_json::to_vec(&request).map_err(|e| IpcError::Serialization(e.to_string()))?;
 
@@ -348,11 +354,9 @@ impl OrchestratorRegistryClient {
             .map_err(IpcError::Io)?;
         stream.write_all(b"\n").await.map_err(IpcError::Io)?;
 
-        // Read response
         let mut buffer = vec![0u8; 8192];
         let n = stream.read(&mut buffer).await.map_err(IpcError::Io)?;
 
-        // Deserialize response
         let response: JsonRpcResponse = serde_json::from_slice(&buffer[..n])
             .map_err(|e| IpcError::Serialization(e.to_string()))?;
 
@@ -382,14 +386,14 @@ impl OrchestratorRegistryClient {
 
     /// Same validation as [`OrchestratorRegistryClient::connect`], but uses a caller-provided socket path.
     pub(crate) async fn connect_test(self) -> IpcResult<Self> {
-        let _stream = UnixStream::connect(&self.socket_path).await.map_err(|e| {
+        let endpoint = self.endpoint();
+        let _stream = connect_raw(&endpoint).await.map_err(|e| {
             IpcError::Connection(format!(
-                "Cannot connect to IPC registry at {}: {}",
-                self.socket_path, e
+                "Cannot connect to IPC registry at {endpoint}: {e}",
             ))
         })?;
 
-        info!("✅ Connected to IPC registry at {}", self.socket_path);
+        info!(endpoint = %endpoint, "Connected to IPC registry");
         Ok(self)
     }
 }

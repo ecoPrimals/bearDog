@@ -9,6 +9,89 @@ use std::collections::{HashMap, HashSet};
 use std::ffi::OsStr;
 use tracing::{debug, info, warn};
 
+/// Transport-dispatched stream for discovery connections.
+enum DiscoveryStream {
+    Tcp(tokio::net::TcpStream),
+    #[cfg(unix)]
+    Unix(tokio::net::UnixStream),
+}
+
+impl tokio::io::AsyncRead for DiscoveryStream {
+    fn poll_read(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+        buf: &mut tokio::io::ReadBuf<'_>,
+    ) -> std::task::Poll<std::io::Result<()>> {
+        match self.get_mut() {
+            Self::Tcp(s) => std::pin::Pin::new(s).poll_read(cx, buf),
+            #[cfg(unix)]
+            Self::Unix(s) => std::pin::Pin::new(s).poll_read(cx, buf),
+        }
+    }
+}
+
+impl tokio::io::AsyncWrite for DiscoveryStream {
+    fn poll_write(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+        buf: &[u8],
+    ) -> std::task::Poll<std::io::Result<usize>> {
+        match self.get_mut() {
+            Self::Tcp(s) => std::pin::Pin::new(s).poll_write(cx, buf),
+            #[cfg(unix)]
+            Self::Unix(s) => std::pin::Pin::new(s).poll_write(cx, buf),
+        }
+    }
+
+    fn poll_flush(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<std::io::Result<()>> {
+        match self.get_mut() {
+            Self::Tcp(s) => std::pin::Pin::new(s).poll_flush(cx),
+            #[cfg(unix)]
+            Self::Unix(s) => std::pin::Pin::new(s).poll_flush(cx),
+        }
+    }
+
+    fn poll_shutdown(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<std::io::Result<()>> {
+        match self.get_mut() {
+            Self::Tcp(s) => std::pin::Pin::new(s).poll_shutdown(cx),
+            #[cfg(unix)]
+            Self::Unix(s) => std::pin::Pin::new(s).poll_shutdown(cx),
+        }
+    }
+}
+
+/// Open a transport-dispatched connection for discovery.
+///
+/// Parses `addr` as `unix://path`, `host:port` (TCP), or bare path (UDS fallback).
+async fn connect_endpoint(addr: &str) -> Result<DiscoveryStream, BearDogError> {
+    let bare = addr.strip_prefix("unix://").unwrap_or(addr);
+
+    if let Some((host, port_str)) = bare.rsplit_once(':')
+        && let Ok(port) = port_str.parse::<u16>()
+    {
+        let stream = tokio::net::TcpStream::connect((host, port)).await?;
+        return Ok(DiscoveryStream::Tcp(stream));
+    }
+
+    #[cfg(unix)]
+    {
+        let stream = tokio::net::UnixStream::connect(bare).await?;
+        Ok(DiscoveryStream::Unix(stream))
+    }
+    #[cfg(not(unix))]
+    {
+        Err(BearDogError::system(format!(
+            "Cannot parse transport address: {addr}"
+        )))
+    }
+}
+
 impl PrimalDiscovery {
     /// Discover from environment variables
     ///
@@ -222,10 +305,6 @@ impl PrimalDiscovery {
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
         info!("🔍 UPA registry discovery at: {}", registry_addr);
 
-        // UPA uses Unix socket + JSON-RPC
-        let socket_path = registry_addr.trim_start_matches("unix://");
-
-        // Build JSON-RPC request
         let capability = if query.capabilities.is_empty() {
             "generic".to_string()
         } else {
@@ -242,12 +321,10 @@ impl PrimalDiscovery {
             "id": 1
         });
 
-        // Connect to UPA registry via Unix socket
-        match tokio::net::UnixStream::connect(socket_path).await {
+        match connect_endpoint(registry_addr).await {
             Ok(mut stream) => {
                 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-                // Send request
                 let request_str =
                     serde_json::to_string(&request).map_err(|e| BearDogError::Network {
                         message: format!("Failed to serialize UPA request: {e}"),
@@ -256,7 +333,6 @@ impl PrimalDiscovery {
                 stream.write_all(request_str.as_bytes()).await?;
                 stream.write_all(b"\n").await?;
 
-                // Read response
                 let mut buffer = vec![0u8; 8192];
                 let n = stream.read(&mut buffer).await?;
                 let response_str = String::from_utf8_lossy(&buffer[..n]);
