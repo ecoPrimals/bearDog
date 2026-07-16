@@ -264,12 +264,6 @@ impl GenesisWitnessVerifier {
             return Err(WitnessVerificationError::InvalidSignature);
         }
 
-        // In test mode, skip actual cryptographic verification after validation
-        // This allows tests to use mock signatures while still validating structure
-        if cfg!(test) {
-            return Ok(());
-        }
-
         // Step 1: Compute message hash using BLAKE3
         // Message = BLAKE3(new_node_id || timestamp || witness_device_id)
         let mut hasher = Hasher::new();
@@ -316,14 +310,26 @@ impl Default for GenesisWitnessVerifier {
 mod tests {
     use super::*;
     use crate::genesis::types::PhysicalChannelType;
+    use ed25519_dalek::{Signer, SigningKey};
 
     fn create_test_witness(device_id: &str, timestamp: u64) -> GenesisWitness {
+        let signing_key = SigningKey::from_bytes(&[42u8; 32]);
+        let public_key = signing_key.verifying_key().to_bytes().to_vec();
+
+        let mut hasher = blake3::Hasher::new();
+        hasher.update(b"test-node");
+        hasher.update(&timestamp.to_le_bytes());
+        hasher.update(device_id.as_bytes());
+        let message = hasher.finalize();
+
+        let signature = signing_key.sign(message.as_bytes()).to_bytes().to_vec();
+
         GenesisWitness::new(
             device_id.to_string(),
-            vec![0u8; 32], // Mock Ed25519 public key
+            public_key,
             PhysicalChannelType::HardwareKey,
             timestamp,
-            vec![0u8; 64], // Mock Ed25519 signature
+            signature,
         )
     }
 

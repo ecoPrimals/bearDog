@@ -96,9 +96,7 @@ impl PathConfig {
     }
 
     fn default_base_dir() -> PathBuf {
-        if cfg!(test) {
-            std::env::temp_dir().join("beardog-test")
-        } else if cfg!(target_os = "linux") {
+        if cfg!(target_os = "linux") {
             PathBuf::from("/var/lib/beardog")
         } else if cfg!(target_os = "macos") {
             PathBuf::from("/Library/Application Support/BearDog")
@@ -110,9 +108,7 @@ impl PathConfig {
     }
 
     fn base_dir_from_env() -> PathBuf {
-        if cfg!(test) {
-            std::env::temp_dir().join("beardog-test")
-        } else if let Ok(base) = std::env::var(env_keys::ENV_BASE_DIR) {
+        if let Ok(base) = std::env::var(env_keys::ENV_BASE_DIR) {
             PathBuf::from(base)
         } else if cfg!(target_os = "linux") {
             if let Ok(data_home) = std::env::var(env_keys::ENV_XDG_DATA_HOME) {
@@ -145,9 +141,7 @@ impl PathConfig {
     
     /// Default configuration directory
     fn default_config_dir(base: &Path) -> PathBuf {
-        if cfg!(test) {
-            base.join("config")
-        } else if cfg!(target_os = "linux") {
+        if cfg!(target_os = "linux") {
             PathBuf::from("/etc/beardog")
         } else {
             base.join("config")
@@ -161,9 +155,7 @@ impl PathConfig {
     
     /// Default log directory
     fn default_log_dir(base: &Path) -> PathBuf {
-        if cfg!(test) {
-            base.join("logs")
-        } else if cfg!(target_os = "linux") {
+        if cfg!(target_os = "linux") {
             PathBuf::from("/var/log/beardog")
         } else {
             base.join("logs")
