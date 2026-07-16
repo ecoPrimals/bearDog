@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 16, 2026 -- Wave 144a: Deep Evolution + Debris Cleanup
+
+#### Test Extraction Wave 4 (963 LOC from 4 production modules)
+- `purpose_key.rs` 747→421L, `load_balancing.rs` 776→458L, `authentication.rs` 760→585L, `key_delegate.rs` 736→543L
+
+#### Orphan Test File Cleanup (3,595 dead LOC removed)
+- Deleted 11 orphan `_tests.rs` files from incomplete Wave 142b subagent work — several contained corruption artifacts from the 815 GiB file incident
+- Canonical tests remain inline in source files
+
+#### Production Mock Elimination
+- **`witness.rs`**: Removed `cfg!(test)` production bypass — tests now use real Ed25519 signatures via deterministic `SigningKey` instead of all-zero mock keys
+- **`paths.rs`**: Removed 4x `cfg!(test)` temp-dir overrides — path resolution now purely platform-aware
+- **`safe_native_wrapper.rs`**: Removed misleading "mock" comment
+
+#### Dependency Cleanup
+- **Removed workspace `libc` dependency** — no crate uses it since `beardog-hid` libc removal in Wave 141b
+
+#### Audit Results (all clean)
+- Zero files >800L, zero unsafe code, zero external C deps, zero `cfg!(test)` in production, zero `#[allow(clippy::)]` in production, zero `#[allow(dead_code)]` in production, zero mocks in production paths, zero `todo!()`/`unimplemented!()`
+
 ### July 16, 2026 -- Wave 142b: Zero-C Compliance + Deep Evolution
 
 #### Zero-C Compliance
