@@ -7,7 +7,7 @@
 #![allow(clippy::useless_vec, clippy::print_literal)]
 
 use super::*;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 // ===== Events Tests =====
 
@@ -298,7 +298,7 @@ mod types_tests {
             status: ConnectionStatus::Active,
             established_at: chrono::Utc::now(),
             last_activity: chrono::Utc::now(),
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         };
 
         assert_eq!(conn.status, ConnectionStatus::Active);
@@ -313,7 +313,7 @@ mod types_tests {
             protocol: ProtocolType::Http,
             health_status: beardog_types::canonical::HealthStatus::Healthy,
             last_health_check: chrono::Utc::now(),
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         };
 
         assert_eq!(endpoint.endpoint_id, "svc-001");

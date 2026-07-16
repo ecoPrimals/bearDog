@@ -11,7 +11,7 @@
 use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::Duration;
 
 use crate::canonical::config::r#trait::BearDogConfig;
@@ -99,10 +99,10 @@ pub struct HealthMonitoringConfig {
     pub endpoints: Vec<String>,
 
     /// Health thresholds
-    pub thresholds: HashMap<String, f64>,
+    pub thresholds: BTreeMap<String, f64>,
 
     /// Recovery actions
-    pub recovery_actions: HashMap<String, String>,
+    pub recovery_actions: BTreeMap<String, String>,
 }
 
 /// Anomaly detection configuration
@@ -121,7 +121,7 @@ pub struct AnomalyDetectionConfig {
     pub training_window: Duration,
 
     /// Alert thresholds
-    pub alert_thresholds: HashMap<String, f64>,
+    pub alert_thresholds: BTreeMap<String, f64>,
 }
 
 /// Trend analysis configuration
@@ -156,10 +156,10 @@ pub struct SecurityMonitoringConfig {
     pub threat_rules: Vec<String>,
 
     /// Alert thresholds
-    pub alert_thresholds: HashMap<String, f64>,
+    pub alert_thresholds: BTreeMap<String, f64>,
 
     /// Response actions
-    pub response_actions: HashMap<String, String>,
+    pub response_actions: BTreeMap<String, String>,
 }
 
 /// Export and integration configuration
@@ -188,7 +188,7 @@ pub struct ExportDestination {
     pub url: String,
 
     /// Authentication
-    pub auth: HashMap<String, String>,
+    pub auth: BTreeMap<String, String>,
 
     /// Export filters
     pub filters: Vec<String>,
@@ -339,10 +339,10 @@ impl HealthMonitoringConfig {
     /// Create configuration from a config source (modern pattern)
     pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
         use crate::canonical::config::source::{get_bool, get_parsed};
-        use std::collections::HashMap;
+        use std::collections::BTreeMap;
         use std::time::Duration;
 
-        let mut thresholds = HashMap::new();
+        let mut thresholds = BTreeMap::new();
         thresholds.insert(
             "response_time_ms".to_string(),
             get_parsed(source, "BEARDOG_RESPONSE_TIME_THRESHOLD_MS", 1000.0),
@@ -358,7 +358,7 @@ impl HealthMonitoringConfig {
             )),
             endpoints: vec!["/health".to_string(), "/ready".to_string()],
             thresholds,
-            recovery_actions: HashMap::new(),
+            recovery_actions: BTreeMap::new(),
         }
     }
 }
@@ -374,10 +374,10 @@ impl AnomalyDetectionConfig {
     /// Create configuration from a config source (modern pattern)
     pub fn from_source(source: &dyn crate::canonical::config::source::ConfigSource) -> Self {
         use crate::canonical::config::source::get_parsed;
-        use std::collections::HashMap;
+        use std::collections::BTreeMap;
         use std::time::Duration;
 
-        let mut alert_thresholds = HashMap::new();
+        let mut alert_thresholds = BTreeMap::new();
         alert_thresholds.insert("anomaly_score".to_string(), 0.9);
 
         Self {
@@ -440,12 +440,12 @@ impl Default for SecurityMonitoringConfig {
                 "unusual_traffic_pattern".to_string(),
             ],
             alert_thresholds: {
-                let mut thresholds = HashMap::new();
+                let mut thresholds = BTreeMap::new();
                 thresholds.insert("threat_score".to_string(), 0.8);
                 thresholds
             },
             response_actions: {
-                let mut actions = HashMap::new();
+                let mut actions = BTreeMap::new();
                 actions.insert("high_threat".to_string(), "block_ip".to_string());
                 actions
             },

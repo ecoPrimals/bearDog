@@ -210,7 +210,7 @@ mod tests {
                 service_type: "http".to_string(),
                 address: "127.0.0.1".to_string(),
                 port: 8080,
-                metadata: std::collections::HashMap::new(),
+                metadata: std::collections::BTreeMap::new(),
             },
             address: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 8080),
             tags: std::collections::HashMap::new(),

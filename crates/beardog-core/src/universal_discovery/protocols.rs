@@ -162,7 +162,7 @@ impl ModernServiceDiscovery {
                 service_type: String::new(),
                 address: String::new(),
                 port: 0,
-                metadata: std::collections::HashMap::new(),
+                metadata: std::collections::BTreeMap::new(),
             })
             .collect();
 

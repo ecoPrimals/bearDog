@@ -300,7 +300,7 @@ impl AccessPolicyEngine {
             membership: membership_entry.membership.clone(),
             trust_level: membership_entry.trust_level,
             reasons: vec!["Trust level evaluation".to_string()],
-            context: std::collections::HashMap::new(),
+            context: std::collections::BTreeMap::new(),
             timestamp: Utc::now(),
         })
     }
@@ -428,7 +428,7 @@ impl Default for MembershipMetadata {
             evidence: Vec::new(),
             interaction_stats: InteractionStatistics::default(),
             history: Vec::new(),
-            custom: std::collections::HashMap::new(),
+            custom: std::collections::BTreeMap::new(),
         }
     }
 }

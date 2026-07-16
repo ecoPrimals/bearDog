@@ -7,7 +7,7 @@
 use super::base_traits::UnifiedProvider;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 /// **MONITORING PROVIDER TRAIT** - For monitoring and observability providers
@@ -190,7 +190,7 @@ pub struct MetricData {
     pub timestamp: SystemTime,
     /// Metric labels
     /// Mapping of labels
-    pub labels: HashMap<String, String>,
+    pub labels: BTreeMap<String, String>,
     /// Metric unit
     /// The unit value
     pub unit: String,
@@ -212,7 +212,7 @@ pub struct LogEvent {
     pub source: String,
     /// Additional fields
     /// Mapping of fields
-    pub fields: HashMap<String, String>,
+    pub fields: BTreeMap<String, String>,
 }
 
 /// Log level enumeration
@@ -255,7 +255,7 @@ pub struct AlertRule {
     pub threshold: f64,
     /// Alert labels
     /// Mapping of labels
-    pub labels: HashMap<String, String>,
+    pub labels: BTreeMap<String, String>,
 }
 
 /// Alert
@@ -276,7 +276,7 @@ pub struct Alert {
     pub timestamp: SystemTime,
     /// Alert labels
     /// Mapping of labels
-    pub labels: HashMap<String, String>,
+    pub labels: BTreeMap<String, String>,
     /// Alert status
     /// Current status of the component
     pub status: String,
@@ -331,7 +331,7 @@ pub struct NetworkMessage {
     pub payload: Vec<u8>,
     /// Message headers
     /// Mapping of headers
-    pub headers: HashMap<String, String>,
+    pub headers: BTreeMap<String, String>,
     /// Message timestamp
     pub timestamp: SystemTime,
 }
@@ -349,7 +349,7 @@ pub struct NetworkResponse {
     pub payload: Vec<u8>,
     /// Response headers
     /// Mapping of headers
-    pub headers: HashMap<String, String>,
+    pub headers: BTreeMap<String, String>,
     /// Response timestamp
     pub timestamp: SystemTime,
 }
@@ -386,7 +386,7 @@ pub struct ServiceInfo {
     pub port: u16,
     /// Service metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Service registration
@@ -406,7 +406,7 @@ pub struct ServiceRegistration {
     pub port: u16,
     /// Service metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
     /// Registration TTL
     /// Optional ttl
     pub ttl: Option<std::time::Duration>,
@@ -464,7 +464,7 @@ pub struct AiResponse {
     pub content: String,
     /// Response metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
     /// Processing time
     pub processing_time: std::time::Duration,
     /// Confidence score
@@ -486,7 +486,7 @@ pub struct ModelSpec {
     /// The source value
     pub source: String,
     /// Model configuration
-    pub config: HashMap<String, serde_json::Value>,
+    pub config: BTreeMap<String, serde_json::Value>,
 }
 
 /// Published metadata for a loadable AI/ML model asset.

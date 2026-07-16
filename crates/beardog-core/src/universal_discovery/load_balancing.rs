@@ -464,7 +464,7 @@ mod tests {
                 service_type: "test".to_string(),
                 address: format!("192.168.1.{i}"),
                 port: 8080,
-                metadata: HashMap::new(),
+                metadata: std::collections::BTreeMap::new(),
             })
             .collect()
     }
@@ -472,7 +472,7 @@ mod tests {
     fn create_test_services_with_metadata(count: usize) -> Vec<ServiceInfo> {
         (0..count)
             .map(|i| {
-                let mut metadata = HashMap::new();
+                let mut metadata = std::collections::BTreeMap::new();
                 for j in 0..i {
                     metadata.insert(format!("key-{j}"), format!("value-{j}"));
                 }

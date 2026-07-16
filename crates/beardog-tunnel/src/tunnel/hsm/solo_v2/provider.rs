@@ -40,7 +40,7 @@ pub struct SoloV2Provider {
     /// Device information
     device_info: SoloV2DeviceInfo,
     /// Configuration (`relying_party_id` and options for CTAP2 when feature `ctap2` is enabled).
-    #[cfg_attr(not(feature = "ctap2"), allow(dead_code))]
+    #[cfg_attr(not(feature = "ctap2"), expect(dead_code, reason = "config fields used only when ctap2 feature is enabled"))]
     config: SoloV2Config,
     /// PIN configuration (protected)
     pin_config: Arc<RwLock<PinConfig>>,

@@ -7,7 +7,7 @@ use crate::universal_discovery::{
     UniversalDiscoveryConfig, UniversalServiceDiscovery,
 };
 use beardog_types::canonical::providers_unified::traits::other_traits::ServiceInfo;
-use std::collections::{HashMap, hash_map::DefaultHasher};
+use std::collections::{BTreeMap, HashMap, hash_map::DefaultHasher};
 use std::hash::{Hash, Hasher};
 use uuid::Uuid;
 
@@ -105,7 +105,7 @@ async fn universal_service_discovery_full_smoke() {
         service_type: "grpc".to_string(),
         address: "127.0.0.1".to_string(),
         port: 9000,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
     usd.register_service(svc).expect("register");
 
@@ -138,7 +138,7 @@ fn minimal_protocol_handler_trait_smoke() {
         service_type: "t".to_string(),
         address: "a".to_string(),
         port: 1,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
     assert!(h.register_service(&si).is_ok());
     assert!(h.deregister_service(&si).is_ok());

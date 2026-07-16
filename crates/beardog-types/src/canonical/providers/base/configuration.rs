@@ -3,7 +3,7 @@
 //! Core provider configuration: wire format, environment, security, and key management.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use super::performance::PerformanceConfiguration;
 use crate::canonical::config::domains::system::LoggingConfig;
@@ -15,7 +15,7 @@ pub struct ProviderConfiguration {
     pub provider_id: String,
     
     /// Provider-specific configuration parameters
-    pub parameters: HashMap<String, ConfigurationValue>,
+    pub parameters: BTreeMap<String, ConfigurationValue>,
     
     /// Environment-specific settings
     pub environment: EnvironmentSettings,
@@ -27,7 +27,7 @@ pub struct ProviderConfiguration {
     pub performance: PerformanceConfiguration,
     
     /// Metadata for the provider
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Configuration value that can hold different types
@@ -38,7 +38,7 @@ pub enum ConfigurationValue {
     Float(f64),
     Boolean(bool),
     Array(Vec<ConfigurationValue>),
-    Object(HashMap<String, ConfigurationValue>),
+    Object(BTreeMap<String, ConfigurationValue>),
 }
 
 /// Environment-specific settings
@@ -48,7 +48,7 @@ pub struct EnvironmentSettings {
     pub environment: String,
     
     /// Environment variables
-    pub variables: HashMap<String, String>,
+    pub variables: BTreeMap<String, String>,
     
     /// Resource limits
     pub resource_limits: ResourceLimits,
@@ -116,7 +116,7 @@ pub struct AuthenticationConfiguration {
     pub method: AuthenticationMethod,
     
     /// Authentication parameters
-    pub parameters: HashMap<String, String>,
+    pub parameters: BTreeMap<String, String>,
     
     /// Session timeout in seconds
     pub session_timeout: u64,
@@ -166,7 +166,7 @@ pub struct RbacConfiguration {
     pub roles: Vec<Role>,
     
     /// Role assignments
-    pub assignments: HashMap<String, Vec<String>>,
+    pub assignments: BTreeMap<String, Vec<String>>,
     
     /// Default role for new users
     pub default_role: Option<String>,
@@ -185,7 +185,7 @@ pub struct Role {
     pub permissions: Vec<String>,
     
     /// Role metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Attribute-based access control configuration

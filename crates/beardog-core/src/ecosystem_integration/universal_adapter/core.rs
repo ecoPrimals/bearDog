@@ -8,7 +8,7 @@ use super::types::{
     AdapterRequest, AdapterResponse, ConnectionInfo, ResponseStatus, ServiceEndpoint,
 };
 use beardog_errors::BearDogError;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
@@ -112,14 +112,14 @@ impl UniversalAdapter {
         Ok(AdapterResponse {
             request_id: request.request_id,
             status: ResponseStatus::Success,
-            headers: HashMap::new(),
+            headers: BTreeMap::new(),
             payload: Some({
                 use serde_json::{Map, Value};
                 let mut payload = Map::new();
                 payload.insert("connected".to_string(), Value::Bool(true));
                 Value::Object(payload)
             }),
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             timestamp: chrono::Utc::now(),
             duration_ms: elapsed_ms_u64(start.elapsed()),
         })
@@ -144,14 +144,14 @@ impl UniversalAdapter {
         Ok(AdapterResponse {
             request_id: request.request_id,
             status: ResponseStatus::Success,
-            headers: HashMap::new(),
+            headers: BTreeMap::new(),
             payload: Some({
                 use serde_json::{Map, Value};
                 let mut payload = Map::new();
                 payload.insert("disconnected".to_string(), Value::Bool(true));
                 Value::Object(payload)
             }),
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             timestamp: chrono::Utc::now(),
             duration_ms: elapsed_ms_u64(start.elapsed()),
         })
@@ -170,9 +170,9 @@ impl UniversalAdapter {
         Ok(AdapterResponse {
             request_id: request.request_id,
             status: ResponseStatus::Success,
-            headers: HashMap::new(),
+            headers: BTreeMap::new(),
             payload: request.payload,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             timestamp: chrono::Utc::now(),
             duration_ms: elapsed_ms_u64(start.elapsed()),
         })
@@ -209,9 +209,9 @@ impl UniversalAdapter {
         Ok(AdapterResponse {
             request_id: request.request_id,
             status: ResponseStatus::Success,
-            headers: HashMap::new(),
+            headers: BTreeMap::new(),
             payload: Some(health_status),
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             timestamp: chrono::Utc::now(),
             duration_ms: elapsed_ms_u64(start.elapsed()),
         })

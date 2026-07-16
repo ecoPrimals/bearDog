@@ -3,7 +3,7 @@
 //! Top-level hybrid intelligence pipeline configuration (training, inference, models, learning).
 
 use beardog_config::env_keys;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
@@ -287,8 +287,8 @@ impl Default for DecisionEngineConfig {
             criteria: DecisionCriteria {
                 primary_criteria: vec![],
                 secondary_criteria: vec![],
-                weights: HashMap::new(),
-                thresholds: HashMap::new(),
+                weights: BTreeMap::new(),
+                thresholds: BTreeMap::new(),
             },
             consensus_mechanism: ConsensusStrategy::Majority,
             timeout: Duration::from_millis(1000),

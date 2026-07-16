@@ -6,7 +6,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use uuid::Uuid;
 
 /// AI response metadata
@@ -33,7 +33,7 @@ pub struct AIFirstError {
     /// Human-readable error message
     pub message: String,
     /// Additional error details and context
-    pub details: HashMap<String, String>,
+    pub details: BTreeMap<String, String>,
 }
 
 /// Human interaction context
@@ -46,7 +46,7 @@ pub struct HumanInteractionContext {
     /// Session identifier for this interaction
     pub session_id: String,
     /// User preferences and configuration settings
-    pub preferences: HashMap<String, String>,
+    pub preferences: BTreeMap<String, String>,
 }
 
 /// Suggested action for the user
@@ -108,7 +108,7 @@ pub struct RemediationAction {
     /// Whether this action can be automated
     pub automated: bool,
     /// Parameters for executing the action
-    pub parameters: HashMap<String, serde_json::Value>,
+    pub parameters: BTreeMap<String, serde_json::Value>,
 }
 
 /// Resource usage information
@@ -232,7 +232,7 @@ pub struct UserPreferences {
     /// Preferred interaction style with the AI
     pub interaction_style: InteractionStyle,
     /// Thresholds for automatic approval of actions by category
-    pub auto_approval_thresholds: HashMap<String, f64>,
+    pub auto_approval_thresholds: BTreeMap<String, f64>,
     /// Notification delivery preferences
     pub notifications: NotificationPreferences,
     /// Security and authentication preferences
@@ -251,7 +251,7 @@ pub enum InteractionStyle {
     /// High level of user interaction and confirmation
     Interactive,
     /// Custom interaction style with configurable parameters
-    Custom(HashMap<String, serde_json::Value>),
+    Custom(BTreeMap<String, serde_json::Value>),
 }
 
 /// Notification delivery preferences
@@ -341,7 +341,7 @@ pub struct InteractionEvent {
     /// Human-readable description of the event
     pub description: String,
     /// Additional contextual metadata about the event
-    pub metadata: HashMap<String, serde_json::Value>,
+    pub metadata: BTreeMap<String, serde_json::Value>,
 }
 
 /// Type of interaction event in the AI-first system

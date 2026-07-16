@@ -2,7 +2,7 @@
 
 //! Default implementations for provider configuration types and trait bridges.
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::canonical::traits::{CacheStrategy, TimeoutPolicy};
 use crate::constants::time;
@@ -27,11 +27,11 @@ impl Default for ProviderConfiguration {
     fn default() -> Self {
         Self {
             provider_id: String::new(),
-            parameters: HashMap::new(),
+            parameters: BTreeMap::new(),
             environment: EnvironmentSettings::default(),
             security: SecurityConfiguration::default(),
             performance: PerformanceConfiguration::default(),
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 }
@@ -40,7 +40,7 @@ impl Default for EnvironmentSettings {
     fn default() -> Self {
         Self {
             environment: "development".to_string(),
-            variables: HashMap::new(),
+            variables: BTreeMap::new(),
             resource_limits: ResourceLimits::default(),
             logging: LoggingConfig::default(),
         }
@@ -87,7 +87,7 @@ impl Default for AuthenticationConfiguration {
     fn default() -> Self {
         Self {
             method: AuthenticationMethod::ApiKey,
-            parameters: HashMap::new(),
+            parameters: BTreeMap::new(),
             session_timeout: std::env::var(env_keys::ENV_PROVIDER_SESSION_TIMEOUT_SECS)
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -111,7 +111,7 @@ impl Default for RbacConfiguration {
     fn default() -> Self {
         Self {
             roles: Vec::new(),
-            assignments: HashMap::new(),
+            assignments: BTreeMap::new(),
             default_role: Some("user".to_string()),
         }
     }

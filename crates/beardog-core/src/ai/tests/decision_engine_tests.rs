@@ -3,7 +3,7 @@
 // Comprehensive tests for the Decision Engine module
 
 use crate::ai::hybrid_intelligence::decision_engine::*;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[test]
 fn test_decision_strategy_variants() {
@@ -300,11 +300,11 @@ fn test_combination_method_variants() {
 
 #[test]
 fn test_decision_criteria_creation() {
-    let mut weights = HashMap::new();
+    let mut weights = BTreeMap::new();
     weights.insert("cost".to_string(), 0.4);
     weights.insert("quality".to_string(), 0.6);
 
-    let mut thresholds = HashMap::new();
+    let mut thresholds = BTreeMap::new();
     thresholds.insert("min_quality".to_string(), 0.7);
 
     let criteria = DecisionCriteria {
@@ -345,7 +345,7 @@ fn test_rule_condition_creation() {
 
 #[test]
 fn test_rule_action_creation() {
-    let mut parameters = HashMap::new();
+    let mut parameters = BTreeMap::new();
     parameters.insert("action".to_string(), "increase_cooling".to_string());
 
     let action = RuleAction {
@@ -365,7 +365,7 @@ fn test_decision_rule_creation() {
         conditions: vec![],
         action: RuleAction {
             action_type: ActionType::LogEvent,
-            parameters: HashMap::new(),
+            parameters: BTreeMap::new(),
             expected_outcome: "logged".to_string(),
         },
         priority: 10,
@@ -414,7 +414,7 @@ fn test_fuzzy_expression_variable() {
 
 #[test]
 fn test_alternative_creation() {
-    let mut values = HashMap::new();
+    let mut values = BTreeMap::new();
     values.insert("cost".to_string(), 100.0);
     values.insert("quality".to_string(), 0.9);
 
@@ -422,7 +422,7 @@ fn test_alternative_creation() {
         id: "alt_1".to_string(),
         name: "Option A".to_string(),
         values,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
 
     assert_eq!(alternative.id, "alt_1");
@@ -444,7 +444,7 @@ fn test_player_creation() {
 
 #[test]
 fn test_strategy_creation() {
-    let mut parameters = HashMap::new();
+    let mut parameters = BTreeMap::new();
     parameters.insert("aggressiveness".to_string(), 0.7);
 
     let strategy = Strategy {
@@ -459,7 +459,7 @@ fn test_strategy_creation() {
 
 #[test]
 fn test_payoff_matrix_creation() {
-    let mut player_mapping = HashMap::new();
+    let mut player_mapping = BTreeMap::new();
     player_mapping.insert("player_1".to_string(), 0);
     player_mapping.insert("player_2".to_string(), 1);
 

@@ -9,7 +9,7 @@ use beardog_genetics::ecosystem_evolution::{EcosystemMembership, TrustEvolution,
 use beardog_types::canonical::HealthStatus;
 use chrono::{DateTime, Utc, Duration};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MembershipConfig {
@@ -92,7 +92,7 @@ pub struct EvolutionFactor {
     pub weight: f64,
     
     /// Configuration specific to this factor
-    pub config: HashMap<String, String>,
+    pub config: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -186,7 +186,7 @@ pub struct MembershipMetadata {
     
     /// Additional custom metadata
     /// Mapping of custom
-    pub custom: HashMap<String, String>,
+    pub custom: BTreeMap<String, String>,
 }
 
 /// Source of membership establishment
@@ -369,7 +369,7 @@ pub struct TrustChangeEvent {
     
     /// Additional context
     /// Mapping of context
-    pub context: HashMap<String, String>,
+    pub context: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone)]
@@ -417,7 +417,7 @@ pub struct TrustAlgorithm {
     /// The algorithm type value
     pub algorithm_type: TrustAlgorithmType,
     
-    pub config: HashMap<String, f64>,
+    pub config: BTreeMap<String, f64>,
     
     /// Weight of this algorithm in final trust score
     /// The weight value
@@ -467,7 +467,7 @@ pub struct AccessPolicy {
     
     /// Access rules by membership type
     /// Mapping of rules
-    pub rules: HashMap<EcosystemMembership, AccessRule>,
+    pub rules: BTreeMap<EcosystemMembership, AccessRule>,
     
     /// The default rule value
     pub default_rule: AccessRule,
@@ -495,7 +495,7 @@ pub struct AccessRule {
     
     /// Additional metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -515,7 +515,7 @@ pub enum AccessCondition {
     TimeWindow(TimeWindow),
     
     /// Custom condition
-    Custom { condition: String, parameters: HashMap<String, String> },
+    Custom { condition: String, parameters: BTreeMap<String, String> },
 }
 
 /// Rate limiting configuration
@@ -743,7 +743,7 @@ pub struct AccessDecision {
     
     /// Additional context
     /// Mapping of context
-    pub context: HashMap<String, String>,
+    pub context: BTreeMap<String, String>,
     
     /// When this decision was made
     pub timestamp: DateTime<Utc>,

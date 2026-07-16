@@ -47,6 +47,10 @@ use tokio::fs::{File, OpenOptions, read_dir, read_to_string};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tracing::{debug, trace, warn};
 
+/// Linux `O_NONBLOCK` flag (stable kernel ABI, `0o4000`).
+/// Avoids pulling in `libc` for a single constant.
+const O_NONBLOCK: i32 = 0o4000;
+
 /// Linux HID device via `/dev/hidraw`
 ///
 /// Provides Pure Rust access to HID devices using standard file I/O.
@@ -100,7 +104,7 @@ impl LinuxHidDevice {
         let device = OpenOptions::new()
             .read(true)
             .write(true)
-            .custom_flags(libc::O_NONBLOCK) // Only libc usage - for flags
+            .custom_flags(O_NONBLOCK)
             .open(path)
             .await
             .map_err(|e| {

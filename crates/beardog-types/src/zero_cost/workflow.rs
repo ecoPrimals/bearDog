@@ -183,7 +183,7 @@ mod tests {
             Ok(WorkflowResult {
                 workflow_id: workflow.id,
                 status: "completed ".to_string(),
-                results: std::collections::HashMap::new(),
+                results: std::collections::BTreeMap::new(),
                 completed_at: chrono::Utc::now(),
             })
         }
@@ -212,9 +212,9 @@ mod tests {
             steps: vec![WorkflowStep {
                 id: "step1".to_string(),
                 action: "validate".to_string(),
-                parameters: std::collections::HashMap::new(),
+                parameters: std::collections::BTreeMap::new(),
             }],
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::BTreeMap::new(),
         };
 
         let result = engine.process(workflow).await?;
@@ -280,7 +280,7 @@ mod tests {
             id: "w".to_string(),
             workflow_type: "security".to_string(),
             steps: vec![],
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::BTreeMap::new(),
         };
         let res = engine.validate(&workflow);
         assert!(matches!(
@@ -297,7 +297,7 @@ mod tests {
             id: "w2".to_string(),
             workflow_type: "security".to_string(),
             steps: vec![],
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::BTreeMap::new(),
         };
         let res = engine.process(workflow).await;
         assert!(matches!(

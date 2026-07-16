@@ -187,7 +187,7 @@ impl UniversalServiceDiscovery {
             service_type: "unknown".to_string(),
             address: "unknown".to_string(),
             port: 0,
-            metadata: HashMap::new(),
+            metadata: std::collections::BTreeMap::new(),
         };
 
         // Deregister from protocol handlers

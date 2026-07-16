@@ -3,7 +3,7 @@
 // Decision making logic and algorithms
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 // Removed unused Duration import
 
 /// Decision strategies available
@@ -37,10 +37,10 @@ pub struct DecisionCriteria {
     /// Collection of secondary criteria
     pub secondary_criteria: Vec<Criterion>,
     /// Mapping of weights
-    pub weights: HashMap<String, f64>,
+    pub weights: BTreeMap<String, f64>,
     /// Threshold values
     /// Mapping of thresholds
-    pub thresholds: HashMap<String, f64>,
+    pub thresholds: BTreeMap<String, f64>,
 }
 
 /// Individual decision criterion
@@ -224,7 +224,7 @@ pub struct RuleAction {
     pub action_type: ActionType,
     /// Action parameters
     /// Mapping of parameters
-    pub parameters: HashMap<String, String>,
+    pub parameters: BTreeMap<String, String>,
     /// Expected outcome
     /// The expected outcome value
     pub expected_outcome: String,
@@ -481,10 +481,10 @@ pub struct Alternative {
     pub name: String,
     /// Criterion values
     /// Mapping of values
-    pub values: HashMap<String, f64>,
+    pub values: BTreeMap<String, f64>,
     /// Alternative metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Preference information for multi-criteria decision analysis
@@ -492,13 +492,13 @@ pub struct Alternative {
 pub struct PreferenceInformation {
     /// Preference thresholds
     /// Mapping of thresholds
-    pub thresholds: HashMap<String, f64>,
+    pub thresholds: BTreeMap<String, f64>,
     /// Indifference thresholds
     /// Mapping of indifference
-    pub indifference: HashMap<String, f64>,
+    pub indifference: BTreeMap<String, f64>,
     /// Veto thresholds
     /// Mapping of veto
-    pub veto: HashMap<String, f64>,
+    pub veto: BTreeMap<String, f64>,
 }
 
 /// Game theory configuration
@@ -576,7 +576,7 @@ pub struct Strategy {
     pub name: String,
     /// Strategy parameters
     /// Mapping of parameters
-    pub parameters: HashMap<String, f64>,
+    pub parameters: BTreeMap<String, f64>,
 }
 
 /// Payoff matrix
@@ -590,7 +590,7 @@ pub struct PayoffMatrix {
     pub payoffs: Vec<Vec<f64>>,
     /// Player mapping
     /// Mapping of player mapping
-    pub player_mapping: HashMap<String, u32>,
+    pub player_mapping: BTreeMap<String, u32>,
 }
 
 /// Solution concepts for game-theoretic analysis
@@ -621,7 +621,7 @@ pub struct EnsembleConfig {
     pub combination_method: CombinationMethod,
     /// Voting weights
     /// Optional weights
-    pub weights: Option<HashMap<String, f64>>,
+    pub weights: Option<BTreeMap<String, f64>>,
 }
 
 /// Decision-making method configuration
@@ -633,7 +633,7 @@ pub struct DecisionMethod {
     /// The method type value
     pub method_type: DecisionMethodType,
     /// Method configuration
-    pub configuration: HashMap<String, serde_json::Value>,
+    pub configuration: BTreeMap<String, serde_json::Value>,
 }
 
 /// Decision method types

@@ -151,7 +151,7 @@ pub struct HsmKey {
     pub created_at: chrono::DateTime<chrono::Utc>,
     /// Additional metadata associated with the key
     /// The metadata value
-    pub metadata: std::collections::HashMap<String, String>,
+    pub metadata: std::collections::BTreeMap<String, String>,
 }
 
 /// Simple key/value health snapshot for dashboards.
@@ -163,7 +163,7 @@ pub struct HealthStatus {
     pub timestamp: chrono::DateTime<chrono::Utc>,
     /// Additional details about the health status
     /// The details value
-    pub details: std::collections::HashMap<String, String>,
+    pub details: std::collections::BTreeMap<String, String>,
 }
 
 /// Workflow definition
@@ -178,7 +178,7 @@ pub struct Workflow {
     /// Collection of steps
     pub steps: Vec<WorkflowStep>,
     /// The metadata value
-    pub metadata: std::collections::HashMap<String, String>,
+    pub metadata: std::collections::BTreeMap<String, String>,
 }
 
 /// Individual workflow step
@@ -189,7 +189,7 @@ pub struct WorkflowStep {
     /// The action value
     pub action: String,
     /// The parameters value
-    pub parameters: std::collections::HashMap<String, String>,
+    pub parameters: std::collections::BTreeMap<String, String>,
 }
 
 /// Workflow execution result
@@ -202,7 +202,7 @@ pub struct WorkflowResult {
     pub status: String,
     /// Results from the workflow execution
     /// The results value
-    pub results: std::collections::HashMap<String, String>,
+    pub results: std::collections::BTreeMap<String, String>,
     /// When the workflow execution completed
     /// The completed at value
     pub completed_at: chrono::DateTime<chrono::Utc>,
@@ -219,7 +219,7 @@ pub struct ServiceInfo {
     /// Number of port
     pub port: u16,
     /// The metadata value
-    pub metadata: std::collections::HashMap<String, String>,
+    pub metadata: std::collections::BTreeMap<String, String>,
     /// Optional health check path
     pub health_check_path: Option<String>,
     /// Collection of capabilities
@@ -232,7 +232,7 @@ impl ServiceInfo {
         name: impl Into<String>,
         endpoint: impl Into<String>,
         port: u16,
-        metadata: std::collections::HashMap<String, String>,
+        metadata: std::collections::BTreeMap<String, String>,
         health_check_path: Option<String>,
         capabilities: Vec<String>,
     ) -> Self {
@@ -347,7 +347,7 @@ mod tests {
     fn test_service_info_creation() {
         const TEST_PORT: u16 = 8080;
 
-        let mut metadata = std::collections::HashMap::new();
+        let mut metadata = std::collections::BTreeMap::new();
         metadata.insert("version".to_string(), "1.0".to_string());
 
         let service = ServiceInfo::new(
@@ -410,7 +410,7 @@ mod tests {
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: types
         // TEST_PRIORITY: normal
-        let metadata = std::collections::HashMap::new();
+        let metadata = std::collections::BTreeMap::new();
         let key = HsmKey {
             key_id: "test-key-123".to_string(),
             key_type: KeyType::EcdsaP256,
@@ -427,7 +427,7 @@ mod tests {
 
     #[test]
     fn test_health_status_creation() {
-        let mut details = std::collections::HashMap::new();
+        let mut details = std::collections::BTreeMap::new();
         details.insert("cpu".to_string(), "50%".to_string());
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: types
@@ -452,7 +452,7 @@ mod tests {
             id: "workflow-1".to_string(),
             workflow_type: "deployment".to_string(),
             steps: vec![],
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::BTreeMap::new(),
         };
 
         assert_eq!(workflow.id, "workflow-1");
@@ -465,7 +465,7 @@ mod tests {
 
     #[test]
     fn test_workflow_step_creation() {
-        let mut params = std::collections::HashMap::new();
+        let mut params = std::collections::BTreeMap::new();
         params.insert("timeout".to_string(), "30s".to_string());
 
         let step = WorkflowStep {

@@ -5,7 +5,7 @@
 use beardog_types::canonical::HealthStatus;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use uuid::Uuid;
 
 /// Supported protocol types
@@ -60,13 +60,13 @@ pub struct AdapterRequest {
     pub endpoint: String,
     /// Request headers
     /// Mapping of headers
-    pub headers: HashMap<String, String>,
+    pub headers: BTreeMap<String, String>,
     /// Request payload
     /// Optional payload
     pub payload: Option<serde_json::Value>,
     /// Request metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
     /// Request timeout override
     pub timeout_ms: Option<u64>,
 }
@@ -81,13 +81,13 @@ pub struct AdapterResponse {
     pub status: ResponseStatus,
     /// Response headers
     /// Mapping of headers
-    pub headers: HashMap<String, String>,
+    pub headers: BTreeMap<String, String>,
     /// Response payload
     /// Optional payload
     pub payload: Option<serde_json::Value>,
     /// Response metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
     /// Response timestamp
     pub timestamp: DateTime<Utc>,
     /// Processing duration in milliseconds
@@ -136,7 +136,7 @@ pub struct ConnectionInfo {
     /// Last activity timestamp
     pub last_activity: DateTime<Utc>,
     /// Additional connection metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Connection status
@@ -177,7 +177,7 @@ pub struct ServiceEndpoint {
     pub last_health_check: DateTime<Utc>,
     /// Endpoint metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 impl AdapterRequest {
@@ -189,9 +189,9 @@ impl AdapterRequest {
             request_id: Uuid::new_v4(),
             operation,
             endpoint,
-            headers: HashMap::new(),
+            headers: BTreeMap::new(),
             payload: None,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
             timeout_ms: None,
         }
     }
