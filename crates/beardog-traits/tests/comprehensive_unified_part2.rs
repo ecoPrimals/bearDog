@@ -525,7 +525,7 @@ fn sample_trait_provider_health() -> ProviderHealth {
     ProviderHealth {
         status: TraitHealthStatus::Healthy,
         timestamp: SystemTime::UNIX_EPOCH,
-        details: HashMap::new(),
+        details: BTreeMap::new(),
         resource_usage: ResourceUsage {
             cpu_percent: 0.0,
             memory_bytes: 0,
@@ -536,7 +536,7 @@ fn sample_trait_provider_health() -> ProviderHealth {
                 packets_sent: 0,
                 packets_received: 0,
             },
-            disk_io: HashMap::new(),
+            disk_io: BTreeMap::new(),
         },
         last_error: None,
     }
@@ -545,7 +545,7 @@ fn sample_trait_provider_health() -> ProviderHealth {
 fn sample_trait_provider_metrics() -> UnifiedProviderMetrics {
     UnifiedProviderMetrics {
         timestamp: SystemTime::UNIX_EPOCH,
-        performance: HashMap::new(),
+        performance: BTreeMap::new(),
         custom_metrics: Vec::<CustomMetric>::new(),
         system_metrics: SystemMetrics {
             uptime_seconds: 0,

@@ -7,7 +7,7 @@
 use beardog_config::env_keys;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use beardog_types::canonical::HealthStatus;
 
@@ -31,7 +31,7 @@ pub struct ComponentHealth {
     pub check_duration_ms: u64,
     /// Additional metadata about the component
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Roll-up of every component's status plus a single overall verdict.
@@ -218,15 +218,15 @@ impl Default for AlertThresholds {
 pub struct MetricCollection {
     /// Collection of counter metrics
     /// Number of itemsers
-    pub counters: std::collections::HashMap<String, u64>,
+    pub counters: BTreeMap<String, u64>,
     /// Collection of gauge metrics
     /// The gauges value
-    pub gauges: std::collections::HashMap<String, f64>,
+    pub gauges: BTreeMap<String, f64>,
     /// Collection of histogram metrics
     /// The histograms value
-    pub histograms: std::collections::HashMap<String, Vec<f64>>,
+    pub histograms: BTreeMap<String, Vec<f64>>,
     /// Collection of timer metrics
-    pub timers: std::collections::HashMap<String, std::time::Duration>,
+    pub timers: BTreeMap<String, std::time::Duration>,
     /// Timestamp when this collection was created
     pub timestamp: DateTime<Utc>,
 }
@@ -234,10 +234,10 @@ pub struct MetricCollection {
 impl Default for MetricCollection {
     fn default() -> Self {
         Self {
-            counters: std::collections::HashMap::new(),
-            gauges: std::collections::HashMap::new(),
-            histograms: std::collections::HashMap::new(),
-            timers: std::collections::HashMap::new(),
+            counters: BTreeMap::new(),
+            gauges: BTreeMap::new(),
+            histograms: BTreeMap::new(),
+            timers: BTreeMap::new(),
             timestamp: Utc::now(),
         }
     }

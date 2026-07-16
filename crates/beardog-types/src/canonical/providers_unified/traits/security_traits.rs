@@ -7,7 +7,7 @@
 use super::base_traits::UnifiedProvider;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 /// **SECURITY PROVIDER TRAIT** - For all security-related providers
@@ -239,7 +239,7 @@ pub struct AuthenticationRequest {
     pub user_id: String,
     /// Authentication credentials
     /// Mapping of credentials
-    pub credentials: HashMap<String, String>,
+    pub credentials: BTreeMap<String, String>,
     /// Authentication context
     /// The context value
     pub context: AuthenticationContext,
@@ -252,7 +252,7 @@ pub struct AuthenticationResponse {
     /// Whether success is enabled
     pub success: bool,
     /// Optional user info
-    pub user_info: Option<HashMap<String, String>>,
+    pub user_info: Option<BTreeMap<String, String>>,
     /// Authentication token
     /// Optional token
     pub token: Option<String>,
@@ -277,7 +277,7 @@ pub struct AuthorizationRequest {
     pub resource: String,
     /// Additional context
     /// Mapping of context
-    pub context: HashMap<String, String>,
+    pub context: BTreeMap<String, String>,
 }
 
 /// Authorization response
@@ -392,7 +392,7 @@ pub struct AuthenticationContext {
     pub session_id: Option<String>,
     /// Additional context data
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
 }
 
 /// Static device identity block used for compliance and pairing.
@@ -474,7 +474,7 @@ pub struct BackupInfo {
     pub backup_data: Vec<u8>,
     /// Backup metadata
     /// Mapping of metadata
-    pub metadata: HashMap<String, String>,
+    pub metadata: BTreeMap<String, String>,
     /// Backup timestamp
     /// The created at value
     pub created_at: SystemTime,

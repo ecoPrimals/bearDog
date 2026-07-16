@@ -10,7 +10,7 @@ use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
 use chrono::Utc;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 #[cfg(test)]
 use std::time::Duration;
 use std::time::Instant;
@@ -90,7 +90,7 @@ impl HealthChecker for DatabaseHealthChecker {
             last_check: Utc::now(),
             check_duration_ms: start.elapsed().as_millis() as u64,
             metadata: {
-                let mut meta = HashMap::with_capacity(16);
+                let mut meta = BTreeMap::new();
                 meta.insert("type".to_string(), "PostgreSQL".to_string());
                 // Capability-based: Discover DB host from environment (no hardcoding)
                 let db_host = beardog_errors::process_env::var(env_keys::ENV_DB_HOST)
@@ -141,7 +141,7 @@ impl HealthChecker for CacheHealthChecker {
             last_check: Utc::now(),
             check_duration_ms: start.elapsed().as_millis() as u64,
             metadata: {
-                let mut meta = HashMap::with_capacity(16);
+                let mut meta = BTreeMap::new();
                 meta.insert("type".to_string(), "Redis".to_string());
                 // Capability-based: Discover cache host from environment
                 let cache_host = beardog_errors::process_env::var(env_keys::ENV_CACHE_HOST)
@@ -198,7 +198,7 @@ impl HealthChecker for ExternalApiHealthChecker {
             last_check: Utc::now(),
             check_duration_ms: start.elapsed().as_millis() as u64,
             metadata: {
-                let mut meta = HashMap::with_capacity(16);
+                let mut meta = BTreeMap::new();
                 meta.insert("url".to_string(), self.url.clone());
                 meta
             },
@@ -245,7 +245,7 @@ impl HealthChecker for HsmHealthChecker {
             last_check: Utc::now(),
             check_duration_ms: start.elapsed().as_millis() as u64,
             metadata: {
-                let mut meta = HashMap::with_capacity(16);
+                let mut meta = BTreeMap::new();
                 // Capability-based: Discover HSM provider dynamically
                 let hsm_provider = beardog_errors::process_env::var(env_keys::ENV_HSM_PROVIDER)
                     .unwrap_or_else(|_| "auto".to_string());

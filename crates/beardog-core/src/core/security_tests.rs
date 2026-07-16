@@ -25,7 +25,7 @@ mod tests {
     use beardog_types::canonical::providers_unified::traits::security_traits::{
         AuthenticationContext, AuthenticationRequest, AuthorizationRequest, UnifiedSecurityProvider,
     };
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
     fn create_test_provider() -> CoreSecurityProvider {
         let config = UnifiedBearDogConfig::default();
@@ -33,10 +33,10 @@ mod tests {
     }
 
     fn create_auth_request(user_id: &str) -> AuthenticationRequest {
-        let mut credentials = HashMap::new();
+        let mut credentials = BTreeMap::new();
         credentials.insert("password".to_string(), "test_password".to_string());
 
-        let mut metadata = HashMap::new();
+        let mut metadata = BTreeMap::new();
         metadata.insert("test_key".to_string(), "test_value".to_string());
 
         AuthenticationRequest {
@@ -60,7 +60,7 @@ mod tests {
             user_id: user_id.to_string(),
             resource: resource.to_string(),
             operation: operation.to_string(),
-            context: HashMap::new(),
+            context: BTreeMap::new(),
         }
     }
 
@@ -138,7 +138,7 @@ mod tests {
     async fn test_initialize() {
         let mut provider = create_test_provider();
         let config = ProviderConfiguration {
-            parameters: std::collections::HashMap::new(),
+            parameters: std::collections::BTreeMap::new(),
             connection: ConnectionConfiguration {
                 timeout_seconds: 5,
                 max_retries: 3,

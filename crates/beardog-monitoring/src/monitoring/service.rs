@@ -10,7 +10,7 @@ use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
@@ -384,7 +384,7 @@ impl MonitoringService {
                 message: Some("Monitoring service operational".to_string()),
                 last_check: Utc::now(),
                 check_duration_ms: 0,
-                metadata: HashMap::new(),
+                metadata: BTreeMap::new(),
             },
             // Check metrics collection
             self.check_metrics_collection(),
@@ -405,7 +405,7 @@ impl MonitoringService {
             message: Some("Metrics collection active".to_string()),
             last_check: Utc::now(),
             check_duration_ms: 0,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 
@@ -417,7 +417,7 @@ impl MonitoringService {
             message: Some("Alert system operational".to_string()),
             last_check: Utc::now(),
             check_duration_ms: 0,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 
@@ -429,7 +429,7 @@ impl MonitoringService {
             message: Some("Snapshot storage operational".to_string()),
             last_check: Utc::now(),
             check_duration_ms: 0,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 

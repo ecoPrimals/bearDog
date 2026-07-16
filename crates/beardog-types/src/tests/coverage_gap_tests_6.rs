@@ -694,7 +694,7 @@ mod zero_percent_files {
         use crate::canonical::config::domains::security::advanced::*;
         let c = GeneticSecurityConfiguration {
             enable_genetic_security: false,
-            genetic_parameters: std::collections::HashMap::default(),
+            genetic_parameters: std::collections::BTreeMap::default(),
             evolution_strategies: vec!["test".to_string()],
             fitness_criteria: vec!["accuracy".to_string()],
         };

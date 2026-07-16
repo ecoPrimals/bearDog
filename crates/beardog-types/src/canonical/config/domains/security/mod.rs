@@ -27,7 +27,7 @@
 use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 // Submodules
 pub mod advanced;
@@ -221,7 +221,7 @@ impl ConsolidatedSecurityConfiguration {
         TrustComputationConfiguration {
             enabled: true,
             algorithm: "weighted_average".to_string(),
-            trust_factors: HashMap::new(),
+            trust_factors: BTreeMap::new(),
             trust_decay: TrustDecayConfiguration {
                 enabled: std::env::var(env_keys::ENV_TRUST_DECAY_ENABLED)
                     .ok()
@@ -244,7 +244,7 @@ impl ConsolidatedSecurityConfiguration {
                 algorithm: std::env::var(env_keys::ENV_TRUST_EVAL_ALGORITHM)
                     .unwrap_or_else(|_| "multi_criteria".to_string()),
                 criteria: vec!["history".to_string(), "behavior".to_string()],
-                weights: HashMap::new(),
+                weights: BTreeMap::new(),
                 timeout_seconds: std::env::var(env_keys::ENV_TRUST_EVAL_TIMEOUT_SECS)
                     .ok()
                     .and_then(|s| s.parse().ok())
@@ -348,13 +348,13 @@ impl Default for ConsolidatedSecurityConfiguration {
             threat_response: ThreatResponseConfiguration::default(),
             genetic_security: GeneticSecurityConfiguration {
                 enable_genetic_security: true,
-                genetic_parameters: HashMap::new(),
+                genetic_parameters: BTreeMap::new(),
                 evolution_strategies: vec!["mutation".to_string(), "crossover".to_string()],
                 fitness_criteria: vec!["security_strength".to_string(), "performance".to_string()],
             },
             ecosystem_membership: EcosystemMembershipConfiguration {
                 enabled: true,
-                membership_levels: HashMap::new(),
+                membership_levels: BTreeMap::new(),
                 evolution_rules: vec![],
                 genetics_integration: GeneticsIntegrationConfiguration {
                     enabled: true,

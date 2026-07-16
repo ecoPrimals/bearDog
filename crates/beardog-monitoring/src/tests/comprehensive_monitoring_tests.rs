@@ -23,7 +23,7 @@ use crate::monitoring::health::{
 };
 use crate::monitoring::types::ComponentHealth;
 use beardog_types::canonical::HealthStatus;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::time::SystemTime;
 
 #[cfg(test)]
@@ -133,7 +133,7 @@ mod health_check_tests {
             message: None,
             last_check: chrono::Utc::now(),
             check_duration_ms: 0,
-            metadata: HashMap::new(),
+            metadata: BTreeMap::new(),
         }
     }
 
@@ -380,7 +380,7 @@ mod snapshot_tests {
 
     #[test]
     fn test_snapshot_storage() {
-        let mut h = HashMap::new();
+        let mut h = BTreeMap::new();
         h.insert("k".to_string(), "v".to_string());
         let c = ComponentHealth {
             name: "snap".to_string(),

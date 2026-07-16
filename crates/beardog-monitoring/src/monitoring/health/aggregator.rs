@@ -10,7 +10,7 @@ use super::traits::HealthChecker;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
 use chrono::Utc;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Aggregates health checks from multiple components
 ///
@@ -59,7 +59,7 @@ impl HealthCheckAggregator {
                         message: Some(format!("Health check failed: {e}")),
                         last_check: Utc::now(),
                         check_duration_ms: 0,
-                        metadata: HashMap::with_capacity(16),
+                        metadata: BTreeMap::new(),
                     });
                 }
             }

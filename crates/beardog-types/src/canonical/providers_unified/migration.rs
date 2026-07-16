@@ -72,7 +72,7 @@ pub use super::traits::{
 // Legacy service types - map to unified equivalents
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 /// Legacy `ServiceHealth` type - use `ProviderHealth` instead
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -92,7 +92,7 @@ pub struct ServiceHealth {
 
 impl From<ServiceHealth> for super::traits::ProviderHealth {
     fn from(service_health: ServiceHealth) -> Self {
-        use std::collections::HashMap;
+        use std::collections::BTreeMap;
         use std::time::SystemTime;
 
         #[expect(
@@ -108,7 +108,7 @@ impl From<ServiceHealth> for super::traits::ProviderHealth {
             super::traits::HealthStatus::Unhealthy
         };
 
-        let mut details = HashMap::new();
+        let mut details = BTreeMap::new();
         details.insert(
             "response_time_ms".to_string(),
             service_health.response_time_ms.to_string(),
@@ -124,7 +124,7 @@ impl From<ServiceHealth> for super::traits::ProviderHealth {
                 packets_sent: 0,
                 packets_received: 0,
             },
-            disk_io: HashMap::new(),
+            disk_io: BTreeMap::new(),
         };
 
         Self {
@@ -203,7 +203,7 @@ impl From<CacheStats> for super::traits::ProviderMetrics {
         );
         custom_metrics.insert("hit_rate".to_string(), hit_rate);
 
-        let mut performance = HashMap::new();
+        let mut performance = BTreeMap::new();
         performance.insert("hit_rate".to_string(), hit_rate);
         performance.insert("error_rate".to_string(), 1.0 - hit_rate);
 
@@ -214,7 +214,7 @@ impl From<CacheStats> for super::traits::ProviderMetrics {
                 value,
                 unit: "count".to_string(),
                 description: format!("Cache metric: {name}"),
-                tags: HashMap::new(),
+                tags: BTreeMap::new(),
             })
             .collect();
 

@@ -26,7 +26,7 @@ use crate::constants::domains::network::addresses::WILDCARD_IPV4;
 use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // Domain-specific monitoring configuration modules
 /// Alerting module
@@ -96,7 +96,7 @@ pub struct MonitoringConfig {
     pub environment: MonitoringEnvironment,
     /// Global tags applied to all monitoring data
     /// Mapping of global tags
-    pub global_tags: HashMap<String, String>,
+    pub global_tags: BTreeMap<String, String>,
 
     /// **CORE MONITORING DOMAINS**
     /// Health check and wellness monitoring configuration
@@ -143,7 +143,7 @@ impl Default for MonitoringConfig {
         Self {
             enabled: true,
             environment: MonitoringEnvironment::Development,
-            global_tags: HashMap::new(),
+            global_tags: BTreeMap::new(),
             health: UnifiedHealthConfig::default(),
             metrics: UnifiedMetricsConfig::default(),
             alerting: UnifiedAlertingConfig::default(),
@@ -189,7 +189,7 @@ pub struct MonitoringExportersConfig {
     pub jaeger: JaegerExporterConfig,
     /// Custom
     /// Mapping of custom
-    pub custom: HashMap<String, serde_json::Value>,
+    pub custom: BTreeMap<String, serde_json::Value>,
 }
 
 /// Prometheus exporter configuration
@@ -242,7 +242,7 @@ pub struct GrafanaExporterConfig {
     /// Optional api key
     pub api_key: Option<String>,
     /// Dashboard Config
-    pub dashboard_config: HashMap<String, serde_json::Value>,
+    pub dashboard_config: BTreeMap<String, serde_json::Value>,
 }
 
 impl Default for GrafanaExporterConfig {
@@ -262,7 +262,7 @@ impl Default for GrafanaExporterConfig {
                     )
                 }),
             api_key: None,
-            dashboard_config: HashMap::new(),
+            dashboard_config: BTreeMap::new(),
         }
     }
 }
@@ -319,7 +319,7 @@ pub struct DashboardConfig {
     pub templates: Vec<String>,
     /// Custom Panels
     /// Mapping of custom panels
-    pub custom_panels: HashMap<String, serde_json::Value>,
+    pub custom_panels: BTreeMap<String, serde_json::Value>,
 }
 
 impl Default for DashboardConfig {
@@ -328,7 +328,7 @@ impl Default for DashboardConfig {
             enabled: true,
             auto_create: true,
             templates: vec!["system".to_string(), "application".to_string()],
-            custom_panels: HashMap::new(),
+            custom_panels: BTreeMap::new(),
         }
     }
 }
@@ -367,7 +367,7 @@ pub struct NotificationChannel {
     /// The channel type value
     pub channel_type: NotificationChannelType,
     /// Config
-    pub config: HashMap<String, serde_json::Value>,
+    pub config: BTreeMap<String, serde_json::Value>,
     /// Filters
     /// Collection of filters
     pub filters: Vec<NotificationFilter>,

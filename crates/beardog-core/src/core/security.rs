@@ -27,7 +27,7 @@ use beardog_types::canonical::providers_unified::traits::security_traits::{
     AuthenticationRequest, AuthenticationResponse, AuthorizationRequest, AuthorizationResponse,
     SecurityContext, UnifiedSecurityProvider,
 };
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
 /// Core Security Provider with REAL cryptographic operations
@@ -171,7 +171,7 @@ impl UnifiedProvider for CoreSecurityProvider {
             status: beardog_types::canonical::providers_unified::traits::HealthStatus::Healthy,
             timestamp: std::time::SystemTime::now(),
             details: {
-                let mut details = HashMap::new();
+                let mut details = BTreeMap::new();
                 details.insert("status".to_string(), "OK".to_string());
                 details.insert("response_time_ms".to_string(), "5".to_string());
                 details
@@ -186,7 +186,7 @@ impl UnifiedProvider for CoreSecurityProvider {
                     packets_sent: 0,
                     packets_received: 0,
                 },
-                disk_io: HashMap::new(),
+                disk_io: BTreeMap::new(),
             },
             last_error: None,
         })
@@ -196,7 +196,7 @@ impl UnifiedProvider for CoreSecurityProvider {
         Ok(ProviderMetrics {
             timestamp: std::time::SystemTime::now(),
             performance: {
-                let mut perf = HashMap::new();
+                let mut perf = BTreeMap::new();
                 perf.insert("requests_per_second".to_string(), 0.0);
                 perf.insert("average_response_time_ms".to_string(), 5.0);
                 perf.insert("error_rate".to_string(), 0.0);
@@ -264,7 +264,7 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
 
         use base64::prelude::{BASE64_URL_SAFE_NO_PAD, Engine};
 
-        let mut user_info = HashMap::new();
+        let mut user_info = BTreeMap::new();
         user_info.insert("user_id".to_string(), request.user_id.clone());
         user_info.insert("method".to_string(), "local".to_string());
         user_info.insert("roles".to_string(), "user,authenticated".to_string());

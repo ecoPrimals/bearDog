@@ -33,7 +33,7 @@ use crate::monitoring::types::{
 };
 use beardog_types::canonical::HealthStatus;
 use chrono::Utc;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
@@ -490,7 +490,7 @@ fn test_component_health() {
         message: Some("OK".to_string()),
         last_check: Utc::now(),
         check_duration_ms: 5,
-        metadata: HashMap::new(),
+        metadata: BTreeMap::new(),
     };
     assert_eq!(health.name, "database");
     assert_eq!(health.status, HealthStatus::Healthy);

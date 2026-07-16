@@ -6,7 +6,7 @@
 //! configuration structures for the `BearDog` security system.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Genetic security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -14,7 +14,7 @@ pub struct GeneticSecurityConfiguration {
     /// Enable genetic security algorithms
     pub enable_genetic_security: bool,
     /// Genetic algorithm parameters
-    pub genetic_parameters: HashMap<String, f64>,
+    pub genetic_parameters: BTreeMap<String, f64>,
     /// Evolution strategies
     pub evolution_strategies: Vec<String>,
     /// Fitness evaluation criteria
@@ -27,7 +27,7 @@ pub struct EcosystemMembershipConfiguration {
     /// Enable ecosystem membership model
     pub enabled: bool,
     /// Membership levels and permissions
-    pub membership_levels: HashMap<String, Vec<String>>,
+    pub membership_levels: BTreeMap<String, Vec<String>>,
     /// Membership evolution rules
     pub evolution_rules: Vec<MembershipEvolutionRule>,
     /// Integration with genetics system
@@ -68,7 +68,7 @@ pub struct TrustComputationConfiguration {
     /// Trust computation algorithm
     pub algorithm: String,
     /// Trust factors and weights
-    pub trust_factors: HashMap<String, f64>,
+    pub trust_factors: BTreeMap<String, f64>,
     /// Trust decay parameters
     pub trust_decay: TrustDecayConfiguration,
     /// Evaluation configuration
@@ -121,7 +121,7 @@ pub struct EvaluationConfiguration {
     /// Evaluation criteria
     pub criteria: Vec<String>,
     /// Evaluation weights
-    pub weights: HashMap<String, f64>,
+    pub weights: BTreeMap<String, f64>,
     /// Evaluation timeout
     pub timeout_seconds: u64,
 }

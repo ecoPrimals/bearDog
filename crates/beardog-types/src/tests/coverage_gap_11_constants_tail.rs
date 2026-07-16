@@ -456,7 +456,7 @@ mod security_advanced_defaults {
     fn test_genetic_security_configuration() {
         let c = GeneticSecurityConfiguration {
             enable_genetic_security: true,
-            genetic_parameters: std::collections::HashMap::new(),
+            genetic_parameters: std::collections::BTreeMap::new(),
             evolution_strategies: vec!["strategy1".to_string()],
             fitness_criteria: vec!["criteria1".to_string()],
         };

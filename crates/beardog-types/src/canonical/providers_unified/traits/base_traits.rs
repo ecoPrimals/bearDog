@@ -6,7 +6,7 @@
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 /// Root capability implemented by every Beardog provider (security, HSM, monitoring, etc.).
@@ -65,7 +65,7 @@ pub struct ProviderHealth {
     /// Health check timestamp
     pub timestamp: SystemTime,
     /// Mapping of details
-    pub details: HashMap<String, String>,
+    pub details: BTreeMap<String, String>,
     /// The resource usage value
     pub resource_usage: ResourceUsage,
     /// Last error (if any)
@@ -79,7 +79,7 @@ pub struct ProviderMetrics {
     /// Metrics collection timestamp
     pub timestamp: SystemTime,
     /// Scalar performance gauges (latency p99, QPS, error rate, etc.).
-    pub performance: HashMap<String, f64>,
+    pub performance: BTreeMap<String, f64>,
     /// Custom metrics
     /// Collection of custom metrics
     pub custom_metrics: Vec<CustomMetric>,
@@ -105,7 +105,7 @@ pub struct ResourceUsage {
     pub network_io: NetworkIoMetrics,
     /// Disk I/O metrics
     /// Mapping of disk io
-    pub disk_io: HashMap<String, u64>,
+    pub disk_io: BTreeMap<String, u64>,
 }
 
 /// Provider capability description
@@ -130,7 +130,7 @@ pub struct ProviderCapability {
 pub struct ProviderConfiguration {
     /// Configuration parameters
     /// Mapping of parameters
-    pub parameters: HashMap<String, serde_json::Value>,
+    pub parameters: BTreeMap<String, serde_json::Value>,
     /// Connection configuration
     /// The connection value
     pub connection: ConnectionConfiguration,
@@ -191,7 +191,7 @@ pub struct CustomMetric {
     pub description: String,
     /// Metric tags
     /// Mapping of tags
-    pub tags: HashMap<String, String>,
+    pub tags: BTreeMap<String, String>,
 }
 
 /// System metrics
