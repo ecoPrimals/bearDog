@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 16, 2026 -- Wave 142b: Zero-C Compliance + Deep Evolution
+
+#### Zero-C Compliance
+- **Removed `libc` from `beardog-hid`** — replaced `libc::O_NONBLOCK` with inline Linux ABI constant (`0o4000`); bearDog now has zero C library dependencies across all crates
+
+#### BTreeMap Batch 4+5 (deterministic serialization)
+- **Batch 4 (Wave 141b)**: 61 HashMap fields → BTreeMap across 8 highest-density production files (decision_engine, other_traits, ecosystem_membership, configuration, ai_first_responses, universal_adapter, monitoring_config, zero_cost)
+- **Batch 5 (Wave 142b)**: 25+ HashMap fields → BTreeMap across 5 files (base_traits, security_traits, monitoring/types, advanced security config) + downstream consumer fixes in 9 test/production files
+
+#### Test Extraction Wave 2+3 (~4,200 LOC from production files)
+- **Wave 2**: entropy_hierarchy 527L, android 526L, performance 465L, ml_engine 427L, capability_routing 396L
+- **Wave 3**: sources 397L, requirements 369L, persistence 368L, verification 364L
+
+#### Module Split
+- **`metrics.rs` (763 LOC)** → `metrics/{mod,types,collection,analysis,storage_export}.rs` — zero-test pure type split
+
+#### Lint Hygiene
+- **`allow(dead_code)` → `expect(dead_code)`** in `solo_v2/provider.rs` (last production instance)
+
+#### Infrastructure
+- **Removed 815 GiB corrupted `ipc_server_tests.rs`** (subagent write failure)
+- **Cleaned 2.2 GiB orphaned `tmp_pack_*`** from `.git/objects/pack/`
+
 ### July 15, 2026 -- Wave 141a: Cross-Architecture Adoption + Deep Evolution
 
 #### Cross-Platform Transport (per-primal handoff from eastGate overwatch)

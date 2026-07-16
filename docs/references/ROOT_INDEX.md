@@ -3,7 +3,7 @@
 
 # BearDog Documentation Index
 
-**Last Updated**: Jul 15, 2026
+**Last Updated**: Jul 16, 2026
 
 Complete guide to BearDog documentation, organized by purpose.
 
