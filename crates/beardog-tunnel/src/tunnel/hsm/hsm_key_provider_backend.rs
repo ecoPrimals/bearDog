@@ -12,6 +12,12 @@ use crate::tunnel::hsm::software_hsm::RustSoftwareHsm;
 #[cfg(target_os = "android")]
 use crate::tunnel::hsm::android_strongbox::AndroidStrongBoxHsm;
 
+#[cfg(windows)]
+use crate::tunnel::hsm::windows_dpapi::WindowsDpapiHsm;
+
+#[cfg(target_os = "linux")]
+use crate::tunnel::hsm::linux_secret_service::LinuxSecretServiceHsm;
+
 /// Canonical `HsmKeyProvider` dispatch enum for the tunnel crate.
 pub enum HsmKeyProviderBackend {
     /// In-process Rust/software HSM.
@@ -19,6 +25,12 @@ pub enum HsmKeyProviderBackend {
     /// Android StrongBox (hardware).
     #[cfg(target_os = "android")]
     AndroidStrongBox(AndroidStrongBoxHsm),
+    /// Windows DPAPI (keys bound to user/machine credentials).
+    #[cfg(windows)]
+    WindowsDpapi(WindowsDpapiHsm),
+    /// Linux Secret Service (GNOME Keyring / `KWallet` via D-Bus).
+    #[cfg(target_os = "linux")]
+    LinuxSecretService(LinuxSecretServiceHsm),
     /// Test double: software-like stub.
     #[cfg(test)]
     StubSoftware(tests::FakeSwProvider),
@@ -33,6 +45,10 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
             Self::Software(p) => p.provider_id(),
             #[cfg(target_os = "android")]
             Self::AndroidStrongBox(p) => p.provider_id(),
+            #[cfg(windows)]
+            Self::WindowsDpapi(p) => p.provider_id(),
+            #[cfg(target_os = "linux")]
+            Self::LinuxSecretService(p) => p.provider_id(),
             #[cfg(test)]
             Self::StubSoftware(p) => p.provider_id(),
             #[cfg(test)]
@@ -45,6 +61,10 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
             Self::Software(p) => p.provider_type(),
             #[cfg(target_os = "android")]
             Self::AndroidStrongBox(p) => p.provider_type(),
+            #[cfg(windows)]
+            Self::WindowsDpapi(p) => p.provider_type(),
+            #[cfg(target_os = "linux")]
+            Self::LinuxSecretService(p) => p.provider_type(),
             #[cfg(test)]
             Self::StubSoftware(p) => p.provider_type(),
             #[cfg(test)]
@@ -57,6 +77,10 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
             Self::Software(p) => p.is_available(),
             #[cfg(target_os = "android")]
             Self::AndroidStrongBox(p) => p.is_available(),
+            #[cfg(windows)]
+            Self::WindowsDpapi(p) => p.is_available(),
+            #[cfg(target_os = "linux")]
+            Self::LinuxSecretService(p) => p.is_available(),
             #[cfg(test)]
             Self::StubSoftware(p) => p.is_available(),
             #[cfg(test)]
@@ -69,6 +93,10 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
             Self::Software(p) => p.capabilities(),
             #[cfg(target_os = "android")]
             Self::AndroidStrongBox(p) => p.capabilities(),
+            #[cfg(windows)]
+            Self::WindowsDpapi(p) => p.capabilities(),
+            #[cfg(target_os = "linux")]
+            Self::LinuxSecretService(p) => p.capabilities(),
             #[cfg(test)]
             Self::StubSoftware(p) => p.capabilities(),
             #[cfg(test)]
@@ -86,6 +114,10 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
                 Self::Software(p) => p.generate_key(&params).await,
                 #[cfg(target_os = "android")]
                 Self::AndroidStrongBox(p) => p.generate_key(&params).await,
+                #[cfg(windows)]
+                Self::WindowsDpapi(p) => p.generate_key(&params).await,
+                #[cfg(target_os = "linux")]
+                Self::LinuxSecretService(p) => p.generate_key(&params).await,
                 #[cfg(test)]
                 Self::StubSoftware(p) => p.generate_key(&params).await,
                 #[cfg(test)]
@@ -101,6 +133,10 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
                 Self::Software(p) => p.delete_key(&key_id).await,
                 #[cfg(target_os = "android")]
                 Self::AndroidStrongBox(p) => p.delete_key(&key_id).await,
+                #[cfg(windows)]
+                Self::WindowsDpapi(p) => p.delete_key(&key_id).await,
+                #[cfg(target_os = "linux")]
+                Self::LinuxSecretService(p) => p.delete_key(&key_id).await,
                 #[cfg(test)]
                 Self::StubSoftware(p) => p.delete_key(&key_id).await,
                 #[cfg(test)]
@@ -116,6 +152,10 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
                 Self::Software(p) => p.key_exists(&key_id).await,
                 #[cfg(target_os = "android")]
                 Self::AndroidStrongBox(p) => p.key_exists(&key_id).await,
+                #[cfg(windows)]
+                Self::WindowsDpapi(p) => p.key_exists(&key_id).await,
+                #[cfg(target_os = "linux")]
+                Self::LinuxSecretService(p) => p.key_exists(&key_id).await,
                 #[cfg(test)]
                 Self::StubSoftware(p) => p.key_exists(&key_id).await,
                 #[cfg(test)]
@@ -136,6 +176,10 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
                 Self::Software(p) => p.encrypt(&key_id, &plaintext).await,
                 #[cfg(target_os = "android")]
                 Self::AndroidStrongBox(p) => p.encrypt(&key_id, &plaintext).await,
+                #[cfg(windows)]
+                Self::WindowsDpapi(p) => p.encrypt(&key_id, &plaintext).await,
+                #[cfg(target_os = "linux")]
+                Self::LinuxSecretService(p) => p.encrypt(&key_id, &plaintext).await,
                 #[cfg(test)]
                 Self::StubSoftware(p) => p.encrypt(&key_id, &plaintext).await,
                 #[cfg(test)]
@@ -156,6 +200,10 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
                 Self::Software(p) => p.decrypt(&key_id, &ciphertext).await,
                 #[cfg(target_os = "android")]
                 Self::AndroidStrongBox(p) => p.decrypt(&key_id, &ciphertext).await,
+                #[cfg(windows)]
+                Self::WindowsDpapi(p) => p.decrypt(&key_id, &ciphertext).await,
+                #[cfg(target_os = "linux")]
+                Self::LinuxSecretService(p) => p.decrypt(&key_id, &ciphertext).await,
                 #[cfg(test)]
                 Self::StubSoftware(p) => p.decrypt(&key_id, &ciphertext).await,
                 #[cfg(test)]
@@ -176,6 +224,10 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
                 Self::Software(p) => p.sign(&key_id, &data).await,
                 #[cfg(target_os = "android")]
                 Self::AndroidStrongBox(p) => p.sign(&key_id, &data).await,
+                #[cfg(windows)]
+                Self::WindowsDpapi(p) => p.sign(&key_id, &data).await,
+                #[cfg(target_os = "linux")]
+                Self::LinuxSecretService(p) => p.sign(&key_id, &data).await,
                 #[cfg(test)]
                 Self::StubSoftware(p) => p.sign(&key_id, &data).await,
                 #[cfg(test)]
@@ -198,6 +250,10 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
                 Self::Software(p) => p.verify(&key_id, &data, &signature).await,
                 #[cfg(target_os = "android")]
                 Self::AndroidStrongBox(p) => p.verify(&key_id, &data, &signature).await,
+                #[cfg(windows)]
+                Self::WindowsDpapi(p) => p.verify(&key_id, &data, &signature).await,
+                #[cfg(target_os = "linux")]
+                Self::LinuxSecretService(p) => p.verify(&key_id, &data, &signature).await,
                 #[cfg(test)]
                 Self::StubSoftware(p) => p.verify(&key_id, &data, &signature).await,
                 #[cfg(test)]
@@ -351,5 +407,45 @@ pub mod tests {
         ) -> impl Future<Output = Result<bool, BearDogError>> + Send {
             async move { Ok(true) }
         }
+    }
+
+    #[test]
+    fn dispatch_software_variant_identity() {
+        let sw = HsmKeyProviderBackend::StubSoftware(FakeSwProvider);
+        assert_eq!(sw.provider_id(), "fake-sw");
+        assert_eq!(sw.provider_type(), CanonicalType::Software);
+        assert!(sw.is_available());
+    }
+
+    #[test]
+    fn dispatch_hardware_variant_identity() {
+        let hw = HsmKeyProviderBackend::StubHardware(FakeHwProvider);
+        assert_eq!(hw.provider_id(), "fake-hw");
+        assert_eq!(hw.provider_type(), CanonicalType::AndroidStrongBox);
+        assert!(hw.is_available());
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn dispatch_linux_secret_service_variant_construction() {
+        let ss = crate::tunnel::hsm::linux_secret_service::LinuxSecretServiceHsm::new()
+            .expect("construction");
+        let backend = HsmKeyProviderBackend::LinuxSecretService(ss);
+        assert_eq!(backend.provider_id(), "linux-secret-service");
+        assert_eq!(backend.provider_type(), CanonicalType::LinuxSecretService);
+        assert!(backend.is_available());
+    }
+
+    #[tokio::test]
+    async fn dispatch_generate_key_through_stub() {
+        use beardog_types::hsm::{HsmAlgorithm, KeyGenParams};
+
+        let backend = HsmKeyProviderBackend::StubSoftware(FakeSwProvider);
+        let handle = backend
+            .generate_key(&KeyGenParams::new(HsmAlgorithm::Aes256Gcm))
+            .await
+            .expect("generate_key");
+        assert_eq!(handle.key_id, "sw-key");
+        assert!(!handle.hardware_backed);
     }
 }

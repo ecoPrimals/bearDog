@@ -22,6 +22,10 @@ pub enum HsmProviderType {
     Pkcs11,
     /// Trusted Platform Module 2.0.
     Tpm,
+    /// Windows Data Protection API (DPAPI) — keys bound to user/machine credentials.
+    WindowsDpapi,
+    /// Linux Secret Service (GNOME Keyring / `KWallet` via D-Bus `org.freedesktop.secrets`).
+    LinuxSecretService,
 }
 
 impl std::fmt::Display for HsmProviderType {
@@ -32,6 +36,8 @@ impl std::fmt::Display for HsmProviderType {
             Self::IosSecureEnclave => write!(f, "ios-secure-enclave"),
             Self::Pkcs11 => write!(f, "pkcs11"),
             Self::Tpm => write!(f, "tpm"),
+            Self::WindowsDpapi => write!(f, "windows-dpapi"),
+            Self::LinuxSecretService => write!(f, "linux-secret-service"),
         }
     }
 }
@@ -167,6 +173,14 @@ mod tests {
             HsmProviderType::AndroidStrongBox.to_string(),
             "android-strongbox"
         );
+        assert_eq!(
+            HsmProviderType::WindowsDpapi.to_string(),
+            "windows-dpapi"
+        );
+        assert_eq!(
+            HsmProviderType::LinuxSecretService.to_string(),
+            "linux-secret-service"
+        );
     }
 
     #[test]
@@ -221,6 +235,8 @@ mod tests {
             HsmProviderType::IosSecureEnclave,
             HsmProviderType::Pkcs11,
             HsmProviderType::Tpm,
+            HsmProviderType::WindowsDpapi,
+            HsmProviderType::LinuxSecretService,
         ] {
             let json = serde_json::to_string(&pt).expect("serialize");
             let back: HsmProviderType = serde_json::from_str(&json).expect("deserialize");

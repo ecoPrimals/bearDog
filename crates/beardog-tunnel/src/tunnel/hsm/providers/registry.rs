@@ -279,6 +279,31 @@ impl HsmProviderRegistry {
             }
         }
 
+        // On Windows, try to register DPAPI backend
+        #[cfg(windows)]
+        {
+            if let Ok(dpapi) = crate::tunnel::hsm::windows_dpapi::WindowsDpapiHsm::new() {
+                if beardog_traits::hsm::HsmKeyProvider::is_available(&dpapi) {
+                    info!("HSM registry: registered windows-dpapi provider");
+                    registry.providers.push(Arc::new(
+                        crate::tunnel::hsm::HsmKeyProviderBackend::WindowsDpapi(dpapi),
+                    ));
+                }
+            }
+        }
+
+        // On Linux, try to register Secret Service backend
+        #[cfg(target_os = "linux")]
+        if let Ok(ss) =
+            crate::tunnel::hsm::linux_secret_service::LinuxSecretServiceHsm::new()
+            && beardog_traits::hsm::HsmKeyProvider::is_available(&ss)
+        {
+            info!("HSM registry: registered linux-secret-service provider");
+            registry.providers.push(Arc::new(
+                crate::tunnel::hsm::HsmKeyProviderBackend::LinuxSecretService(ss),
+            ));
+        }
+
         registry
     }
 
@@ -640,5 +665,40 @@ mod tests {
         assert!(!reg.is_empty());
         let sw = reg.software_fallback().unwrap();
         assert_eq!(sw.provider_type(), CanonicalType::Software);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[tokio::test]
+    async fn canonical_registry_discover_registers_linux_secret_service() {
+        let reg = HsmProviderRegistry::discover().await;
+        let has_ss = reg
+            .iter()
+            .any(|p| p.provider_type() == CanonicalType::LinuxSecretService);
+        assert!(
+            has_ss,
+            "Linux Secret Service backend should be registered on Linux"
+        );
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn canonical_registry_linux_backend_manual_registration() {
+        let ss = crate::tunnel::hsm::linux_secret_service::LinuxSecretServiceHsm::new()
+            .expect("construction");
+        let mut reg = HsmProviderRegistry::new();
+        reg.register(Arc::new(
+            crate::tunnel::hsm::HsmKeyProviderBackend::LinuxSecretService(ss),
+        ));
+
+        assert_eq!(reg.len(), 1);
+        let p = reg.select(SelectionPreference::PreferHardware).unwrap();
+        assert_eq!(p.provider_type(), CanonicalType::LinuxSecretService);
+    }
+
+    #[tokio::test]
+    async fn canonical_registry_software_fallback_always_available() {
+        let reg = HsmProviderRegistry::discover().await;
+        let sw = reg.software_fallback();
+        assert!(sw.is_ok(), "Software HSM fallback should always be available");
     }
 }

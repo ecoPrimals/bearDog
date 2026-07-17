@@ -10,6 +10,12 @@ pub mod software_hsm;
 #[cfg(target_os = "android")]
 pub mod android_strongbox;
 
+#[cfg(windows)]
+pub mod windows_dpapi;
+
+#[cfg(target_os = "linux")]
+pub mod linux_secret_service;
+
 // Solo V2 USB security key support
 #[cfg(feature = "solo-v2")]
 pub mod solo_v2;
