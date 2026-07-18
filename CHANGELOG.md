@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 18, 2026 -- Wave 149b: HSM Platform Backend Abstraction + Crypto Handoff
+
+#### HSM Platform Backend Abstraction (Wave 145a)
+- **`WindowsDpapiHsm`**: `#[cfg(windows)]` gated — DPAPI `CryptProtectData`/`CryptUnprotectData` key wrapping, AES-256-GCM encrypt/decrypt, HMAC sign/verify, blob storage in `%LOCALAPPDATA%/beardog/keys/`
+- **`LinuxSecretServiceHsm`**: `#[cfg(target_os = "linux")]` gated — HKDF-derived master key, AES-256-GCM at-rest encryption, XDG-compliant storage, D-Bus probe for `org.freedesktop.secrets`
+- **`HsmProviderType`** extended with `WindowsDpapi` + `LinuxSecretService` variants (serde + Display + tests)
+- **`HsmKeyProviderBackend`** enum dispatch extended with both new platform variants across all 10 match arms
+- **`HsmProviderRegistry::discover()`** auto-probes and registers platform backends behind `is_available()` gates
+- 15 new tests: unit, dispatch integration, registry auto-discovery, full key lifecycle end-to-end
+
+#### Phase 2 Transport: raw UDS → TransportEndpoint (Wave 145a)
+- 9 production sites across 5 crates refactored to use `connect_raw()`/`connect_transport()` via `TransportEndpoint`
+- Shipped `connect_raw()` in `beardog-ipc/isomorphic.rs` for protocol-prefix-free transport dispatch
+- Phase 2 transport: 14/14 complete across ecosystem
+
+#### Crypto JSON-RPC Handoff (Wave 149b)
+- Created `specs/current/integration/CRYPTO_JSONRPC_HANDOFF_WAVE149b.md` — full method signatures, param/return shapes, semantic aliases, cross-primal namespace, esotericWebb integration pattern
+
 ### July 16, 2026 -- Wave 144a: Deep Evolution + Debris Cleanup
 
 #### Test Extraction Wave 4 (963 LOC from 4 production modules)
