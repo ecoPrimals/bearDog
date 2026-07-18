@@ -1,0 +1,105 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# agentReagents Template: bearDog Linux HSM Validation
+#
+# Validation substrate for bearDog's platform HSM backends on Linux:
+#   - RustSoftwareHsm (always available)
+#   - LinuxSecretServiceHsm (D-Bus / GNOME Keyring / KWallet)
+#
+# Runs on x86_64 (flockGate, ironGate, CI). No special hardware required.
+#
+# Reference:
+#   - crates/beardog-tunnel/src/tunnel/hsm/linux_secret_service/
+#   - crates/beardog-tunnel/src/tunnel/hsm/providers/registry.rs
+
+name: beardog-linux-hsm-validation
+version: "1.0.0"
+description: >
+  Validation substrate for bearDog Linux HSM backends. Exercises the
+  Software HSM and Linux Secret Service HSM providers end-to-end via
+  JSON-RPC. Suitable for CI gating on any x86_64 Linux host.
+
+resources:
+  memory_mb: 2048
+  vcpus: 2
+  disk_gb: 15
+  timeout_secs: 1800
+
+base_image: ubuntu-24.04-server-cloudimg-amd64.img
+
+users:
+  - name: beardogtest
+    groups: [sudo]
+    ssh_authorized_keys: []
+
+build_steps:
+  - type: wait_cloud_init
+    timeout_secs: 600
+
+  - type: install_packages
+    packages:
+      - openssh-server
+      - curl
+      - ca-certificates
+      - jq
+      - dbus
+      - gnome-keyring
+      - libsecret-tools
+
+  - type: enable_service
+    service: ssh
+
+  - type: enable_service
+    service: dbus
+
+  - type: create_file
+    path: /etc/beardog/linux-hsm-validation.conf
+    content: |
+      # bearDog Linux HSM validation substrate
+      BEARDOG_HSM_MODE=auto
+      BEARDOG_PORT=9100
+      RUST_LOG=beardog=debug,beardog_tunnel::tunnel::hsm=trace
+    mode: "0644"
+
+post_boot_steps:
+  - type: run_command
+    command: "mkdir -p /opt/plasmidBin /var/log/beardog /etc/beardog"
+    description: "Create bearDog deployment directories"
+
+  - type: run_command
+    command: |
+      PLASMID_BIN="${PLASMID_BIN:-/opt/plasmidBin}"
+      ARCH="$(uname -m)"
+      SRC="${PLASMID_BIN}/primals/${ARCH}"
+      if [ -f "${SRC}/beardog" ]; then
+        cp "${SRC}/beardog" /opt/plasmidBin/
+      elif command -v fetch.sh >/dev/null 2>&1; then
+        fetch.sh pull beardog --arch "${ARCH}" --dest /opt/plasmidBin/
+      fi
+      chmod +x /opt/plasmidBin/* 2>/dev/null || true
+    description: "Deploy bearDog binary from plasmidBin"
+
+verification:
+  required_packages:
+    - openssh-server
+    - jq
+    - dbus
+    - gnome-keyring
+  required_services:
+    - ssh
+    - dbus
+  required_files:
+    - /etc/beardog/linux-hsm-validation.conf
+  verification_commands:
+    - command: "test -d /opt/plasmidBin"
+      description: "plasmidBin directory exists"
+      expected_exit_code: 0
+    - command: "dbus-send --system --dest=org.freedesktop.DBus --type=method_call --print-reply /org/freedesktop/DBus org.freedesktop.DBus.ListNames >/dev/null 2>&1"
+      description: "D-Bus system bus is responsive"
+      expected_exit_code: 0
+
+metadata:
+  gate_standard: "GATE_DEPLOYMENT_STANDARD.md"
+  primal: "bearDog"
+  hsm_backend: "LinuxSecretService, Software"
+  validation_target: "Linux Secret Service (D-Bus) + Software HSM"
+  arch: "x86_64"
