@@ -130,9 +130,15 @@ async fn test_discover_services_with_valid_config() {
     let mut framework = BearDogFramework::with_config(config).unwrap();
     let result = framework.discover_services();
 
-    assert!(result.is_ok(), "discover_services should succeed: {result:?}");
+    assert!(
+        result.is_ok(),
+        "discover_services should succeed: {result:?}"
+    );
     let services = result.unwrap();
-    assert!(services.is_empty(), "runtime discovery not yet wired — returns empty");
+    assert!(
+        services.is_empty(),
+        "runtime discovery not yet wired — returns empty"
+    );
     assert_eq!(framework.stats.services_discovered, 0);
 }
 
@@ -142,7 +148,10 @@ async fn test_discover_services_missing_compute_endpoint() {
     let mut framework = BearDogFramework::with_config(config).unwrap();
     let result = framework.discover_services();
 
-    assert!(result.is_ok(), "discover_services returns Ok even without endpoints");
+    assert!(
+        result.is_ok(),
+        "discover_services returns Ok even without endpoints"
+    );
     assert!(result.unwrap().is_empty());
 }
 

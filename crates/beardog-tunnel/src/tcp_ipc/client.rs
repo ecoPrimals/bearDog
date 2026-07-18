@@ -26,8 +26,8 @@ use crate::btsp_handshake::{
     framing::{read_frame, write_frame},
     session::{BtspCipher, BtspSession},
     types::{
-        BTSP_HANDSHAKE_VERSION, ChallengeResponse, ClientHello, HandshakeComplete,
-        HandshakeError, ServerHello,
+        BTSP_HANDSHAKE_VERSION, ChallengeResponse, ClientHello, HandshakeComplete, HandshakeError,
+        ServerHello,
     },
 };
 use crate::ribocipher;
@@ -259,9 +259,8 @@ where
         )));
     }
 
-    let complete: HandshakeComplete = serde_json::from_slice(&complete_bytes).map_err(|e| {
-        BearDogError::system(format!("BTSP HandshakeComplete parse failed: {e}"))
-    })?;
+    let complete: HandshakeComplete = serde_json::from_slice(&complete_bytes)
+        .map_err(|e| BearDogError::system(format!("BTSP HandshakeComplete parse failed: {e}")))?;
 
     // Verify server's family membership proof (mutual auth)
     if !complete.server_proof.is_empty() {
@@ -289,8 +288,8 @@ where
     let shared_secret = x25519_shared_secret(&client_secret, &their_pub);
     let keys = derive_session_keys(&shared_secret, complete.session_id.as_bytes())?;
 
-    let cipher = BtspCipher::from_wire_name(&complete.cipher)
-        .unwrap_or(BtspCipher::ChaCha20Poly1305);
+    let cipher =
+        BtspCipher::from_wire_name(&complete.cipher).unwrap_or(BtspCipher::ChaCha20Poly1305);
 
     Ok(BtspSession::new_client(
         complete.session_id,

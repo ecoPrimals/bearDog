@@ -295,12 +295,8 @@ mod tests {
             vulnerabilities_found: 0,
             threat_level: "none".to_string(),
         };
-        let risk = calculate_audit_risk_level(
-            &creator,
-            &security,
-            false,
-            VerificationStatus::Unverified,
-        );
+        let risk =
+            calculate_audit_risk_level(&creator, &security, false, VerificationStatus::Unverified);
         assert_eq!(risk, RiskLevel::High);
     }
 }

@@ -14,10 +14,10 @@ use beardog_errors::BearDogError;
 use beardog_hid::HidDevice;
 use ciborium::Value as CborValue;
 use hmac::{Hmac, Mac};
+use p256::PublicKey;
 use p256::ecdh::EphemeralSecret;
 use p256::elliptic_curve::rand_core::OsRng;
 use p256::elliptic_curve::sec1::ToEncodedPoint;
-use p256::PublicKey;
 use sha2::{Digest, Sha256};
 use tracing::{debug, info};
 
@@ -46,7 +46,10 @@ pub struct PinToken {
 impl PinToken {
     /// Compute `pinUvAuthParam` for a given message (e.g. `clientDataHash`).
     /// Returns `left(HMAC-SHA-256(pinToken, message), 16)`.
-    #[expect(clippy::expect_used, reason = "HMAC-SHA-256 new_from_slice accepts any key length — infallible")]
+    #[expect(
+        clippy::expect_used,
+        reason = "HMAC-SHA-256 new_from_slice accepts any key length — infallible"
+    )]
     pub fn authenticate(&self, message: &[u8]) -> Vec<u8> {
         let mut mac =
             Hmac::<Sha256>::new_from_slice(&self.token).expect("HMAC accepts any key length");
@@ -110,11 +113,17 @@ pub async fn set_pin<D: HidDevice + ?Sized>(
     // Step 6: Build and send setPIN command
     let platform_key_cbor = encode_public_key_cose(&ephemeral_public);
 
-    let body = encode_client_pin_cmd(SubCommand::SetPin, vec![
-        (CborValue::Integer(3.into()), platform_key_cbor),
-        (CborValue::Integer(4.into()), CborValue::Bytes(pin_uv_auth_param)),
-        (CborValue::Integer(5.into()), CborValue::Bytes(new_pin_enc)),
-    ])?;
+    let body = encode_client_pin_cmd(
+        SubCommand::SetPin,
+        vec![
+            (CborValue::Integer(3.into()), platform_key_cbor),
+            (
+                CborValue::Integer(4.into()),
+                CborValue::Bytes(pin_uv_auth_param),
+            ),
+            (CborValue::Integer(5.into()), CborValue::Bytes(new_pin_enc)),
+        ],
+    )?;
 
     debug!("setPIN CBOR payload ({} bytes): {:02x?}", body.len(), &body);
 
@@ -165,12 +174,19 @@ pub async fn get_pin_token<D: HidDevice + ?Sized>(
     // Step 5: Build and send getPinToken command
     let platform_key_cbor = encode_public_key_cose(&ephemeral_public);
 
-    let body = encode_client_pin_cmd(SubCommand::GetPinToken, vec![
-        (CborValue::Integer(3.into()), platform_key_cbor),
-        (CborValue::Integer(6.into()), CborValue::Bytes(pin_hash_enc)),
-    ])?;
+    let body = encode_client_pin_cmd(
+        SubCommand::GetPinToken,
+        vec![
+            (CborValue::Integer(3.into()), platform_key_cbor),
+            (CborValue::Integer(6.into()), CborValue::Bytes(pin_hash_enc)),
+        ],
+    )?;
 
-    debug!("getPinToken CBOR payload ({} bytes): {:02x?}", body.len(), &body);
+    debug!(
+        "getPinToken CBOR payload ({} bytes): {:02x?}",
+        body.len(),
+        &body
+    );
 
     // send_ctap2_command returns Ok only if status == 0x00; response is raw CBOR payload
     let response = send_ctap2_command(device, cid, Ctap2Command::ClientPin, &body).await?;
@@ -199,9 +215,7 @@ pub async fn get_pin_token<D: HidDevice + ?Sized>(
 /// # Errors
 ///
 /// Returns `BearDogError` on transport failure or parse errors.
-pub async fn get_retries<D: HidDevice + ?Sized>(
-    device: &mut D,
-) -> Result<u64, BearDogError> {
+pub async fn get_retries<D: HidDevice + ?Sized>(device: &mut D) -> Result<u64, BearDogError> {
     let cid = ctaphid_init(device).await?;
 
     let body = encode_client_pin_cmd(SubCommand::GetRetries, vec![])?;
@@ -277,7 +291,10 @@ fn encrypt_pin(shared_secret: &[u8; 32], pin: &str) -> Result<Vec<u8>, BearDogEr
 }
 
 /// `left(HMAC-SHA-256(key, message), 16)`
-#[expect(clippy::expect_used, reason = "HMAC-SHA-256 new_from_slice accepts any key length — infallible")]
+#[expect(
+    clippy::expect_used,
+    reason = "HMAC-SHA-256 new_from_slice accepts any key length — infallible"
+)]
 fn left_hmac_sha256(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
     let mut mac = Hmac::<Sha256>::new_from_slice(key).expect("HMAC accepts any key length");
     mac.update(message);
@@ -348,7 +365,10 @@ fn aes256_cbc_decrypt_zero_iv(key: &[u8; 32], ciphertext: &[u8]) -> Result<Vec<u
 /// Encode a P-256 public key as a `COSE_Key` for `ClientPIN` `keyAgreement`.
 /// Solo 2 requires `alg` = -25 (`ECDH-ES+HKDF-256`) for `keyAgreement` keys.
 /// Keys in canonical CBOR order: positive ascending (1, 3), negative ascending (-1, -2, -3).
-#[expect(clippy::expect_used, reason = "to_encoded_point(false) returns uncompressed point — x/y always present")]
+#[expect(
+    clippy::expect_used,
+    reason = "to_encoded_point(false) returns uncompressed point — x/y always present"
+)]
 fn encode_public_key_cose(key: &PublicKey) -> CborValue {
     let point = key.to_encoded_point(false); // uncompressed
     let x = point.x().expect("valid P-256 point has x coordinate");
@@ -387,7 +407,7 @@ fn parse_cose_p256_pubkey(cbor: &CborValue) -> Result<PublicKey, BearDogError> {
         _ => {
             return Err(BearDogError::system(
                 "Expected CBOR map in getKeyAgreement response".to_string(),
-            ))
+            ));
         }
     };
 
@@ -407,7 +427,7 @@ fn parse_cose_p256_pubkey(cbor: &CborValue) -> Result<PublicKey, BearDogError> {
         _ => {
             return Err(BearDogError::system(
                 "keyAgreement is not a CBOR map".to_string(),
-            ))
+            ));
         }
     };
 
@@ -467,9 +487,7 @@ fn extract_bytes_from_map(cbor: &CborValue, key: i128) -> Result<Vec<u8>, BearDo
             },
             _ => None,
         })
-        .ok_or_else(|| {
-            BearDogError::system(format!("Missing bytes at key {key} in CBOR map"))
-        })
+        .ok_or_else(|| BearDogError::system(format!("Missing bytes at key {key} in CBOR map")))
 }
 
 /// Extract an integer value from a CBOR map by integer key.
@@ -487,7 +505,5 @@ fn extract_integer_from_map(cbor: &CborValue, key: i128) -> Result<u64, BearDogE
             },
             _ => None,
         })
-        .ok_or_else(|| {
-            BearDogError::system(format!("Missing integer at key {key} in CBOR map"))
-        })
+        .ok_or_else(|| BearDogError::system(format!("Missing integer at key {key} in CBOR map")))
 }

@@ -5,8 +5,8 @@
 // Security event tracking, threat detection, and compliance monitoring.
 
 use beardog_errors::BearDogError;
-use serde::{Deserialize, Serialize};
 use parking_lot::Mutex;
+use serde::{Deserialize, Serialize};
 
 /// Records security-category [`super::MetricEvent`] values and exposes aggregate counters.
 #[derive(Debug)]

@@ -72,9 +72,9 @@ pub async fn serve_https_gateway(
     bind_port: u16,
 ) -> Result<(), BearDogError> {
     let addr = format!("0.0.0.0:{bind_port}");
-    let listener = TcpListener::bind(&addr).await.map_err(|e| {
-        BearDogError::system(format!("HTTPS gateway bind {addr}: {e}"))
-    })?;
+    let listener = TcpListener::bind(&addr)
+        .await
+        .map_err(|e| BearDogError::system(format!("HTTPS gateway bind {addr}: {e}")))?;
 
     let upstream = resolve_upstream();
     info!(port = bind_port, upstream = %upstream, "HTTPS gateway listening (ACME TLS → upstream)");
@@ -104,9 +104,9 @@ pub async fn serve_https_gateway(
                 Err(e) => {
                     warn!(peer = %peer, error = %e, "upstream connect failed");
                     let mut stream = tls_stream;
-                    let _ = stream.write_all(
-                        b"HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n"
-                    ).await;
+                    let _ = stream
+                        .write_all(b"HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n")
+                        .await;
                     return;
                 }
             };

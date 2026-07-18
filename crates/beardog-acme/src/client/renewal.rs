@@ -148,17 +148,11 @@ mod tests {
         let spki_der = verifying_key.to_public_key_der().unwrap();
         let spki = SubjectPublicKeyInfoOwned::try_from(spki_der.as_bytes()).unwrap();
 
-        let cert = CertificateBuilder::new(
-            Profile::Root,
-            serial,
-            validity,
-            subject,
-            spki,
-            &signing_key,
-        )
-        .unwrap()
-        .build::<p256::ecdsa::DerSignature>()
-        .unwrap();
+        let cert =
+            CertificateBuilder::new(Profile::Root, serial, validity, subject, spki, &signing_key)
+                .unwrap()
+                .build::<p256::ecdsa::DerSignature>()
+                .unwrap();
 
         cert.to_pem(x509_cert::der::pem::LineEnding::LF).unwrap()
     }

@@ -513,10 +513,7 @@ impl UnixSocketIpcServer {
     ///
     /// # Errors
     /// Returns error if unable to parse or handle the request
-    pub async fn handle_jsonrpc_request(
-        &self,
-        request_str: &str,
-    ) -> Result<JsonRpcResponse> {
+    pub async fn handle_jsonrpc_request(&self, request_str: &str) -> Result<JsonRpcResponse> {
         let request: JsonRpcRequest =
             serde_json::from_str(request_str).context("Failed to parse JSON-RPC request")?;
         let mut caller = CallerContext::from_unix();

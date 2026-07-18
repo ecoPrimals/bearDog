@@ -22,8 +22,8 @@ pub use collection::{
     MetricFilteringConfig, ValueFilter, ValueFilterOperator,
 };
 pub use storage_export::{
-    CustomMetricConfig, CustomMetricType, MetricExportConfig, MetricExporter,
-    MetricStorageConfig, PartitionBy, PartitioningConfig,
+    CustomMetricConfig, CustomMetricType, MetricExportConfig, MetricExporter, MetricStorageConfig,
+    PartitionBy, PartitioningConfig,
 };
 pub use types::{CounterConfig, GaugeConfig, HistogramConfig, SummaryConfig};
 

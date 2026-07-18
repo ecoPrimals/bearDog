@@ -215,7 +215,11 @@ impl SystemMonitor {
                 SystemAlert {
                     alert_type: AlertType::HighCpuUsage,
                     message: format!("High CPU usage: {cpu_usage:.2}%"),
-                    severity: if cpu_usage > 95.0 { AlertSeverity::Critical } else { AlertSeverity::Warning },
+                    severity: if cpu_usage > 95.0 {
+                        AlertSeverity::Critical
+                    } else {
+                        AlertSeverity::Warning
+                    },
                     timestamp: chrono::Utc::now(),
                     component: None,
                     metric_value: Some(cpu_usage),
@@ -229,7 +233,11 @@ impl SystemMonitor {
                 SystemAlert {
                     alert_type: AlertType::HighMemoryUsage,
                     message: format!("High memory usage: {memory_usage:.2}%"),
-                    severity: if memory_usage > 95.0 { AlertSeverity::Critical } else { AlertSeverity::Warning },
+                    severity: if memory_usage > 95.0 {
+                        AlertSeverity::Critical
+                    } else {
+                        AlertSeverity::Warning
+                    },
                     timestamp: chrono::Utc::now(),
                     component: None,
                     metric_value: Some(memory_usage),
@@ -257,10 +265,7 @@ impl SystemMonitor {
     }
 
     /// Send an alert to all registered handlers, logging failures.
-    fn dispatch_alert(
-        handlers: &[Box<dyn AlertHandler + Send + Sync>],
-        alert: SystemAlert,
-    ) {
+    fn dispatch_alert(handlers: &[Box<dyn AlertHandler + Send + Sync>], alert: SystemAlert) {
         for handler in handlers {
             if let Err(e) = handler.handle_alert(alert.clone()) {
                 error!("Alert handler failed: {}", e);
@@ -306,4 +311,3 @@ impl Default for SystemMonitor {
         })
     }
 }
-

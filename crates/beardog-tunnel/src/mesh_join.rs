@@ -18,9 +18,7 @@ use serde_json::{Value, json};
 use tracing::info;
 
 use crate::tcp_ipc::client::BtspConnection;
-use crate::trusted_issuer_registry::{
-    TrustMethod, TrustedIssuerRegistry, did_from_verifying_key,
-};
+use crate::trusted_issuer_registry::{TrustMethod, TrustedIssuerRegistry, did_from_verifying_key};
 use crate::unix_socket_ipc::handlers::primal_signing::derive_primal_signing_key;
 
 /// Result of a successful mesh join.
@@ -114,17 +112,16 @@ pub async fn mesh_join(
         .and_then(Value::as_str)
         .map(String::from);
 
-    let remote_pk_bytes = BASE64_STANDARD.decode(remote_pk_b64).map_err(|e| {
-        BearDogError::system(format!("peer public_key invalid base64: {e}"))
-    })?;
+    let remote_pk_bytes = BASE64_STANDARD
+        .decode(remote_pk_b64)
+        .map_err(|e| BearDogError::system(format!("peer public_key invalid base64: {e}")))?;
 
-    let arr: [u8; 32] = remote_pk_bytes.try_into().map_err(|_| {
-        BearDogError::system("peer public_key must be 32 bytes".to_string())
-    })?;
+    let arr: [u8; 32] = remote_pk_bytes
+        .try_into()
+        .map_err(|_| BearDogError::system("peer public_key must be 32 bytes".to_string()))?;
 
-    let remote_vk = VerifyingKey::from_bytes(&arr).map_err(|e| {
-        BearDogError::system(format!("peer public_key invalid Ed25519: {e}"))
-    })?;
+    let remote_vk = VerifyingKey::from_bytes(&arr)
+        .map_err(|e| BearDogError::system(format!("peer public_key invalid Ed25519: {e}")))?;
 
     let peer_newly_registered = registry
         .register(
@@ -156,9 +153,9 @@ pub async fn mesh_join(
 mod tests {
     use super::*;
     use crate::auth_event_bus::AuthEventBus;
+    use crate::btsp_handshake::FamilySeed;
     use crate::btsp_handshake::framing::{read_frame, write_frame};
     use crate::btsp_handshake::perform_server_handshake;
-    use crate::btsp_handshake::FamilySeed;
     use crate::method_gate::{CallerContext, ConnectionOrigin};
     use crate::tcp_ipc::client::BtspTcpClient;
     use crate::trust_handlers::handle_auth_exchange_trust;
@@ -189,10 +186,9 @@ mod tests {
         let server_reg = server_registry.clone();
         let server_handle = tokio::spawn(async move {
             let (mut stream, _) = listener.accept().await.expect("accept");
-            let mut session =
-                perform_server_handshake(&mut stream, &server_seed)
-                    .await
-                    .expect("server handshake");
+            let mut session = perform_server_handshake(&mut stream, &server_seed)
+                .await
+                .expect("server handshake");
 
             let frame = read_frame(&mut stream).await.expect("read frame");
             let plain = session.decrypt_frame(&frame).expect("decrypt");

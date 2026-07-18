@@ -386,8 +386,7 @@ impl KeystoreTransport for MemoryKeystoreTransport {
 const STUB_ATTESTATION_MESSAGE: &str = "device attestation requires Android hardware";
 
 #[cfg(target_os = "android")]
-const ANDROID_ATTESTATION_JNI_MESSAGE: &str =
-    "Android Key Attestation JNI integration is not yet available (hardware-backed attestation required)";
+const ANDROID_ATTESTATION_JNI_MESSAGE: &str = "Android Key Attestation JNI integration is not yet available (hardware-backed attestation required)";
 
 /// Port for Android Key Attestation JNI (hardware-backed attestation).
 pub trait AttestationTransport: Send + Sync {

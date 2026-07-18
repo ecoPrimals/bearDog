@@ -5,8 +5,8 @@
 // Performance monitoring, analysis, and optimization tracking.
 
 use beardog_errors::BearDogError;
-use serde::{Deserialize, Serialize};
 use parking_lot::Mutex;
+use serde::{Deserialize, Serialize};
 
 /// Collects and surfaces performance-related [`super::MetricEvent`] values.
 #[derive(Debug)]

@@ -22,7 +22,10 @@ mod suite {
 
         // Client doesn't know or care what's on the other end
         // Could be Songbird, Consul, etcd, custom - it adapts universally
-        assert_eq!(client.socket_path(), PathBuf::from("/tmp/any-registry.sock"));
+        assert_eq!(
+            client.socket_path(),
+            PathBuf::from("/tmp/any-registry.sock")
+        );
 
         // No vendor-specific methods
         // No primal-specific knowledge
@@ -33,7 +36,10 @@ mod suite {
     fn test_works_with_songbird_socket() {
         // Works with Songbird
         let client = PrimalRegistryClient::new(PathBuf::from("/tmp/songbird-nat0.sock"));
-        assert_eq!(client.socket_path(), PathBuf::from("/tmp/songbird-nat0.sock"));
+        assert_eq!(
+            client.socket_path(),
+            PathBuf::from("/tmp/songbird-nat0.sock")
+        );
     }
 
     #[test]

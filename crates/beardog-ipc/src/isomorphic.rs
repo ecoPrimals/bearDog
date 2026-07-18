@@ -450,9 +450,7 @@ pub fn ipc_endpoint_to_transport(ep: &IpcEndpoint) -> beardog_types::btsp::Trans
 ///
 /// Returns an error if the connection cannot be established, or if the
 /// endpoint transport type is not supported for outbound connections.
-pub async fn connect_raw(
-    endpoint: &beardog_types::btsp::TransportEndpoint,
-) -> Result<IpcStream> {
+pub async fn connect_raw(endpoint: &beardog_types::btsp::TransportEndpoint) -> Result<IpcStream> {
     use beardog_types::btsp::TransportEndpoint;
 
     debug!(endpoint = %endpoint, "raw transport connect (no protocol prefix)");

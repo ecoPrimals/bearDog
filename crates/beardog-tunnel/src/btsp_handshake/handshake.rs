@@ -6,8 +6,7 @@
 
 use super::FamilySeed;
 use super::crypto::{
-    compute_challenge_hmac,
-    derive_handshake_key, derive_session_keys, generate_ephemeral_keypair,
+    compute_challenge_hmac, derive_handshake_key, derive_session_keys, generate_ephemeral_keypair,
     verify_challenge_response, x25519_shared_secret,
 };
 use super::framing::{read_frame, write_frame};

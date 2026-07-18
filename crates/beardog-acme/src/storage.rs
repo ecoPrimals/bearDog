@@ -112,8 +112,7 @@ impl CertificateStore {
         let chain_path = self.fullchain_path(domain);
         let key_path = self.privkey_path(domain);
 
-        if !tokio::fs::try_exists(&chain_path).await? || !tokio::fs::try_exists(&key_path).await?
-        {
+        if !tokio::fs::try_exists(&chain_path).await? || !tokio::fs::try_exists(&key_path).await? {
             return Ok(None);
         }
 
@@ -167,11 +166,13 @@ mod tests {
     async fn load_returns_none_when_missing() {
         let dir = tempdir().expect("tempdir");
         let store = CertificateStore::new(dir.path()).expect("store");
-        assert!(store
-            .load_cert("missing.com")
-            .await
-            .expect("load")
-            .is_none());
+        assert!(
+            store
+                .load_cert("missing.com")
+                .await
+                .expect("load")
+                .is_none()
+        );
     }
 
     #[test]

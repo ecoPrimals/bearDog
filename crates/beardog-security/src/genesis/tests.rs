@@ -142,17 +142,11 @@ fn test_witness_with_trusted_list() {
     let trusted = vec!["solokey-123".to_string()];
     let verifier = GenesisWitnessVerifier::with_trusted_witnesses(trusted);
 
-    let trusted_witness = create_test_witness_for_node(
-        "solokey-123",
-        PhysicalChannelType::HardwareKey,
-        "test-node",
-    );
+    let trusted_witness =
+        create_test_witness_for_node("solokey-123", PhysicalChannelType::HardwareKey, "test-node");
     assert!(verifier.verify(&trusted_witness, "test-node").is_ok());
 
-    let untrusted_witness = create_test_witness_for_node(
-        "unknown-key",
-        PhysicalChannelType::HardwareKey,
-        "test-node",
-    );
+    let untrusted_witness =
+        create_test_witness_for_node("unknown-key", PhysicalChannelType::HardwareKey, "test-node");
     assert!(verifier.verify(&untrusted_witness, "test-node").is_err());
 }

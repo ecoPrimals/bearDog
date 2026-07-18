@@ -20,7 +20,9 @@ fn fido2_handler_method_list() {
 
 #[tokio::test]
 async fn fido2_discover_returns_valid_response() {
-    let result = discover::handle_fido2_discover(None).await.expect("discover");
+    let result = discover::handle_fido2_discover(None)
+        .await
+        .expect("discover");
     assert!(result.get("devices").is_some());
     assert!(result.get("count").is_some());
     let count = result["count"].as_u64().expect("count is u64");
@@ -30,7 +32,9 @@ async fn fido2_discover_returns_valid_response() {
 
 #[tokio::test]
 async fn fido2_register_requires_params() {
-    let err = register::handle_fido2_register(None).await.expect_err("no params");
+    let err = register::handle_fido2_register(None)
+        .await
+        .expect_err("no params");
     assert!(err.contains("Missing params"));
 }
 
@@ -98,7 +102,9 @@ async fn fido2_authenticate_requires_challenge() {
 
 #[tokio::test]
 async fn fido2_entropy_requires_params() {
-    let err = entropy::handle_fido2_entropy(None).await.expect_err("no params");
+    let err = entropy::handle_fido2_entropy(None)
+        .await
+        .expect_err("no params");
     assert!(err.contains("Missing params"));
 }
 
@@ -144,7 +150,9 @@ async fn fido2_handler_unknown_method_errors() {
 
 #[tokio::test]
 async fn fido2_ceremony_requires_params() {
-    let err = ceremony::handle_fido2_ceremony(None).await.expect_err("no params");
+    let err = ceremony::handle_fido2_ceremony(None)
+        .await
+        .expect_err("no params");
     assert!(err.contains("Missing params"));
 }
 

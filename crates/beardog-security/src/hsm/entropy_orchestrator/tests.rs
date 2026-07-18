@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::config::{OrchestratorConfig, OS_RNG_FALLBACK_DEVICE, OS_RNG_FALLBACK_TIER, OS_RNG_SOURCE};
+use super::config::{
+    OS_RNG_FALLBACK_DEVICE, OS_RNG_FALLBACK_TIER, OS_RNG_SOURCE, OrchestratorConfig,
+};
 #[cfg(any(feature = "fido2", target_os = "android", target_os = "ios"))]
 use super::discovery::HsmSource;
 use super::orchestrator::HsmEntropyOrchestrator;
 use super::quality::os_rng_fallback_report;
-use super::types::{
-    EntropyGenerationRequest, HumanEntropyInput, SecurityLevel,
-};
+use super::types::{EntropyGenerationRequest, HumanEntropyInput, SecurityLevel};
 
 #[tokio::test]
 async fn test_orchestrator_initialization() {

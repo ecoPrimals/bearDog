@@ -256,7 +256,9 @@ impl MonitoringService {
     ///
     /// # Errors
     /// Returns an error if metrics cannot be collected
-    pub async fn collect_performance_metrics(&self) -> Result<SystemPerformanceMetrics, BearDogError> {
+    pub async fn collect_performance_metrics(
+        &self,
+    ) -> Result<SystemPerformanceMetrics, BearDogError> {
         let uptime_seconds = self.start_time.elapsed().as_secs();
 
         let (cpu_usage_percent, memory_usage_percent, memory_total_bytes, memory_used_bytes) =

@@ -214,7 +214,12 @@ mod tests {
         for proto in KNOWN_PROTOS {
             let tag = mito_tag(seed, proto);
             let decoded = decode_mito_tag(seed, &tag);
-            assert_eq!(decoded, Some(proto), "round-trip failed for 0x{:02X}", proto);
+            assert_eq!(
+                decoded,
+                Some(proto),
+                "round-trip failed for 0x{:02X}",
+                proto
+            );
         }
     }
 

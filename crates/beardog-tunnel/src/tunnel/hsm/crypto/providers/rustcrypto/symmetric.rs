@@ -3,7 +3,7 @@
 //! Symmetric encryption operations (AES-GCM, ChaCha20-Poly1305).
 
 use super::RustCryptoProvider;
-use crate::tunnel::hsm::crypto::algorithms::{EncryptedData, EncryptionOptions, DecryptionOptions};
+use crate::tunnel::hsm::crypto::algorithms::{DecryptionOptions, EncryptedData, EncryptionOptions};
 use crate::tunnel::hsm::crypto::provider::NonceGenerator;
 use beardog_errors::BearDogError;
 
@@ -112,8 +112,9 @@ impl RustCryptoProvider {
     {
         use aes_gcm::Nonce;
 
-        let cipher = C::new_from_slice(key)
-            .map_err(|e| BearDogError::crypto_error(format!("Invalid {algorithm_name} key: {e}")))?;
+        let cipher = C::new_from_slice(key).map_err(|e| {
+            BearDogError::crypto_error(format!("Invalid {algorithm_name} key: {e}"))
+        })?;
 
         let nonce_vec = options
             .nonce
@@ -146,13 +147,13 @@ impl RustCryptoProvider {
     {
         use aes_gcm::Nonce;
 
-        let cipher = C::new_from_slice(key)
-            .map_err(|e| BearDogError::crypto_error(format!("Invalid {algorithm_name} key: {e}")))?;
+        let cipher = C::new_from_slice(key).map_err(|e| {
+            BearDogError::crypto_error(format!("Invalid {algorithm_name} key: {e}"))
+        })?;
 
-        let nonce_vec = encrypted
-            .nonce
-            .as_ref()
-            .ok_or_else(|| BearDogError::crypto_error(format!("Missing nonce for {algorithm_name}")))?;
+        let nonce_vec = encrypted.nonce.as_ref().ok_or_else(|| {
+            BearDogError::crypto_error(format!("Missing nonce for {algorithm_name}"))
+        })?;
         let nonce = Nonce::from_slice(nonce_vec);
 
         cipher

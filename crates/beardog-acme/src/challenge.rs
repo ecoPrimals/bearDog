@@ -93,7 +93,10 @@ impl Http01Solver {
     pub async fn serve(&self, port: u16) -> Result<(), AcmeError> {
         let addr = format!("0.0.0.0:{port}");
         let listener = TcpListener::bind(&addr).await?;
-        info!(port, "gatehouse HTTP server listening (ACME challenges + HTTPS redirect)");
+        info!(
+            port,
+            "gatehouse HTTP server listening (ACME challenges + HTTPS redirect)"
+        );
 
         let challenges = Arc::clone(&self.challenges);
 
@@ -128,7 +131,10 @@ impl Http01Solver {
                         Ok(0) | Err(_) => break,
                         Ok(_) if header.trim().is_empty() => break,
                         Ok(_) => {
-                            if let Some(val) = header.strip_prefix("Host:").or_else(|| header.strip_prefix("host:")) {
+                            if let Some(val) = header
+                                .strip_prefix("Host:")
+                                .or_else(|| header.strip_prefix("host:"))
+                            {
                                 host = val.trim().to_string();
                             }
                         }

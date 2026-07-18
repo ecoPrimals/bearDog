@@ -185,8 +185,8 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
         let this = self.clone();
         async move {
             let health_status = this.health_monitor.get_health_status().await;
-            let is_healthy =
-                this.keystore.is_strongbox_available() && health_status.map(|h| h.is_healthy).unwrap_or(false);
+            let is_healthy = this.keystore.is_strongbox_available()
+                && health_status.map(|h| h.is_healthy).unwrap_or(false);
 
             Ok(HealthStatus {
                 is_healthy,

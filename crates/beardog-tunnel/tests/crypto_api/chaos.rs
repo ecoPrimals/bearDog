@@ -167,15 +167,13 @@ async fn test_chaos_concurrent_random_operations() {
                 let data_b64 = base64::engine::general_purpose::STANDARD.encode(&random_data);
 
                 match op {
-                    0 => {
-                        handle_sign_ed25519(Some(&json!({
-                            "message": data_b64,
-                            "key_id": "test",
-                            "purpose": "chaos"
-                        })))
-                        .await
-                        .map_err(|e| e.to_string())
-                    }
+                    0 => handle_sign_ed25519(Some(&json!({
+                        "message": data_b64,
+                        "key_id": "test",
+                        "purpose": "chaos"
+                    })))
+                    .await
+                    .map_err(|e| e.to_string()),
                     1 => handle_x25519_generate_ephemeral(None)
                         .await
                         .map_err(|e| e.to_string()),

@@ -84,9 +84,7 @@ impl WindowsDpapiHsm {
     #[cfg(windows)]
     fn dpapi_protect(plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
         use std::ptr;
-        use windows_sys::Win32::Security::Cryptography::{
-            CryptProtectData, CRYPTOAPI_BLOB,
-        };
+        use windows_sys::Win32::Security::Cryptography::{CRYPTOAPI_BLOB, CryptProtectData};
 
         let mut input = CRYPTOAPI_BLOB {
             cbData: u32::try_from(plaintext.len()).unwrap_or(u32::MAX),
@@ -124,9 +122,7 @@ impl WindowsDpapiHsm {
     #[cfg(windows)]
     fn dpapi_unprotect(protected: &[u8]) -> Result<Vec<u8>, BearDogError> {
         use std::ptr;
-        use windows_sys::Win32::Security::Cryptography::{
-            CryptUnprotectData, CRYPTOAPI_BLOB,
-        };
+        use windows_sys::Win32::Security::Cryptography::{CRYPTOAPI_BLOB, CryptUnprotectData};
 
         let mut input = CRYPTOAPI_BLOB {
             cbData: u32::try_from(protected.len()).unwrap_or(u32::MAX),
@@ -169,9 +165,7 @@ impl WindowsDpapiHsm {
     async fn store_blob(&self, key_id: &str, blob: &[u8]) -> Result<(), BearDogError> {
         let path = self.blob_path(key_id);
         tokio::fs::write(&path, blob).await.map_err(|e| {
-            BearDogError::internal(format!(
-                "Failed to write DPAPI blob for {key_id}: {e}"
-            ))
+            BearDogError::internal(format!("Failed to write DPAPI blob for {key_id}: {e}"))
         })
     }
 
@@ -179,9 +173,7 @@ impl WindowsDpapiHsm {
     async fn load_blob(&self, key_id: &str) -> Result<Vec<u8>, BearDogError> {
         let path = self.blob_path(key_id);
         tokio::fs::read(&path).await.map_err(|e| {
-            BearDogError::internal(format!(
-                "Failed to read DPAPI blob for {key_id}: {e}"
-            ))
+            BearDogError::internal(format!("Failed to read DPAPI blob for {key_id}: {e}"))
         })
     }
 }

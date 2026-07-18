@@ -23,7 +23,10 @@ use tokio::sync::RwLock;
 
 /// Metadata for a single key stored in the secret service backend.
 #[derive(Debug, Clone)]
-#[expect(dead_code, reason = "metadata fields used for key inventory and diagnostics")]
+#[expect(
+    dead_code,
+    reason = "metadata fields used for key inventory and diagnostics"
+)]
 struct SecretKeyEntry {
     key_id: String,
     algorithm: beardog_types::hsm::HsmAlgorithm,
@@ -41,7 +44,10 @@ struct SecretKeyEntry {
 pub struct LinuxSecretServiceHsm {
     keys: RwLock<BTreeMap<String, SecretKeyEntry>>,
     storage_dir: PathBuf,
-    #[expect(dead_code, reason = "reserved for future D-Bus secret storage integration")]
+    #[expect(
+        dead_code,
+        reason = "reserved for future D-Bus secret storage integration"
+    )]
     dbus_available: bool,
 }
 
@@ -74,9 +80,7 @@ impl LinuxSecretServiceHsm {
             });
             let dir = PathBuf::from(data_home).join("beardog").join("keys");
             std::fs::create_dir_all(&dir).map_err(|e| {
-                BearDogError::internal(format!(
-                    "Failed to create secret service key dir: {e}"
-                ))
+                BearDogError::internal(format!("Failed to create secret service key dir: {e}"))
             })?;
             Ok(dir)
         }
@@ -98,8 +102,7 @@ impl LinuxSecretServiceHsm {
                         .strip_prefix("unix:path=")
                         .or_else(|| addr.strip_prefix("unix:abstract="));
                     if let Some(p) = path {
-                        return std::path::Path::new(p).exists()
-                            || addr.contains("abstract=");
+                        return std::path::Path::new(p).exists() || addr.contains("abstract=");
                     }
                 }
                 return !addr.is_empty();
@@ -130,7 +133,10 @@ impl LinuxSecretServiceHsm {
             .unwrap_or_else(|_| "beardog-linux-secret-service-dev-key".to_string());
         let hk = Hkdf::<Sha256>::new(None, ikm.as_bytes());
         let mut okm = [0u8; 32];
-        #[expect(clippy::expect_used, reason = "HKDF-SHA256 expand to 32 bytes is infallible")]
+        #[expect(
+            clippy::expect_used,
+            reason = "HKDF-SHA256 expand to 32 bytes is infallible"
+        )]
         hk.expand(b"beardog-secret-service-v1", &mut okm)
             .expect("32-byte expand");
         okm
@@ -177,9 +183,7 @@ impl LinuxSecretServiceHsm {
     async fn store_blob(&self, key_id: &str, blob: &[u8]) -> Result<(), BearDogError> {
         let path = self.blob_path(key_id);
         tokio::fs::write(&path, blob).await.map_err(|e| {
-            BearDogError::internal(format!(
-                "Failed to write secret blob for {key_id}: {e}"
-            ))
+            BearDogError::internal(format!("Failed to write secret blob for {key_id}: {e}"))
         })
     }
 
@@ -187,9 +191,7 @@ impl LinuxSecretServiceHsm {
     async fn load_blob(&self, key_id: &str) -> Result<Vec<u8>, BearDogError> {
         let path = self.blob_path(key_id);
         tokio::fs::read(&path).await.map_err(|e| {
-            BearDogError::internal(format!(
-                "Failed to read secret blob for {key_id}: {e}"
-            ))
+            BearDogError::internal(format!("Failed to read secret blob for {key_id}: {e}"))
         })
     }
 }
@@ -218,11 +220,10 @@ mod tests {
     #[test]
     fn at_rest_encrypt_decrypt_roundtrip() {
         let plaintext = b"secret-key-material-32-bytes!!!!";
-        let encrypted = LinuxSecretServiceHsm::encrypt_at_rest(plaintext)
-            .expect("encrypt_at_rest");
+        let encrypted = LinuxSecretServiceHsm::encrypt_at_rest(plaintext).expect("encrypt_at_rest");
         assert_ne!(encrypted, plaintext);
-        let decrypted = LinuxSecretServiceHsm::decrypt_at_rest(&encrypted)
-            .expect("decrypt_at_rest");
+        let decrypted =
+            LinuxSecretServiceHsm::decrypt_at_rest(&encrypted).expect("decrypt_at_rest");
         assert_eq!(decrypted, plaintext);
     }
 
@@ -288,7 +289,11 @@ mod tests {
 
         assert!(hsm.key_exists(&handle.key_id).await.expect("key_exists"));
         hsm.delete_key(&handle.key_id).await.expect("delete_key");
-        assert!(!hsm.key_exists(&handle.key_id).await.expect("key_exists after delete"));
+        assert!(
+            !hsm.key_exists(&handle.key_id)
+                .await
+                .expect("key_exists after delete")
+        );
     }
 
     #[tokio::test]

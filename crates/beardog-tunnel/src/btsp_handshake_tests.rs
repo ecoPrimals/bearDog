@@ -328,8 +328,7 @@ mod tests {
         assert_eq!(server_session.cipher, client_session.cipher);
 
         // Simulate encrypted JSON-RPC: client sends `health.liveness` request
-        let jsonrpc_request =
-            br#"{"jsonrpc":"2.0","method":"health.liveness","id":1}"#;
+        let jsonrpc_request = br#"{"jsonrpc":"2.0","method":"health.liveness","id":1}"#;
         let encrypted_req = client_session
             .encrypt_frame(jsonrpc_request)
             .expect("encrypt request");

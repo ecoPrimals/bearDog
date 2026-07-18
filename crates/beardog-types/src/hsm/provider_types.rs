@@ -173,10 +173,7 @@ mod tests {
             HsmProviderType::AndroidStrongBox.to_string(),
             "android-strongbox"
         );
-        assert_eq!(
-            HsmProviderType::WindowsDpapi.to_string(),
-            "windows-dpapi"
-        );
+        assert_eq!(HsmProviderType::WindowsDpapi.to_string(), "windows-dpapi");
         assert_eq!(
             HsmProviderType::LinuxSecretService.to_string(),
             "linux-secret-service"

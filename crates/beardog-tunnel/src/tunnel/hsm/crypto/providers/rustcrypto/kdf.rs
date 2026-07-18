@@ -38,8 +38,9 @@ impl RustCryptoProvider {
 
         let hkdf = Hkdf::<Sha256>::new(Some(salt), input_key);
         let mut output = vec![0u8; output_length];
-        hkdf.expand(info, &mut output)
-            .map_err(|e| BearDogError::crypto_error(format!("HKDF-SHA256 expansion failed: {e}")))?;
+        hkdf.expand(info, &mut output).map_err(|e| {
+            BearDogError::crypto_error(format!("HKDF-SHA256 expansion failed: {e}"))
+        })?;
         Ok(output)
     }
 
@@ -55,8 +56,9 @@ impl RustCryptoProvider {
 
         let hkdf = Hkdf::<Sha384>::new(Some(salt), input_key);
         let mut output = vec![0u8; output_length];
-        hkdf.expand(info, &mut output)
-            .map_err(|e| BearDogError::crypto_error(format!("HKDF-SHA384 expansion failed: {e}")))?;
+        hkdf.expand(info, &mut output).map_err(|e| {
+            BearDogError::crypto_error(format!("HKDF-SHA384 expansion failed: {e}"))
+        })?;
         Ok(output)
     }
 
@@ -72,8 +74,9 @@ impl RustCryptoProvider {
 
         let hkdf = Hkdf::<Sha512>::new(Some(salt), input_key);
         let mut output = vec![0u8; output_length];
-        hkdf.expand(info, &mut output)
-            .map_err(|e| BearDogError::crypto_error(format!("HKDF-SHA512 expansion failed: {e}")))?;
+        hkdf.expand(info, &mut output).map_err(|e| {
+            BearDogError::crypto_error(format!("HKDF-SHA512 expansion failed: {e}"))
+        })?;
         Ok(output)
     }
 

@@ -75,11 +75,7 @@ fn format_phase2_not_implemented(
     output
 }
 
-fn format_unsupported_platform(
-    platform: &str,
-    feature: &str,
-    alternatives: &[&str],
-) -> String {
+fn format_unsupported_platform(platform: &str, feature: &str, alternatives: &[&str]) -> String {
     let mut output = format!("❌ Platform not supported: {platform}\n\n");
     let _ = writeln!(output, "Feature '{feature}' requires Android platform");
     if !alternatives.is_empty() {

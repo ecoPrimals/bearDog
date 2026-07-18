@@ -93,9 +93,7 @@ impl UnixSocketIpcServer {
         tier_label: &str,
     ) -> Result<()> {
         match protocol_type {
-            ribocipher::PROTO_NDJSON_JSONRPC => {
-                self.handle_jsonrpc_universal("", stream).await
-            }
+            ribocipher::PROTO_NDJSON_JSONRPC => self.handle_jsonrpc_universal("", stream).await,
             ribocipher::PROTO_BTSP_BINARY => {
                 match btsp_handshake::perform_server_handshake(&mut stream, family_seed).await {
                     Ok(session) => {
@@ -117,8 +115,7 @@ impl UnixSocketIpcServer {
                 let mut buf_reader = BufReader::new(stream);
                 buf_reader.read_until(b'\n', &mut buf).await?;
                 let line = String::from_utf8_lossy(&buf);
-                if let Ok(hello) =
-                    serde_json::from_str::<btsp_handshake::ClientHello>(line.trim())
+                if let Ok(hello) = serde_json::from_str::<btsp_handshake::ClientHello>(line.trim())
                 {
                     let stream = buf_reader.into_inner();
                     self.handle_btsp_jsonline_connection(stream, &hello, family_seed)

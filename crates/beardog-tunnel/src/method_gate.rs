@@ -230,7 +230,10 @@ impl MethodGate {
         let trusted_issuers = TrustedIssuerRegistry::new();
         match trusted_issuers.seed_from_env() {
             Ok(n) if n > 0 => {
-                tracing::info!(count = n, "Seeded trusted issuers from BEARDOG_TRUSTED_ISSUERS");
+                tracing::info!(
+                    count = n,
+                    "Seeded trusted issuers from BEARDOG_TRUSTED_ISSUERS"
+                );
             }
             Ok(_) => {}
             Err(e) => {

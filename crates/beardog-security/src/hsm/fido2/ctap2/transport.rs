@@ -162,7 +162,11 @@ pub async fn send_ctap2_command<D: beardog_hid::HidDevice + ?Sized>(
         init_pkt.push(0);
     }
 
-    debug!("   Init pkt ({} bytes): {:02x?}", init_pkt.len(), &init_pkt[..12.min(init_pkt.len())]);
+    debug!(
+        "   Init pkt ({} bytes): {:02x?}",
+        init_pkt.len(),
+        &init_pkt[..12.min(init_pkt.len())]
+    );
 
     device
         .write(&init_pkt)
@@ -175,7 +179,6 @@ pub async fn send_ctap2_command<D: beardog_hid::HidDevice + ?Sized>(
     let cont_payload_max = HID_PACKET_SIZE - 5; // 59
 
     while offset < packet.len() {
-
         let take = (packet.len() - offset).min(cont_payload_max);
         let mut cont_pkt = Vec::with_capacity(HID_PACKET_SIZE);
         cont_pkt.extend_from_slice(&cid_bytes);
@@ -187,7 +190,9 @@ pub async fn send_ctap2_command<D: beardog_hid::HidDevice + ?Sized>(
 
         debug!(
             "   Cont pkt seq={} ({} bytes payload): {:02x?}",
-            seq, take, &cont_pkt[..12.min(cont_pkt.len())]
+            seq,
+            take,
+            &cont_pkt[..12.min(cont_pkt.len())]
         );
 
         device
@@ -248,9 +253,7 @@ pub async fn send_ctap2_command<D: beardog_hid::HidDevice + ?Sized>(
         // Error packet
         if b4 == CtapHidCommand::Error.as_u8() {
             let code = if n > 7 { buf[7] } else { 0 };
-            return Err(BearDogError::system(format!(
-                "CTAPHID error: 0x{code:02X}"
-            )));
+            return Err(BearDogError::system(format!("CTAPHID error: 0x{code:02X}")));
         }
 
         if assembled.is_empty() {
@@ -270,9 +273,7 @@ pub async fn send_ctap2_command<D: beardog_hid::HidDevice + ?Sized>(
             let first_payload_max = HID_PACKET_SIZE - 7; // 57 bytes
             let take = bcnt.min(first_payload_max).min(n - 7);
             assembled.extend_from_slice(&buf[7..7 + take]);
-            debug!(
-                "   Init packet: bcnt={bcnt}, got {take} bytes (attempt {attempt})"
-            );
+            debug!("   Init packet: bcnt={bcnt}, got {take} bytes (attempt {attempt})");
             if assembled.len() >= bcnt {
                 break;
             }

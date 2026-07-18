@@ -25,13 +25,11 @@ use crate::ServerArgs;
 use beardog_config::env_keys::{self, resolve_primal_name};
 use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
-use beardog_ipc::{
-    discover_neural_api_socket, register_with_neural_api, send_primal_announce,
-};
-use beardog_tunnel::primal_announce::registered_announce_method_names_for_identity;
+use beardog_ipc::{discover_neural_api_socket, register_with_neural_api, send_primal_announce};
 use beardog_tunnel::btsp_handshake;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
 use beardog_tunnel::multi_transport_server::MultiTransportServer;
+use beardog_tunnel::primal_announce::registered_announce_method_names_for_identity;
 use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 use beardog_tunnel::tunnel::hsm::software_hsm::RustSoftwareHsm;
 use beardog_tunnel::tunnel::hsm::{HsmProviderBackend, HsmTier, SoftwareHsmConfig};
@@ -250,7 +248,11 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
 
     info!(platform = "universal", "creating multi-transport server");
 
-    let uds_path = if tcp_only { None } else { Some(socket_path.as_str()) };
+    let uds_path = if tcp_only {
+        None
+    } else {
+        Some(socket_path.as_str())
+    };
     let server = MultiTransportServer::bind_all_available(
         btsp_provider,
         identity.clone(),
@@ -338,9 +340,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         let default_health = format!("{primal_name}-default.sock");
         let main = std::path::Path::new(&socket_path);
         if let Some(dir) = main.parent() {
-            dir.join(&default_health)
-                .to_string_lossy()
-                .to_string()
+            dir.join(&default_health).to_string_lossy().to_string()
         } else {
             format!("/tmp/{default_health}")
         }

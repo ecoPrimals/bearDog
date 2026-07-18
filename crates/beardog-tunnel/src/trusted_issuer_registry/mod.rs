@@ -37,7 +37,5 @@ mod tests;
 
 pub use did::{did_from_verifying_key, did_matches_key};
 pub use registry::TrustedIssuerRegistry;
-pub use types::{
-    CrossGateVerifyResult, IssuerInfo, RegisterError, TrustMethod,
-};
+pub use types::{CrossGateVerifyResult, IssuerInfo, RegisterError, TrustMethod};
 pub use verify::verify_with_registry;

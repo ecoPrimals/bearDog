@@ -72,7 +72,10 @@ impl CollaborationService {
     /// cannot be retrieved.
     pub async fn get_template_info(&self, template_id: &str) -> Result<TemplateInfo> {
         info!("Discovering primal with TemplateStorage capability for template: {template_id}");
-        Err(Self::discovery_unavailable("get_template_info", "TemplateStorage"))
+        Err(Self::discovery_unavailable(
+            "get_template_info",
+            "TemplateStorage",
+        ))
     }
 
     /// Get user permissions (replaces legacy collaborator listing on a collaboration provider)
@@ -107,7 +110,10 @@ impl CollaborationService {
     /// be retrieved.
     pub async fn get_lineage(&self, _template_id: &str) -> Result<Vec<LineageVersion>> {
         info!("Discovering primal with LineageTracking capability");
-        Err(Self::discovery_unavailable("get_lineage", "LineageTracking"))
+        Err(Self::discovery_unavailable(
+            "get_lineage",
+            "LineageTracking",
+        ))
     }
 
     /// Get community metrics (replaces legacy usage metrics on a collaboration provider)

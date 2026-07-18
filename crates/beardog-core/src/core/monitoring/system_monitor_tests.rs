@@ -141,8 +141,7 @@ fn test_system_monitor_with_config() {
         alert_threshold_disk: 95.0,
         max_alert_history: 500,
     };
-    let monitor =
-        SystemMonitor::with_config(config).expect("SystemMonitor::with_config in test");
+    let monitor = SystemMonitor::with_config(config).expect("SystemMonitor::with_config in test");
     assert!(std::mem::size_of_val(&monitor) > 0);
 }
 

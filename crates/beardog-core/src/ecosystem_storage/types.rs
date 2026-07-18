@@ -221,4 +221,3 @@ impl EcosystemStorageRequest {
         Self { operation, data }
     }
 }
-

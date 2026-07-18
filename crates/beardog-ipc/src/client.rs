@@ -58,13 +58,9 @@ impl OrchestratorRegistryClient {
         };
 
         let endpoint = client.endpoint();
-        let _stream = connect_raw(&endpoint)
-            .await
-            .map_err(|e| {
-                IpcError::Connection(format!(
-                    "Cannot connect to IPC registry at {endpoint}: {e}",
-                ))
-            })?;
+        let _stream = connect_raw(&endpoint).await.map_err(|e| {
+            IpcError::Connection(format!("Cannot connect to IPC registry at {endpoint}: {e}",))
+        })?;
 
         info!(endpoint = %endpoint, "Connected to IPC registry");
         Ok(client)
@@ -388,9 +384,7 @@ impl OrchestratorRegistryClient {
     pub(crate) async fn connect_test(self) -> IpcResult<Self> {
         let endpoint = self.endpoint();
         let _stream = connect_raw(&endpoint).await.map_err(|e| {
-            IpcError::Connection(format!(
-                "Cannot connect to IPC registry at {endpoint}: {e}",
-            ))
+            IpcError::Connection(format!("Cannot connect to IPC registry at {endpoint}: {e}",))
         })?;
 
         info!(endpoint = %endpoint, "Connected to IPC registry");

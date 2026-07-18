@@ -44,9 +44,9 @@ use crate::tunnel::hsm::types::key::HsmKey;
 use crate::tunnel::hsm::types::tier::HsmTier;
 use beardog_types::hsm::SelectionPreference;
 
+pub use crate::tunnel::hsm::config::SimpleHsmTier;
 pub use capability::DefaultHsmCapabilityDetector;
 pub use config::HsmManagerConfig;
-pub use crate::tunnel::hsm::config::SimpleHsmTier;
 pub use failover::{CircuitBreaker, CircuitBreakerState};
 // Failover/health monitors: use `beardog_types::hsm::{DefaultHsmFailoverManager, DefaultHsmHealthMonitor}` (imported below for this module).
 pub use implementation::{DefaultHsmManager, HealthStatus, HsmProvider, KeyInfo, ProviderInfo};

@@ -94,9 +94,7 @@ impl HsmKeyProvider for LinuxSecretServiceHsm {
             let path = self.blob_path(&key_id);
             if path.exists() {
                 tokio::fs::remove_file(&path).await.map_err(|e| {
-                    BearDogError::internal(format!(
-                        "Failed to delete secret blob: {e}"
-                    ))
+                    BearDogError::internal(format!("Failed to delete secret blob: {e}"))
                 })?;
             }
             Ok(())

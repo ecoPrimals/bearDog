@@ -294,8 +294,7 @@ impl HsmProviderRegistry {
 
         // On Linux, try to register Secret Service backend
         #[cfg(target_os = "linux")]
-        if let Ok(ss) =
-            crate::tunnel::hsm::linux_secret_service::LinuxSecretServiceHsm::new()
+        if let Ok(ss) = crate::tunnel::hsm::linux_secret_service::LinuxSecretServiceHsm::new()
             && beardog_traits::hsm::HsmKeyProvider::is_available(&ss)
         {
             info!("HSM registry: registered linux-secret-service provider");
@@ -699,6 +698,9 @@ mod tests {
     async fn canonical_registry_software_fallback_always_available() {
         let reg = HsmProviderRegistry::discover().await;
         let sw = reg.software_fallback();
-        assert!(sw.is_ok(), "Software HSM fallback should always be available");
+        assert!(
+            sw.is_ok(),
+            "Software HSM fallback should always be available"
+        );
     }
 }

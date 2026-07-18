@@ -279,10 +279,7 @@ pub fn handle_auth_exchange_trust(
                 });
                 event_bus.emit(AuthEvent {
                     kind: AuthEventKind::KeyExchangeCompleted {
-                        remote_gate: remote_gate_id
-                            .as_deref()
-                            .unwrap_or(&remote_did)
-                            .to_owned(),
+                        remote_gate: remote_gate_id.as_deref().unwrap_or(&remote_did).to_owned(),
                         method: trust_method.as_str().to_owned(),
                     },
                     source_gate: primal_name.to_owned(),

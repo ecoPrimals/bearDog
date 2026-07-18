@@ -143,7 +143,11 @@ impl BeardogBtspProvider {
         };
 
         if let Err(e) = provider.seed_trusted_peers_from_env().await {
-            warn!("Failed to seed trusted peers from {}: {}", env_keys::ENV_TRUSTED_PEERS, e);
+            warn!(
+                "Failed to seed trusted peers from {}: {}",
+                env_keys::ENV_TRUSTED_PEERS,
+                e
+            );
         }
 
         Ok(provider)
@@ -180,10 +184,7 @@ impl BeardogBtspProvider {
 
     /// Get peer trust level (used by `SecureTunnelProvider`).
     pub(crate) async fn get_peer_trust(&self, peer_id: &str) -> Option<types::TrustLevel> {
-        self.trust_db
-            .read()
-            .get(peer_id)
-            .map(|r| r.trust_level)
+        self.trust_db.read().get(peer_id).map(|r| r.trust_level)
     }
 }
 

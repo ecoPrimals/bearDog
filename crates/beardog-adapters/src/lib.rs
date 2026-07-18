@@ -372,7 +372,10 @@ mod tests {
             .await
             .expect_err("dispatch_capability returns not_yet_available until IPC is wired");
         let msg = err.to_string();
-        assert!(msg.contains("ipc.resolve"), "error should mention ipc.resolve: {msg}");
+        assert!(
+            msg.contains("ipc.resolve"),
+            "error should mention ipc.resolve: {msg}"
+        );
     }
 }
 

@@ -177,9 +177,7 @@ pub enum VerificationError {
     },
 
     /// License required but not present
-    #[error(
-        "🔒 License required for {classification} classification. Visit {LICENSE_PRICING_URL}"
-    )]
+    #[error("🔒 License required for {classification} classification. Visit {LICENSE_PRICING_URL}")]
     LicenseRequired {
         /// Serialized or debug representation of the classification that triggered the requirement.
         classification: String,

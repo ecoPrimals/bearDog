@@ -166,10 +166,7 @@ impl Client {
     /// ```
     #[cfg(unix)]
     pub async fn connect(primal_name: &str) -> Result<Self> {
-        info!(
-            "Connecting via Tower Atomic (socket key: {})",
-            primal_name
-        );
+        info!("Connecting via Tower Atomic (socket key: {})", primal_name);
 
         let socket_path = discover_primal_socket(primal_name).await?;
         debug!("Found socket at: {:?}", socket_path);
@@ -186,12 +183,14 @@ impl Client {
     /// Returns [`Error::ConnectionFailed`] if the Unix socket cannot be opened.
     #[cfg(unix)]
     pub async fn connect_unix_path(socket_path: &Path, peer_label: &str) -> Result<Self> {
-        let stream = tokio::net::UnixStream::connect(socket_path).await.map_err(|e| {
-            Error::ConnectionFailed(format!(
-                "Failed to connect Tower Atomic peer `{peer_label}` at {}: {e}",
-                socket_path.display()
-            ))
-        })?;
+        let stream = tokio::net::UnixStream::connect(socket_path)
+            .await
+            .map_err(|e| {
+                Error::ConnectionFailed(format!(
+                    "Failed to connect Tower Atomic peer `{peer_label}` at {}: {e}",
+                    socket_path.display()
+                ))
+            })?;
 
         Self::finish_connect(IpcStream::Unix(stream), peer_label).await
     }
@@ -203,11 +202,13 @@ impl Client {
     ///
     /// Returns [`Error::ConnectionFailed`] if the TCP connection fails.
     pub async fn connect_tcp(host: &str, port: u16, peer_label: &str) -> Result<Self> {
-        let stream = tokio::net::TcpStream::connect((host, port)).await.map_err(|e| {
-            Error::ConnectionFailed(format!(
-                "Failed to connect Tower Atomic peer `{peer_label}` at {host}:{port}: {e}"
-            ))
-        })?;
+        let stream = tokio::net::TcpStream::connect((host, port))
+            .await
+            .map_err(|e| {
+                Error::ConnectionFailed(format!(
+                    "Failed to connect Tower Atomic peer `{peer_label}` at {host}:{port}: {e}"
+                ))
+            })?;
 
         Self::finish_connect(IpcStream::Tcp(stream), peer_label).await
     }

@@ -181,13 +181,13 @@ impl AcmeClient {
     /// Returns DER-encoded CSR bytes and the ECDSA P-256 private key as PEM.
     /// Uses pure-Rust `p256` + `x509-cert` — zero C dependencies.
     pub(super) fn build_csr(&self) -> Result<(Vec<u8>, String), AcmeError> {
-        use x509_cert::der::asn1::Ia5String;
         use p256::ecdsa::SigningKey;
         use p256::pkcs8::EncodePrivateKey;
         use x509_cert::builder::{Builder, RequestBuilder};
         use x509_cert::der::Encode;
-        use x509_cert::ext::pkix::name::GeneralName;
+        use x509_cert::der::asn1::Ia5String;
         use x509_cert::ext::pkix::SubjectAltName;
+        use x509_cert::ext::pkix::name::GeneralName;
         use x509_cert::name::Name;
 
         let primary_domain = self

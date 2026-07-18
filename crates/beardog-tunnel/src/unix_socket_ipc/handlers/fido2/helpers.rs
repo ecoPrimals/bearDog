@@ -24,7 +24,10 @@ pub async fn resolve_device_path(explicit: Option<&str>) -> Result<String, Strin
              (SoloKey, YubiKey, or other CTAP2 authenticator)"
                 .to_string(),
         )?;
-    info!(path = fido2_device.path.as_str(), "Auto-selected FIDO2 device");
+    info!(
+        path = fido2_device.path.as_str(),
+        "Auto-selected FIDO2 device"
+    );
     Ok(fido2_device.path)
 }
 

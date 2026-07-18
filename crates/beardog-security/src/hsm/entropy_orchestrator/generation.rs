@@ -5,7 +5,7 @@
 use super::config::OS_RNG_SOURCE;
 use super::discovery::HsmSource;
 use super::orchestrator::HsmEntropyOrchestrator;
-use super::quality::{os_rng_fallback_report, EntropySourceReport};
+use super::quality::{EntropySourceReport, os_rng_fallback_report};
 use super::types::{EntropyGenerationRequest, EntropyGenerationResult};
 use beardog_errors::BearDogError;
 use tracing::{debug, info, warn};
@@ -104,7 +104,8 @@ impl HsmEntropyOrchestrator {
 
         debug!(
             "Generated {} bytes of entropy via OS RNG fallback ({})",
-            length, super::config::OS_RNG_FALLBACK_DEVICE
+            length,
+            super::config::OS_RNG_FALLBACK_DEVICE
         );
         Ok((entropy, os_rng_fallback_report()))
     }

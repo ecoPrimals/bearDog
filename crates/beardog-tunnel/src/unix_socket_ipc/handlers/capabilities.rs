@@ -71,11 +71,10 @@ impl MethodHandler for CapabilitiesHandler {
             "capabilities" | "get_capabilities" => {
                 self.handle_capabilities().await.map_err(HandlerError::from)
             }
-            "discover_capabilities" => {
-                self.handle_discover_capabilities()
-                    .await
-                    .map_err(HandlerError::from)
-            }
+            "discover_capabilities" => self
+                .handle_discover_capabilities()
+                .await
+                .map_err(HandlerError::from),
             "identity.get" => self.handle_identity_get().await.map_err(HandlerError::from),
             "identity" | "whoami" | "get_identity" => {
                 self.handle_identity().await.map_err(HandlerError::from)
@@ -413,7 +412,10 @@ impl CapabilitiesHandler {
     /// This mirrors the conventional `discover_capabilities` format, enabling
     /// uniform capability discovery across all primals. Includes a signed
     /// attestation so ecosystem discovery can verify authenticity.
-    #[expect(clippy::items_after_statements, reason = "CAPABILITIES const placed near its usage for readability")]
+    #[expect(
+        clippy::items_after_statements,
+        reason = "CAPABILITIES const placed near its usage for readability"
+    )]
     async fn handle_discover_capabilities(&self) -> Result<serde_json::Value, String> {
         info!("discover_capabilities requested");
 

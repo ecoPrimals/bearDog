@@ -202,7 +202,8 @@ pub async fn run(
         &neural_registration,
         unix_server.handler_registry(),
     )
-    .await {
+    .await
+    {
         Ok(()) => {
             info!("✅ Successfully registered with discovery service");
             info!("   Other primals can now discover BearDog via capabilities\n");

@@ -146,7 +146,10 @@ async fn ctaphid_init<D: HidDevice + ?Sized>(device: &mut D) -> Result<u32, Bear
     for _ in 0..5 {
         match device.read(&mut drain_buf).await {
             Ok(n) if n > 0 => {
-                debug!("ctaphid_init: drained {} stale bytes (cmd=0x{:02x})", n, drain_buf[4]);
+                debug!(
+                    "ctaphid_init: drained {} stale bytes (cmd=0x{:02x})",
+                    n, drain_buf[4]
+                );
             }
             _ => break,
         }
@@ -183,10 +186,15 @@ async fn ctaphid_init<D: HidDevice + ?Sized>(device: &mut D) -> Result<u32, Bear
                     || msg.contains("temporarily unavailable")
                     || msg.contains("WouldBlock")
                 {
-                    tokio::time::sleep(std::time::Duration::from_millis(CTAPHID_POST_INIT_DELAY_MS)).await;
+                    tokio::time::sleep(std::time::Duration::from_millis(
+                        CTAPHID_POST_INIT_DELAY_MS,
+                    ))
+                    .await;
                     continue;
                 }
-                return Err(BearDogError::system(format!("CTAPHID_INIT read failed: {e}")));
+                return Err(BearDogError::system(format!(
+                    "CTAPHID_INIT read failed: {e}"
+                )));
             }
         }
     }
@@ -209,7 +217,10 @@ async fn ctaphid_init<D: HidDevice + ?Sized>(device: &mut D) -> Result<u32, Bear
     }
 
     let cid = u32::from_be_bytes([response[15], response[16], response[17], response[18]]);
-    tokio::time::sleep(tokio::time::Duration::from_millis(CTAPHID_POST_INIT_DELAY_MS)).await;
+    tokio::time::sleep(tokio::time::Duration::from_millis(
+        CTAPHID_POST_INIT_DELAY_MS,
+    ))
+    .await;
     Ok(cid)
 }
 

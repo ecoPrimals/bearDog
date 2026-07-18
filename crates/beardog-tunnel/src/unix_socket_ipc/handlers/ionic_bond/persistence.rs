@@ -277,12 +277,16 @@ impl CapabilityDiscoveryBondPersistence {
         let te = beardog_types::btsp::TransportEndpoint::Uds {
             path: std::path::PathBuf::from(endpoint),
         };
-        let mut stream = beardog_ipc::connect_raw(&te)
-            .await
-            .map_err(|e| BondPersistenceError::Io {
-                context: "connect to ledger",
-                source: std::io::Error::new(std::io::ErrorKind::ConnectionRefused, e.to_string()),
-            })?;
+        let mut stream =
+            beardog_ipc::connect_raw(&te)
+                .await
+                .map_err(|e| BondPersistenceError::Io {
+                    context: "connect to ledger",
+                    source: std::io::Error::new(
+                        std::io::ErrorKind::ConnectionRefused,
+                        e.to_string(),
+                    ),
+                })?;
 
         stream
             .write_all(&request_bytes)

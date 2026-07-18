@@ -108,7 +108,7 @@ impl LinuxHidDevice {
             .open(path)
             .await
             .map_err(|e| {
-                  BearDogError::io_error(&format!(
+                BearDogError::io_error(&format!(
                     "Failed to open HID device {path}: {e}. \
                      Check permissions and udev rules."
                 ))
@@ -186,7 +186,10 @@ impl HidDevice for LinuxHidDevice {
     /// reports (all FIDO2/CTAPHID devices), this is `0x00`. The kernel strips it
     /// before sending to the USB device.
     async fn write(&mut self, report: &[u8]) -> Result<usize, BearDogError> {
-        trace!("Writing {} bytes to HID device (+ report ID prefix)", report.len());
+        trace!(
+            "Writing {} bytes to HID device (+ report ID prefix)",
+            report.len()
+        );
 
         let mut buf = Vec::with_capacity(1 + report.len());
         buf.push(0x00);

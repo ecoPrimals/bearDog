@@ -20,7 +20,9 @@ use tracing::info;
 /// - `user_name` (string, required): user display name
 /// - `device_path` (string, optional): HID device path (auto-selects first FIDO2 device)
 /// - `pin` (string, optional): device PIN for ClientPIN-authenticated registration
-pub async fn handle_fido2_register(params: Option<&Value>) -> Result<Value, super::super::HandlerError> {
+pub async fn handle_fido2_register(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for beardog.fido2.register")?;
 
     let rp_id = params
@@ -58,11 +60,10 @@ pub async fn handle_fido2_register(params: Option<&Value>) -> Result<Value, supe
             .map_err(|e| format!("Invalid base64 user_id: {e}"))?;
 
         if let Some(pin) = _pin {
-            let result = ceremony_register_with_pin(
-                &device_path, rp_id, &_user_id_bytes, user_name, pin,
-            )
-            .await
-            .map_err(|e| format!("MakeCredential (PIN ceremony): {e}"))?;
+            let result =
+                ceremony_register_with_pin(&device_path, rp_id, &_user_id_bytes, user_name, pin)
+                    .await
+                    .map_err(|e| format!("MakeCredential (PIN ceremony): {e}"))?;
 
             let credential_id_b64 = BASE64.encode(&result.0);
             let public_key_b64 = BASE64.encode(&result.1);
@@ -131,12 +132,12 @@ async fn ceremony_register_with_pin(
     user_name: &str,
     pin: &str,
 ) -> Result<(Vec<u8>, Vec<u8>), String> {
-    use beardog_security::hsm::fido2::ctap2::client_pin;
+    use crate::tunnel::hsm::solo_v2::Ctap2Transport;
+    use crate::tunnel::hsm::solo_v2::HidCtap2Transport;
     use crate::tunnel::hsm::solo_v2::ctap2_protocol::{
         build_make_credential, parse_make_credential_response,
     };
-    use crate::tunnel::hsm::solo_v2::HidCtap2Transport;
-    use crate::tunnel::hsm::solo_v2::Ctap2Transport;
+    use beardog_security::hsm::fido2::ctap2::client_pin;
 
     info!(device_path, "Opening HID device for PIN ceremony");
 
@@ -171,9 +172,8 @@ async fn ceremony_register_with_pin(
     let pin_uv_auth_param = pin_token.authenticate(&client_data_hash);
     let pin_uv = Some((pin_uv_auth_param.as_slice(), 1_u64));
 
-    let cmd =
-        build_make_credential(rp_id, user_id, user_name, &client_data_hash, -8, pin_uv)
-            .map_err(|e| format!("Failed to build MakeCredential: {e}"))?;
+    let cmd = build_make_credential(rp_id, user_id, user_name, &client_data_hash, -8, pin_uv)
+        .map_err(|e| format!("Failed to build MakeCredential: {e}"))?;
 
     info!("Sending MakeCredential (touch key when it blinks!)...");
     let mut transport = HidCtap2Transport::open(device_path)

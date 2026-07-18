@@ -14,10 +14,10 @@ use super::config::OrchestratorConfig;
 use super::discovery::discover_providers;
 use beardog_errors::BearDogError;
 
-#[cfg(all(feature = "mobile", target_os = "ios"))]
-use std::sync::{Arc, RwLock};
 #[cfg(feature = "fido2")]
 use crate::hsm::fido2::multi_credential_provider::Fido2MultiCredentialProvider;
+#[cfg(all(feature = "mobile", target_os = "ios"))]
+use std::sync::{Arc, RwLock};
 
 /// Universal HSM entropy orchestrator
 ///

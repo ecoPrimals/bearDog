@@ -28,7 +28,11 @@ pub(super) const fn os_rng_fallback_report() -> EntropySourceReport {
 
 impl HsmEntropyOrchestrator {
     /// Calculate quality tier based on HSM source and data
-    pub(super) const fn calculate_quality_tier(&self, source: &HsmSource, _data_length: usize) -> u8 {
+    pub(super) const fn calculate_quality_tier(
+        &self,
+        source: &HsmSource,
+        _data_length: usize,
+    ) -> u8 {
         match source {
             #[cfg(all(feature = "mobile", target_os = "android"))]
             HsmSource::Android => 3, // StrongBox = Tier 3

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use beardog_acme::{create_hot_reload_pair, AcmeClient, AcmeConfig, HotReloadAcceptor};
+use beardog_acme::{AcmeClient, AcmeConfig, HotReloadAcceptor, create_hot_reload_pair};
 use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tracing::{error, info};
@@ -38,49 +38,53 @@ pub(super) async fn start_acme_gateway() -> Result<AcmeGateway, BearDogError> {
     });
 
     // 2. Bootstrap TLS: load existing cert or issue new one
-    let primary_domain = config.domains.first().ok_or_else(|| BearDogError::Initialization {
-        message: "BEARDOG_ACME_DOMAINS is empty".to_string(),
-    })?;
+    let primary_domain = config
+        .domains
+        .first()
+        .ok_or_else(|| BearDogError::Initialization {
+            message: "BEARDOG_ACME_DOMAINS is empty".to_string(),
+        })?;
 
     let store = client.store().clone();
-    let (acceptor, controller) =
-        if let Some(cert) = store.load_cert(primary_domain).await.map_err(|e| {
-            BearDogError::Initialization {
+    let (acceptor, controller) = if let Some(cert) =
+        store
+            .load_cert(primary_domain)
+            .await
+            .map_err(|e| BearDogError::Initialization {
                 message: format!("load cert: {e}"),
+            })? {
+        info!(domain = %primary_domain, "loaded existing ACME certificate");
+        create_hot_reload_pair(&cert.fullchain_pem, &cert.privkey_pem).map_err(|e| {
+            BearDogError::Initialization {
+                message: format!("TLS bootstrap: {e}"),
             }
-        })? {
-            info!(domain = %primary_domain, "loaded existing ACME certificate");
-            create_hot_reload_pair(&cert.fullchain_pem, &cert.privkey_pem).map_err(|e| {
-                BearDogError::Initialization {
-                    message: format!("TLS bootstrap: {e}"),
-                }
+        })?
+    } else {
+        info!(
+            domain = %primary_domain,
+            "no existing cert — issuing initial certificate"
+        );
+        client
+            .issue_certificate()
+            .await
+            .map_err(|e| BearDogError::Initialization {
+                message: format!("initial cert issuance: {e}"),
+            })?;
+        let cert = store
+            .load_cert(primary_domain)
+            .await
+            .map_err(|e| BearDogError::Initialization {
+                message: format!("load new cert: {e}"),
             })?
-        } else {
-            info!(
-                domain = %primary_domain,
-                "no existing cert — issuing initial certificate"
-            );
-            client
-                .issue_certificate()
-                .await
-                .map_err(|e| BearDogError::Initialization {
-                    message: format!("initial cert issuance: {e}"),
-                })?;
-            let cert = store
-                .load_cert(primary_domain)
-                .await
-                .map_err(|e| BearDogError::Initialization {
-                    message: format!("load new cert: {e}"),
-                })?
-                .ok_or_else(|| BearDogError::Initialization {
-                    message: "cert not found after issuance".to_string(),
-                })?;
-            create_hot_reload_pair(&cert.fullchain_pem, &cert.privkey_pem).map_err(|e| {
-                BearDogError::Initialization {
-                    message: format!("TLS bootstrap: {e}"),
-                }
-            })?
-        };
+            .ok_or_else(|| BearDogError::Initialization {
+                message: "cert not found after issuance".to_string(),
+            })?;
+        create_hot_reload_pair(&cert.fullchain_pem, &cert.privkey_pem).map_err(|e| {
+            BearDogError::Initialization {
+                message: format!("TLS bootstrap: {e}"),
+            }
+        })?
+    };
 
     // 3. Wire hot-reload controller into client and spawn renewal daemon
     let controller = Arc::new(controller);

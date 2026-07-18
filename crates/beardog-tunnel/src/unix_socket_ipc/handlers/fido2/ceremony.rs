@@ -42,7 +42,9 @@ use tracing::info;
 ///   "purpose": "loam_seed"
 /// }
 /// ```
-pub async fn handle_fido2_ceremony(params: Option<&Value>) -> Result<Value, super::super::HandlerError> {
+pub async fn handle_fido2_ceremony(
+    params: Option<&Value>,
+) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for beardog.fido2.ceremony")?;
 
     let rp_id = params
@@ -85,9 +87,7 @@ pub async fn handle_fido2_ceremony(params: Option<&Value>) -> Result<Value, supe
 
         info!(
             rp_id,
-            tap_count,
-            purpose,
-            "Starting tap-sequence entropy ceremony"
+            tap_count, purpose, "Starting tap-sequence entropy ceremony"
         );
 
         let result = provider

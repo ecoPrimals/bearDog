@@ -75,9 +75,7 @@ fn parse_sign_request(params: Option<&serde_json::Value>) -> Result<SignRequest,
     Ok(SignRequest { data, key_size })
 }
 
-fn parse_verify_request(
-    params: Option<&serde_json::Value>,
-) -> Result<VerifyRequest, HandlerError> {
+fn parse_verify_request(params: Option<&serde_json::Value>) -> Result<VerifyRequest, HandlerError> {
     let params = params.ok_or("Missing parameters for RSA verification")?;
 
     let data_b64 = params
@@ -190,7 +188,10 @@ pub async fn handle_verify_rsa_pkcs1_sha256(
         .map_err(|e| format!("Invalid signature format: {e}"))?;
 
     let valid = verifying_key.verify(&req.data, &signature).is_ok();
-    info!("RSA PKCS#1: Signature {}", if valid { "VALID" } else { "INVALID" });
+    info!(
+        "RSA PKCS#1: Signature {}",
+        if valid { "VALID" } else { "INVALID" }
+    );
 
     Ok(serde_json::json!({
         "valid": valid,
@@ -244,7 +245,10 @@ pub async fn handle_verify_rsa_pss_sha256(
         .map_err(|e| format!("Invalid signature format: {e}"))?;
 
     let valid = verifying_key.verify(&req.data, &signature).is_ok();
-    info!("RSA-PSS: Signature {}", if valid { "VALID" } else { "INVALID" });
+    info!(
+        "RSA-PSS: Signature {}",
+        if valid { "VALID" } else { "INVALID" }
+    );
 
     Ok(serde_json::json!({
         "valid": valid,

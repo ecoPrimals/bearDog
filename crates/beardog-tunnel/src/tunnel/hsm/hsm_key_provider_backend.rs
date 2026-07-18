@@ -264,7 +264,10 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
 }
 
 #[cfg(test)]
-#[expect(clippy::manual_async_fn, reason = "trait method returns BoxFuture, cannot use async fn")]
+#[expect(
+    clippy::manual_async_fn,
+    reason = "trait method returns BoxFuture, cannot use async fn"
+)]
 pub mod tests {
     use super::*;
     use beardog_types::hsm::{

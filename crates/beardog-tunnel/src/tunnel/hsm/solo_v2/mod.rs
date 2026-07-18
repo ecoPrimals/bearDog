@@ -88,15 +88,15 @@ pub mod hid_transport;
 
 #[cfg(feature = "ctap2")]
 pub use hid_transport::{
-    CtapResponseWithTiming, Ctap2TransportBackend, HidCtap2Transport, TapTimingEntropy,
+    Ctap2TransportBackend, CtapResponseWithTiming, HidCtap2Transport, TapTimingEntropy,
 };
 
 pub use ctap2_protocol::{
     GetAssertionResponse, MakeCredentialResponse, build_get_assertion, build_make_credential,
     parse_get_assertion_response, parse_make_credential_response,
 };
+pub use provider::SoloV2Provider;
 #[cfg(feature = "ctap2")]
 pub use provider::{CeremonyResult, CeremonyTap};
-pub use provider::SoloV2Provider;
 pub use transport::Ctap2Transport;
 pub use types::*;

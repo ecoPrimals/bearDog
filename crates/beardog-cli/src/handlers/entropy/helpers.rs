@@ -126,8 +126,7 @@ pub(super) fn generate_system_entropy(size: usize) -> Result<Vec<u8>, BearDogErr
     entropy_pool.extend_from_slice(thread_id.as_bytes());
 
     // Source 5: System-specific entropy (hostname, machine ID if available)
-    if let Ok(hostname) = whoami::fallible::hostname()
-    {
+    if let Ok(hostname) = whoami::fallible::hostname() {
         entropy_pool.extend_from_slice(hostname.as_bytes());
     }
 

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::*;
-use base64::Engine;
 use crate::ionic_token::{TokenError, issue_ionic_token};
 use crate::unix_socket_ipc::handlers::primal_signing::{
     derive_primal_signing_key, derive_primal_verifying_key,
 };
+use base64::Engine;
 use beardog_config::env_keys::ENV_TRUSTED_ISSUERS;
 
 const GATE_A_PRIMAL: &str = "beardog";
@@ -284,7 +284,9 @@ fn seed_from_env_skips_when_unset() {
 fn seed_from_env_rejects_invalid_base64() {
     beardog_errors::process_env::set_var(ENV_TRUSTED_ISSUERS, "not-valid-base64!!!");
     let registry = TrustedIssuerRegistry::new();
-    let err = registry.seed_from_env().expect_err("should reject bad base64");
+    let err = registry
+        .seed_from_env()
+        .expect_err("should reject bad base64");
     assert!(err.to_string().contains("base64"), "error: {err}");
     beardog_errors::process_env::remove_var(ENV_TRUSTED_ISSUERS);
 }
@@ -295,7 +297,9 @@ fn seed_from_env_rejects_wrong_key_length() {
     let short_key = base64::engine::general_purpose::STANDARD.encode(b"tooshort");
     beardog_errors::process_env::set_var(ENV_TRUSTED_ISSUERS, &short_key);
     let registry = TrustedIssuerRegistry::new();
-    let err = registry.seed_from_env().expect_err("should reject short key");
+    let err = registry
+        .seed_from_env()
+        .expect_err("should reject short key");
     assert!(err.to_string().contains("32 bytes"), "error: {err}");
     beardog_errors::process_env::remove_var(ENV_TRUSTED_ISSUERS);
 }

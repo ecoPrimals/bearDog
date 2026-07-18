@@ -19,7 +19,10 @@ impl TrustedIssuerRegistry {
             || {
                 directories::BaseDirs::new().map_or_else(
                     || PathBuf::from(".local/share/beardog/trusted_issuers.json"),
-                    |d| d.home_dir().join(".local/share/beardog/trusted_issuers.json"),
+                    |d| {
+                        d.home_dir()
+                            .join(".local/share/beardog/trusted_issuers.json")
+                    },
                 )
             },
             |dirs| dirs.data_dir().join("trusted_issuers.json"),
@@ -61,9 +64,8 @@ impl TrustedIssuerRegistry {
             std::fs::create_dir_all(parent)?;
         }
 
-        let json = serde_json::to_string_pretty(&persisted).map_err(|e| {
-            std::io::Error::new(std::io::ErrorKind::InvalidData, e)
-        })?;
+        let json = serde_json::to_string_pretty(&persisted)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
         std::fs::write(path, json)
     }
 
@@ -74,9 +76,8 @@ impl TrustedIssuerRegistry {
     /// Returns an I/O error if the file cannot be read or contains invalid data.
     pub fn load_from_file(path: &Path) -> Result<Self, std::io::Error> {
         let contents = std::fs::read_to_string(path)?;
-        let persisted: PersistedRegistry = serde_json::from_str(&contents).map_err(|e| {
-            std::io::Error::new(std::io::ErrorKind::InvalidData, e)
-        })?;
+        let persisted: PersistedRegistry = serde_json::from_str(&contents)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
 
         let registry = Self::new();
         {
@@ -95,9 +96,8 @@ impl TrustedIssuerRegistry {
                         "public_key must be 32 bytes",
                     )
                 })?;
-                let vk = VerifyingKey::from_bytes(&key_array).map_err(|e| {
-                    std::io::Error::new(std::io::ErrorKind::InvalidData, e)
-                })?;
+                let vk = VerifyingKey::from_bytes(&key_array)
+                    .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
 
                 if !did_matches_key(&entry.did, &vk) {
                     return Err(std::io::Error::new(

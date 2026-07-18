@@ -601,7 +601,13 @@ fn dispatch_routes_ionic_methods() {
         dispatch_auth_method("auth.issue_ionic", &gate, &mut caller, Some(&issue_params)).unwrap();
     let verify_params = serde_json::json!({"token": token_result["token"]});
     assert!(
-        dispatch_auth_method("auth.verify_ionic", &gate, &mut caller, Some(&verify_params)).is_some()
+        dispatch_auth_method(
+            "auth.verify_ionic",
+            &gate,
+            &mut caller,
+            Some(&verify_params)
+        )
+        .is_some()
     );
 }
 
@@ -623,7 +629,12 @@ fn dispatch_routes_issue_session() {
     let gate = test_gate(EnforcementMode::Permissive);
     let mut caller = CallerContext::loopback();
     let session_params = serde_json::json!({"purpose": "jupyterhub", "user": "researcher"});
-    let result = dispatch_auth_method("auth.issue_session", &gate, &mut caller, Some(&session_params));
+    let result = dispatch_auth_method(
+        "auth.issue_session",
+        &gate,
+        &mut caller,
+        Some(&session_params),
+    );
     assert!(result.is_some());
     let val = result.unwrap();
     assert_eq!(val["purpose"], "jupyterhub");
@@ -846,10 +857,7 @@ fn try_verify_bearer_skips_when_claims_already_set() {
     gate.try_verify_bearer("auth.trust_issuer", &mut caller);
     assert!(caller.validated_claims.is_some());
 
-    let first_sub = caller
-        .validated_claims
-        .as_ref()
-        .map(|c| c.sub.clone());
+    let first_sub = caller.validated_claims.as_ref().map(|c| c.sub.clone());
 
     gate.try_verify_bearer("auth.trust_issuer", &mut caller);
     assert_eq!(

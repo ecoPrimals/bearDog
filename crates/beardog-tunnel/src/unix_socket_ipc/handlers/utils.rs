@@ -48,9 +48,7 @@ impl IdentityHints {
 /// Resolves primal name from explicit hints.
 #[must_use]
 pub fn get_primal_name_with(h: &IdentityHints) -> String {
-    h.primal_name
-        .clone()
-        .unwrap_or_else(resolve_primal_name)
+    h.primal_name.clone().unwrap_or_else(resolve_primal_name)
 }
 
 /// Get the primal name using self-knowledge pattern (reads environment).
