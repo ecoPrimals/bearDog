@@ -44,53 +44,48 @@
 use super::utils::get_primal_name;
 use super::{HandlerError, HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
+use crate::credential_store::CredentialStoreBackend;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_config::env_keys;
 use beardog_core::crypto_service::algorithms::hashing;
+use beardog_traits::unified::CredentialStore;
 use beardog_types::primal_identity::PrimalIdentity;
 use chacha20poly1305::{
     ChaCha20Poly1305,
     aead::{Aead, AeadCore, KeyInit, OsRng},
 };
 use hkdf::Hkdf;
-use parking_lot::RwLock;
 use sha2::Sha256;
-use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{debug, info, warn};
 
-/// An encrypted secret entry in the store
-#[derive(Debug, Clone)]
-struct EncryptedSecret {
-    /// Base64-encoded ciphertext (ChaCha20-Poly1305 output, includes auth tag)
-    ciphertext: String,
-    /// Base64-encoded 96-bit nonce
-    nonce: String,
-    /// ISO 8601 timestamp of when the secret was stored
-    stored_at: String,
-}
-
-/// Secret storage handler with family-scoped encryption
+/// Secret storage handler with family-scoped encryption.
 ///
 /// Stores secrets encrypted with ChaCha20-Poly1305 using keys derived
 /// from the family seed. Each secret name produces a unique encryption key
 /// via HKDF, ensuring cryptographic isolation between secrets.
+///
+/// Storage is delegated to a [`CredentialStoreBackend`] (Silicon Atheism
+/// pattern), which may be in-memory (dev/test) or a persistent file vault
+/// (production). The handler owns the encryption layer; the backend owns
+/// the raw ciphertext persistence.
 pub struct SecretsHandler {
     /// Primal identity for family-scoped key derivation
     identity: Arc<PrimalIdentity>,
-    /// In-memory encrypted secret store (name -> encrypted entry)
-    /// Production evolution: replace with discovered `storage.store` capability
-    store: Arc<RwLock<HashMap<String, EncryptedSecret>>>,
+    /// Pluggable credential store backend (in-memory, file vault, or platform-native)
+    backend: Arc<CredentialStoreBackend>,
 }
 
 impl SecretsHandler {
-    /// Create a new secrets handler with explicit identity injection
-    pub fn new(identity: Arc<PrimalIdentity>) -> Self {
-        Self {
-            identity,
-            store: Arc::new(RwLock::new(HashMap::new())),
-        }
+    /// Create a new secrets handler with explicit identity and backend injection.
+    pub fn new(identity: Arc<PrimalIdentity>, backend: Arc<CredentialStoreBackend>) -> Self {
+        Self { identity, backend }
+    }
+
+    /// Create a new secrets handler with an in-memory backend (dev/test convenience).
+    pub fn new_in_memory(identity: Arc<PrimalIdentity>) -> Self {
+        Self::new(identity, Arc::new(CredentialStoreBackend::in_memory()))
     }
 
     /// Derive a per-secret encryption key from family seed + secret name
@@ -152,19 +147,18 @@ impl SecretsHandler {
             .encrypt(&nonce, value.as_bytes())
             .map_err(|e| format!("Encryption failed: {e}"))?;
 
-        // Store the encrypted entry
-        let entry = EncryptedSecret {
-            ciphertext: BASE64.encode(&ciphertext),
-            nonce: BASE64.encode(nonce),
-            stored_at: chrono::Utc::now().to_rfc3339(),
-        };
-
-        self.store.write().insert(name.to_string(), entry);
+        // Store the sealed entry through the credential store backend
+        let sealed = format!("{}:{}", BASE64.encode(nonce), BASE64.encode(&ciphertext),);
+        self.backend
+            .store(name, &sealed)
+            .await
+            .map_err(|e| format!("Backend store failed: {e}"))?;
 
         info!(
-            "🔐 Secret '{}' stored (encrypted, family-scoped: {})",
+            "🔐 Secret '{}' stored (encrypted, family-scoped: {}, backend: {})",
             name,
-            self.identity.family_id()
+            self.identity.family_id(),
+            self.backend.backend_id(),
         );
 
         Ok(serde_json::json!({
@@ -221,7 +215,7 @@ impl SecretsHandler {
     ///
     /// Uses the same HMAC-SHA256 convention as `crypto.derive_purpose_key`:
     /// `purpose_key = HMAC-SHA256(family_seed, hex("purpose-v1:" + purpose))`
-    fn lazy_derive_and_store(&self, name: &str, purpose: &str) -> Result<(), String> {
+    async fn lazy_derive_and_store(&self, name: &str, purpose: &str) -> Result<(), String> {
         let family_seed = Self::load_family_seed()?;
 
         let msg = hex::encode(format!("purpose-v1:{purpose}"));
@@ -238,13 +232,11 @@ impl SecretsHandler {
             .encrypt(&nonce, derived_b64.as_bytes())
             .map_err(|e| format!("Encryption of derived purpose key failed: {e}"))?;
 
-        let entry = EncryptedSecret {
-            ciphertext: BASE64.encode(&ciphertext),
-            nonce: BASE64.encode(nonce),
-            stored_at: chrono::Utc::now().to_rfc3339(),
-        };
-
-        self.store.write().insert(name.to_string(), entry);
+        let sealed = format!("{}:{}", BASE64.encode(nonce), BASE64.encode(&ciphertext));
+        self.backend
+            .store(name, &sealed)
+            .await
+            .map_err(|e| format!("Backend store failed during lazy derivation: {e}"))?;
 
         info!(
             "🔑 Lazy-derived and stored purpose key '{}' for purpose '{}'",
@@ -267,39 +259,37 @@ impl SecretsHandler {
 
         debug!("🔓 secrets.retrieve: decrypting secret '{}'", name);
 
-        // Look up the encrypted entry
-        let entry = {
-            let store = self.store.read();
-            store.get(name).cloned()
-        };
-
-        // Lazy purpose-key derivation: if the secret doesn't exist and matches
-        // the NUCLEUS pattern `nucleus:{family}:purpose:{name}`, derive it from
-        // FAMILY_SEED and auto-store before retrieval.
-        let entry = match entry {
-            Some(e) => e,
-            None => {
+        // Look up the sealed entry from the credential store backend.
+        // If not found and the name matches the NUCLEUS purpose-key pattern,
+        // lazy-derive it from FAMILY_SEED and auto-store before retrieval.
+        let (sealed, stored_at) = match self.backend.retrieve(name).await {
+            Ok((val, meta)) => (val, meta.stored_at),
+            Err(_) => {
                 if let Some(purpose) = Self::parse_nucleus_purpose_key(name) {
-                    self.lazy_derive_and_store(name, purpose)?;
-                    let store = self.store.read();
-                    store
-                        .get(name)
-                        .cloned()
-                        .ok_or_else(|| format!("Secret '{name}' not found after derivation"))?
+                    self.lazy_derive_and_store(name, purpose).await?;
+                    let (val, meta) =
+                        self.backend.retrieve(name).await.map_err(|e| {
+                            format!("Secret '{name}' not found after derivation: {e}")
+                        })?;
+                    (val, meta.stored_at)
                 } else {
                     return Err(format!("Secret '{name}' not found").into());
                 }
             }
         };
 
-        // Decode stored ciphertext and nonce
-        let ciphertext = BASE64
-            .decode(&entry.ciphertext)
-            .map_err(|e| format!("Corrupt ciphertext: {e}"))?;
+        // Decode sealed format: "base64(nonce):base64(ciphertext)"
+        let (nonce_b64, ct_b64) = sealed
+            .split_once(':')
+            .ok_or_else(|| format!("Corrupt sealed format for '{name}'"))?;
 
         let nonce_bytes = BASE64
-            .decode(&entry.nonce)
+            .decode(nonce_b64)
             .map_err(|e| format!("Corrupt nonce: {e}"))?;
+
+        let ciphertext = BASE64
+            .decode(ct_b64)
+            .map_err(|e| format!("Corrupt ciphertext: {e}"))?;
 
         if nonce_bytes.len() != 12 {
             return Err(format!(
@@ -309,12 +299,11 @@ impl SecretsHandler {
             .into());
         }
 
-        // Derive the same per-secret key
+        // Derive the same per-secret key and decrypt
         let key = self.derive_secret_key(name)?;
         let cipher = ChaCha20Poly1305::new(&key.into());
         let nonce = chacha20poly1305::Nonce::from_slice(&nonce_bytes);
 
-        // Decrypt
         let plaintext = cipher
             .decrypt(nonce, ciphertext.as_ref())
             .map_err(|e| format!("Decryption failed (key mismatch or tampering): {e}"))?;
@@ -327,7 +316,7 @@ impl SecretsHandler {
         Ok(serde_json::json!({
             "value": value,
             "name": name,
-            "stored_at": entry.stored_at,
+            "stored_at": stored_at,
             "provider": get_primal_name(),
         }))
     }
@@ -336,8 +325,11 @@ impl SecretsHandler {
     ///
     /// Returns only the key names, never the encrypted values.
     async fn handle_list(&self) -> Result<serde_json::Value, HandlerError> {
-        let store = self.store.read();
-        let names: Vec<&str> = store.keys().map(String::as_str).collect();
+        let names = self
+            .backend
+            .list()
+            .await
+            .map_err(|e| format!("Backend list failed: {e}"))?;
 
         info!("📋 secrets.list: {} secrets stored", names.len());
 
@@ -345,6 +337,7 @@ impl SecretsHandler {
             "secrets": names,
             "count": names.len(),
             "provider": get_primal_name(),
+            "backend": self.backend.backend_id(),
         }))
     }
 
@@ -363,7 +356,11 @@ impl SecretsHandler {
             .and_then(|v| v.as_str())
             .ok_or("Missing 'name' parameter")?;
 
-        let removed = self.store.write().remove(name).is_some();
+        let removed = self
+            .backend
+            .delete(name)
+            .await
+            .map_err(|e| format!("Backend delete failed: {e}"))?;
 
         if removed {
             info!("🗑️ Secret '{}' deleted", name);
@@ -416,7 +413,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_secrets_handler_methods() {
-        let handler = SecretsHandler::new(test_identity());
+        let handler = SecretsHandler::new_in_memory(test_identity());
         let methods = handler.methods();
 
         assert_eq!(methods.len(), 4);
@@ -428,7 +425,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_store_and_retrieve_roundtrip() {
-        let handler = SecretsHandler::new(test_identity());
+        let handler = SecretsHandler::new_in_memory(test_identity());
 
         // Store a secret
         let store_params = serde_json::json!({
@@ -453,7 +450,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_retrieve_nonexistent_secret() {
-        let handler = SecretsHandler::new(test_identity());
+        let handler = SecretsHandler::new_in_memory(test_identity());
 
         let params = serde_json::json!({ "name": "nonexistent" });
         let result = handler.handle_retrieve(Some(&params)).await;
@@ -466,8 +463,8 @@ mod tests {
         // Two handlers with different family IDs
         let family_a = Arc::new(PrimalIdentity::for_test("family-alpha", "node-1"));
         let family_b = Arc::new(PrimalIdentity::for_test("family-bravo", "node-1"));
-        let handler_a = SecretsHandler::new(family_a);
-        let handler_b = SecretsHandler::new(family_b);
+        let handler_a = SecretsHandler::new_in_memory(family_a);
+        let handler_b = SecretsHandler::new_in_memory(family_b);
 
         // Store same secret name in handler_a
         let store_params = serde_json::json!({
@@ -494,7 +491,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_list_secrets() {
-        let handler = SecretsHandler::new(test_identity());
+        let handler = SecretsHandler::new_in_memory(test_identity());
 
         // Store two secrets
         for name in &["key-1", "key-2"] {
@@ -527,7 +524,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_secret() {
-        let handler = SecretsHandler::new(test_identity());
+        let handler = SecretsHandler::new_in_memory(test_identity());
 
         // Store
         let params = serde_json::json!({
@@ -553,7 +550,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_nonexistent() {
-        let handler = SecretsHandler::new(test_identity());
+        let handler = SecretsHandler::new_in_memory(test_identity());
 
         let params = serde_json::json!({ "name": "never-stored" });
         let result = handler.handle_delete(Some(&params)).await;
@@ -568,7 +565,7 @@ mod tests {
     #[serial]
     async fn test_lazy_derive_purpose_key() {
         beardog_errors::process_env::set_var("FAMILY_SEED", "test-lazy-derive-seed-material!");
-        let handler = SecretsHandler::new(test_identity());
+        let handler = SecretsHandler::new_in_memory(test_identity());
 
         // Secret doesn't exist yet — retrieve should lazy-derive it
         let params = serde_json::json!({ "name": "nucleus:test-family:purpose:storage" });
@@ -593,7 +590,7 @@ mod tests {
     #[serial]
     async fn test_lazy_derive_is_deterministic() {
         beardog_errors::process_env::set_var("FAMILY_SEED", "deterministic-lazy-seed!!!!!!!!!");
-        let handler = SecretsHandler::new(test_identity());
+        let handler = SecretsHandler::new_in_memory(test_identity());
 
         let params = serde_json::json!({ "name": "nucleus:test-family:purpose:inference" });
         let r1 = handler.handle_retrieve(Some(&params)).await.expect("r1");
@@ -620,7 +617,7 @@ mod tests {
     async fn test_lazy_derive_without_family_seed_fails() {
         beardog_errors::process_env::remove_var("FAMILY_SEED");
         beardog_errors::process_env::remove_var("BEARDOG_FAMILY_SEED");
-        let handler = SecretsHandler::new(test_identity());
+        let handler = SecretsHandler::new_in_memory(test_identity());
 
         let params = serde_json::json!({ "name": "nucleus:fam:purpose:storage" });
         let result = handler.handle_retrieve(Some(&params)).await;
@@ -630,7 +627,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_non_nucleus_key_not_lazy_derived() {
-        let handler = SecretsHandler::new(test_identity());
+        let handler = SecretsHandler::new_in_memory(test_identity());
 
         // Non-matching pattern should NOT trigger lazy derivation
         let params = serde_json::json!({ "name": "my-regular-secret" });
@@ -665,7 +662,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_overwrite_secret() {
-        let handler = SecretsHandler::new(test_identity());
+        let handler = SecretsHandler::new_in_memory(test_identity());
 
         // Store initial value
         let params = serde_json::json!({

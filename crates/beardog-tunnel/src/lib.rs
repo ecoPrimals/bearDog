@@ -191,6 +191,9 @@ pub mod auth_event_bus;
 // Deterministic protocol routing via intentional signal prefix.
 pub mod ribocipher;
 
+// Credential store backends (Silicon Atheism CredentialStore trait, Wave 150t)
+pub mod credential_store;
+
 #[cfg(test)]
 mod btsp_handshake_tests;
 #[cfg(test)]

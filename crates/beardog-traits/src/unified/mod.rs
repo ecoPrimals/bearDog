@@ -48,7 +48,7 @@ pub mod network;
 pub mod providers;
 /// Policy, trust, and risk interfaces used by security services.
 pub mod security;
-/// Durable and volatile storage contracts.
+/// Durable and volatile storage contracts, including the ecosystem [`CredentialStore`] trait.
 pub mod storage;
 /// Long-running workflow and saga orchestration traits.
 pub mod workflow;
@@ -64,6 +64,7 @@ pub use hsm_multi_credential::{
     PermissionMapper,
 };
 pub use security::{AuditProvider, PolicyEngine};
+pub use storage::{CredentialStore, SecretMetadata};
 
 // Re-export unified provider traits (these replace all scattered provider traits)
 pub use providers::{
