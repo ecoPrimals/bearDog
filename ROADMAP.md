@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: Jul 16, 2026
+**Updated**: Jul 21, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -22,20 +22,20 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 800 lines of code (production)
-- 13,884+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
+- 13,911+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
 - 90.51% line coverage (llvm-cov workspace) — target 90% met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - `#[serial]` minimized — 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent
 - `cargo deny` passes all 4 checks
 - `trust-dns-resolver` → `hickory-resolver`, `bincode` → `postcard`, `validator` 0.20
 - Multi-family socket support (`--family-id` flag)
-- Encrypted secret storage (family-scoped ChaCha20-Poly1305)
+- Encrypted secret storage (family-scoped ChaCha20-Poly1305) + `CredentialStore` trait with in-memory and file-vault backends
 - `discover_capabilities` introspection method
 - Tor v3 onion address derivation + ntor handshake + cell crypto
 - Dark Forest beacon (zero metadata leakage discovery)
 - Universal IPC (Unix sockets, abstract sockets, TCP)
 - Android StrongBox integration (complete)
-- HSM abstraction (software, PKCS#11, StrongBox)
+- HSM abstraction (software, PKCS#11, StrongBox, Windows DPAPI, Linux SecretService)
 - All production `unwrap()`/`expect()` eliminated (zero panic paths)
 - SPDX license headers on all .rs files (100%)
 - ecoBin C-dependency compliance (sysinfo removed, blake3 pure, pprof optional)
@@ -331,9 +331,9 @@ These items are enhancements — nothing is blocking production use.
 
 ~~Stub framework exists~~ — **DONE (Wave 11)**: 14 crypto fault injection tests covering adversarial inputs (malformed base64, wrong key/nonce lengths, corrupted ciphertext/signatures, all-zero/all-ones keys, wrong-length DH secrets) for Blake3, ChaCha20-Poly1305, Ed25519, X25519, and Tor ntor handlers.
 
-### Secret Storage Evolution (when persistent storage primal available)
+### Secret Storage Evolution — DONE (Wave 150t)
 
-Current in-memory storage backend evolves to persistent storage via capability discovery. BearDog discovers any primal offering `storage.store` / `storage.retrieve` at runtime. No code changes needed — the discovery pattern is already implemented.
+`CredentialStore` trait defines `store`/`retrieve`/`list`/`delete` with `SecretMetadata`. Two backends shipped: `InMemoryCredentialStore` (volatile, dev/test) and `FileVaultCredentialStore` (persistent, ChaCha20-Poly1305 + HKDF-SHA256). `SecretsHandler` rewired to `CredentialStoreBackend` enum dispatch. Trait surface aligned with `squirrel` `SecurityProvider` delegation for cross-primal credential storage.
 
 ### Graph Security Phase 2-3 (optional)
 
@@ -363,4 +363,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: Jul 15, 2026 (Wave 141a)
+**Last Updated**: Jul 21, 2026 (Wave 150t)

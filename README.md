@@ -10,7 +10,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 29 | **JSON-RPC Methods**: 229 | **Tests**: 13,884+ | **Coverage**: 90.51% | **Last Updated**: July 18, 2026
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 25 | **JSON-RPC Methods**: 229 | **Tests**: 13,911+ | **Coverage**: 90.51% | **Last Updated**: July 21, 2026
 
 ---
 
@@ -34,10 +34,10 @@ BearDog provides secure cryptographic operations for all primals through the **T
 - **229 JSON-RPC Methods** — Complete crypto API (BTSP handshake-as-a-service, ionic bond lifecycle, contract signing, lineage queries, consent gate, FIDO2/CTAP2 hardware authentication, cross-gate trust exchange)
 - **Tor v3 Support** — Onion address derivation + ntor handshake + cell crypto
 - **Multi-Family Support** — `--family-id` flag for per-family instances
-- **Secret Storage** — Encrypted secrets with family-scoped keys
+- **Secret Storage** — Encrypted secrets with family-scoped keys + `CredentialStore` trait (in-memory, file-vault backends)
 - **Relay Authorization** — Lineage-gated access for relay-assisted coordinated punch
 - **Universal IPC** — Multi-transport, platform-agnostic
-- **HSM Integration** — Hardware, software, mobile backends
+- **HSM Integration** — Software, Windows DPAPI, Linux SecretService, Android StrongBox backends
 - **Dark Forest Beacon** — Zero metadata leakage discovery
 
 ---
@@ -119,7 +119,7 @@ crypto.*       - Hash, sign, verify, encrypt, decrypt, key exchange
 tls.*          - TLS 1.2/1.3 key derivation and handshake
 tor.*          - Onion identity, ntor, cell crypto
 genetic.*      - Lineage keys, beacon, challenge-response
-secrets.*      - Store, retrieve, list, delete encrypted secrets
+secrets.*      - Store, retrieve, list, delete encrypted secrets (CredentialStore backends)
 relay.*        - Lineage-gated relay authorization (coordinated punch)
 beacon.*       - Dark Forest beacon generation, encryption, meeting exchange
 btsp.*         - Secure tunnel configuration (Phase 1–3: handshake, key exchange, encrypted framing with ChaCha20-Poly1305)
@@ -238,8 +238,8 @@ export FAMILY_SEED=my-secret-seed
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
 | **Files > 800 LOC** | 0 (production code) |
-| **Rust files** | 2,110 |
-| **Tests** | 13,884+ (concurrent; 35 `#[serial]` in `beardog-production`) |
+| **Rust files** | 1,952 |
+| **Tests** | 13,911+ (concurrent; 35 `#[serial]` in `beardog-production`) |
 | **Coverage** | 90.51% line (llvm-cov workspace, target 90% met) |
 | **Serial Tests** | 35 (`beardog-production` shared `AtomicBool` state) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |

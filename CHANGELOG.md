@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 21, 2026 -- Wave 150t: CredentialStore Trait + Cleanup
+
+#### CredentialStore Trait (Wave 150t)
+- **`CredentialStore` trait** defined in `beardog-traits::unified::storage` — `store`, `retrieve`, `list`, `delete` async methods with `SecretMetadata` timestamps
+- **`InMemoryCredentialStore`** — volatile backend for dev/test (parking_lot `RwLock`)
+- **`FileVaultCredentialStore`** — persistent encrypted backend (ChaCha20-Poly1305 + HKDF-SHA256, atomic writes)
+- **`CredentialStoreBackend`** enum dispatch (Silicon Atheism pattern: `InMemory` | `FileVault`)
+- **`SecretsHandler` rewired** — now uses `CredentialStoreBackend` for underlying storage while retaining family-scoped HKDF encryption/decryption
+- Cross-primal alignment: trait surface designed for `squirrel` `SecurityProvider` delegation
+
+#### Documentation + Infra Cleanup (Wave 150t)
+- Root docs refreshed to Wave 150t (README, STATUS, CHANGELOG, ROADMAP)
+- `STATUS.md` trimmed — historical wave log (Waves 5–131) moved to CHANGELOG fossil record; STATUS now shows only recent ~10 waves
+- `infra/wateringHole/` handoffs updated with current platform status
+- `cargo clean` reclaimed 30G
+
 ### July 18, 2026 -- Wave 149b: HSM Platform Backend Abstraction + Crypto Handoff
 
 #### HSM Platform Backend Abstraction (Wave 145a)
