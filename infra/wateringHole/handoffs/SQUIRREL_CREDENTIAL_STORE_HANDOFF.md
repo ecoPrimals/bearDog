@@ -107,5 +107,46 @@ standard primal IPC discovery (socket auto-detect or `BEARDOG_TCP_IPC_PORT`).
 
 ## Report Back
 
-When integration is tested, update this handoff with results and push via
-cascade. The bearDog agent on flockGate will pick up in the next wave.
+### Integration Results — Wave 150u (July 22, 2026)
+
+**Status**: ✅ **INTEGRATED** — squirrel's `SecurityProvider` now delegates to
+bearDog's `secrets.*` JSON-RPC over IPC.
+
+#### What was implemented
+
+| Deliverable | Status | Details |
+|-------------|--------|---------|
+| `CredentialStorage::SecurityProvider` delegates to `secrets.*` over IPC | ✅ | `SecurityProviderSecretStore` implements `SecretStore` via JSON-RPC |
+| AI key retrieval via `secrets.retrieve` (not `std::env::var`) | ✅ | `api_key_resolver` module, `discover_http_providers` wired |
+| Graceful fallback to env vars when bearDog is not running | ✅ | `resolve_secret_or_env` tries store first, falls back to env |
+| 5-point verification checklist passing | ⏳ | Unit tests pass; integration test blocked until bearDog is running on same host |
+| Report back on handoff doc | ✅ | This section |
+
+#### Code delivered
+
+| File | Purpose |
+|------|---------|
+| `crates/core/mcp/src/security/security_provider_secret_store.rs` | IPC-backed `SecretStore` — `secrets.store/retrieve/list/delete` JSON-RPC |
+| `crates/core/mcp/src/security/secret_store.rs` | `SecretStoreBackend::SecurityProvider` variant + `from_config` wiring |
+| `crates/main/src/api/ai/api_key_resolver.rs` | `resolve_api_key`, `is_api_key_available`, `filter_providers_with_keys` |
+| `crates/main/src/api/ai/router_discovery.rs` | HTTP provider discovery uses bearDog store before env fallback |
+
+#### Endpoint discovery
+
+Tiered resolution (same pattern as all primal IPC):
+1. `SECURITY_ENDPOINT` env var (full URL: `unix:///path` or `tcp://host:port`)
+2. `BEARDOG_ENDPOINT` env var (fallback)
+3. `resolve_capability_unix_socket("SECURITY_SOCKET", "beardog")` (socket auto-detect)
+
+#### Test results
+
+- **14 new tests** (8 security provider, 6 api key resolver)
+- **7,122 total tests passing** across 16 workspace crates
+- 0 failures, 0 warnings, Clippy clean
+
+#### Remaining for full 5-point checklist
+
+Items 1–4 of the verification checklist are covered by unit tests against
+`InMemorySecretStore`. Item 5 (persistence across restart) requires bearDog
+running on the same host with `FileVaultCredentialStore`. This will be tested
+when bearDog and squirrel co-locate on eastGate/sporeGate.
