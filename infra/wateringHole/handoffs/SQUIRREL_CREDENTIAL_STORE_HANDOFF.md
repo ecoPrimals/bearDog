@@ -2,17 +2,18 @@
 
 **From**: bearDog (flockGate)
 **To**: squirrel team
-**Date**: July 21, 2026
-**Wave**: 150t
+**Date**: July 22, 2026
+**Wave**: 150u
 **Priority**: P1 (cross-primal credential storage)
 
 ---
 
 ## Context
 
-bearDog has shipped the `CredentialStore` trait and two backends as of Wave 150t.
+bearDog has shipped the `CredentialStore` trait and three backends as of Wave 150u.
 This enables squirrel's `SecurityProvider` to delegate secret storage to bearDog
-over the existing `secrets.*` JSON-RPC interface.
+over the existing `secrets.*` JSON-RPC interface. The Android Keystore backend
+(Wave 150u) extends coverage to grapheneGate hardware.
 
 ### What bearDog Provides
 
@@ -21,6 +22,7 @@ over the existing `secrets.*` JSON-RPC interface.
 | `CredentialStore` trait | `beardog-traits::unified::storage` | `store`, `retrieve`, `list`, `delete` async API with `SecretMetadata` |
 | `InMemoryCredentialStore` | `beardog-tunnel::credential_store::in_memory` | Volatile backend (dev/test) |
 | `FileVaultCredentialStore` | `beardog-tunnel::credential_store::file_vault` | Persistent encrypted backend (ChaCha20-Poly1305 + HKDF-SHA256) |
+| `AndroidKeystoreCredentialStore` | `beardog-tunnel::credential_store::android_keystore` | Android TEE/StrongBox master key (Wave 150u) |
 | `CredentialStoreBackend` | `beardog-tunnel::credential_store::backend` | Enum dispatch (Silicon Atheism pattern) |
 | `secrets.*` JSON-RPC | IPC handlers | Wire-level API for cross-primal access |
 

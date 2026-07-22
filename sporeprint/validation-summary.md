@@ -1,7 +1,7 @@
 +++
 title = "bearDog Validation Summary"
-description = "Zero-trust sovereign cryptographic orchestrator — 13,884+ tests, 29 crates, 229 IPC methods, ACME auto-cert, FIDO2/CTAP2, BTSP cross-gate trust"
-date = 2026-07-16
+description = "Zero-trust sovereign cryptographic orchestrator — 13,929+ tests, 25 crates, 230 IPC methods, ACME auto-cert, FIDO2/CTAP2, BTSP cross-gate trust, CredentialStore"
+date = 2026-07-22
 
 [taxonomies]
 primals = ["beardog"]
@@ -10,9 +10,9 @@ springs = []
 
 ## Status
 
-- **13,884+ tests** passing (workspace), 0 failures
-- **29 crates** in workspace
-- **229 JSON-RPC methods** — 217 registry + 12 pre-dispatch gate (see `docs/PRIMAL_CONTRACTS.md` v4.1.0)
+- **13,929+ tests** passing (workspace), 0 failures
+- **25 crates** in workspace
+- **230 JSON-RPC methods** — 218 registry + 12 pre-dispatch gate (see `docs/PRIMAL_CONTRACTS.md` v4.1.0)
 - **v0.9.0** — edition 2024, MSRV 1.93.0
 - **Pure Rust** — 100% (zero C dependencies), `forbid(unsafe_code)` workspace-wide
 - **Clippy** — pedantic + nursery + cast lints + `doc_markdown` + `missing_errors_doc` + unwrap/expect warn

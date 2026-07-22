@@ -37,7 +37,7 @@ BearDog exposes its cryptographic and genetic capabilities through a JSON-RPC 2.
 
 ## 📚 **API CATEGORIES**
 
-BearDog provides **229 dispatchable JSON-RPC methods** (217 via `HandlerRegistry` + 12 pre-dispatch gate methods) organized into 18 handler categories, plus 13 route aliases for backward compatibility.
+BearDog provides **230 dispatchable JSON-RPC methods** (218 via `HandlerRegistry` + 12 pre-dispatch gate methods) organized into 18 handler categories, plus 13 route aliases for backward compatibility.
 
 > **SSOT**: Call `rpc.methods` or `capabilities.list` for the live method inventory.
 
@@ -1582,7 +1582,7 @@ Plus 12 additional security/consent/birdsong methods (call `rpc.methods` for ful
 
 ### **Summary**
 
-**217 registry methods** + **12 pre-dispatch gate methods** = **229 dispatchable method names**, plus **13 route aliases** for backward compatibility. The `CryptoHandler` alone registers 108 methods across signatures, encryption, hashing, KDF, TLS, genetic, Tor, and semantic alias surfaces.
+**218 registry methods** + **12 pre-dispatch gate methods** = **230 dispatchable method names**, plus **13 route aliases** for backward compatibility. The `CryptoHandler` alone registers 108 methods across signatures, encryption, hashing, KDF, TLS, genetic, Tor, and semantic alias surfaces; `BtspHandler` registers 38 methods including `enrollment.verify`.
 
 ═══════════════════════════════════════════════════════════════════
 

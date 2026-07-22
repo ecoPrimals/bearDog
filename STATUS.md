@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 22, 2026 (Wave 150u)
+**Last Updated**: July 22, 2026 (Wave 150u — deep evolution)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant; 2 monoliths refactored Wave 119 (server.rs→7 files, orchestrator.rs→10 files) |
-| **Tests** | 13,911+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 13,929+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | all 4 pass | 2 advisory ignores (RSA Marvin, `paste`); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned; TLS backend is Pure Rust `rustls-rustcrypto` |
@@ -34,8 +34,8 @@
 ## Codebase Metrics
 
 - **Crates**: 25 workspace members
-- **Rust Files**: 1,952 (crates + src + tests; excludes showcase/examples)
-- **JSON-RPC Methods**: 229 dispatchable (217 registry + 12 pre-dispatch gate) — see `docs/PRIMAL_CONTRACTS.md` v4.1.0 for category breakdown
+- **Rust Files**: 1,949 (crates + src + tests; excludes showcase/examples)
+- **JSON-RPC Methods**: 230 dispatchable (218 registry + 12 pre-dispatch gate) — see `docs/PRIMAL_CONTRACTS.md` v4.1.0 for category breakdown
 - **`#[allow(`**: 81 (was 86; all carry `reason`)
 - **`#[expect(`**: 644 (was 646; 2 stale removed)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
@@ -90,13 +90,13 @@
 
 ## Recent Improvements
 
-### Wave 150u — Android Keystore + enrollment.verify (Jul 22, 2026)
+### Wave 150u — Deep Evolution + Tower Atomic Alignment (Jul 22, 2026)
 
 - **`AndroidKeystoreCredentialStore`** — `CredentialStore` trait impl with TEE/StrongBox master key, `#[cfg(target_os = "android")]` gated
 - **`CredentialStoreBackend::AndroidKeystore`** variant in Silicon Atheism enum dispatch
-- **`enrollment.verify`** JSON-RPC endpoint — HMAC-SHA256 proof verification for mesh enrollment (Tower Atomic parity P1)
-- **`EnrollmentVerifyParams`/`EnrollmentVerifyResponse`** types in `beardog-types::btsp`
-- eastGate handoff updated with 13-check CredentialStore validation checklist
+- **`enrollment.verify`** JSON-RPC endpoint (method 230) — HMAC-SHA256 proof verification for mesh enrollment (Tower Atomic parity P1)
+- **Deep evolution pass**: Removed hardcoded port 7780 from gateway.rs (capability-based discovery); evolved `PerformanceAnalyzer` from no-op to real statistical analysis with anomaly detection; clone reduction in `key_management/store.rs`; updated yanked deps (`spin`, `crypto-bigint`); removed dead `ed448-goldilocks` dependency; documented DPAPI unsafe FFI safety invariants
+- **Crypto throughput benchmark** — ChaCha20-Poly1305, AES-256-GCM, Ed25519, X25519, HKDF, HMAC at 64B–1MB payloads (Tower Atomic parity P2)
 
 ### Wave 150t — CredentialStore Trait + Cleanup (Jul 21, 2026)
 
@@ -149,7 +149,7 @@
 - **HTTPS gateway on :443** — TLS-terminating reverse proxy in `beardog-cli/src/handlers/server/gateway.rs`; uses `HotReloadAcceptor` for atomic cert swap; bidirectional TCP forwarding to configurable upstream.
 - **HTTP-01 solver spawned** — `Http01Solver::serve()` as background task; unblocks Let's Encrypt domain validation.
 - **Full ACME supervisor** — `start_acme_gateway()` orchestrates solver + initial issuance + hot-reload bootstrap + renewal daemon in single startup.
-- **`BEARDOG_GATEWAY_UPSTREAM`** — new env key for upstream target (`host:port` or `unix:/path`); default `127.0.0.1:7700` (songBird).
+- **`BEARDOG_GATEWAY_UPSTREAM`** — env key for upstream target (`host:port` or `unix:/path`); no default — explicit configuration required (primal isolation).
 - **Env**: `BEARDOG_TLS_MODE=acme` activates full gateway; `BEARDOG_HTTPS_PORT` configures bind port (default 443).
 
 ### Wave 132 — AI Type Migration, Mobile Feature Gate (Jun 3, 2026)

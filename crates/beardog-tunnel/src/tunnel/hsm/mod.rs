@@ -61,8 +61,6 @@ pub mod native_device_detection;
 
 // Key management
 pub mod human_entropy_unified;
-/// Key lifecycle management (reserved for HSM key rotation / revocation API)
-mod key_manager;
 
 // Performance and health
 pub mod failover;

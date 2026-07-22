@@ -100,11 +100,6 @@ pub mod categories;
 /// Convenient constructor functions for creating domain-specific errors.
 pub mod constructors_unified;
 
-/// Idiomatic Rust error handling patterns
-///
-/// Extension traits and helpers for idiomatic error handling in Rust.
-pub mod idiomatic;
-
 /// Result/option validation extension traits (additional context helpers).
 #[expect(
     missing_docs,

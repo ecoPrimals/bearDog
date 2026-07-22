@@ -10,7 +10,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 25 | **JSON-RPC Methods**: 229 | **Tests**: 13,911+ | **Coverage**: 90.51% | **Last Updated**: July 22, 2026
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 25 | **JSON-RPC Methods**: 230 | **Tests**: 13,929+ | **Coverage**: 90.51% | **Last Updated**: July 22, 2026
 
 ---
 
@@ -31,7 +31,7 @@ BearDog provides secure cryptographic operations for all primals through the **T
 - **100% Pure Rust** — Zero C dependencies (RustCrypto suite, postcard, mdns-sd for LAN discovery)
 - **Rust 2024 Edition** — Modern idioms, MSRV 1.93.0
 - **Fully Concurrent** — Dependency injection architecture, no global mutable state
-- **229 JSON-RPC Methods** — Complete crypto API (BTSP handshake-as-a-service, ionic bond lifecycle, contract signing, lineage queries, consent gate, FIDO2/CTAP2 hardware authentication, cross-gate trust exchange)
+- **230 JSON-RPC Methods** — Complete crypto API (BTSP handshake-as-a-service, ionic bond lifecycle, contract signing, lineage queries, consent gate, FIDO2/CTAP2 hardware authentication, cross-gate trust exchange, enrollment verification)
 - **Tor v3 Support** — Onion address derivation + ntor handshake + cell crypto
 - **Multi-Family Support** — `--family-id` flag for per-family instances
 - **Secret Storage** — Encrypted secrets with family-scoped keys + `CredentialStore` trait (in-memory, file-vault backends)
@@ -238,8 +238,8 @@ export FAMILY_SEED=my-secret-seed
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
 | **Files > 800 LOC** | 0 (production code) |
-| **Rust files** | 1,952 |
-| **Tests** | 13,911+ (concurrent; 35 `#[serial]` in `beardog-production`) |
+| **Rust files** | 1,949 |
+| **Tests** | 13,929+ (concurrent; 35 `#[serial]` in `beardog-production`) |
 | **Coverage** | 90.51% line (llvm-cov workspace, target 90% met) |
 | **Serial Tests** | 35 (`beardog-production` shared `AtomicBool` state) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |

@@ -116,7 +116,7 @@ Older cross-team drafts that previously appeared under paths like `otherTeams/` 
 
 ---
 
-## Current JSON-RPC Methods (229)
+## Current JSON-RPC Methods (230)
 
 | Category | Methods | Examples |
 |----------|---------|---------|

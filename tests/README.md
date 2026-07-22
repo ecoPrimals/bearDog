@@ -1,6 +1,6 @@
 # BearDog Test Suite
 
-**Last Updated**: March 24, 2026
+**Last Updated**: July 22, 2026
 **Total tests**: See **[STATUS.md](../STATUS.md)** for the current passing count (authoritative).
 **Coverage**: See **[STATUS.md](../STATUS.md)** — measured via `cargo llvm-cov --workspace`
 
