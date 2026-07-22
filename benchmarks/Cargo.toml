@@ -24,6 +24,10 @@ harness = false
 name = "production_workload_benchmarks"
 harness = false
 
+[[bench]]
+name = "crypto_throughput"
+harness = false
+
 [lints]
 workspace = true
 
@@ -33,6 +37,14 @@ beardog-errors = { workspace = true }
 beardog-security = { workspace = true }
 beardog-types = { workspace = true }
 beardog-utils = { workspace = true }
+chacha20poly1305 = { workspace = true }
+aes-gcm = { workspace = true }
+ed25519-dalek = { workspace = true }
+x25519-dalek = { workspace = true }
+hkdf = { workspace = true }
+hmac = { workspace = true }
+sha2 = { workspace = true }
+rand = { workspace = true }
 criterion = { workspace = true }
 # Optional: pprof links to C (libc); default build is ecoBin-compliant
 pprof = { version = "0.13", features = ["criterion", "flamegraph"], optional = true }

@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 22, 2026 -- Wave 150u: Deep Evolution + Tower Atomic Alignment
+
+#### Deep Debt Evolution
+- **Dependency cleanup**: Updated yanked `spin` (0.9.8→0.9.9) and `crypto-bigint` (0.7.3→0.7.5); removed dead `ed448-goldilocks` dependency (handlers are stubs, crate unused)
+- **Gateway hardcoding removed**: `gateway.rs` no longer hardcodes port 7780 — requires explicit `BEARDOG_GATEWAY_UPSTREAM` or `BEARDOG_GATEWAY_UPSTREAM_PORT` env var (primal isolation)
+- **PerformanceAnalyzer evolved**: No-op placeholder → real statistical analysis (min/max/mean/stddev, anomaly detection with configurable threshold); wired into `AdvancedMetricsSystem` to emit `AnomalyDetected` events
+- **Clone reduction**: `key_management/store.rs` — reduced redundant `key_id.clone()` calls in `generate_signing_key`, `generate_symmetric_key`, `import_signing_key`
+- **DPAPI safety documented**: Windows DPAPI unsafe FFI blocks annotated with safety invariants for `CryptProtectData`/`CryptUnprotectData`
+- **enrollment.verify wire contract aligned**: Params updated from `{node_id, family_id, enrollment_data, enrollment_proof}` to songBird format `{node_id, public_key, timestamp, proof}`; response `{verified, reason?}`; HMAC keyed by `FAMILY_SEED` from env
+- **BTSP method count updated**: 37→38 methods (added `enrollment.verify`)
+
+#### Crypto Throughput Benchmark (Wave 150u — Tower Atomic Parity P2)
+- New `crypto_throughput` criterion benchmark in `benchmarks/benches/crypto_throughput.rs`
+- Measures real encrypt/decrypt throughput for parity assessment vs WireGuard
+- ChaCha20-Poly1305 (encrypt, decrypt, roundtrip) at 64B–1MB payloads
+- AES-256-GCM (encrypt, decrypt) at 64B–1MB for comparison
+- Ed25519 sign/verify, X25519 DH, HKDF-SHA256 derivation, HMAC-SHA256
+- Run: `cargo bench --bench crypto_throughput -p benchmarks`
+
 ### July 22, 2026 -- Wave 150u: Android Keystore + enrollment.verify
 
 #### Android Keystore CredentialStore Backend (Wave 150u)
@@ -18,10 +37,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - eastGate handoff updated with CredentialStore validation checklist (13 checks across HSM + secrets layers)
 
 #### `enrollment.verify` Endpoint (Wave 150u — Tower Atomic Parity)
-- New `enrollment.verify` JSON-RPC method on BTSP handler — verifies HMAC-SHA256 proofs from mesh enrollment
-- `EnrollmentVerifyParams` / `EnrollmentVerifyResponse` types in `beardog-types::btsp`
-- HKDF-derived per-node enrollment keys, constant-time comparison
-- 7 new tests (key derivation determinism, family/node isolation, valid/invalid proof roundtrip)
+- New `enrollment.verify` JSON-RPC method on BTSP handler — verifies HMAC-SHA256 proofs from `mesh.enroll`
+- Wire contract aligned to songBird convergence brief: `{node_id, public_key, timestamp, proof}` params, `{verified, reason?}` response
+- HMAC message: `node_id || "|" || public_key || "|" || timestamp`, keyed by `FAMILY_SEED` from env
+- Constant-time comparison via `subtle::ConstantTimeEq`
+- 6 tests (HMAC determinism, message format, valid/invalid proof, missing seed)
+
+#### Crypto Throughput Benchmark (Wave 150u — Tower Atomic Parity P2)
+- New `crypto_throughput` criterion benchmark in `benchmarks/benches/crypto_throughput.rs`
+- Measures real encrypt/decrypt throughput for parity assessment vs WireGuard
+- ChaCha20-Poly1305 (encrypt, decrypt, roundtrip) at 64B–1MB payloads
+- AES-256-GCM (encrypt, decrypt) at 64B–1MB for comparison
+- Ed25519 sign/verify, X25519 DH, HKDF-SHA256 derivation, HMAC-SHA256
+- Run: `cargo bench --bench crypto_throughput -p benchmarks`
 
 ### July 21, 2026 -- Wave 150t: CredentialStore Trait + Cleanup
 

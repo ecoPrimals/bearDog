@@ -44,7 +44,7 @@ ed25519-dalek = { workspace = true }
 p256 = { workspace = true, features = ["ecdsa", "ecdh", "pem"] }  # ECDSA + ECDH for TLS 1.3
 p384 = { workspace = true, features = ["ecdsa", "ecdh"] }  # ECDSA + ECDH P-384 (Phase 6 - TLS 1.3)
 # p521 removed: rand_core version conflict, < 1% usage, will add when stable
-ed448-goldilocks = { workspace = true }  # Ed448 signatures (Phase 3 - TLS 1.3)
+# ed448-goldilocks removed: handlers are stubs, crate unused — re-add when Phase 3 activates
 rsa = { workspace = true }  # RSA signatures (Phase 4 - TLS 1.3 legacy)
 ecdsa = { workspace = true }
 rand = { workspace = true }

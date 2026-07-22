@@ -61,7 +61,7 @@ impl KeyStore {
     ) {
         let mut inner = self.inner.write().await;
         inner.symmetric_keys.insert(key_id.clone(), key_bytes);
-        inner.metadata.insert(key_id, metadata);
+        inner.metadata.insert(key_id, metadata); // key_id consumed here
     }
 
     /// Generate a new Ed25519 signing key
@@ -91,6 +91,7 @@ impl KeyStore {
         let verifying_key = signing_key.verifying_key();
         let public_key_bytes = verifying_key.to_bytes().to_vec();
 
+        let needs_persist = matches!(&storage, KeyStorage::File(_));
         let metadata = KeyMetadata {
             key_id: key_id.clone(),
             key_type: KeyType::Ed25519,
@@ -101,15 +102,14 @@ impl KeyStore {
             description,
         };
 
-        let persist_id = matches!(&metadata.storage, KeyStorage::File(_)).then(|| key_id.clone());
         let mut inner = self.inner.write().await;
         inner.signing_keys.insert(key_id.clone(), signing_key);
         inner.verifying_keys.insert(key_id.clone(), verifying_key);
-        inner.metadata.insert(key_id, metadata);
+        inner.metadata.insert(key_id.clone(), metadata);
         drop(inner);
 
-        if let Some(pid) = persist_id {
-            self.persist_signing_key_inner(&pid).await?;
+        if needs_persist {
+            self.persist_signing_key_inner(&key_id).await?;
         }
 
         Ok(public_key_bytes)
@@ -147,14 +147,14 @@ impl KeyStore {
             description,
         };
 
-        let persist_id = matches!(&metadata.storage, KeyStorage::File(_)).then(|| key_id.clone());
+        let needs_persist = matches!(&metadata.storage, KeyStorage::File(_));
         let mut inner = self.inner.write().await;
         inner.symmetric_keys.insert(key_id.clone(), key_bytes);
-        inner.metadata.insert(key_id, metadata);
+        inner.metadata.insert(key_id.clone(), metadata);
         drop(inner);
 
-        if let Some(pid) = persist_id {
-            self.persist_symmetric_key_inner(&pid).await?;
+        if needs_persist {
+            self.persist_symmetric_key_inner(&key_id).await?;
         }
 
         Ok(())
@@ -187,6 +187,7 @@ impl KeyStore {
         );
         let verifying_key = signing_key.verifying_key();
 
+        let needs_persist = matches!(&storage, KeyStorage::File(_));
         let metadata = KeyMetadata {
             key_id: key_id.clone(),
             key_type: KeyType::Ed25519,
@@ -197,15 +198,14 @@ impl KeyStore {
             description,
         };
 
-        let persist_id = matches!(&metadata.storage, KeyStorage::File(_)).then(|| key_id.clone());
         let mut inner = self.inner.write().await;
         inner.signing_keys.insert(key_id.clone(), signing_key);
         inner.verifying_keys.insert(key_id.clone(), verifying_key);
-        inner.metadata.insert(key_id, metadata);
+        inner.metadata.insert(key_id.clone(), metadata);
         drop(inner);
 
-        if let Some(pid) = persist_id {
-            self.persist_signing_key_inner(&pid).await?;
+        if needs_persist {
+            self.persist_signing_key_inner(&key_id).await?;
         }
 
         Ok(())

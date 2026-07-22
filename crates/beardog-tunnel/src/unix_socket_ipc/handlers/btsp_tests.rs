@@ -13,8 +13,9 @@ async fn test_btsp_handler_methods() {
     // - 5 server methods (create_session, verify, export_keys, negotiate, status) = 5
     // - 1 Phase 3 method (btsp.negotiate) = 1
     // - 3 legacy session aliases (session.create, session.verify, session.negotiate) = 3
-    // Total = 37 methods
-    assert_eq!(methods.len(), 37);
+    // - 1 Tower Atomic method (enrollment.verify) = 1
+    // Total = 38 methods
+    assert_eq!(methods.len(), 38);
 
     // Semantic domain.operation names (primary in registry)
     assert!(methods.contains(&"btsp.contact.exchange"));
@@ -44,6 +45,9 @@ async fn test_btsp_handler_methods() {
     assert!(methods.contains(&"btsp.session.create"));
     assert!(methods.contains(&"btsp.session.verify"));
     assert!(methods.contains(&"btsp.session.negotiate"));
+
+    // Tower Atomic enrollment
+    assert!(methods.contains(&"enrollment.verify"));
 }
 
 // Note: Full integration tests require a working BTSP provider

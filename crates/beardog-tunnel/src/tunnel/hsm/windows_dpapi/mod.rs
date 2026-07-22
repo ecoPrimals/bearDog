@@ -79,8 +79,18 @@ impl WindowsDpapiHsm {
         }
     }
 
-    /// Encrypt raw key material with DPAPI (Windows) or return an error
-    /// on unsupported platforms.
+    /// Encrypt raw key material with DPAPI (Windows).
+    ///
+    /// # Safety invariants (for `unsafe` FFI blocks below)
+    ///
+    /// - `input.pbData` points to a valid, live `plaintext` slice for the duration of the call.
+    /// - `output.pbData` is set by `CryptProtectData` on success; we copy its contents
+    ///   into a `Vec<u8>` immediately and free via `LocalFree` before returning.
+    /// - `from_raw_parts` reads exactly `output.cbData` bytes from `output.pbData`,
+    ///   which is the contract documented by the Windows API.
+    ///
+    /// When cross-compiling for Windows, `#![forbid(unsafe_code)]` in `lib.rs` must
+    /// be relaxed for this module (e.g. `#[allow(unsafe_code)]` on the containing mod).
     #[cfg(windows)]
     fn dpapi_protect(plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
         use std::ptr;
@@ -119,6 +129,10 @@ impl WindowsDpapiHsm {
     }
 
     /// Decrypt a DPAPI-protected blob back to plaintext key material.
+    ///
+    /// Same safety invariants as [`dpapi_protect`] — `output.pbData` is valid
+    /// for `output.cbData` bytes after a successful `CryptUnprotectData` call,
+    /// copied immediately, and freed via `LocalFree`.
     #[cfg(windows)]
     fn dpapi_unprotect(protected: &[u8]) -> Result<Vec<u8>, BearDogError> {
         use std::ptr;

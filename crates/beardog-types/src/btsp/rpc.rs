@@ -390,33 +390,31 @@ pub struct SessionExportKeysResponse {
     pub cipher: String,
 }
 
-/// Parameters for `enrollment.verify` — verify an HMAC proof from mesh enrollment.
+/// Parameters for `enrollment.verify` — verify an HMAC proof from `mesh.enroll`.
 ///
-/// During `mesh.enroll`, the enrolling node produces an HMAC-SHA256 tag over
-/// its enrollment data using the family seed. `enrollment.verify` lets the
-/// orchestrating primal (songBird) delegate proof verification to bearDog.
+/// songBird sends the structured enrollment fields; bearDog reconstructs the
+/// HMAC message as `node_id || "|" || public_key || "|" || timestamp` and
+/// verifies the proof against `FAMILY_SEED`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnrollmentVerifyParams {
-    /// The enrolling node's identifier (e.g. `"sporeGate"`).
+    /// The enrolling node's identifier (e.g. `"southGate"`).
     pub node_id: String,
-    /// The family the node claims to belong to.
-    pub family_id: String,
-    /// Base64-encoded enrollment data that was signed.
-    pub enrollment_data: String,
-    /// Base64-encoded HMAC-SHA256 proof over `enrollment_data`.
-    pub enrollment_proof: String,
+    /// The enrolling node's public key (`WireGuard` or Ed25519, as string).
+    pub public_key: String,
+    /// Unix timestamp (seconds) when the enrollment was initiated.
+    pub timestamp: u64,
+    /// Base64-encoded HMAC-SHA256 proof over `node_id|public_key|timestamp`.
+    pub proof: String,
 }
 
 /// Response from `enrollment.verify`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnrollmentVerifyResponse {
     /// Whether the HMAC proof is valid.
-    pub valid: bool,
-    /// The algorithm used for verification.
-    pub algorithm: String,
-    /// Human-readable error if `valid` is `false`.
+    pub verified: bool,
+    /// Human-readable reason if `verified` is `false`.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub error: Option<String>,
+    pub reason: Option<String>,
 }
 
 fn default_cipher() -> String {

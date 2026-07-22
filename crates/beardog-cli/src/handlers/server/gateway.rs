@@ -4,12 +4,16 @@
 //!
 //! Accepts TLS connections on `:443` using ACME-managed certificates via
 //! [`HotReloadAcceptor`], then forwards decrypted HTTP traffic to the
-//! configured upstream (songBird `http.proxy` by default).
+//! configured upstream.
 //!
-//! The upstream is resolved from `BEARDOG_GATEWAY_UPSTREAM`:
-//! - `host:port` — TCP upstream (e.g., `127.0.0.1:7780`)
-//! - `unix:/path/to/socket` — Unix domain socket
-//! - absent — default `127.0.0.1:7780` (songBird drawbridge HTTP listener)
+//! Upstream resolution (precedence order):
+//! 1. `BEARDOG_GATEWAY_UPSTREAM` env var (`host:port` or `unix:/path`)
+//! 2. `BEARDOG_GATEWAY_UPSTREAM_PORT` env var (localhost on that port)
+//! 3. Error — no hardcoded defaults. The upstream must be explicitly
+//!    configured or discovered at runtime.
+//!
+//! **Primal isolation**: bearDog has no compile-time knowledge of which
+//! primal provides the upstream HTTP proxy. The operator configures it.
 
 use beardog_acme::HotReloadAcceptor;
 use beardog_config::env_keys;
@@ -20,44 +24,56 @@ use tokio::io::AsyncWriteExt;
 use tokio::net::TcpListener;
 use tracing::{debug, info, warn};
 
-fn resolve_upstream() -> TransportEndpoint {
-    match std::env::var(env_keys::ENV_GATEWAY_UPSTREAM) {
-        Ok(val) if val.starts_with("unix:") => {
+/// Env var for specifying only the upstream port (localhost assumed).
+const ENV_GATEWAY_UPSTREAM_PORT: &str = "BEARDOG_GATEWAY_UPSTREAM_PORT";
+
+fn resolve_upstream() -> Result<TransportEndpoint, BearDogError> {
+    if let Ok(val) = std::env::var(env_keys::ENV_GATEWAY_UPSTREAM) {
+        if val.starts_with("unix:") {
             let path = val.strip_prefix("unix:").unwrap_or(&val);
             #[cfg(unix)]
             {
-                TransportEndpoint::Uds {
+                return Ok(TransportEndpoint::Uds {
                     path: PathBuf::from(path),
-                }
+                });
             }
             #[cfg(not(unix))]
             {
-                warn!(upstream = %val, "unix: upstream not supported on this platform, falling back to TCP");
-                TransportEndpoint::Tcp {
-                    host: "127.0.0.1".to_string(),
-                    port: 7780,
-                }
+                return Err(BearDogError::system(format!(
+                    "unix: upstream not supported on this platform: {val}"
+                )));
             }
         }
-        Ok(val) if !val.is_empty() => {
+
+        if !val.is_empty() {
             if let Some((host, port_str)) = val.rsplit_once(':')
                 && let Ok(port) = port_str.parse::<u16>()
             {
-                return TransportEndpoint::Tcp {
+                return Ok(TransportEndpoint::Tcp {
                     host: host.to_string(),
                     port,
-                };
+                });
             }
-            TransportEndpoint::Tcp {
-                host: val,
-                port: 7780,
-            }
+            return Err(BearDogError::system(format!(
+                "BEARDOG_GATEWAY_UPSTREAM must be host:port or unix:/path, got: {val}"
+            )));
         }
-        _ => TransportEndpoint::Tcp {
-            host: "127.0.0.1".to_string(),
-            port: 7780,
-        },
     }
+
+    if let Ok(port_str) = std::env::var(ENV_GATEWAY_UPSTREAM_PORT)
+        && let Ok(port) = port_str.parse::<u16>()
+    {
+        return Ok(TransportEndpoint::Tcp {
+            host: "127.0.0.1".to_string(),
+            port,
+        });
+    }
+
+    Err(BearDogError::system(
+        "Gateway upstream not configured: set BEARDOG_GATEWAY_UPSTREAM (host:port or unix:/path) \
+         or BEARDOG_GATEWAY_UPSTREAM_PORT"
+            .to_string(),
+    ))
 }
 
 /// Start the HTTPS gateway on the given port using ACME-managed certificates.
@@ -76,7 +92,7 @@ pub async fn serve_https_gateway(
         .await
         .map_err(|e| BearDogError::system(format!("HTTPS gateway bind {addr}: {e}")))?;
 
-    let upstream = resolve_upstream();
+    let upstream = resolve_upstream()?;
     info!(port = bind_port, upstream = %upstream, "HTTPS gateway listening (ACME TLS → upstream)");
 
     loop {

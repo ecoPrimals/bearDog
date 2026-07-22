@@ -57,12 +57,10 @@ impl CredentialStoreBackend {
     ///
     /// Returns [`BearDogError`] if Android Keystore is not available or the
     /// vault directory cannot be created.
-    pub fn android_keystore(
-        vault_dir: std::path::PathBuf,
-    ) -> Result<Self, BearDogError> {
-        Ok(Self::AndroidKeystore(
-            AndroidKeystoreCredentialStore::new(vault_dir)?,
-        ))
+    pub fn android_keystore(vault_dir: std::path::PathBuf) -> Result<Self, BearDogError> {
+        Ok(Self::AndroidKeystore(AndroidKeystoreCredentialStore::new(
+            vault_dir,
+        )?))
     }
 }
 

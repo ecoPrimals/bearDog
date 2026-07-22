@@ -21,10 +21,6 @@ use tokio::sync::{RwLock, broadcast};
 pub struct AdvancedMetricsSystem {
     /// Real-time metrics store
     metrics_store: Arc<RwLock<MetricsStore>>,
-    #[expect(
-        dead_code,
-        reason = "PerformanceAnalyzer wired in new(); analysis API not exposed yet"
-    )]
     performance_analyzer: Arc<PerformanceAnalyzer>,
     /// Security metrics collector
     security_metrics: Arc<RwLock<SecurityMetrics>>,
@@ -85,31 +81,45 @@ impl AdvancedMetricsSystem {
             last_updated: SystemTime::now(),
         };
 
-        {
+        let analysis = {
             let mut store = self.metrics_store.write().await;
             store.store_performance_metric(metric);
-        }
-
-        // Broadcast metric update
-        let event = MetricEvent {
-            event_type: MetricEventType::MetricUpdated,
-            metric_name: name,
-            data: {
-                use serde_json::{Map, Value};
-                let mut data = Map::new();
-                data.insert(
-                    "value".to_string(),
-                    Value::Number(
-                        serde_json::Number::from_f64(value)
-                            .unwrap_or_else(|| serde_json::Number::from(0)),
-                    ),
-                );
-                Value::Object(data)
-            },
-            timestamp: SystemTime::now(),
+            store
+                .get_performance_metric(&name)
+                .and_then(|m| self.performance_analyzer.analyze_metric(m).ok())
         };
 
-        let _ = self.broadcaster.send(event);
+        let now = SystemTime::now();
+        let value_json =
+            serde_json::Number::from_f64(value).unwrap_or_else(|| serde_json::Number::from(0));
+
+        let _ = self.broadcaster.send(MetricEvent {
+            event_type: MetricEventType::MetricUpdated,
+            metric_name: name.clone(),
+            data: serde_json::Value::Object({
+                let mut m = serde_json::Map::new();
+                m.insert("value".to_string(), serde_json::Value::Number(value_json));
+                m
+            }),
+            timestamp: now,
+        });
+
+        if let Some(ref result) = analysis
+            && result.is_anomalous
+        {
+            let _ = self.broadcaster.send(MetricEvent {
+                event_type: MetricEventType::AnomalyDetected,
+                metric_name: name,
+                data: serde_json::json!({
+                    "current_value": result.current_value,
+                    "mean": result.mean,
+                    "std_dev": result.std_dev,
+                    "direction": format!("{:?}", result.anomaly_direction),
+                }),
+                timestamp: now,
+            });
+        }
+
         Ok(())
     }
 

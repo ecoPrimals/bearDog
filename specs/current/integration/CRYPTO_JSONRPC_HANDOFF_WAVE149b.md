@@ -312,6 +312,41 @@ Response:
 }
 ```
 
+## Tower Atomic — Enrollment Verification (Wave 150u)
+
+songBird delegates `mesh.enroll` proof verification to bearDog via
+`enrollment.verify`. The enrolling node computes
+`HMAC-SHA256(family_seed, node_id || "|" || public_key || "|" || timestamp)`
+and sends the structured fields; bearDog reconstructs and verifies.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "enrollment.verify",
+  "params": {
+    "node_id": "southGate",
+    "public_key": "<wg-or-ed25519-pubkey>",
+    "timestamp": 1753128000,
+    "proof": "<base64 HMAC-SHA256>"
+  }
+}
+```
+
+Response:
+
+```json
+{"jsonrpc":"2.0","id":1,"result":{"verified":true}}
+```
+
+Or on failure:
+
+```json
+{"jsonrpc":"2.0","id":1,"result":{"verified":false,"reason":"HMAC proof does not match enrollment data"}}
+```
+
+**Requires**: `FAMILY_SEED` or `BEARDOG_FAMILY_SEED` env var set.
+
 ## Full Method List (109 methods)
 
 See `crates/beardog-tunnel/src/unix_socket_ipc/handlers/crypto_handler/method_list.rs`

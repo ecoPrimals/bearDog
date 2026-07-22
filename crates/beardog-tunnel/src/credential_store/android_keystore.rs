@@ -77,7 +77,10 @@ impl AndroidKeystoreCredentialStore {
     pub fn new(vault_dir: PathBuf) -> Result<Self, BearDogError> {
         let master_key = retrieve_or_generate_master_key()?;
         let inner = FileVaultCredentialStore::new(vault_dir, master_key)?;
-        debug!(alias = KEYSTORE_ALIAS, "Android Keystore credential store initialized");
+        debug!(
+            alias = KEYSTORE_ALIAS,
+            "Android Keystore credential store initialized"
+        );
         Ok(Self { inner })
     }
 
@@ -177,9 +180,7 @@ fn load_encrypted_master_key(path: &std::path::Path) -> Result<[u8; 32], BearDog
 }
 
 #[cfg(target_os = "android")]
-fn generate_and_store_master_key(
-    path: &std::path::Path,
-) -> Result<[u8; 32], BearDogError> {
+fn generate_and_store_master_key(path: &std::path::Path) -> Result<[u8; 32], BearDogError> {
     use rand_core::RngCore;
 
     if let Some(parent) = path.parent() {
@@ -218,9 +219,12 @@ fn encrypt_with_keystore(plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
     // Build.FINGERPRINT. This is NOT hardware-backed and will be
     // replaced by the real JNI path after eastGate validation.
 
+    use chacha20poly1305::{
+        ChaCha20Poly1305,
+        aead::{Aead, AeadCore, KeyInit, OsRng},
+    };
     use hkdf::Hkdf;
     use sha2::Sha256;
-    use chacha20poly1305::{ChaCha20Poly1305, aead::{Aead, AeadCore, KeyInit, OsRng}};
 
     let device_id = get_android_device_id();
     let hk = Hkdf::<Sha256>::new(
@@ -245,9 +249,12 @@ fn encrypt_with_keystore(plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
 
 #[cfg(target_os = "android")]
 fn decrypt_with_keystore(blob: &[u8]) -> Result<[u8; 32], BearDogError> {
+    use chacha20poly1305::{
+        ChaCha20Poly1305,
+        aead::{Aead, KeyInit},
+    };
     use hkdf::Hkdf;
     use sha2::Sha256;
-    use chacha20poly1305::{ChaCha20Poly1305, aead::{Aead, KeyInit}};
 
     if blob.len() < 12 + 32 + 16 {
         return Err(BearDogError::security(format!(
@@ -269,13 +276,11 @@ fn decrypt_with_keystore(blob: &[u8]) -> Result<[u8; 32], BearDogError> {
         .map_err(|e| BearDogError::internal(format!("HKDF expand failed: {e}")))?;
 
     let cipher = ChaCha20Poly1305::new(&key.into());
-    let plaintext = cipher
-        .decrypt(nonce, ciphertext)
-        .map_err(|e| {
-            BearDogError::security(format!(
-                "Master key decryption failed (device mismatch or tamper): {e}"
-            ))
-        })?;
+    let plaintext = cipher.decrypt(nonce, ciphertext).map_err(|e| {
+        BearDogError::security(format!(
+            "Master key decryption failed (device mismatch or tamper): {e}"
+        ))
+    })?;
 
     if plaintext.len() != 32 {
         return Err(BearDogError::security(format!(
@@ -335,11 +340,10 @@ fn resolve_vault_dir() -> PathBuf {
 
 #[cfg(not(target_os = "android"))]
 fn resolve_vault_dir() -> PathBuf {
-    directories::ProjectDirs::from("eco", "primals", "beardog")
-        .map_or_else(
-            || PathBuf::from("/tmp/beardog/credentials"),
-            |d| d.data_local_dir().join("credentials"),
-        )
+    directories::ProjectDirs::from("eco", "primals", "beardog").map_or_else(
+        || PathBuf::from("/tmp/beardog/credentials"),
+        |d| d.data_local_dir().join("credentials"),
+    )
 }
 
 #[cfg(test)]
