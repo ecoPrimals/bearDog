@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 22, 2026 -- Wave 150u: Android Keystore + enrollment.verify
+
+#### Android Keystore CredentialStore Backend (Wave 150u)
+- **`AndroidKeystoreCredentialStore`**: `CredentialStore` trait impl — master key in TEE/StrongBox, file vault encryption (ChaCha20-Poly1305 + HKDF), `#[cfg(target_os = "android")]` gated
+- **`CredentialStoreBackend::AndroidKeystore`** variant in Silicon Atheism enum dispatch
+- Reports unavailable on non-Android platforms (same pattern as Windows DPAPI, Linux SecretService)
+- eastGate handoff updated with CredentialStore validation checklist (13 checks across HSM + secrets layers)
+
+#### `enrollment.verify` Endpoint (Wave 150u — Tower Atomic Parity)
+- New `enrollment.verify` JSON-RPC method on BTSP handler — verifies HMAC-SHA256 proofs from mesh enrollment
+- `EnrollmentVerifyParams` / `EnrollmentVerifyResponse` types in `beardog-types::btsp`
+- HKDF-derived per-node enrollment keys, constant-time comparison
+- 7 new tests (key derivation determinism, family/node isolation, valid/invalid proof roundtrip)
+
 ### July 21, 2026 -- Wave 150t: CredentialStore Trait + Cleanup
 
 #### CredentialStore Trait (Wave 150t)
@@ -21,9 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Documentation + Infra Cleanup (Wave 150t)
 - Root docs refreshed to Wave 150t (README, STATUS, CHANGELOG, ROADMAP)
-- `STATUS.md` trimmed — historical wave log (Waves 5–131) moved to CHANGELOG fossil record; STATUS now shows only recent ~10 waves
+- `STATUS.md` trimmed — historical wave log (Waves 5–127) moved to CHANGELOG fossil record; STATUS now shows only recent ~10 waves
 - `infra/wateringHole/` handoffs updated with current platform status
-- `cargo clean` reclaimed 30G
+- Squirrel CredentialStore integration handoff added
+- `cargo clean` reclaimed 36.5G
 
 ### July 18, 2026 -- Wave 149b: HSM Platform Backend Abstraction + Crypto Handoff
 

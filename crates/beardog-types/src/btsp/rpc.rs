@@ -390,6 +390,35 @@ pub struct SessionExportKeysResponse {
     pub cipher: String,
 }
 
+/// Parameters for `enrollment.verify` — verify an HMAC proof from mesh enrollment.
+///
+/// During `mesh.enroll`, the enrolling node produces an HMAC-SHA256 tag over
+/// its enrollment data using the family seed. `enrollment.verify` lets the
+/// orchestrating primal (songBird) delegate proof verification to bearDog.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EnrollmentVerifyParams {
+    /// The enrolling node's identifier (e.g. `"sporeGate"`).
+    pub node_id: String,
+    /// The family the node claims to belong to.
+    pub family_id: String,
+    /// Base64-encoded enrollment data that was signed.
+    pub enrollment_data: String,
+    /// Base64-encoded HMAC-SHA256 proof over `enrollment_data`.
+    pub enrollment_proof: String,
+}
+
+/// Response from `enrollment.verify`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EnrollmentVerifyResponse {
+    /// Whether the HMAC proof is valid.
+    pub valid: bool,
+    /// The algorithm used for verification.
+    pub algorithm: String,
+    /// Human-readable error if `valid` is `false`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
 fn default_cipher() -> String {
     "chacha20_poly1305".into()
 }

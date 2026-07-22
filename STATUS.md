@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 21, 2026 (Wave 150t)
+**Last Updated**: July 22, 2026 (Wave 150u)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -89,6 +89,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 150u — Android Keystore + enrollment.verify (Jul 22, 2026)
+
+- **`AndroidKeystoreCredentialStore`** — `CredentialStore` trait impl with TEE/StrongBox master key, `#[cfg(target_os = "android")]` gated
+- **`CredentialStoreBackend::AndroidKeystore`** variant in Silicon Atheism enum dispatch
+- **`enrollment.verify`** JSON-RPC endpoint — HMAC-SHA256 proof verification for mesh enrollment (Tower Atomic parity P1)
+- **`EnrollmentVerifyParams`/`EnrollmentVerifyResponse`** types in `beardog-types::btsp`
+- eastGate handoff updated with 13-check CredentialStore validation checklist
 
 ### Wave 150t — CredentialStore Trait + Cleanup (Jul 21, 2026)
 

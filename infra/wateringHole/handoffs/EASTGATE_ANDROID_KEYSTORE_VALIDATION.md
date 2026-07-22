@@ -2,30 +2,47 @@
 
 **From**: bearDog (flockGate)
 **To**: eastGate team
-**Date**: July 21, 2026
-**Wave**: 150t
+**Date**: July 22, 2026
+**Wave**: 150u
 **Priority**: P2 (last remaining bearDog HSM backend)
 
 ---
 
 ## Context
 
-bearDog has shipped all platform-specific HSM backends except Android Keystore:
+bearDog has shipped all platform-specific HSM backends except Android Keystore
+hardware validation. As of Wave 150u, both the HSM layer and the CredentialStore
+layer have Android backends implemented:
 
-| Backend | Status | Platform |
-|---------|--------|----------|
-| RustSoftwareHsm | SHIPPED | All platforms |
-| LinuxSecretServiceHsm | SHIPPED (Wave 145a) | Linux (D-Bus) |
-| WindowsDpapiHsm | SHIPPED (Wave 145a) | Windows |
-| **AndroidStrongBoxHsm** | **PENDING — needs hardware validation** | Android (Pixel 8) |
+| Backend | Layer | Status | Platform |
+|---------|-------|--------|----------|
+| RustSoftwareHsm | HSM | SHIPPED | All platforms |
+| LinuxSecretServiceHsm | HSM | SHIPPED (Wave 145a) | Linux (D-Bus) |
+| WindowsDpapiHsm | HSM | SHIPPED (Wave 145a) | Windows |
+| **AndroidStrongBoxHsm** | HSM | **Code complete — needs hardware validation** | Android |
+| InMemoryCredentialStore | CredentialStore | SHIPPED (Wave 150t) | All platforms |
+| FileVaultCredentialStore | CredentialStore | SHIPPED (Wave 150t) | All platforms |
+| **AndroidKeystoreCredentialStore** | CredentialStore | **Code complete — needs hardware validation** | Android |
 
-The Android Keystore backend code exists in bearDog
+### HSM Layer (HsmKeyProvider trait)
+
+The Android StrongBox HSM backend code exists in bearDog
 (`crates/beardog-tunnel/src/tunnel/hsm/android_strongbox/`) with:
 - `AndroidStrongBoxHsm` struct and `HsmKeyProvider` trait impl
 - `UnwiredAndroidKeystoreTransport` / `MemoryKeystoreTransport` stubs
 - Safe JNI wrapper (`safe_native_wrapper.rs`)
 - Safe device detection (`safe_device_detection.rs`)
 - Multi-credential provider (`beardog-security`)
+
+### CredentialStore Layer (Wave 150u)
+
+The Android Keystore credential store backend is at
+`crates/beardog-tunnel/src/credential_store/android_keystore.rs`:
+- `AndroidKeystoreCredentialStore` implementing `CredentialStore` trait
+- `CredentialStoreBackend::AndroidKeystore` enum variant (Silicon Atheism dispatch)
+- Master key derived from TEE/StrongBox via `beardog-credstore-v1` alias
+- File vault encryption (ChaCha20-Poly1305 + HKDF) with hardware-bound master key
+- Full test coverage on non-Android (availability probe, construction error, metadata)
 
 **What's missing**: end-to-end validation on real Titan M2 / StrongBox
 hardware. The software mock path works; we need to confirm:
@@ -82,6 +99,8 @@ benchscale exec node-1 -- /opt/beardog-android-keystore-validate.sh
 
 ## Validation Checklist
 
+### HSM Layer (HsmKeyProvider)
+
 | # | Check | Method | Expected |
 |---|-------|--------|----------|
 | 1 | bearDog starts on aarch64 | `beardog server --listen 127.0.0.1:9100` | Clean startup, HSM registry discovers StrongBox |
@@ -92,9 +111,22 @@ benchscale exec node-1 -- /opt/beardog-android-keystore-validate.sh
 | 6 | StrongBox capability probe | HSM trace logs | `StrongBox available: true` |
 | 7 | Device attestation chain | `beardog.fido2.discover` (if wired) | Valid attestation |
 
+### CredentialStore Layer (secrets.*)
+
+| # | Check | Method | Expected |
+|---|-------|--------|----------|
+| 8 | Store a secret | `secrets.store({"name":"test","value":"hello"})` | `stored: true` |
+| 9 | Retrieve secret | `secrets.retrieve({"name":"test"})` | `value: "hello"` |
+| 10 | List secrets | `secrets.list({})` | `["test"]` in list |
+| 11 | Delete secret | `secrets.delete({"name":"test"})` | `deleted: true` |
+| 12 | Persistence across restart | Store → restart bearDog → retrieve | Value survives restart |
+| 13 | Backend reports keystore | `primal.info` or trace logs | `backend_id: "android-keystore"` |
+
 ---
 
 ## Code Pointers
+
+### HSM Layer
 
 | File | What |
 |------|------|
@@ -106,6 +138,16 @@ benchscale exec node-1 -- /opt/beardog-android-keystore-validate.sh
 | `crates/beardog-tunnel/src/tunnel/hsm/providers/registry.rs` | Provider discovery |
 | `crates/beardog-tunnel/src/tunnel/hsm/hsm_key_provider_backend.rs` | Enum dispatch |
 | `crates/beardog-types/src/hsm/provider_types.rs` | `HsmProviderType::AndroidStrongBox` |
+
+### CredentialStore Layer (Wave 150u)
+
+| File | What |
+|------|------|
+| `crates/beardog-traits/src/unified/storage.rs` | `CredentialStore` trait + `SecretMetadata` |
+| `crates/beardog-tunnel/src/credential_store/android_keystore.rs` | `AndroidKeystoreCredentialStore` impl |
+| `crates/beardog-tunnel/src/credential_store/backend.rs` | `CredentialStoreBackend::AndroidKeystore` dispatch |
+| `crates/beardog-tunnel/src/credential_store/mod.rs` | Module root + re-exports |
+| `crates/beardog-tunnel/src/unix_socket_ipc/handlers/secrets.rs` | `secrets.*` JSON-RPC handlers |
 
 ---
 

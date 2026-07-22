@@ -14,6 +14,7 @@
 //! - Backward compatible with existing BTSP internal mode calls
 
 mod contact;
+mod enrollment;
 mod negotiation;
 mod peer;
 mod session;
@@ -102,6 +103,8 @@ impl MethodHandler for BtspHandler {
             "btsp.session.create",
             "btsp.session.verify",
             "btsp.session.negotiate",
+            // Enrollment verification (Tower Atomic parity — mesh.enroll HMAC proofs)
+            "enrollment.verify",
         ]
     }
 
@@ -162,6 +165,8 @@ impl MethodHandler for BtspHandler {
             self.handle_phase3_negotiate(params).await
         } else if method == "btsp.server.status" {
             self.handle_server_status().await
+        } else if method == "enrollment.verify" {
+            self.handle_enrollment_verify(params).await
         } else {
             Err(format!("Unknown BTSP method: {method}").into())
         }

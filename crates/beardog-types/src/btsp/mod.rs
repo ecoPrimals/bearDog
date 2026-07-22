@@ -111,10 +111,11 @@ mod trust_mode;
 // Re-export all public types
 pub use protocol::TunnelProtocol;
 pub use rpc::{
-    ConfigureTlsParams, SessionCreateParams, SessionCreateResponse, SessionExportKeysParams,
-    SessionExportKeysResponse, SessionNegotiateParams, SessionNegotiateResponse,
-    SessionVerifyParams, SessionVerifyResponse, TunnelEstablishParams, TunnelEstablishResponse,
-    TunnelSendHttpParams, TunnelSendHttpResponse, VerifyPeerParams, VerifyPeerResponse,
+    ConfigureTlsParams, EnrollmentVerifyParams, EnrollmentVerifyResponse, SessionCreateParams,
+    SessionCreateResponse, SessionExportKeysParams, SessionExportKeysResponse,
+    SessionNegotiateParams, SessionNegotiateResponse, SessionVerifyParams, SessionVerifyResponse,
+    TunnelEstablishParams, TunnelEstablishResponse, TunnelSendHttpParams, TunnelSendHttpResponse,
+    VerifyPeerParams, VerifyPeerResponse,
 };
 pub use transport::{Transport, TransportEndpoint};
 pub use trust_mode::{CaBundle, TrustMode};

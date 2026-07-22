@@ -6,6 +6,7 @@
 //! (DPAPI, Keychain, Keystore) can be added as variants without `#[cfg]`
 //! gating — they return appropriate errors when unavailable.
 
+use super::android_keystore::AndroidKeystoreCredentialStore;
 use super::file_vault::FileVaultCredentialStore;
 use super::in_memory::InMemoryCredentialStore;
 use beardog_errors::BearDogError;
@@ -22,6 +23,8 @@ pub enum CredentialStoreBackend {
     InMemory(InMemoryCredentialStore),
     /// Persistent encrypted file vault (production default).
     FileVault(FileVaultCredentialStore),
+    /// Android Keystore hardware-backed store (grapheneGate / mobile).
+    AndroidKeystore(AndroidKeystoreCredentialStore),
 }
 
 impl CredentialStoreBackend {
@@ -44,6 +47,23 @@ impl CredentialStoreBackend {
             vault_dir, master_key,
         )?))
     }
+
+    /// Create an Android Keystore backend.
+    ///
+    /// The master key is retrieved from (or generated in) the Android Keystore
+    /// hardware enclave. Only available on `target_os = "android"`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] if Android Keystore is not available or the
+    /// vault directory cannot be created.
+    pub fn android_keystore(
+        vault_dir: std::path::PathBuf,
+    ) -> Result<Self, BearDogError> {
+        Ok(Self::AndroidKeystore(
+            AndroidKeystoreCredentialStore::new(vault_dir)?,
+        ))
+    }
 }
 
 impl CredentialStore for CredentialStoreBackend {
@@ -51,6 +71,7 @@ impl CredentialStore for CredentialStoreBackend {
         match self {
             Self::InMemory(s) => s.store(name, value).await,
             Self::FileVault(s) => s.store(name, value).await,
+            Self::AndroidKeystore(s) => s.store(name, value).await,
         }
     }
 
@@ -58,6 +79,7 @@ impl CredentialStore for CredentialStoreBackend {
         match self {
             Self::InMemory(s) => s.retrieve(name).await,
             Self::FileVault(s) => s.retrieve(name).await,
+            Self::AndroidKeystore(s) => s.retrieve(name).await,
         }
     }
 
@@ -65,6 +87,7 @@ impl CredentialStore for CredentialStoreBackend {
         match self {
             Self::InMemory(s) => s.list().await,
             Self::FileVault(s) => s.list().await,
+            Self::AndroidKeystore(s) => s.list().await,
         }
     }
 
@@ -72,6 +95,7 @@ impl CredentialStore for CredentialStoreBackend {
         match self {
             Self::InMemory(s) => s.delete(name).await,
             Self::FileVault(s) => s.delete(name).await,
+            Self::AndroidKeystore(s) => s.delete(name).await,
         }
     }
 
@@ -79,6 +103,7 @@ impl CredentialStore for CredentialStoreBackend {
         match self {
             Self::InMemory(s) => s.backend_id(),
             Self::FileVault(s) => s.backend_id(),
+            Self::AndroidKeystore(s) => s.backend_id(),
         }
     }
 
@@ -86,6 +111,7 @@ impl CredentialStore for CredentialStoreBackend {
         match self {
             Self::InMemory(s) => s.is_persistent(),
             Self::FileVault(s) => s.is_persistent(),
+            Self::AndroidKeystore(s) => s.is_persistent(),
         }
     }
 }
@@ -122,5 +148,12 @@ mod tests {
 
         assert!(backend.delete("key").await.unwrap());
         assert!(backend.retrieve("key").await.is_err());
+    }
+
+    #[test]
+    fn android_keystore_unavailable_on_non_android() {
+        let dir = tempfile::tempdir().unwrap();
+        let result = CredentialStoreBackend::android_keystore(dir.path().join("vault"));
+        assert!(result.is_err());
     }
 }
