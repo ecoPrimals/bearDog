@@ -34,7 +34,7 @@
 ## Codebase Metrics
 
 - **Crates**: 25 workspace members
-- **Rust Files**: 1,949 (crates + src + tests; excludes showcase/examples)
+- **Rust Files**: 1,947 (crates + src + tests; excludes showcase/examples)
 - **JSON-RPC Methods**: 230 dispatchable (218 registry + 12 pre-dispatch gate) — see `docs/PRIMAL_CONTRACTS.md` v4.1.0 for category breakdown
 - **`#[allow(`**: 81 (was 86; all carry `reason`)
 - **`#[expect(`**: 644 (was 646; 2 stale removed)

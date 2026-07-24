@@ -1,7 +1,7 @@
 # 🔌 BearDog Primal Contracts - JSON-RPC API Specification
 
-**Version**: 4.1.0  
-**Date**: Jun 22, 2026  
+**Version**: 4.2.0  
+**Date**: Jul 24, 2026  
 **Status**: Production Stable  
 **Protocol**: JSON-RPC 2.0 over Unix Domain Sockets
 

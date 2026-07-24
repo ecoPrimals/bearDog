@@ -238,7 +238,7 @@ export FAMILY_SEED=my-secret-seed
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
 | **Files > 800 LOC** | 0 (production code) |
-| **Rust files** | 1,949 |
+| **Rust files** | 1,947 |
 | **Tests** | 13,937+ (concurrent; 35 `#[serial]` in `beardog-production`) |
 | **Coverage** | 90.51% line (llvm-cov workspace, target 90% met) |
 | **Serial Tests** | 35 (`beardog-production` shared `AtomicBool` state) |

@@ -2,8 +2,8 @@
 
 **From**: bearDog (flockGate)
 **To**: squirrel team
-**Date**: July 22, 2026
-**Wave**: 150u
+**Date**: July 24, 2026
+**Wave**: 150x
 **Priority**: P1 (cross-primal credential storage)
 
 ---

@@ -2,8 +2,8 @@
 
 **From**: bearDog (flockGate)
 **To**: eastGate team
-**Date**: July 22, 2026
-**Wave**: 150u
+**Date**: July 24, 2026
+**Wave**: 150x
 **Priority**: P2 (last remaining bearDog HSM backend)
 
 ---
