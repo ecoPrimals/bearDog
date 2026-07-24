@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 24, 2026 (Wave 150x — security hardening)
+**Last Updated**: July 24, 2026 (Wave 150x — cipher floor + deep debt sweep)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant; 2 monoliths refactored Wave 119 (server.rs→7 files, orchestrator.rs→10 files) |
-| **Tests** | 13,937+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 13,941+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | all 4 pass | 2 advisory ignores (RSA Marvin, `paste`); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned; TLS backend is Pure Rust `rustls-rustcrypto` |
@@ -35,7 +35,7 @@
 
 - **Crates**: 25 workspace members
 - **Rust Files**: 1,947 (crates + src + tests; excludes showcase/examples)
-- **JSON-RPC Methods**: 230 dispatchable (218 registry + 12 pre-dispatch gate) — see `docs/PRIMAL_CONTRACTS.md` v4.1.0 for category breakdown
+- **JSON-RPC Methods**: 231 dispatchable (219 registry + 12 pre-dispatch gate) — see `docs/PRIMAL_CONTRACTS.md` v4.2.0 for category breakdown
 - **`#[allow(`**: 81 (was 86; all carry `reason`)
 - **`#[expect(`**: 644 (was 646; 2 stale removed)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS

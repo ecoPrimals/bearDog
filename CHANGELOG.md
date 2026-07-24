@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 24, 2026 -- Wave 150x: Cipher Floor + Deep Debt Sweep
+
+#### Cipher Floor Enforcement (P1)
+- **BTSP cipher floor**: `BEARDOG_BTSP_CIPHER_FLOOR` env (default `chacha20-poly1305`) enforces minimum cipher strength in `btsp.negotiate` and `btsp.server.negotiate`
+- Negotiation rejects ciphers below the configured floor; skunkBat enforces its own floor on the defense side
+- Cipher ranking: `chacha20-poly1305` (3) > `hmac-plain` (2) > `null` (1)
+
+#### `crypto.hash.blake3` Capability (P2)
+- Dot-separated semantic alias wired for songBird crypto delegation
+- Registered in method list, hashing router, capabilities, cost estimates, cleartext allowlist, neural registration, `discover_capabilities`
+- 109 crypto methods registered (was 108)
+
+#### Deep Debt Sweep
+- **iOS hardcoding removed**: `"biomeos"` string literal → `ipc_layout::resolve_biomeos_ipc_subdir_from_optional(None)` for socket dirs and XPC service IDs
+- **Gateway host configurable**: `BEARDOG_GATEWAY_UPSTREAM_HOST` env (default `127.0.0.1`); env keys centralized in `beardog-config`
+- **HSM probe ports configurable**: `BEARDOG_HSM_DISCOVERY_PORTS` (comma-separated) replaces hardcoded `[1792, 7000, 9000, 443]`
+- **riboCipher wired**: `handle_ribocipher_signal` now dispatched from UDS connection handler; detects signal bytes (0xEC/0xED/0xEE) before BTSP handshake fallback
+- **Integration API docs**: clarified as secondary REST→UDS bridge
+
+#### Deep Debt Audit Findings (all clean)
+- 0 production files >800 LOC; 6 `unsafe` blocks (Windows DPAPI FFI, irreducible); 0 peer-primal hardcoding violations; 0 `todo!()`/`unimplemented!()`; `ring` not in dependency graph; 24 clippy suppressions all justified
+
 ### July 24, 2026 -- Wave 150x: Security Hardening (Pen Test Response)
 
 #### Enrollment Replay Protection + Timestamp Window
