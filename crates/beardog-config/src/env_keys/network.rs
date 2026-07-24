@@ -84,6 +84,12 @@ pub const ENV_HTTPS_PORT: &str = "BEARDOG_HTTPS_PORT";
 /// Upstream HTTP backend for the ACME TLS gateway (e.g., songBird `http.proxy`).
 /// Format: `host:port` or unix socket path prefixed with `unix:`.
 pub const ENV_GATEWAY_UPSTREAM: &str = "BEARDOG_GATEWAY_UPSTREAM";
+/// Upstream port for the gateway when `BEARDOG_GATEWAY_UPSTREAM` is not set.
+/// Used with `BEARDOG_GATEWAY_UPSTREAM_HOST` (default: `127.0.0.1`).
+pub const ENV_GATEWAY_UPSTREAM_PORT: &str = "BEARDOG_GATEWAY_UPSTREAM_PORT";
+/// Upstream host for the gateway (default: `127.0.0.1`).
+/// Only used when `BEARDOG_GATEWAY_UPSTREAM_PORT` is set.
+pub const ENV_GATEWAY_UPSTREAM_HOST: &str = "BEARDOG_GATEWAY_UPSTREAM_HOST";
 /// Gatehouse mode: activates bearDog as the sovereign external gateway
 /// (`:443` TLS + `:80` ACME/redirect). Equivalent to `BEARDOG_TLS_MODE=acme`.
 pub const ENV_GATEHOUSE_MODE: &str = "BEARDOG_GATEHOUSE_MODE";

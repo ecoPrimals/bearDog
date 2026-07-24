@@ -26,9 +26,8 @@ impl UnixSocketIpcServer {
     /// Reads the tier-specific payload after the signal byte, resolves the
     /// protocol type, then dispatches to the appropriate handler.
     ///
-    /// Not yet wired from `handle_connection` — awaits riboCipher accept-path
-    /// integration in the connection dispatcher.
-    #[expect(dead_code, reason = "riboCipher accept-path wiring pending")]
+    /// Wired from `handle_connection` when the first peek byte matches a
+    /// riboCipher tier signal (0xEC/0xED/0xEE).
     pub(super) async fn handle_ribocipher_signal(
         &self,
         mut stream: Box<dyn PlatformStream>,

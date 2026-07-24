@@ -376,6 +376,15 @@ impl UnixSocketIpcServer {
                         );
                         Box::new(PrefixedStream::new(peek[0], stream)) as Box<dyn PlatformStream>
                     }
+                    Ok(Ok(1)) if crate::ribocipher::is_signal_byte(peek[0]) => {
+                        debug!(
+                            signal = format!("0x{:02X}", peek[0]),
+                            "UDS peek: riboCipher signal detected"
+                        );
+                        return self
+                            .handle_ribocipher_signal(stream, peek[0], family_seed)
+                            .await;
+                    }
                     Ok(Ok(_)) => {
                         debug!("BTSP production: initiating UDS handshake");
                         let mut prefixed = PrefixedStream::new(peek[0], stream);

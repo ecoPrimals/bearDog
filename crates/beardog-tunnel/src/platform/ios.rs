@@ -55,6 +55,7 @@
 
 use super::{PlatformListenerBackend, PlatformSocket, SocketEndpoint};
 use beardog_config::env_keys;
+use beardog_types::constants::domains::network::ipc_discovery as ipc_layout;
 use tokio::net::UnixListener;
 use tracing::{debug, info, warn};
 
@@ -77,7 +78,10 @@ impl PlatformSocket for IOSSocket {
                     let path = std::path::PathBuf::from(d);
                     if path.exists() { Some(path) } else { None }
                 })
-                .unwrap_or_else(|| std::env::temp_dir().join("biomeos"));
+                .unwrap_or_else(|| {
+                    std::env::temp_dir()
+                        .join(ipc_layout::resolve_biomeos_ipc_subdir_from_optional(None))
+                });
 
             // Ensure directory exists
             if let Err(e) = std::fs::create_dir_all(&socket_dir) {
@@ -101,7 +105,8 @@ impl PlatformSocket for IOSSocket {
         // iOS: XPC is preferred but requires platform-specific bindings
         #[cfg(target_os = "ios")]
         {
-            let xpc_service = format!("org.biomeos.{}", primal_name);
+            let ns = ipc_layout::resolve_biomeos_ipc_subdir_from_optional(None);
+            let xpc_service = format!("org.{ns}.{primal_name}");
 
             info!("📱 iOS XPC service identifier: {}", xpc_service);
             warn!("⚠️  iOS XPC transport requires platform-specific bindings");

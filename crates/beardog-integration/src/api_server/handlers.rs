@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Domain handlers for the integration API.
+//! Domain handlers for the integration REST API.
 //!
-//! REST API surface for ecosystem integration (BTSP, BirdSong, Lineage, and system
-//! endpoints). Crypto-related handlers are **not yet wired** to real tunnel, HSM, or
-//! genetics providers; they return `501 Not Implemented` via [`super::ApiError`] until
-//! those integrations land. Non-crypto system endpoints (health, metrics, capabilities,
-//! status) and in-memory tunnel/lineage lookups are functional.
+//! Secondary HTTP surface for ecosystem tooling. The primary interface is the
+//! UDS JSON-RPC server (`crypto.*`, `btsp.*`, `lineage.*`), which has full
+//! implementations. These REST handlers provide an HTTP bridge; crypto-related
+//! endpoints return `501 Not Implemented` until REST→UDS forwarding is wired.
+//! System endpoints (health, metrics, capabilities, status) and in-memory
+//! tunnel/lineage lookups are functional.
 
 use std::time::Duration;
 

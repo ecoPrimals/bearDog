@@ -24,9 +24,6 @@ use tokio::io::AsyncWriteExt;
 use tokio::net::TcpListener;
 use tracing::{debug, info, warn};
 
-/// Env var for specifying only the upstream port (localhost assumed).
-const ENV_GATEWAY_UPSTREAM_PORT: &str = "BEARDOG_GATEWAY_UPSTREAM_PORT";
-
 fn resolve_upstream() -> Result<TransportEndpoint, BearDogError> {
     if let Ok(val) = std::env::var(env_keys::ENV_GATEWAY_UPSTREAM) {
         if val.starts_with("unix:") {
@@ -60,13 +57,12 @@ fn resolve_upstream() -> Result<TransportEndpoint, BearDogError> {
         }
     }
 
-    if let Ok(port_str) = std::env::var(ENV_GATEWAY_UPSTREAM_PORT)
+    if let Ok(port_str) = std::env::var(env_keys::ENV_GATEWAY_UPSTREAM_PORT)
         && let Ok(port) = port_str.parse::<u16>()
     {
-        return Ok(TransportEndpoint::Tcp {
-            host: "127.0.0.1".to_string(),
-            port,
-        });
+        let host = std::env::var(env_keys::ENV_GATEWAY_UPSTREAM_HOST)
+            .unwrap_or_else(|_| "127.0.0.1".to_string());
+        return Ok(TransportEndpoint::Tcp { host, port });
     }
 
     Err(BearDogError::system(

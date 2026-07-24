@@ -16,10 +16,27 @@ use std::path::{Path, PathBuf};
 use tracing::{debug, info};
 
 /// Well-known ports for HSM device discovery probing.
+///
+/// Override at runtime with `BEARDOG_HSM_DISCOVERY_PORTS` (comma-separated).
 const DEFAULT_DISCOVERY_PORTS: &[u16] = &[1792, 7000, 9000, 443];
 
 /// Default HSM discovery timeout in milliseconds.
 const DEFAULT_DISCOVERY_TIMEOUT_MS: u32 = 5000;
+
+/// Load discovery ports from `BEARDOG_HSM_DISCOVERY_PORTS` (comma-separated)
+/// or fall back to [`DEFAULT_DISCOVERY_PORTS`].
+fn load_discovery_ports() -> Vec<u16> {
+    if let Ok(val) = std::env::var("BEARDOG_HSM_DISCOVERY_PORTS") {
+        let parsed: Vec<u16> = val
+            .split(',')
+            .filter_map(|s| s.trim().parse().ok())
+            .collect();
+        if !parsed.is_empty() {
+            return parsed;
+        }
+    }
+    DEFAULT_DISCOVERY_PORTS.to_vec()
+}
 
 /// Main discovery engine coordinating all discoverers
 pub struct DiscoveryEngine {
@@ -421,7 +438,7 @@ impl NetworkHsmDiscoverer {
             .unwrap_or_default();
 
         Ok(Self {
-            _common_ports: DEFAULT_DISCOVERY_PORTS.to_vec(),
+            _common_ports: load_discovery_ports(),
             _scan_config: NetworkScanConfig {
                 ip_ranges,
                 timeout_ms: 1000,
