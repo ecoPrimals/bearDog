@@ -35,6 +35,22 @@ impl BtspHandler {
         let cipher = crate::btsp_handshake::BtspCipher::from_wire_name(&neg_params.cipher)
             .unwrap_or(crate::btsp_handshake::BtspCipher::ChaCha20Poly1305);
 
+        let floor = load_cipher_floor();
+        let floor_rank = cipher_rank(floor);
+        if cipher_rank(cipher.wire_name()) < floor_rank {
+            warn!(
+                requested = cipher.wire_name(),
+                floor, "BTSP server.negotiate: cipher below floor"
+            );
+            let resp = beardog_types::btsp::SessionNegotiateResponse {
+                accepted: false,
+                cipher: format!("rejected: {} below floor {floor}", cipher.wire_name()),
+            };
+            return serde_json::to_value(resp)
+                .map_err(|e| format!("Serialize: {e}"))
+                .map_err(Into::into);
+        }
+
         match self
             .session_store
             .negotiate_cipher(&neg_params.session_token, cipher)
@@ -110,12 +126,25 @@ impl BtspHandler {
             );
         };
 
-        let selected = select_best_cipher(&offered_ciphers);
+        let Some(selected) = select_best_cipher(&offered_ciphers) else {
+            let floor = load_cipher_floor();
+            warn!(
+                session_id = session_id,
+                offered = ?offered_ciphers,
+                floor,
+                "BTSP Phase 3: no offered cipher meets floor"
+            );
+            return Err(format!(
+                "No offered cipher meets the cipher floor ({floor}). \
+                 Offered: {offered_ciphers:?}"
+            )
+            .into());
+        };
 
         if selected == "null" {
             info!(
                 session_id = session_id,
-                "BTSP Phase 3: no supported cipher offered — returning null"
+                "BTSP Phase 3: null cipher selected (floor permits)"
             );
             return Ok(serde_json::json!({
                 "cipher": "null",
@@ -169,17 +198,49 @@ impl BtspHandler {
     }
 }
 
-/// Select the best cipher from the client's offered list.
+/// Cipher strength ordering (higher = stronger).
+fn cipher_rank(name: &str) -> u8 {
+    match name {
+        "chacha20-poly1305" | "chacha20_poly1305" => 3,
+        "hmac-plain" | "hmac_plain" => 2,
+        "null" => 1,
+        _ => 0,
+    }
+}
+
+/// Load the configured cipher floor from `BEARDOG_BTSP_CIPHER_FLOOR`.
+///
+/// Defaults to `chacha20-poly1305` (strongest) when unset. This means
+/// negotiation will reject `hmac-plain` and `null` unless the floor is
+/// explicitly lowered.
+fn load_cipher_floor() -> &'static str {
+    static FLOOR: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+    let val = FLOOR.get_or_init(|| {
+        beardog_errors::process_env::var(env_keys::ENV_BTSP_CIPHER_FLOOR).unwrap_or_default()
+    });
+    match val.as_str() {
+        "null" => "null",
+        "hmac-plain" | "hmac_plain" => "hmac-plain",
+        _ => "chacha20-poly1305",
+    }
+}
+
+/// Select the best cipher from the client's offered list, enforcing the
+/// configured cipher floor.
 ///
 /// Preference order: `chacha20-poly1305` > `hmac-plain` > `null`.
-fn select_best_cipher(offered: &[String]) -> &'static str {
-    if offered.iter().any(|c| c == "chacha20-poly1305") {
-        "chacha20-poly1305"
-    } else if offered.iter().any(|c| c == "hmac-plain") {
-        "hmac-plain"
-    } else {
-        "null"
-    }
+/// Returns `None` if no offered cipher meets the floor.
+fn select_best_cipher(offered: &[String]) -> Option<&'static str> {
+    let floor = load_cipher_floor();
+    let floor_rank = cipher_rank(floor);
+
+    let candidates: &[&str] = &["chacha20-poly1305", "hmac-plain", "null"];
+    candidates
+        .iter()
+        .find(|&&candidate| {
+            cipher_rank(candidate) >= floor_rank && offered.iter().any(|c| c == candidate)
+        })
+        .copied()
 }
 
 /// Load the family seed from the environment for handshake key re-derivation.
@@ -209,24 +270,42 @@ mod tests {
             "chacha20-poly1305".to_string(),
             "hmac-plain".to_string(),
         ];
-        assert_eq!(select_best_cipher(&offered), "chacha20-poly1305");
+        assert_eq!(select_best_cipher(&offered), Some("chacha20-poly1305"));
     }
 
     #[test]
-    fn select_best_cipher_falls_back_to_hmac() {
-        let offered = vec!["hmac-plain".to_string(), "null".to_string()];
-        assert_eq!(select_best_cipher(&offered), "hmac-plain");
+    fn select_best_cipher_rejects_below_floor() {
+        // Default floor is chacha20-poly1305 — hmac-plain alone is rejected
+        let offered = vec!["hmac-plain".to_string()];
+        assert_eq!(select_best_cipher(&offered), None);
     }
 
     #[test]
-    fn select_best_cipher_falls_back_to_null() {
+    fn select_best_cipher_rejects_unsupported() {
         let offered = vec!["aes-256-gcm".to_string()];
-        assert_eq!(select_best_cipher(&offered), "null");
+        assert_eq!(select_best_cipher(&offered), None);
     }
 
     #[test]
-    fn select_best_cipher_empty_returns_null() {
-        assert_eq!(select_best_cipher(&[]), "null");
+    fn select_best_cipher_empty_returns_none() {
+        assert_eq!(select_best_cipher(&[]), None);
+    }
+
+    #[test]
+    fn cipher_rank_ordering() {
+        assert!(cipher_rank("chacha20-poly1305") > cipher_rank("hmac-plain"));
+        assert!(cipher_rank("hmac-plain") > cipher_rank("null"));
+        assert!(cipher_rank("null") > cipher_rank("unknown"));
+        assert_eq!(
+            cipher_rank("chacha20_poly1305"),
+            cipher_rank("chacha20-poly1305")
+        );
+    }
+
+    #[test]
+    fn load_cipher_floor_defaults_to_chacha20() {
+        let floor = load_cipher_floor();
+        assert_eq!(floor, "chacha20-poly1305");
     }
 
     #[tokio::test]
@@ -264,7 +343,7 @@ mod tests {
 
     #[tokio::test]
     #[serial_test::serial]
-    async fn phase3_negotiate_null_when_unsupported_cipher() {
+    async fn phase3_negotiate_rejects_below_floor() {
         beardog_errors::process_env::set_var(
             "FAMILY_SEED",
             "test-family-seed-for-phase3-negotiate",
@@ -277,12 +356,9 @@ mod tests {
             "client_nonce": BASE64.encode([0xBB; 32]),
         });
 
-        let result = handler
-            .handle_phase3_negotiate(Some(&params))
-            .await
-            .expect("negotiate should succeed with null fallback");
-
-        assert_eq!(result["cipher"], "null");
+        let result = handler.handle_phase3_negotiate(Some(&params)).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("cipher floor"));
 
         beardog_errors::process_env::remove_var("FAMILY_SEED");
     }

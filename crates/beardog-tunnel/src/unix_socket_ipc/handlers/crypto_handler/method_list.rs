@@ -109,6 +109,7 @@ pub fn crypto_method_names() -> Vec<&'static str> {
         "crypto.seed_fingerprint",
         "crypto.sign_registration",
         // Dot-separated semantic names (SEMANTIC_METHOD_NAMING_STANDARD v2.0)
+        "crypto.hash.blake3",
         "crypto.ed25519.sign",
         "crypto.ed25519.verify",
         // Phase 3.5: CryptoProvider::call convention for relay signature verification
@@ -175,6 +176,15 @@ mod tests {
         assert!(
             names.contains(&"crypto.ed25519.verify"),
             "dot-separated crypto.ed25519.verify per SEMANTIC_METHOD_NAMING_STANDARD v2.0"
+        );
+    }
+
+    #[test]
+    fn crypto_hash_blake3_registered() {
+        let names = crypto_method_names();
+        assert!(
+            names.contains(&"crypto.hash.blake3"),
+            "crypto.hash.blake3 needed for songBird delegation (Wave 150x)"
         );
     }
 

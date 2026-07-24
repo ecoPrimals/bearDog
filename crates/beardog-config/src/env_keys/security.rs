@@ -34,6 +34,11 @@ pub const ENV_RATE_LIMIT_WINDOW_SECS: &str = "BEARDOG_RATE_LIMIT_WINDOW_SECS";
 pub const ENV_RATE_LIMIT_MAX_TOTAL: &str = "BEARDOG_RATE_LIMIT_MAX_TOTAL";
 /// UDS max concurrent connections (applies to Unix domain socket server).
 pub const ENV_UDS_MAX_CONNECTIONS: &str = "BEARDOG_UDS_MAX_CONNECTIONS";
+/// BTSP cipher floor — minimum cipher for `btsp.negotiate` / `btsp.server.negotiate`.
+///
+/// Values: `chacha20-poly1305` (default), `hmac-plain`, `null`.
+/// When set, negotiation rejects any cipher below the floor.
+pub const ENV_BTSP_CIPHER_FLOOR: &str = "BEARDOG_BTSP_CIPHER_FLOOR";
 /// Enrollment HMAC proof timestamp validity window (seconds, default 300).
 pub const ENV_ENROLLMENT_TIMESTAMP_WINDOW: &str = "BEARDOG_ENROLLMENT_TIMESTAMP_WINDOW";
 /// Automatically block suspicious source IPs.

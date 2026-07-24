@@ -278,6 +278,7 @@ impl CapabilitiesHandler {
                 "crypto.sign_ed25519":             { "cpu": "low",    "latency_ms": 1 },
                 "crypto.verify_ed25519":           { "cpu": "low",    "latency_ms": 1 },
                 "crypto.blake3_hash":              { "cpu": "low",    "latency_ms": 1 },
+                "crypto.hash.blake3":              { "cpu": "low",    "latency_ms": 1 },
                 "crypto.hmac_sha256":              { "cpu": "low",    "latency_ms": 1 },
                 "crypto.hmac_verify":              { "cpu": "low",    "latency_ms": 1 },
                 "crypto.hkdf_sha256":              { "cpu": "low",    "latency_ms": 1 },
@@ -344,6 +345,7 @@ impl CapabilitiesHandler {
                 "cleartext_detection": "first-byte 0x7B auto-detect on UDS and TCP",
                 "cleartext_methods": [
                     "crypto.hash",
+                    "crypto.hash.blake3",
                     "crypto.blake3_hash",
                     "health.liveness",
                     "health.readiness",
@@ -420,6 +422,7 @@ impl CapabilitiesHandler {
         info!("discover_capabilities requested");
 
         const CAPABILITIES: &[&str] = &[
+            "crypto.hash.blake3",
             "crypto.sha256",
             "crypto.sha512",
             "crypto.sign",
@@ -637,7 +640,7 @@ mod tests {
         let caps = response["capabilities"]
             .as_array()
             .expect("capabilities should be array in test");
-        assert!(caps.len() >= 22, "Expected at least 22 capabilities");
+        assert!(caps.len() >= 23, "Expected at least 23 capabilities");
 
         let cap_strs: Vec<&str> = caps
             .iter()

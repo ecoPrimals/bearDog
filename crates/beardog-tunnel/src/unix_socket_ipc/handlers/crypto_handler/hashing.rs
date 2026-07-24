@@ -24,7 +24,7 @@ pub async fn route(
     params: Option<&serde_json::Value>,
 ) -> Result<Option<serde_json::Value>, super::super::HandlerError> {
     match method {
-        "crypto.blake3_hash" => {
+        "crypto.blake3_hash" | "crypto.hash.blake3" => {
             info!("🔍 Crypto: blake3_hash");
             Ok(Some(handle_blake3_hash(params).await?))
         }
@@ -141,6 +141,22 @@ mod tests {
 
     fn b64(data: &[u8]) -> String {
         base64::engine::general_purpose::STANDARD.encode(data)
+    }
+
+    #[tokio::test]
+    async fn hashing_route_crypto_hash_blake3_alias() {
+        let params = json!({ "data": b64(b"songbird-delegation-test") });
+        let out = route("crypto.hash.blake3", Some(&params))
+            .await
+            .expect("route")
+            .expect("some");
+        assert_eq!(out["algorithm"], "BLAKE3");
+
+        let canonical = route("crypto.blake3_hash", Some(&params))
+            .await
+            .expect("route")
+            .expect("canonical");
+        assert_eq!(out["hash"], canonical["hash"]);
     }
 
     #[tokio::test]

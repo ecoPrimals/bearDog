@@ -290,6 +290,7 @@ pub fn beardog_announce_method_names() -> &'static [&'static str] {
         "crypto.aes256_gcm_decrypt",
         // Hash / HMAC / KDF
         "crypto.blake3_hash",
+        "crypto.hash.blake3",
         "crypto.sha256",
         "crypto.sha384",
         "crypto.sha512",
