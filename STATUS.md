@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 22, 2026 (Wave 150u — deep evolution)
+**Last Updated**: July 24, 2026 (Wave 150x — security hardening)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant; 2 monoliths refactored Wave 119 (server.rs→7 files, orchestrator.rs→10 files) |
-| **Tests** | 13,929+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 13,937+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | all 4 pass | 2 advisory ignores (RSA Marvin, `paste`); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned; TLS backend is Pure Rust `rustls-rustcrypto` |
@@ -89,6 +89,13 @@
 ---
 
 ## Recent Improvements
+
+### Wave 150x — Security Hardening: Pen Test Response (Jul 24, 2026)
+
+- **Enrollment timestamp window** — rejects proofs with >±300s drift (configurable `BEARDOG_ENROLLMENT_TIMESTAMP_WINDOW`)
+- **Enrollment replay tracking** — BLAKE3-digested proof cache with bounded capacity + self-pruning
+- **UDS connection cap** — semaphore-based backpressure (default 512, configurable `BEARDOG_UDS_MAX_CONNECTIONS`)
+- Responds to `s_tower_pen_enrollment_replay` and `s_tower_stress_btsp_storm` pen test findings
 
 ### Wave 150u — Deep Evolution + Tower Atomic Alignment (Jul 22, 2026)
 

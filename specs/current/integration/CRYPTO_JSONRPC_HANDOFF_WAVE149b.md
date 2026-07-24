@@ -347,6 +347,18 @@ Or on failure:
 
 **Requires**: `FAMILY_SEED` or `BEARDOG_FAMILY_SEED` env var set.
 
+### Security Hardening (Wave 150x)
+
+- **Timestamp window**: proofs are rejected if the timestamp differs from
+  bearDog's wall clock by more than `BEARDOG_ENROLLMENT_TIMESTAMP_WINDOW`
+  seconds (default 300 = ±5 minutes). Failure reason:
+  `"Timestamp outside validity window (Ns drift, max 300s)"`.
+- **Replay tracking**: a successfully verified proof cannot be resubmitted.
+  bearDog caches proof digests and rejects duplicates within the validity
+  window. Failure reason: `"Enrollment proof already used (replay rejected)"`.
+- Callers should use a fresh timestamp (current Unix seconds) for each
+  enrollment attempt.
+
 ## Full Method List (109 methods)
 
 See `crates/beardog-tunnel/src/unix_socket_ipc/handlers/crypto_handler/method_list.rs`

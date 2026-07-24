@@ -32,6 +32,10 @@ pub const ENV_RATE_LIMIT_BURST_CAPACITY: &str = "BEARDOG_RATE_LIMIT_BURST_CAPACI
 pub const ENV_RATE_LIMIT_WINDOW_SECS: &str = "BEARDOG_RATE_LIMIT_WINDOW_SECS";
 /// Global max concurrent connections before rate limiting rejects.
 pub const ENV_RATE_LIMIT_MAX_TOTAL: &str = "BEARDOG_RATE_LIMIT_MAX_TOTAL";
+/// UDS max concurrent connections (applies to Unix domain socket server).
+pub const ENV_UDS_MAX_CONNECTIONS: &str = "BEARDOG_UDS_MAX_CONNECTIONS";
+/// Enrollment HMAC proof timestamp validity window (seconds, default 300).
+pub const ENV_ENROLLMENT_TIMESTAMP_WINDOW: &str = "BEARDOG_ENROLLMENT_TIMESTAMP_WINDOW";
 /// Automatically block suspicious source IPs.
 pub const ENV_AUTO_BLOCK_SUSPICIOUS_IPS: &str = "BEARDOG_AUTO_BLOCK_SUSPICIOUS_IPS";
 /// Require authentication for all endpoints.

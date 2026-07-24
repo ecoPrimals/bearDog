@@ -40,6 +40,9 @@ use tracing::{debug, error, info, warn};
 /// connection is closed and the task freed.
 pub(super) const IPC_READ_TIMEOUT: Duration = Duration::from_secs(30);
 
+/// Default max concurrent UDS connections (overridable via `BEARDOG_UDS_MAX_CONNECTIONS`).
+const DEFAULT_UDS_MAX_CONNECTIONS: usize = 512;
+
 /// Unix socket IPC server for inter-primal communication
 pub struct UnixSocketIpcServer {
     /// Path to the Unix socket
@@ -65,6 +68,9 @@ pub struct UnixSocketIpcServer {
 
     /// Atomic readiness flag for lock-free checks
     is_ready: Arc<std::sync::atomic::AtomicBool>,
+
+    /// Bounds concurrent connections to prevent resource exhaustion (Wave 150x).
+    connection_semaphore: Arc<tokio::sync::Semaphore>,
 }
 
 impl UnixSocketIpcServer {
@@ -109,6 +115,13 @@ impl UnixSocketIpcServer {
             "Method gate initialized (JH-0/JH-1)"
         );
 
+        let max_conn = std::env::var(beardog_config::env_keys::ENV_UDS_MAX_CONNECTIONS)
+            .ok()
+            .and_then(|v| v.parse::<usize>().ok())
+            .unwrap_or(DEFAULT_UDS_MAX_CONNECTIONS);
+
+        info!(max_connections = max_conn, "UDS connection cap configured");
+
         Ok(Self {
             socket_path,
             ipc_symlinks,
@@ -118,6 +131,7 @@ impl UnixSocketIpcServer {
             method_gate,
             is_running: Arc::new(tokio::sync::RwLock::new(false)),
             is_ready: Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            connection_semaphore: Arc::new(tokio::sync::Semaphore::new(max_conn)),
         })
     }
 
@@ -297,16 +311,26 @@ impl UnixSocketIpcServer {
             "Unix socket IPC server status (atomic flag set)"
         );
 
-        // Accept connections loop (universal platform support!)
+        // Accept connections loop with semaphore-based backpressure (Wave 150x).
+        //
+        // The semaphore bounds concurrent connections to `BEARDOG_UDS_MAX_CONNECTIONS`
+        // (default 512). When at capacity, accept() still runs but the spawned
+        // task blocks until a permit is available — providing backpressure without
+        // dropping connections.
         loop {
             match listener.accept().await {
                 Ok(stream) => {
-                    // stream is Box<dyn PlatformStream> - works on all platforms!
                     let server = Arc::clone(&self);
+                    let sem = Arc::clone(&self.connection_semaphore);
                     tokio::spawn(async move {
+                        let Ok(_permit) = sem.acquire_owned().await else {
+                            warn!("UDS connection rejected: semaphore closed");
+                            return;
+                        };
                         if let Err(e) = server.handle_connection(stream).await {
                             error!(error = %e, "Connection handler error");
                         }
+                        // _permit dropped here → slot released
                     });
                 }
                 Err(e) => {

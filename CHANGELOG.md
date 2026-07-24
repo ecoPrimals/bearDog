@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 24, 2026 -- Wave 150x: Security Hardening (Pen Test Response)
+
+#### Enrollment Replay Protection + Timestamp Window
+- **Timestamp validity window**: `enrollment.verify` now rejects proofs whose timestamp drifts more than ±300 seconds from wall clock (configurable via `BEARDOG_ENROLLMENT_TIMESTAMP_WINDOW`)
+- **Replay tracking**: verified proofs are cached by BLAKE3 digest; resubmission within the window is rejected with `"replay rejected"` reason
+- `ReplayCache` with bounded capacity (10K entries) and self-pruning expired entries
+- 8 new tests: window acceptance/rejection (past/future), replay detection, cache independence
+
+#### UDS Connection Cap + Backpressure
+- **Semaphore-based connection cap** on Unix socket server (default 512, configurable via `BEARDOG_UDS_MAX_CONNECTIONS`)
+- Backpressure: at capacity, new connections queue on the semaphore rather than being dropped — callers experience latency, not errors
+- Permit released automatically when connection handler completes
+
+#### Env Keys
+- `BEARDOG_ENROLLMENT_TIMESTAMP_WINDOW` — enrollment proof timestamp validity (seconds, default 300)
+- `BEARDOG_UDS_MAX_CONNECTIONS` — max concurrent UDS connections (default 512)
+
 ### July 22, 2026 -- Wave 150u: Deep Evolution + Tower Atomic Alignment
 
 #### Deep Debt Evolution

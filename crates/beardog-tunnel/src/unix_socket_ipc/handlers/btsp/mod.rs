@@ -50,6 +50,8 @@ use std::sync::Arc;
 pub struct BtspHandler {
     /// Persistent server-side session store for handshake-as-a-service.
     session_store: crate::btsp_handshake::BtspSessionStore,
+    /// Tracks verified enrollment proofs to prevent replay attacks (Wave 150x).
+    replay_cache: enrollment::ReplayCache,
 }
 
 impl MethodHandler for BtspHandler {
@@ -180,11 +182,12 @@ impl Default for BtspHandler {
 }
 
 impl BtspHandler {
-    /// Create a new handler with a fresh session store.
+    /// Create a new handler with a fresh session store and replay cache.
     #[must_use]
     pub fn new() -> Self {
         Self {
             session_store: crate::btsp_handshake::BtspSessionStore::new(),
+            replay_cache: enrollment::ReplayCache::new(),
         }
     }
 }
