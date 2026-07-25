@@ -1,10 +1,13 @@
 # Handoff: eastGate Android Keystore Validation
 
 **From**: bearDog (flockGate)
-**To**: eastGate team
+**To**: primalSpring / eastGate team (hardware access)
 **Date**: July 25, 2026
 **Wave**: 150x
 **Priority**: P2 (last remaining bearDog HSM backend)
+**Note**: flockGate has no Android hardware. The primalSpring team on eastGate
+has access to grapheneGate (Pixel 8a, Tensor G3) and can run testing and
+validation on our behalf.
 
 ---
 
