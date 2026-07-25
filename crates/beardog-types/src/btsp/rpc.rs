@@ -393,8 +393,24 @@ pub struct SessionExportKeysResponse {
 /// Parameters for `enrollment.verify` — verify an HMAC proof from `mesh.enroll`.
 ///
 /// songBird sends the structured enrollment fields; bearDog reconstructs the
-/// HMAC message as `node_id || "|" || public_key || "|" || timestamp` and
-/// verifies the proof against `FAMILY_SEED`.
+/// HMAC message as `node_id || "|" || public_key || "|" || timestamp || "|" || seed_generation`
+/// and verifies the proof against a key derived from `FAMILY_SEED` via HKDF
+/// at the specified `seed_generation`.
+///
+/// ## Seed rotation (Wave 150x)
+///
+/// Enrollment keys are derived through the genetic HKDF hierarchy:
+///
+/// ```text
+/// enrollment_key(gen) = HKDF-SHA256(
+///     ikm  = FAMILY_SEED,
+///     salt = FAMILY_ID (or "default"),
+///     info = "enrollment-v{gen}"
+/// )
+/// ```
+///
+/// During a grace period after rotation, the verifier accepts proofs
+/// keyed to the current generation **or** the previous one.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnrollmentVerifyParams {
     /// The enrolling node's identifier (e.g. `"southGate"`).
@@ -403,8 +419,12 @@ pub struct EnrollmentVerifyParams {
     pub public_key: String,
     /// Unix timestamp (seconds) when the enrollment was initiated.
     pub timestamp: u64,
-    /// Base64-encoded HMAC-SHA256 proof over `node_id|public_key|timestamp`.
+    /// Base64-encoded HMAC-SHA256 proof over the enrollment message.
     pub proof: String,
+    /// Seed generation used to derive the HMAC key (default 0 for
+    /// backward compatibility with pre-rotation enrollments).
+    #[serde(default)]
+    pub seed_generation: u32,
 }
 
 /// Response from `enrollment.verify`.
@@ -415,6 +435,9 @@ pub struct EnrollmentVerifyResponse {
     /// Human-readable reason if `verified` is `false`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<String>,
+    /// The seed generation against which the proof was verified (if successful).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub verified_generation: Option<u32>,
 }
 
 fn default_cipher() -> String {

@@ -41,6 +41,12 @@ pub const ENV_UDS_MAX_CONNECTIONS: &str = "BEARDOG_UDS_MAX_CONNECTIONS";
 pub const ENV_BTSP_CIPHER_FLOOR: &str = "BEARDOG_BTSP_CIPHER_FLOOR";
 /// Enrollment HMAC proof timestamp validity window (seconds, default 300).
 pub const ENV_ENROLLMENT_TIMESTAMP_WINDOW: &str = "BEARDOG_ENROLLMENT_TIMESTAMP_WINDOW";
+/// Current enrollment seed generation (default 0).
+///
+/// Enrollment HMAC keys are derived via HKDF from `FAMILY_SEED` + this
+/// generation counter. During rotation, the verifier accepts the current
+/// generation **and** the previous one (grace period).
+pub const ENV_ENROLLMENT_SEED_GENERATION: &str = "BEARDOG_ENROLLMENT_SEED_GENERATION";
 /// Automatically block suspicious source IPs.
 pub const ENV_AUTO_BLOCK_SUSPICIOUS_IPS: &str = "BEARDOG_AUTO_BLOCK_SUSPICIOUS_IPS";
 /// Require authentication for all endpoints.

@@ -315,9 +315,17 @@ Response:
 ## Tower Atomic — Enrollment Verification (Wave 150u)
 
 songBird delegates `mesh.enroll` proof verification to bearDog via
-`enrollment.verify`. The enrolling node computes
-`HMAC-SHA256(family_seed, node_id || "|" || public_key || "|" || timestamp)`
-and sends the structured fields; bearDog reconstructs and verifies.
+`enrollment.verify`. Enrollment keys are derived through the genetic HKDF
+hierarchy rather than using raw `FAMILY_SEED` bytes:
+
+```text
+enrollment_key(gen) = HKDF-SHA256(
+    ikm  = FAMILY_SEED,
+    salt = FAMILY_ID (or "default"),
+    info = "enrollment-v{gen}"
+)
+proof = HMAC-SHA256(enrollment_key(gen), node_id|public_key|timestamp|gen)
+```
 
 ```json
 {
@@ -328,7 +336,8 @@ and sends the structured fields; bearDog reconstructs and verifies.
     "node_id": "southGate",
     "public_key": "<wg-or-ed25519-pubkey>",
     "timestamp": 1753128000,
-    "proof": "<base64 HMAC-SHA256>"
+    "proof": "<base64 HMAC-SHA256>",
+    "seed_generation": 0
   }
 }
 ```
@@ -336,7 +345,7 @@ and sends the structured fields; bearDog reconstructs and verifies.
 Response:
 
 ```json
-{"jsonrpc":"2.0","id":1,"result":{"verified":true}}
+{"jsonrpc":"2.0","id":1,"result":{"verified":true,"verified_generation":0}}
 ```
 
 Or on failure:
@@ -346,6 +355,18 @@ Or on failure:
 ```
 
 **Requires**: `FAMILY_SEED` or `BEARDOG_FAMILY_SEED` env var set.
+
+### Seed Rotation (Wave 150x)
+
+- **`BEARDOG_ENROLLMENT_SEED_GENERATION`**: sets the current generation (default 0).
+  Bump this value to rotate — each generation derives a completely different
+  HMAC key from the same root `FAMILY_SEED`.
+- **Grace period**: during rotation, the verifier accepts generation N **and** N−1.
+  After a rotation window, set generation to N+1 to retire N−1.
+- **Wire contract**: `seed_generation` field defaults to 0 for backward
+  compatibility. Callers that don't send it verify against generation 0.
+- **`verified_generation`**: response includes which generation matched,
+  allowing callers to detect nodes still on old generation.
 
 ### Security Hardening (Wave 150x)
 

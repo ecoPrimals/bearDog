@@ -22,7 +22,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 800 lines of code (production)
-- 13,941+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
+- 13,948+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
 - 90.51% line coverage (llvm-cov workspace) — target 90% met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - `#[serial]` minimized — 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent
@@ -36,6 +36,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - Universal IPC (Unix sockets, abstract sockets, TCP)
 - Android StrongBox integration (complete)
 - HSM abstraction (software, PKCS#11, StrongBox, Windows DPAPI, Linux SecretService)
+- Enrollment seed rotation via genetic HKDF hierarchy (generation-based, grace-period dual verification)
 - All production `unwrap()`/`expect()` eliminated (zero panic paths)
 - SPDX license headers on all .rs files (100%)
 - ecoBin C-dependency compliance (sysinfo removed, blake3 pure, pprof optional)

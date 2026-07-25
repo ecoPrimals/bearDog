@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 24, 2026 -- Wave 150x: Enrollment Seed Rotation via Genetic HKDF
+
+#### Enrollment Seed Rotation (P2 → SHIPPED)
+- **HKDF-derived enrollment keys**: `enrollment.verify` now derives HMAC keys through the genetic HKDF hierarchy rather than using raw `FAMILY_SEED` bytes — same pattern as `LineageKeyDerivation`
+- **Derivation**: `enrollment_key(gen) = HKDF-SHA256(ikm=FAMILY_SEED, salt=FAMILY_ID, info="enrollment-v{gen}")`
+- **Generation-aware proofs**: HMAC message now includes `seed_generation` field: `node_id|public_key|timestamp|generation`
+- **Grace-period dual verification**: during rotation, verifier accepts current generation N **and** previous N−1
+- **`BEARDOG_ENROLLMENT_SEED_GENERATION`** env key: sets current generation (default 0); bump to rotate
+- **Wire contract**: `EnrollmentVerifyParams` gains `seed_generation` (default 0, backward compatible); `EnrollmentVerifyResponse` gains `verified_generation`
+- 7 new tests: gen0/gen1 verification, grace period, stale gen rejection, cross-gen without grace, deterministic derivation, generation variation
+
+#### `BirdSong` Generation Wiring
+- `BirdSongEncryption` now tracks `current_generation` via `AtomicU32`; `encrypt()` uses it instead of hardcoded 0
+- `BirdSongBroadcast` gains `generation` field (serde-defaulted for backward compat); `decrypt()` reads generation from broadcast metadata
+- `advance_generation()` and `generation()` accessors for rotation orchestration
+
 ### July 24, 2026 -- Wave 150x: Cipher Floor + Deep Debt Sweep
 
 #### Cipher Floor Enforcement (P1)

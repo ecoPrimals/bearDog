@@ -18,6 +18,8 @@ use super::types::{BirdSongBroadcast, BirdSongDecryptRequest, BirdSongEncryptReq
 /// `BirdSong` encryption manager
 pub struct BirdSongEncryption {
     kdf: std::sync::Arc<LineageKeyDerivation>,
+    /// Current key generation for new encryptions.
+    current_generation: std::sync::atomic::AtomicU32,
 }
 
 impl BirdSongEncryption {
@@ -28,7 +30,26 @@ impl BirdSongEncryption {
     /// * `kdf` - Shared key derivation manager
     pub fn new(kdf: std::sync::Arc<LineageKeyDerivation>) -> Self {
         info!("🎵 Initializing BirdSongEncryption");
-        Self { kdf }
+        Self {
+            kdf,
+            current_generation: std::sync::atomic::AtomicU32::new(0),
+        }
+    }
+
+    /// Advance to the next key generation for new encryptions.
+    pub fn advance_generation(&self) -> u32 {
+        let new = self
+            .current_generation
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
+            + 1;
+        info!(generation = new, "🔄 BirdSong: advanced to generation");
+        new
+    }
+
+    /// Return the current key generation.
+    pub fn generation(&self) -> u32 {
+        self.current_generation
+            .load(std::sync::atomic::Ordering::SeqCst)
     }
 
     /// Encrypt a broadcast for a specific lineage
@@ -54,8 +75,8 @@ impl BirdSongEncryption {
             request.plaintext.len()
         );
 
-        // Derive key for this lineage
-        let key = self.kdf.derive_key(&request.lineage_hint, 0)?; // Generation 0 for now
+        let generation = self.generation();
+        let key = self.kdf.derive_key(&request.lineage_hint, generation)?;
 
         // Check key expiration
         if self.kdf.is_key_expired(&key) {
@@ -88,6 +109,7 @@ impl BirdSongEncryption {
             nonce: nonce_bytes.to_vec(),
             ciphertext,
             associated_data: request.associated_data.clone(),
+            generation,
             broadcast_at: Utc::now(),
         };
 
@@ -153,9 +175,9 @@ impl BirdSongEncryption {
             )));
         }
 
-        // Derive the same key used for encryption
-        // Note: We use generation 0 here; in production, generation would be included in broadcast metadata
-        let key = self.kdf.derive_key(&request.broadcast.hint, 0)?;
+        let key = self
+            .kdf
+            .derive_key(&request.broadcast.hint, request.broadcast.generation)?;
 
         // Check key validity for this depth
         // Note: Sender is always allowed (already checked above), so skip depth validity check for sender
@@ -475,6 +497,7 @@ mod tests {
             nonce: vec![0u8; 12],
             ciphertext: Vec::new(),
             associated_data: None,
+            generation: 0,
             broadcast_at: Utc::now(),
         };
 

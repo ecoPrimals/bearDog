@@ -186,6 +186,10 @@ pub struct BirdSongBroadcast {
     pub ciphertext: Vec<u8>,
     /// Optional associated data (authenticated but not encrypted)
     pub associated_data: Option<Vec<u8>>,
+    /// Key generation used to encrypt this broadcast.
+    /// Decryptors must derive the key at this generation to decrypt.
+    #[serde(default)]
+    pub generation: u32,
     /// Broadcast timestamp
     pub broadcast_at: DateTime<Utc>,
 }
