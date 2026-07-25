@@ -34,6 +34,16 @@ pub const ENV_RATE_LIMIT_WINDOW_SECS: &str = "BEARDOG_RATE_LIMIT_WINDOW_SECS";
 pub const ENV_RATE_LIMIT_MAX_TOTAL: &str = "BEARDOG_RATE_LIMIT_MAX_TOTAL";
 /// UDS max concurrent connections (applies to Unix domain socket server).
 pub const ENV_UDS_MAX_CONNECTIONS: &str = "BEARDOG_UDS_MAX_CONNECTIONS";
+/// Require BTSP handshake on local UDS connections (defense-in-depth).
+///
+/// When set to `"1"`, the first-byte `{` bypass is disabled on the
+/// family-scoped socket. All connections must complete a BTSP handshake
+/// (binary or JSON-line) before sending JSON-RPC traffic. The health
+/// socket (`beardog-default.sock`) is unaffected — it remains plaintext
+/// for monitoring probes.
+///
+/// Default: unset (bypass enabled for backward compatibility).
+pub const ENV_UDS_REQUIRE_BTSP: &str = "BEARDOG_UDS_REQUIRE_BTSP";
 /// BTSP cipher floor — minimum cipher for `btsp.negotiate` / `btsp.server.negotiate`.
 ///
 /// Values: `chacha20-poly1305` (default), `hmac-plain`, `null`.

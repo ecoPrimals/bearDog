@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 25, 2026 -- Wave 151a: BTSP on Local UDS (Defense-in-Depth)
+
+#### Defense-in-Depth UDS Enforcement (P2 → SHIPPED)
+- **`BEARDOG_UDS_REQUIRE_BTSP=1`**: disables the first-byte `{` bypass on family-scoped sockets — all connections must complete a BTSP handshake (binary or JSON-line `ClientHello`)
+- Plain JSON-RPC on the family socket is rejected with error code `-32600` and guidance to use BTSP or the health socket
+- JSON-line BTSP `ClientHello` (`{"protocol":"btsp",...}`) remains the allowed `{`-prefixed entry point
+- Health socket (`beardog-default.sock`) unaffected — stays plaintext for monitoring
+- `capabilities.list` and `discover_capabilities` now advertise `btsp_strict`, `cleartext_available`, and mode-appropriate `cleartext_methods`
+- Shared P2 item with songBird (songBird needs to send JSON-line ClientHello when strict mode is active)
+
 ### July 25, 2026 -- Wave 150x: Bond-Type Cipher Awareness + Backpressure Signaling
 
 #### Bond-Type Cipher Awareness (P2 → SHIPPED)

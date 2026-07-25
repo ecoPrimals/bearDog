@@ -427,6 +427,24 @@ Precedence: bond-type env → global `BEARDOG_BTSP_CIPHER_FLOOR` → default
 (`chacha20-poly1305`). Omitting `bond_type` is backward compatible (treats
 as covalent).
 
+### Defense-in-Depth: BTSP on Local UDS (Wave 151a)
+
+When `BEARDOG_UDS_REQUIRE_BTSP=1`, the first-byte `{` bypass is disabled.
+All connections to the family-scoped socket must complete a BTSP handshake:
+
+- **Binary framing** (4-byte length prefix): standard BTSP handshake path
+- **JSON-line `ClientHello`**: `{"protocol":"btsp","version":1,"client_ephemeral_pub":"<b64>"}`
+
+Plain JSON-RPC (`{` as first byte without BTSP ClientHello) is rejected
+with error code `-32600` ("BTSP handshake required (defense-in-depth)").
+
+The health socket (`beardog-default.sock`) is unaffected — it remains
+plaintext for monitoring probes (`health.liveness`, etc).
+
+**songBird integration**: when strict mode is active, songBird dispatch
+must send a JSON-line `ClientHello` before JSON-RPC traffic on bearDog's
+family socket.
+
 ### UDS Backpressure Signaling (Wave 150x)
 
 When all UDS connection slots are in use (`BEARDOG_UDS_MAX_CONNECTIONS`,

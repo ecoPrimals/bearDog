@@ -71,6 +71,10 @@ pub struct UnixSocketIpcServer {
 
     /// Bounds concurrent connections to prevent resource exhaustion (Wave 150x).
     connection_semaphore: Arc<tokio::sync::Semaphore>,
+
+    /// When true, all UDS connections must complete a BTSP handshake —
+    /// the first-byte `{` bypass is disabled (defense-in-depth, Wave 151a).
+    pub(super) require_btsp: bool,
 }
 
 impl UnixSocketIpcServer {
@@ -122,6 +126,14 @@ impl UnixSocketIpcServer {
 
         info!(max_connections = max_conn, "UDS connection cap configured");
 
+        let require_btsp =
+            beardog_errors::process_env::var(beardog_config::env_keys::ENV_UDS_REQUIRE_BTSP)
+                .is_ok_and(|v| v == "1");
+
+        if require_btsp {
+            info!("UDS BTSP enforcement: STRICT — first-byte bypass disabled (defense-in-depth)");
+        }
+
         Ok(Self {
             socket_path,
             ipc_symlinks,
@@ -132,6 +144,7 @@ impl UnixSocketIpcServer {
             is_running: Arc::new(tokio::sync::RwLock::new(false)),
             is_ready: Arc::new(std::sync::atomic::AtomicBool::new(false)),
             connection_semaphore: Arc::new(tokio::sync::Semaphore::new(max_conn)),
+            require_btsp,
         })
     }
 
@@ -392,9 +405,12 @@ impl UnixSocketIpcServer {
     ///
     /// In production mode (`FAMILY_ID` set), peeks the first byte to distinguish
     /// JSON-RPC (`0x7B` = `{`) from BTSP binary framing — matching the TCP
-    /// server pattern. This allows biomeOS composition traffic over UDS without
-    /// requiring a BTSP client, while external connections still get full BTSP
-    /// enforcement.
+    /// server pattern.
+    ///
+    /// When `BEARDOG_UDS_REQUIRE_BTSP=1` (defense-in-depth), the `{` bypass
+    /// is restricted: plain JSON-RPC is rejected, only BTSP JSON-line
+    /// `ClientHello` (`{"protocol":"btsp",...}`) is accepted. The health
+    /// socket (`beardog-default.sock`) is unaffected.
     ///
     /// In development mode, falls through to the existing NDJSON path.
     ///
@@ -418,9 +434,15 @@ impl UnixSocketIpcServer {
                 match tokio::time::timeout(Duration::from_secs(5), stream.read_exact(&mut peek))
                     .await
                 {
-                    Ok(Ok(1)) if peek[0] == b'{' => {
+                    Ok(Ok(1)) if peek[0] == b'{' && !self.require_btsp => {
                         debug!(
                             "UDS peek: JSON-RPC detected (0x7B) — bypassing BTSP for local composition"
+                        );
+                        Box::new(PrefixedStream::new(peek[0], stream)) as Box<dyn PlatformStream>
+                    }
+                    Ok(Ok(1)) if peek[0] == b'{' && self.require_btsp => {
+                        debug!(
+                            "UDS peek: JSON-RPC detected (0x7B) — BTSP required, routing to JSON-line handshake"
                         );
                         Box::new(PrefixedStream::new(peek[0], stream)) as Box<dyn PlatformStream>
                     }
@@ -542,6 +564,34 @@ impl UnixSocketIpcServer {
                 return self
                     .handle_btsp_jsonline_connection(stream, &client_hello, family_seed)
                     .await;
+            }
+
+            // Defense-in-depth: when BTSP is required on local UDS, reject
+            // plain JSON-RPC that did not arrive via a BTSP handshake. The
+            // BTSP JSON-line ClientHello path above is the only allowed `{`
+            // entry point. This prevents co-resident processes from silently
+            // bypassing transport security.
+            if self.require_btsp
+                && matches!(self.security_mode, BtspSecurityMode::Production { .. })
+            {
+                warn!("UDS BTSP enforcement: rejecting plaintext — BTSP handshake required");
+                let rejection = serde_json::json!({
+                    "jsonrpc": JSONRPC_VERSION,
+                    "error": {
+                        "code": -32600,
+                        "message": "BTSP handshake required (defense-in-depth)",
+                        "data": {
+                            "reason": "BEARDOG_UDS_REQUIRE_BTSP=1 — all connections must complete a BTSP handshake. Send a JSON-line ClientHello ({\"protocol\":\"btsp\",\"version\":1,...}) or connect to beardog-default.sock for plaintext health checks.",
+                            "btsp_version": "2.0",
+                        }
+                    },
+                    "id": serde_json::Value::Null,
+                });
+                if let Ok(msg) = serde_json::to_string(&rejection) {
+                    let mut s = stream;
+                    let _ = s.write_all(format!("{msg}\n").as_bytes()).await;
+                }
+                return Ok(());
             }
 
             let protocol = Protocol::detect_from_bytes(first_line.as_bytes());

@@ -340,28 +340,39 @@ impl CapabilitiesHandler {
             "transport_security": {
                 "btsp_version": "2.0",
                 "btsp_required": self.is_btsp_required(),
+                "btsp_strict": self.is_btsp_strict(),
                 "btsp_server_available": true,
-                "cleartext_available": true,
-                "cleartext_detection": "first-byte 0x7B auto-detect on UDS and TCP",
-                "cleartext_methods": [
-                    "crypto.hash",
-                    "crypto.hash.blake3",
-                    "crypto.blake3_hash",
-                    "health.liveness",
-                    "health.readiness",
-                    "health.version",
-                    "capabilities.list",
-                    "identity.get",
-                    "auth.check",
-                    "auth.mode",
-                    "auth.peer_info",
-                    "auth.issue_ionic",
-                    "auth.issue_session",
-                    "auth.verify_ionic",
-                    "auth.public_key",
-                    "identity.create",
-                ],
-                "note": if self.is_btsp_required() {
+                "cleartext_available": !self.is_btsp_strict(),
+                "cleartext_detection": if self.is_btsp_strict() {
+                    "disabled — BEARDOG_UDS_REQUIRE_BTSP=1"
+                } else {
+                    "first-byte 0x7B auto-detect on UDS and TCP"
+                },
+                "cleartext_methods": if self.is_btsp_strict() {
+                    serde_json::json!([])
+                } else {
+                    serde_json::json!([
+                        "crypto.hash",
+                        "crypto.hash.blake3",
+                        "crypto.blake3_hash",
+                        "health.liveness",
+                        "health.readiness",
+                        "health.version",
+                        "capabilities.list",
+                        "identity.get",
+                        "auth.check",
+                        "auth.mode",
+                        "auth.peer_info",
+                        "auth.issue_ionic",
+                        "auth.issue_session",
+                        "auth.verify_ionic",
+                        "auth.public_key",
+                        "identity.create",
+                    ])
+                },
+                "note": if self.is_btsp_strict() {
+                    "Defense-in-depth: BTSP handshake required on all connections. Use JSON-line ClientHello or binary framing. Health socket (beardog-default.sock) remains plaintext."
+                } else if self.is_btsp_required() {
                     "Family-scoped socket: BTSP preferred. Cleartext JSON-RPC accepted via first-byte 0x7B bypass for listed methods."
                 } else {
                     "Dev/standalone socket: plaintext JSON-RPC accepted for all methods."
@@ -383,6 +394,15 @@ impl CapabilitiesHandler {
     fn is_btsp_required(&self) -> bool {
         let fid = self.identity.family_id();
         !fid.is_empty() && fid != "standalone" && fid != "default"
+    }
+
+    /// Whether strict BTSP enforcement is active (defense-in-depth).
+    ///
+    /// When `BEARDOG_UDS_REQUIRE_BTSP=1`, the first-byte `{` bypass is
+    /// disabled — all UDS connections must use BTSP (binary or JSON-line).
+    fn is_btsp_strict(&self) -> bool {
+        beardog_errors::process_env::var(beardog_config::env_keys::ENV_UDS_REQUIRE_BTSP)
+            .is_ok_and(|v| v == "1")
     }
 
     /// Produce a signed capability announcement using the primal's unified
@@ -467,6 +487,7 @@ impl CapabilitiesHandler {
             "capabilities": CAPABILITIES,
             "transport_security": {
                 "btsp_required": self.is_btsp_required(),
+                "btsp_strict": self.is_btsp_strict(),
                 "btsp_version": "2.0",
             },
             "signed_announcement": signed,

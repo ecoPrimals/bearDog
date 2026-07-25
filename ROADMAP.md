@@ -40,6 +40,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - Two-layer genetic enrollment: mitochondrial gate (HMAC/family seed) + nuclear lineage distance (tree proximity → trust tier)
 - Bond-type cipher awareness: `BtspBondType` (Covalent/Ionic) drives per-type cipher floors in BTSP negotiation
 - UDS backpressure signaling: explicit JSON-RPC error `-32003` on connection saturation (retry-with-backoff instead of hang)
+- BTSP on local UDS (defense-in-depth): `BEARDOG_UDS_REQUIRE_BTSP=1` disables the `{` bypass, all connections must BTSP handshake
 - All production `unwrap()`/`expect()` eliminated (zero panic paths)
 - SPDX license headers on all .rs files (100%)
 - ecoBin C-dependency compliance (sysinfo removed, blake3 pure, pprof optional)
