@@ -1,7 +1,7 @@
 +++
 title = "bearDog Validation Summary"
-description = "Zero-trust sovereign cryptographic orchestrator — 13,973+ tests, 25 crates, 231 IPC methods, ACME auto-cert, FIDO2/CTAP2, BTSP cross-gate trust, CredentialStore, two-layer genetic enrollment"
-date = 2026-07-24
+description = "Zero-trust sovereign cryptographic orchestrator — 13,973+ tests, 25 crates, 231 IPC methods, ACME auto-cert, FIDO2/CTAP2, BTSP cross-gate trust, CredentialStore, two-layer genetic enrollment, BTSP strict UDS, enrollment handler decomposition"
+date = 2026-07-25
 
 [taxonomies]
 primals = ["beardog"]

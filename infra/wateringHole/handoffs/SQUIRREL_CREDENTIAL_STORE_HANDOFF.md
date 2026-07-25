@@ -3,7 +3,8 @@
 **From**: bearDog (flockGate)
 **To**: squirrel team
 **Date**: July 25, 2026
-**Wave**: 150x
+**Wave**: 150u (integration shipped) / 150x (handoff created)
+**Status**: ✅ INTEGRATED (item 5 pending co-located host)
 **Priority**: P1 (cross-primal credential storage)
 
 ---

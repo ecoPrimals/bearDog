@@ -98,8 +98,12 @@ limiting, no connection cap, no backpressure. TCP server already had
 
 ## P2 Remaining (bearDog)
 
-| Task | Status |
-|------|--------|
-| Android Keystore + grapheneGate | Code complete, awaiting hardware validation |
-| Enrollment seed rotation | Future hardening (P2 queued) |
-| CredentialStore squirrel integration | Downstream team (eastGate) |
+| Task | Status | Updated |
+|------|--------|---------|
+| Android Keystore + grapheneGate | Code complete, awaiting hardware validation | Unchanged — eastGate handoff open |
+| Enrollment seed rotation | ✅ SHIPPED (Wave 150x) | HKDF-based, grace period N/N−1 |
+| CredentialStore squirrel integration | ✅ INTEGRATED (Wave 150u) | squirrel `SecurityProvider` delegates to `secrets.*` |
+| UDS backpressure signaling | ✅ SHIPPED (Wave 150x) | 100ms timeout → `-32003` saturation error |
+| Bond-type cipher floors | ✅ SHIPPED (Wave 150x) | Per-bond `COVALENT`/`IONIC` cipher floor env keys |
+| BTSP strict UDS mode | ✅ SHIPPED (Wave 151a) | `BEARDOG_UDS_REQUIRE_BTSP=1` |
+| Enrollment handler decomposition | ✅ SHIPPED (Wave 151b) | 1061L → 7 modules |

@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 25, 2026 (Wave 150x — bond-type cipher awareness + backpressure signaling)
+**Last Updated**: July 25, 2026 (Wave 151b — enrollment decomposition + hardcoding evolution)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
