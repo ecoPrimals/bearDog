@@ -2,7 +2,7 @@
 
 **Version**: 1.0.0  
 **Date**: November 9, 2025  
-**Status**: 🚧 **IN PROGRESS** - Connecting Existing Systems  
+**Status**: ✅ **PHASE 1 SHIPPED** — OS-RNG fallback with honest labeling; hardware RNG Phase 2  
 **Module**: `beardog-security::hsm::entropy_orchestrator`
 
 ---
@@ -11,8 +11,8 @@
 
 This specification defines the **universal orchestration layer** that connects BearDog's existing:
 - ✅ **Entropy Hierarchy System** (3-tier human-owned randomness)
-- ✅ **iOS Secure Enclave** (iPhone hardware security)
-- ✅ **Android StrongBox** (Pixel Titan M2 chip)
+- ⏸️ **iOS Secure Enclave** — stub; no iOS hardware in ecosystem (Phase 2)
+- ⏸️ **Android StrongBox** — JNI not wired; blocked on eastGate hardware (Phase 2)
 - ✅ **FIDO2/CTAP2** (SoloKeys, YubiKey, hardware tokens)
 
 Into a **unified human entropy generation system** where ANY device can contribute to BearDog's entropy hierarchy.

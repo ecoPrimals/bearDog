@@ -2,19 +2,20 @@
 ## Version 3.1 - Deployment Approved
 
 ---
-**ACCURACY UPDATE** (April 13, 2026)
+**ACCURACY UPDATE** (July 25, 2026 — Wave 151b)
 
-Previous accuracy notice (October 2025) is **resolved**:
+Previous accuracy notice (April 2026) is **superseded**:
 - Zero unsafe code blocks — `forbid(unsafe_code)` enforced workspace-wide
-- 14,784+ tests passing, zero failures
+- 13,973+ tests passing, zero failures
 - 90.51% line coverage (llvm-cov)
-- 100 JSON-RPC methods, 29 crates, edition 2024
+- 231 JSON-RPC methods (219 registry + 12 pre-dispatch gate), 25 crates, edition 2024
+- BTSP strict UDS (`BEARDOG_UDS_REQUIRE_BTSP=1`), enrollment handler decomposed (7 modules)
 
 **For current status**: See [STATUS.md](../../../STATUS.md)
 ---
 
-**Status**: **PRODUCTION READY** (Updated April 13, 2026)  
-**Last Updated**: April 13, 2026  
+**Status**: **PRODUCTION READY** (Updated July 25, 2026)  
+**Last Updated**: July 25, 2026  
 **Security Grade**: **A (Excellent)**  
 **Deployment Confidence**: **PRODUCTION READY**  
 
@@ -29,7 +30,7 @@ BearDog has successfully completed all critical security fixes and quality impro
 | Category | Score | Status | Notes |
 |----------|-------|--------|-------|
 | **Security** | 100/100 | ✅ BULLETPROOF | All critical vulnerabilities eliminated |
-| **Testing** | 95/100 | ✅ COMPREHENSIVE | 14,784+ tests passing, 90.51% coverage |
+| **Testing** | 95/100 | ✅ COMPREHENSIVE | 13,973+ tests passing, 90.51% coverage |
 | **Build Quality** | 100/100 | ✅ CLEAN | Zero errors, minimal warnings |
 | **Documentation** | 90/100 | ✅ COMPLETE | Production guides available |
 | **Performance** | 95/100 | ✅ OPTIMIZED | Zero-copy architecture implemented |

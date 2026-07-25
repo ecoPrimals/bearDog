@@ -4,6 +4,7 @@
 //!
 //! Routes operations to appropriate HSM providers based on requirements and availability.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 
@@ -50,6 +51,30 @@ impl Default for OperationRouterConfig {
             ],
             max_retries: 3,
             operation_timeout_ms: 5000,
+        }
+    }
+}
+
+impl OperationRouterConfig {
+    /// Load from environment, falling back to defaults.
+    ///
+    /// - `BEARDOG_HSM_OPERATION_TIMEOUT_SECS` → `operation_timeout_ms` (×1000, default 5000ms)
+    /// - `BEARDOG_HSM_MAX_RETRIES` → `max_retries` (default 3)
+    pub fn from_env() -> Self {
+        let timeout_ms = std::env::var(env_keys::ENV_HSM_OPERATION_TIMEOUT_SECS)
+            .ok()
+            .and_then(|v| v.parse::<u64>().ok())
+            .map_or(5000, |secs| secs * 1000);
+
+        let max_retries = std::env::var(env_keys::ENV_HSM_MAX_RETRIES)
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(3);
+
+        Self {
+            operation_timeout_ms: timeout_ms,
+            max_retries,
+            ..Self::default()
         }
     }
 }

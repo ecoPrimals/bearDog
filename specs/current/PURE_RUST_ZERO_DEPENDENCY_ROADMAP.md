@@ -3,8 +3,8 @@
 
 **Version**: 1.0  
 **Date**: November 1, 2025  
-**Status**: 🎯 **ROADMAP ACTIVE**  
-**Timeline**: 10-16 weeks to completion  
+**Status**: ✅ **CRYPTO MILESTONE ACHIEVED** (Wave 145) — hardware HSM paths remain Phase 2  
+**Timeline**: Core Pure Rust stack shipped Jun 2026; optional HSM/system deps remain roadmap  
 **Philosophy**: **Rust All The Way Down**
 
 ---

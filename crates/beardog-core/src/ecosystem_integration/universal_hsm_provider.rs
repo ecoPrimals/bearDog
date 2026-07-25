@@ -5,6 +5,7 @@
 // This module provides a unified interface for Hardware Security Module (HSM) operations
 // across different vendors and deployment environments.
 
+use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -248,6 +249,38 @@ impl Default for UniversalHsmConfig {
             operation_timeout_ms: 5000,
             max_retries: 3,
             health_check_interval_secs: 30,
+        }
+    }
+}
+
+impl UniversalHsmConfig {
+    /// Load from environment, falling back to defaults.
+    ///
+    /// - `BEARDOG_HSM_OPERATION_TIMEOUT_SECS` → `operation_timeout_ms` (×1000, default 5000ms)
+    /// - `BEARDOG_HSM_MAX_RETRIES` → `max_retries` (default 3)
+    /// - `BEARDOG_HSM_HEALTH_CHECK_INTERVAL_SECS` → `health_check_interval_secs` (default 30)
+    pub fn from_env() -> Self {
+        let timeout_ms = std::env::var(env_keys::ENV_HSM_OPERATION_TIMEOUT_SECS)
+            .ok()
+            .and_then(|v| v.parse::<u64>().ok())
+            .map_or(5000, |secs| secs * 1000);
+
+        let max_retries = std::env::var(env_keys::ENV_HSM_MAX_RETRIES)
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(3);
+
+        let health_check_interval_secs =
+            std::env::var(env_keys::ENV_HSM_HEALTH_CHECK_INTERVAL_SECS)
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(30);
+
+        Self {
+            operation_timeout_ms: timeout_ms,
+            max_retries,
+            health_check_interval_secs,
+            ..Self::default()
         }
     }
 }

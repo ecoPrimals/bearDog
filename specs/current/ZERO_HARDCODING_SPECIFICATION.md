@@ -2,9 +2,9 @@
 ## Eliminating All Hardcoded Values from BearDog
 
 **Version**: 1.1  
-**Date**: November 14, 2025  
-**Status**: 🎯 **ACTIVE MANDATE**  
-**Current Hardcoding**: 307 instances remaining (audit update from 211)  
+**Date**: November 14, 2025 (spec) | **Reviewed**: July 25, 2026 (Wave 151b)  
+**Status**: ✅ **ACHIEVED** (production) — 850+ env_keys, capability-based discovery  
+**Current Hardcoding**: 0 in production code (Wave 133–151b env migration complete)  
 **Target**: **ZERO** hardcoded values in production code  
 **Philosophy**: **Configuration over Convention**
 
@@ -17,9 +17,9 @@
 **Solution**: Move ALL configurable values to configuration files, environment variables, or runtime discovery.
 
 **Status**:
-- ✅ **45% reduction**: 261 hardcoded values removed
-- ⚠️ **211 remaining**: Need systematic elimination
-- 🎯 **Target**: Zero hardcoded values by Phase 1 completion
+- ✅ **Complete**: All production literals migrated to env_keys / runtime discovery
+- ✅ **0 remaining** in production (Wave 133–151b: eth0→BEARDOG_MDNS_INTERFACE, /tmp→temp_dir())
+- ✅ **Target met**: July 2026 — see STATUS.md Architecture Compliance
 
 ---
 
@@ -36,7 +36,7 @@ Breakdown:
   - Other Constants: ~81 instances
 ```
 
-### **Current State (November 1, 2025)**
+### **Historical State (November 1, 2025) — now resolved**
 ```yaml
 Total Hardcoded Values: 211 instances (55% reduction!)
 Breakdown:

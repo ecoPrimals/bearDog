@@ -1,8 +1,8 @@
 # 🔄 Key Rotation and Lifecycle Management Specification
 
 **Version**: 1.0.0  
-**Date**: November 6, 2025  
-**Status**: IMPLEMENTATION SPEC
+**Date**: November 6, 2025 (spec) | **Reviewed**: July 25, 2026  
+**Status**: 📋 **PARTIAL** — types/tests exist; automated rotation daemon not shipped
 
 ---
 

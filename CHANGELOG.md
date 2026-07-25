@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 25, 2026 -- Wave 151c: Spec Audit + Env Wiring + DNS Bug Fix
+
+#### Spec Status Corrections (7 specs)
+- **ZERO_HARDCODING_SPECIFICATION**: `ACTIVE MANDATE (307 remaining)` → `ACHIEVED (0 in production)`
+- **PRODUCTION_READINESS_SPECIFICATION**: Updated metrics to 231 methods / 25 crates / 13,973+ tests
+- **NODE_REGISTRY_MODERNIZATION_ROADMAP**: `CRITICAL / Ready` → `DEFERRED / DORMANT` (crate workspace-excluded)
+- **PURE_RUST_ZERO_DEPENDENCY_ROADMAP**: `ROADMAP ACTIVE` → `CRYPTO MILESTONE ACHIEVED (Wave 145)`
+- **UNIVERSAL_HSM_ENTROPY_ORCHESTRATION**: `IN PROGRESS` → `PHASE 1 SHIPPED`; iOS/Android marked as stubs
+- **KEY_ROTATION_AND_LIFECYCLE**: `IMPLEMENTATION SPEC` → `PARTIAL` (types/tests exist, daemon not shipped)
+- **BEARDOG_SCOPE_AND_BOUNDARIES**: Updated metrics from 100→231 methods, 14,784→13,973+ tests
+
+#### Bug Fix
+- **`dns_timeout_seconds` was mapped to `DEFAULT_POOL_SIZE` (10)** instead of DNS timeout constant (5s) — fixed `TimeoutConfiguration::with_defaults()` and `from_env_provider()` to use `DEFAULT_DNS_TIMEOUT_SECS` and read `BEARDOG_DNS_RESOLUTION_TIMEOUT_SECS`
+
+#### Env Wiring (3 structs, 1 new key)
+- **`HumanEntropyConfig`**: Wired `BEARDOG_ENTROPY_COLLECTION_TIMEOUT_MS` (new env key; default 5000ms)
+- **`OperationRouterConfig`**: Added `from_env()` reading `BEARDOG_HSM_OPERATION_TIMEOUT_SECS` + `BEARDOG_HSM_MAX_RETRIES`
+- **`UniversalHsmConfig`**: Added `from_env()` reading `BEARDOG_HSM_OPERATION_TIMEOUT_SECS` + `BEARDOG_HSM_MAX_RETRIES` + `BEARDOG_HSM_HEALTH_CHECK_INTERVAL_SECS`
+
 ### July 25, 2026 -- Wave 151b: Deep Debt Sweep — Smart Refactoring + Hardcoding Evolution
 
 #### Smart File Decomposition

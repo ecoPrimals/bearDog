@@ -139,8 +139,8 @@ integration_point:
 ### **✅ BearDog — Completed (as of March 2026)**
 - ~~Ring crypto library integration~~ → Eliminated: 100% Pure Rust (RustCrypto suite, zero C deps)
 - ~~Ed25519 signature verification~~ → Complete: full Ed25519 sign/verify via `crypto.sign_ed25519` / `crypto.verify_ed25519`
-- ~~Advanced cryptographic algorithms~~ → Complete: 100 JSON-RPC methods (ChaCha20-Poly1305, X25519, BLAKE3, Argon2id, post-quantum ML-KEM/ML-DSA/SPHINCS+, Tor ntor)
-- ~~Security test suite~~ → 14,784+ tests, 90.51% line coverage, 14 crypto fault injection tests
+- ~~Advanced cryptographic algorithms~~ → Complete: 231 JSON-RPC methods (ChaCha20-Poly1305, X25519, BLAKE3, Argon2id, post-quantum ML-KEM/ML-DSA/SPHINCS+, Tor ntor, genetic enrollment, BTSP handshake)
+- ~~Security test suite~~ → 13,973+ tests, 90.51% line coverage, 14 crypto fault injection tests
 - ~~Key rotation automation~~ → Complete: `key_rotation_manager.rs` with policy-driven rotation
 - ~~HSM configuration~~ → Complete: Software, PKCS#11, StrongBox backends via `HsmManager`
 - ~~Genetic spawning cryptographic proof generation~~ → Complete: `genetic.*` methods, lineage key derivation, beacon seeds

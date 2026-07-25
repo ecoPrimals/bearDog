@@ -115,6 +115,8 @@ pub const ENV_GRPC_HOST: &str = "BEARDOG_GRPC_HOST";
 
 /// Entropy quality threshold (0.0–1.0).
 pub const ENV_ENTROPY_QUALITY_THRESHOLD: &str = "BEARDOG_ENTROPY_QUALITY_THRESHOLD";
+/// Human entropy collection timeout (milliseconds).
+pub const ENV_ENTROPY_COLLECTION_TIMEOUT_MS: &str = "BEARDOG_ENTROPY_COLLECTION_TIMEOUT_MS";
 /// Multisig enforcement mode.
 pub const ENV_MULTISIG_MODE: &str = "BEARDOG_MULTISIG_MODE";
 /// Multisig signature threshold.

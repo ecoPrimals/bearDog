@@ -3,10 +3,10 @@
 
 ---
 
-**Priority**: 🔥 **CRITICAL**  
-**Impact**: Eliminates 281 compilation errors + architectural overlap  
-**Timeline**: 4-6 hours implementation  
-**Status**: Ready for implementation  
+**Priority**: 📋 **DEFERRED** (crate workspace-excluded, zero consumers)  
+**Impact**: Would eliminate architectural overlap with songBird when crate is reactivated  
+**Timeline**: Deferred — blocked on capability-based composition need (Wave 148)  
+**Status**: ⏸️ **DORMANT** — excluded from workspace Jul 2026; see STATUS.md  
 
 ---
 
@@ -16,8 +16,8 @@
 - ❌ Overlaps with Songbird service discovery
 - ❌ Duplicates Songbird health monitoring  
 - ❌ Replicates Songbird load balancing
-- ❌ 281 compilation errors
-- ❌ Architectural confusion
+- ⏸️ Crate excluded from workspace (dormant; not in active build)
+- ❌ Architectural confusion (if reactivated)
 
 ### **TO: BearDog Security Registry (Focused)**
 - ✅ Security relationship management only

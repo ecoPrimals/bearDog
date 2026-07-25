@@ -1,15 +1,16 @@
-# After Action Report: Wave 151a/151b
+# After Action Report: Wave 151a/151b/151c
 
 **Date**: July 25, 2026
 **Author**: flockGate
-**Commit range**: `f7e2f50..f3797b0`
+**Commit range**: `f7e2f50..HEAD`
 
 ---
 
 ## Scope
 
-Two back-to-back waves delivering defense-in-depth UDS enforcement (151a) and a
-deep debt sweep with smart file decomposition (151b).
+Three back-to-back waves delivering defense-in-depth UDS enforcement (151a),
+deep debt sweep with smart file decomposition (151b), and spec audit + env wiring
++ DNS bug fix (151c).
 
 ---
 
@@ -93,6 +94,38 @@ Items found during audit but not actioned this wave (external deps or low priori
 
 ---
 
+## Wave 151c — Spec Audit + Env Wiring + DNS Bug Fix
+
+### What was delivered
+
+| Item | Status |
+|------|--------|
+| 7 stale spec status headers corrected | SHIPPED |
+| `dns_timeout_seconds` bug (mapped to `DEFAULT_POOL_SIZE`) | FIXED |
+| `HumanEntropyConfig.collection_timeout_ms` env wired | SHIPPED |
+| `OperationRouterConfig.from_env()` added | SHIPPED |
+| `UniversalHsmConfig.from_env()` added | SHIPPED |
+| New env key: `BEARDOG_ENTROPY_COLLECTION_TIMEOUT_MS` | SHIPPED |
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `specs/current/ZERO_HARDCODING_SPECIFICATION.md` | `ACTIVE MANDATE` → `ACHIEVED` |
+| `specs/current/production/PRODUCTION_READINESS_SPECIFICATION.md` | 231 methods, 13,973+ tests |
+| `specs/current/architecture/BEARDOG_NODE_REGISTRY_MODERNIZATION_ROADMAP.md` | `CRITICAL` → `DEFERRED/DORMANT` |
+| `specs/current/architecture/BEARDOG_SCOPE_AND_BOUNDARIES.md` | Updated metrics |
+| `specs/current/PURE_RUST_ZERO_DEPENDENCY_ROADMAP.md` | `ROADMAP ACTIVE` → `ACHIEVED` |
+| `specs/current/security/UNIVERSAL_HSM_ENTROPY_ORCHESTRATION.md` | `IN PROGRESS` → `PHASE 1 SHIPPED` |
+| `specs/KEY_ROTATION_AND_LIFECYCLE.md` | `IMPLEMENTATION SPEC` → `PARTIAL` |
+| `crates/beardog-types/.../connection.rs` | DNS timeout bug fix + env wiring |
+| `crates/beardog-config/src/env_keys/identity.rs` | Added `ENV_ENTROPY_COLLECTION_TIMEOUT_MS` |
+| `crates/beardog-genetics/.../legacy.rs` | Wired `collection_timeout_ms` from env |
+| `crates/beardog-tunnel/.../operation_router.rs` | Added `from_env()` |
+| `crates/beardog-core/.../universal_hsm_provider.rs` | Added `from_env()` |
+
+---
+
 ## What went well
 
 - Four-dimensional parallel audit (large files, unsafe, hardcoding, deps) enabled efficient triage
@@ -105,3 +138,6 @@ Items found during audit but not actioned this wave (external deps or low priori
 - Root docs drift faster than code — test counts, method counts, and dates accumulate inconsistencies across 9+ files
 - The `#[path]` attribute for test extraction is the cleanest pattern for Rust test isolation
 - `cargo clippy --fix` handles `redundant_pub_crate` automatically
+- `DEFAULT_POOL_SIZE` was being used as a generic "10" constant across 30+ call sites, including DNS timeout — semantic constants prevent category errors
+- Specs drift even faster than root docs — 7 specs had incorrect status labels that would mislead upstream auditors
+- `from_env()` should be added at struct creation time, not bolted on later; 3 config structs had Default but no env wiring

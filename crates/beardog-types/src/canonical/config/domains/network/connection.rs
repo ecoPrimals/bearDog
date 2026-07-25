@@ -390,6 +390,9 @@ impl TimeoutConfiguration {
     /// Default shutdown timeout in seconds
     pub const DEFAULT_SHUTDOWN_TIMEOUT_SECS: u64 = 30;
 
+    /// Default DNS resolution timeout in seconds
+    pub const DEFAULT_DNS_TIMEOUT_SECS: u64 = 5;
+
     /// Create `TimeoutConfiguration` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
@@ -401,8 +404,7 @@ impl TimeoutConfiguration {
             request_timeout_seconds: crate::constants::domains::network::timeouts::REQUEST_TIMEOUT
                 .as_secs(),
             keepalive_timeout_seconds: Self::DEFAULT_KEEPALIVE_TIMEOUT_SECS,
-            dns_timeout_seconds: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE
-                as u64,
+            dns_timeout_seconds: Self::DEFAULT_DNS_TIMEOUT_SECS,
             tls_handshake_timeout_seconds: Self::DEFAULT_TLS_HANDSHAKE_TIMEOUT_SECS,
             read_timeout_seconds: Self::DEFAULT_READ_TIMEOUT_SECS,
             write_timeout_seconds: Self::DEFAULT_WRITE_TIMEOUT_SECS,
@@ -434,8 +436,9 @@ impl TimeoutConfiguration {
             keepalive_timeout_seconds: get("BEARDOG_KEEPALIVE_TIMEOUT_SECS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_KEEPALIVE_TIMEOUT_SECS),
-            dns_timeout_seconds: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE
-                as u64,
+            dns_timeout_seconds: get("BEARDOG_DNS_RESOLUTION_TIMEOUT_SECS")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(Self::DEFAULT_DNS_TIMEOUT_SECS),
             tls_handshake_timeout_seconds: get("BEARDOG_TLS_HANDSHAKE_TIMEOUT_SECS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_TLS_HANDSHAKE_TIMEOUT_SECS),
