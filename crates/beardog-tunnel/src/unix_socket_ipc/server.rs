@@ -311,26 +311,40 @@ impl UnixSocketIpcServer {
             "Unix socket IPC server status (atomic flag set)"
         );
 
-        // Accept connections loop with semaphore-based backpressure (Wave 150x).
+        // Accept connections with semaphore-based backpressure + explicit
+        // saturation signaling (Wave 150x).
         //
         // The semaphore bounds concurrent connections to `BEARDOG_UDS_MAX_CONNECTIONS`
-        // (default 512). When at capacity, accept() still runs but the spawned
-        // task blocks until a permit is available — providing backpressure without
-        // dropping connections.
+        // (default 512). When at capacity, the connection gets a brief grace period
+        // (100ms) for a slot to free; if none does, a JSON-RPC error is sent before
+        // closing so callers can retry with backoff instead of hanging indefinitely.
         loop {
             match listener.accept().await {
                 Ok(stream) => {
                     let server = Arc::clone(&self);
                     let sem = Arc::clone(&self.connection_semaphore);
                     tokio::spawn(async move {
-                        let Ok(_permit) = sem.acquire_owned().await else {
-                            warn!("UDS connection rejected: semaphore closed");
-                            return;
+                        let permit = match tokio::time::timeout(
+                            Duration::from_millis(100),
+                            sem.acquire_owned(),
+                        )
+                        .await
+                        {
+                            Ok(Ok(permit)) => permit,
+                            Ok(Err(_closed)) => {
+                                warn!("UDS connection rejected: semaphore closed");
+                                return;
+                            }
+                            Err(_timeout) => {
+                                warn!("UDS connection rejected: server saturated");
+                                send_saturation_error(stream).await;
+                                return;
+                            }
                         };
                         if let Err(e) = server.handle_connection(stream).await {
                             error!(error = %e, "Connection handler error");
                         }
-                        // _permit dropped here → slot released
+                        drop(permit);
                     });
                 }
                 Err(e) => {
@@ -339,7 +353,41 @@ impl UnixSocketIpcServer {
             }
         }
     }
+}
 
+/// Send a JSON-RPC error to a connection when the server is at capacity.
+///
+/// Writes a single NDJSON line with error code `-32003` ("server saturated")
+/// including `retry_after_ms` and `max_connections` hints, then closes.
+/// This gives callers explicit feedback for retry-with-backoff instead of
+/// an indefinite hang.
+async fn send_saturation_error(mut stream: Box<dyn PlatformStream>) {
+    let max_conn =
+        beardog_errors::process_env::var(beardog_config::env_keys::ENV_UDS_MAX_CONNECTIONS)
+            .ok()
+            .and_then(|v| v.parse::<usize>().ok())
+            .unwrap_or(DEFAULT_UDS_MAX_CONNECTIONS);
+
+    let error_response = serde_json::json!({
+        "jsonrpc": "2.0",
+        "error": {
+            "code": -32003,
+            "message": "Server saturated",
+            "data": {
+                "reason": "All connection slots are in use. Retry after a brief backoff.",
+                "retry_after_ms": 500,
+                "max_connections": max_conn,
+            }
+        },
+        "id": serde_json::Value::Null,
+    });
+
+    if let Ok(msg) = serde_json::to_string(&error_response) {
+        let _ = stream.write_all(format!("{msg}\n").as_bytes()).await;
+    }
+}
+
+impl UnixSocketIpcServer {
     /// Handle a single client connection with protocol auto-detection.
     ///
     /// In production mode (`FAMILY_ID` set), peeks the first byte to distinguish

@@ -38,7 +38,18 @@ pub const ENV_UDS_MAX_CONNECTIONS: &str = "BEARDOG_UDS_MAX_CONNECTIONS";
 ///
 /// Values: `chacha20-poly1305` (default), `hmac-plain`, `null`.
 /// When set, negotiation rejects any cipher below the floor.
+/// This is the **global** floor; bond-type-specific floors override it.
 pub const ENV_BTSP_CIPHER_FLOOR: &str = "BEARDOG_BTSP_CIPHER_FLOOR";
+/// Cipher floor for **covalent** bonds (same-family, intra-mesh).
+///
+/// Defaults to `chacha20-poly1305`. Covalent bonds are permanent, high-trust
+/// connections that should enforce the strongest cipher.
+pub const ENV_BTSP_CIPHER_FLOOR_COVALENT: &str = "BEARDOG_BTSP_CIPHER_FLOOR_COVALENT";
+/// Cipher floor for **ionic** bonds (cross-family, contract-based).
+///
+/// Defaults to global floor when unset. Ionic bonds may negotiate
+/// a lower tier (e.g. `hmac-plain`) based on the agreed encryption terms.
+pub const ENV_BTSP_CIPHER_FLOOR_IONIC: &str = "BEARDOG_BTSP_CIPHER_FLOOR_IONIC";
 /// Enrollment HMAC proof timestamp validity window (seconds, default 300).
 pub const ENV_ENROLLMENT_TIMESTAMP_WINDOW: &str = "BEARDOG_ENROLLMENT_TIMESTAMP_WINDOW";
 /// Current enrollment seed generation (default 0).

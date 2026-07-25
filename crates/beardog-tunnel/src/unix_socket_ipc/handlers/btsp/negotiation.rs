@@ -35,12 +35,14 @@ impl BtspHandler {
         let cipher = crate::btsp_handshake::BtspCipher::from_wire_name(&neg_params.cipher)
             .unwrap_or(crate::btsp_handshake::BtspCipher::ChaCha20Poly1305);
 
-        let floor = load_cipher_floor();
+        let floor = load_cipher_floor_for_bond(neg_params.bond_type);
         let floor_rank = cipher_rank(floor);
         if cipher_rank(cipher.wire_name()) < floor_rank {
             warn!(
                 requested = cipher.wire_name(),
-                floor, "BTSP server.negotiate: cipher below floor"
+                floor,
+                bond_type = ?neg_params.bond_type,
+                "BTSP server.negotiate: cipher below floor"
             );
             let resp = beardog_types::btsp::SessionNegotiateResponse {
                 accepted: false,
@@ -126,8 +128,13 @@ impl BtspHandler {
             );
         };
 
-        let Some(selected) = select_best_cipher(&offered_ciphers) else {
-            let floor = load_cipher_floor();
+        let bond_type: beardog_types::btsp::BtspBondType = params_value
+            .get("bond_type")
+            .and_then(|v| serde_json::from_value(v.clone()).ok())
+            .unwrap_or_default();
+
+        let Some(selected) = select_best_cipher_for_bond(&offered_ciphers, bond_type) else {
+            let floor = load_cipher_floor_for_bond(bond_type);
             warn!(
                 session_id = session_id,
                 offered = ?offered_ciphers,
@@ -208,30 +215,58 @@ fn cipher_rank(name: &str) -> u8 {
     }
 }
 
-/// Load the configured cipher floor from `BEARDOG_BTSP_CIPHER_FLOOR`.
+/// Resolve an env-var value to a canonical cipher name.
+fn resolve_cipher_name(raw: &str) -> &'static str {
+    match raw {
+        "null" => "null",
+        "hmac-plain" | "hmac_plain" => "hmac-plain",
+        "chacha20-poly1305" | "chacha20_poly1305" => "chacha20-poly1305",
+        _ => "chacha20-poly1305",
+    }
+}
+
+/// Load the configured cipher floor, optionally differentiated by bond type.
 ///
-/// Defaults to `chacha20-poly1305` (strongest) when unset. This means
-/// negotiation will reject `hmac-plain` and `null` unless the floor is
-/// explicitly lowered.
+/// Precedence:
+/// 1. Bond-type-specific env (`BEARDOG_BTSP_CIPHER_FLOOR_COVALENT` or `_IONIC`)
+/// 2. Global env (`BEARDOG_BTSP_CIPHER_FLOOR`)
+/// 3. Default: `chacha20-poly1305`
+fn load_cipher_floor_for_bond(bond_type: beardog_types::btsp::BtspBondType) -> &'static str {
+    let type_specific_key = match bond_type {
+        beardog_types::btsp::BtspBondType::Covalent => env_keys::ENV_BTSP_CIPHER_FLOOR_COVALENT,
+        beardog_types::btsp::BtspBondType::Ionic => env_keys::ENV_BTSP_CIPHER_FLOOR_IONIC,
+    };
+
+    if let Ok(val) = beardog_errors::process_env::var(type_specific_key)
+        && !val.is_empty()
+    {
+        return resolve_cipher_name(&val);
+    }
+
+    load_cipher_floor()
+}
+
+/// Load the global cipher floor from `BEARDOG_BTSP_CIPHER_FLOOR`.
+///
+/// Defaults to `chacha20-poly1305` (strongest) when unset.
 fn load_cipher_floor() -> &'static str {
     static FLOOR: std::sync::OnceLock<String> = std::sync::OnceLock::new();
     let val = FLOOR.get_or_init(|| {
         beardog_errors::process_env::var(env_keys::ENV_BTSP_CIPHER_FLOOR).unwrap_or_default()
     });
-    match val.as_str() {
-        "null" => "null",
-        "hmac-plain" | "hmac_plain" => "hmac-plain",
-        _ => "chacha20-poly1305",
-    }
+    resolve_cipher_name(val.as_str())
 }
 
-/// Select the best cipher from the client's offered list, enforcing the
-/// configured cipher floor.
+/// Select the best cipher from the offered list, enforcing the floor for
+/// the given bond type.
 ///
 /// Preference order: `chacha20-poly1305` > `hmac-plain` > `null`.
 /// Returns `None` if no offered cipher meets the floor.
-fn select_best_cipher(offered: &[String]) -> Option<&'static str> {
-    let floor = load_cipher_floor();
+fn select_best_cipher_for_bond(
+    offered: &[String],
+    bond_type: beardog_types::btsp::BtspBondType,
+) -> Option<&'static str> {
+    let floor = load_cipher_floor_for_bond(bond_type);
     let floor_rank = cipher_rank(floor);
 
     let candidates: &[&str] = &["chacha20-poly1305", "hmac-plain", "null"];
@@ -241,6 +276,12 @@ fn select_best_cipher(offered: &[String]) -> Option<&'static str> {
             cipher_rank(candidate) >= floor_rank && offered.iter().any(|c| c == candidate)
         })
         .copied()
+}
+
+/// Select the best cipher using the global floor (backward compatible).
+#[cfg(test)]
+fn select_best_cipher(offered: &[String]) -> Option<&'static str> {
+    select_best_cipher_for_bond(offered, beardog_types::btsp::BtspBondType::Covalent)
 }
 
 /// Load the family seed from the environment for handshake key re-derivation.
@@ -453,5 +494,76 @@ mod tests {
         assert_ne!(server_keys.encrypt_key, server_keys.decrypt_key);
         assert_ne!(server_keys.encrypt_key, [0u8; 32]);
         assert_ne!(server_keys.decrypt_key, [0u8; 32]);
+    }
+
+    // ── Bond-type-aware cipher floor tests ──────────────────────
+
+    #[test]
+    fn select_best_cipher_covalent_default_floor() {
+        let offered = vec!["hmac-plain".to_string()];
+        // Covalent default floor is chacha20-poly1305 → hmac-plain rejected
+        assert_eq!(
+            select_best_cipher_for_bond(&offered, beardog_types::btsp::BtspBondType::Covalent),
+            None
+        );
+    }
+
+    #[serial_test::serial]
+    #[test]
+    fn select_best_cipher_ionic_with_lowered_floor() {
+        beardog_errors::process_env::set_var("BEARDOG_BTSP_CIPHER_FLOOR_IONIC", "hmac-plain");
+        let offered = vec!["hmac-plain".to_string()];
+        // Ionic floor lowered to hmac-plain → accepted
+        assert_eq!(
+            select_best_cipher_for_bond(&offered, beardog_types::btsp::BtspBondType::Ionic),
+            Some("hmac-plain")
+        );
+        beardog_errors::process_env::remove_var("BEARDOG_BTSP_CIPHER_FLOOR_IONIC");
+    }
+
+    #[serial_test::serial]
+    #[test]
+    fn select_best_cipher_ionic_falls_back_to_global() {
+        beardog_errors::process_env::remove_var("BEARDOG_BTSP_CIPHER_FLOOR_IONIC");
+        let offered = vec!["hmac-plain".to_string()];
+        // No ionic-specific floor → uses global (chacha20-poly1305) → rejected
+        assert_eq!(
+            select_best_cipher_for_bond(&offered, beardog_types::btsp::BtspBondType::Ionic),
+            None
+        );
+    }
+
+    #[serial_test::serial]
+    #[test]
+    fn select_best_cipher_covalent_always_enforces_strong() {
+        beardog_errors::process_env::set_var(
+            "BEARDOG_BTSP_CIPHER_FLOOR_COVALENT",
+            "chacha20-poly1305",
+        );
+        let offered = vec![
+            "null".to_string(),
+            "hmac-plain".to_string(),
+            "chacha20-poly1305".to_string(),
+        ];
+        // Covalent always picks strongest
+        assert_eq!(
+            select_best_cipher_for_bond(&offered, beardog_types::btsp::BtspBondType::Covalent),
+            Some("chacha20-poly1305")
+        );
+        beardog_errors::process_env::remove_var("BEARDOG_BTSP_CIPHER_FLOOR_COVALENT");
+    }
+
+    #[test]
+    fn bond_type_default_is_covalent() {
+        let default = beardog_types::btsp::BtspBondType::default();
+        assert_eq!(default, beardog_types::btsp::BtspBondType::Covalent);
+    }
+
+    #[test]
+    fn bond_type_serde_roundtrip() {
+        let json = serde_json::to_string(&beardog_types::btsp::BtspBondType::Ionic).unwrap();
+        assert_eq!(json, "\"ionic\"");
+        let parsed: beardog_types::btsp::BtspBondType = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, beardog_types::btsp::BtspBondType::Ionic);
     }
 }

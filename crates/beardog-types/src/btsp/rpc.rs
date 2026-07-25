@@ -9,6 +9,28 @@ use std::collections::BTreeMap;
 
 use super::{Transport, TrustMode, TunnelProtocol};
 
+/// Bond classification for BTSP cipher floor differentiation.
+///
+/// Mirrors the biological two-layer model:
+/// - **Covalent**: same-family bonds (shared `FAMILY_SEED`, intra-mesh).
+///   These are permanent, high-trust connections — the floor defaults to the
+///   strongest available cipher.
+/// - **Ionic**: cross-family bonds (contract-based, bilateral trust exchange).
+///   These are ephemeral or negotiated connections — the floor may be lower
+///   depending on the agreed encryption tier.
+///
+/// When no bond type is specified, the global `BEARDOG_BTSP_CIPHER_FLOOR`
+/// applies (backward compatible).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BtspBondType {
+    /// Same-family connection (shared `FAMILY_SEED`). Highest cipher floor.
+    #[default]
+    Covalent,
+    /// Cross-family connection (ionic bond / contract exchange). Configurable floor.
+    Ionic,
+}
+
 /// Parameters for `btsp.tunnel_establish` (extended for unified BTSP)
 ///
 /// This method establishes a secure tunnel with either:
@@ -343,6 +365,13 @@ pub struct SessionNegotiateParams {
     pub session_token: String,
     /// Requested cipher suite name.
     pub cipher: String,
+    /// Bond type for cipher floor differentiation.
+    ///
+    /// When set, the server applies the bond-type-specific cipher floor
+    /// (e.g. covalent bonds enforce a higher floor than ionic bonds).
+    /// Defaults to `Covalent` when absent.
+    #[serde(default)]
+    pub bond_type: BtspBondType,
 }
 
 /// Response from `btsp.server.negotiate`

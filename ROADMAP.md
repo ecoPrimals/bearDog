@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: Jul 24, 2026
+**Updated**: Jul 25, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -38,6 +38,8 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - HSM abstraction (software, PKCS#11, StrongBox, Windows DPAPI, Linux SecretService)
 - Enrollment seed rotation via genetic HKDF hierarchy (generation-based, grace-period dual verification)
 - Two-layer genetic enrollment: mitochondrial gate (HMAC/family seed) + nuclear lineage distance (tree proximity → trust tier)
+- Bond-type cipher awareness: `BtspBondType` (Covalent/Ionic) drives per-type cipher floors in BTSP negotiation
+- UDS backpressure signaling: explicit JSON-RPC error `-32003` on connection saturation (retry-with-backoff instead of hang)
 - All production `unwrap()`/`expect()` eliminated (zero panic paths)
 - SPDX license headers on all .rs files (100%)
 - ecoBin C-dependency compliance (sysinfo removed, blake3 pure, pprof optional)

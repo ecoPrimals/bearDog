@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 25, 2026 -- Wave 150x: Bond-Type Cipher Awareness + Backpressure Signaling
+
+#### Bond-Type Cipher Awareness (P2 → SHIPPED)
+- **`BtspBondType` enum**: `Covalent` (same-family, intra-mesh) / `Ionic` (cross-family, contract) — drives per-type cipher floor selection
+- **Per-type cipher floors**: `BEARDOG_BTSP_CIPHER_FLOOR_COVALENT` and `BEARDOG_BTSP_CIPHER_FLOOR_IONIC` env keys — override the global floor per bond type
+- **Wire contract**: `SessionNegotiateParams` and `btsp.negotiate` accept optional `bond_type` field (defaults to `covalent` — backward compatible)
+- `select_best_cipher_for_bond()` and `load_cipher_floor_for_bond()` replace the flat floor logic
+- 6 new tests: covalent default, ionic lowered floor, ionic fallback to global, covalent enforces strong, bond type default, serde roundtrip
+
+#### UDS Backpressure Signaling (P2 → SHIPPED)
+- **Explicit saturation error**: when all UDS connection slots are in use, callers receive a JSON-RPC error (`-32003`, "Server saturated") with `retry_after_ms` and `max_connections` hints instead of hanging indefinitely
+- Semaphore acquisition changed from blocking to `tokio::time::timeout(100ms)` — brief grace period before rejection
+- Mirrors the BTSP rejection pattern (send structured error, then close)
+
 ### July 25, 2026 -- Wave 150x: Two-Layer Genetic Enrollment (Mito + Nuclear)
 
 #### Nuclear Lineage Distance in Enrollment

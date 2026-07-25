@@ -413,6 +413,32 @@ Response (without lineage — backward compatible):
 - Callers should use a fresh timestamp (current Unix seconds) for each
   enrollment attempt.
 
+### Bond-Type Cipher Awareness (Wave 150x)
+
+BTSP negotiation (`btsp.negotiate` and `btsp.server.negotiate`) now accepts
+an optional `bond_type` field to select per-type cipher floors:
+
+- **`covalent`** (default): same-family connections. Floor defaults to
+  `chacha20-poly1305`. Override via `BEARDOG_BTSP_CIPHER_FLOOR_COVALENT`.
+- **`ionic`**: cross-family contracts. Floor defaults to global. Override
+  via `BEARDOG_BTSP_CIPHER_FLOOR_IONIC`.
+
+Precedence: bond-type env → global `BEARDOG_BTSP_CIPHER_FLOOR` → default
+(`chacha20-poly1305`). Omitting `bond_type` is backward compatible (treats
+as covalent).
+
+### UDS Backpressure Signaling (Wave 150x)
+
+When all UDS connection slots are in use (`BEARDOG_UDS_MAX_CONNECTIONS`,
+default 512), bearDog sends a JSON-RPC error before closing:
+
+```json
+{"jsonrpc":"2.0","error":{"code":-32003,"message":"Server saturated","data":{"reason":"All connection slots are in use. Retry after a brief backoff.","retry_after_ms":500,"max_connections":512}},"id":null}
+```
+
+Callers should catch `-32003` and retry with backoff. A 100ms grace period
+exists before rejection (slots may free during brief traffic bursts).
+
 ## Full Method List (109 methods)
 
 See `crates/beardog-tunnel/src/unix_socket_ipc/handlers/crypto_handler/method_list.rs`
