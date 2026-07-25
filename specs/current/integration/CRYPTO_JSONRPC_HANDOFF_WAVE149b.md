@@ -312,11 +312,16 @@ Response:
 }
 ```
 
-## Tower Atomic — Enrollment Verification (Wave 150u)
+## Tower Atomic — Enrollment Verification (Wave 150u+)
 
 songBird delegates `mesh.enroll` proof verification to bearDog via
-`enrollment.verify`. Enrollment keys are derived through the genetic HKDF
-hierarchy rather than using raw `FAMILY_SEED` bytes:
+`enrollment.verify`. The endpoint implements a **two-layer genetic model**
+mirroring biological DNA:
+
+### Layer 1: Mitochondrial Gate (HMAC / family seed)
+
+Shared `FAMILY_SEED` proves the enrollee is in the same family — they can
+"hear the birdsong". This is the prerequisite: without it, enrollment fails.
 
 ```text
 enrollment_key(gen) = HKDF-SHA256(
@@ -326,6 +331,24 @@ enrollment_key(gen) = HKDF-SHA256(
 )
 proof = HMAC-SHA256(enrollment_key(gen), node_id|public_key|timestamp|gen)
 ```
+
+### Layer 2: Nuclear Lineage Distance (optional `lineage_proof`)
+
+When the enrollee attaches a `lineage_proof` (their path from root in the
+lineage tree), the verifier computes **genetic distance** and classifies the
+enrollee into a trust tier:
+
+| Distance | Tier | Meaning |
+|----------|------|---------|
+| 0 | `identity` | Same node re-enrolling |
+| 1 | `kin` | Direct parent or child |
+| 2 | `sibling` | Siblings (share a parent) |
+| 3–4 | `extended` | Cousins, aunts/uncles |
+| 5+ | `distant` | Far relatives — may require ceremony |
+
+Distance = `depth(enrollee) + depth(verifier) − 2 × depth(common_ancestor)`.
+
+### Wire Contract
 
 ```json
 {
@@ -337,21 +360,31 @@ proof = HMAC-SHA256(enrollment_key(gen), node_id|public_key|timestamp|gen)
     "public_key": "<wg-or-ed25519-pubkey>",
     "timestamp": 1753128000,
     "proof": "<base64 HMAC-SHA256>",
-    "seed_generation": 0
+    "seed_generation": 0,
+    "lineage_proof": {
+      "chain_id": "family-chain-id",
+      "path": ["root", "child-1", "southGate"],
+      "generation": 0
+    }
   }
 }
 ```
 
-Response:
+Response (with lineage):
+
+```json
+{"jsonrpc":"2.0","id":1,"result":{
+  "verified": true,
+  "verified_generation": 0,
+  "enrollment_tier": "sibling",
+  "genetic_distance": 2
+}}
+```
+
+Response (without lineage — backward compatible):
 
 ```json
 {"jsonrpc":"2.0","id":1,"result":{"verified":true,"verified_generation":0}}
-```
-
-Or on failure:
-
-```json
-{"jsonrpc":"2.0","id":1,"result":{"verified":false,"reason":"HMAC proof does not match enrollment data"}}
 ```
 
 **Requires**: `FAMILY_SEED` or `BEARDOG_FAMILY_SEED` env var set.

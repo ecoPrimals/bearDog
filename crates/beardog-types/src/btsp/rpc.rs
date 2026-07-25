@@ -425,12 +425,38 @@ pub struct EnrollmentVerifyParams {
     /// backward compatibility with pre-rotation enrollments).
     #[serde(default)]
     pub seed_generation: u32,
+
+    /// Optional lineage proof from the enrolling node.
+    ///
+    /// When present, the verifier computes genetic distance between the
+    /// enrollee and the verifier's own node, mapping it to a trust tier.
+    /// The mitochondrial gate (HMAC/family seed) is always checked first;
+    /// the nuclear lineage proof refines trust based on tree proximity.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lineage_proof: Option<EnrollmentLineageProof>,
+}
+
+/// Compact lineage proof attached to enrollment requests.
+///
+/// This is a simplified representation of the nuclear `LineageProof` —
+/// just the path from root to the enrolling node and its chain ID.
+/// The full cryptographic proof chain is verified separately via
+/// `genetic.verify_lineage`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EnrollmentLineageProof {
+    /// Lineage chain ID the enrollee claims membership in.
+    pub chain_id: String,
+    /// Path from root to the enrolling node (ordered node IDs).
+    pub path: Vec<String>,
+    /// Chain generation at the time of proof.
+    #[serde(default)]
+    pub generation: u64,
 }
 
 /// Response from `enrollment.verify`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnrollmentVerifyResponse {
-    /// Whether the HMAC proof is valid.
+    /// Whether the HMAC proof is valid (mitochondrial gate).
     pub verified: bool,
     /// Human-readable reason if `verified` is `false`.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -438,6 +464,17 @@ pub struct EnrollmentVerifyResponse {
     /// The seed generation against which the proof was verified (if successful).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub verified_generation: Option<u32>,
+    /// Genetic enrollment tier (nuclear lineage distance classification).
+    ///
+    /// Only present when a `lineage_proof` was submitted and the mito gate passed.
+    /// Values: `"identity"`, `"kin"`, `"sibling"`, `"extended"`, `"distant"`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enrollment_tier: Option<String>,
+    /// Raw genetic distance (number of hops in the lineage tree).
+    ///
+    /// Only present when a `lineage_proof` was submitted.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub genetic_distance: Option<u32>,
 }
 
 fn default_cipher() -> String {

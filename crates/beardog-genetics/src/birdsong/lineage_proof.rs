@@ -9,7 +9,7 @@ use tracing::{debug, info};
 use beardog_errors::BearDogError;
 
 use super::lineage_chain::LineageChainManager;
-use super::types::{LineageChain, LineageProof, LineageVerificationResult};
+use super::types::{GeneticEnrollmentTier, LineageChain, LineageProof, LineageVerificationResult};
 
 /// Manager for lineage proof operations
 pub struct LineageProofManager {
@@ -285,6 +285,89 @@ impl LineageProofManager {
     ) -> Result<bool, BearDogError> {
         let descendants = self.chain_manager.get_descendants(chain_id, ancestor_id);
         Ok(descendants.iter().any(|n| n.node_id == descendant_id))
+    }
+
+    /// Compute the genetic distance between two nodes in a lineage chain.
+    ///
+    /// Distance = `depth(A) + depth(B) − 2 × depth(common_ancestor(A, B))`.
+    ///
+    /// Returns `None` if either node is not in the chain or they share no
+    /// common ancestor (different roots — impossible within a single chain,
+    /// but defensive).
+    ///
+    /// # Examples
+    ///
+    /// - Parent → child: distance = 1
+    /// - Siblings: distance = 2 (each is depth 1 from common parent)
+    /// - Cousins: distance = 4 (each is depth 2 from common grandparent)
+    /// - Self: distance = 0
+    pub fn genetic_distance(
+        &self,
+        chain_id: &str,
+        node_a_id: &str,
+        node_b_id: &str,
+    ) -> Option<u32> {
+        if node_a_id == node_b_id {
+            return Some(0);
+        }
+
+        let path_a = self.chain_manager.get_path_from_root(chain_id, node_a_id)?;
+        let path_b = self.chain_manager.get_path_from_root(chain_id, node_b_id)?;
+
+        // Find depth of lowest common ancestor (shared prefix length − 1)
+        let common_depth = path_a
+            .iter()
+            .zip(path_b.iter())
+            .take_while(|(a, b)| a == b)
+            .count();
+
+        if common_depth == 0 {
+            return None;
+        }
+
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "Lineage path lengths fit u32"
+        )]
+        let depth_a = (path_a.len() - 1) as u32;
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "Lineage path lengths fit u32"
+        )]
+        let depth_b = (path_b.len() - 1) as u32;
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "Common prefix length fits u32"
+        )]
+        let ancestor_depth = (common_depth - 1) as u32;
+
+        Some(depth_a + depth_b - 2 * ancestor_depth)
+    }
+
+    /// Classify genetic distance into an enrollment trust tier.
+    ///
+    /// The two-layer model:
+    /// - **Mitochondrial gate** (prerequisite): same `FAMILY_SEED` → can even
+    ///   attempt enrollment. This is checked externally via HMAC.
+    /// - **Nuclear distance** (this function): lineage tree proximity determines
+    ///   the trust level granted upon enrollment.
+    ///
+    /// | Distance | Tier | Meaning |
+    /// |----------|------|---------|
+    /// | 0 | `Self` | Same node re-enrolling |
+    /// | 1 | `Kin` | Direct parent or child |
+    /// | 2 | `Sibling` | Siblings (same parent) |
+    /// | 3–4 | `Extended` | Cousins, aunts/uncles |
+    /// | 5+ | `Distant` | Far relatives — may require ceremony |
+    #[must_use]
+    pub const fn classify_enrollment_tier(distance: u32) -> GeneticEnrollmentTier {
+        match distance {
+            0 => GeneticEnrollmentTier::Identity,
+            1 => GeneticEnrollmentTier::Kin,
+            2 => GeneticEnrollmentTier::Sibling,
+            3 | 4 => GeneticEnrollmentTier::Extended,
+            _ => GeneticEnrollmentTier::Distant,
+        }
     }
 
     /// Get the common ancestor of two nodes
@@ -601,5 +684,194 @@ mod tests {
             .expect_err("unknown chain");
         assert!(err.to_string().contains("Chain not found") || err.to_string().contains("chain"));
         Ok(())
+    }
+
+    // ── Genetic distance tests ──────────────────────────────────
+
+    #[tokio::test]
+    async fn test_genetic_distance_self() -> Result<(), BearDogError> {
+        let chain_manager = Arc::new(LineageChainManager::new());
+        let proof_manager = LineageProofManager::new(chain_manager.clone());
+        let chain = chain_manager
+            .generate_root_chain("root".to_string(), None)
+            .await?;
+
+        assert_eq!(
+            proof_manager.genetic_distance(&chain.chain_id, "root", "root"),
+            Some(0)
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_genetic_distance_parent_child() -> Result<(), BearDogError> {
+        let chain_manager = Arc::new(LineageChainManager::new());
+        let proof_manager = LineageProofManager::new(chain_manager.clone());
+        let chain = chain_manager
+            .generate_root_chain("root".to_string(), None)
+            .await?;
+        chain_manager
+            .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
+            .await?;
+
+        // Parent→child = distance 1
+        assert_eq!(
+            proof_manager.genetic_distance(&chain.chain_id, "root", "child-1"),
+            Some(1)
+        );
+        // Symmetric
+        assert_eq!(
+            proof_manager.genetic_distance(&chain.chain_id, "child-1", "root"),
+            Some(1)
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_genetic_distance_siblings() -> Result<(), BearDogError> {
+        let chain_manager = Arc::new(LineageChainManager::new());
+        let proof_manager = LineageProofManager::new(chain_manager.clone());
+        let chain = chain_manager
+            .generate_root_chain("root".to_string(), None)
+            .await?;
+        chain_manager
+            .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
+            .await?;
+        chain_manager
+            .add_child(&chain.chain_id, "root", "child-2".to_string(), None)
+            .await?;
+
+        // Siblings: depth 1 + depth 1 − 2*depth(root=0) = 2
+        assert_eq!(
+            proof_manager.genetic_distance(&chain.chain_id, "child-1", "child-2"),
+            Some(2)
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_genetic_distance_cousins() -> Result<(), BearDogError> {
+        let chain_manager = Arc::new(LineageChainManager::new());
+        let proof_manager = LineageProofManager::new(chain_manager.clone());
+        let chain = chain_manager
+            .generate_root_chain("root".to_string(), None)
+            .await?;
+        chain_manager
+            .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
+            .await?;
+        chain_manager
+            .add_child(&chain.chain_id, "root", "child-2".to_string(), None)
+            .await?;
+        chain_manager
+            .add_child(&chain.chain_id, "child-1", "gc-1".to_string(), None)
+            .await?;
+        chain_manager
+            .add_child(&chain.chain_id, "child-2", "gc-2".to_string(), None)
+            .await?;
+
+        // Cousins: depth 2 + depth 2 − 2*depth(root=0) = 4
+        assert_eq!(
+            proof_manager.genetic_distance(&chain.chain_id, "gc-1", "gc-2"),
+            Some(4)
+        );
+
+        // Uncle: gc-1 (depth 2) to child-2 (depth 1), common ancestor root (depth 0)
+        // = 2 + 1 − 2*0 = 3
+        assert_eq!(
+            proof_manager.genetic_distance(&chain.chain_id, "gc-1", "child-2"),
+            Some(3)
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_genetic_distance_nonexistent_node() -> Result<(), BearDogError> {
+        let chain_manager = Arc::new(LineageChainManager::new());
+        let proof_manager = LineageProofManager::new(chain_manager.clone());
+        let chain = chain_manager
+            .generate_root_chain("root".to_string(), None)
+            .await?;
+
+        assert_eq!(
+            proof_manager.genetic_distance(&chain.chain_id, "root", "ghost"),
+            None
+        );
+        Ok(())
+    }
+
+    // ── Enrollment tier tests ──────────────────────────────────
+
+    #[test]
+    fn test_classify_enrollment_tier_identity() {
+        assert_eq!(
+            LineageProofManager::classify_enrollment_tier(0),
+            GeneticEnrollmentTier::Identity
+        );
+    }
+
+    #[test]
+    fn test_classify_enrollment_tier_kin() {
+        assert_eq!(
+            LineageProofManager::classify_enrollment_tier(1),
+            GeneticEnrollmentTier::Kin
+        );
+    }
+
+    #[test]
+    fn test_classify_enrollment_tier_sibling() {
+        assert_eq!(
+            LineageProofManager::classify_enrollment_tier(2),
+            GeneticEnrollmentTier::Sibling
+        );
+    }
+
+    #[test]
+    fn test_classify_enrollment_tier_extended() {
+        assert_eq!(
+            LineageProofManager::classify_enrollment_tier(3),
+            GeneticEnrollmentTier::Extended
+        );
+        assert_eq!(
+            LineageProofManager::classify_enrollment_tier(4),
+            GeneticEnrollmentTier::Extended
+        );
+    }
+
+    #[test]
+    fn test_classify_enrollment_tier_distant() {
+        assert_eq!(
+            LineageProofManager::classify_enrollment_tier(5),
+            GeneticEnrollmentTier::Distant
+        );
+        assert_eq!(
+            LineageProofManager::classify_enrollment_tier(100),
+            GeneticEnrollmentTier::Distant
+        );
+    }
+
+    #[test]
+    fn test_enrollment_tier_auto_enroll() {
+        assert!(GeneticEnrollmentTier::Identity.auto_enroll());
+        assert!(GeneticEnrollmentTier::Kin.auto_enroll());
+        assert!(GeneticEnrollmentTier::Sibling.auto_enroll());
+        assert!(GeneticEnrollmentTier::Extended.auto_enroll());
+        assert!(!GeneticEnrollmentTier::Distant.auto_enroll());
+    }
+
+    #[test]
+    fn test_enrollment_tier_wire_names() {
+        assert_eq!(GeneticEnrollmentTier::Identity.wire_name(), "identity");
+        assert_eq!(GeneticEnrollmentTier::Kin.wire_name(), "kin");
+        assert_eq!(GeneticEnrollmentTier::Sibling.wire_name(), "sibling");
+        assert_eq!(GeneticEnrollmentTier::Extended.wire_name(), "extended");
+        assert_eq!(GeneticEnrollmentTier::Distant.wire_name(), "distant");
+    }
+
+    #[test]
+    fn test_enrollment_tier_ordering() {
+        assert!(GeneticEnrollmentTier::Identity < GeneticEnrollmentTier::Kin);
+        assert!(GeneticEnrollmentTier::Kin < GeneticEnrollmentTier::Sibling);
+        assert!(GeneticEnrollmentTier::Sibling < GeneticEnrollmentTier::Extended);
+        assert!(GeneticEnrollmentTier::Extended < GeneticEnrollmentTier::Distant);
     }
 }

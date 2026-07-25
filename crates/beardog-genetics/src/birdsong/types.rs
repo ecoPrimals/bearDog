@@ -214,6 +214,52 @@ pub struct LineageVerificationResult {
     pub failure_reason: Option<String>,
 }
 
+/// Trust tier derived from nuclear lineage distance between two nodes.
+///
+/// The mitochondrial layer (`FAMILY_SEED` / mito-beacon) determines whether
+/// a node can *hear* the family at all. Once the mito gate passes, the
+/// nuclear lineage tree determines *how much trust* to grant.
+///
+/// This mirrors biological genetics: mitochondrial DNA is shared broadly
+/// within a maternal lineage (discovery), while nuclear DNA encodes
+/// individual traits and authority (permissions).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub enum GeneticEnrollmentTier {
+    /// Distance 0 — same node (re-enrollment / key refresh).
+    Identity,
+    /// Distance 1 — direct parent or child.
+    Kin,
+    /// Distance 2 — siblings (share a parent).
+    Sibling,
+    /// Distance 3–4 — cousins, aunts/uncles.
+    Extended,
+    /// Distance 5+ — far relatives. May require a genesis ceremony.
+    Distant,
+}
+
+impl GeneticEnrollmentTier {
+    /// Whether this tier grants automatic enrollment without ceremony.
+    #[must_use]
+    pub const fn auto_enroll(&self) -> bool {
+        matches!(
+            self,
+            Self::Identity | Self::Kin | Self::Sibling | Self::Extended
+        )
+    }
+
+    /// Wire name for JSON serialization.
+    #[must_use]
+    pub const fn wire_name(&self) -> &'static str {
+        match self {
+            Self::Identity => "identity",
+            Self::Kin => "kin",
+            Self::Sibling => "sibling",
+            Self::Extended => "extended",
+            Self::Distant => "distant",
+        }
+    }
+}
+
 /// Configuration for `BirdSong` encryption
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BirdSongConfig {

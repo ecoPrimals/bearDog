@@ -82,6 +82,6 @@ pub use lineage_id::LineageID;
 pub use lineage_proof::LineageProofManager;
 pub use manager::BirdSongManager;
 pub use types::{
-    BirdSongKey, LineageChain, LineageDepth, LineageHint, LineageNode, LineageProof,
-    LineageRelationship,
+    BirdSongKey, GeneticEnrollmentTier, LineageChain, LineageDepth, LineageHint, LineageNode,
+    LineageProof, LineageRelationship,
 };

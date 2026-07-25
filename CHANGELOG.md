@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 25, 2026 -- Wave 150x: Two-Layer Genetic Enrollment (Mito + Nuclear)
+
+#### Nuclear Lineage Distance in Enrollment
+- **Two-layer genetic model**: `enrollment.verify` now implements a dual-DNA verification model:
+  - **Mitochondrial gate** (HMAC/family seed): "can you hear the birdsong?" — prerequisite, same family
+  - **Nuclear lineage distance** (optional `lineage_proof`): "how close are you in the tree?" — trust tier
+- **`genetic_distance()`**: new function in `LineageProofManager` computes tree distance between two nodes using common ancestor depth: `depth(A) + depth(B) − 2 × depth(common_ancestor(A, B))`
+- **`GeneticEnrollmentTier`** enum: `Identity` (0), `Kin` (1), `Sibling` (2), `Extended` (3-4), `Distant` (5+) — with `auto_enroll()` predicate and `wire_name()` for JSON
+- **Wire contract evolution**: `EnrollmentVerifyParams` gains optional `lineage_proof` (chain_id, path, generation); `EnrollmentVerifyResponse` gains `enrollment_tier` and `genetic_distance` (both omitted when no proof provided — backward compatible)
+- 6 new enrollment tests: lineage proof with tier, without proof omits tier, sibling distance, deep enrollee, distant enrollee, self-enrollment
+- 13 new genetics tests: distance (self, parent-child, siblings, cousins, nonexistent), tier classification (identity, kin, sibling, extended, distant), tier ordering, auto_enroll, wire names
+
 ### July 24, 2026 -- Wave 150x: Enrollment Seed Rotation via Genetic HKDF
 
 #### Enrollment Seed Rotation (P2 → SHIPPED)

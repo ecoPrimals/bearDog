@@ -37,6 +37,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - Android StrongBox integration (complete)
 - HSM abstraction (software, PKCS#11, StrongBox, Windows DPAPI, Linux SecretService)
 - Enrollment seed rotation via genetic HKDF hierarchy (generation-based, grace-period dual verification)
+- Two-layer genetic enrollment: mitochondrial gate (HMAC/family seed) + nuclear lineage distance (tree proximity → trust tier)
 - All production `unwrap()`/`expect()` eliminated (zero panic paths)
 - SPDX license headers on all .rs files (100%)
 - ecoBin C-dependency compliance (sysinfo removed, blake3 pure, pprof optional)

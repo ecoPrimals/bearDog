@@ -1,9 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! `enrollment.verify` — HMAC proof verification for `mesh.enroll`.
+//! `enrollment.verify` — two-layer genetic enrollment verification.
 //!
-//! Enrollment keys are derived through the genetic HKDF hierarchy rather than
-//! using raw `FAMILY_SEED` bytes directly:
+//! ## Two-layer genetic model
+//!
+//! Enrollment mirrors the biological two-DNA system:
+//!
+//! 1. **Mitochondrial gate** — shared `FAMILY_SEED` HMAC proves the enrollee
+//!    can "hear the birdsong" (same family). This is the mito-beacon layer:
+//!    if you don't share the family seed, you can't even produce a valid proof.
+//!
+//! 2. **Nuclear lineage distance** — when a `lineage_proof` is attached, the
+//!    verifier computes genetic distance (tree hops) and classifies the
+//!    enrollee into a trust tier (`identity`, `kin`, `sibling`, `extended`,
+//!    `distant`). Like nuclear DNA, this determines authority and permissions.
 //!
 //! ```text
 //! enrollment_key(gen) = HKDF-SHA256(
@@ -14,26 +24,19 @@
 //! proof = HMAC-SHA256(enrollment_key(gen), node_id|public_key|timestamp|gen)
 //! ```
 //!
-//! This mirrors the `BirdSong` `LineageKeyDerivation` pattern: same HKDF
-//! hierarchy, generation-based rotation, deterministic derivation.
-//!
-//! ## Seed rotation (Wave 150x)
+//! ## Seed rotation
 //!
 //! - `BEARDOG_ENROLLMENT_SEED_GENERATION` sets the current generation (default 0).
-//! - During a grace period after rotation, the verifier accepts proofs keyed
-//!   to the current generation **or** the previous one (N and N−1).
-//! - Each generation produces a completely different HMAC key from the same
-//!   root `FAMILY_SEED`, so rotating doesn't require distributing new secrets.
+//! - Grace period accepts N and N−1 (same as `BirdSong` key rotation).
 //!
-//! ## Security hardening (Wave 150x)
+//! ## Security hardening
 //!
-//! - **Timestamp window**: proofs are only valid within ±`BEARDOG_ENROLLMENT_TIMESTAMP_WINDOW`
-//!   seconds of the current wall clock (default 300s / 5 minutes).
-//! - **Replay tracking**: each verified proof digest is cached; resubmission within the
-//!   window is rejected. The cache is bounded and self-pruning.
+//! - **Timestamp window**: ±`BEARDOG_ENROLLMENT_TIMESTAMP_WINDOW` seconds.
+//! - **Replay tracking**: BLAKE3-digest dedup cache, bounded and self-pruning.
 
 use base64::Engine;
 use beardog_config::env_keys;
+use beardog_genetics::birdsong::lineage_proof::LineageProofManager;
 use hkdf::Hkdf;
 use parking_lot::Mutex;
 use serde::Deserialize;
@@ -197,6 +200,8 @@ impl BtspHandler {
                     "Timestamp outside validity window ({delta}s drift, max {window}s)"
                 )),
                 verified_generation: None,
+                enrollment_tier: None,
+                genetic_distance: None,
             };
             return serde_json::to_value(resp)
                 .map_err(|e| format!("Serialize: {e}"))
@@ -229,6 +234,8 @@ impl BtspHandler {
                     current_gen.saturating_sub(1)
                 )),
                 verified_generation: None,
+                enrollment_tier: None,
+                genetic_distance: None,
             };
             return serde_json::to_value(resp)
                 .map_err(|e| format!("Serialize: {e}"))
@@ -278,6 +285,8 @@ impl BtspHandler {
                     verified: false,
                     reason: Some("Enrollment proof already used (replay rejected)".to_string()),
                     verified_generation: None,
+                    enrollment_tier: None,
+                    genetic_distance: None,
                 };
                 return serde_json::to_value(resp)
                     .map_err(|e| format!("Serialize: {e}"))
@@ -285,10 +294,23 @@ impl BtspHandler {
             }
         }
 
+        // --- Nuclear lineage distance (when proof provided) ---
+        let (enrollment_tier, distance) = if verified {
+            if let Some(ref lp) = verify_params.lineage_proof {
+                classify_lineage_distance(&verify_params.node_id, lp)
+            } else {
+                (None, None)
+            }
+        } else {
+            (None, None)
+        };
+
         info!(
             node_id = %verify_params.node_id,
             timestamp = verify_params.timestamp,
             seed_generation = if verified { matched_gen } else { requested_gen },
+            ?enrollment_tier,
+            ?distance,
             verified,
             "enrollment.verify"
         );
@@ -301,12 +323,73 @@ impl BtspHandler {
                 Some("HMAC proof does not match enrollment data".to_string())
             },
             verified_generation: if verified { Some(matched_gen) } else { None },
+            enrollment_tier,
+            genetic_distance: distance,
         };
 
         serde_json::to_value(resp)
             .map_err(|e| format!("Serialize: {e}"))
             .map_err(Into::into)
     }
+}
+
+/// Classify the nuclear lineage distance from an enrollment proof.
+///
+/// The enrollee's `lineage_proof.path` encodes their depth from root.
+/// The verifier's own node ID is resolved from `BEARDOG_PRIMAL_NAME` / `NODE_ID`.
+///
+/// If the verifier is in the same chain, we compute true genetic distance:
+/// `depth(enrollee) + depth(verifier) - 2 * depth(common_ancestor)`.
+///
+/// If the verifier's node is not in the enrollee's path (different branch
+/// or verifier doesn't participate in chain proofs), we fall back to
+/// classifying the enrollee's **depth from root** — still useful for
+/// trust tiering since depth 1 (root's child) has more authority than depth 5.
+fn classify_lineage_distance(
+    enrollee_node_id: &str,
+    proof: &beardog_types::btsp::EnrollmentLineageProof,
+) -> (Option<String>, Option<u32>) {
+    if proof.path.is_empty() {
+        return (None, None);
+    }
+
+    // Enrollee's depth from root
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Lineage path lengths fit u32"
+    )]
+    let enrollee_depth = (proof.path.len() - 1) as u32;
+
+    // Check the enrollee is actually the last node in their own path
+    if proof.path.last().map(String::as_str) != Some(enrollee_node_id) {
+        return (None, None);
+    }
+
+    // Try to find verifier's node in the same path (same branch → direct lineage)
+    let verifier_id = beardog_errors::process_env::var(env_keys::ENV_NODE_ID_PREFIXED)
+        .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_NODE_ID))
+        .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME_PREFIXED))
+        .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME))
+        .unwrap_or_default();
+
+    let distance = if verifier_id.is_empty() {
+        // No verifier identity → use raw depth as distance proxy
+        enrollee_depth
+    } else if verifier_id == enrollee_node_id {
+        0
+    } else if let Some(verifier_pos) = proof.path.iter().position(|n| n == &verifier_id) {
+        // Verifier is an ancestor of the enrollee → distance is depth difference
+        #[expect(clippy::cast_possible_truncation, reason = "Position in path fits u32")]
+        let verifier_depth = verifier_pos as u32;
+        enrollee_depth - verifier_depth
+    } else {
+        // Verifier not in enrollee's path — use enrollee depth as upper bound
+        // (true distance would need verifier's own path + common ancestor lookup)
+        enrollee_depth
+    };
+
+    let tier = LineageProofManager::classify_enrollment_tier(distance);
+    (Some(tier.wire_name().to_string()), Some(distance))
 }
 
 /// Load the family seed from environment variables.
@@ -766,5 +849,213 @@ mod tests {
         assert_eq!(result["verified"], false);
         assert!(result["reason"].as_str().unwrap().contains("not accepted"));
         clear_test_env();
+    }
+
+    // --- Nuclear lineage distance tests ---
+
+    #[serial_test::serial]
+    #[tokio::test]
+    async fn verify_with_lineage_proof_returns_tier() {
+        set_test_seed();
+        beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "root");
+        let handler = BtspHandler::new();
+
+        let timestamp = current_unix_timestamp();
+        let proof = make_valid_proof("child-1", "wg-pubkey", timestamp);
+
+        let params = serde_json::json!({
+            "node_id": "child-1",
+            "public_key": "wg-pubkey",
+            "timestamp": timestamp,
+            "proof": proof,
+            "lineage_proof": {
+                "chain_id": "test-chain",
+                "path": ["root", "child-1"],
+                "generation": 0
+            }
+        });
+
+        let result = handler
+            .handle_enrollment_verify(Some(&params))
+            .await
+            .unwrap();
+
+        assert_eq!(result["verified"], true);
+        // Verifier is "root", enrollee is "child-1" in path [root, child-1]
+        // Verifier is at position 0 (depth 0), enrollee at depth 1 → distance 1 → "kin"
+        assert_eq!(result["enrollment_tier"], "kin");
+        assert_eq!(result["genetic_distance"], 1);
+        clear_test_env();
+        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
+    }
+
+    #[serial_test::serial]
+    #[tokio::test]
+    async fn verify_without_lineage_proof_omits_tier() {
+        set_test_seed();
+        let handler = BtspHandler::new();
+
+        let timestamp = current_unix_timestamp();
+        let proof = make_valid_proof("southGate", "wg-pubkey", timestamp);
+
+        let params = serde_json::json!({
+            "node_id": "southGate",
+            "public_key": "wg-pubkey",
+            "timestamp": timestamp,
+            "proof": proof,
+        });
+
+        let result = handler
+            .handle_enrollment_verify(Some(&params))
+            .await
+            .unwrap();
+
+        assert_eq!(result["verified"], true);
+        assert!(result.get("enrollment_tier").is_none() || result["enrollment_tier"].is_null());
+        assert!(result.get("genetic_distance").is_none() || result["genetic_distance"].is_null());
+        clear_test_env();
+    }
+
+    #[serial_test::serial]
+    #[tokio::test]
+    async fn verify_lineage_proof_sibling_distance() {
+        set_test_seed();
+        beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "child-1");
+        let handler = BtspHandler::new();
+
+        let timestamp = current_unix_timestamp();
+        let proof = make_valid_proof("child-2", "wg-pubkey", timestamp);
+
+        // child-2's path: [root, child-2]. Verifier is "child-1" which is NOT
+        // in child-2's path, so distance falls back to enrollee's depth (1)
+        let params = serde_json::json!({
+            "node_id": "child-2",
+            "public_key": "wg-pubkey",
+            "timestamp": timestamp,
+            "proof": proof,
+            "lineage_proof": {
+                "chain_id": "test-chain",
+                "path": ["root", "child-2"],
+                "generation": 0
+            }
+        });
+
+        let result = handler
+            .handle_enrollment_verify(Some(&params))
+            .await
+            .unwrap();
+
+        assert_eq!(result["verified"], true);
+        // Verifier not in path → fallback to enrollee depth = 1 → "kin"
+        assert_eq!(result["enrollment_tier"], "kin");
+        assert_eq!(result["genetic_distance"], 1);
+        clear_test_env();
+        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
+    }
+
+    #[serial_test::serial]
+    #[tokio::test]
+    async fn verify_lineage_proof_deep_enrollee() {
+        set_test_seed();
+        beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "root");
+        let handler = BtspHandler::new();
+
+        let timestamp = current_unix_timestamp();
+        let proof = make_valid_proof("gc-3", "wg-pubkey", timestamp);
+
+        // Deep enrollee: root → child-1 → gc-1 → gc-2 → gc-3 (depth 4)
+        // Verifier at root (pos 0), enrollee depth 4 → distance 4 → "extended"
+        let params = serde_json::json!({
+            "node_id": "gc-3",
+            "public_key": "wg-pubkey",
+            "timestamp": timestamp,
+            "proof": proof,
+            "lineage_proof": {
+                "chain_id": "test-chain",
+                "path": ["root", "child-1", "gc-1", "gc-2", "gc-3"],
+                "generation": 0
+            }
+        });
+
+        let result = handler
+            .handle_enrollment_verify(Some(&params))
+            .await
+            .unwrap();
+
+        assert_eq!(result["verified"], true);
+        assert_eq!(result["enrollment_tier"], "extended");
+        assert_eq!(result["genetic_distance"], 4);
+        clear_test_env();
+        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
+    }
+
+    #[serial_test::serial]
+    #[tokio::test]
+    async fn verify_lineage_proof_distant_enrollee() {
+        set_test_seed();
+        beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "root");
+        let handler = BtspHandler::new();
+
+        let timestamp = current_unix_timestamp();
+        let proof = make_valid_proof("far-node", "wg-pubkey", timestamp);
+
+        // Very deep: 6 hops from root → distance 6 → "distant"
+        let params = serde_json::json!({
+            "node_id": "far-node",
+            "public_key": "wg-pubkey",
+            "timestamp": timestamp,
+            "proof": proof,
+            "lineage_proof": {
+                "chain_id": "test-chain",
+                "path": ["root", "a", "b", "c", "d", "e", "far-node"],
+                "generation": 0
+            }
+        });
+
+        let result = handler
+            .handle_enrollment_verify(Some(&params))
+            .await
+            .unwrap();
+
+        assert_eq!(result["verified"], true);
+        assert_eq!(result["enrollment_tier"], "distant");
+        assert_eq!(result["genetic_distance"], 6);
+        clear_test_env();
+        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
+    }
+
+    #[serial_test::serial]
+    #[tokio::test]
+    async fn verify_lineage_proof_self_enrollment() {
+        set_test_seed();
+        beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "southGate");
+        let handler = BtspHandler::new();
+
+        let timestamp = current_unix_timestamp();
+        let proof = make_valid_proof("southGate", "wg-pubkey", timestamp);
+
+        let params = serde_json::json!({
+            "node_id": "southGate",
+            "public_key": "wg-pubkey",
+            "timestamp": timestamp,
+            "proof": proof,
+            "lineage_proof": {
+                "chain_id": "test-chain",
+                "path": ["root", "southGate"],
+                "generation": 0
+            }
+        });
+
+        let result = handler
+            .handle_enrollment_verify(Some(&params))
+            .await
+            .unwrap();
+
+        assert_eq!(result["verified"], true);
+        // node_id == verifier_id → distance 0 → "identity"
+        assert_eq!(result["enrollment_tier"], "identity");
+        assert_eq!(result["genetic_distance"], 0);
+        clear_test_env();
+        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
     }
 }

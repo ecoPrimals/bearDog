@@ -111,8 +111,8 @@ mod trust_mode;
 // Re-export all public types
 pub use protocol::TunnelProtocol;
 pub use rpc::{
-    ConfigureTlsParams, EnrollmentVerifyParams, EnrollmentVerifyResponse, SessionCreateParams,
-    SessionCreateResponse, SessionExportKeysParams, SessionExportKeysResponse,
+    ConfigureTlsParams, EnrollmentLineageProof, EnrollmentVerifyParams, EnrollmentVerifyResponse,
+    SessionCreateParams, SessionCreateResponse, SessionExportKeysParams, SessionExportKeysResponse,
     SessionNegotiateParams, SessionNegotiateResponse, SessionVerifyParams, SessionVerifyResponse,
     TunnelEstablishParams, TunnelEstablishResponse, TunnelSendHttpParams, TunnelSendHttpResponse,
     VerifyPeerParams, VerifyPeerResponse,
