@@ -101,6 +101,8 @@ pub const ENV_METRICS_PORT: &str = "BEARDOG_METRICS_PORT";
 pub const ENV_HEALTH_PORT: &str = "BEARDOG_HEALTH_PORT";
 /// TCP IPC port (opt-in; absent = UDS-only mode).
 pub const ENV_TCP_IPC_PORT: &str = "BEARDOG_TCP_IPC_PORT";
+/// mDNS discovery interface (default: auto-detect or empty string for all).
+pub const ENV_MDNS_INTERFACE: &str = "BEARDOG_MDNS_INTERFACE";
 /// UPA URL (combined host + port).
 pub const ENV_UPA_URL: &str = "BEARDOG_UPA_URL";
 /// Debug/diagnostics port.

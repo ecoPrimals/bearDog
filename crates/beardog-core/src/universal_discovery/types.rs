@@ -203,7 +203,7 @@ impl Default for UniversalDiscoveryConfig {
             enabled_protocols: vec![
                 DiscoveryProtocol::Mdns {
                     service_type: "_http._tcp".to_string(),
-                    interface: "eth0".to_string(),
+                    interface: String::new(),
                     timeout_ms: 5000,
                     continuous_monitoring: true,
                 },
@@ -230,6 +230,11 @@ impl UniversalDiscoveryConfig {
             .or_else(|_| std::env::var(env_keys::ENV_SERVICE_TYPE))
             .unwrap_or_else(|_| "primal".to_string());
 
+        let mdns_interface = std::env::var(env_keys::ENV_MDNS_INTERFACE)
+            .unwrap_or_default();
+        let mdns_service_type = std::env::var(env_keys::ENV_MDNS_SERVICE_TYPE)
+            .unwrap_or_else(|_| "_http._tcp".to_string());
+
         let network_config = NetworkConfig::default();
         let http_endpoint = std::env::var(env_keys::ENV_SERVICE_REGISTRY_ENDPOINT_UNPREFIXED)
             .or_else(|_| std::env::var(env_keys::ENV_DISCOVERY_SERVICE_ENDPOINT))
@@ -251,8 +256,8 @@ impl UniversalDiscoveryConfig {
             service_id: format!("{primal_type}-{}", Uuid::new_v4()),
             enabled_protocols: vec![
                 DiscoveryProtocol::Mdns {
-                    service_type: "_http._tcp".to_string(),
-                    interface: "eth0".to_string(),
+                    service_type: mdns_service_type,
+                    interface: mdns_interface,
                     timeout_ms: 5000,
                     continuous_monitoring: true,
                 },

@@ -75,7 +75,8 @@ impl LinuxSecretServiceHsm {
         #[cfg(target_os = "linux")]
         {
             let data_home = std::env::var("XDG_DATA_HOME").unwrap_or_else(|_| {
-                let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
+                let home = std::env::var("HOME")
+                    .unwrap_or_else(|_| std::env::temp_dir().display().to_string());
                 format!("{home}/.local/share")
             });
             let dir = PathBuf::from(data_home).join("beardog").join("keys");
@@ -86,7 +87,7 @@ impl LinuxSecretServiceHsm {
         }
         #[cfg(not(target_os = "linux"))]
         {
-            Ok(PathBuf::from("/tmp/beardog-secret-service-stub"))
+            Ok(std::env::temp_dir().join("beardog-secret-service-stub"))
         }
     }
 

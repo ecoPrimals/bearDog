@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 25, 2026 -- Wave 151b: Deep Debt Sweep — Smart Refactoring + Hardcoding Evolution
+
+#### Smart File Decomposition
+- **`enrollment.rs` (1061L → 7 modules)**: Decomposed into `mod.rs`, `handler.rs` (202L), `crypto.rs` (57L), `config.rs` (54L), `lineage.rs` (58L), `replay_cache.rs` (48L), `tests.rs` (613L) — logical separation by concern, not arbitrary splitting
+- **`lineage_proof.rs` (877L → 399L + 480L tests)**: Extracted 480 lines of test code to `lineage_proof_tests.rs` via `#[path]` attribute
+- All production files now under 400 lines; no production `.rs` file exceeds 800 lines
+
+#### Hardcoding → Capability-Based Evolution
+- **mDNS interface**: Replaced hardcoded `"eth0"` with `BEARDOG_MDNS_INTERFACE` env var (default: empty = all interfaces); added `BEARDOG_MDNS_SERVICE_TYPE` wiring to existing discovery env key
+- **`/tmp/` paths**: Evolved hardcoded `/tmp` fallbacks to `std::env::temp_dir()` in Linux Secret Service backend (HOME fallback + non-Linux stub path)
+- **`reject()` helper**: Reduced 6× repeated `EnrollmentVerifyResponse` rejection boilerplate to single function call
+
+#### Code Quality
+- Resolved all `redundant_pub_crate` clippy warnings in new enrollment submodules
+- Zero clippy warnings, zero test failures, 13,973+ tests passing
+
 ### July 25, 2026 -- Wave 151a: BTSP on Local UDS (Defense-in-Depth)
 
 #### Defense-in-Depth UDS Enforcement (P2 → SHIPPED)
