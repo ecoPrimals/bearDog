@@ -36,6 +36,7 @@ pub struct OrchestratorRegistryClient {
 
 impl OrchestratorRegistryClient {
     /// Create a new client (socket path defaults to [`DISCOVERY_SOCKET_FALLBACK`] until [`connect`](Self::connect)).
+    #[must_use]
     pub fn new() -> Self {
         Self {
             socket_path: DISCOVERY_SOCKET_FALLBACK.to_string(),
@@ -288,6 +289,7 @@ impl OrchestratorRegistryClient {
     /// Start automatic heartbeat task
     ///
     /// Returns a handle that stops heartbeat when dropped
+    #[must_use]
     pub fn start_heartbeat(&self, interval_duration: Duration) -> HeartbeatHandle {
         let client = Self {
             socket_path: self.socket_path.clone(),

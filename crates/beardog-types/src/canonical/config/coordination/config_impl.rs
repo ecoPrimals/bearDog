@@ -63,6 +63,7 @@ impl Default for CoordinationConfig {
 
 impl CoordinationConfig {
     /// Create a new coordination configuration with distributed model
+    #[must_use]
     pub fn distributed() -> Self {
         Self {
             coordination_model: CoordinationModel::Distributed {
@@ -81,6 +82,7 @@ impl CoordinationConfig {
     }
 
     /// Create a new coordination configuration with rotational model
+    #[must_use]
     pub fn rotational() -> Self {
         Self {
             coordination_model: CoordinationModel::Rotational {
@@ -108,6 +110,7 @@ impl CoordinationConfig {
     }
 
     /// Create a new coordination configuration with emergent model
+    #[must_use]
     pub fn emergent() -> Self {
         Self {
             coordination_model: CoordinationModel::Emergent {
@@ -129,12 +132,14 @@ impl CoordinationConfig {
     }
 
     /// Check if coordination model supports ecosystem integration
-    pub fn supports_ecosystem_integration(&self) -> bool {
+    #[must_use]
+    pub const fn supports_ecosystem_integration(&self) -> bool {
         self.ecosystem_integration.genetics_integration_enabled
     }
 
     /// Get current coordination model type
     /// Gets `coordination_type`
+    #[must_use]
     pub fn get_coordination_type(&self) -> String {
         match &self.coordination_model {
             CoordinationModel::Distributed { .. } => "distributed".to_string(),
@@ -219,7 +224,8 @@ pub fn migrate_from_primary_replica(
 }
 
 /// Utility to assess coordination health
-pub fn assess_coordination_health(config: &CoordinationConfig) -> f64 {
+#[must_use]
+pub const fn assess_coordination_health(config: &CoordinationConfig) -> f64 {
     let _ = config;
     0.8
 }

@@ -47,14 +47,14 @@ pub async fn handle_doctor(args: DoctorArgs) -> Result<(), BearDogError> {
     checks.push(check_version());
 
     // Check 2: Entropy sources
-    checks.push(check_entropy().await);
+    checks.push(check_entropy());
 
     // Check 3: Key storage
-    checks.push(check_key_storage().await);
+    checks.push(check_key_storage());
 
     // Check 4: HSM availability (if comprehensive)
     if args.comprehensive {
-        checks.push(check_hsm().await);
+        checks.push(check_hsm());
     }
 
     // Check 5: Unix socket connectivity (if server running)
@@ -64,7 +64,7 @@ pub async fn handle_doctor(args: DoctorArgs) -> Result<(), BearDogError> {
 
     // Check 6: Crypto operations
     if args.comprehensive {
-        checks.push(check_crypto_operations().await);
+        checks.push(check_crypto_operations());
     }
 
     // Check 7: Component-specific check
@@ -145,7 +145,7 @@ fn check_version() -> HealthCheck {
     }
 }
 
-async fn check_entropy() -> HealthCheck {
+fn check_entropy() -> HealthCheck {
     // Check if we can generate entropy
     use rand::RngCore;
 
@@ -161,7 +161,7 @@ async fn check_entropy() -> HealthCheck {
     }
 }
 
-async fn check_key_storage() -> HealthCheck {
+fn check_key_storage() -> HealthCheck {
     let key_dir = std::path::PathBuf::from(defaults::resolve_key_storage_dir());
 
     if key_dir.exists() || std::fs::create_dir_all(&key_dir).is_ok() {
@@ -184,7 +184,7 @@ async fn check_key_storage() -> HealthCheck {
     }
 }
 
-async fn check_hsm() -> HealthCheck {
+fn check_hsm() -> HealthCheck {
     // Check HSM availability
     use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 
@@ -231,7 +231,7 @@ async fn check_server_connectivity() -> HealthCheck {
     }
 }
 
-async fn check_crypto_operations() -> HealthCheck {
+fn check_crypto_operations() -> HealthCheck {
     // Test basic crypto operations - just check that Blake3 is available
     use blake3;
 
@@ -257,11 +257,11 @@ async fn check_crypto_operations() -> HealthCheck {
 
 async fn check_component(component: &str) -> HealthCheck {
     match component {
-        "entropy" => check_entropy().await,
-        "storage" => check_key_storage().await,
-        "hsm" => check_hsm().await,
+        "entropy" => check_entropy(),
+        "storage" => check_key_storage(),
+        "hsm" => check_hsm(),
         "server" => check_server_connectivity().await,
-        "crypto" => check_crypto_operations().await,
+        "crypto" => check_crypto_operations(),
         _ => HealthCheck {
             name: format!("Component: {component}"),
             healthy: false,
@@ -304,14 +304,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_check_entropy() {
-        let result = check_entropy().await;
+        let result = check_entropy();
         assert!(result.healthy);
         assert_eq!(result.name, "Entropy Sources");
     }
 
     #[tokio::test]
     async fn test_check_key_storage() {
-        let result = check_key_storage().await;
+        let result = check_key_storage();
         // Should succeed as /tmp is usually writable
         assert_eq!(result.name, "Key Storage");
         // Don't assert healthy as it depends on filesystem permissions
@@ -319,7 +319,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_check_crypto_operations() {
-        let result = check_crypto_operations().await;
+        let result = check_crypto_operations();
         assert!(result.healthy);
         assert_eq!(result.name, "Crypto Operations");
         assert!(result.details.as_ref().unwrap().contains("Blake3"));
@@ -342,7 +342,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_check_hsm() {
-        let result = check_hsm().await;
+        let result = check_hsm();
         assert!(result.healthy);
         assert_eq!(result.name, "HSM Devices");
     }

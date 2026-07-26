@@ -94,6 +94,7 @@ impl ProductionMetricsConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             enabled: true,
@@ -107,6 +108,7 @@ impl ProductionMetricsConfig {
     ///
     /// # Environment Variables
     /// - `BEARDOG_METRICS_ENDPOINT`: Metrics endpoint (default: "/metrics")
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -132,6 +134,7 @@ impl ProductionLoggingConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             level: Self::DEFAULT_LEVEL.to_string(),
@@ -146,6 +149,7 @@ impl ProductionLoggingConfig {
     /// # Environment Variables
     /// - `BEARDOG_LOG_LEVEL`: Log level (default: "info")
     /// - `BEARDOG_LOG_FORMAT`: Log format (default: "json")
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -167,6 +171,7 @@ impl ProductionTracingConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             enabled: false,
@@ -180,6 +185,7 @@ impl ProductionTracingConfig {
     ///
     /// # Environment Variables
     /// - `BEARDOG_TRACING_ENDPOINT`: Tracing endpoint (default: "/traces")
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -202,6 +208,7 @@ impl DashboardConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             enabled: false,
@@ -215,6 +222,7 @@ impl DashboardConfig {
     ///
     /// # Environment Variables
     /// - `BEARDOG_DASHBOARD_ENDPOINT`: Dashboard endpoint (default: "/dashboard")
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }

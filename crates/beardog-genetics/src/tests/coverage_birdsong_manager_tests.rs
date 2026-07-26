@@ -12,13 +12,13 @@ mod manager_discovery_tests {
     use super::BearDogError;
     use crate::birdsong::BirdSongManager;
 
-    async fn create_test_manager() -> BirdSongManager {
-        BirdSongManager::new(vec![0xEF; 32], None).await.unwrap()
+    fn create_test_manager() -> BirdSongManager {
+        BirdSongManager::new(vec![0xEF; 32], None).unwrap()
     }
 
     #[tokio::test]
     async fn test_discovery_encrypt_decrypt_roundtrip() -> Result<(), BearDogError> {
-        let manager = create_test_manager().await;
+        let manager = create_test_manager();
         let plaintext = b"Hello, family!";
         let family_id = "test-family";
 
@@ -32,7 +32,7 @@ mod manager_discovery_tests {
 
     #[tokio::test]
     async fn test_discovery_wrong_family_fails() -> Result<(), BearDogError> {
-        let manager = create_test_manager().await;
+        let manager = create_test_manager();
         let plaintext = b"Secret message";
 
         let encrypted = manager.encrypt_discovery_for_family(plaintext, "family-A")?;
@@ -43,7 +43,7 @@ mod manager_discovery_tests {
 
     #[tokio::test]
     async fn test_discovery_decrypt_too_short() -> Result<(), BearDogError> {
-        let manager = create_test_manager().await;
+        let manager = create_test_manager();
         let short_data = vec![0u8; 10];
 
         let result = manager.decrypt_discovery_from_family(&short_data, "family");
@@ -53,7 +53,7 @@ mod manager_discovery_tests {
 
     #[tokio::test]
     async fn test_discovery_decrypt_corrupted_data() -> Result<(), BearDogError> {
-        let manager = create_test_manager().await;
+        let manager = create_test_manager();
         let plaintext = b"Test data";
 
         let mut encrypted = manager.encrypt_discovery_for_family(plaintext, "family")?;
@@ -68,7 +68,7 @@ mod manager_discovery_tests {
 
     #[tokio::test]
     async fn test_discovery_empty_plaintext() -> Result<(), BearDogError> {
-        let manager = create_test_manager().await;
+        let manager = create_test_manager();
         let plaintext = b"";
 
         let encrypted = manager.encrypt_discovery_for_family(plaintext, "family")?;
@@ -79,14 +79,14 @@ mod manager_discovery_tests {
 
     #[tokio::test]
     async fn test_get_lineage_chain_nonexistent() -> Result<(), BearDogError> {
-        let manager = create_test_manager().await;
+        let manager = create_test_manager();
         assert!(manager.get_lineage_chain("nonexistent").is_none());
         Ok(())
     }
 
     #[tokio::test]
     async fn test_get_descendants_nonexistent() -> Result<(), BearDogError> {
-        let manager = create_test_manager().await;
+        let manager = create_test_manager();
         let descendants = manager.get_descendants("nonexistent", "node");
         assert!(descendants.is_empty());
         Ok(())
@@ -94,7 +94,7 @@ mod manager_discovery_tests {
 
     #[tokio::test]
     async fn test_can_decrypt_check() -> Result<(), BearDogError> {
-        let manager = create_test_manager().await;
+        let manager = create_test_manager();
 
         let chain = manager
             .generate_root_lineage("root".to_string(), None)
@@ -127,7 +127,7 @@ mod manager_discovery_tests {
 
     #[tokio::test]
     async fn test_revoke_keys_no_keys() -> Result<(), BearDogError> {
-        let manager = create_test_manager().await;
+        let manager = create_test_manager();
         let chain = manager
             .generate_root_lineage("root".to_string(), None)
             .await?;
@@ -139,7 +139,7 @@ mod manager_discovery_tests {
 
     #[tokio::test]
     async fn test_get_distributed_keys_nonexistent() -> Result<(), BearDogError> {
-        let manager = create_test_manager().await;
+        let manager = create_test_manager();
         let keys = manager.get_distributed_keys("nonexistent");
         assert!(keys.is_empty());
         Ok(())
@@ -147,7 +147,7 @@ mod manager_discovery_tests {
 
     #[tokio::test]
     async fn test_distribute_keys_to_descendants() -> Result<(), BearDogError> {
-        let manager = create_test_manager().await;
+        let manager = create_test_manager();
         let chain = manager
             .generate_root_lineage("root".to_string(), None)
             .await?;
@@ -168,7 +168,7 @@ mod manager_discovery_tests {
 
     #[tokio::test]
     async fn test_full_lineage_lifecycle() -> Result<(), BearDogError> {
-        let manager = create_test_manager().await;
+        let manager = create_test_manager();
 
         // Create root
         let chain = manager

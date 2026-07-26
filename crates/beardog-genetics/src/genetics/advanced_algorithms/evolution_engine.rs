@@ -42,6 +42,7 @@ pub struct GeneticEvolutionEngine {
 
 impl GeneticEvolutionEngine {
     /// Create new evolution engine
+    #[must_use]
     pub fn new(config: EvolutionConfig) -> Self {
         Self {
             evolution_config: config.clone(),
@@ -188,6 +189,7 @@ impl GeneticEvolutionEngine {
     }
 
     /// Get best individual
+    #[must_use]
     pub fn get_best_individual(&self) -> Option<GeneticIndividual> {
         let population = self.population_manager.get_population();
         population.into_iter().max_by(|a, b| {

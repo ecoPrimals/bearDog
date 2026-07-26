@@ -242,8 +242,7 @@ async fn test_create_key_management_returns_software_hsm() {
 
 #[tokio::test]
 async fn test_software_hsm_with_config() {
-    let p = SoftwareHsmProvider::with_config(std::collections::HashMap::new())
-        .await
-        .expect("with_config");
+    let p =
+        SoftwareHsmProvider::with_config(std::collections::HashMap::new()).expect("with_config");
     assert_eq!(p.provider_name(), "SecureSoftwareHSM");
 }

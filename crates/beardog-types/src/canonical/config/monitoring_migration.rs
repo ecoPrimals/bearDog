@@ -154,15 +154,15 @@ impl Default for MonitoringMigrationOptions {
 
 impl MonitoringMigrationService {
     /// Create a new monitoring migration service
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub const fn new(options: MonitoringMigrationOptions) -> Self {
         Self { options }
     }
 
     /// Create a migration service with default options
-    #[must_use]
     /// Creates instance with defaults
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self::new(MonitoringMigrationOptions::default())
     }
@@ -390,8 +390,8 @@ impl MonitoringMigrationService {
     const fn validate_unified_monitoring_config(_unified_config: &MonitoringConfig) {}
 
     /// Create a migration report summary
-    #[must_use]
     /// Creates `monitoring_migration_summary`
+    #[must_use]
     pub fn create_monitoring_migration_summary(report: &MonitoringMigrationReport) -> String {
         format!(
             "Monitoring Configuration Migration Summary:\n\
@@ -422,8 +422,8 @@ pub async fn migrate_monitoring_configurations(
 }
 
 /// Create a legacy monitoring config from configuration monitoring settings
-#[must_use]
 /// Creates `configuration_legacy_monitoring`
+#[must_use]
 pub fn create_configuration_legacy_monitoring(
     metrics_settings: Option<serde_json::Value>,
     tracing_settings: Option<serde_json::Value>,

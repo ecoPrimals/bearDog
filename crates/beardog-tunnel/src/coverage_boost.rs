@@ -181,8 +181,7 @@ mod modes_client_test {
         let result = run(
             Some("/tmp/beardog-wave10-cov-absent.sock".to_string()),
             Some("health".to_string()),
-        )
-        .await;
+        );
         assert!(result.is_err(), "should error when server is not running");
     }
 
@@ -191,8 +190,7 @@ mod modes_client_test {
         let result = run(
             Some("unix:///tmp/beardog-wave10-cov.sock".to_string()),
             None,
-        )
-        .await;
+        );
         assert!(result.is_ok(), "client run interactive should return Ok");
     }
 }

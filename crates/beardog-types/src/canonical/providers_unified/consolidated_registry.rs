@@ -152,8 +152,6 @@ pub struct ProviderRegistryConfig {
 }
 
 /// Backward compatibility alias
-#[deprecated(since = "3.2.0", note = "Use ProviderRegistryConfig instead")]
-pub type RegistryConfig = ProviderRegistryConfig;
 
 impl Default for ProviderRegistryConfig {
     fn default() -> Self {
@@ -190,7 +188,7 @@ pub struct ProviderRegistration {
 
 impl ConsolidatedProviderRegistry {
     /// Create new consolidated provider registry
-    pub fn new(config: RegistryConfig) -> Self {
+    pub fn new(config: ProviderRegistryConfig) -> Self {
         info!("Creating consolidated provider registry with config: {:?}", config);
         
         Self {

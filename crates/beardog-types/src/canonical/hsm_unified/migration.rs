@@ -2,10 +2,14 @@
 
 // HSM Configuration Migration Utilities
 //
-// This module provides utilities to migrate fragmented HSM configurations
-// from beardog-tunnel and other crates into the unified canonical system.
+// Converts legacy tunnel / configuration / zero-cost HSM fragments into
+// [`CanonicalHsmConfig`]. Tunnel and configuration paths map known keys into
+// canonical fields; unrecognized keys are preserved in metadata when
+// `preserve_legacy_metadata` is enabled.
 
 use super::CanonicalHsmConfig;
+use super::core::HsmType;
+use super::monitoring::HsmMonitoringConfig;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -135,8 +139,8 @@ impl Default for HsmMigrationService {
 
 impl HsmMigrationService {
     /// Create a new migration service with options
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub const fn new(options: MigrationOptions) -> Self {
         Self { options }
     }
@@ -225,17 +229,27 @@ impl HsmMigrationService {
             LegacyHsmConfig::TunnelHsm {
                 hardware_config,
                 software_config,
-                mobile_config: _,
+                mobile_config,
             } => {
-                self.migrate_tunnel_hsm_config(hardware_config, software_config, unified_config)?;
+                self.migrate_tunnel_hsm_config(
+                    hardware_config,
+                    software_config,
+                    mobile_config,
+                    unified_config,
+                )?;
                 Ok("TunnelHsm".to_string())
             }
             LegacyHsmConfig::ConfigurationHsm {
                 providers,
                 monitoring,
-                performance: _,
+                performance,
             } => {
-                self.migrate_configuration_hsm_config(providers, monitoring, unified_config)?;
+                self.migrate_configuration_hsm_config(
+                    providers,
+                    monitoring,
+                    performance,
+                    unified_config,
+                )?;
                 Ok("ConfigurationHsm".to_string())
             }
             LegacyHsmConfig::ZeroCostHsm { manager_config } => {
@@ -246,32 +260,36 @@ impl HsmMigrationService {
     }
 
     /// Migrate tunnel HSM configuration
-    #[expect(
-        clippy::unnecessary_wraps,
-        reason = "migration stub — Result kept for future async HSM tunnel wiring"
-    )]
     fn migrate_tunnel_hsm_config(
         &self,
         hardware_config: Option<HashMap<String, serde_json::Value>>,
         software_config: Option<HashMap<String, serde_json::Value>>,
-        _unified_config: &mut CanonicalHsmConfig,
+        mobile_config: Option<HashMap<String, serde_json::Value>>,
+        unified_config: &mut CanonicalHsmConfig,
     ) -> Result<(), BearDogError> {
         debug!("Starting tunnel HSM configuration migration");
 
         if let Some(hw_config) = hardware_config {
             debug!("Migrating tunnel hardware HSM configuration");
-            // Implementation would migrate hardware-specific tunnel HSM settings
-            for (key, value) in hw_config {
-                debug!("Processing tunnel hardware setting: {} = {:?}", key, value);
+            Self::apply_tunnel_fragment(&hw_config, "tunnel.hw", unified_config, &self.options);
+            if unified_config.core.hsm_type == HsmType::Software {
+                unified_config.core.hsm_type = HsmType::Hardware;
             }
+            unified_config.core.enabled = true;
         }
 
         if let Some(sw_config) = software_config {
             debug!("Migrating tunnel software HSM configuration");
-            // Implementation would migrate software-specific tunnel HSM settings
-            for (key, value) in sw_config {
-                debug!("Processing tunnel software setting: {} = {:?}", key, value);
-            }
+            Self::apply_tunnel_fragment(&sw_config, "tunnel.sw", unified_config, &self.options);
+            unified_config.core.hsm_type = HsmType::Software;
+            unified_config.core.enabled = true;
+        }
+
+        if let Some(mobile) = mobile_config {
+            debug!("Migrating tunnel mobile HSM configuration");
+            Self::apply_mobile_fragment(&mobile, unified_config, &self.options);
+            unified_config.core.hsm_type = HsmType::Mobile;
+            unified_config.core.enabled = true;
         }
 
         debug!("Tunnel HSM configuration migration completed");
@@ -279,34 +297,145 @@ impl HsmMigrationService {
     }
 
     /// Migrate configuration HSM settings
-    #[expect(
-        clippy::unnecessary_wraps,
-        reason = "migration stub — Result kept for future async configuration migration"
-    )]
     fn migrate_configuration_hsm_config(
         &self,
         providers: Vec<HashMap<String, serde_json::Value>>,
         monitoring: Option<HashMap<String, serde_json::Value>>,
-        _unified_config: &mut CanonicalHsmConfig,
+        performance: Option<HashMap<String, serde_json::Value>>,
+        unified_config: &mut CanonicalHsmConfig,
     ) -> Result<(), BearDogError> {
         debug!("Starting configuration HSM migration");
 
         for (index, provider_config) in providers.into_iter().enumerate() {
-            debug!("Migrating provider configuration {}", index);
-            for (key, value) in provider_config {
-                debug!("Processing provider setting: {} = {:?}", key, value);
+            debug!("Migrating provider configuration {index}");
+            if let Some(name) = provider_config
+                .get("name")
+                .or_else(|| provider_config.get("provider"))
+                .and_then(|v| v.as_str())
+            {
+                unified_config.provider.name = name.to_string();
+            }
+            if let Some(enabled) = provider_config
+                .get("enabled")
+                .and_then(serde_json::Value::as_bool)
+            {
+                unified_config.provider.enabled = enabled;
+            }
+            if let Some(endpoint) = provider_config.get("endpoint").and_then(|v| v.as_str()) {
+                unified_config.provider.endpoint = Some(endpoint.to_string());
+            }
+            if self.options.preserve_legacy_metadata {
+                for (key, value) in provider_config {
+                    if let Some(s) = json_value_to_string(&value) {
+                        unified_config
+                            .core
+                            .metadata
+                            .insert(format!("config.provider.{index}.{key}"), s);
+                    }
+                }
             }
         }
 
         if let Some(monitoring_config) = monitoring {
             debug!("Migrating HSM monitoring configuration");
-            for (key, value) in monitoring_config {
-                debug!("Processing monitoring setting: {} = {:?}", key, value);
+            apply_monitoring_fragment(&monitoring_config, &mut unified_config.monitoring);
+            if self.options.preserve_legacy_metadata {
+                for (key, value) in monitoring_config {
+                    if let Some(s) = json_value_to_string(&value) {
+                        unified_config
+                            .core
+                            .metadata
+                            .insert(format!("config.monitoring.{key}"), s);
+                    }
+                }
+            }
+        }
+
+        if let Some(perf) = performance {
+            debug!("Migrating HSM performance configuration");
+            if let Some(batch) = perf
+                .get("batch_operations_enabled")
+                .and_then(serde_json::Value::as_bool)
+            {
+                unified_config.performance.batch_operations_enabled = batch;
+            }
+            if let Some(pool) = perf
+                .get("connection_pooling_enabled")
+                .and_then(serde_json::Value::as_bool)
+            {
+                unified_config.performance.connection_pooling_enabled = pool;
+            }
+            if let Some(cache) = perf
+                .get("cache_enabled")
+                .and_then(serde_json::Value::as_bool)
+            {
+                unified_config.performance.cache_enabled = cache;
             }
         }
 
         debug!("Configuration HSM migration completed");
         Ok(())
+    }
+
+    fn apply_tunnel_fragment(
+        fragment: &HashMap<String, serde_json::Value>,
+        prefix: &str,
+        unified_config: &mut CanonicalHsmConfig,
+        options: &MigrationOptions,
+    ) {
+        if let Some(name) = fragment.get("name").and_then(|v| v.as_str()) {
+            unified_config.core.name = name.to_string();
+        }
+        if let Some(version) = fragment.get("version").and_then(|v| v.as_str()) {
+            unified_config.core.version = version.to_string();
+        }
+        if let Some(provider_type) = fragment.get("provider_type").and_then(|v| v.as_str()) {
+            unified_config.core.hsm_type = hsm_type_from_legacy(provider_type);
+        }
+        if options.preserve_legacy_metadata {
+            for (key, value) in fragment {
+                if let Some(s) = json_value_to_string(value) {
+                    unified_config
+                        .core
+                        .metadata
+                        .insert(format!("{prefix}.{key}"), s);
+                }
+            }
+        }
+    }
+
+    fn apply_mobile_fragment(
+        fragment: &HashMap<String, serde_json::Value>,
+        unified_config: &mut CanonicalHsmConfig,
+        options: &MigrationOptions,
+    ) {
+        if let Some(platform) = fragment.get("platform").and_then(|v| v.as_str()) {
+            match platform.to_ascii_lowercase().as_str() {
+                "android" | "android_strongbox" => {
+                    unified_config.mobile.android_strongbox_enabled = true;
+                }
+                "ios" | "ios_secure_enclave" => {
+                    unified_config.mobile.ios_secure_enclave_enabled = true;
+                }
+                _ => {}
+            }
+        }
+        if let Some(bio) = fragment
+            .get("biometric_auth")
+            .and_then(serde_json::Value::as_bool)
+        {
+            unified_config.mobile.biometric_auth_enabled = bio;
+        }
+        if options.preserve_legacy_metadata {
+            for (key, value) in fragment {
+                if let Some(s) = json_value_to_string(value) {
+                    unified_config
+                        .core
+                        .metadata
+                        .insert(format!("tunnel.mobile.{key}"), s);
+                }
+            }
+        }
     }
 
     /// Migrate zero-cost HSM configuration
@@ -363,8 +492,8 @@ impl HsmMigrationService {
     }
 
     /// Create a migration report summary
-    #[must_use]
     /// Creates `migration_summary`
+    #[must_use]
     pub fn create_migration_summary(report: &MigrationReport) -> String {
         format!(
             "HSM Configuration Migration Summary:\n\
@@ -382,12 +511,59 @@ impl HsmMigrationService {
     }
 }
 
+fn hsm_type_from_legacy(provider_type: &str) -> HsmType {
+    match provider_type.to_ascii_lowercase().as_str() {
+        "hardware" => HsmType::Hardware,
+        "software" => HsmType::Software,
+        "cloud" => HsmType::Cloud,
+        "network" => HsmType::Network,
+        "mobile" | "android_strongbox" | "ios_secure_enclave" => HsmType::Mobile,
+        "pkcs11" => HsmType::Pkcs11,
+        "usb" | "usb_token" => HsmType::UsbToken,
+        "smartcard" | "smart_card" => HsmType::SmartCard,
+        _ => HsmType::Software,
+    }
+}
+
+fn json_value_to_string(value: &serde_json::Value) -> Option<String> {
+    match value {
+        serde_json::Value::String(s) => Some(s.clone()),
+        serde_json::Value::Bool(b) => Some(b.to_string()),
+        serde_json::Value::Number(n) => Some(n.to_string()),
+        other => serde_json::to_string(other).ok(),
+    }
+}
+
+fn apply_monitoring_fragment(
+    fragment: &HashMap<String, serde_json::Value>,
+    monitoring: &mut HsmMonitoringConfig,
+) {
+    if let Some(v) = fragment
+        .get("health_checks_enabled")
+        .and_then(serde_json::Value::as_bool)
+    {
+        monitoring.health_checks_enabled = v;
+    }
+    if let Some(v) = fragment
+        .get("metrics_enabled")
+        .and_then(serde_json::Value::as_bool)
+    {
+        monitoring.metrics_enabled = v;
+    }
+    if let Some(v) = fragment
+        .get("alerting_enabled")
+        .and_then(serde_json::Value::as_bool)
+    {
+        monitoring.alerting_enabled = v;
+    }
+}
+
 /// Convenience function to migrate HSM configurations with default options
 ///
 /// # Errors
 ///
 /// Same as [`HsmMigrationService::migrate_hsm_configs`] (currently always `Ok`).
-pub async fn migrate_hsm_configurations(
+pub fn migrate_hsm_configurations(
     legacy_configs: Vec<LegacyHsmConfig>,
 ) -> Result<MigrationResult, BearDogError> {
     let migration_service = HsmMigrationService::default();
@@ -395,8 +571,8 @@ pub async fn migrate_hsm_configurations(
 }
 
 /// Create a legacy HSM config from beardog-tunnel configuration
-#[must_use]
 /// Creates `tunnel_legacy_config`
+#[must_use]
 pub fn create_tunnel_legacy_config(
     hardware_settings: Option<serde_json::Value>,
     software_settings: Option<serde_json::Value>,

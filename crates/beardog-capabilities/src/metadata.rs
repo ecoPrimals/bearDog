@@ -74,18 +74,21 @@ impl CapabilityMetadata {
     }
 
     /// Set protocols
+    #[must_use]
     pub fn with_protocols(mut self, protocols: Vec<String>) -> Self {
         self.protocols = protocols;
         self
     }
 
     /// Set rate limit
+    #[must_use]
     pub const fn with_rate_limit(mut self, limit: u64) -> Self {
         self.rate_limit = Some(limit);
         self
     }
 
     /// Set authentication requirement
+    #[must_use]
     pub const fn with_auth(mut self, requires_auth: bool) -> Self {
         self.requires_auth = requires_auth;
         self
@@ -149,6 +152,7 @@ pub const ENV_CAPABILITY_MDNS_SERVICE: &str = "BEARDOG_CAPABILITY_MDNS_SERVICE";
 /// Precedence:
 /// 1. [`ENV_CAPABILITY_HTTP_BASE`]
 /// 2. `BEARDOG_API_HOST` or `BEARDOG_BIND_ADDRESS` + `BEARDOG_API_PORT` (or [`beardog_config::DEFAULT_API_PORT`])
+#[must_use]
 pub fn resolve_capability_http_base() -> String {
     resolve_capability_http_base_from_env(|k| beardog_errors::process_env::var(k))
 }
@@ -164,7 +168,8 @@ pub fn resolve_capability_http_base_from_env(
     let host = get("BEARDOG_API_HOST")
         .or_else(|_| get("BEARDOG_BIND_ADDRESS"))
         .unwrap_or_else(|_| {
-            beardog_config::domains::network_addresses::DEFAULT_BIND_ADDRESS.to_string()
+            beardog_config::domains::network_addresses::NetworkAddressesConfig::from_env()
+                .bind_address
         });
 
     let port: u16 = get("BEARDOG_API_PORT")
@@ -176,6 +181,7 @@ pub fn resolve_capability_http_base_from_env(
 }
 
 /// Full HTTP URL for the capability discovery document.
+#[must_use]
 pub fn resolve_capability_http_discovery_url() -> String {
     resolve_capability_http_discovery_url_from_env(|k| beardog_errors::process_env::var(k))
 }
@@ -213,6 +219,7 @@ where
 ///
 /// Uses sovereign `instance_id` only as the default instance label; operators may override via
 /// [`ENV_CAPABILITY_MDNS_INSTANCE`]. This is discovery metadata, not a coupled primal name.
+#[must_use]
 pub fn resolve_capability_mdns_full_name(instance_id: &str) -> String {
     resolve_capability_mdns_full_name_from_env(instance_id, |k| beardog_errors::process_env::var(k))
 }
@@ -261,6 +268,7 @@ pub struct CapabilityEndpoint {
 
 impl CapabilityEndpoint {
     /// Create new capability endpoint
+    #[must_use]
     pub fn new(metadata: CapabilityMetadata, provider: PrimalInfo, url: String) -> Self {
         let now = chrono::Utc::now().to_rfc3339();
         Self {

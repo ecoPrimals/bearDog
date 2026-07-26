@@ -20,9 +20,7 @@ use tracing::info;
 /// - `user_name` (string, required): user display name
 /// - `device_path` (string, optional): HID device path (auto-selects first FIDO2 device)
 /// - `pin` (string, optional): device PIN for ClientPIN-authenticated registration
-pub async fn handle_fido2_register(
-    params: Option<&Value>,
-) -> Result<Value, super::super::HandlerError> {
+pub fn handle_fido2_register(params: Option<&Value>) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for beardog.fido2.register")?;
 
     let rp_id = params

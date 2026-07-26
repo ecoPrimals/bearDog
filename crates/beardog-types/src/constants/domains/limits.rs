@@ -503,19 +503,3 @@ pub const MAX_DISCOVERY_RETRIES: u32 = 5;
 ///
 /// **Rationale**: Prevents runaway workflows
 pub const MAX_WORKFLOW_STEPS: usize = 100;
-
-// ============================================================================
-// BACKWARD COMPATIBILITY ALIASES
-// ============================================================================
-
-/// Deprecated: Use `MAX_CONNECTIONS` instead
-#[deprecated(since = "3.1.0", note = "Use MAX_CONNECTIONS for clarity")]
-pub const DEFAULT_MAX_CONNECTIONS: usize = MAX_CONNECTIONS;
-
-/// Deprecated: Use `MAX_RETRIES` instead
-#[deprecated(since = "3.1.0", note = "Use MAX_RETRIES for clarity")]
-pub const DEFAULT_MAX_RETRIES: u32 = MAX_RETRIES;
-
-/// Deprecated: Use `MAX_REQUEST_SIZE` instead
-#[deprecated(since = "3.1.0", note = "Use MAX_REQUEST_SIZE for clarity")]
-pub const DEFAULT_MAX_REQUEST_SIZE: usize = MAX_REQUEST_SIZE;

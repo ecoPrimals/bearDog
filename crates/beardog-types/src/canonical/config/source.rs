@@ -123,6 +123,7 @@ pub struct EnvConfigSource;
 
 impl EnvConfigSource {
     /// Create a new environment configuration source
+    #[must_use]
     pub const fn new() -> Self {
         Self
     }
@@ -155,6 +156,7 @@ pub struct TestConfigSource {
 
 impl TestConfigSource {
     /// Create a new empty test configuration source
+    #[must_use]
     pub fn new() -> Self {
         Self {
             values: Arc::new(RwLock::new(HashMap::new())),
@@ -205,11 +207,13 @@ impl TestConfigSource {
     }
 
     /// Get the number of configured values
+    #[must_use]
     pub fn len(&self) -> usize {
         self.values.read().len()
     }
 
     /// Check if the source is empty
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.values.read().is_empty()
     }
@@ -256,17 +260,20 @@ impl CompositeConfigSource {
     /// Create a new composite source from multiple sources
     ///
     /// Sources are checked in order, first match wins.
+    #[must_use]
     pub fn new(sources: Vec<Box<dyn ConfigSource>>) -> Self {
         Self { sources }
     }
 
     /// Add a source with higher priority (checked first)
+    #[must_use]
     pub fn with_priority(mut self, source: Box<dyn ConfigSource>) -> Self {
         self.sources.insert(0, source);
         self
     }
 
     /// Add a source with lower priority (checked last)
+    #[must_use]
     pub fn with_fallback(mut self, source: Box<dyn ConfigSource>) -> Self {
         self.sources.push(source);
         self

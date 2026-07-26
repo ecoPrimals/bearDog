@@ -293,14 +293,14 @@ mod tests {
     fn expected_primal_name() -> String {
         beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME)
             .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_NAME))
-            .unwrap_or_else(|_| "beardog".to_string())
+            .unwrap_or_else(|_| env_keys::DEFAULT_PRIMAL_NAME.to_string())
     }
 
     #[test]
     fn test_capability_manifest_creation() {
         let caps = BearDogCapabilities::new(Some("test_family".to_string()), "node1".to_string());
 
-        // Primal ID is discovered from environment or defaults to "beardog"
+        // Primal ID is discovered from environment or defaults to DEFAULT_PRIMAL_NAME
         assert_eq!(caps.primal_id, expected_primal_name());
         assert_eq!(caps.family_id, Some("test_family".to_string()));
         assert_eq!(caps.node_id, "node1");

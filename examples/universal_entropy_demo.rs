@@ -39,7 +39,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
     // Step 2: List all discovered devices
     println!("📋 Step 2: Available HSM devices:");
     println!("─────────────────────────────────────────────────────────");
-    let devices = orchestrator.list_available_devices().await;
+    let devices = orchestrator.list_available_devices();
 
     if devices.is_empty() {
         println!("⚠️  No HSM devices detected");
@@ -80,7 +80,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
         min_quality_tier: 3,
     };
 
-    let result = orchestrator.generate_entropy(request).await?;
+    let result = orchestrator.generate_entropy(request)?;
     println!("✅ Generated seed: {}", result.seed_id);
     println!(
         "   Quality Tier: {} ({})",

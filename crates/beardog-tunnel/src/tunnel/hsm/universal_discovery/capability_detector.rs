@@ -18,6 +18,7 @@ pub struct CapabilityDetector;
 
 impl CapabilityDetector {
     /// Create a new detector (currently no-op; probes are platform-gated).
+    #[must_use]
     pub const fn new() -> Self {
         Self
     }

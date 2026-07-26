@@ -133,6 +133,7 @@ impl ConsolidatedNetworkConfiguration {
     }
 
     /// Create a development-friendly configuration
+    #[must_use]
     pub fn development() -> Self {
         let mut config = Self::default();
 
@@ -152,6 +153,7 @@ impl ConsolidatedNetworkConfiguration {
     }
 
     /// Create a production-hardened configuration
+    #[must_use]
     pub fn production() -> Self {
         let mut config = Self::default();
 
@@ -301,6 +303,7 @@ impl Default for RateLimitConfig {
 
 impl RateLimitConfig {
     /// Create a configuration for requests per minute
+    #[must_use]
     pub fn per_minute(requests: u64) -> Self {
         Self {
             max_requests: requests,
@@ -310,6 +313,7 @@ impl RateLimitConfig {
     }
 
     /// Create a configuration for requests per second
+    #[must_use]
     pub fn per_second(requests: u64) -> Self {
         Self {
             max_requests: requests,
@@ -319,6 +323,7 @@ impl RateLimitConfig {
     }
 
     /// Create a global rate limit
+    #[must_use]
     pub fn global(requests: u64, window_secs: u64) -> Self {
         Self {
             max_requests: requests,
@@ -444,6 +449,7 @@ pub struct NetworkScanConfig {
 
 impl NetworkScanConfig {
     /// Convert to standard network configuration for consistency
+    #[must_use]
     pub fn to_network_config(&self) -> ConsolidatedNetworkConfiguration {
         // Set appropriate timeout based on scan timeout
         // Note: TimeoutConfiguration structure handled by its own implementation
@@ -470,6 +476,7 @@ impl ConsolidatedNetworkConfiguration {
     }
 
     /// Create from bind address (`SocketAddr` pattern)
+    #[must_use]
     pub fn from_bind_address(addr: std::net::SocketAddr) -> Self {
         let mut config = Self::default();
         config.server.bind_address = addr.ip().to_string();

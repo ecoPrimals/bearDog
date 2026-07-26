@@ -39,6 +39,7 @@ pub struct KeyRotationManager {
 
 impl KeyRotationManager {
     /// Create new rotation manager with configuration
+    #[must_use]
     pub fn new(config: KeyRotationConfig) -> Self {
         Self {
             config,
@@ -48,6 +49,7 @@ impl KeyRotationManager {
     }
 
     /// Create rotation manager with default configuration
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self::new(KeyRotationConfig::default())
     }

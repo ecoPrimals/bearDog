@@ -280,6 +280,7 @@ pub struct CanonicalComplianceConfig {
 impl CanonicalComplianceConfig {
     /// Check if a specific framework is enabled
     /// Checks if framework enabled
+    #[must_use]
     pub fn is_framework_enabled(&self, framework: &ComplianceFramework) -> bool {
         self.status == ComplianceStatus::Enabled && self.frameworks.contains(framework)
     }

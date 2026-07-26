@@ -34,7 +34,7 @@ use tracing::info;
 /// # Errors
 ///
 /// Returns [`BearDogError`] if no HSM hardware is detected on the host.
-pub async fn discover_any_available_hsm() -> Result<String, BearDogError> {
+pub fn discover_any_available_hsm() -> Result<String, BearDogError> {
     info!("Discovering available HSM hardware...");
 
     // Priority 1: Check for Android StrongBox (via ADB or env var)
@@ -113,7 +113,7 @@ fn detect_fido2_hid_device() -> bool {
 ///
 /// Returns [`BearDogError`] if any hardware-level HSM operation fails during
 /// the test sequence.
-pub async fn run_universal_hsm_test_suite(hsm_type: &str) -> Result<(), BearDogError> {
+pub fn run_universal_hsm_test_suite(hsm_type: &str) -> Result<(), BearDogError> {
     info!("🧪 Running universal HSM test suite on {}", hsm_type);
 
     // Test 1: Basic discovery
@@ -147,13 +147,9 @@ mod tests {
     #[ignore = "Requires real hardware - run with --include-ignored"]
     async fn test_on_any_available_hardware() {
         // This test discovers and uses whatever HSM is available
-        let hsm_type = discover_any_available_hsm()
-            .await
-            .expect("No HSM hardware available");
+        let hsm_type = discover_any_available_hsm().expect("No HSM hardware available");
 
-        run_universal_hsm_test_suite(&hsm_type)
-            .await
-            .expect("Universal test suite failed");
+        run_universal_hsm_test_suite(&hsm_type).expect("Universal test suite failed");
     }
 
     #[tokio::test]
@@ -167,23 +163,17 @@ mod tests {
         info!("✅ Testing SoftHSM2 directly");
         let hsm_type = "SoftHSM2";
 
-        run_universal_hsm_test_suite(hsm_type)
-            .await
-            .expect("SoftHSM2 tests failed");
+        run_universal_hsm_test_suite(hsm_type).expect("SoftHSM2 tests failed");
     }
 
     #[tokio::test]
     #[ignore = "Requires Android device connected via ADB"]
     async fn validate_on_android_strongbox() {
-        let hsm_type = discover_any_available_hsm()
-            .await
-            .expect("Android StrongBox not available");
+        let hsm_type = discover_any_available_hsm().expect("Android StrongBox not available");
 
         assert_eq!(hsm_type, "AndroidStrongBox");
 
-        run_universal_hsm_test_suite(&hsm_type)
-            .await
-            .expect("StrongBox tests failed");
+        run_universal_hsm_test_suite(&hsm_type).expect("StrongBox tests failed");
     }
 
     #[tokio::test]
@@ -197,8 +187,6 @@ mod tests {
         info!("Testing FIDO2 token");
         let hsm_type = "FIDO2Token";
 
-        run_universal_hsm_test_suite(hsm_type)
-            .await
-            .expect("FIDO2 tests failed");
+        run_universal_hsm_test_suite(hsm_type).expect("FIDO2 tests failed");
     }
 }

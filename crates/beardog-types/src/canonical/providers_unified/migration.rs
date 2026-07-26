@@ -52,9 +52,9 @@ pub fn migrate_from_legacy_with_settings(
     Ok(config)
 }
 
-#[must_use]
 /// Heuristic: empty provider name or disabled health checks imply legacy layouts.
-pub fn needs_migration(config: &CanonicalProviderConfig) -> bool {
+#[must_use]
+pub const fn needs_migration(config: &CanonicalProviderConfig) -> bool {
     // Check for legacy patterns that indicate migration is needed
     config.core.name.is_empty() || !config.health.enabled
 }

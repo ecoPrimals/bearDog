@@ -117,7 +117,7 @@ impl ThreatEvent {
 
     /// Update threat status
     /// Updates status
-    pub fn update_status(&mut self, status: ThreatStatus) {
+    pub const fn update_status(&mut self, status: ThreatStatus) {
         self.status = status;
     }
 

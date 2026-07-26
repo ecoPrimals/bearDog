@@ -92,12 +92,5 @@ pub struct SiemIntegrationConfiguration {
 /// Rate limiting configuration (DEPRECATED - use canonical network config)
 ///
 /// **MIGRATION**: Use `super::super::network::RateLimitConfig` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use super::super::network::RateLimitConfig instead"
-)]
 // Re-export from network domain (consolidated Nov 7, 2025)
 pub use super::super::network::RateLimitConfig;
-pub use super::super::network::RateLimitConfiguration;

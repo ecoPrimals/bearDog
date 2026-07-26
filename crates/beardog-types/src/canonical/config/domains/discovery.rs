@@ -160,6 +160,7 @@ impl DiscoveryConfig {
     /// Create a new discovery configuration with custom timeout
     ///
     /// All other fields use defaults.
+    #[must_use]
     pub fn with_timeout(timeout: Duration) -> Self {
         Self {
             timeout,
@@ -170,6 +171,7 @@ impl DiscoveryConfig {
     /// Create a new discovery configuration with custom endpoints
     ///
     /// All other fields use defaults.
+    #[must_use]
     pub fn with_endpoints(endpoints: Vec<String>) -> Self {
         Self {
             endpoints,
@@ -182,7 +184,8 @@ impl DiscoveryConfig {
     /// - Disabled caching
     /// - Short timeouts
     /// - No auto-registration
-    pub fn for_testing() -> Self {
+    #[must_use]
+    pub const fn for_testing() -> Self {
         Self {
             enabled: true,
             timeout: Duration::from_millis(100),
@@ -211,6 +214,7 @@ impl DiscoveryConfig {
     /// - `BEARDOG_CAPABILITY_REGISTRY`: additional endpoint
     ///
     /// Falls back to defaults for any missing vars.
+    #[must_use]
     pub fn from_env() -> Self {
         let mut config = Self::default();
 

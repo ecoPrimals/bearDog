@@ -296,8 +296,8 @@ impl Default for BearDogAIArchitecture {
 
 impl CapabilityType {
     /// Get the string representation of the capability type
-    #[must_use]
     /// Returns as string
+    #[must_use]
     pub fn as_string(&self) -> String {
         match self {
             Self::Security(_) => "security".to_string(),

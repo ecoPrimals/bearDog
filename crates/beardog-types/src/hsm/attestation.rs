@@ -49,13 +49,13 @@ impl AttestationData {
 
     /// Checks if attestation data is empty
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.challenge.is_empty() && self.response.is_empty() && self.certificate_chain.is_empty()
     }
 
     /// Gets the number of certificates in the chain
     #[must_use]
-    pub fn certificate_count(&self) -> usize {
+    pub const fn certificate_count(&self) -> usize {
         self.certificate_chain.len()
     }
 

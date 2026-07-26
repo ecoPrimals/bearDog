@@ -110,6 +110,7 @@ impl Default for CircuitBreakerConfig {
 
 impl CircuitBreakerConfig {
     /// Load from environment or use defaults (production use)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }

@@ -420,17 +420,6 @@ pub enum FilterOperator {
     LessThan,
 }
 
-/// Rate limiting configuration for monitoring (DEPRECATED - use canonical)
-///
-/// **MIGRATION**: Use `crate::canonical::config::domains::network::RateLimitConfig` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use crate::canonical::config::domains::network::RateLimitConfig instead"
-)]
-pub type RateLimitConfig = crate::canonical::config::domains::network::RateLimitConfig;
-
 /// Configuration validation trait
 pub trait MonitoringConfigValidation {
     /// Validate the monitoring configuration

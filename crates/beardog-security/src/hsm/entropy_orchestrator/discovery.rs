@@ -135,7 +135,7 @@ impl HsmEntropyOrchestrator {
     /// Get list of available HSM devices
     ///
     /// Returns device information for user selection or display.
-    pub async fn list_available_devices(&self) -> Vec<HsmDeviceInfo> {
+    pub fn list_available_devices(&self) -> Vec<HsmDeviceInfo> {
         #[cfg_attr(
             not(any(feature = "fido2", target_os = "android", target_os = "ios")),
             allow(unused_mut)

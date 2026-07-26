@@ -46,7 +46,6 @@ pub async fn run_full_stack_integration_test(
                 "/api/v1/workflow/process",
                 Some(r#"{"action": "test", "data": "sample"}"#),
             )
-            .await
         })
         .await?;
 
@@ -79,7 +78,7 @@ pub async fn run_full_stack_integration_test(
     // Simulate authentication
     execute_step("Authentication Flow", || async {
         let (response, _) = measure_latency(|| async {
-            simulate_api_request("/api/v1/auth/verify", Some(r#"{"token": "test-token"}"#)).await
+            simulate_api_request("/api/v1/auth/verify", Some(r#"{"token": "test-token"}"#))
         })
         .await?;
         assert_success(&response)?;
@@ -102,13 +101,13 @@ pub async fn run_full_stack_integration_test(
     info!("Step 4: Storage Layer Integration");
 
     // Create test entities
-    let test_entities = create_test_data("workflow-entity", 5).await?;
+    let test_entities = create_test_data("workflow-entity", 5)?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
 
     // Verify persistence
     for entity_id in &test_entities {
-        let integrity_ok = verify_data_integrity(entity_id).await?;
+        let integrity_ok = verify_data_integrity(entity_id)?;
         if !integrity_ok {
             return Err(BearDogError::internal(format!(
                 "Data persistence check failed for: {entity_id}"
@@ -126,7 +125,7 @@ pub async fn run_full_stack_integration_test(
     execute_step("External Service Communication", || async {
         // Simulate calls to external services
         let (response, _) = measure_latency(|| async {
-            simulate_api_request("/api/v1/integration/external", None).await
+            simulate_api_request("/api/v1/integration/external", None)
         })
         .await?;
         assert_success(&response)?;
@@ -146,7 +145,6 @@ pub async fn run_full_stack_integration_test(
                 "/api/v1/workflow/complete",
                 Some(r#"{"workflow_id": "test-123"}"#),
             )
-            .await
         })
         .await?;
         assert_success(&response)?;
@@ -159,7 +157,7 @@ pub async fn run_full_stack_integration_test(
     // Cleanup
     if config.enable_cleanup {
         info!("Step 7: Cleanup");
-        cleanup_test_data(&test_entities).await?;
+        cleanup_test_data(&test_entities)?;
     }
 
     // Calculate metrics

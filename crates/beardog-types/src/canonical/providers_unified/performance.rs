@@ -50,28 +50,6 @@ impl Default for PerformanceConfig {
     }
 }
 
-/// Rate limiting configuration (DEPRECATED - use canonical)
-///
-/// **MIGRATION**: Use `super::super::config::domains::network::RateLimitConfig` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use super::super::config::domains::network::RateLimitConfig instead"
-)]
-pub type RateLimitConfig = super::super::config::domains::network::RateLimitConfig;
-
-/// Rate limiting algorithms (DEPRECATED - use canonical `RateLimitStrategy`)
-///
-/// **MIGRATION**: Use `super::super::config::domains::network::RateLimitStrategy` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use super::super::config::domains::network::RateLimitStrategy instead"
-)]
-pub type RateLimitAlgorithm = super::super::config::domains::network::RateLimitStrategy;
-
 /// Caching configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CachingConfig {

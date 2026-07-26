@@ -49,6 +49,7 @@ pub struct ValidationReport {
 
 impl ValidationReport {
     /// Create new validation report
+    #[must_use]
     pub const fn new(primal: PrimalName) -> Self {
         Self {
             primal,
@@ -63,6 +64,7 @@ impl ValidationReport {
     }
 
     /// Check if binary is healthy
+    #[must_use]
     pub const fn is_healthy(&self) -> bool {
         self.file_exists && self.is_executable && self.size_reasonable && self.runs
     }
@@ -116,6 +118,7 @@ pub struct BinaryValidator;
 
 impl BinaryValidator {
     /// Create new validator
+    #[must_use]
     pub const fn new() -> Self {
         Self
     }

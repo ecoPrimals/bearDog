@@ -44,7 +44,7 @@ impl BearDogCore {
         expect(dead_code, reason = "called only from ecosystem orchestration tests")
     )]
     #[expect(clippy::unused_self, reason = "trait conformance requires &self")]
-    pub(crate) fn check_hsm_health(&self) -> HealthStatus {
+    pub(crate) const fn check_hsm_health(&self) -> HealthStatus {
         HealthStatus::Healthy
     }
 }

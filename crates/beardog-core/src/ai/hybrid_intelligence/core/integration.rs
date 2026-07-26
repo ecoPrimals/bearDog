@@ -151,8 +151,8 @@ impl IntegrationManager {
 }
 
 impl ExternalSystemIntegration {
-    #[must_use]
     /// Create a new external system integration
+    #[must_use]
     pub fn new(config: HybridIntelligenceConfig) -> Self {
         Self {
             config,

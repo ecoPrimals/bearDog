@@ -199,6 +199,7 @@ impl CoreBootstrapConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             discovery_timeout_ms: Self::DEFAULT_DISCOVERY_TIMEOUT_MS,
@@ -217,6 +218,7 @@ impl CoreBootstrapConfig {
     /// - `BEARDOG_DISCOVERY_TIMEOUT_MS`: Discovery timeout in ms (default: 30000)
     /// - `BEARDOG_MAX_DISCOVERY_ATTEMPTS`: Max attempts (default: 5)
     /// - `BEARDOG_MIN_CAPABILITIES`: Min capabilities threshold (default: 3)
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             discovery_timeout_ms: std::env::var(env_keys::ENV_DISCOVERY_TIMEOUT_MS)
@@ -345,6 +347,7 @@ impl InfantPatternConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             min_observations: Self::DEFAULT_MIN_OBSERVATIONS,
@@ -363,6 +366,7 @@ impl InfantPatternConfig {
     /// # Environment Variables
     /// - `BEARDOG_PATTERN_MAX_AGE_SECS`: Pattern max age in seconds (default: 3600)
     /// - `BEARDOG_PATTERN_CONSOLIDATION_INTERVAL_SECS`: Consolidation interval (default: 300)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -514,6 +518,7 @@ impl BootstrapNetworkConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             listen_interface: crate::constants::domains::network::addresses::default_bind_address(),
@@ -531,6 +536,7 @@ impl BootstrapNetworkConfig {
     /// # Environment Variables
     /// - `BEARDOG_BOOTSTRAP_DISCOVERY_PORT`: Discovery port (default: 5353)
     /// - `BEARDOG_BOOTSTRAP_BUFFER_SIZE`: Buffer size (default: 8192)
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             listen_interface: crate::constants::domains::network::addresses::default_bind_address(),
@@ -581,6 +587,7 @@ impl BootstrapPerformanceConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             enable_caching: true,
@@ -597,6 +604,7 @@ impl BootstrapPerformanceConfig {
     ///
     /// # Environment Variables
     /// - `BEARDOG_BOOTSTRAP_CACHE_DURATION_SECS`: Cache duration in seconds (default: 300)
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             enable_caching: true,
@@ -621,6 +629,7 @@ impl Default for BootstrapPerformanceConfig {
 
 impl UnifiedBootstrapConfig {
     /// Create `UnifiedBootstrapConfig` with hardcoded defaults
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             core: CoreBootstrapConfig::default(),
@@ -632,6 +641,7 @@ impl UnifiedBootstrapConfig {
     }
 
     /// Create `UnifiedBootstrapConfig` from environment variables
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             core: CoreBootstrapConfig::from_env(),

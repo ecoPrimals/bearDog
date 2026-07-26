@@ -272,33 +272,39 @@ impl Default for RuntimeNetworkConfig {
 
 impl RuntimeNetworkConfig {
     /// Create configuration from environment variables
+    #[must_use]
     pub fn from_env() -> Self {
         Self::default()
     }
 
     /// Get full API URL
+    #[must_use]
     pub fn api_url(&self) -> String {
         let protocol = if self.enable_tls { "https" } else { "http" };
         format!("{}://{}:{}", protocol, self.api_host, self.api_port)
     }
 
     /// Get metrics URL
+    #[must_use]
     pub fn metrics_url(&self) -> String {
         format!("http://{}:{}/metrics", self.api_host, self.metrics_port)
     }
 
     /// Get health check URL
+    #[must_use]
     pub fn health_url(&self) -> String {
         format!("http://{}:{}/health", self.api_host, self.health_port)
     }
 
     /// Get WebSocket URL
+    #[must_use]
     pub fn ws_url(&self) -> String {
         let protocol = if self.enable_tls { "wss" } else { "ws" };
         format!("{}://{}:{}", protocol, self.api_host, self.ws_port)
     }
 
     /// Get gRPC endpoint
+    #[must_use]
     pub fn grpc_endpoint(&self) -> String {
         format!("{}:{}", self.api_host, self.grpc_port)
     }
@@ -414,6 +420,7 @@ impl Default for RuntimeHsmConfig {
 
 impl RuntimeHsmConfig {
     /// Create configuration from environment variables
+    #[must_use]
     pub fn from_env() -> Self {
         Self::default()
     }
@@ -517,21 +524,25 @@ impl Default for RuntimeConfig {
 
 impl RuntimeConfig {
     /// Create configuration from environment variables
+    #[must_use]
     pub fn from_env() -> Self {
         Self::default()
     }
 
     /// Check if running in production
+    #[must_use]
     pub fn is_production(&self) -> bool {
         self.environment.to_lowercase() == "production"
     }
 
     /// Check if running in development
+    #[must_use]
     pub fn is_development(&self) -> bool {
         self.environment.to_lowercase() == "development"
     }
 
     /// Check if running in staging
+    #[must_use]
     pub fn is_staging(&self) -> bool {
         self.environment.to_lowercase() == "staging"
     }

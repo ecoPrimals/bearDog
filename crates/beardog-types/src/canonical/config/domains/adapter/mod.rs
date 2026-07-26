@@ -211,6 +211,7 @@ impl BearDogConfig for UnifiedAdapterConfig {
 
 impl UnifiedAdapterConfig {
     /// Create a new adapter configuration with defaults
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -244,6 +245,7 @@ pub mod migration {
     use std::sync::Arc;
 
     /// Migrate from legacy `AdapterConfig` to `UnifiedAdapterConfig`
+    #[must_use]
     pub fn migrate_legacy_adapter_config(
         adapter_id: &str,
         max_connections: usize,
@@ -257,7 +259,8 @@ pub mod migration {
     }
 
     /// Migrate from legacy `DiscoveryConfig`
-    pub fn migrate_legacy_discovery_config(
+    #[must_use]
+    pub const fn migrate_legacy_discovery_config(
         endpoints: Vec<String>,
         timeout_ms: u64,
         cache_enabled: bool,
@@ -280,6 +283,7 @@ pub mod migration {
     }
 
     /// Migrate from legacy `OptimizationConfig`
+    #[must_use]
     pub fn migrate_legacy_optimization_config(
         enabled: bool,
         level: u8,

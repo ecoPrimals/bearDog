@@ -297,7 +297,7 @@ impl NetworkFaultInjector {
     ///
     /// Returns `Err` with a timeout message when the fault injector triggers a
     /// `NetworkTimeout` fault.
-    pub async fn maybe_timeout(&self, duration: Duration) -> Result<(), String> {
+    pub fn maybe_timeout(&self, duration: Duration) -> Result<(), String> {
         if self
             .base_injector
             .should_inject_fault(FaultType::NetworkTimeout)
@@ -374,7 +374,7 @@ impl HsmFaultInjector {
     /// # Errors
     ///
     /// Returns `Err` when the fault injector triggers an `HsmTimeout` fault.
-    pub async fn maybe_timeout(&self, duration: Duration) -> Result<(), String> {
+    pub fn maybe_timeout(&self, duration: Duration) -> Result<(), String> {
         if self
             .base_injector
             .should_inject_fault(FaultType::HsmTimeout)

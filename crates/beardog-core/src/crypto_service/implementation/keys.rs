@@ -207,7 +207,7 @@ impl BearDogCryptoService {
         Ok(key)
     }
 
-    pub(crate) async fn generate_key_impl(
+    pub(crate) fn generate_key_impl(
         &self,
         algorithm: KeyAlgorithm,
         options: KeyGenOptions,

@@ -130,6 +130,7 @@ impl CloudProvider {
     /// Parse provider from string identifier
     ///
     /// Accepts various string formats (case-insensitive).
+    #[must_use]
     pub fn from_identifier(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "aws" | "amazon" | "awskms" => Some(Self::Aws),

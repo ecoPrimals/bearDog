@@ -44,8 +44,8 @@ pub mod security {
     /// Default HSM provider
     pub const DEFAULT_HSM_PROVIDER: &str = "software";
 
-    /// Default JWT issuer
-    pub const DEFAULT_JWT_ISSUER: &str = "beardog";
+    /// Default JWT issuer — alias of [`beardog_config::env_keys::DEFAULT_PRIMAL_NAME`].
+    pub use beardog_config::env_keys::DEFAULT_PRIMAL_NAME as DEFAULT_JWT_ISSUER;
 
     /// Default JWT audience
     pub const DEFAULT_JWT_AUDIENCE: &str = "beardog-api";
@@ -107,6 +107,7 @@ pub mod network {
     pub const HTTPS_PROTOCOL: &str = "https";
 
     /// Get default auth callback URI (environment-aware)
+    #[must_use]
     pub fn default_auth_callback() -> String {
         std::env::var(env_keys::ENV_AUTH_CALLBACK).unwrap_or_else(|_| {
             let network_config = crate::canonical::config::network::NetworkConfig::default();
@@ -144,6 +145,7 @@ pub mod storage {
     pub const REDIS_BACKEND: &str = "redis";
 
     /// Get default Redis URL (environment-aware)
+    #[must_use]
     pub fn default_redis_url() -> String {
         std::env::var(env_keys::ENV_REDIS_URL)
             .or_else(|_| std::env::var(env_keys::ENV_REDIS_URL_PREFIXED))

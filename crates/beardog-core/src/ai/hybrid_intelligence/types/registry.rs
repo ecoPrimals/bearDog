@@ -77,10 +77,6 @@ pub struct AIRegistryConfig {
     pub auth: Option<AuthConfig>,
 }
 
-/// Backward compatibility alias
-#[deprecated(since = "3.2.0", note = "Use AIRegistryConfig instead")]
-pub type RegistryConfig = AIRegistryConfig;
-
 impl Default for AIRegistryConfig {
     fn default() -> Self {
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();

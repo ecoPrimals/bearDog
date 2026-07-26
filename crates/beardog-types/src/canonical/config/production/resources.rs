@@ -136,6 +136,7 @@ impl NetworkResourceConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             max_connections: Self::DEFAULT_MAX_CONNECTIONS,
@@ -156,6 +157,7 @@ impl NetworkResourceConfig {
     /// - `BEARDOG_PROD_CONNECTION_TIMEOUT_SECS`: Connection timeout (default: 30)
     /// - `BEARDOG_PROD_READ_TIMEOUT_SECS`: Read timeout (default: 30)
     /// - `BEARDOG_PROD_WRITE_TIMEOUT_SECS`: Write timeout (default: 30)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -236,6 +238,7 @@ impl StorageResourceConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             max_disk_usage_percent: Self::DEFAULT_MAX_DISK_USAGE_PERCENT,
@@ -256,6 +259,7 @@ impl StorageResourceConfig {
     /// - `BEARDOG_TEMP_CLEANUP_INTERVAL_SECS`: Cleanup interval (default: 3600)
     /// - `BEARDOG_LOG_ROTATION_SIZE_MB`: Log rotation size (default: 100)
     /// - `BEARDOG_LOG_RETENTION_DAYS`: Log retention days (default: 30)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -298,6 +302,7 @@ impl ConnectionConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             pool_size: Self::DEFAULT_POOL_SIZE,
@@ -316,6 +321,7 @@ impl ConnectionConfig {
     /// - `BEARDOG_MAX_IDLE_CONNECTIONS`: Max idle connections (default: 5)
     /// - `BEARDOG_CONNECTION_LIFETIME_SECS`: Connection lifetime (default: 1800)
     /// - `BEARDOG_CONNECTION_HEALTH_CHECK_INTERVAL_SECS`: Health check interval (default: 60)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -345,6 +351,7 @@ impl ConnectionConfig {
 
 impl GcTuningConfig {
     /// Create `GcTuningConfig` with hardcoded defaults
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             strategy: GcStrategy::Default,
@@ -354,6 +361,7 @@ impl GcTuningConfig {
     }
 
     /// Create `GcTuningConfig` from environment variables
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }

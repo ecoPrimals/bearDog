@@ -118,9 +118,6 @@ where
 }
 
 /// Backward compatibility alias (deprecated)
-#[deprecated(since = "3.1.0", note = "Use ConnectionPoolConfig instead")]
-pub type ConnectionPoolConfiguration = ConnectionPoolConfig;
-
 /// Timeout configuration - consolidates `TimeoutConfig` variants
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeoutConfiguration {
@@ -247,6 +244,7 @@ impl FailoverConfiguration {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             enabled: true,
@@ -263,6 +261,7 @@ impl FailoverConfiguration {
     /// # Environment Variables
     /// - `BEARDOG_FAILOVER_DETECTION_TIMEOUT_SECS`: Detection timeout (default: 30)
     /// - `BEARDOG_FAILOVER_MAX_ATTEMPTS`: Maximum attempts (default: 3)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -302,6 +301,7 @@ impl ConnectionPoolConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             min_size: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE,
@@ -328,6 +328,7 @@ impl ConnectionPoolConfig {
     /// - `BEARDOG_CONNECTION_MAX_LIFETIME_SECS`: Max lifetime (default: 1800)
     /// - `BEARDOG_CONNECTION_ACQUIRE_TIMEOUT_SECS`: Acquire timeout (default: 30)
     /// - `BEARDOG_CONNECTION_MAINTENANCE_INTERVAL_SECS`: Maintenance interval (default: 60)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -397,6 +398,7 @@ impl TimeoutConfiguration {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             connection_timeout_seconds:
@@ -422,6 +424,7 @@ impl TimeoutConfiguration {
     /// - `BEARDOG_READ_TIMEOUT_SECS`: Read timeout (default: 30)
     /// - `BEARDOG_WRITE_TIMEOUT_SECS`: Write timeout (default: 30)
     /// - `BEARDOG_SHUTDOWN_TIMEOUT_SECS`: Shutdown timeout (default: 30)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -487,6 +490,7 @@ impl LoadBalancerHealthCheckConfiguration {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             interval_seconds: Self::DEFAULT_INTERVAL_SECS,
@@ -506,6 +510,7 @@ impl LoadBalancerHealthCheckConfiguration {
     /// - `BEARDOG_LB_HEALTH_CHECK_INTERVAL_SECS`: Health check interval (default: 30)
     /// - `BEARDOG_LB_UNHEALTHY_THRESHOLD`: Unhealthy threshold (default: 3)
     /// - `BEARDOG_LB_HEALTHY_THRESHOLD`: Healthy threshold (default: 2)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -550,6 +555,7 @@ impl CircuitBreakerConfiguration {
         clippy::cast_possible_truncation,
         reason = "default pool size fits u32 for circuit breaker thresholds"
     )]
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             enabled: true,
@@ -569,6 +575,7 @@ impl CircuitBreakerConfiguration {
     /// # Environment Variables
     /// - `BEARDOG_CIRCUIT_BREAKER_RECOVERY_TIMEOUT_SECS`: Recovery timeout (default: 60)
     /// - `BEARDOG_CIRCUIT_BREAKER_MIN_THROUGHPUT`: Minimum throughput (default: 20)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }

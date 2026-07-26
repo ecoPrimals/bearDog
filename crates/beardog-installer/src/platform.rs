@@ -12,7 +12,7 @@
 //! - Modern: Async-ready, type-safe
 
 use beardog_types::constants::domains::network::ipc_discovery::BIOMEOS_RUNTIME_SOCKET_SUBDIR;
-use directories::{BaseDirs, ProjectDirs};
+use etcetera::app_strategy::{AppStrategy, AppStrategyArgs, choose_app_strategy};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use thiserror::Error;
@@ -176,59 +176,60 @@ impl PlatformPaths {
     /// # Errors
     /// Returns `PlatformError::NoHomeDir` if home directory cannot be determined.
     pub fn discover() -> Result<Self, PlatformError> {
-        let project = ProjectDirs::from("org", BIOMEOS_RUNTIME_SOCKET_SUBDIR, "nucleus")
-            .ok_or(PlatformError::NoHomeDir)?;
-
-        let base = BaseDirs::new().ok_or(PlatformError::NoHomeDir)?;
+        let project = choose_app_strategy(AppStrategyArgs {
+            top_level_domain: "org".to_string(),
+            author: BIOMEOS_RUNTIME_SOCKET_SUBDIR.to_string(),
+            app_name: "nucleus".to_string(),
+        })
+        .map_err(|_| PlatformError::NoHomeDir)?;
 
         Ok(Self {
-            bin_dir: Self::discover_bin_dir(&project, &base)?,
-            data_dir: project.data_dir().to_path_buf(),
-            config_dir: project.config_dir().to_path_buf(),
-            runtime_dir: Self::discover_runtime_dir()?,
-            cache_dir: project.cache_dir().to_path_buf(),
+            bin_dir: Self::discover_bin_dir(project.home_dir(), &project.data_dir()),
+            data_dir: project.data_dir(),
+            config_dir: project.config_dir(),
+            runtime_dir: Self::discover_runtime_dir(),
+            cache_dir: project.cache_dir(),
         })
     }
 
     /// Discover binary installation directory (prefers user-space, no sudo)
-    fn discover_bin_dir(project: &ProjectDirs, base: &BaseDirs) -> Result<PathBuf, PlatformError> {
+    fn discover_bin_dir(home_dir: &std::path::Path, data_dir: &std::path::Path) -> PathBuf {
         // 1. Try $HOME/.local/bin (most common, usually in PATH)
-        let local_bin = base.home_dir().join(".local").join("bin");
+        let local_bin = home_dir.join(".local").join("bin");
         if local_bin.exists() {
-            return Ok(local_bin);
+            return local_bin;
         }
 
         // 2. Fallback to XDG_DATA_HOME/<ecosystem-namespace>/bin
-        let xdg_bin = project.data_dir().join("bin");
-        Ok(xdg_bin)
+        data_dir.join("bin")
     }
 
     /// Discover runtime directory (fast temporary storage)
-    fn discover_runtime_dir() -> Result<PathBuf, PlatformError> {
+    fn discover_runtime_dir() -> PathBuf {
         // 1. Try XDG_RUNTIME_DIR (Linux, guaranteed fast tmpfs)
         if let Ok(xdg_runtime) = beardog_errors::process_env::var("XDG_RUNTIME_DIR") {
             let runtime_dir = PathBuf::from(xdg_runtime).join(BIOMEOS_RUNTIME_SOCKET_SUBDIR);
-            return Ok(runtime_dir);
+            return runtime_dir;
         }
 
         // 2. Try TMPDIR (macOS, Linux fallback)
         if let Ok(tmpdir) = beardog_errors::process_env::var("TMPDIR") {
-            return Ok(PathBuf::from(tmpdir).join(BIOMEOS_RUNTIME_SOCKET_SUBDIR));
+            return PathBuf::from(tmpdir).join(BIOMEOS_RUNTIME_SOCKET_SUBDIR);
         }
 
         // 3. Try TEMP (Windows)
         if let Ok(temp) = beardog_errors::process_env::var("TEMP") {
-            return Ok(PathBuf::from(temp).join(BIOMEOS_RUNTIME_SOCKET_SUBDIR));
+            return PathBuf::from(temp).join(BIOMEOS_RUNTIME_SOCKET_SUBDIR);
         }
 
         // 4. Android fallback
         #[cfg(target_os = "android")]
         {
-            return Ok(PathBuf::from("/data/local/tmp").join(BIOMEOS_RUNTIME_SOCKET_SUBDIR));
+            return PathBuf::from("/data/local/tmp").join(BIOMEOS_RUNTIME_SOCKET_SUBDIR);
         }
 
         // 5. Final fallback: system temp
-        Ok(std::env::temp_dir().join(BIOMEOS_RUNTIME_SOCKET_SUBDIR))
+        std::env::temp_dir().join(BIOMEOS_RUNTIME_SOCKET_SUBDIR)
     }
 
     /// Create all directories if they don't exist

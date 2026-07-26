@@ -37,9 +37,7 @@ impl BeardogBtspProvider {
         );
 
         // 1. Query genetic lineage for path to peer
-        let lineage_path = self
-            .find_lineage_path(requester_lineage, target_peer_id, max_hops)
-            .await?;
+        let lineage_path = self.find_lineage_path(requester_lineage, target_peer_id, max_hops)?;
 
         if lineage_path.is_empty() {
             return Err(BearDogError::business(format!(
@@ -57,7 +55,7 @@ impl BeardogBtspProvider {
         }
 
         // 3. Generate lineage proof (cryptographic verification)
-        let lineage_proof = self.generate_lineage_proof(&lineage_path).await?;
+        let lineage_proof = self.generate_lineage_proof(&lineage_path)?;
 
         let search_depth = lineage_path.len();
 
@@ -79,7 +77,7 @@ impl BeardogBtspProvider {
     }
 
     /// Find path through genetic lineage to target peer
-    pub(crate) async fn find_lineage_path(
+    pub(crate) fn find_lineage_path(
         &self,
         _requester_lineage: &str,
         target_peer_id: &str,
@@ -111,7 +109,7 @@ impl BeardogBtspProvider {
     }
 
     /// Generate lineage proof (cryptographic verification of genetic relationship)
-    pub(crate) async fn generate_lineage_proof(
+    pub(crate) fn generate_lineage_proof(
         &self,
         lineage_path: &[String],
     ) -> Result<String, BearDogError> {

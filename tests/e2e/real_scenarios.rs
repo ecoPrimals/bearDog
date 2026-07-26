@@ -45,7 +45,7 @@ pub async fn run_real_core_lifecycle_test(
 
     // Step 1: Initialize real BearDog Core
     info!("Step 1: Initialize Real BearDog Core");
-    let core = initialize_real_beardog_core().await?;
+    let core = initialize_real_beardog_core()?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
 
@@ -74,7 +74,7 @@ pub async fn run_real_core_lifecycle_test(
 
     // Step 5: Shutdown
     info!("Step 5: Shutdown BearDog Core");
-    shutdown_real_beardog_core(core).await?;
+    shutdown_real_beardog_core(core)?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
 
@@ -105,13 +105,13 @@ pub async fn run_real_config_validation_test(
 
     // Step 1: Load development configuration
     info!("Step 1: Load Development Configuration");
-    let _dev_config = test_real_configuration_load().await?;
+    let _dev_config = test_real_configuration_load()?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
 
     // Step 2: Initialize core with development config
     info!("Step 2: Initialize Core with Development Config");
-    let core = initialize_real_beardog_core().await?;
+    let core = initialize_real_beardog_core()?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
 
@@ -132,7 +132,7 @@ pub async fn run_real_config_validation_test(
     metrics.successful_requests += 1;
 
     // Cleanup
-    shutdown_real_beardog_core(core).await?;
+    shutdown_real_beardog_core(core)?;
 
     metrics.data_verified = true;
 
@@ -160,7 +160,7 @@ pub async fn run_real_health_monitoring_test(
 
     // Step 1: Initialize core
     info!("Step 1: Initialize Core");
-    let core = initialize_real_beardog_core().await?;
+    let core = initialize_real_beardog_core()?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
 
@@ -218,7 +218,7 @@ pub async fn run_real_health_monitoring_test(
     metrics.total_requests += 1;
 
     // Cleanup
-    shutdown_real_beardog_core(core).await?;
+    shutdown_real_beardog_core(core)?;
 
     metrics.data_verified = true;
 
@@ -246,7 +246,7 @@ pub async fn run_real_concurrency_test(
 
     // Step 1: Initialize core
     info!("Step 1: Initialize Core");
-    let core = initialize_real_beardog_core().await?;
+    let core = initialize_real_beardog_core()?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
 
@@ -315,7 +315,7 @@ pub async fn run_real_concurrency_test(
     metrics.successful_requests += 1;
 
     // Cleanup
-    shutdown_real_beardog_core(core).await?;
+    shutdown_real_beardog_core(core)?;
 
     metrics.data_verified = true;
 
@@ -343,7 +343,7 @@ pub async fn run_real_component_management_test(
 
     // Step 1: Initialize core
     info!("Step 1: Initialize Core");
-    let core = initialize_real_beardog_core().await?;
+    let core = initialize_real_beardog_core()?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
 
@@ -427,7 +427,7 @@ pub async fn run_real_component_management_test(
     metrics.successful_requests += 1;
 
     // Cleanup
-    shutdown_real_beardog_core(core).await?;
+    shutdown_real_beardog_core(core)?;
 
     metrics.data_verified = true;
 

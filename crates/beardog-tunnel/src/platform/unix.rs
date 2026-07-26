@@ -79,7 +79,7 @@ pub struct UnixPlatformListener {
 }
 
 impl UnixPlatformListener {
-    pub(super) fn new(listener: UnixListener, path: String) -> Self {
+    pub(super) const fn new(listener: UnixListener, path: String) -> Self {
         Self { listener, path }
     }
 }
@@ -108,6 +108,7 @@ pub struct UnixListenHints {
 
 impl UnixListenHints {
     /// Read `BEARDOG_SOCKET` and `XDG_RUNTIME_DIR`.
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             beardog_socket: beardog_errors::process_env::var(env_keys::ENV_SOCKET).ok(),
@@ -229,6 +230,7 @@ impl PlatformSocket for UnixSocket {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use beardog_types::constants::domains::network::ipc_discovery::default_ecosystem_ipc_namespace;
 
     #[test]
     fn test_xdg_socket_path() {
@@ -247,7 +249,7 @@ mod tests {
         match endpoint {
             SocketEndpoint::Filesystem(path) => {
                 let path_str = path.to_str().expect("socket path is valid UTF-8");
-                assert!(path_str.contains("biomeos"));
+                assert!(path_str.contains(&default_ecosystem_ipc_namespace()));
                 assert!(path_str.ends_with("beardog.sock"));
                 println!("✅ XDG-compliant path: {}", path.display());
             }

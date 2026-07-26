@@ -318,6 +318,7 @@ impl Constraint for CompositeConstraint {
 
 impl CompositeConstraint {
     /// Create AND composite constraint
+    #[must_use]
     pub fn and(constraints: Vec<Box<dyn Constraint>>) -> Self {
         Self {
             operation: LogicOperation::And,
@@ -326,6 +327,7 @@ impl CompositeConstraint {
     }
 
     /// Create OR composite constraint
+    #[must_use]
     pub fn or(constraints: Vec<Box<dyn Constraint>>) -> Self {
         Self {
             operation: LogicOperation::Or,
@@ -334,6 +336,7 @@ impl CompositeConstraint {
     }
 
     /// Create NOT composite constraint
+    #[must_use]
     pub fn not(constraint: Box<dyn Constraint>) -> Self {
         Self {
             operation: LogicOperation::Not,

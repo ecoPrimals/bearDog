@@ -278,16 +278,16 @@ impl<T> HsmOperationResult<T> {
     }
 
     /// Set processing time
-    #[must_use]
     /// Creates instance with processing time
+    #[must_use]
     pub const fn with_processing_time(mut self, time_ms: u64) -> Self {
         self.processing_time_ms = time_ms;
         self
     }
 
     /// Add metadata
-    #[must_use]
     /// Creates instance with metadata
+    #[must_use]
     pub fn with_metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.metadata.insert(key.into(), value.into());
         self

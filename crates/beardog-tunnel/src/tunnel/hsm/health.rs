@@ -98,8 +98,8 @@ impl HsmHealthMonitor {
 
         Ok(check)
     }
-
     /// Gets the last health check result
+    #[must_use]
     pub fn get_last_check(&self) -> Option<HsmHealthCheck> {
         self.last_check.clone()
     }

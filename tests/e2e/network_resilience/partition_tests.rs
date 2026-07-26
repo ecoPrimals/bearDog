@@ -8,7 +8,7 @@ use beardog_errors::BearDogError;
 use tracing::{info, warn};
 
 /// Test network partition and reconnection
-pub async fn test_network_partition_recovery() -> Result<NetworkE2EMetrics, BearDogError> {
+pub fn test_network_partition_recovery() -> Result<NetworkE2EMetrics, BearDogError> {
     info!("🔌 Testing network partition and recovery");
 
     let mut metrics = NetworkE2EMetrics::default();
@@ -40,7 +40,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_partition_and_recovery() {
-        let result = test_network_partition_recovery().await;
+        let result = test_network_partition_recovery();
         assert!(result.is_ok());
 
         let metrics = result.unwrap();

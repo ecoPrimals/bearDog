@@ -2,6 +2,7 @@
 
 use super::*;
 use serde::{Deserialize, Serialize};
+use serial_test::serial;
 use std::io::Write;
 use tempfile::NamedTempFile;
 
@@ -171,6 +172,7 @@ fn test_merge_configs_merged_json_rejects_target_struct() {
 }
 
 #[test]
+#[serial]
 fn test_clear_shared_configs_and_stats() {
     let key = format!("stats_key_{}", uuid::Uuid::new_v4());
     UnifiedConfigUtils::clear_shared_configs();

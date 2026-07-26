@@ -54,7 +54,7 @@ pub fn log_aes128_gcm_encrypt(
 /// **Zero runtime overhead** in production builds.
 #[cfg(not(feature = "diagnostics"))]
 #[inline(always)]
-pub fn log_aes128_gcm_encrypt(
+pub const fn log_aes128_gcm_encrypt(
     _key_len: usize,
     _nonce_len: usize,
     _plaintext_len: usize,
@@ -89,7 +89,7 @@ pub fn log_aes256_gcm_encrypt(
 /// No-op diagnostic log for AES-256-GCM encryption (diagnostics feature disabled)
 #[cfg(not(feature = "diagnostics"))]
 #[inline(always)]
-pub fn log_aes256_gcm_encrypt(
+pub const fn log_aes256_gcm_encrypt(
     _key_len: usize,
     _nonce_len: usize,
     _plaintext_len: usize,
@@ -123,7 +123,7 @@ pub fn log_chacha20_poly1305_encrypt(
 /// No-op diagnostic log for ChaCha20-Poly1305 encryption (diagnostics feature disabled)
 #[cfg(not(feature = "diagnostics"))]
 #[inline(always)]
-pub fn log_chacha20_poly1305_encrypt(
+pub const fn log_chacha20_poly1305_encrypt(
     _key_len: usize,
     _nonce_len: usize,
     _plaintext_len: usize,
@@ -169,7 +169,7 @@ pub fn log_chacha20_poly1305_decrypt(
 /// No-op diagnostic log for ChaCha20-Poly1305 decryption (diagnostics feature disabled)
 #[cfg(not(feature = "diagnostics"))]
 #[inline(always)]
-pub fn log_chacha20_poly1305_decrypt(
+pub const fn log_chacha20_poly1305_decrypt(
     _key: &[u8],
     _nonce: &[u8],
     _ciphertext: &[u8],

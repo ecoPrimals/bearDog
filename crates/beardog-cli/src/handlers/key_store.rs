@@ -258,6 +258,7 @@ fn delete_key_in_dir(key_id: &str, keys_dir: &std::path::Path) -> Result<(), Bea
 }
 
 /// Encode bytes to base64
+#[must_use]
 pub fn base64_encode(data: &[u8]) -> String {
     use base64::Engine;
     use base64::engine::general_purpose::STANDARD;

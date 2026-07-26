@@ -114,14 +114,13 @@ impl SecureSoftwareHsm {
     }
 
     /// Store key material securely (encrypted at rest in memory)
-    async fn store_key(&self, key_id: String, material: KeyMaterial) -> Result<(), KmsError> {
+    fn store_key(&self, key_id: String, material: KeyMaterial) {
         let mut store = self.key_store.write();
         store.insert(key_id, material);
-        Ok(())
     }
 
     /// Retrieve key material
-    async fn get_key(&self, key_id: &KeyId) -> Result<KeyMaterial, KmsError> {
+    fn get_key(&self, key_id: &KeyId) -> Result<KeyMaterial, KmsError> {
         let store = self.key_store.read();
         store
             .get(key_id.as_str())
@@ -134,7 +133,7 @@ impl SecureSoftwareHsm {
 
 impl KeyManagementCapability for SecureSoftwareHsm {
     async fn encrypt(&self, plaintext: &[u8], key_id: &KeyId) -> Result<Vec<u8>, KmsError> {
-        let key_material = self.get_key(key_id).await?;
+        let key_material = self.get_key(key_id)?;
 
         match key_material.algorithm {
             KeyAlgorithm::Aes256Gcm => {
@@ -184,7 +183,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
     }
 
     async fn decrypt(&self, ciphertext: &[u8], key_id: &KeyId) -> Result<Vec<u8>, KmsError> {
-        let key_material = self.get_key(key_id).await?;
+        let key_material = self.get_key(key_id)?;
 
         match key_material.algorithm {
             KeyAlgorithm::Aes256Gcm => {
@@ -270,13 +269,13 @@ impl KeyManagementCapability for SecureSoftwareHsm {
             .replace('_', "-");
 
         // Store securely
-        self.store_key(key_id.clone(), material).await?;
+        self.store_key(key_id.clone(), material);
 
         Ok(KeyId::new(key_id))
     }
 
     async fn sign(&self, data: &[u8], key_id: &KeyId) -> Result<Vec<u8>, KmsError> {
-        let key_material = self.get_key(key_id).await?;
+        let key_material = self.get_key(key_id)?;
 
         match key_material.algorithm {
             KeyAlgorithm::Ed25519 => {
@@ -317,7 +316,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
         signature: &[u8],
         key_id: &KeyId,
     ) -> Result<bool, KmsError> {
-        let key_material = self.get_key(key_id).await?;
+        let key_material = self.get_key(key_id)?;
 
         match key_material.algorithm {
             KeyAlgorithm::Ed25519 => {
@@ -364,7 +363,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
     }
 
     async fn get_public_key(&self, key_id: &KeyId) -> Result<Vec<u8>, KmsError> {
-        let key_material = self.get_key(key_id).await?;
+        let key_material = self.get_key(key_id)?;
 
         match key_material.algorithm {
             KeyAlgorithm::Ed25519 => {
@@ -481,7 +480,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
         use super::key_management_capability::KeyAlgorithm as KmsKeyAlgorithm;
 
         // Get the old key to determine algorithm
-        let old_material = self.get_key(key_id).await?;
+        let old_material = self.get_key(key_id)?;
 
         // Convert our internal algorithm to the KeyAlgorithm enum
         let key_algorithm = match old_material.algorithm {
@@ -628,7 +627,6 @@ mod tests {
         // Key should exist
         let _ = hsm
             .get_key(&key_id)
-            .await
             .expect("get_key should find key before delete in test");
 
         // Delete key
@@ -637,7 +635,7 @@ mod tests {
             .expect("delete_key should succeed in test");
 
         // Key should no longer exist
-        let result = hsm.get_key(&key_id).await;
+        let result = hsm.get_key(&key_id);
         assert!(result.is_err());
     }
 
@@ -667,11 +665,9 @@ mod tests {
         // Both keys should exist
         let _ = hsm
             .get_key(&old_key_id)
-            .await
             .expect("old key should remain after rotation in test");
         let _ = hsm
             .get_key(&new_key_id)
-            .await
             .expect("new key should exist after rotation in test");
 
         // Old data encrypted with old key should still decrypt

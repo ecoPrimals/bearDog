@@ -216,7 +216,6 @@ mod tests {
             Arc::new(EcosystemGeneticEngine::new().expect("EcosystemGeneticEngine::new"));
         Arc::new(
             BeardogBtspProvider::new_for_testing(hsm, genetics)
-                .await
                 .expect("BeardogBtspProvider::new_for_testing"),
         )
     }

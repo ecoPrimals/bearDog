@@ -17,32 +17,32 @@ pub struct ConfigE2EMetrics {
 }
 
 /// Test complete configuration lifecycle
-pub async fn test_config_lifecycle() -> Result<ConfigE2EMetrics, BearDogError> {
+pub fn test_config_lifecycle() -> Result<ConfigE2EMetrics, BearDogError> {
     info!("⚙️ Testing configuration lifecycle");
 
     let mut metrics = ConfigE2EMetrics::default();
 
     // 1. Load initial configuration
     info!("Loading initial configuration");
-    simulate_config_load("default").await?;
+    simulate_config_load("default")?;
     metrics.config_loads += 1;
 
     // 2. Validate configuration
     info!("Validating configuration");
-    simulate_config_validation().await?;
+    simulate_config_validation()?;
     metrics.config_validations += 1;
 
     // 3. Apply configuration
     info!("Applying configuration");
-    simulate_config_apply().await?;
+    simulate_config_apply()?;
 
     // 4. Hot-reload configuration
     info!("Hot-reloading configuration");
-    simulate_config_reload().await?;
+    simulate_config_reload()?;
     metrics.config_reloads += 1;
 
     // 5. Validate after reload
-    simulate_config_validation().await?;
+    simulate_config_validation()?;
     metrics.config_validations += 1;
 
     info!("✅ Configuration lifecycle complete");
@@ -50,7 +50,7 @@ pub async fn test_config_lifecycle() -> Result<ConfigE2EMetrics, BearDogError> {
 }
 
 /// Test configuration validation with invalid configs
-pub async fn test_config_validation_errors() -> Result<ConfigE2EMetrics, BearDogError> {
+pub fn test_config_validation_errors() -> Result<ConfigE2EMetrics, BearDogError> {
     info!("🔍 Testing configuration validation errors");
 
     let mut metrics = ConfigE2EMetrics::default();
@@ -64,7 +64,7 @@ pub async fn test_config_validation_errors() -> Result<ConfigE2EMetrics, BearDog
     ];
 
     for config_type in invalid_configs {
-        if simulate_invalid_config_load(config_type).await == Ok(()) {
+        if simulate_invalid_config_load(config_type) == Ok(()) {
             return Err(BearDogError::internal(format!(
                 "Expected validation error for: {config_type}"
             )));
@@ -78,7 +78,7 @@ pub async fn test_config_validation_errors() -> Result<ConfigE2EMetrics, BearDog
 }
 
 /// Test environment-specific configurations
-pub async fn test_environment_configs() -> Result<ConfigE2EMetrics, BearDogError> {
+pub fn test_environment_configs() -> Result<ConfigE2EMetrics, BearDogError> {
     info!("🌍 Testing environment-specific configurations");
 
     let mut metrics = ConfigE2EMetrics::default();
@@ -87,10 +87,10 @@ pub async fn test_environment_configs() -> Result<ConfigE2EMetrics, BearDogError
 
     for env in environments {
         info!("Loading configuration for environment: {}", env);
-        simulate_env_config_load(env).await?;
+        simulate_env_config_load(env)?;
         metrics.config_loads += 1;
 
-        simulate_config_validation().await?;
+        simulate_config_validation()?;
         metrics.config_validations += 1;
     }
 
@@ -99,28 +99,28 @@ pub async fn test_environment_configs() -> Result<ConfigE2EMetrics, BearDogError
 }
 
 /// Test configuration hot-reload without downtime
-pub async fn test_config_hot_reload() -> Result<ConfigE2EMetrics, BearDogError> {
+pub fn test_config_hot_reload() -> Result<ConfigE2EMetrics, BearDogError> {
     info!("🔥 Testing configuration hot-reload");
 
     let mut metrics = ConfigE2EMetrics::default();
 
     // 1. Start with initial config
-    simulate_config_load("initial").await?;
+    simulate_config_load("initial")?;
     metrics.config_loads += 1;
 
     // 2. Simulate ongoing operations
     for i in 0..5 {
-        simulate_ongoing_operation(i).await?;
+        simulate_ongoing_operation(i)?;
     }
 
     // 3. Hot-reload configuration (should not interrupt operations)
     info!("Performing hot-reload during operations");
-    simulate_config_reload().await?;
+    simulate_config_reload()?;
     metrics.config_reloads += 1;
 
     // 4. Continue operations with new config
     for i in 5..10 {
-        simulate_ongoing_operation(i).await?;
+        simulate_ongoing_operation(i)?;
     }
 
     info!("✅ Configuration hot-reload completed without downtime");
@@ -128,26 +128,26 @@ pub async fn test_config_hot_reload() -> Result<ConfigE2EMetrics, BearDogError> 
 }
 
 /// Test configuration override hierarchy
-pub async fn test_config_override_hierarchy() -> Result<ConfigE2EMetrics, BearDogError> {
+pub fn test_config_override_hierarchy() -> Result<ConfigE2EMetrics, BearDogError> {
     info!("📊 Testing configuration override hierarchy");
 
     let mut metrics = ConfigE2EMetrics::default();
 
     // Load configs in order: defaults -> file -> env vars -> CLI args
-    simulate_config_load("defaults").await?;
+    simulate_config_load("defaults")?;
     metrics.config_loads += 1;
 
-    simulate_config_load("file_overrides").await?;
+    simulate_config_load("file_overrides")?;
     metrics.config_loads += 1;
 
-    simulate_config_load("env_overrides").await?;
+    simulate_config_load("env_overrides")?;
     metrics.config_loads += 1;
 
-    simulate_config_load("cli_overrides").await?;
+    simulate_config_load("cli_overrides")?;
     metrics.config_loads += 1;
 
     // Validate final merged configuration
-    simulate_config_validation().await?;
+    simulate_config_validation()?;
     metrics.config_validations += 1;
 
     info!("✅ Configuration override hierarchy applied correctly");
@@ -156,37 +156,37 @@ pub async fn test_config_override_hierarchy() -> Result<ConfigE2EMetrics, BearDo
 
 // Helper functions
 
-async fn simulate_config_load(_config_type: &str) -> Result<(), BearDogError> {
+fn simulate_config_load(_config_type: &str) -> Result<(), BearDogError> {
     // Simulate config load (instant in tests, would be file I/O in production)
     Ok(())
 }
 
-async fn simulate_invalid_config_load(_config_type: &str) -> Result<(), BearDogError> {
+fn simulate_invalid_config_load(_config_type: &str) -> Result<(), BearDogError> {
     // Simulate invalid config load (instant in tests)
     Err(BearDogError::internal("Invalid configuration".to_string()))
 }
 
-async fn simulate_env_config_load(_env: &str) -> Result<(), BearDogError> {
+fn simulate_env_config_load(_env: &str) -> Result<(), BearDogError> {
     // Simulate environment config load (instant in tests)
     Ok(())
 }
 
-async fn simulate_config_validation() -> Result<(), BearDogError> {
+fn simulate_config_validation() -> Result<(), BearDogError> {
     // Simulate validation (instant in tests)
     Ok(())
 }
 
-async fn simulate_config_apply() -> Result<(), BearDogError> {
+fn simulate_config_apply() -> Result<(), BearDogError> {
     // Simulate apply (instant in tests)
     Ok(())
 }
 
-async fn simulate_config_reload() -> Result<(), BearDogError> {
+fn simulate_config_reload() -> Result<(), BearDogError> {
     // Simulate reload (instant in tests)
     Ok(())
 }
 
-async fn simulate_ongoing_operation(_iteration: usize) -> Result<(), BearDogError> {
+fn simulate_ongoing_operation(_iteration: usize) -> Result<(), BearDogError> {
     // Simulate operation (instant in tests)
     Ok(())
 }
@@ -200,14 +200,11 @@ pub async fn run_configuration_management_test(
     let mut metrics = E2EMetrics::default();
 
     let scenarios: [(&str, ConfigE2EMetrics); 5] = [
-        ("lifecycle", test_config_lifecycle().await?),
-        ("validation errors", test_config_validation_errors().await?),
-        ("environment configs", test_environment_configs().await?),
-        ("hot reload", test_config_hot_reload().await?),
-        (
-            "override hierarchy",
-            test_config_override_hierarchy().await?,
-        ),
+        ("lifecycle", test_config_lifecycle()?),
+        ("validation errors", test_config_validation_errors()?),
+        ("environment configs", test_environment_configs()?),
+        ("hot reload", test_config_hot_reload()?),
+        ("override hierarchy", test_config_override_hierarchy()?),
     ];
 
     for (name, config_metrics) in scenarios {
@@ -240,7 +237,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_config_lifecycle_workflow() {
-        let result = test_config_lifecycle().await;
+        let result = test_config_lifecycle();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.config_loads, 1);
@@ -250,7 +247,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_config_validation_errors_workflow() {
-        let result = test_config_validation_errors().await;
+        let result = test_config_validation_errors();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.validation_errors, 4);
@@ -258,7 +255,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_environment_configs_workflow() {
-        let result = test_environment_configs().await;
+        let result = test_environment_configs();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.config_loads, 3);
@@ -267,7 +264,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_config_hot_reload_workflow() {
-        let result = test_config_hot_reload().await;
+        let result = test_config_hot_reload();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.config_reloads, 1);
@@ -275,7 +272,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_config_override_hierarchy_workflow() {
-        let result = test_config_override_hierarchy().await;
+        let result = test_config_override_hierarchy();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.config_loads, 4);

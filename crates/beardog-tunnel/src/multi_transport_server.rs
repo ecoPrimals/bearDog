@@ -318,9 +318,9 @@ impl MultiTransportServer {
         info!("all transports stopped, socket files cleaned");
         Ok(())
     }
-
     /// Get count of bound transports
-    pub fn transport_count(&self) -> usize {
+    #[must_use]
+    pub const fn transport_count(&self) -> usize {
         self.transports.len()
     }
 }

@@ -53,7 +53,7 @@ impl BirdSongManager {
     /// # Errors
     ///
     /// Returns error if initialization fails
-    pub async fn new(
+    pub fn new(
         master_secret: Vec<u8>,
         config: Option<BirdSongConfig>,
     ) -> Result<Self, BearDogError> {
@@ -100,7 +100,6 @@ impl BirdSongManager {
     ) -> Result<LineageChain, BearDogError> {
         self.chain_manager
             .generate_root_chain(root_node_id, metadata)
-            .await
     }
 
     /// Add a child to an existing lineage
@@ -124,20 +123,22 @@ impl BirdSongManager {
     ) -> Result<LineageNode, BearDogError> {
         self.chain_manager
             .add_child(chain_id, parent_id, child_id, metadata)
-            .await
     }
 
     /// List all lineage chains with summary metadata.
+    #[must_use]
     pub fn list_lineage_chains(&self) -> Vec<super::LineageChainSummary> {
         self.chain_manager.list_chains()
     }
 
     /// Get a lineage chain
+    #[must_use]
     pub fn get_lineage_chain(&self, chain_id: &str) -> Option<LineageChain> {
         self.chain_manager.get_chain(chain_id)
     }
 
     /// Get all descendants of a node
+    #[must_use]
     pub fn get_descendants(&self, chain_id: &str, node_id: &str) -> Vec<LineageNode> {
         self.chain_manager.get_descendants(chain_id, node_id)
     }
@@ -219,6 +220,7 @@ impl BirdSongManager {
     }
 
     /// Check if a node can decrypt a broadcast
+    #[must_use]
     pub fn can_decrypt(&self, broadcast: &BirdSongBroadcast, node_depth: u32) -> bool {
         self.encryption.can_decrypt(broadcast, node_depth)
     }
@@ -413,6 +415,7 @@ impl BirdSongManager {
     /// # Returns
     ///
     /// List of keys distributed to this node
+    #[must_use]
     pub fn get_distributed_keys(&self, node_id: &str) -> Vec<BirdSongKey> {
         self.distributed_keys
             .read()
@@ -547,7 +550,7 @@ mod tests {
 
     async fn create_test_manager() -> BirdSongManager {
         let master_secret = vec![0xEF; 32];
-        BirdSongManager::new(master_secret, None).await.unwrap()
+        BirdSongManager::new(master_secret, None).unwrap()
     }
 
     #[tokio::test]

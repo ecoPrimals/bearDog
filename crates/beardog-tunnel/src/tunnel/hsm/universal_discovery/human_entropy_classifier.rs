@@ -125,11 +125,11 @@ impl HumanEntropyClassifier {
 
         Ok(classifier)
     }
-
     /// Convenience method to check if a discovered HSM supports human entropy
     ///
     /// Returns true if the HSM meets criteria for human entropy ephemeral seeds.
     /// This is a simplified wrapper that handles errors gracefully.
+    #[must_use]
     pub fn supports_human_entropy(&self, hsm: &super::DiscoveredHsm) -> bool {
         self.classify_human_entropy_support(&hsm.capabilities)
             .unwrap_or(false)
@@ -457,8 +457,8 @@ impl HumanEntropyMethodEvaluator {
 /// Policy presets for tier elevation
 pub mod policies {
     use super::TierElevationCriteria;
-
     /// High security policy
+    #[must_use]
     pub const fn high_security_policy() -> TierElevationCriteria {
         TierElevationCriteria {
             min_quality_score: 0.85,
@@ -467,8 +467,8 @@ pub mod policies {
             require_quality_assessment: true,
         }
     }
-
     /// Balanced policy
+    #[must_use]
     pub const fn balanced_policy() -> TierElevationCriteria {
         TierElevationCriteria {
             min_quality_score: 0.65,
@@ -477,8 +477,8 @@ pub mod policies {
             require_quality_assessment: true,
         }
     }
-
     /// Permissive policy
+    #[must_use]
     pub const fn permissive_policy() -> TierElevationCriteria {
         TierElevationCriteria {
             min_quality_score: 0.5,

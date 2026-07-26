@@ -32,7 +32,7 @@ impl IonicBondHandler {
     // ── Single-party contract signing ────────────────────────────────────
 
     /// Sign an arbitrary contract document with `BearDog`'s Ed25519 identity.
-    pub(super) async fn handle_sign_contract(
+    pub(super) fn handle_sign_contract(
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
@@ -72,7 +72,7 @@ impl IonicBondHandler {
 
     /// Verify a single Ed25519 signature over a contract terms hash.
     /// When `expires_at` is present, also checks ionic lease expiry.
-    pub(super) async fn handle_verify_contract(
+    pub(super) fn handle_verify_contract(
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, HandlerError> {
         let params_value = params.ok_or("Missing params for crypto.verify_contract")?;
@@ -252,7 +252,7 @@ impl IonicBondHandler {
     }
 
     /// Verify a sealed cross-family contract — checks both signatures.
-    pub(super) async fn handle_contract_verify(
+    pub(super) fn handle_contract_verify(
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, HandlerError> {
         let params_value = params.ok_or("Missing params for crypto.contract.verify")?;

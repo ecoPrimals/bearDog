@@ -141,6 +141,7 @@ pub struct DataAccessConstraint {
 
 impl DataAccessConstraint {
     /// Check if a path matches any pattern in the list
+    #[must_use]
     pub fn path_matches(path: &str, patterns: &[String]) -> bool {
         patterns.iter().any(|pattern| {
             // Simple glob matching (supports * wildcard)
@@ -210,6 +211,7 @@ impl SignedConstraints {
     pub const CURRENT_VERSION: u32 = 1;
 
     /// Compute hash of constraints for signing
+    #[must_use]
     pub fn compute_hash(constraints: &KeyConstraints) -> Vec<u8> {
         use blake3::Hasher;
 
@@ -280,6 +282,7 @@ pub enum KeyOperation {
 
 impl KeyOperation {
     /// Get the operation type
+    #[must_use]
     pub const fn operation_type(&self) -> OperationType {
         match self {
             Self::Sign { .. } => OperationType::Sign,
@@ -294,6 +297,7 @@ impl KeyOperation {
     }
 
     /// Get domain if applicable
+    #[must_use]
     pub fn domain(&self) -> Option<&str> {
         match self {
             Self::Sign { domain } | Self::Decrypt { domain } => domain.as_deref(),
@@ -302,6 +306,7 @@ impl KeyOperation {
     }
 
     /// Get path if applicable
+    #[must_use]
     pub fn path(&self) -> Option<&str> {
         match self {
             Self::Delete { path } | Self::Modify { path } | Self::Read { path } => Some(path),

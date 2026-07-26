@@ -89,7 +89,7 @@ impl BtspHandler {
     ///
     /// Wire: `{"session_id":"...","ciphers":["chacha20-poly1305"],"client_nonce":"<b64>"}`
     /// Response: `{"cipher":"chacha20-poly1305","server_nonce":"<b64>"}`
-    pub(super) async fn handle_phase3_negotiate(
+    pub(super) fn handle_phase3_negotiate(
         &self,
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, HandlerError> {
@@ -369,7 +369,6 @@ mod tests {
 
         let result = handler
             .handle_phase3_negotiate(Some(&params))
-            .await
             .expect("negotiate should succeed");
 
         assert_eq!(result["cipher"], "chacha20-poly1305");
@@ -397,7 +396,7 @@ mod tests {
             "client_nonce": BASE64.encode([0xBB; 32]),
         });
 
-        let result = handler.handle_phase3_negotiate(Some(&params)).await;
+        let result = handler.handle_phase3_negotiate(Some(&params));
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("cipher floor"));
 
@@ -407,7 +406,7 @@ mod tests {
     #[tokio::test]
     async fn phase3_negotiate_fails_without_params() {
         let handler = BtspHandler::new();
-        let result = handler.handle_phase3_negotiate(None).await;
+        let result = handler.handle_phase3_negotiate(None);
         assert!(result.is_err());
     }
 
@@ -418,7 +417,7 @@ mod tests {
             "ciphers": ["chacha20-poly1305"],
             "client_nonce": "YWJj",
         });
-        let result = handler.handle_phase3_negotiate(Some(&params)).await;
+        let result = handler.handle_phase3_negotiate(Some(&params));
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("session_id"));
     }
@@ -430,7 +429,7 @@ mod tests {
             "session_id": "test",
             "ciphers": ["chacha20-poly1305"],
         });
-        let result = handler.handle_phase3_negotiate(Some(&params)).await;
+        let result = handler.handle_phase3_negotiate(Some(&params));
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("client_nonce"));
     }
@@ -448,7 +447,7 @@ mod tests {
             "client_nonce": BASE64.encode([0xCC; 32]),
         });
 
-        let result = handler.handle_phase3_negotiate(Some(&params)).await;
+        let result = handler.handle_phase3_negotiate(Some(&params));
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("FAMILY_SEED"));
     }
@@ -470,7 +469,6 @@ mod tests {
 
         let result = handler
             .handle_phase3_negotiate(Some(&params))
-            .await
             .expect("preferred_cipher alias should work");
         assert_eq!(result["cipher"], "chacha20-poly1305");
 

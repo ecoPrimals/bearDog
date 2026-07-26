@@ -16,6 +16,7 @@ use uuid::Uuid;
 
 impl CrossNodeAuthEngine {
     /// Creates a new instance
+    #[must_use]
     pub fn new(
         node_registry: Box<dyn NodeRegistry + Send + Sync>,
         proof_verifier: Box<dyn ProofVerifier + Send + Sync>,
@@ -34,6 +35,7 @@ impl CrossNodeAuthEngine {
     }
 
     /// Creates instance with default config
+    #[must_use]
     pub fn with_default_config(
         node_registry: Box<dyn NodeRegistry + Send + Sync>,
         proof_verifier: Box<dyn ProofVerifier + Send + Sync>,
@@ -51,6 +53,7 @@ impl CrossNodeAuthEngine {
     }
 
     /// Check if engine is initialized
+    #[must_use]
     pub const fn is_initialized(&self) -> bool {
         true // Engine is initialized when created
     }
@@ -104,6 +107,7 @@ impl CrossNodeAuthEngine {
     }
 
     /// Get node authorizations
+    #[must_use]
     pub fn get_node_authorizations(&self, node_id: &str) -> Vec<&CrossNodeAuthorization> {
         self.active_authorizations
             .values()
@@ -112,6 +116,7 @@ impl CrossNodeAuthEngine {
     }
 
     /// Get authorization metrics
+    #[must_use]
     pub fn get_authorization_metrics(&self) -> HashMap<String, u64> {
         let mut metrics = HashMap::new();
         metrics.insert(

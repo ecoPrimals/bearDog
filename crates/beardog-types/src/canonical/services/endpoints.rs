@@ -5,6 +5,7 @@
 //! This module provides consolidated endpoint types for service communication,
 //! replacing scattered endpoint definitions across the codebase.
 
+use crate::canonical::config::domains::network::monitoring::HealthCheckConfiguration;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -37,7 +38,7 @@ pub struct UnifiedServiceEndpoint {
     pub security_config: Option<EndpointSecurityConfig>,
     
     /// Health check configuration
-    pub health_check: Option<HealthCheckConfig>,
+    pub health_check: Option<HealthCheckConfiguration>,
     
     /// Additional endpoint metadata
     pub metadata: HashMap<String, String>,
@@ -169,39 +170,6 @@ pub enum TlsVersion {
     V1_3,
 }
 
-/// Rate limiting configuration (DEPRECATED - use canonical)
-///
-/// **MIGRATION**: Use `super::super::config::domains::network::RateLimitConfig` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use super::super::config::domains::network::RateLimitConfig instead"
-)]
-pub type RateLimitConfig = super::super::config::domains::network::RateLimitConfig;
-
-/// Rate limiting scope (DEPRECATED - use canonical)
-///
-/// **MIGRATION**: Use `super::super::config::domains::network::RateLimitScope` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use super::super::config::domains::network::RateLimitScope instead"
-)]
-pub type RateLimitScope = super::super::config::domains::network::RateLimitScope;
-
-/// Health check configuration for endpoints
-///
-/// **DEPRECATED**: Use `super::super::config::domains::network::monitoring::HealthCheckConfiguration` instead.
-///
-/// For specialized health checks, use the appropriate type from `canonical::monitoring::health`.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use canonical::config::domains::network::monitoring::HealthCheckConfiguration or canonical::monitoring::health types"
-)]
-pub type HealthCheckConfig = super::super::config::domains::network::monitoring::HealthCheckConfiguration;
-
 impl Default for UnifiedServiceEndpoint {
     fn default() -> Self {
         Self {
@@ -270,7 +238,7 @@ impl UnifiedServiceEndpoint {
     }
     
     /// Set health check configuration
-    pub fn with_health_check(mut self, health_check: HealthCheckConfig) -> Self {
+    pub fn with_health_check(mut self, health_check: HealthCheckConfiguration) -> Self {
         self.health_check = Some(health_check);
         self
     }

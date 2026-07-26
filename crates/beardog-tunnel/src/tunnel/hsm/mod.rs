@@ -7,14 +7,9 @@
 /// Core HSM implementations
 pub mod software_hsm;
 
-#[cfg(target_os = "android")]
 pub mod android_strongbox;
-
-#[cfg(windows)]
-pub mod windows_dpapi;
-
-#[cfg(target_os = "linux")]
 pub mod linux_secret_service;
+pub mod windows_dpapi;
 
 // Solo V2 USB security key support
 #[cfg(feature = "solo-v2")]
@@ -101,7 +96,6 @@ pub use types::config::SoftwareHsmConfig;
 pub use types::key::{KeyHealthStatus, KeyMaterial, KeyMetadata, UniversalKey};
 pub use types::status::HsmHealthStatus as HealthStatus;
 
-#[cfg(target_os = "android")]
 pub use android_strongbox::AndroidStrongBox;
 
 /// Request to generate a new key in the HSM

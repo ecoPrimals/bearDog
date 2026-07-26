@@ -31,18 +31,3 @@ pub fn default_cluster_port() -> u16 {
         .and_then(|p| p.parse().ok())
         .unwrap_or(FALLBACK_CLUSTER_PORT)
 }
-
-// Legacy const exports for backward compatibility (deprecated)
-#[deprecated(
-    since = "3.1.0",
-    note = "Use default_node_discovery_port() for environment-aware configuration"
-)]
-/// Deprecated: use [`default_node_discovery_port`].
-pub const DEFAULT_NODE_DISCOVERY_PORT: u16 = FALLBACK_NODE_DISCOVERY_PORT;
-
-#[deprecated(
-    since = "3.1.0",
-    note = "Use default_cluster_port() for environment-aware configuration"
-)]
-/// Deprecated: use [`default_cluster_port`].
-pub const DEFAULT_CLUSTER_PORT: u16 = FALLBACK_CLUSTER_PORT;

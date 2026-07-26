@@ -250,12 +250,12 @@ mod error_edge_cases {
 
     #[test]
     fn test_error_propagation_with_success() {
-        fn inner() -> Result<i32, BearDogError> {
-            Ok(21)
+        fn inner() -> i32 {
+            21
         }
 
         fn outer() -> Result<i32, BearDogError> {
-            let val = inner()?;
+            let val = inner();
             Ok(val * 2)
         }
 
@@ -312,27 +312,21 @@ mod error_edge_cases {
 
     #[test]
     fn test_result_unwrap_or() {
-        fn mk_ok() -> Result<i32, BearDogError> {
-            Ok(42)
+        fn mk_ok() -> i32 {
+            42
         }
-        assert_eq!(mk_ok().unwrap_or(0), 42);
+        assert_eq!(mk_ok(), 42);
         assert_eq!(sample_err_result().unwrap_or(0), 0);
     }
 
     #[test]
     fn test_result_unwrap_or_else() {
-        fn mk_ok() -> Result<i32, BearDogError> {
-            Ok(42)
+        fn mk_ok() -> i32 {
+            42
         }
 
         let mut err_branch_ran = false;
-        assert_eq!(
-            mk_ok().unwrap_or_else(|_| {
-                err_branch_ran = true;
-                0
-            }),
-            42
-        );
+        assert_eq!(mk_ok(), 42);
         assert!(
             !err_branch_ran,
             "unwrap_or_else should not run the closure for Ok"

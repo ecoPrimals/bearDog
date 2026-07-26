@@ -99,7 +99,7 @@ impl HealthChecker {
     /// # Errors
     /// Returns an error if monitoring cannot be stopped cleanly
     /// Stops monitoring
-    pub fn stop_monitoring(&mut self) -> Result<(), BearDogError> {
+    pub const fn stop_monitoring(&mut self) -> Result<(), BearDogError> {
         Ok(())
     }
 

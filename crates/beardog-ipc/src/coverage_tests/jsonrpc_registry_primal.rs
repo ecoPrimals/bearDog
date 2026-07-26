@@ -243,7 +243,7 @@ fn test_registry_client_zero_vendor_hardcoding() {
 
 #[tokio::test]
 async fn test_discover_ipc_socket_exercises_path() {
-    let socket = crate::discover_ipc_socket().await;
+    let socket = crate::discover_ipc_socket();
     // Should return a non-empty string (either from env or fallback)
     assert!(!socket.is_empty());
 }
@@ -252,6 +252,6 @@ async fn test_discover_ipc_socket_exercises_path() {
 async fn test_discover_ipc_socket_returns_fallback_without_env() {
     // Without IPC_SOCKET or DISCOVERY_SOCKET env vars, should use fallback
     // (env vars may or may not be set in test environment)
-    let socket = crate::discover_ipc_socket().await;
+    let socket = crate::discover_ipc_socket();
     assert!(!socket.is_empty());
 }

@@ -86,7 +86,7 @@ impl AndroidKeystoreCredentialStore {
 
     /// Whether the Android Keystore is available on this platform.
     #[must_use]
-    pub fn is_available() -> bool {
+    pub const fn is_available() -> bool {
         probe_android_keystore()
     }
 
@@ -322,8 +322,44 @@ fn probe_android_keystore() -> bool {
 }
 
 #[cfg(not(target_os = "android"))]
-fn probe_android_keystore() -> bool {
+const fn probe_android_keystore() -> bool {
     false
+}
+
+#[cfg(not(target_os = "android"))]
+fn resolve_vault_dir() -> PathBuf {
+    app_data_local_dir(beardog_credential_app_args())
+        .map(|d| d.join("credentials"))
+        .unwrap_or_else(|| std::env::temp_dir().join("beardog").join("credentials"))
+}
+
+fn beardog_credential_app_args() -> etcetera::app_strategy::AppStrategyArgs {
+    etcetera::app_strategy::AppStrategyArgs {
+        top_level_domain: "eco".to_string(),
+        author: "primals".to_string(),
+        app_name: "beardog".to_string(),
+    }
+}
+
+/// Platform-local application data directory (equivalent to `ProjectDirs::data_local_dir`).
+fn app_data_local_dir(args: etcetera::app_strategy::AppStrategyArgs) -> Option<PathBuf> {
+    use etcetera::app_strategy::{AppStrategy, choose_app_strategy, choose_native_strategy};
+    use etcetera::base_strategy::{BaseStrategy, Windows as BaseWindows};
+
+    #[cfg(windows)]
+    {
+        return BaseWindows::new()
+            .ok()
+            .map(|base| base.cache_dir().join(&args.author).join(&args.app_name));
+    }
+    #[cfg(target_os = "macos")]
+    {
+        return choose_native_strategy(args).ok().map(|s| s.data_dir());
+    }
+    #[cfg(not(any(windows, target_os = "macos")))]
+    {
+        return choose_app_strategy(args).ok().map(|s| s.data_dir());
+    }
 }
 
 #[cfg(target_os = "android")]
@@ -332,18 +368,10 @@ fn resolve_vault_dir() -> PathBuf {
     beardog_errors::process_env::var("ANDROID_DATA")
         .map(|d| PathBuf::from(d).join("beardog").join("credentials"))
         .unwrap_or_else(|_| {
-            directories::ProjectDirs::from("eco", "primals", "beardog")
-                .map(|d| d.data_local_dir().join("credentials"))
-                .unwrap_or_else(|| PathBuf::from("/data/local/tmp/beardog/credentials"))
+            app_data_local_dir(beardog_credential_app_args())
+                .map(|d| d.join("credentials"))
+                .unwrap_or_else(|| std::env::temp_dir().join("beardog").join("credentials"))
         })
-}
-
-#[cfg(not(target_os = "android"))]
-fn resolve_vault_dir() -> PathBuf {
-    directories::ProjectDirs::from("eco", "primals", "beardog").map_or_else(
-        || PathBuf::from("/tmp/beardog/credentials"),
-        |d| d.data_local_dir().join("credentials"),
-    )
 }
 
 #[cfg(test)]

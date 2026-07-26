@@ -50,7 +50,7 @@ impl TelemetryCollector {
     /// # Errors
     ///
     /// This function currently always returns `Ok`.
-    pub fn start_collection(&mut self) -> Result<(), BearDogError> {
+    pub const fn start_collection(&mut self) -> Result<(), BearDogError> {
         Ok(())
     }
 
@@ -60,7 +60,7 @@ impl TelemetryCollector {
     /// # Errors
     ///
     /// This function currently always returns `Ok`.
-    pub fn stop_collection(&mut self) -> Result<(), BearDogError> {
+    pub const fn stop_collection(&mut self) -> Result<(), BearDogError> {
         Ok(())
     }
 }

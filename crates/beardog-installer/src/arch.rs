@@ -75,6 +75,7 @@ impl Architecture {
     /// let os = OperatingSystem::Linux;
     /// assert_eq!(arch.to_rust_target(&os), "x86_64-unknown-linux-gnu");
     /// ```
+    #[must_use]
     pub fn to_rust_target(&self, os: &crate::platform::OperatingSystem) -> String {
         use crate::platform::OperatingSystem::{Android, Ios, Linux, LinuxMusl, MacOS, Windows};
 
@@ -124,6 +125,7 @@ impl Architecture {
     /// assert_eq!(arch.binary_extension(&OperatingSystem::Windows), ".exe");
     /// assert_eq!(arch.binary_extension(&OperatingSystem::Linux), "");
     /// ```
+    #[must_use]
     pub const fn binary_extension(&self, os: &crate::platform::OperatingSystem) -> &'static str {
         match os {
             crate::platform::OperatingSystem::Windows => ".exe",
@@ -132,6 +134,7 @@ impl Architecture {
     }
 
     /// All supported architectures
+    #[must_use]
     pub fn all() -> Vec<Self> {
         vec![Self::X86_64, Self::Aarch64, Self::Riscv64, Self::Wasm32]
     }

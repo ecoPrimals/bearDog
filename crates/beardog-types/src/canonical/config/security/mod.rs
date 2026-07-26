@@ -175,6 +175,7 @@ impl RateLimitingConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             enabled: true,
@@ -192,6 +193,7 @@ impl RateLimitingConfig {
     /// - `BEARDOG_RATE_LIMIT_MAX_REQUESTS_PER_MIN`: Max requests per minute (default: 100)
     /// - `BEARDOG_RATE_LIMIT_BURST_CAPACITY`: Burst capacity (default: 10)
     /// - `BEARDOG_RATE_LIMIT_WINDOW_SECS`: Window in seconds (default: 60)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }

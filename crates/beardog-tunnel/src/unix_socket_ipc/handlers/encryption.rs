@@ -63,8 +63,8 @@ impl MethodHandler for EncryptionHandler {
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> HandlerResult {
         match method {
-            "encryption.encrypt" => self.handle_encrypt(params).await,
-            "encryption.decrypt" => self.handle_decrypt(params).await,
+            "encryption.encrypt" => self.handle_encrypt(params),
+            "encryption.decrypt" => self.handle_decrypt(params),
             _ => Err(format!("Unknown encryption method: {method}").into()),
         }
     }
@@ -83,7 +83,7 @@ impl EncryptionHandler {
     /// - `ciphertext`: Same as `encrypted_data` (compatibility)
     /// - `nonce`: Base64-encoded 96-bit nonce
     /// - `tag`: Base64-encoded 128-bit authentication tag (last 16 bytes of ciphertext)
-    async fn handle_encrypt(
+    fn handle_encrypt(
         &self,
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, HandlerError> {
@@ -173,7 +173,7 @@ impl EncryptionHandler {
     /// - `data`: Base64-encoded plaintext (`BiomeOS` format)
     /// - `plaintext`: Same as data (standard format)
     /// - `verified`: Authentication verified (always true for ChaCha20-Poly1305)
-    async fn handle_decrypt(
+    fn handle_decrypt(
         &self,
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, HandlerError> {
@@ -286,7 +286,6 @@ mod tests {
 
         let encrypted = handler
             .handle_encrypt(Some(&encrypt_params))
-            .await
             .expect("encrypt roundtrip");
 
         assert!(encrypted["ciphertext"].is_string());
@@ -304,7 +303,6 @@ mod tests {
 
         let decrypted = handler
             .handle_decrypt(Some(&decrypt_params))
-            .await
             .expect("decrypt roundtrip");
 
         assert_eq!(decrypted["data"], plaintext_b64);
@@ -339,7 +337,6 @@ mod tests {
 
         let encrypted = handler
             .handle_encrypt(Some(&encrypt_params))
-            .await
             .expect("encrypt for wrong-key test");
 
         // Try to decrypt with different key
@@ -349,7 +346,7 @@ mod tests {
             "key_ref": "key2"  // Different key!
         });
 
-        let result = handler.handle_decrypt(Some(&decrypt_params)).await;
+        let result = handler.handle_decrypt(Some(&decrypt_params));
 
         // Should fail due to authentication
         assert!(result.is_err());
@@ -371,7 +368,6 @@ mod tests {
 
         let encrypted = handler
             .handle_encrypt(Some(&encrypt_params))
-            .await
             .expect("encrypt for tamper test");
 
         // Tamper with ciphertext
@@ -394,7 +390,7 @@ mod tests {
             "key_ref": "test-key"
         });
 
-        let result = handler.handle_decrypt(Some(&decrypt_params)).await;
+        let result = handler.handle_decrypt(Some(&decrypt_params));
 
         // Should fail due to authentication
         assert!(result.is_err());

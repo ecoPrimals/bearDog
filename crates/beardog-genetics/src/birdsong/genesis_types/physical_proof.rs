@@ -9,6 +9,7 @@ use beardog_config::env_keys;
 
 impl PhysicalChannelProof {
     /// Get trust level for this proof
+    #[must_use]
     pub const fn trust_level(&self) -> TrustLevel {
         self.channel_type.trust_level()
     }

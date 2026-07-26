@@ -375,7 +375,7 @@ impl UniversalHsmDiscovery {
     ///
     /// # Errors
     /// Returns an error if component initialization fails.
-    pub async fn new(config: DiscoveryConfig) -> Result<Self, BearDogError> {
+    pub fn new(config: DiscoveryConfig) -> Result<Self, BearDogError> {
         info!("🔍 Initializing Universal HSM Discovery Engine");
 
         let capability_detector = capability_detector::CapabilityDetector::new();
@@ -534,16 +534,16 @@ impl UniversalHsmDiscovery {
 
         Ok(all_discovered)
     }
-
     /// Gets HSMs that support human entropy
+    #[must_use]
     pub fn get_human_entropy_hsms(&self) -> Vec<&DiscoveredHsm> {
         self.discovered_hsms
             .values()
             .filter(|hsm| hsm.supports_human_entropy)
             .collect()
     }
-
     /// Gets HSMs by tier
+    #[must_use]
     pub fn get_hsms_by_tier(&self, tier: &HsmTier) -> Vec<&DiscoveredHsm> {
         self.discovered_hsms
             .values()
@@ -574,7 +574,7 @@ mod tests {
     #[tokio::test]
     async fn test_discovery_creation() -> Result<(), Box<dyn std::error::Error>> {
         let config = DiscoveryConfig::default();
-        let discovery = UniversalHsmDiscovery::new(config).await;
+        let discovery = UniversalHsmDiscovery::new(config);
         assert!(discovery.is_ok());
         Ok(())
     }
@@ -589,7 +589,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_discover_all_hsms_populates_registry_and_queries() -> Result<(), BearDogError> {
-        let mut discovery = UniversalHsmDiscovery::new(DiscoveryConfig::default()).await?;
+        let mut discovery = UniversalHsmDiscovery::new(DiscoveryConfig::default())?;
         let hsms = discovery.discover_all_hsms()?;
         assert!(
             !hsms.is_empty(),

@@ -176,7 +176,7 @@ async fn android_keystore_stub_transport_exercises_logic_without_hardware() {
     assert!(ks.delete_key("kid").await.is_ok());
     assert!(!ks.key_exists("kid").await.expect("gone"));
     assert!(ks.import_key("kid", b"", KeyType::Ed25519).await.is_err());
-    let rnd = ks.generate_random_bytes(16).await.expect("rnd");
+    let rnd = ks.generate_random_bytes(16).expect("rnd");
     assert_eq!(rnd.len(), 16);
     let ch = ks.generate_attestation_challenge(8).expect("chal");
     assert_eq!(ch.len(), 8);

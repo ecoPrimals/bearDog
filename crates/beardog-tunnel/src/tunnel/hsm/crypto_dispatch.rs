@@ -58,14 +58,15 @@ pub enum CryptoProviderDispatch {
 
 impl CryptoProviderDispatch {
     /// Create a `RustCrypto` provider (100% Pure Rust, ARM-ready!)
+    #[must_use]
     pub const fn rust_crypto(provider: SoftwareHsmCryptoProvider) -> Self {
         Self::RustCrypto(provider)
     }
 
     // Ring provider removed - evolved to RustCrypto (100% Pure Rust!)
     // OpenSSL provider removed - evolved to RustCrypto
-
     /// Get the provider type as a string
+    #[must_use]
     pub const fn provider_type(&self) -> &'static str {
         match self {
             Self::RustCrypto(_) => "rust_crypto",
@@ -163,7 +164,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_rust_crypto_constructor() -> Result<(), BearDogError> {
-        let provider = SoftwareHsmCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new()?;
         let dispatch = CryptoProviderDispatch::rust_crypto(provider);
         assert_eq!(dispatch.provider_type(), "rust_crypto");
         Ok(())
@@ -177,8 +178,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_provider_type_strings() -> Result<(), BearDogError> {
-        let rust_crypto =
-            CryptoProviderDispatch::RustCrypto(SoftwareHsmCryptoProvider::new().await?);
+        let rust_crypto = CryptoProviderDispatch::RustCrypto(SoftwareHsmCryptoProvider::new()?);
         assert_eq!(rust_crypto.provider_type(), "rust_crypto");
 
         Ok(())
@@ -189,7 +189,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_rust_crypto_initialize() -> Result<(), BearDogError> {
-        let provider = SoftwareHsmCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new()?;
         let dispatch = CryptoProviderDispatch::rust_crypto(provider);
         dispatch.initialize().await?;
         Ok(())
@@ -203,7 +203,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_rust_crypto_generate_key() -> Result<(), BearDogError> {
-        let provider = SoftwareHsmCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new()?;
         let dispatch = CryptoProviderDispatch::rust_crypto(provider);
         let key = dispatch.generate_key_material(&KeyType::Aes).await?;
         assert!(!key.is_empty());
@@ -218,7 +218,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_rust_crypto_encrypt_decrypt() -> Result<(), BearDogError> {
-        let provider = SoftwareHsmCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new()?;
         let dispatch = CryptoProviderDispatch::rust_crypto(provider);
         let key = dispatch.generate_key_material(&KeyType::Aes).await?;
         let plaintext = b"test message";
@@ -245,7 +245,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_dispatch_clone() -> Result<(), BearDogError> {
-        let provider = SoftwareHsmCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new()?;
         let dispatch = CryptoProviderDispatch::rust_crypto(provider);
         let cloned = dispatch.clone();
         assert_eq!(cloned.provider_type(), dispatch.provider_type());
@@ -257,7 +257,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_dispatch_debug() -> Result<(), BearDogError> {
-        let provider = SoftwareHsmCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new()?;
         let dispatch = CryptoProviderDispatch::rust_crypto(provider);
         let debug_str = format!("{:?}", dispatch);
         assert!(debug_str.contains("RustCrypto"));
@@ -289,7 +289,7 @@ mod tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_multiple_operations_same_dispatch() -> Result<(), BearDogError> {
-        let provider = SoftwareHsmCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new()?;
         let dispatch = CryptoProviderDispatch::rust_crypto(provider);
 
         // Generate key

@@ -54,7 +54,7 @@ impl SystemMetricsCollector {
     /// # Errors
     ///
     /// Returns an error if the collection subsystem cannot be initialized.
-    pub fn start_collection(&mut self) -> Result<(), BearDogError> {
+    pub const fn start_collection(&mut self) -> Result<(), BearDogError> {
         // Implementation would start background collection
         Ok(())
     }
@@ -299,7 +299,7 @@ impl SystemMonitor {
     /// # Errors
     ///
     /// Returns an error if system probes cannot be started.
-    pub fn initialize(&mut self) -> Result<(), BearDogError> {
+    pub const fn initialize(&mut self) -> Result<(), BearDogError> {
         // Implementation would initialize system monitoring
         Ok(())
     }
@@ -370,7 +370,7 @@ impl SystemMonitor {
     }
 
     /// Update monitoring configuration
-    pub fn update_config(&mut self, config: SystemConfig) {
+    pub const fn update_config(&mut self, config: SystemConfig) {
         self.config = config;
     }
 

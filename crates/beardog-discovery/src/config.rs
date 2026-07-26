@@ -39,6 +39,7 @@ impl DiscoveryConfig {
     }
 
     /// Get primal info (self-knowledge)
+    #[must_use]
     pub fn primal_info(&self) -> PrimalInfo {
         PrimalInfo {
             primal_id: self.primal_self.primal_id.clone(),
@@ -71,6 +72,7 @@ impl DiscoveryConfig {
     }
 
     /// Get required capabilities
+    #[must_use]
     pub fn required_capabilities(&self) -> Vec<RequiredCapability> {
         self.required_capabilities
             .iter()

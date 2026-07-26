@@ -8,7 +8,7 @@ use crate::tunnel::hsm::crypto::provider::NonceGenerator;
 use beardog_errors::BearDogError;
 
 impl RustCryptoProvider {
-    pub(super) async fn encrypt_aes_256_gcm(
+    pub(super) fn encrypt_aes_256_gcm(
         &self,
         key: &[u8],
         plaintext: &[u8],
@@ -17,7 +17,7 @@ impl RustCryptoProvider {
         self.encrypt_aes_gcm::<aes_gcm::Aes256Gcm>(key, plaintext, options, "AES-256-GCM")
     }
 
-    pub(super) async fn decrypt_aes_256_gcm(
+    pub(super) fn decrypt_aes_256_gcm(
         &self,
         key: &[u8],
         encrypted: &EncryptedData,
@@ -26,7 +26,7 @@ impl RustCryptoProvider {
         self.decrypt_aes_gcm::<aes_gcm::Aes256Gcm>(key, encrypted, options, "AES-256-GCM")
     }
 
-    pub(super) async fn encrypt_aes_128_gcm(
+    pub(super) fn encrypt_aes_128_gcm(
         &self,
         key: &[u8],
         plaintext: &[u8],
@@ -35,7 +35,7 @@ impl RustCryptoProvider {
         self.encrypt_aes_gcm::<aes_gcm::Aes128Gcm>(key, plaintext, options, "AES-128-GCM")
     }
 
-    pub(super) async fn decrypt_aes_128_gcm(
+    pub(super) fn decrypt_aes_128_gcm(
         &self,
         key: &[u8],
         encrypted: &EncryptedData,
@@ -44,7 +44,7 @@ impl RustCryptoProvider {
         self.decrypt_aes_gcm::<aes_gcm::Aes128Gcm>(key, encrypted, options, "AES-128-GCM")
     }
 
-    pub(super) async fn encrypt_chacha20_poly1305(
+    pub(super) fn encrypt_chacha20_poly1305(
         &self,
         key: &[u8],
         plaintext: &[u8],
@@ -74,7 +74,7 @@ impl RustCryptoProvider {
         })
     }
 
-    pub(super) async fn decrypt_chacha20_poly1305(
+    pub(super) fn decrypt_chacha20_poly1305(
         &self,
         key: &[u8],
         encrypted: &EncryptedData,

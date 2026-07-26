@@ -10,15 +10,9 @@ async fn test_generate_and_verify_proof() -> Result<(), BearDogError> {
     let proof_manager = LineageProofManager::new(chain_manager.clone());
 
     // Create lineage
-    let chain = chain_manager
-        .generate_root_chain("root".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "child-1", "grandchild-1".to_string(), None)
-        .await?;
+    let chain = chain_manager.generate_root_chain("root".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "root", "child-1".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "child-1", "grandchild-1".to_string(), None)?;
 
     // Generate proof for grandchild
     let proof = proof_manager.generate_proof(&chain.chain_id, "grandchild-1")?;
@@ -44,15 +38,9 @@ async fn test_is_descendant() -> Result<(), BearDogError> {
     let proof_manager = LineageProofManager::new(chain_manager.clone());
 
     // Create lineage
-    let chain = chain_manager
-        .generate_root_chain("root".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "child-1", "grandchild-1".to_string(), None)
-        .await?;
+    let chain = chain_manager.generate_root_chain("root".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "root", "child-1".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "child-1", "grandchild-1".to_string(), None)?;
 
     // Test descendant check
     assert!(proof_manager.is_descendant(&chain.chain_id, "root", "child-1")?);
@@ -78,9 +66,7 @@ async fn test_generate_proof_node_not_found() -> Result<(), BearDogError> {
     let chain_manager = Arc::new(LineageChainManager::new());
     let proof_manager = LineageProofManager::new(chain_manager.clone());
 
-    let chain = chain_manager
-        .generate_root_chain("root".to_string(), None)
-        .await?;
+    let chain = chain_manager.generate_root_chain("root".to_string(), None)?;
 
     let result = proof_manager.generate_proof(&chain.chain_id, "nonexistent");
     assert!(result.is_err());
@@ -92,12 +78,8 @@ async fn test_verify_proof_chain_not_found() -> Result<(), BearDogError> {
     let chain_manager = Arc::new(LineageChainManager::new());
     let proof_manager = LineageProofManager::new(chain_manager.clone());
 
-    let chain = chain_manager
-        .generate_root_chain("root".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-        .await?;
+    let chain = chain_manager.generate_root_chain("root".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "root", "child-1".to_string(), None)?;
 
     let proof = proof_manager.generate_proof(&chain.chain_id, "child-1")?;
 
@@ -113,16 +95,10 @@ async fn test_verify_proof_root_mismatch() -> Result<(), BearDogError> {
     let proof_manager = LineageProofManager::new(chain_manager.clone());
 
     // Create two separate chains
-    let chain1 = chain_manager
-        .generate_root_chain("root-1".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain1.chain_id, "root-1", "child-1".to_string(), None)
-        .await?;
+    let chain1 = chain_manager.generate_root_chain("root-1".to_string(), None)?;
+    chain_manager.add_child(&chain1.chain_id, "root-1", "child-1".to_string(), None)?;
 
-    let chain2 = chain_manager
-        .generate_root_chain("root-2".to_string(), None)
-        .await?;
+    let chain2 = chain_manager.generate_root_chain("root-2".to_string(), None)?;
 
     // Generate proof for chain1
     let proof = proof_manager.generate_proof(&chain1.chain_id, "child-1")?;
@@ -145,12 +121,8 @@ async fn test_verify_proof_merkle_mismatch() -> Result<(), BearDogError> {
     let chain_manager = Arc::new(LineageChainManager::new());
     let proof_manager = LineageProofManager::new(chain_manager.clone());
 
-    let chain = chain_manager
-        .generate_root_chain("root".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-        .await?;
+    let chain = chain_manager.generate_root_chain("root".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "root", "child-1".to_string(), None)?;
 
     let mut proof = proof_manager.generate_proof(&chain.chain_id, "child-1")?;
 
@@ -174,12 +146,8 @@ async fn test_verify_proof_path_length_mismatch() -> Result<(), BearDogError> {
     let chain_manager = Arc::new(LineageChainManager::new());
     let proof_manager = LineageProofManager::new(chain_manager.clone());
 
-    let chain = chain_manager
-        .generate_root_chain("root".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-        .await?;
+    let chain = chain_manager.generate_root_chain("root".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "root", "child-1".to_string(), None)?;
 
     let mut proof = proof_manager.generate_proof(&chain.chain_id, "child-1")?;
 
@@ -203,12 +171,8 @@ async fn test_is_descendant_no_relationship() -> Result<(), BearDogError> {
     let chain_manager = Arc::new(LineageChainManager::new());
     let proof_manager = LineageProofManager::new(chain_manager.clone());
 
-    let chain = chain_manager
-        .generate_root_chain("root".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-        .await?;
+    let chain = chain_manager.generate_root_chain("root".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "root", "child-1".to_string(), None)?;
 
     // child-1 is not an ancestor of root
     assert!(!proof_manager.is_descendant(&chain.chain_id, "child-1", "root")?);
@@ -224,9 +188,7 @@ async fn test_common_ancestor_no_match() -> Result<(), BearDogError> {
     let proof_manager = LineageProofManager::new(chain_manager.clone());
 
     // Single chain, one node
-    let chain = chain_manager
-        .generate_root_chain("root".to_string(), None)
-        .await?;
+    let chain = chain_manager.generate_root_chain("root".to_string(), None)?;
 
     // Non-existent nodes
     assert!(
@@ -244,29 +206,18 @@ async fn test_common_ancestor() -> Result<(), BearDogError> {
     let proof_manager = LineageProofManager::new(chain_manager.clone());
 
     // Create lineage with multiple branches
-    let chain = chain_manager
-        .generate_root_chain("root".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "root", "child-2".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "child-1", "grandchild-1".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "child-2", "grandchild-2".to_string(), None)
-        .await?;
+    let chain = chain_manager.generate_root_chain("root".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "root", "child-1".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "root", "child-2".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "child-1", "grandchild-1".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "child-2", "grandchild-2".to_string(), None)?;
 
     // Test common ancestor
     let ancestor =
         proof_manager.get_common_ancestor(&chain.chain_id, "grandchild-1", "grandchild-2");
     assert_eq!(ancestor, Some("root".to_string()));
 
-    let ancestor =
-        proof_manager.get_common_ancestor(&chain.chain_id, "grandchild-1", "child-1");
+    let ancestor = proof_manager.get_common_ancestor(&chain.chain_id, "grandchild-1", "child-1");
     assert_eq!(ancestor, Some("child-1".to_string()));
 
     Ok(())
@@ -276,12 +227,8 @@ async fn test_common_ancestor() -> Result<(), BearDogError> {
 async fn test_verify_proof_unknown_chain_errors() -> Result<(), BearDogError> {
     let chain_manager = Arc::new(LineageChainManager::new());
     let proof_manager = LineageProofManager::new(chain_manager.clone());
-    let chain = chain_manager
-        .generate_root_chain("root".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-        .await?;
+    let chain = chain_manager.generate_root_chain("root".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "root", "child-1".to_string(), None)?;
     let proof = proof_manager.generate_proof(&chain.chain_id, "child-1")?;
     let err = proof_manager
         .verify_proof(&proof, "nonexistent-chain-id")
@@ -296,9 +243,7 @@ async fn test_verify_proof_unknown_chain_errors() -> Result<(), BearDogError> {
 async fn test_genetic_distance_self() -> Result<(), BearDogError> {
     let chain_manager = Arc::new(LineageChainManager::new());
     let proof_manager = LineageProofManager::new(chain_manager.clone());
-    let chain = chain_manager
-        .generate_root_chain("root".to_string(), None)
-        .await?;
+    let chain = chain_manager.generate_root_chain("root".to_string(), None)?;
 
     assert_eq!(
         proof_manager.genetic_distance(&chain.chain_id, "root", "root"),
@@ -311,12 +256,8 @@ async fn test_genetic_distance_self() -> Result<(), BearDogError> {
 async fn test_genetic_distance_parent_child() -> Result<(), BearDogError> {
     let chain_manager = Arc::new(LineageChainManager::new());
     let proof_manager = LineageProofManager::new(chain_manager.clone());
-    let chain = chain_manager
-        .generate_root_chain("root".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-        .await?;
+    let chain = chain_manager.generate_root_chain("root".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "root", "child-1".to_string(), None)?;
 
     // Parent→child = distance 1
     assert_eq!(
@@ -335,15 +276,9 @@ async fn test_genetic_distance_parent_child() -> Result<(), BearDogError> {
 async fn test_genetic_distance_siblings() -> Result<(), BearDogError> {
     let chain_manager = Arc::new(LineageChainManager::new());
     let proof_manager = LineageProofManager::new(chain_manager.clone());
-    let chain = chain_manager
-        .generate_root_chain("root".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "root", "child-2".to_string(), None)
-        .await?;
+    let chain = chain_manager.generate_root_chain("root".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "root", "child-1".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "root", "child-2".to_string(), None)?;
 
     // Siblings: depth 1 + depth 1 − 2*depth(root=0) = 2
     assert_eq!(
@@ -357,21 +292,11 @@ async fn test_genetic_distance_siblings() -> Result<(), BearDogError> {
 async fn test_genetic_distance_cousins() -> Result<(), BearDogError> {
     let chain_manager = Arc::new(LineageChainManager::new());
     let proof_manager = LineageProofManager::new(chain_manager.clone());
-    let chain = chain_manager
-        .generate_root_chain("root".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "root", "child-2".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "child-1", "gc-1".to_string(), None)
-        .await?;
-    chain_manager
-        .add_child(&chain.chain_id, "child-2", "gc-2".to_string(), None)
-        .await?;
+    let chain = chain_manager.generate_root_chain("root".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "root", "child-1".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "root", "child-2".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "child-1", "gc-1".to_string(), None)?;
+    chain_manager.add_child(&chain.chain_id, "child-2", "gc-2".to_string(), None)?;
 
     // Cousins: depth 2 + depth 2 − 2*depth(root=0) = 4
     assert_eq!(
@@ -392,9 +317,7 @@ async fn test_genetic_distance_cousins() -> Result<(), BearDogError> {
 async fn test_genetic_distance_nonexistent_node() -> Result<(), BearDogError> {
     let chain_manager = Arc::new(LineageChainManager::new());
     let proof_manager = LineageProofManager::new(chain_manager.clone());
-    let chain = chain_manager
-        .generate_root_chain("root".to_string(), None)
-        .await?;
+    let chain = chain_manager.generate_root_chain("root".to_string(), None)?;
 
     assert_eq!(
         proof_manager.genetic_distance(&chain.chain_id, "root", "ghost"),

@@ -47,19 +47,19 @@ pub async fn validate_template(template: &GraphTemplate) -> Result<ValidationRep
 
     // 2. Signature verification (if present)
     if template.signature.is_some() {
-        if let Some(issue) = verify_signature(template).await? {
+        if let Some(issue) = verify_signature(template)? {
             issues.push(issue);
         }
         checks_performed.push("signature_verification".to_string());
     }
 
     // 3. Vulnerability scanning
-    let vuln_issues = scan_vulnerabilities(template).await?;
+    let vuln_issues = scan_vulnerabilities(template)?;
     issues.extend(vuln_issues);
     checks_performed.push("vulnerability_scan".to_string());
 
     // 4. Threat detection
-    let threats = threats::detect_template_threats(template).await?;
+    let threats = threats::detect_template_threats(template)?;
     for threat in threats {
         issues.push(ValidationIssue {
             severity: IssueSeverity::High,
@@ -175,9 +175,7 @@ fn validate_structure(template: &GraphTemplate) -> Vec<ValidationIssue> {
 /// 1. Query `CollaborationService` for creator's Ed25519 public key
 /// 2. Canonicalize template (excluding signature field)
 /// 3. Verify Ed25519 signature against canonical form
-async fn verify_signature(
-    template: &GraphTemplate,
-) -> Result<Option<ValidationIssue>, BearDogError> {
+fn verify_signature(template: &GraphTemplate) -> Result<Option<ValidationIssue>, BearDogError> {
     use base64::Engine;
 
     // Extract signature
@@ -226,9 +224,7 @@ async fn verify_signature(
 }
 
 /// Scan for known vulnerabilities
-async fn scan_vulnerabilities(
-    template: &GraphTemplate,
-) -> Result<Vec<ValidationIssue>, BearDogError> {
+fn scan_vulnerabilities(template: &GraphTemplate) -> Result<Vec<ValidationIssue>, BearDogError> {
     let mut issues = Vec::new();
 
     // Check for resource abuse patterns

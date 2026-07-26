@@ -56,7 +56,7 @@ impl MockTunnelConnection {
         }
     }
 
-    async fn connect(&self) -> Result<()> {
+    fn connect(&self) -> Result<()> {
         if self.is_connected.load(Ordering::SeqCst) {
             return Ok(()); // Already connected
         }
@@ -65,7 +65,7 @@ impl MockTunnelConnection {
         Ok(())
     }
 
-    async fn disconnect(&self) -> Result<()> {
+    fn disconnect(&self) -> Result<()> {
         self.is_connected.store(false, Ordering::SeqCst);
         Ok(())
     }
@@ -150,14 +150,14 @@ impl MockTunnelConnection {
 async fn test_tunnel_connection_drop() -> Result<()> {
     // Test handling of sudden connection drop
     let tunnel = MockTunnelConnection::new("test_tunnel");
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     // Send some data
     tunnel.send(b"test_data".to_vec()).await?;
     assert_eq!(tunnel.get_packets_sent(), 1);
 
     // Simulate connection drop
-    tunnel.disconnect().await?;
+    tunnel.disconnect()?;
 
     // Attempt to send should fail
     let result = tunnel.send(b"more_data".to_vec()).await;
@@ -172,12 +172,12 @@ async fn test_tunnel_reconnection_after_drop() -> Result<()> {
     let tunnel = MockTunnelConnection::new("test_tunnel");
 
     // Connect, send, disconnect
-    tunnel.connect().await?;
+    tunnel.connect()?;
     tunnel.send(b"data1".to_vec()).await?;
-    tunnel.disconnect().await?;
+    tunnel.disconnect()?;
 
     // Reconnect and send again
-    tunnel.connect().await?;
+    tunnel.connect()?;
     tunnel.send(b"data2".to_vec()).await?;
 
     assert_eq!(tunnel.get_packets_sent(), 2);
@@ -188,7 +188,7 @@ async fn test_tunnel_reconnection_after_drop() -> Result<()> {
 async fn test_tunnel_connection_during_active_transfer() -> Result<()> {
     // Test connection drop during active data transfer
     let tunnel = Arc::new(MockTunnelConnection::new("test_tunnel"));
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     let (shutdown_tx, mut shutdown_rx) = mpsc::channel::<()>(1);
 
@@ -216,7 +216,7 @@ async fn test_tunnel_connection_during_active_transfer() -> Result<()> {
     }
 
     // Simulate connection drop
-    tunnel.disconnect().await?;
+    tunnel.disconnect()?;
 
     // Signal shutdown
     let _ = shutdown_tx.send(()).await;
@@ -238,7 +238,7 @@ async fn test_tunnel_connection_during_active_transfer() -> Result<()> {
 async fn test_tunnel_packet_loss_handling() -> Result<()> {
     // Test graceful handling of packet loss
     let tunnel = MockTunnelConnection::new("test_tunnel");
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     // Send some packets successfully
     tunnel.send(b"packet1".to_vec()).await?;
@@ -264,7 +264,7 @@ async fn test_tunnel_packet_loss_handling() -> Result<()> {
 async fn test_tunnel_receive_failure_handling() -> Result<()> {
     // Test handling of receive failures
     let tunnel = MockTunnelConnection::new("test_tunnel");
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     // Send some data
     tunnel.send(b"test_data".to_vec()).await?;
@@ -287,7 +287,7 @@ async fn test_tunnel_receive_failure_handling() -> Result<()> {
 async fn test_tunnel_partial_packet_loss() -> Result<()> {
     // Test handling of intermittent packet loss
     let tunnel = MockTunnelConnection::new("test_tunnel");
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     let mut successful = 0;
     let mut failed = 0;
@@ -321,19 +321,19 @@ async fn test_tunnel_partial_packet_loss() -> Result<()> {
 async fn test_tunnel_network_partition_recovery() -> Result<()> {
     // Test recovery after network partition
     let tunnel = MockTunnelConnection::new("test_tunnel");
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     // Send data before partition
     tunnel.send(b"before_partition".to_vec()).await?;
 
     // Simulate network partition
-    tunnel.disconnect().await?;
+    tunnel.disconnect()?;
 
     // Attempt operations during partition (should fail)
     assert!(tunnel.send(b"during_partition".to_vec()).await.is_err());
 
     // Recover from partition
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     // Operations should succeed after recovery
     tunnel.send(b"after_partition".to_vec()).await?;
@@ -349,10 +349,10 @@ async fn test_tunnel_rapid_partition_recovery_cycles() -> Result<()> {
 
     for i in 0..20 {
         if i % 2 == 0 {
-            tunnel.connect().await?;
+            tunnel.connect()?;
             let _ = tunnel.send(format!("data_{}", i).into_bytes()).await;
         } else {
-            tunnel.disconnect().await?;
+            tunnel.disconnect()?;
         }
     }
 
@@ -370,7 +370,7 @@ async fn test_tunnel_rapid_partition_recovery_cycles() -> Result<()> {
 async fn test_tunnel_operation_retry_after_failure() -> Result<()> {
     // Test retry logic after transient failure
     let tunnel = MockTunnelConnection::new("test_tunnel");
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     // First attempt fails
     tunnel.inject_send_failure();
@@ -394,7 +394,7 @@ async fn test_tunnel_operation_retry_after_failure() -> Result<()> {
 async fn test_tunnel_exponential_backoff_simulation() -> Result<()> {
     // Simulate exponential backoff retry pattern
     let tunnel = MockTunnelConnection::new("test_tunnel");
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     let max_retries = 5;
     let mut retry_count = 0;
@@ -436,13 +436,13 @@ async fn test_tunnel_state_preservation_across_reconnects() -> Result<()> {
     let tunnel = MockTunnelConnection::new("test_tunnel");
 
     // Connect and send
-    tunnel.connect().await?;
+    tunnel.connect()?;
     tunnel.send(b"data1".to_vec()).await?;
     let sent_before = tunnel.get_packets_sent();
 
     // Disconnect and reconnect
-    tunnel.disconnect().await?;
-    tunnel.connect().await?;
+    tunnel.disconnect()?;
+    tunnel.connect()?;
 
     // Send more data
     tunnel.send(b"data2".to_vec()).await?;
@@ -457,7 +457,7 @@ async fn test_tunnel_state_preservation_across_reconnects() -> Result<()> {
 async fn test_tunnel_message_queue_integrity() -> Result<()> {
     // Test that message queue remains intact after connection issues
     let tunnel = MockTunnelConnection::new("test_tunnel");
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     // Send multiple messages
     tunnel.send(b"msg1".to_vec()).await?;
@@ -465,10 +465,10 @@ async fn test_tunnel_message_queue_integrity() -> Result<()> {
     tunnel.send(b"msg3".to_vec()).await?;
 
     // Disconnect
-    tunnel.disconnect().await?;
+    tunnel.disconnect()?;
 
     // Reconnect
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     // Verify messages can still be received
     let msg1 = tunnel.receive().await?;
@@ -490,7 +490,7 @@ async fn test_tunnel_message_queue_integrity() -> Result<()> {
 async fn test_tunnel_concurrent_send_operations() -> Result<()> {
     // Test concurrent send operations
     let tunnel = Arc::new(MockTunnelConnection::new("test_tunnel"));
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     let mut handles = vec![];
 
@@ -526,9 +526,9 @@ async fn test_tunnel_concurrent_connect_disconnect() -> Result<()> {
         let tunnel = Arc::clone(&tunnel);
         handles.push(tokio::spawn(async move {
             if i % 2 == 0 {
-                let _ = tunnel.connect().await;
+                let _ = tunnel.connect();
             } else {
-                let _ = tunnel.disconnect().await;
+                let _ = tunnel.disconnect();
             }
         }));
     }
@@ -547,7 +547,7 @@ async fn test_tunnel_concurrent_connect_disconnect() -> Result<()> {
 async fn test_tunnel_concurrent_send_receive() -> Result<()> {
     // Test concurrent send and receive operations
     let tunnel = Arc::new(MockTunnelConnection::new("test_tunnel"));
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     // Spawn sender task
     let tunnel_sender = Arc::clone(&tunnel);
@@ -590,7 +590,7 @@ async fn test_tunnel_concurrent_send_receive() -> Result<()> {
 async fn test_tunnel_graceful_degradation() -> Result<()> {
     // Test graceful degradation under failure conditions
     let tunnel = MockTunnelConnection::new("test_tunnel");
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     // Inject failure
     tunnel.inject_send_failure();
@@ -618,7 +618,7 @@ async fn test_tunnel_error_recovery_workflow() -> Result<()> {
     let tunnel = MockTunnelConnection::new("test_tunnel");
 
     // 1. Connect
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     // 2. Send successfully
     tunnel.send(b"data1".to_vec()).await?;
@@ -648,7 +648,7 @@ async fn test_tunnel_error_recovery_workflow() -> Result<()> {
 async fn test_tunnel_empty_data_transmission() -> Result<()> {
     // Test transmission of empty data
     let tunnel = MockTunnelConnection::new("test_tunnel");
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     tunnel.send(vec![]).await?;
     assert_eq!(tunnel.get_packets_sent(), 1);
@@ -660,7 +660,7 @@ async fn test_tunnel_empty_data_transmission() -> Result<()> {
 async fn test_tunnel_large_data_transmission() -> Result<()> {
     // Test transmission of large data
     let tunnel = MockTunnelConnection::new("test_tunnel");
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     let large_data = vec![0u8; 1_000_000];
     tunnel.send(large_data).await?;
@@ -673,7 +673,7 @@ async fn test_tunnel_large_data_transmission() -> Result<()> {
 async fn test_tunnel_stress_test() -> Result<()> {
     // Stress test with many operations
     let tunnel = Arc::new(MockTunnelConnection::new("test_tunnel"));
-    tunnel.connect().await?;
+    tunnel.connect()?;
 
     let mut handles = vec![];
 
@@ -705,14 +705,14 @@ async fn test_tunnel_multiple_reconnection_cycles() -> Result<()> {
 
     for cycle in 0..10 {
         // Connect
-        tunnel.connect().await?;
+        tunnel.connect()?;
         assert!(tunnel.is_connected());
 
         // Send some data
         tunnel.send(format!("cycle_{}", cycle).into_bytes()).await?;
 
         // Disconnect
-        tunnel.disconnect().await?;
+        tunnel.disconnect()?;
         assert!(!tunnel.is_connected());
     }
 
@@ -727,15 +727,15 @@ async fn test_tunnel_idempotent_operations() -> Result<()> {
     let tunnel = MockTunnelConnection::new("test_tunnel");
 
     // Multiple connects should be safe
-    tunnel.connect().await?;
-    tunnel.connect().await?;
-    tunnel.connect().await?;
+    tunnel.connect()?;
+    tunnel.connect()?;
+    tunnel.connect()?;
     assert!(tunnel.is_connected());
 
     // Multiple disconnects should be safe
-    tunnel.disconnect().await?;
-    tunnel.disconnect().await?;
-    tunnel.disconnect().await?;
+    tunnel.disconnect()?;
+    tunnel.disconnect()?;
+    tunnel.disconnect()?;
     assert!(!tunnel.is_connected());
 
     Ok(())

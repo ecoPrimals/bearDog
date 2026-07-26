@@ -94,9 +94,8 @@ pub async fn handle_respond_to_challenge(params: &Value) -> Result<Value, BearDo
     let _seed_b64 = BASE64.encode(&seed_bytes);
 
     let provider = GeneticCryptoProvider::new_with_lineage(seed_bytes.clone())?;
-    let lineage_key = provider
-        .derive_lineage_key("family", "responder", b"lineage-challenge-v1")
-        .await?;
+    let lineage_key =
+        provider.derive_lineage_key("family", "responder", b"lineage-challenge-v1")?;
 
     let nonce_bytes = hex::decode(&request.nonce)
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid nonce (not hex): {e}")))?;
@@ -158,10 +157,9 @@ pub async fn handle_verify_challenge_response(params: &Value) -> Result<Value, B
             ))
         })?;
 
-    let provider = GeneticCryptoProvider::new_with_lineage(our_seed_bytes.clone())?;
-    let lineage_key = provider
-        .derive_lineage_key("family", "responder", b"lineage-challenge-v1")
-        .await?;
+    let provider = GeneticCryptoProvider::new_with_lineage(our_seed_bytes)?;
+    let lineage_key =
+        provider.derive_lineage_key("family", "responder", b"lineage-challenge-v1")?;
 
     let nonce_bytes = hex::decode(&request.nonce)
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid nonce (not hex): {e}")))?;
@@ -180,9 +178,7 @@ pub async fn handle_verify_challenge_response(params: &Value) -> Result<Value, B
         BearDogError::invalid_input(&format!("Invalid lineage_proof (not base64): {e}"))
     })?;
 
-    let proof_valid = provider
-        .verify_lineage("family", "responder", &lineage_proof)
-        .await?;
+    let proof_valid = provider.verify_lineage("family", "responder", &lineage_proof)?;
 
     let valid = response_valid && proof_valid;
     let (relationship, trust_level) = if valid {

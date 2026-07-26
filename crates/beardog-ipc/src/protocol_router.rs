@@ -45,6 +45,7 @@ pub enum Protocol {
 
 impl Protocol {
     /// Human-readable name
+    #[must_use]
     pub const fn name(&self) -> &'static str {
         match self {
             Self::JsonRpc => "json-rpc",
@@ -55,6 +56,7 @@ impl Protocol {
     }
 
     /// Whether this is the primary ecosystem protocol
+    #[must_use]
     pub const fn is_primary(&self) -> bool {
         matches!(self, Self::JsonRpc)
     }
@@ -77,11 +79,13 @@ pub struct ProtocolDetector {
 
 impl ProtocolDetector {
     /// Create a new protocol detector
+    #[must_use]
     pub const fn new() -> Self {
         Self { peek_size: 16 }
     }
 
     /// Create with custom peek size
+    #[must_use]
     pub const fn with_peek_size(peek_size: usize) -> Self {
         Self { peek_size }
     }
@@ -110,6 +114,7 @@ impl ProtocolDetector {
     }
 
     /// Detect protocol from bytes (pure function)
+    #[must_use]
     pub fn detect_from_bytes(bytes: &[u8]) -> Protocol {
         if bytes.is_empty() {
             return Protocol::Unknown;
@@ -190,6 +195,7 @@ impl Default for RouterConfig {
 
 impl RouterConfig {
     /// Create config with only JSON-RPC enabled (recommended for inter-primal IPC)
+    #[must_use]
     pub const fn jsonrpc_only() -> Self {
         Self {
             enable_jsonrpc: true,
@@ -198,6 +204,7 @@ impl RouterConfig {
     }
 
     /// Get list of supported protocols
+    #[must_use]
     pub fn supported_protocols(&self) -> Vec<Protocol> {
         let mut protocols = Vec::new();
 
@@ -212,6 +219,7 @@ impl RouterConfig {
     }
 
     /// Check if a protocol is supported
+    #[must_use]
     pub const fn is_supported(&self, protocol: Protocol) -> bool {
         match protocol {
             Protocol::JsonRpc => self.enable_jsonrpc,
@@ -236,6 +244,7 @@ pub struct ProtocolCapabilities {
 
 impl ProtocolCapabilities {
     /// Create capabilities from router config
+    #[must_use]
     pub fn from_config(config: &RouterConfig) -> Self {
         let mut supported = Vec::new();
         let mut versions = std::collections::HashMap::new();
@@ -258,6 +267,7 @@ impl ProtocolCapabilities {
     }
 
     /// Create JSON representation for capability response
+    #[must_use]
     pub fn to_json(&self) -> String {
         serde_json::to_string_pretty(self).unwrap_or_else(|_| "{}".to_string())
     }
@@ -289,7 +299,7 @@ impl PrefixedStream {
     }
 
     /// Check if prefix has been fully read
-    pub fn prefix_exhausted(&self) -> bool {
+    pub const fn prefix_exhausted(&self) -> bool {
         self.prefix_pos >= self.prefix.len()
     }
 }

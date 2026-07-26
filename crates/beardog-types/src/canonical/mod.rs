@@ -151,11 +151,6 @@ pub use capabilities::{
 };
 
 // Configuration - primary exports (from main configuration module, not canonical)
-// Legacy config re-exports - use canonical::config instead
-#[deprecated(
-    since = "3.1.0",
-    note = "Use canonical::config::app::UnifiedAppConfig instead"
-)]
 // Constants
 pub use constants::genetics;
 

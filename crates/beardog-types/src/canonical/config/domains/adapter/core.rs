@@ -108,6 +108,7 @@ impl CoreAdapterConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             adapter_id: Arc::from(Self::DEFAULT_ADAPTER_ID),
@@ -123,6 +124,7 @@ impl CoreAdapterConfig {
     ///
     /// Reads configuration from environment, falling back to defaults.
     /// This makes the intent explicit and allows testing without env pollution.
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             adapter_id: Arc::from(

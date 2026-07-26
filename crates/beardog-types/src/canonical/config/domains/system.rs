@@ -53,6 +53,7 @@ impl ApplicationConfig {
     /// Version and instance ID are taken from `BEARDOG_APP_VERSION` and `BEARDOG_INSTANCE_ID`
     /// when set; otherwise version is the crate version at compile time and instance ID is
     /// `instance-{pid}` for stable local defaults without embedding a named deployment.
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             name: Self::DEFAULT_NAME.to_string(),
@@ -78,6 +79,7 @@ impl ApplicationConfig {
     /// # System Detection
     /// - Version: `BEARDOG_APP_VERSION` or `CARGO_PKG_VERSION` at compile time
     /// - Instance ID: `BEARDOG_INSTANCE_ID` or random UUID
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -131,6 +133,7 @@ impl ThreadingConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables or system queries are performed.
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             worker_threads: Self::DEFAULT_WORKER_THREADS,
@@ -147,6 +150,7 @@ impl ThreadingConfig {
     /// # Environment Variables
     /// - `BEARDOG_WORKER_THREADS`: Number of worker threads (default: detected from system)
     /// - `BEARDOG_BLOCKING_THREADS`: Number of blocking threads (default: `DEFAULT_CACHE_SIZE`)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -226,6 +230,7 @@ impl ResourceConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             max_memory_bytes: None,
@@ -243,6 +248,7 @@ impl ResourceConfig {
     /// - `BEARDOG_MAX_FILE_DESCRIPTORS`: Maximum file descriptors (default: 65536)
     /// - `BEARDOG_SYSTEM_MAX_CONNECTIONS`: Maximum connections (default: 10000)
     /// - `BEARDOG_SYSTEM_MONITORING_INTERVAL_SECS`: Monitoring interval (default: 60)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -282,6 +288,7 @@ impl EnvironmentConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             environment_type: Self::DEFAULT_ENVIRONMENT_TYPE.to_string(),
@@ -296,6 +303,7 @@ impl EnvironmentConfig {
     ///
     /// # Environment Variables
     /// - `BEARDOG_ENVIRONMENT`: Environment type (default: "development")
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }

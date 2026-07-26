@@ -51,7 +51,9 @@ impl TcpIpcServer {
                 continue;
             }
 
-            let request: Value = if let Ok(req) = serde_json::from_str(trimmed) { req } else {
+            let request: Value = if let Ok(req) = serde_json::from_str(trimmed) {
+                req
+            } else {
                 let err_resp = serde_json::json!({
                     "jsonrpc": "2.0",
                     "error": {"code": -32700, "message": "Parse error: invalid JSON"},

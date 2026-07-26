@@ -53,7 +53,7 @@ async fn test_discover_from_env_specific_primal() {
     );
 
     let query = DiscoveryQuery::by_name("PeerAlpha");
-    let primals = discovery.discover_with_env(query, env_vars).await.unwrap();
+    let primals = discovery.discover_with_env(query, env_vars).unwrap();
 
     assert_eq!(
         primals.len(),
@@ -90,7 +90,7 @@ async fn test_discover_from_env_scan_all() {
         capabilities: Vec::new(),
         timeout: std::time::Duration::from_secs(5),
     };
-    let primals = discovery.discover_with_env(query, env_vars).await.unwrap();
+    let primals = discovery.discover_with_env(query, env_vars).unwrap();
 
     assert!(primals.len() >= 2);
 }
@@ -141,7 +141,7 @@ async fn test_discovered_primal_trust_score() {
     );
 
     let query = DiscoveryQuery::by_name("Trusted");
-    let primals = discovery.discover_with_env(query, env_vars).await.unwrap();
+    let primals = discovery.discover_with_env(query, env_vars).unwrap();
 
     assert_eq!(primals.len(), 1);
     assert_eq!(primals[0].trust_score, Some(1.0));
@@ -151,7 +151,7 @@ async fn test_discovered_primal_trust_score() {
 async fn test_discover_biomeos_runtime_socket_scan() {
     let mut discovery = PrimalDiscovery::new(DiscoveryMethod::Environment);
     let base = tempfile::tempdir().unwrap();
-    let biomeos = base.path().join(ipc::BIOMEOS_RUNTIME_SOCKET_SUBDIR);
+    let biomeos = base.path().join(ipc::default_ecosystem_ipc_namespace());
     std::fs::create_dir_all(&biomeos).unwrap();
     let sock = biomeos.join("orchid.sock");
     std::fs::File::create(&sock).unwrap();
@@ -167,7 +167,7 @@ async fn test_discover_biomeos_runtime_socket_scan() {
     );
 
     let query = DiscoveryQuery::by_capability(SimpleCapability::Discovery);
-    let primals = discovery.discover_with_env(query, env_vars).await.unwrap();
+    let primals = discovery.discover_with_env(query, env_vars).unwrap();
     assert!(
         primals.iter().any(|p| p.name == "orchid"),
         "expected orchid from socket scan, got {primals:?}"
@@ -208,7 +208,7 @@ async fn test_discover_multi_runs_environment_and_dedupes() {
         DiscoveryMethod::Environment,
     ]));
     let dir = tempfile::tempdir().unwrap();
-    let biomeos = dir.path().join(ipc::BIOMEOS_RUNTIME_SOCKET_SUBDIR);
+    let biomeos = dir.path().join(ipc::default_ecosystem_ipc_namespace());
     std::fs::create_dir_all(&biomeos).unwrap();
     let sock = biomeos.join("dedupe.sock");
     std::fs::File::create(&sock).unwrap();
@@ -228,7 +228,6 @@ async fn test_discover_multi_runs_environment_and_dedupes() {
     };
     let primals = discovery
         .discover_with_env(query, env_vars)
-        .await
         .expect("multi env");
     assert_eq!(
         primals.len(),
@@ -330,6 +329,6 @@ async fn discover_by_name_missing_primal_returns_empty_without_error() {
         "unix:///tmp/nope.sock".to_string(),
     );
     let q = DiscoveryQuery::by_name("missing");
-    let primals = discovery.discover_with_env(q, env).await.expect("discover");
+    let primals = discovery.discover_with_env(q, env).expect("discover");
     assert!(primals.is_empty());
 }

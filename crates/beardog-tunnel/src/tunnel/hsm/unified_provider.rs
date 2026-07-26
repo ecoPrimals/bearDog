@@ -134,8 +134,8 @@ impl UnifiedHsmProvider {
 
         self.get_provider(default_id)
     }
-
     /// Lists all registered providers
+    #[must_use]
     pub fn list_providers(&self) -> Vec<String> {
         let providers = self.providers.read();
         providers.keys().cloned().collect()

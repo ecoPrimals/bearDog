@@ -23,7 +23,7 @@ async fn test_list_available_devices() {
     let orchestrator = HsmEntropyOrchestrator::new()
         .await
         .expect("HsmEntropyOrchestrator::new in test");
-    let devices = orchestrator.list_available_devices().await;
+    let devices = orchestrator.list_available_devices();
     // Should not panic, may be empty if no HSMs available
     // Note: devices.len() is always >= 0 (usize is unsigned)
     assert!(devices.is_empty() || !devices.is_empty()); // Always true, verifies call succeeds
@@ -78,7 +78,7 @@ async fn test_generate_entropy_basic() {
         ..Default::default()
     };
 
-    let result = orchestrator.generate_entropy(request).await;
+    let result = orchestrator.generate_entropy(request);
     assert!(result.is_ok() || result.is_err());
 }
 
@@ -104,7 +104,7 @@ async fn test_generate_entropy_various_lengths() {
             ..Default::default()
         };
 
-        let result = orchestrator.generate_entropy(request).await;
+        let result = orchestrator.generate_entropy(request);
         assert!(result.is_ok() || result.is_err());
     }
 }
@@ -177,8 +177,8 @@ async fn test_list_devices_consistency() {
         .await
         .expect("HsmEntropyOrchestrator::new in test");
 
-    let devices1 = orchestrator.list_available_devices().await;
-    let devices2 = orchestrator.list_available_devices().await;
+    let devices1 = orchestrator.list_available_devices();
+    let devices2 = orchestrator.list_available_devices();
 
     assert_eq!(devices1.len(), devices2.len());
 }
@@ -210,8 +210,8 @@ async fn test_entropy_requests_are_independent() {
         ..Default::default()
     };
 
-    let result1 = orchestrator.generate_entropy(request1).await;
-    let result2 = orchestrator.generate_entropy(request2).await;
+    let result1 = orchestrator.generate_entropy(request1);
+    let result2 = orchestrator.generate_entropy(request2);
 
     assert!(result1.is_ok() || result1.is_err());
     assert!(result2.is_ok() || result2.is_err());
@@ -223,7 +223,7 @@ async fn test_orchestrator_sequential_operations() {
         .await
         .expect("HsmEntropyOrchestrator::new in test");
 
-    let _devices = orchestrator.list_available_devices().await;
+    let _devices = orchestrator.list_available_devices();
     let result1 = orchestrator.generate_human_entropy(32, None).await;
     let result2 = orchestrator.generate_human_entropy(32, None).await;
 
@@ -243,7 +243,7 @@ async fn test_generate_entropy_zero_length() {
         ..Default::default()
     };
 
-    let result = orchestrator.generate_entropy(request).await;
+    let result = orchestrator.generate_entropy(request);
     assert!(result.is_ok() || result.is_err());
 }
 
@@ -259,7 +259,7 @@ async fn test_generate_entropy_large_length() {
         ..Default::default()
     };
 
-    let result = orchestrator.generate_entropy(request).await;
+    let result = orchestrator.generate_entropy(request);
     assert!(result.is_ok() || result.is_err());
 }
 

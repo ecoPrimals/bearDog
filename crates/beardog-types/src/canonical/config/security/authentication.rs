@@ -224,6 +224,7 @@ impl CanonicalAuthenticationConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             jwt_secret: Arc::from("CHANGE_ME_IN_PRODUCTION"),
@@ -263,6 +264,7 @@ impl CanonicalAuthenticationConfig {
     /// - `BEARDOG_PASSWORD_MIN_LENGTH`: Password minimum length (default: 8)
     /// - `BEARDOG_MAX_AUTH_ATTEMPTS`: Maximum authentication attempts (default: 3)
     /// - `BEARDOG_LOCKOUT_DURATION_SECS`: Lockout duration (default: 900)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }

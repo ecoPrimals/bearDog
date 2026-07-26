@@ -33,6 +33,7 @@ pub enum Capability {
 
 impl Capability {
     /// Convert capability to string representation
+    #[must_use]
     pub fn as_str(&self) -> &str {
         match self {
             Self::Crypto => "crypto",
@@ -87,7 +88,8 @@ pub struct DiscoveryQuery {
 
 impl DiscoveryQuery {
     /// Create a new discovery query
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             primal: None,
             capabilities: Vec::new(),
@@ -96,6 +98,7 @@ impl DiscoveryQuery {
     }
 
     /// Query for a specific primal
+    #[must_use]
     pub fn primal(name: &str) -> Self {
         Self {
             primal: Some(name.to_string()),
@@ -105,6 +108,7 @@ impl DiscoveryQuery {
     }
 
     /// Query by capability
+    #[must_use]
     pub fn capability(cap: Capability) -> Self {
         Self {
             primal: None,
@@ -114,12 +118,14 @@ impl DiscoveryQuery {
     }
 
     /// Add a capability requirement
+    #[must_use]
     pub fn with_capability(mut self, cap: Capability) -> Self {
         self.capabilities.push(cap.as_str().to_string());
         self
     }
 
     /// Add a filter
+    #[must_use]
     pub fn with_filter(mut self, key: String, value: serde_json::Value) -> Self {
         self.filters.insert(key, value);
         self

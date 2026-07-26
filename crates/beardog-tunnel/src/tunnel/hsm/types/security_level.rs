@@ -78,6 +78,7 @@ pub enum SecurityLevel {
 
 impl SecurityLevel {
     /// Returns the minimum recommended security bits for this level
+    #[must_use]
     pub const fn security_bits(&self) -> usize {
         match self {
             Self::Software => 128,                    // Minimum acceptable
@@ -87,26 +88,26 @@ impl SecurityLevel {
             Self::StrongBox => 256,                   // Maximum security
         }
     }
-
     /// Returns whether this level provides hardware backing
+    #[must_use]
     pub const fn is_hardware_backed(&self) -> bool {
         !matches!(self, Self::Software)
     }
-
     /// Returns whether this level supports key attestation
+    #[must_use]
     pub const fn supports_attestation(&self) -> bool {
         matches!(
             self,
             Self::SecureEnclave | Self::HardwareSecurityModule | Self::StrongBox
         )
     }
-
     /// Returns whether keys can be extracted from this security level
+    #[must_use]
     pub const fn allows_key_export(&self) -> bool {
         matches!(self, Self::Software)
     }
-
     /// Returns a human-readable description
+    #[must_use]
     pub const fn description(&self) -> &'static str {
         match self {
             Self::Software => "Software (no hardware security)",
@@ -116,8 +117,8 @@ impl SecurityLevel {
             Self::StrongBox => "StrongBox (Titan M, Qualcomm SPU)",
         }
     }
-
     /// Returns the platform identifier
+    #[must_use]
     pub const fn platform_name(&self) -> &'static str {
         match self {
             Self::Software => "software",

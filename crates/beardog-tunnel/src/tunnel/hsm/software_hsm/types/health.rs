@@ -22,7 +22,7 @@ impl SoftwareHealthMonitor {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub async fn new() -> Result<Self, BearDogError> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             health_status: Arc::new(RwLock::new(HsmHealthStatus {
                 is_healthy: true,

@@ -68,11 +68,13 @@ pub enum MonitoringLevel {
 
 impl MonitoringLevel {
     /// Returns true if this level includes detailed metrics
+    #[must_use]
     pub const fn includes_detailed_metrics(&self) -> bool {
         matches!(self, Self::Detailed | Self::Verbose)
     }
 
     /// Returns true if this level includes trace data
+    #[must_use]
     pub const fn includes_tracing(&self) -> bool {
         matches!(self, Self::Standard | Self::Detailed | Self::Verbose)
     }
@@ -80,6 +82,7 @@ impl MonitoringLevel {
     /// Returns the relative performance overhead of this level
     ///
     /// Returns a value from 1 (lowest) to 5 (highest)
+    #[must_use]
     pub const fn overhead_level(&self) -> u8 {
         match self {
             Self::Minimal => 1,
@@ -91,6 +94,7 @@ impl MonitoringLevel {
     }
 
     /// Returns the typical reporting interval for this level
+    #[must_use]
     pub const fn typical_interval(&self) -> Duration {
         match self {
             Self::Minimal => Duration::from_secs(300), // 5 minutes

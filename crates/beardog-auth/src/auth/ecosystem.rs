@@ -61,6 +61,7 @@ impl CrossNodeAuthEngine {
     }
 
     /// Get ecosystem capabilities for a node
+    #[must_use]
     pub fn get_ecosystem_capabilities(&self, node_id: &str) -> Vec<NodeCapability> {
         match self.node_registry.get_node_info(node_id) {
             Ok(info) => {
@@ -71,6 +72,7 @@ impl CrossNodeAuthEngine {
     }
 
     /// [`CapabilityMetadata`] aligned with [`Self::discover_node_capabilities`] for the same `node_id`.
+    #[must_use]
     pub fn ecosystem_capability_metadata(&self, node_id: &str) -> Vec<CapabilityMetadata> {
         match classify_node_id(node_id) {
             DiscoveredNodeKind::Hsm => vec![

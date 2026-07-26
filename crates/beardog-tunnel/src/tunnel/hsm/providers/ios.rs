@@ -66,7 +66,7 @@ impl IosUniversalProvider {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub async fn new() -> Result<Self, BearDogError> {
+    pub fn new() -> Result<Self, BearDogError> {
         let mut provider = Self {
             capabilities: None,
             secure_enclave_available: false,
@@ -78,7 +78,7 @@ impl IosUniversalProvider {
         provider.detect_secure_enclave();
         provider.detect_biometrics();
 
-        let capabilities = provider.discover_capabilities().await?;
+        let capabilities = provider.discover_capabilities()?;
         provider.capabilities = Some(capabilities);
 
         Ok(provider)
@@ -208,7 +208,7 @@ impl IosUniversalProvider {
     }
 
     /// Discover iOS HSM capabilities
-    async fn discover_capabilities(&self) -> Result<IosCapabilities, BearDogError> {
+    fn discover_capabilities(&self) -> Result<IosCapabilities, BearDogError> {
         let secure_enclave_level = if self.secure_enclave_available && self.biometric_available {
             SecureEnclaveLevel::Full
         } else if self.secure_enclave_available {
@@ -240,8 +240,8 @@ impl IosUniversalProvider {
             biometric_type,
         })
     }
-
     /// Get security level
+    #[must_use]
     pub const fn get_security_level(&self) -> u8 {
         if self.secure_enclave_available {
             3 // Highest: Secure Enclave
@@ -249,8 +249,8 @@ impl IosUniversalProvider {
             1 // Basic: Software
         }
     }
-
     /// Get vendor information
+    #[must_use]
     pub fn get_vendor_info(&self) -> VendorInfo {
         VendorInfo {
             name: "Apple".to_string(),
@@ -266,18 +266,18 @@ impl IosUniversalProvider {
                 .unwrap_or_else(|| "Unknown".to_string()),
         }
     }
-
     /// Check if Secure Enclave is available
+    #[must_use]
     pub const fn has_secure_enclave(&self) -> bool {
         self.secure_enclave_available
     }
-
     /// Check if biometric authentication is available
+    #[must_use]
     pub const fn has_biometric_auth(&self) -> bool {
         self.biometric_available
     }
-
     /// Get capabilities
+    #[must_use]
     pub const fn capabilities(&self) -> Option<&IosCapabilities> {
         self.capabilities.as_ref()
     }

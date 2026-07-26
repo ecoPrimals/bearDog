@@ -45,7 +45,6 @@ pub async fn run_security_flow_test(config: &E2ETestConfig) -> Result<E2EMetrics
             "/api/v1/auth/login",
             Some(r#"{"username": "test-user", "password": "test-pass"}"#),
         )
-        .await
     })
     .await?;
 
@@ -64,7 +63,6 @@ pub async fn run_security_flow_test(config: &E2ETestConfig) -> Result<E2EMetrics
             "/api/v1/auth/validate",
             Some(r#"{"token": "test-auth-token"}"#),
         )
-        .await
     })
     .await?;
 
@@ -84,7 +82,7 @@ pub async fn run_security_flow_test(config: &E2ETestConfig) -> Result<E2EMetrics
 
     for endpoint in &protected_endpoints {
         let (response, _) =
-            measure_latency(|| async { simulate_api_request(endpoint, None).await }).await?;
+            measure_latency(|| async { simulate_api_request(endpoint, None) }).await?;
 
         assert_success(&response)?;
         latencies.push(response.latency_ms);
@@ -135,10 +133,9 @@ pub async fn run_security_flow_test(config: &E2ETestConfig) -> Result<E2EMetrics
     metrics.successful_requests += 1;
 
     execute_step("HSM Integration Check", || async {
-        let (response, _) = measure_latency(|| async {
-            simulate_api_request("/api/v1/security/hsm/status", None).await
-        })
-        .await?;
+        let (response, _) =
+            measure_latency(|| async { simulate_api_request("/api/v1/security/hsm/status", None) })
+                .await?;
         assert_success(&response)?;
         Ok(())
     })
@@ -149,10 +146,9 @@ pub async fn run_security_flow_test(config: &E2ETestConfig) -> Result<E2EMetrics
     // Step 5: Audit Logging
     info!("Step 5: Audit Logging Verification");
 
-    let (audit_response, _) = measure_latency(|| async {
-        simulate_api_request("/api/v1/audit/security-events", None).await
-    })
-    .await?;
+    let (audit_response, _) =
+        measure_latency(|| async { simulate_api_request("/api/v1/audit/security-events", None) })
+            .await?;
 
     assert_success(&audit_response)?;
     latencies.push(audit_response.latency_ms);
@@ -174,8 +170,7 @@ pub async fn run_security_flow_test(config: &E2ETestConfig) -> Result<E2EMetrics
     info!("Step 7: Session Management");
 
     let (logout_response, _) =
-        measure_latency(|| async { simulate_api_request("/api/v1/auth/logout", None).await })
-            .await?;
+        measure_latency(|| async { simulate_api_request("/api/v1/auth/logout", None) }).await?;
 
     assert_success(&logout_response)?;
     latencies.push(logout_response.latency_ms);

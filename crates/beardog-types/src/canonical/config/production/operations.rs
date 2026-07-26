@@ -33,15 +33,6 @@ pub struct OperationalConfig {
     pub procedures: ProcedureConfig,
 }
 
-/// Health check configuration
-///
-/// **DEPRECATED**: Use `super::super::domains::network::monitoring::HealthCheckConfiguration` instead.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use canonical::config::domains::network::monitoring::HealthCheckConfiguration instead"
-)]
-pub type HealthCheckConfig = super::super::domains::network::monitoring::HealthCheckConfiguration;
-
 /// Maintenance configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MaintenanceConfig {
@@ -93,6 +84,7 @@ impl MaintenanceConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             enabled: false,
@@ -106,6 +98,7 @@ impl MaintenanceConfig {
     ///
     /// # Environment Variables
     /// - `BEARDOG_MAINTENANCE_WINDOW_SECS`: Window duration (default: 3600)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -131,6 +124,7 @@ impl BackupConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             enabled: true,
@@ -144,6 +138,7 @@ impl BackupConfig {
     ///
     /// # Environment Variables
     /// - `BEARDOG_BACKUP_INTERVAL_SECS`: Backup interval (default: 86400)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -169,6 +164,7 @@ impl DisasterRecoveryConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             enabled: false,
@@ -182,6 +178,7 @@ impl DisasterRecoveryConfig {
     ///
     /// # Environment Variables
     /// - `BEARDOG_DR_RTO_SECS`: Recovery Time Objective (default: 3600)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }

@@ -195,6 +195,7 @@ impl CanonicalRetryConfig {
     ///
     /// Suitable for critical operations where you want to retry many times
     /// with short delays.
+    #[must_use]
     pub const fn aggressive() -> Self {
         Self {
             max_attempts: 10,
@@ -208,6 +209,7 @@ impl CanonicalRetryConfig {
     /// Create a conservative retry configuration
     ///
     /// Suitable for operations where you want to avoid overloading systems.
+    #[must_use]
     pub const fn conservative() -> Self {
         Self {
             max_attempts: 2,
@@ -221,6 +223,7 @@ impl CanonicalRetryConfig {
     /// Create a no-retry configuration
     ///
     /// The operation will only be attempted once with no retries.
+    #[must_use]
     pub const fn no_retry() -> Self {
         Self {
             max_attempts: 1,
@@ -238,6 +241,7 @@ impl CanonicalRetryConfig {
     ///
     /// # Returns
     /// The duration to wait before this retry attempt
+    #[must_use]
     pub fn delay_for_attempt(&self, attempt: u32) -> Duration {
         if attempt == 0 {
             return self.initial_delay;

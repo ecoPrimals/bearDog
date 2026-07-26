@@ -96,6 +96,7 @@ pub struct InternalTunnelHandle {
 
 impl InternalTunnelHandle {
     /// Create new internal tunnel handle
+    #[must_use]
     pub fn new(id: String, peer_id: String) -> Self {
         Self {
             id,
@@ -103,8 +104,8 @@ impl InternalTunnelHandle {
             established_at: Utc::now(),
         }
     }
-
     /// Get age of tunnel in seconds
+    #[must_use]
     pub fn age_seconds(&self) -> i64 {
         Utc::now()
             .signed_duration_since(self.established_at)
@@ -133,6 +134,7 @@ pub struct InternalTunnelStatus {
 
 impl InternalTunnelStatus {
     /// Create new active tunnel status
+    #[must_use]
     pub fn new_active() -> Self {
         Self {
             active: true,
@@ -141,8 +143,8 @@ impl InternalTunnelStatus {
             last_activity: Utc::now(),
         }
     }
-
     /// Create new inactive tunnel status
+    #[must_use]
     pub fn new_inactive() -> Self {
         Self {
             active: false,
@@ -168,15 +170,15 @@ impl InternalTunnelStatus {
         self.bytes_received = self.bytes_received.saturating_add(bytes);
         self.touch();
     }
-
     /// Get seconds since last activity
+    #[must_use]
     pub fn idle_seconds(&self) -> i64 {
         Utc::now()
             .signed_duration_since(self.last_activity)
             .num_seconds()
     }
-
     /// Check if tunnel is stale (idle > threshold)
+    #[must_use]
     pub fn is_stale(&self, idle_threshold_seconds: i64) -> bool {
         self.idle_seconds() > idle_threshold_seconds
     }

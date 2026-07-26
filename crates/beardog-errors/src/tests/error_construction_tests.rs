@@ -180,13 +180,12 @@ fn test_error_serialization() {
 // TEST_DOMAIN: errors
 // TEST_PRIORITY: important
 fn test_result_type_ok() {
-    fn returns_ok() -> Result<String, BearDogError> {
-        Ok("success".to_string())
+    fn returns_ok() -> String {
+        "success".to_string()
     }
 
     let result = returns_ok();
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(), "success");
+    assert_eq!(result, "success");
 }
 
 // TEST_CATEGORY: integration
@@ -370,11 +369,8 @@ fn test_all_constructor_methods_exist() {
 
 #[test]
 fn test_error_from_result_chain() {
-    fn step1() -> Result<i32, BearDogError> {
-        // TEST_CATEGORY: integration
-        // TEST_DOMAIN: errors
-        // TEST_PRIORITY: important
-        Ok(42)
+    fn step1() -> i32 {
+        42
     }
 
     fn step2(value: i32) -> Result<String, BearDogError> {
@@ -386,7 +382,7 @@ fn test_error_from_result_chain() {
     }
 
     fn pipeline() -> Result<String, BearDogError> {
-        let value = step1()?;
+        let value = step1();
         step2(value)
     }
 

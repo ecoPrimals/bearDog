@@ -26,7 +26,7 @@ pub async fn dispatch(
     if let Some(v) = hashing::route(method, params).await? {
         return Ok(v);
     }
-    if let Some(v) = password_kdf::route(method, params).await? {
+    if let Some(v) = password_kdf::route(method, params)? {
         return Ok(v);
     }
     if let Some(v) = tls_ops::route(method, params).await? {
@@ -64,7 +64,6 @@ mod tests {
             Arc::new(EcosystemGeneticEngine::new().expect("EcosystemGeneticEngine::new"));
         Arc::new(
             BeardogBtspProvider::new_for_testing(hsm, genetics)
-                .await
                 .expect("BeardogBtspProvider::new_for_testing"),
         )
     }

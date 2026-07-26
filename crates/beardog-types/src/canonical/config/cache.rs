@@ -388,6 +388,7 @@ impl Default for CanonicalCacheConfig {
 
 impl CanonicalCacheConfig {
     /// Create cache configuration with L1 tier
+    #[must_use]
     pub fn with_tier(tier: CacheTier) -> Self {
         Self {
             enabled: true,
@@ -397,6 +398,7 @@ impl CanonicalCacheConfig {
     }
 
     /// High-performance preset for L1 cache
+    #[must_use]
     pub fn high_performance_l1() -> Self {
         Self::with_tier(CacheTier::L1 {
             max_entries: 50_000,
@@ -406,6 +408,7 @@ impl CanonicalCacheConfig {
     }
 
     /// High-performance preset for L2 cache
+    #[must_use]
     pub fn high_performance_l2() -> Self {
         Self::with_tier(CacheTier::L2 {
             max_size_mb: 500,
@@ -414,6 +417,7 @@ impl CanonicalCacheConfig {
     }
 
     /// High-performance preset for L3 cache
+    #[must_use]
     pub fn high_performance_l3() -> Self {
         Self::with_tier(CacheTier::L3 {
             max_size_gb: 5,
@@ -423,6 +427,7 @@ impl CanonicalCacheConfig {
     }
 
     /// Memory-optimized preset
+    #[must_use]
     pub const fn memory_optimized() -> Self {
         Self {
             enabled: true,

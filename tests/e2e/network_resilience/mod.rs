@@ -92,29 +92,26 @@ pub async fn run_network_resilience_test(
     let mut aggregate = NetworkE2EMetrics::default();
 
     let scenarios: [(&str, NetworkE2EMetrics); 6] = [
-        (
-            "retry backoff",
-            retry_tests::test_network_retry_backoff().await?,
-        ),
+        ("retry backoff", retry_tests::test_network_retry_backoff()?),
         (
             "timeout handling",
             timeout_tests::test_network_timeout_handling().await?,
         ),
         (
             "partition recovery",
-            partition_tests::test_network_partition_recovery().await?,
+            partition_tests::test_network_partition_recovery()?,
         ),
         (
             "recovery scenarios",
-            recovery_tests::test_recovery_scenarios().await?,
+            recovery_tests::test_recovery_scenarios()?,
         ),
         (
             "circuit breaker",
-            circuit_breaker_tests::test_circuit_breaker().await?,
+            circuit_breaker_tests::test_circuit_breaker()?,
         ),
         (
             "graceful degradation",
-            degradation_tests::test_graceful_degradation().await?,
+            degradation_tests::test_graceful_degradation()?,
         ),
     ];
 

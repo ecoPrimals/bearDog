@@ -113,6 +113,7 @@ impl Default for NetworkConfig {
     since = "0.10.0",
     note = "Use BEARDOG_CONFIG.network.api.bind_address directly"
 )]
+#[must_use]
 pub fn default_service_host() -> String {
     std::env::var(env_keys::ENV_SERVICE_HOST).unwrap_or_else(|_| {
         std::env::var(env_keys::ENV_HOST).unwrap_or_else(|_| {
@@ -376,8 +377,8 @@ impl Default for ServiceEndpoints {
 
 impl NetworkConfig {
     /// Create network config with custom host
-    #[must_use]
     /// Creates instance with host
+    #[must_use]
     pub fn with_host(host: &str) -> Self {
         Self {
             default_host: host.to_string(),
@@ -386,8 +387,8 @@ impl NetworkConfig {
         }
     }
 
-    #[must_use]
     /// Gets `service_url`
+    #[must_use]
     pub fn get_service_url(&self, service: &str, path: &str) -> String {
         let port = match service {
             "admin" => self.service_ports.admin_port,
@@ -404,8 +405,8 @@ impl NetworkConfig {
 
 impl ServiceEndpoints {
     /// Create endpoints with custom host
-    #[must_use]
     /// Creates instance with host
+    #[must_use]
     pub fn with_host(host: &str) -> Self {
         let ports = ServicePorts::default();
 
@@ -505,15 +506,7 @@ pub enum LoadBalancingStrategy {
     Random,
 }
 
-/// Rate limiting configuration (DEPRECATED - use canonical domains/network)
-///
-/// **MIGRATION**: Use `super::domains::network::RateLimitConfig` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use super::domains::network::RateLimitConfig instead"
-)]
+/// Rate limiting configuration
 // Re-export from domains::network (consolidated Nov 7, 2025)
 pub use super::domains::network::RateLimitConfig;
 

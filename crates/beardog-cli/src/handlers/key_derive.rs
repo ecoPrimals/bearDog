@@ -29,7 +29,6 @@ pub async fn handle_key_derive(
         expires_in,
         home.as_path(),
     )
-    .await
 }
 
 /// Same as [`handle_key_derive`] but keys and receipts live under `home` (tests / DI).
@@ -38,7 +37,7 @@ pub async fn handle_key_derive(
 ///
 /// Returns an error if the master key cannot be loaded or decoded, HKDF derivation fails, expiry
 /// parsing fails, or saving keys or receipts fails.
-pub async fn handle_key_derive_with_home(
+pub fn handle_key_derive_with_home(
     master_key_id: &str,
     purpose: &str,
     output_key_id: &str,
@@ -254,7 +253,6 @@ mod tests {
         key_store::save_key_to_home(&master, home).expect("save master key for derive test");
 
         handle_key_derive_with_home("master-1", "student-1", "child-1", None, home)
-            .await
             .expect("derive child key from master");
 
         let child = key_store::load_key_from_home("child-1", home).expect("load derived child key");
@@ -299,7 +297,6 @@ mod tests {
         key_store::save_key_to_home(&master, home).expect("save master-exp key");
 
         handle_key_derive_with_home("master-exp", "purpose-x", "child-exp", Some("48h"), home)
-            .await
             .expect("derive key with 48h expiry");
 
         let child =
@@ -375,7 +372,7 @@ mod tests {
     async fn test_handle_key_derive_with_home_missing_master_fails() {
         let dir = TempDir::new().expect("create temp directory for missing master test");
         let home = dir.path();
-        let r = handle_key_derive_with_home("no-such-key", "p", "out", None, home).await;
+        let r = handle_key_derive_with_home("no-such-key", "p", "out", None, home);
         assert!(r.is_err());
     }
 
@@ -399,7 +396,7 @@ mod tests {
             purpose: None,
         };
         key_store::save_key_to_home(&master, home).expect("save bad-b64 master key");
-        let r = handle_key_derive_with_home("bad-b64", "p", "child-x", None, home).await;
+        let r = handle_key_derive_with_home("bad-b64", "p", "child-x", None, home);
         assert!(r.is_err());
     }
 
@@ -428,7 +425,6 @@ mod tests {
         key_store::save_key_to_home(&master, home).expect("save lineage-root master");
 
         handle_key_derive_with_home("lineage-root", "next", "child-depth", None, home)
-            .await
             .expect("derive child-depth from lineage-root");
 
         let child =
@@ -465,7 +461,6 @@ mod tests {
         key_store::save_key_to_home(&master, home).expect("save m-hours master");
 
         handle_key_derive_with_home("m-hours", "p", "c-hours", Some("3h"), home)
-            .await
             .expect("derive c-hours with 3h expiry");
         let child = key_store::load_key_from_home("c-hours", home).expect("load c-hours");
         assert!(child.expires_at.is_some());

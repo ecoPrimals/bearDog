@@ -30,9 +30,7 @@ use tracing::{debug, info, warn};
 /// `TEST_DOMAIN`: `device_deployment`
 /// `TEST_PRIORITY`: high
 /// `TEST_REQUIRES`: adb, `android_device`
-pub async fn run_device_deployment_test(
-    _config: &E2ETestConfig,
-) -> Result<E2EMetrics, BearDogError> {
+pub fn run_device_deployment_test(_config: &E2ETestConfig) -> Result<E2EMetrics, BearDogError> {
     info!("📱 Starting Android device deployment E2E test");
 
     let mut metrics = E2EMetrics::default();
@@ -40,7 +38,7 @@ pub async fn run_device_deployment_test(
 
     // Step 1: Check for adb availability
     info!("Step 1: Checking adb availability");
-    let adb_available = check_adb_available().await;
+    let adb_available = check_adb_available();
     metrics.total_requests += 1;
 
     if !adb_available {
@@ -54,7 +52,7 @@ pub async fn run_device_deployment_test(
 
     // Step 2: Detect Android devices
     info!("Step 2: Detecting Android devices");
-    let device_count = detect_android_devices().await?;
+    let device_count = detect_android_devices()?;
     metrics.total_requests += 1;
 
     if device_count == 0 {
@@ -69,7 +67,7 @@ pub async fn run_device_deployment_test(
 
     // Step 3: Query device properties
     info!("Step 3: Querying device properties");
-    let properties = query_device_properties().await?;
+    let properties = query_device_properties()?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
     info!(
@@ -79,7 +77,7 @@ pub async fn run_device_deployment_test(
 
     // Step 4: Check device capabilities
     info!("Step 4: Checking device capabilities");
-    let capabilities = check_device_capabilities().await?;
+    let capabilities = check_device_capabilities()?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
     info!(
@@ -89,7 +87,7 @@ pub async fn run_device_deployment_test(
 
     // Step 5: Test log retrieval
     info!("Step 5: Testing log retrieval");
-    let log_access = test_log_access().await?;
+    let log_access = test_log_access()?;
     metrics.total_requests += 1;
 
     if log_access {
@@ -133,7 +131,7 @@ struct DeviceCapabilities {
 }
 
 /// Check if adb is available
-async fn check_adb_available() -> bool {
+fn check_adb_available() -> bool {
     debug!("Checking for adb in PATH");
 
     match std::process::Command::new("adb").arg("version").output() {
@@ -154,7 +152,7 @@ async fn check_adb_available() -> bool {
 }
 
 /// Detect Android devices
-async fn detect_android_devices() -> Result<usize, BearDogError> {
+fn detect_android_devices() -> Result<usize, BearDogError> {
     debug!("Detecting Android devices via adb");
 
     let output = std::process::Command::new("adb")
@@ -181,7 +179,7 @@ async fn detect_android_devices() -> Result<usize, BearDogError> {
 }
 
 /// Query device properties
-async fn query_device_properties() -> Result<DeviceProperties, BearDogError> {
+fn query_device_properties() -> Result<DeviceProperties, BearDogError> {
     debug!("Querying device properties");
 
     // Get API level
@@ -223,7 +221,7 @@ async fn query_device_properties() -> Result<DeviceProperties, BearDogError> {
 }
 
 /// Check device capabilities
-async fn check_device_capabilities() -> Result<DeviceCapabilities, BearDogError> {
+fn check_device_capabilities() -> Result<DeviceCapabilities, BearDogError> {
     debug!("Checking device capabilities");
 
     // Check for StrongBox
@@ -244,7 +242,7 @@ async fn check_device_capabilities() -> Result<DeviceCapabilities, BearDogError>
 }
 
 /// Test log access
-async fn test_log_access() -> Result<bool, BearDogError> {
+fn test_log_access() -> Result<bool, BearDogError> {
     debug!("Testing log access");
 
     let output = std::process::Command::new("adb")
@@ -260,21 +258,21 @@ async fn test_log_access() -> Result<bool, BearDogError> {
 /// `TEST_CATEGORY`: e2e
 /// `TEST_DOMAIN`: `device_deployment`
 /// `TEST_PRIORITY`: normal
-pub async fn test_device_connectivity() -> Result<E2EMetrics, BearDogError> {
+pub fn test_device_connectivity() -> Result<E2EMetrics, BearDogError> {
     info!("🔌 Testing device connectivity");
 
     let mut metrics = E2EMetrics::default();
 
     // Test 1: adb server status
     info!("Test 1: Checking adb server status");
-    let server_ok = check_adb_server().await?;
+    let server_ok = check_adb_server()?;
     metrics.total_requests += 1;
     metrics.successful_requests += u64::from(server_ok);
     metrics.failed_requests += u64::from(!server_ok);
 
     // Test 2: Device list refresh
     info!("Test 2: Refreshing device list");
-    let device_count = detect_android_devices().await.unwrap_or(0);
+    let device_count = detect_android_devices().unwrap_or(0);
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
     info!("   Devices online: {}", device_count);
@@ -285,7 +283,7 @@ pub async fn test_device_connectivity() -> Result<E2EMetrics, BearDogError> {
     Ok(metrics)
 }
 
-async fn check_adb_server() -> Result<bool, BearDogError> {
+fn check_adb_server() -> Result<bool, BearDogError> {
     let output = std::process::Command::new("adb")
         .args(["start-server"])
         .output()
@@ -305,7 +303,7 @@ mod tests {
     )]
     async fn test_adb_check() {
         // This test should pass whether or not adb is installed
-        let available = check_adb_available().await;
+        let available = check_adb_available();
         // Test is valid regardless of result
         assert!(available || !available);
     }

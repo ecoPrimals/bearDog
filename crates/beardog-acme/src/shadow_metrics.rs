@@ -55,12 +55,12 @@ impl ShadowSideMetrics {
     }
 
     /// Record an error.
-    pub fn record_error(&mut self) {
+    pub const fn record_error(&mut self) {
         self.total_errors += 1;
     }
 
     /// Record a certificate rotation attempt.
-    pub fn record_cert_rotation(&mut self, success: bool) {
+    pub const fn record_cert_rotation(&mut self, success: bool) {
         self.cert_rotations += 1;
         if success {
             self.cert_rotation_successes += 1;

@@ -80,6 +80,7 @@ impl RolloutConfig {
     pub const DEFAULT_PERCENTAGE: f64 = 100.0;
 
     /// Create `RolloutConfig` with hardcoded defaults
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             percentage: Self::DEFAULT_PERCENTAGE,
@@ -87,6 +88,7 @@ impl RolloutConfig {
     }
 
     /// Create `RolloutConfig` from environment variables
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -106,6 +108,7 @@ impl CanaryConfig {
     pub const DEFAULT_PERCENTAGE: f64 = 10.0;
 
     /// Create `CanaryConfig` with hardcoded defaults
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             percentage: Self::DEFAULT_PERCENTAGE,
@@ -113,6 +116,7 @@ impl CanaryConfig {
     }
 
     /// Create `CanaryConfig` from environment variables
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }

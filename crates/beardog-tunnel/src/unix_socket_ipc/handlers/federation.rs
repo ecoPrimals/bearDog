@@ -55,8 +55,8 @@ impl MethodHandler for FederationHandler {
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> HandlerResult {
         match method {
-            "federation.verify_family_member" => self.handle_verify_family_member(params).await,
-            "federation.derive_subfed_key" => self.handle_derive_subfed_key(params).await,
+            "federation.verify_family_member" => self.handle_verify_family_member(params),
+            "federation.derive_subfed_key" => self.handle_derive_subfed_key(params),
             _ => Err(format!("Unknown federation method: {method}").into()),
         }
     }
@@ -64,6 +64,7 @@ impl MethodHandler for FederationHandler {
 
 impl FederationHandler {
     /// Create a new `FederationHandler` with explicit identity injection
+    #[must_use]
     pub const fn new(identity: Arc<PrimalIdentity>) -> Self {
         Self { identity }
     }
@@ -79,7 +80,7 @@ impl FederationHandler {
     /// - `is_family_member`: Whether peer is in our family
     /// - `relationship`: "sibling" or "unrelated"
     /// - `trust_level`: "limited" or "none"
-    async fn handle_verify_family_member(
+    fn handle_verify_family_member(
         &self,
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, HandlerError> {
@@ -144,7 +145,7 @@ impl FederationHandler {
     /// - `key_id`: Structured key ID
     /// - `algorithm`: "AES-256-GCM"
     /// - `derivation_method`: "HKDF-SHA256"
-    async fn handle_derive_subfed_key(
+    fn handle_derive_subfed_key(
         &self,
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, HandlerError> {
@@ -228,7 +229,6 @@ mod tests {
 
         let result = handler
             .handle_verify_family_member(Some(&params))
-            .await
             .expect("verify family member same family");
 
         assert_eq!(result["is_family_member"], true);
@@ -255,7 +255,6 @@ mod tests {
 
         let result = handler
             .handle_verify_family_member(Some(&params))
-            .await
             .expect("verify family member different family");
 
         assert_eq!(result["is_family_member"], false);
@@ -280,7 +279,6 @@ mod tests {
 
         let result = handler
             .handle_derive_subfed_key(Some(&params))
-            .await
             .expect("derive subfed key");
 
         assert!(

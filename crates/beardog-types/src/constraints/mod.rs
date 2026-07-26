@@ -144,6 +144,7 @@ pub struct ConstraintContext {
 
 impl ConstraintContext {
     /// Create new context with current time
+    #[must_use]
     pub fn new() -> Self {
         Self {
             current_time: Utc::now(),
@@ -156,18 +157,21 @@ impl ConstraintContext {
     }
 
     /// Add environment data
+    #[must_use]
     pub fn with_env(mut self, key: String, value: serde_json::Value) -> Self {
         self.environment.insert(key, value);
         self
     }
 
     /// Add location
+    #[must_use]
     pub const fn with_location(mut self, location: GeoLocation) -> Self {
         self.location = Some(location);
         self
     }
 
     /// Add user identity
+    #[must_use]
     pub fn with_user(mut self, user: String) -> Self {
         self.user_identity = Some(user);
         self
@@ -195,6 +199,7 @@ pub struct GeoLocation {
 
 impl GeoLocation {
     /// Calculate distance to another location (Haversine formula)
+    #[must_use]
     pub fn distance_to(&self, other: &Self) -> f64 {
         const EARTH_RADIUS_M: f64 = 6_371_000.0;
 
@@ -234,6 +239,7 @@ pub struct SystemState {
 
 impl SystemState {
     /// Get memory usage percentage (0.0 - 100.0)
+    #[must_use]
     pub fn memory_usage_percent(&self) -> Option<f64> {
         match (self.memory_used_bytes, self.memory_total_bytes) {
             // Note: Precision loss acceptable for percentage calculation

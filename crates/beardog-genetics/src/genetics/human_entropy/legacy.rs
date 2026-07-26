@@ -167,6 +167,7 @@ impl HumanEntropyConfig {
     ///
     /// - `BEARDOG_ENTROPY_QUALITY_THRESHOLD` → `quality_threshold` (default 0.8)
     /// - `BEARDOG_ENTROPY_COLLECTION_TIMEOUT_MS` → `collection_timeout_ms` (default 5000)
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             quality_threshold: std::env::var(env_keys::ENV_ENTROPY_QUALITY_THRESHOLD)

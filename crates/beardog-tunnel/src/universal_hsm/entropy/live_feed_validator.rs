@@ -46,7 +46,8 @@ pub struct LiveFeedValidator {
 
 impl LiveFeedValidator {
     /// Create a validator with default thresholds (5 s freshness, 80 % hardware ratio).
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             required_freshness_seconds: 5,
             min_hardware_entropy_ratio: 0.8,
@@ -214,7 +215,7 @@ impl LiveFeedValidator {
         age.num_seconds() <= max_age
     }
 
-    fn calculate_entropy_freshness() -> f64 {
+    const fn calculate_entropy_freshness() -> f64 {
         0.95
     }
 

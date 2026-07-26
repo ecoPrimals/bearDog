@@ -28,7 +28,8 @@ pub struct EvolutionMetrics {
 
 impl EvolutionMetrics {
     /// Create new metrics
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             total_generations: AtomicU64::new(0),
             successful_mutations: AtomicU64::new(0),
@@ -79,7 +80,8 @@ pub struct DiversityMetrics {
 
 impl DiversityMetrics {
     /// Create new metrics
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             genetic_diversity: AtomicU64::new(0),
             phenotypic_diversity: AtomicU64::new(0),

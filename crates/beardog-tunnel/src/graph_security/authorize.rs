@@ -110,7 +110,7 @@ pub async fn authorize_modification(
     checks_performed.push("structure_validation".to_string());
 
     // Layer 4: Threat Detection - Check for malicious patterns
-    if let Some(threat) = threats::detect_modification_threats(modification, graph).await? {
+    if let Some(threat) = threats::detect_modification_threats(modification, graph)? {
         checks_performed.push("threat_detection".to_string());
         return Ok(AuthorizationResult {
             authorized: false,

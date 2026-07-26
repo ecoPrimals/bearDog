@@ -225,7 +225,7 @@ impl CapabilityRegistry {
     /// # Errors
     ///
     /// Returns [`beardog_errors::BearDogError`] when HTTP or mDNS advertisement setup fails.
-    pub async fn advertise(&self) -> crate::Result<()> {
+    pub fn advertise(&self) -> crate::Result<()> {
         let advertisement = self.build_advertisement();
 
         info!(
@@ -518,7 +518,7 @@ mod tests {
         registry.register("test", MockCapability, metadata);
 
         // Advertise should succeed (no-op without mdns feature)
-        let result = registry.advertise().await;
+        let result = registry.advertise();
         assert!(result.is_ok());
     }
 }

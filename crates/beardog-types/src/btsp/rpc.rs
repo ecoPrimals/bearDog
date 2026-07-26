@@ -95,6 +95,7 @@ impl TunnelEstablishParams {
     ///
     /// Returns the specified trust mode, or defaults to `GeneticLineage`
     /// for backward compatibility with existing internal BTSP usage.
+    #[must_use]
     pub fn trust_mode(&self) -> TrustMode {
         self.trust_mode.clone().unwrap_or({
             TrustMode::GeneticLineage {
@@ -109,6 +110,7 @@ impl TunnelEstablishParams {
     ///
     /// Returns the specified protocol, or defaults to `BtspNative`
     /// for backward compatibility with existing internal BTSP usage.
+    #[must_use]
     pub fn protocol(&self) -> TunnelProtocol {
         self.protocol
             .clone()
@@ -131,11 +133,13 @@ impl TunnelEstablishParams {
     }
 
     /// Check if this is internal mode
+    #[must_use]
     pub fn is_internal(&self) -> bool {
         self.trust_mode().is_internal() && self.protocol().is_internal()
     }
 
     /// Check if this is external mode
+    #[must_use]
     pub fn is_external(&self) -> bool {
         self.trust_mode().is_external() && self.protocol().is_external()
     }

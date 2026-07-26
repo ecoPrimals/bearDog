@@ -99,16 +99,19 @@ pub enum TunnelProtocol {
 
 impl TunnelProtocol {
     /// Check if this is internal mode (BTSP native)
+    #[must_use]
     pub const fn is_internal(&self) -> bool {
         matches!(self, Self::BtspNative { .. })
     }
 
     /// Check if this is external mode (TLS HTTP)
+    #[must_use]
     pub const fn is_external(&self) -> bool {
         matches!(self, Self::TlsHttp { .. })
     }
 
     /// Get the protocol version string
+    #[must_use]
     pub fn version(&self) -> &str {
         match self {
             Self::BtspNative { version, .. } => version,
@@ -117,6 +120,7 @@ impl TunnelProtocol {
     }
 
     /// Get HTTP version (for external mode)
+    #[must_use]
     pub fn http_version(&self) -> Option<&str> {
         match self {
             Self::TlsHttp { http_version, .. } => Some(http_version),
@@ -125,6 +129,7 @@ impl TunnelProtocol {
     }
 
     /// Get ALPN protocols (for external mode)
+    #[must_use]
     pub fn alpn_protocols(&self) -> Option<&[String]> {
         match self {
             Self::TlsHttp { alpn_protocols, .. } => Some(alpn_protocols),
@@ -133,6 +138,7 @@ impl TunnelProtocol {
     }
 
     /// Check if a feature is enabled (for internal mode)
+    #[must_use]
     pub fn has_feature(&self, feature: &str) -> bool {
         match self {
             Self::BtspNative { features, .. } => features.contains(&feature.to_string()),

@@ -34,6 +34,7 @@ impl BinaryInstaller {
     /// # Arguments
     /// - `paths`: Installation paths
     /// - `source_dir`: Directory containing compiled binaries
+    #[must_use]
     pub const fn new(paths: PlatformPaths, source_dir: PathBuf) -> Self {
         Self { paths, source_dir }
     }
@@ -199,12 +200,14 @@ impl BinaryInstaller {
     }
 
     /// Check if binary is installed
-    pub async fn is_installed(&self, primal: PrimalName) -> bool {
+    #[must_use]
+    pub fn is_installed(&self, primal: PrimalName) -> bool {
         let binary_path = self.paths.bin_dir.join(primal.name());
         binary_path.exists()
     }
 
     /// Get installed binary path
+    #[must_use]
     pub fn binary_path(&self, primal: PrimalName) -> PathBuf {
         self.paths.bin_dir.join(primal.name())
     }
@@ -351,7 +354,7 @@ mod tests {
         let installer = BinaryInstaller::new(paths, temp.path().to_path_buf());
 
         // Not installed initially
-        assert!(!installer.is_installed(PrimalName::new("beardog")).await);
+        assert!(!installer.is_installed(PrimalName::new("beardog")));
 
         // Create binary
         fs::write(bin_dir.join("beardog"), b"test")
@@ -359,7 +362,7 @@ mod tests {
             .expect("write binary");
 
         // Now installed
-        assert!(installer.is_installed(PrimalName::new("beardog")).await);
+        assert!(installer.is_installed(PrimalName::new("beardog")));
     }
 
     #[test]

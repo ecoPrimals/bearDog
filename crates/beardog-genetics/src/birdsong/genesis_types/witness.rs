@@ -8,6 +8,7 @@ impl GenesisWitness {
     /// Create message to be signed by witness
     ///
     /// Format: `new_node_id` || timestamp (8 bytes, big-endian) || `witness_public_key`
+    #[must_use]
     pub fn create_signing_message(
         new_node_id: &str,
         timestamp: u64,

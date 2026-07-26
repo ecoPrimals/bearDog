@@ -36,20 +36,20 @@ impl DataIntegrityScenario {
         let mut metrics = E2EMetrics::default();
 
         // Test 1: Create baseline test data
-        Self::test_baseline_data(&ctx, &mut metrics, config).await?;
+        Self::test_baseline_data(&ctx, &mut metrics, config)?;
 
         // Test 2: Detect data corruption
-        Self::test_corruption_detection(&ctx, &mut metrics, config).await?;
+        Self::test_corruption_detection(&ctx, &mut metrics, config)?;
 
         // Test 3: Backup recovery
-        Self::test_backup_recovery(&ctx, &mut metrics, config).await?;
+        Self::test_backup_recovery(&ctx, &mut metrics, config)?;
 
         // Test 4: Data quarantine
-        Self::test_data_quarantine(&ctx, &mut metrics, config).await?;
+        Self::test_data_quarantine(&ctx, &mut metrics, config)?;
 
         // Verify final data integrity after all recovery operations
         // Modern pattern: explicit verification step, not implicit
-        let all_data_verified = Self::verify_all_data_integrity(&ctx).await?;
+        let all_data_verified = Self::verify_all_data_integrity(&ctx)?;
         metrics.data_verified = all_data_verified;
 
         if all_data_verified {
@@ -63,7 +63,7 @@ impl DataIntegrityScenario {
 
     /// Verify all data integrity after recovery
     /// Modern pattern: Complete implementation, not stub
-    async fn verify_all_data_integrity(ctx: &DataIntegrityContext) -> Result<bool, BearDogError> {
+    fn verify_all_data_integrity(ctx: &DataIntegrityContext) -> Result<bool, BearDogError> {
         // Verify no corrupted data remains
         let set = ctx.corrupted_data.lock().unwrap();
 
@@ -76,17 +76,17 @@ impl DataIntegrityScenario {
         }
     }
 
-    async fn test_baseline_data(
+    fn test_baseline_data(
         _ctx: &DataIntegrityContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
     ) -> Result<(), BearDogError> {
         info!("  Creating baseline test data...");
 
-        let test_data = create_test_data("integrity-test", 5).await?;
+        let test_data = create_test_data("integrity-test", 5)?;
 
         for data_id in test_data {
-            if verify_data_integrity(&data_id).await? {
+            if verify_data_integrity(&data_id)? {
                 metrics.successful_requests += 1;
             } else {
                 metrics.failed_requests += 1;
@@ -97,7 +97,7 @@ impl DataIntegrityScenario {
         Ok(())
     }
 
-    async fn test_corruption_detection(
+    fn test_corruption_detection(
         ctx: &DataIntegrityContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
@@ -107,16 +107,16 @@ impl DataIntegrityScenario {
         let data_id = "test-data-001";
 
         // Calculate baseline checksum
-        let _baseline_checksum = calculate_data_checksum(data_id).await?;
+        let _baseline_checksum = calculate_data_checksum(data_id)?;
         metrics.total_requests += 1;
         metrics.successful_requests += 1;
 
         // Inject corruption
-        inject_data_corruption(ctx, data_id, "partial").await?;
+        inject_data_corruption(ctx, data_id, "partial")?;
         metrics.total_requests += 1;
 
         // Detect corruption
-        if detect_data_corruption(ctx, data_id).await? {
+        if detect_data_corruption(ctx, data_id)? {
             info!("  ✅ Corruption detected successfully");
             metrics.successful_requests += 1;
         } else {
@@ -128,18 +128,18 @@ impl DataIntegrityScenario {
         Ok(())
     }
 
-    async fn test_backup_recovery(
+    fn test_backup_recovery(
         ctx: &DataIntegrityContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
     ) -> Result<(), BearDogError> {
         info!("  Testing backup recovery...");
 
-        let corrupted_ids = get_corruption_alerts(ctx).await?;
+        let corrupted_ids = get_corruption_alerts(ctx)?;
         metrics.total_requests += 1;
 
         for data_id in corrupted_ids {
-            match recover_from_backup(ctx, &data_id).await {
+            match recover_from_backup(ctx, &data_id) {
                 Ok(()) => {
                     info!("  ✅ Recovered data: {}", data_id);
                     metrics.successful_requests += 1;
@@ -155,14 +155,14 @@ impl DataIntegrityScenario {
         Ok(())
     }
 
-    async fn test_data_quarantine(
+    fn test_data_quarantine(
         ctx: &DataIntegrityContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
     ) -> Result<(), BearDogError> {
         info!("  Testing data quarantine...");
 
-        let quarantined = get_quarantined_data().await?;
+        let quarantined = get_quarantined_data()?;
         metrics.total_requests += 1;
 
         if !quarantined.is_empty() {
@@ -171,7 +171,7 @@ impl DataIntegrityScenario {
         }
 
         // Clear alerts
-        clear_corruption_alerts(ctx).await?;
+        clear_corruption_alerts(ctx)?;
         metrics.total_requests += 1;
         metrics.successful_requests += 1;
 
@@ -184,14 +184,14 @@ impl DataIntegrityScenario {
 // =============================================================================
 
 /// Calculate data checksum (capability: integrity verification)
-async fn calculate_data_checksum(data_id: &str) -> Result<u64, BearDogError> {
+fn calculate_data_checksum(data_id: &str) -> Result<u64, BearDogError> {
     // Simulate checksum calculation
     let checksum = data_id.len() as u64 * 12345;
     Ok(checksum)
 }
 
 /// Inject data corruption (test capability)
-async fn inject_data_corruption(
+fn inject_data_corruption(
     ctx: &DataIntegrityContext,
     data_id: &str,
     _corruption_type: &str,
@@ -202,38 +202,32 @@ async fn inject_data_corruption(
 }
 
 /// Detect data corruption
-async fn detect_data_corruption(
-    ctx: &DataIntegrityContext,
-    data_id: &str,
-) -> Result<bool, BearDogError> {
+fn detect_data_corruption(ctx: &DataIntegrityContext, data_id: &str) -> Result<bool, BearDogError> {
     let set = ctx.corrupted_data.lock().unwrap();
     Ok(set.contains(data_id))
 }
 
 /// Get corruption alerts
-async fn get_corruption_alerts(ctx: &DataIntegrityContext) -> Result<Vec<String>, BearDogError> {
+fn get_corruption_alerts(ctx: &DataIntegrityContext) -> Result<Vec<String>, BearDogError> {
     let set = ctx.corrupted_data.lock().unwrap();
     Ok(set.iter().cloned().collect())
 }
 
 /// Recover data from backup
-async fn recover_from_backup(
-    ctx: &DataIntegrityContext,
-    data_id: &str,
-) -> Result<(), BearDogError> {
+fn recover_from_backup(ctx: &DataIntegrityContext, data_id: &str) -> Result<(), BearDogError> {
     let mut set = ctx.corrupted_data.lock().unwrap();
     set.remove(data_id);
     Ok(())
 }
 
 /// Get quarantined data
-async fn get_quarantined_data() -> Result<Vec<String>, BearDogError> {
+fn get_quarantined_data() -> Result<Vec<String>, BearDogError> {
     // In real implementation, this would query quarantine storage
     Ok(vec![])
 }
 
 /// Clear corruption alerts
-async fn clear_corruption_alerts(ctx: &DataIntegrityContext) -> Result<(), BearDogError> {
+fn clear_corruption_alerts(ctx: &DataIntegrityContext) -> Result<(), BearDogError> {
     let mut set = ctx.corrupted_data.lock().unwrap();
     set.clear();
     Ok(())

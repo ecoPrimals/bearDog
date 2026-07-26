@@ -186,6 +186,7 @@ impl Default for PerformanceMetricsCollector {
 
 impl PerformanceMetricsCollector {
     /// Create a new collector
+    #[must_use]
     pub fn new() -> Self {
         Self {
             metrics_history: Arc::new(RwLock::new(Vec::new())),
@@ -196,6 +197,7 @@ impl PerformanceMetricsCollector {
     }
 
     /// Create with custom configuration
+    #[must_use]
     pub fn with_config(max_history_size: usize, thresholds: PerformanceThresholds) -> Self {
         Self {
             metrics_history: Arc::new(RwLock::new(Vec::new())),

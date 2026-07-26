@@ -106,7 +106,7 @@ impl CertificateRenewal {
     /// Set the renewal buffer time
     ///
     /// Certificates will be renewed when they have less than this time remaining.
-    pub fn set_renewal_buffer(&mut self, buffer: Duration) {
+    pub const fn set_renewal_buffer(&mut self, buffer: Duration) {
         self.renewal_buffer = buffer;
     }
 }

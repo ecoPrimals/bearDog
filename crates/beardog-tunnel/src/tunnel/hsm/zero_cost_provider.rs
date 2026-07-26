@@ -27,8 +27,8 @@ where
             _phantom: PhantomData,
         }
     }
-
     /// Returns the static capability set of this provider
+    #[must_use]
     pub const fn capabilities() -> &'static P::Capabilities {
         P::CAPABILITIES
     }

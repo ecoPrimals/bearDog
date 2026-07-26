@@ -85,6 +85,7 @@ impl EndpointConfig {
     /// - `BEARDOG_WS_PORT` - WebSocket port (default: 0)
     /// - `BEARDOG_METRICS_PORT` - Metrics port (default: 0)
     /// - `BEARDOG_BIND_ADDR` - Bind address (default: 0.0.0.0)
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             http_port: Self::env_port(env_keys::ENV_HTTP_PORT, 0),
@@ -101,6 +102,7 @@ impl EndpointConfig {
     /// - Testing (no port conflicts!)
     /// - Development (multiple instances)
     /// - Cloud environments (dynamic allocation)
+    #[must_use]
     pub const fn auto() -> Self {
         Self {
             http_port: 0,
@@ -112,6 +114,7 @@ impl EndpointConfig {
     }
 
     /// Create with explicit ports (human sovereignty)
+    #[must_use]
     pub fn new(http: u16, rpc: u16, ws: u16, metrics: u16, bind: &str) -> Self {
         Self {
             http_port: http,
@@ -123,21 +126,25 @@ impl EndpointConfig {
     }
 
     /// Get HTTP socket address
+    #[must_use]
     pub const fn http_socket_addr(&self) -> SocketAddr {
         SocketAddr::new(self.bind_addr, self.http_port)
     }
 
     /// Get RPC socket address
+    #[must_use]
     pub const fn rpc_socket_addr(&self) -> SocketAddr {
         SocketAddr::new(self.bind_addr, self.rpc_port)
     }
 
     /// Get WebSocket socket address
+    #[must_use]
     pub const fn ws_socket_addr(&self) -> SocketAddr {
         SocketAddr::new(self.bind_addr, self.ws_port)
     }
 
     /// Get metrics socket address
+    #[must_use]
     pub const fn metrics_socket_addr(&self) -> SocketAddr {
         SocketAddr::new(self.bind_addr, self.metrics_port)
     }
@@ -231,6 +238,7 @@ impl ZeroHardcodingTimeouts {
     /// - `BEARDOG_TIMEOUT_SHUTDOWN` - Shutdown timeout (seconds, default: 30)
     /// - `BEARDOG_TIMEOUT_HEALTH` - Health check timeout (seconds, default: 5)
     /// - `BEARDOG_TIMEOUT_DB_QUERY` - DB query timeout (seconds, default: 10)
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             connect: Self::env_duration(env_keys::ENV_TIMEOUT_CONNECT, 10),
@@ -244,6 +252,7 @@ impl ZeroHardcodingTimeouts {
     }
 
     /// Aggressive timeouts (for fast-fail scenarios)
+    #[must_use]
     pub const fn aggressive() -> Self {
         Self {
             connect: Duration::from_secs(2),
@@ -257,6 +266,7 @@ impl ZeroHardcodingTimeouts {
     }
 
     /// Relaxed timeouts (for slow networks)
+    #[must_use]
     pub const fn relaxed() -> Self {
         Self {
             connect: Duration::from_secs(30),
@@ -320,6 +330,7 @@ impl RetryConfig {
     /// - `BEARDOG_RETRY_INITIAL_BACKOFF_MS` - Initial backoff ms (default: 100)
     /// - `BEARDOG_RETRY_MAX_BACKOFF_SECS` - Max backoff seconds (default: 30)
     /// - `BEARDOG_RETRY_BACKOFF_MULTIPLIER` - Backoff multiplier (default: 2.0)
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             max_attempts: std::env::var(env_keys::ENV_RETRY_MAX_ATTEMPTS)
@@ -362,6 +373,7 @@ impl RetryConfig {
         clippy::cast_sign_loss,
         reason = "Non-negative backoff before u64 millis"
     )]
+    #[must_use]
     pub fn backoff_for_attempt(&self, attempt: u32) -> Duration {
         let multiplier = self.backoff_multiplier.powi(attempt as i32);
         let backoff = self.initial_backoff.as_millis() as f64 * multiplier;
@@ -420,6 +432,7 @@ pub struct ZeroHardcodingConfig {
 
 impl ZeroHardcodingConfig {
     /// Create from environment variables (recommended)
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             endpoints: EndpointConfig::from_env(),
@@ -429,6 +442,7 @@ impl ZeroHardcodingConfig {
     }
 
     /// Auto-select all ports (testing)
+    #[must_use]
     pub fn auto() -> Self {
         Self {
             endpoints: EndpointConfig::auto(),

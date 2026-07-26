@@ -142,10 +142,10 @@ pub fn decode_base64_field_handler(field_name: &str, input: &str) -> Result<Vec<
 pub fn require_params(params: Option<&Value>) -> Result<&Value, HandlerError> {
     params.ok_or_else(|| HandlerError::InvalidParams("Missing required parameters".to_owned()))
 }
-
 /// Extract an optional string parameter from JSON
 ///
 /// Returns `None` if the field doesn't exist or isn't a string.
+#[must_use]
 pub fn extract_str_param<'a>(params: &'a Value, field: &str) -> Option<&'a str> {
     params.get(field).and_then(|v| v.as_str())
 }

@@ -18,7 +18,7 @@ impl SoftwareHealthMonitor {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub async fn new() -> Result<Self, BearDogError> {
+    pub fn new() -> Result<Self, BearDogError> {
         info!("Creating software health monitor");
 
         let health_status = Arc::new(RwLock::new(HsmHealthStatus {
@@ -118,7 +118,7 @@ impl SoftwareHealthMonitor {
     pub async fn perform_health_check(&self) -> Result<HsmHealthStatus, BearDogError> {
         info!("Performing health check");
         let mut healthy = true;
-        let mut error_message = if self.check_keystore_health().await.is_err() {
+        let mut error_message = if self.check_keystore_health().is_err() {
             healthy = false;
             Some("Key store is unhealthy".to_string())
         } else {
@@ -126,7 +126,7 @@ impl SoftwareHealthMonitor {
         };
 
         // Check crypto provider health
-        if self.check_crypto_provider_health().await.is_err() {
+        if self.check_crypto_provider_health().is_err() {
             healthy = false;
             if error_message.is_none() {
                 error_message = Some("Crypto provider is unhealthy".to_string());
@@ -134,7 +134,7 @@ impl SoftwareHealthMonitor {
         }
 
         // Check memory protector health
-        if self.check_memory_protector_health().await.is_err() {
+        if self.check_memory_protector_health().is_err() {
             healthy = false;
             if error_message.is_none() {
                 error_message = Some("Memory protector is unhealthy".to_string());
@@ -142,7 +142,7 @@ impl SoftwareHealthMonitor {
         }
 
         // Check audit logger health
-        if self.check_audit_logger_health().await.is_err() {
+        if self.check_audit_logger_health().is_err() {
             healthy = false;
             if error_message.is_none() {
                 error_message = Some("Audit logger is unhealthy".to_string());
@@ -150,7 +150,7 @@ impl SoftwareHealthMonitor {
         }
 
         // Check system resources
-        if self.check_system_resources().await.is_err() {
+        if self.check_system_resources().is_err() {
             healthy = false;
             if error_message.is_none() {
                 error_message = Some("System resources are unhealthy".to_string());
@@ -178,35 +178,35 @@ impl SoftwareHealthMonitor {
     }
 
     /// Check keystore health
-    async fn check_keystore_health(&self) -> Result<(), BearDogError> {
+    fn check_keystore_health(&self) -> Result<(), BearDogError> {
         debug!("Checking keystore health");
         // Implementation would check actual keystore
         Ok(())
     }
 
     /// Check crypto provider health
-    async fn check_crypto_provider_health(&self) -> Result<(), BearDogError> {
+    fn check_crypto_provider_health(&self) -> Result<(), BearDogError> {
         debug!("Checking crypto provider health");
         // Implementation would check actual crypto provider
         Ok(())
     }
 
     /// Check memory protector health
-    async fn check_memory_protector_health(&self) -> Result<(), BearDogError> {
+    fn check_memory_protector_health(&self) -> Result<(), BearDogError> {
         debug!("Checking memory protector health");
         // Implementation would check actual memory protector
         Ok(())
     }
 
     /// Check audit logger health
-    async fn check_audit_logger_health(&self) -> Result<(), BearDogError> {
+    fn check_audit_logger_health(&self) -> Result<(), BearDogError> {
         debug!("Checking audit logger health");
         // Implementation would check actual audit logger
         Ok(())
     }
 
     /// Check system resources
-    async fn check_system_resources(&self) -> Result<(), BearDogError> {
+    fn check_system_resources(&self) -> Result<(), BearDogError> {
         debug!("Checking system resources");
         // Implementation would check CPU, memory, disk, etc.
         Ok(())
@@ -247,7 +247,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_health_monitor_creation() -> Result<(), BearDogError> {
-        let monitor = SoftwareHealthMonitor::new().await?;
+        let monitor = SoftwareHealthMonitor::new()?;
         let status = monitor.get_health_status().await?;
         assert!(status.is_healthy);
         Ok(())
@@ -255,7 +255,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_health_check() -> Result<(), BearDogError> {
-        let monitor = SoftwareHealthMonitor::new().await?;
+        let monitor = SoftwareHealthMonitor::new()?;
         let status = monitor.perform_health_check().await?;
         assert!(status.is_healthy);
         assert!(status.error_message.is_none());
@@ -264,7 +264,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_metrics_update() -> Result<(), BearDogError> {
-        let monitor = SoftwareHealthMonitor::new().await?;
+        let monitor = SoftwareHealthMonitor::new()?;
 
         monitor.record_operation(10.5, true).await?;
         monitor.record_operation(15.3, true).await?;
@@ -277,7 +277,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_error_tracking() -> Result<(), BearDogError> {
-        let monitor = SoftwareHealthMonitor::new().await?;
+        let monitor = SoftwareHealthMonitor::new()?;
 
         monitor.record_operation(10.0, true).await?;
         monitor.record_operation(15.0, false).await?;

@@ -301,6 +301,7 @@ impl LineageProofManager {
     /// - Siblings: distance = 2 (each is depth 1 from common parent)
     /// - Cousins: distance = 4 (each is depth 2 from common grandparent)
     /// - Self: distance = 0
+    #[must_use]
     pub fn genetic_distance(
         &self,
         chain_id: &str,
@@ -371,6 +372,7 @@ impl LineageProofManager {
     }
 
     /// Get the common ancestor of two nodes
+    #[must_use]
     pub fn get_common_ancestor(
         &self,
         chain_id: &str,

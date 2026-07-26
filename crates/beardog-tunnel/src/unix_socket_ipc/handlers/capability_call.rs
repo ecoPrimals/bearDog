@@ -31,7 +31,7 @@ pub struct CapabilityCallHandler {
 
 impl CapabilityCallHandler {
     /// Create a new handler with a back-reference to the registry for re-dispatch.
-    pub fn new(registry: Arc<HandlerRegistry>) -> Self {
+    pub const fn new(registry: Arc<HandlerRegistry>) -> Self {
         Self { registry }
     }
 

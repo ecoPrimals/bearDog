@@ -239,7 +239,7 @@ impl AuditEngine {
 
     /// Get total event count
     #[must_use]
-    pub fn event_count(&self) -> usize {
+    pub const fn event_count(&self) -> usize {
         self.events.len()
     }
 

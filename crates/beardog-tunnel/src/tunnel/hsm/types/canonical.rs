@@ -237,6 +237,7 @@ pub struct KeyMetadata {
 
 impl KeyMetadata {
     /// Create new key metadata
+    #[must_use]
     pub fn new(key_id: String) -> Self {
         Self {
             key_id,

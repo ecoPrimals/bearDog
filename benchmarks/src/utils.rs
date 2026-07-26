@@ -39,6 +39,7 @@ impl Default for BenchmarkStats {
     clippy::cast_precision_loss,
     reason = "Benchmark mean/variance/min/max; f64 precision sufficient for timing stats"
 )]
+#[must_use]
 pub fn calculate_stats(measurements: &[Duration]) -> BenchmarkStats {
     if measurements.is_empty() {
         return BenchmarkStats::default();

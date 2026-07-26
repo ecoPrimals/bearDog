@@ -17,7 +17,7 @@ async fn main() -> Result<()> {
         .join("../../configs/beardog-primal-capabilities.toml");
     println!("Loading configuration from: {}", config_path.display());
 
-    let discovery = CapabilityDiscovery::from_config(config_path).await?;
+    let discovery = CapabilityDiscovery::from_config(config_path)?;
     println!("✅ Discovery initialized\n");
 
     // Example 1: Discover orchestration capability

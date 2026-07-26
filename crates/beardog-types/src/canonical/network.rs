@@ -50,17 +50,6 @@ impl Default for NetworkConfig {
     }
 }
 
-/// Connection pool configuration (DEPRECATED - use canonical config)
-///
-/// **MIGRATION**: Use `canonical::config::domains::network::ConnectionPoolConfig` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use canonical::config::domains::network::ConnectionPoolConfig instead"
-)]
-pub type ConnectionPoolConfig = crate::canonical::config::domains::network::ConnectionPoolConfig;
-
 /// Timeout configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeoutConfig {
@@ -234,8 +223,8 @@ impl NetworkConfig {
     }
 
     /// Create a new network configuration
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -247,8 +236,8 @@ impl NetworkConfig {
     }
 
     /// Check if TLS is properly configured
-    #[must_use]
     /// Checks if tls configured
+    #[must_use]
     pub const fn is_tls_configured(&self) -> bool {
         self.tls_enabled && self.tls_cert_path.is_some() && self.tls_key_path.is_some()
     }

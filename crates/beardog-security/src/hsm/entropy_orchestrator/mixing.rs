@@ -40,12 +40,12 @@ impl HsmEntropyOrchestrator {
             ..Default::default()
         };
 
-        let result = self.generate_entropy(request).await?;
+        let result = self.generate_entropy(request)?;
         Ok(result.seed_id)
     }
 
     /// Mix hardware entropy with human input
-    pub(super) async fn mix_with_human_input(
+    pub(super) fn mix_with_human_input(
         &self,
         hardware_entropy: Vec<u8>,
         human_input: HumanEntropyInput,

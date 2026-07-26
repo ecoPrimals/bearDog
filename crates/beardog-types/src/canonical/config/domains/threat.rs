@@ -133,6 +133,7 @@ pub enum SensitivityLevel {
 
 impl SensitivityLevel {
     /// Convert sensitivity level to numeric value (0.0 - 1.0)
+    #[must_use]
     pub const fn to_numeric(&self) -> f64 {
         match self {
             Self::Low => 0.5,
@@ -143,6 +144,7 @@ impl SensitivityLevel {
     }
 
     /// Create sensitivity level from numeric value
+    #[must_use]
     pub fn from_numeric(value: f64) -> Self {
         if value < 0.6 {
             Self::Low

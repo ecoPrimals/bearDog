@@ -49,6 +49,7 @@ pub struct BearDogCrypto;
 
 impl BearDogCrypto {
     /// Generate Ed25519 Keypair operation.
+    #[must_use]
     pub fn generate_ed25519_keypair() -> (Vec<u8>, Vec<u8>) {
         let mut csprng = OsRng;
         let mut secret_bytes = [0u8; 32];
@@ -119,6 +120,7 @@ impl BearDogCrypto {
     }
 
     /// Generate Secure Random operation.
+    #[must_use]
     pub fn generate_secure_random(size: usize) -> Vec<u8> {
         let mut bytes = vec![0u8; size];
         rng().fill_bytes(&mut bytes);
@@ -126,6 +128,7 @@ impl BearDogCrypto {
     }
 
     /// Generate Secure Nonce operation.
+    #[must_use]
     pub fn generate_secure_nonce(size: usize) -> Vec<u8> {
         Self::generate_secure_random(size)
     }
@@ -258,6 +261,7 @@ impl BearDogCrypto {
     }
 
     /// SHA-256 hash returning raw bytes.
+    #[must_use]
     pub fn sha256_hash_bytes(input: &[u8]) -> Vec<u8> {
         let mut hasher = Sha256::new();
         hasher.update(input);
@@ -265,6 +269,7 @@ impl BearDogCrypto {
     }
 
     /// SHA-256 hash returning a hex-encoded string.
+    #[must_use]
     pub fn sha256_hash(input: &[u8]) -> String {
         hex::encode(Self::sha256_hash_bytes(input))
     }
@@ -326,6 +331,7 @@ impl BearDogCrypto {
     ///
     /// # Returns
     /// `true` if the slices are equal, `false` otherwise
+    #[must_use]
     pub fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
         if a.len() != b.len() {
             return false;

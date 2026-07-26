@@ -48,6 +48,7 @@ pub struct MonitoringConfig {
 
 impl MonitoringConfig {
     /// Pure static defaults (no environment variable reads)
+    #[must_use]
     pub fn const_defaults() -> Self {
         Self {
             log_level: "info".to_string(),
@@ -63,6 +64,7 @@ impl MonitoringConfig {
     }
 
     /// Load configuration from environment variables with fallback to defaults
+    #[must_use]
     pub fn from_env() -> Self {
         let defaults = Self::const_defaults();
 
@@ -100,6 +102,7 @@ impl MonitoringConfig {
     }
 
     /// Create a builder for flexible configuration construction
+    #[must_use]
     pub fn builder() -> MonitoringConfigBuilder {
         MonitoringConfigBuilder::new()
     }
@@ -162,65 +165,76 @@ pub struct MonitoringConfigBuilder {
 
 impl MonitoringConfigBuilder {
     /// Starts a builder; unspecified options inherit [`MonitoringConfig::const_defaults`].
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Log verbosity name (e.g. `info`, `debug`) for process-wide logging.
+    #[must_use]
     pub fn log_level(mut self, level: String) -> Self {
         self.log_level = Some(level);
         self
     }
 
     /// Output format for log records (e.g. JSON vs plain text), when the runtime supports it.
+    #[must_use]
     pub fn log_format(mut self, format: String) -> Self {
         self.log_format = Some(format);
         self
     }
 
     /// Enables structured key/value fields instead of unstructured lines.
+    #[must_use]
     pub const fn structured_logging(mut self, enabled: bool) -> Self {
         self.structured_logging = Some(enabled);
         self
     }
 
     /// Turns Prometheus-style or internal metrics collection on or off.
+    #[must_use]
     pub const fn enable_metrics(mut self, enabled: bool) -> Self {
         self.enable_metrics = Some(enabled);
         self
     }
 
     /// TCP port bound for scraping or exporting metrics.
+    #[must_use]
     pub const fn metrics_port(mut self, port: u16) -> Self {
         self.metrics_port = Some(port);
         self
     }
 
     /// Exposes a lightweight HTTP (or similar) health endpoint when enabled.
+    #[must_use]
     pub const fn enable_health_check(mut self, enabled: bool) -> Self {
         self.enable_health_check = Some(enabled);
         self
     }
 
     /// Port for the health check listener.
+    #[must_use]
     pub const fn health_check_port(mut self, port: u16) -> Self {
         self.health_check_port = Some(port);
         self
     }
 
     /// Collects latency and throughput samples for operational dashboards.
+    #[must_use]
     pub const fn enable_performance_tracking(mut self, enabled: bool) -> Self {
         self.enable_performance_tracking = Some(enabled);
         self
     }
 
     /// Fraction of distributed traces to retain (`0.0`–`1.0`) to control overhead.
+    #[must_use]
     pub const fn tracing_sample_rate(mut self, rate: f64) -> Self {
         self.tracing_sample_rate = Some(rate);
         self
     }
 
     /// Builds [`MonitoringConfig`] with defaults for any unset fields.
+    #[must_use]
     pub fn build(self) -> MonitoringConfig {
         let defaults = MonitoringConfig::const_defaults();
 

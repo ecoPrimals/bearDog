@@ -283,6 +283,7 @@ impl NetworkHostsConfig {
     /// Get bind address for a service
     ///
     /// Returns the appropriate bind address (0.0.0.0 for servers, localhost for clients)
+    #[must_use]
     pub fn bind_address(&self) -> &str {
         &self.api_host
     }
@@ -290,6 +291,7 @@ impl NetworkHostsConfig {
     /// Get client connection address
     ///
     /// Returns the address clients should use to connect
+    #[must_use]
     pub fn connection_address(&self) -> &str {
         &self.client_host
     }

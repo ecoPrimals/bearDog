@@ -56,7 +56,7 @@ impl MockHsmDevice {
         self.fail_on_operation.store(false, Ordering::SeqCst);
     }
 
-    async fn connect(&self) -> Result<()> {
+    fn connect(&self) -> Result<()> {
         if self.fail_on_connect.load(Ordering::SeqCst) {
             return Err(BearDogError::hsm(format!(
                 "Failed to connect to HSM device: {}",
@@ -68,12 +68,12 @@ impl MockHsmDevice {
         Ok(())
     }
 
-    async fn disconnect(&self) -> Result<()> {
+    fn disconnect(&self) -> Result<()> {
         self.is_connected.store(false, Ordering::SeqCst);
         Ok(())
     }
 
-    async fn generate_key(&self, _key_id: &str) -> Result<Vec<u8>> {
+    fn generate_key(&self, _key_id: &str) -> Result<Vec<u8>> {
         self.operation_count.fetch_add(1, Ordering::SeqCst);
 
         if !self.is_connected.load(Ordering::SeqCst) {
@@ -88,7 +88,7 @@ impl MockHsmDevice {
         Ok(vec![0u8; 32])
     }
 
-    async fn sign(&self, _data: &[u8], _key_id: &str) -> Result<Vec<u8>> {
+    fn sign(&self, _data: &[u8], _key_id: &str) -> Result<Vec<u8>> {
         self.operation_count.fetch_add(1, Ordering::SeqCst);
 
         if !self.is_connected.load(Ordering::SeqCst) {
@@ -122,7 +122,7 @@ async fn test_hsm_connection_failure() -> Result<()> {
     let device = MockHsmDevice::new("test_device");
     device.inject_connection_failure();
 
-    let result = device.connect().await;
+    let result = device.connect();
     assert!(result.is_err());
     assert!(matches!(
         result.unwrap_err(),
@@ -140,11 +140,11 @@ async fn test_hsm_connection_recovery() -> Result<()> {
 
     // First connection attempt fails
     device.inject_connection_failure();
-    assert!(device.connect().await.is_err());
+    assert!(device.connect().is_err());
 
     // Recovery: clear failure and retry
     device.clear_failures();
-    device.connect().await?;
+    device.connect()?;
     assert!(device.is_connected());
 
     Ok(())
@@ -156,7 +156,7 @@ async fn test_hsm_operation_without_connection() -> Result<()> {
     let device = MockHsmDevice::new("test_device");
 
     // Attempt operation without connecting
-    let result = device.generate_key("test_key").await;
+    let result = device.generate_key("test_key");
     assert!(result.is_err());
 
     Ok(())
@@ -168,13 +168,13 @@ async fn test_hsm_reconnection_after_disconnect() -> Result<()> {
     let device = MockHsmDevice::new("test_device");
 
     // Connect, disconnect, reconnect
-    device.connect().await?;
+    device.connect()?;
     assert!(device.is_connected());
 
-    device.disconnect().await?;
+    device.disconnect()?;
     assert!(!device.is_connected());
 
-    device.connect().await?;
+    device.connect()?;
     assert!(device.is_connected());
 
     Ok(())
@@ -188,10 +188,10 @@ async fn test_hsm_reconnection_after_disconnect() -> Result<()> {
 async fn test_hsm_key_generation_failure() -> Result<()> {
     // Test graceful handling of key generation failures
     let device = MockHsmDevice::new("test_device");
-    device.connect().await?;
+    device.connect()?;
 
     device.inject_operation_failure();
-    let result = device.generate_key("test_key").await;
+    let result = device.generate_key("test_key");
     assert!(result.is_err());
 
     // Device should still be connected
@@ -204,10 +204,10 @@ async fn test_hsm_key_generation_failure() -> Result<()> {
 async fn test_hsm_signing_failure() -> Result<()> {
     // Test graceful handling of signing failures
     let device = MockHsmDevice::new("test_device");
-    device.connect().await?;
+    device.connect()?;
 
     device.inject_operation_failure();
-    let result = device.sign(b"test_data", "test_key").await;
+    let result = device.sign(b"test_data", "test_key");
     assert!(result.is_err());
 
     // Device should still be connected
@@ -220,15 +220,15 @@ async fn test_hsm_signing_failure() -> Result<()> {
 async fn test_hsm_operation_recovery() -> Result<()> {
     // Test recovery after transient operation failure
     let device = MockHsmDevice::new("test_device");
-    device.connect().await?;
+    device.connect()?;
 
     // First operation fails
     device.inject_operation_failure();
-    assert!(device.generate_key("test_key").await.is_err());
+    assert!(device.generate_key("test_key").is_err());
 
     // Recovery: clear failure and retry
     device.clear_failures();
-    let result = device.generate_key("test_key").await;
+    let result = device.generate_key("test_key");
     assert!(result.is_ok());
 
     Ok(())
@@ -238,7 +238,7 @@ async fn test_hsm_operation_recovery() -> Result<()> {
 async fn test_hsm_concurrent_operations() -> Result<()> {
     // Test concurrent operations on the same device
     let device = Arc::new(MockHsmDevice::new("test_device"));
-    device.connect().await?;
+    device.connect()?;
 
     let mut handles = vec![];
 
@@ -248,7 +248,6 @@ async fn test_hsm_concurrent_operations() -> Result<()> {
         handles.push(tokio::spawn(async move {
             device
                 .generate_key(&format!("key_{i}"))
-                .await
                 .expect("operation should succeed");
         }));
     }
@@ -272,7 +271,7 @@ async fn test_hsm_concurrent_operations() -> Result<()> {
 async fn test_hsm_concurrent_operations_with_failures() -> Result<()> {
     // Test concurrent operations with intermittent failures
     let device = Arc::new(MockHsmDevice::new("test_device"));
-    device.connect().await?;
+    device.connect()?;
 
     let mut handles = vec![];
 
@@ -287,7 +286,7 @@ async fn test_hsm_concurrent_operations_with_failures() -> Result<()> {
                 device.clear_failures();
             }
 
-            device.generate_key(&format!("key_{i}")).await
+            device.generate_key(&format!("key_{i}"))
         }));
     }
 
@@ -313,7 +312,7 @@ async fn test_hsm_concurrent_operations_with_failures() -> Result<()> {
 async fn test_hsm_connection_failure_during_operations() -> Result<()> {
     // Test handling of connection loss during operations
     let device = Arc::new(MockHsmDevice::new("test_device"));
-    device.connect().await?;
+    device.connect()?;
 
     let (shutdown_tx, mut shutdown_rx) = mpsc::channel::<()>(1);
 
@@ -327,7 +326,7 @@ async fn test_hsm_connection_failure_during_operations() -> Result<()> {
                     break;
                 }
                 () = async {
-                    let _ = device_clone.generate_key(&format!("key_{count}")).await;
+                    let _ = device_clone.generate_key(&format!("key_{count}"));
                     count += 1;
                     tokio::task::yield_now().await;
                 } => {}
@@ -341,7 +340,7 @@ async fn test_hsm_connection_failure_during_operations() -> Result<()> {
     }
 
     // Simulate connection loss
-    device.disconnect().await?;
+    device.disconnect()?;
 
     // Signal shutdown
     let _ = shutdown_tx.send(()).await;
@@ -363,7 +362,7 @@ async fn test_hsm_error_propagation() -> Result<()> {
     let device = MockHsmDevice::new("test_device");
     device.inject_connection_failure();
 
-    let result = device.connect().await;
+    let result = device.connect();
     assert!(result.is_err());
 
     // Verify error type
@@ -381,7 +380,7 @@ async fn test_hsm_error_propagation() -> Result<()> {
 async fn test_hsm_rapid_failure_recovery_cycles() -> Result<()> {
     // Test rapid cycling between failure and recovery
     let device = MockHsmDevice::new("test_device");
-    device.connect().await?;
+    device.connect()?;
 
     for i in 0..50 {
         if i % 2 == 0 {
@@ -390,7 +389,7 @@ async fn test_hsm_rapid_failure_recovery_cycles() -> Result<()> {
             device.clear_failures();
         }
 
-        let _ = device.generate_key(&format!("key_{i}")).await;
+        let _ = device.generate_key(&format!("key_{i}"));
     }
 
     // Device should remain stable
@@ -403,20 +402,20 @@ async fn test_hsm_rapid_failure_recovery_cycles() -> Result<()> {
 async fn test_hsm_graceful_degradation() -> Result<()> {
     // Test graceful degradation under failure conditions
     let device = MockHsmDevice::new("test_device");
-    device.connect().await?;
+    device.connect()?;
 
     // Inject failure
     device.inject_operation_failure();
 
     // Multiple operations should fail gracefully
     for i in 0..10 {
-        let result = device.generate_key(&format!("key_{i}")).await;
+        let result = device.generate_key(&format!("key_{i}"));
         assert!(result.is_err());
     }
 
     // Device should still be usable after clearing failure
     device.clear_failures();
-    let result = device.generate_key("recovery_key").await;
+    let result = device.generate_key("recovery_key");
     assert!(result.is_ok());
 
     Ok(())
@@ -430,9 +429,9 @@ async fn test_hsm_graceful_degradation() -> Result<()> {
 async fn test_hsm_empty_key_id() -> Result<()> {
     // Test handling of empty key IDs
     let device = MockHsmDevice::new("test_device");
-    device.connect().await?;
+    device.connect()?;
 
-    let result = device.generate_key("").await;
+    let result = device.generate_key("");
     // Should succeed (validation is caller's responsibility)
     assert!(result.is_ok());
 
@@ -443,9 +442,9 @@ async fn test_hsm_empty_key_id() -> Result<()> {
 async fn test_hsm_empty_data_signing() -> Result<()> {
     // Test signing empty data
     let device = MockHsmDevice::new("test_device");
-    device.connect().await?;
+    device.connect()?;
 
-    let result = device.sign(&[], "test_key").await;
+    let result = device.sign(&[], "test_key");
     // Should succeed (validation is caller's responsibility)
     assert!(result.is_ok());
 
@@ -456,10 +455,10 @@ async fn test_hsm_empty_data_signing() -> Result<()> {
 async fn test_hsm_large_data_signing() -> Result<()> {
     // Test signing large data
     let device = MockHsmDevice::new("test_device");
-    device.connect().await?;
+    device.connect()?;
 
     let large_data = vec![0u8; 1_000_000];
-    let result = device.sign(&large_data, "test_key").await;
+    let result = device.sign(&large_data, "test_key");
     assert!(result.is_ok());
 
     Ok(())
@@ -469,7 +468,7 @@ async fn test_hsm_large_data_signing() -> Result<()> {
 async fn test_hsm_special_characters_in_key_id() -> Result<()> {
     // Test handling of special characters in key IDs
     let device = MockHsmDevice::new("test_device");
-    device.connect().await?;
+    device.connect()?;
 
     let special_key_ids = vec![
         "key.with.dots",
@@ -481,7 +480,7 @@ async fn test_hsm_special_characters_in_key_id() -> Result<()> {
     ];
 
     for key_id in special_key_ids {
-        let result = device.generate_key(key_id).await;
+        let result = device.generate_key(key_id);
         assert!(result.is_ok());
     }
 
@@ -498,9 +497,9 @@ async fn test_hsm_multiple_connections() -> Result<()> {
     let device = MockHsmDevice::new("test_device");
 
     // Multiple connects should be idempotent
-    device.connect().await?;
-    device.connect().await?;
-    device.connect().await?;
+    device.connect()?;
+    device.connect()?;
+    device.connect()?;
 
     assert!(device.is_connected());
 
@@ -511,12 +510,12 @@ async fn test_hsm_multiple_connections() -> Result<()> {
 async fn test_hsm_multiple_disconnections() -> Result<()> {
     // Test handling of multiple disconnection attempts
     let device = MockHsmDevice::new("test_device");
-    device.connect().await?;
+    device.connect()?;
 
     // Multiple disconnects should be idempotent
-    device.disconnect().await?;
-    device.disconnect().await?;
-    device.disconnect().await?;
+    device.disconnect()?;
+    device.disconnect()?;
+    device.disconnect()?;
 
     assert!(!device.is_connected());
 
@@ -527,11 +526,11 @@ async fn test_hsm_multiple_disconnections() -> Result<()> {
 async fn test_hsm_operation_limits() -> Result<()> {
     // Test handling of high operation counts
     let device = MockHsmDevice::new("test_device");
-    device.connect().await?;
+    device.connect()?;
 
     // Perform many operations
     for i in 0..1_000 {
-        device.generate_key(&format!("key_{i}")).await?;
+        device.generate_key(&format!("key_{i}"))?;
     }
 
     assert_eq!(device.get_operation_count(), 1_000);
@@ -554,9 +553,9 @@ async fn test_hsm_concurrent_connect_disconnect() -> Result<()> {
         let device = Arc::clone(&device);
         handles.push(tokio::spawn(async move {
             if i % 2 == 0 {
-                let _ = device.connect().await;
+                let _ = device.connect();
             } else {
-                let _ = device.disconnect().await;
+                let _ = device.disconnect();
             }
         }));
     }
@@ -575,7 +574,7 @@ async fn test_hsm_concurrent_connect_disconnect() -> Result<()> {
 async fn test_hsm_concurrent_mixed_operations() -> Result<()> {
     // Test concurrent mix of connections, operations, and disconnections
     let device = Arc::new(MockHsmDevice::new("test_device"));
-    device.connect().await?;
+    device.connect()?;
 
     let mut handles = vec![];
 
@@ -585,13 +584,13 @@ async fn test_hsm_concurrent_mixed_operations() -> Result<()> {
         handles.push(tokio::spawn(async move {
             match i % 3 {
                 0 => {
-                    let _ = device.generate_key(&format!("key_{i}")).await;
+                    let _ = device.generate_key(&format!("key_{i}"));
                 }
                 1 => {
-                    let _ = device.sign(b"test_data", &format!("key_{i}")).await;
+                    let _ = device.sign(b"test_data", &format!("key_{i}"));
                 }
                 2 => {
-                    let _ = device.connect().await;
+                    let _ = device.connect();
                 }
                 _ => unreachable!(),
             }
@@ -613,7 +612,7 @@ async fn test_hsm_concurrent_mixed_operations() -> Result<()> {
 async fn test_hsm_stress_test() -> Result<()> {
     // Stress test with many concurrent operations
     let device = Arc::new(MockHsmDevice::new("test_device"));
-    device.connect().await?;
+    device.connect()?;
 
     let mut handles = vec![];
 
@@ -622,7 +621,7 @@ async fn test_hsm_stress_test() -> Result<()> {
         let device = Arc::clone(&device);
         handles.push(tokio::spawn(async move {
             for j in 0..10 {
-                let _ = device.generate_key(&format!("key_{i}_{j}")).await;
+                let _ = device.generate_key(&format!("key_{i}_{j}"));
                 tokio::task::yield_now().await;
             }
         }));

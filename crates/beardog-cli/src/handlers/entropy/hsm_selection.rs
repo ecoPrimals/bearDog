@@ -8,6 +8,7 @@ use beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType;
 use super::types::HsmInfo;
 
 /// Maps a discovered HSM interface to a short CLI label (used by `handle_entropy_collect`).
+#[must_use]
 pub fn format_hsm_interface_type_label(interface_type: &HsmInterfaceType) -> String {
     match interface_type {
         HsmInterfaceType::Tpm { version } => format!("TPM {version}"),

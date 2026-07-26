@@ -185,7 +185,7 @@ impl PrimalIdentity {
         let primal_type = inputs
             .beardog_primal_type
             .clone()
-            .unwrap_or_else(|| "beardog".to_string());
+            .unwrap_or_else(|| env_keys::DEFAULT_PRIMAL_NAME.to_string());
 
         let mut capabilities = HashSet::new();
         if inputs.capability_hsm {
@@ -350,7 +350,7 @@ impl PrimalDiscovery {
 
         // 2. mDNS discovery (if no primals found)
         if primals.is_empty()
-            && let Ok(mdns_primals) = self.discover_via_mdns(capability).await
+            && let Ok(mdns_primals) = self.discover_via_mdns(capability)
         {
             primals.extend(mdns_primals);
         }
@@ -366,7 +366,7 @@ impl PrimalDiscovery {
     }
 
     /// Discover via mDNS (local network, no hardcoding)
-    async fn discover_via_mdns(&self, capability: &str) -> Result<Vec<DiscoveredPrimal>> {
+    fn discover_via_mdns(&self, capability: &str) -> Result<Vec<DiscoveredPrimal>> {
         #[cfg(feature = "mdns")]
         {
             use crate::primal_discovery_mdns::MdnsDiscoveryClient;

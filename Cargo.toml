@@ -213,7 +213,7 @@ x509-cert = { version = "0.2", default-features = false, features = ["builder", 
 data-encoding = "2.5"
 rpassword = "7.3"
 whoami = "1.6"
-directories = "5"
+etcetera = "0.8"
 bs58 = "0.5"  # Base58 encoding for did:key multibase (Ed25519 → did:key:z6Mk...)
 
 # Dev-only

@@ -46,6 +46,7 @@ impl DelegationConstraints {
         dead_code,
         reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
     )]
+    #[must_use]
     pub fn to_constraints(&self) -> Vec<Box<dyn Constraint>> {
         let mut constraints: Vec<Box<dyn Constraint>> = Vec::new();
 
@@ -112,6 +113,7 @@ impl DelegationConstraints {
         dead_code,
         reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
     )]
+    #[must_use]
     pub fn as_composite(&self) -> CompositeConstraint {
         CompositeConstraint::and(self.to_constraints())
     }
@@ -148,7 +150,7 @@ pub async fn handle_key_delegate(
         memory_quota,
         expires_in,
     };
-    handle_key_delegate_impl(&params, &keys_home, std::path::Path::new(".")).await
+    handle_key_delegate_impl(&params, &keys_home, std::path::Path::new("."))
 }
 
 /// Parameters for key delegation, avoiding long argument lists.
@@ -182,10 +184,10 @@ pub async fn handle_key_delegate_with_home(
     home: impl AsRef<Path>,
 ) -> Result<(), BearDogError> {
     let home = home.as_ref();
-    handle_key_delegate_impl(params, home, home).await
+    handle_key_delegate_impl(params, home, home)
 }
 
-async fn handle_key_delegate_impl(
+fn handle_key_delegate_impl(
     params: &DelegateParams<'_>,
     keys_home: &Path,
     receipt_parent: &Path,

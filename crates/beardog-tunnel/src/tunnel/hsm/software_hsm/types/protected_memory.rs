@@ -16,6 +16,7 @@ pub struct ProtectedMemory {
 
 impl ProtectedMemory {
     /// Create new protected memory
+    #[must_use]
     pub fn new(data: Vec<u8>, protected: bool) -> Self {
         Self {
             data: bytes::Bytes::from(data),
@@ -24,7 +25,7 @@ impl ProtectedMemory {
     }
 
     /// Wrap existing shared bytes (e.g. after [`bytes::Bytes::clone`] from the same buffer).
-    pub fn from_bytes(data: bytes::Bytes, protected: bool) -> Self {
+    pub const fn from_bytes(data: bytes::Bytes, protected: bool) -> Self {
         Self { data, protected }
     }
 

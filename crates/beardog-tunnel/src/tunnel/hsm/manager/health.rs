@@ -24,6 +24,7 @@ pub struct HsmHealthStatus {
 
 impl HsmHealthStatus {
     /// Create a healthy status
+    #[must_use]
     pub fn healthy() -> Self {
         Self {
             is_healthy: true,
@@ -31,8 +32,8 @@ impl HsmHealthStatus {
             error_message: None,
         }
     }
-
     /// Create an unhealthy status with error
+    #[must_use]
     pub fn unhealthy(error: String) -> Self {
         Self {
             is_healthy: false,
@@ -54,6 +55,7 @@ pub struct HealthMonitor {
 
 impl HealthMonitor {
     /// Create a new health monitor
+    #[must_use]
     pub fn new(check_interval: Duration) -> Self {
         Self {
             health_cache: Arc::new(RwLock::new(HashMap::new())),

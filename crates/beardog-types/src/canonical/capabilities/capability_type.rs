@@ -225,18 +225,6 @@ impl CapabilityType {
                 | Self::Security
         )
     }
-
-    /// Get the primal name associated with this capability (if any)
-    /// DEPRECATED: Removed hardcoded primal mappings to achieve true capability-based discovery
-    #[deprecated(note = "Use capability-based discovery instead of hardcoded primal names")]
-    #[must_use]
-    #[inline]
-    pub const fn associated_primal(&self) -> Option<&'static str> {
-        // EVOLUTION: No longer return hardcoded primal names
-        // Each primal should discover capabilities dynamically through universal adapter
-        // No capability available
-        None
-    }
 }
 
 impl std::fmt::Display for CapabilityType {

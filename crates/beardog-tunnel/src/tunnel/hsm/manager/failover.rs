@@ -35,6 +35,7 @@ pub struct CircuitBreaker {
 
 impl CircuitBreaker {
     /// Create a new circuit breaker
+    #[must_use]
     pub const fn new(threshold: u32) -> Self {
         Self {
             state: CircuitBreakerState::Closed,
@@ -94,8 +95,8 @@ impl CircuitBreaker {
             CircuitBreakerState::HalfOpen => true,
         }
     }
-
     /// Get current state
+    #[must_use]
     pub const fn state(&self) -> &CircuitBreakerState {
         &self.state
     }
@@ -111,6 +112,7 @@ pub struct FailoverManager {
 
 impl FailoverManager {
     /// Create a new failover manager
+    #[must_use]
     pub fn new(threshold: u32, max_retries: u32) -> Self {
         Self {
             circuit_breaker: Arc::new(RwLock::new(CircuitBreaker::new(threshold))),

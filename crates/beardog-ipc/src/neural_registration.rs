@@ -271,7 +271,7 @@ pub async fn send_primal_announce(
     note = "Use beardog_tunnel::primal_announce::registered_announce_method_names for runtime introspection"
 )]
 #[must_use]
-pub fn beardog_announce_method_names() -> &'static [&'static str] {
+pub const fn beardog_announce_method_names() -> &'static [&'static str] {
     &[
         // Ed25519 / ECDSA
         "crypto.sign_ed25519",
@@ -574,6 +574,7 @@ pub fn discover_neural_api_socket_from_inputs(inputs: &NeuralApiDiscoveryInputs)
 ///
 /// Resolution order: `NEURAL_API_SOCKET`, then `NEURALS_SOCKET`, then orchestrator/XDG paths, then platform temp fallbacks.
 /// An empty env value disables auto-registration (returns `None`).
+#[must_use]
 pub fn discover_neural_api_socket() -> Option<String> {
     discover_neural_api_socket_with(
         beardog_errors::process_env::var(beardog_config::env_keys::ENV_NEURAL_API_SOCKET).ok(),

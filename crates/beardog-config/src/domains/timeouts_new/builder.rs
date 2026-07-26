@@ -35,83 +35,97 @@ pub struct TimeoutConfigBuilder {
 
 impl TimeoutConfigBuilder {
     /// Create a new builder with default values
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Set health check timeout (seconds)
+    #[must_use]
     pub const fn health_check_secs(mut self, secs: u64) -> Self {
         self.health_check_secs = Some(secs);
         self
     }
 
     /// Set HSM operation timeout (seconds)
+    #[must_use]
     pub const fn hsm_operation_secs(mut self, secs: u64) -> Self {
         self.hsm_operation_secs = Some(secs);
         self
     }
 
     /// Set HSM probe timeout (milliseconds)
+    #[must_use]
     pub const fn hsm_probe_millis(mut self, millis: u64) -> Self {
         self.hsm_probe_millis = Some(millis);
         self
     }
 
     /// Set discovery operation timeout (seconds)
+    #[must_use]
     pub const fn discovery_operation_secs(mut self, secs: u64) -> Self {
         self.discovery_operation_secs = Some(secs);
         self
     }
 
     /// Set AI decision timeout (seconds)
+    #[must_use]
     pub const fn ai_decision_secs(mut self, secs: u64) -> Self {
         self.ai_decision_secs = Some(secs);
         self
     }
 
     /// Set AI request timeout (seconds)
+    #[must_use]
     pub const fn ai_request_secs(mut self, secs: u64) -> Self {
         self.ai_request_secs = Some(secs);
         self
     }
 
     /// Set AI batch timeout (milliseconds)
+    #[must_use]
     pub const fn ai_batch_timeout_millis(mut self, millis: u64) -> Self {
         self.ai_batch_timeout_millis = Some(millis);
         self
     }
 
     /// Set pool idle timeout (seconds)
+    #[must_use]
     pub const fn pool_idle_secs(mut self, secs: u64) -> Self {
         self.pool_idle_secs = Some(secs);
         self
     }
 
     /// Set max connection age (seconds)
+    #[must_use]
     pub const fn max_connection_age_secs(mut self, secs: u64) -> Self {
         self.max_connection_age_secs = Some(secs);
         self
     }
 
     /// Set network operation timeout (seconds)
+    #[must_use]
     pub const fn network_operation_secs(mut self, secs: u64) -> Self {
         self.network_operation_secs = Some(secs);
         self
     }
 
     /// Set DNS resolution timeout (seconds)
+    #[must_use]
     pub const fn dns_resolution_timeout_secs(mut self, secs: u64) -> Self {
         self.dns_resolution_timeout_secs = Some(secs);
         self
     }
 
     /// Set connection timeout (seconds)
+    #[must_use]
     pub const fn connection_timeout_secs(mut self, secs: u64) -> Self {
         self.connection_timeout_secs = Some(secs);
         self
     }
 
     /// Set request timeout (seconds)
+    #[must_use]
     pub const fn request_timeout_secs(mut self, secs: u64) -> Self {
         self.request_timeout_secs = Some(secs);
         self
@@ -121,6 +135,7 @@ impl TimeoutConfigBuilder {
     ///
     /// Only updates values that have environment variables set.
     /// Falls back to builder values or defaults.
+    #[must_use]
     pub fn from_env(mut self) -> Self {
         if let Ok(val) = std::env::var(env_keys::ENV_HEALTH_CHECK_TIMEOUT_SECS)
             && let Ok(secs) = val.parse()
@@ -180,6 +195,7 @@ impl TimeoutConfigBuilder {
     }
 
     /// Build the `TimeoutConfig`
+    #[must_use]
     pub fn build(self) -> TimeoutConfig {
         TimeoutConfig {
             health_check_secs: self

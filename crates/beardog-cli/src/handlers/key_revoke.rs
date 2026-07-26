@@ -41,6 +41,7 @@ pub struct RevocationList {
 
 impl RevocationList {
     /// Create new empty revocation list
+    #[must_use]
     pub fn new() -> Self {
         Self {
             revoked_keys: HashMap::new(),
@@ -126,6 +127,7 @@ impl RevocationList {
     }
 
     /// Check if a key is revoked
+    #[must_use]
     pub fn is_revoked(&self, key_id: &str) -> bool {
         self.revoked_keys.contains_key(key_id)
     }

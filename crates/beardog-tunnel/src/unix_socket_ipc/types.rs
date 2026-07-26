@@ -150,8 +150,8 @@ impl JsonRpcError {
             data: None,
         }
     }
-
     /// Create a permission denied error (method gate, JH-0).
+    #[must_use]
     pub fn permission_denied(method: &str) -> Self {
         Self {
             code: Self::PERMISSION_DENIED,
@@ -190,6 +190,7 @@ impl Protocol {
     /// Detection logic:
     /// - JSON-RPC: Begins with `{` (JSON object) - PRIMARY protocol
     /// - HTTP: Begins with HTTP verbs (GET, POST, etc.) - LEGACY compatibility
+    #[must_use]
     pub fn detect_from_bytes(first_bytes: &[u8]) -> Self {
         if first_bytes.is_empty() {
             return Self::JsonRpc; // Default to primary protocol
@@ -213,16 +214,16 @@ impl Protocol {
         // Default: JSON-RPC (primary protocol)
         Self::JsonRpc
     }
-
     /// Get protocol name for logging
+    #[must_use]
     pub const fn name(&self) -> &'static str {
         match self {
             Self::JsonRpc => "json-rpc",
             Self::Http => "http",
         }
     }
-
     /// Get security level (5 = highest, 1 = lowest)
+    #[must_use]
     pub const fn security_level(&self) -> u8 {
         match self {
             Self::JsonRpc => 4, // Structured, comprehensive, production-ready

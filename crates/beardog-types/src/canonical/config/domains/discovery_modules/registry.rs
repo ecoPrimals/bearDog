@@ -115,6 +115,7 @@ impl ServiceRegistryConfig {
     ///
     /// Useful for const contexts where Default can't be used.
     /// Note: Endpoints will be empty; set via builder or Default.
+    #[must_use]
     pub const fn const_defaults() -> Self {
         Self {
             backend: String::new(),
@@ -132,13 +133,15 @@ impl ServiceRegistryConfig {
     /// A registry is considered configured if it has:
     /// - A non-empty backend type
     /// - At least one endpoint
-    pub fn is_configured(&self) -> bool {
+    #[must_use]
+    pub const fn is_configured(&self) -> bool {
         !self.backend.is_empty() && !self.endpoints.is_empty()
     }
 
     /// Get the primary endpoint (first in the list)
     ///
     /// Returns None if no endpoints are configured.
+    #[must_use]
     pub fn primary_endpoint(&self) -> Option<&String> {
         self.endpoints.first()
     }

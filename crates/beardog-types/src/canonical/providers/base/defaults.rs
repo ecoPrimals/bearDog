@@ -17,7 +17,7 @@ use beardog_config::env_keys;
 };
 use crate::canonical::config::domains::system::LoggingConfig;
 use super::performance::{
-    BackoffStrategy, CachingConfiguration, ConnectionPoolConfiguration, EvictionPolicy,
+    BackoffStrategy, CachingConfiguration, ConnectionPoolConfig, EvictionPolicy,
     PerformanceConfiguration, RetryConfiguration, TimeoutConfiguration,
 };
 use super::schema::ConfigurationSchema;
@@ -170,7 +170,7 @@ impl Default for KeyDerivationConfiguration {
 impl Default for PerformanceConfiguration {
     fn default() -> Self {
         Self {
-            connection_pool: ConnectionPoolConfiguration::default(),
+            connection_pool: ConnectionPoolConfig::default(),
             caching: CachingConfiguration::default(),
             timeouts: TimeoutConfiguration::default(),
             retry: RetryConfiguration::default(),
@@ -178,7 +178,7 @@ impl Default for PerformanceConfiguration {
     }
 }
 
-impl Default for ConnectionPoolConfiguration {
+impl Default for ConnectionPoolConfig {
     fn default() -> Self {
         Self {
             min_size: std::env::var(env_keys::ENV_CONNECTION_POOL_MIN_SIZE)

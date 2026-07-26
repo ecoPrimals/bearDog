@@ -19,7 +19,7 @@ impl CommercialExtractionDetector {
     /// # Errors
     ///
     /// Currently always succeeds; the `Result` type is reserved for future classification failures.
-    pub async fn classify(
+    pub fn classify(
         &self,
         ctx: &RequestContext,
     ) -> Result<CertificateClassification, BearDogError> {

@@ -74,7 +74,7 @@ impl ServiceRegistryDiscovery {
     /// # Errors
     ///
     /// Currently always succeeds; the `Result` type is reserved for future initialization failures.
-    pub async fn new() -> Result<Self> {
+    pub fn new() -> Result<Self> {
         info!("🔍 Capability-based service registry discovery (zero hardcoding!)");
 
         Ok(Self {
@@ -93,7 +93,7 @@ impl ServiceRegistryDiscovery {
     /// ```rust,no_run
     /// # use beardog_discovery::service_registry::ServiceRegistryDiscovery;
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let discovery = ServiceRegistryDiscovery::new().await?;
+    /// let discovery = ServiceRegistryDiscovery::new()?;
     /// let services = discovery.discover("crypto").await?;
     /// println!("Found {} crypto services", services.len());
     /// # Ok(())
@@ -113,7 +113,7 @@ impl ServiceRegistryDiscovery {
 
         // Discover service registry providers if not yet discovered
         if self.registry_providers.read().await.is_empty() {
-            self.discover_registry_providers().await?;
+            self.discover_registry_providers()?;
         }
 
         // Query all discovered registry providers
@@ -121,7 +121,7 @@ impl ServiceRegistryDiscovery {
         let providers = self.registry_providers.read().await;
 
         for provider in providers.iter() {
-            match self.query_provider(provider, capability).await {
+            match self.query_provider(provider, capability) {
                 Ok(mut services) => {
                     info!(
                         "✅ Found {} services from {} registry",
@@ -131,7 +131,12 @@ impl ServiceRegistryDiscovery {
                     all_services.append(&mut services);
                 }
                 Err(e) => {
-                    warn!("⚠️  Failed to query {} registry: {}", provider.name, e);
+                    warn!(
+                        provider = %provider.name,
+                        capability = %capability,
+                        error = %e,
+                        "service registry provider query failed; skipping provider"
+                    );
                 }
             }
         }
@@ -155,7 +160,7 @@ impl ServiceRegistryDiscovery {
     /// - Consul (if available)
     /// - etcd (if available)
     /// - Any primal exposing `service_registry` capability (if available)
-    async fn discover_registry_providers(&self) -> Result<()> {
+    fn discover_registry_providers(&self) -> Result<()> {
         info!("🔍 Discovering service registry providers (capability-based)");
 
         #[cfg(feature = "mdns")]
@@ -224,21 +229,23 @@ impl ServiceRegistryDiscovery {
     }
 
     /// Query a discovered provider for services
-    async fn query_provider(
+    fn query_provider(
         &self,
         provider: &DiscoveredProvider,
         capability: &str,
     ) -> Result<Vec<DiscoveredService>> {
-        debug!("🔍 Querying {} registry for: {}", provider.name, capability);
+        debug!(
+            "🔍 Querying {} registry for capability: {}",
+            provider.name, capability
+        );
 
-        // Delegate to provider via its advertised interface
-        // Provider could be:
-        // - Unix socket (local peer primal)
-        // - HTTP endpoint (external registry like Consul)
-        // - Custom protocol (any provider!)
+        warn!(
+            provider = %provider.name,
+            capability = %capability,
+            endpoint = %provider._endpoint,
+            "service registry JSON-RPC delegation is not yet wired; returning empty results for capability query"
+        );
 
-        // For Phase 2: Implement actual delegation
-        // For now, return empty (no hardcoded Consul!)
         Ok(Vec::new())
     }
 
@@ -291,7 +298,7 @@ impl ServiceRegistryDiscovery {
     pub async fn refresh_providers(&self) -> Result<()> {
         info!("🔄 Refreshing service registry providers");
         self.registry_providers.write().await.clear();
-        self.discover_registry_providers().await
+        self.discover_registry_providers()
     }
 }
 
@@ -312,15 +319,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_discovery() {
-        let discovery = ServiceRegistryDiscovery::new().await;
+        let discovery = ServiceRegistryDiscovery::new();
         assert!(discovery.is_ok());
     }
 
     #[tokio::test]
     async fn test_cache_operations() {
-        let discovery = ServiceRegistryDiscovery::new()
-            .await
-            .expect("ServiceRegistryDiscovery::new in test");
+        let discovery =
+            ServiceRegistryDiscovery::new().expect("ServiceRegistryDiscovery::new in test");
 
         // Cache should be empty
         assert!(discovery.get_cached("test").await.is_none());
@@ -336,9 +342,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_cache_expiration() {
-        let discovery = ServiceRegistryDiscovery::new()
-            .await
-            .expect("ServiceRegistryDiscovery::new in test");
+        let discovery =
+            ServiceRegistryDiscovery::new().expect("ServiceRegistryDiscovery::new in test");
 
         // TTL 0: `get_cached` treats entries as valid only when `age < ttl_secs`, so `0 < 0` is
         // false and the entry is never returned (no wall-clock wait required).
@@ -350,9 +355,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_concurrent_cache_access() {
-        let discovery = ServiceRegistryDiscovery::new()
-            .await
-            .expect("ServiceRegistryDiscovery::new in test");
+        let discovery =
+            ServiceRegistryDiscovery::new().expect("ServiceRegistryDiscovery::new in test");
 
         // Concurrent cache writes
         let handles: Vec<_> = (0..10)
@@ -373,9 +377,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_discover_without_providers() {
-        let discovery = ServiceRegistryDiscovery::new()
-            .await
-            .expect("ServiceRegistryDiscovery::new in test");
+        let discovery =
+            ServiceRegistryDiscovery::new().expect("ServiceRegistryDiscovery::new in test");
 
         // Should fail gracefully when no providers are available
         let result = discovery.discover("test-cap").await;
@@ -388,9 +391,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_discover_returns_cached_services_without_touching_providers() {
-        let discovery = ServiceRegistryDiscovery::new()
-            .await
-            .expect("ServiceRegistryDiscovery::new in test");
+        let discovery =
+            ServiceRegistryDiscovery::new().expect("ServiceRegistryDiscovery::new in test");
         let svc = DiscoveredService {
             id: "reg-1".to_string(),
             service_type: "registry".to_string(),
@@ -424,9 +426,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_refresh_providers() {
-        let discovery = ServiceRegistryDiscovery::new()
-            .await
-            .expect("ServiceRegistryDiscovery::new in test");
+        let discovery =
+            ServiceRegistryDiscovery::new().expect("ServiceRegistryDiscovery::new in test");
 
         // Should return error (no providers available)
         // But should not panic

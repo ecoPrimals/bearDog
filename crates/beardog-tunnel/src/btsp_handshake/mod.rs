@@ -44,7 +44,7 @@ pub struct FamilySeed(Vec<u8>);
 impl FamilySeed {
     /// Wrap raw bytes as a `FamilySeed`.
     #[must_use]
-    pub fn new(bytes: Vec<u8>) -> Self {
+    pub const fn new(bytes: Vec<u8>) -> Self {
         Self(bytes)
     }
 
@@ -141,8 +141,8 @@ fn load_family_seed() -> Result<Vec<u8>, BearDogError> {
 pub(crate) fn load_cipher_floor() -> BtspCipher {
     static FLOOR: std::sync::OnceLock<BtspCipher> = std::sync::OnceLock::new();
     *FLOOR.get_or_init(|| {
-        let raw = beardog_errors::process_env::var(env_keys::ENV_BTSP_CIPHER_FLOOR)
-            .unwrap_or_default();
+        let raw =
+            beardog_errors::process_env::var(env_keys::ENV_BTSP_CIPHER_FLOOR).unwrap_or_default();
         match raw.as_str() {
             "null" => BtspCipher::Null,
             "hmac-plain" | "hmac_plain" => BtspCipher::HmacPlain,
@@ -154,7 +154,7 @@ pub(crate) fn load_cipher_floor() -> BtspCipher {
 impl BtspSecurityMode {
     /// Returns `true` when BTSP handshake enforcement is active.
     #[must_use]
-    pub fn is_production(&self) -> bool {
+    pub const fn is_production(&self) -> bool {
         matches!(self, Self::Production { .. })
     }
 }

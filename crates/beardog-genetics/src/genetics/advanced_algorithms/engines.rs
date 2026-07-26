@@ -26,6 +26,7 @@ pub struct PopulationManager {
 
 impl PopulationManager {
     /// Create new manager
+    #[must_use]
     pub fn new(capacity: usize) -> Self {
         Self {
             current_population: parking_lot::RwLock::new(Vec::with_capacity(capacity)),
@@ -72,6 +73,7 @@ pub struct FitnessEvaluator {
 
 impl FitnessEvaluator {
     /// Create new evaluator
+    #[must_use]
     pub fn new() -> Self {
         Self {
             weights: HashMap::with_capacity(16),
@@ -120,6 +122,7 @@ pub struct MutationEngine {
 
 impl MutationEngine {
     /// Create new engine
+    #[must_use]
     pub fn new() -> Self {
         Self {
             adaptive_rates: HashMap::with_capacity(16),
@@ -173,6 +176,7 @@ pub struct CrossoverEngine {
 
 impl CrossoverEngine {
     /// Create new engine
+    #[must_use]
     pub fn new() -> Self {
         Self {
             compatibility_matrix: HashMap::with_capacity(16),
@@ -236,6 +240,7 @@ pub struct SelectionEngine {
 
 impl SelectionEngine {
     /// Create new engine
+    #[must_use]
     pub fn new() -> Self {
         Self {
             current_method: "tournament".to_string(),

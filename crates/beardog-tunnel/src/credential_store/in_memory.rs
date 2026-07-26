@@ -25,7 +25,7 @@ pub struct InMemoryCredentialStore {
 impl InMemoryCredentialStore {
     /// Create an empty in-memory credential store.
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             entries: RwLock::new(BTreeMap::new()),
         }

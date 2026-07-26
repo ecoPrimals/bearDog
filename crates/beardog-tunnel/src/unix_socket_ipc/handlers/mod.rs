@@ -46,7 +46,11 @@ fn sanitize_error_message(raw: &str) -> String {
     let mut chars = raw.chars().peekable();
 
     while let Some(ch) = chars.next() {
-        if ch == '/' && chars.peek().is_some_and(|c| c.is_alphanumeric() || *c == '.') {
+        if ch == '/'
+            && chars
+                .peek()
+                .is_some_and(|c| c.is_alphanumeric() || *c == '.')
+        {
             out.push_str("<path>");
             for c in chars.by_ref() {
                 if c == ' ' || c == ':' || c == '\'' || c == '"' || c == ')' {
@@ -370,6 +374,7 @@ impl HandlerRegistry {
     /// This function is panic-free under normal operation. The only panic path
     /// would be if lock acquisition fails during construction, which should never
     /// happen since we hold the only reference at that point.
+    #[must_use]
     pub fn new(identity: Arc<beardog_types::primal_identity::PrimalIdentity>) -> Arc<Self> {
         let client = OrchestratorRegistryClient::new();
         let persistence = ionic_bond::CapabilityDiscoveryBondPersistence::new(client);

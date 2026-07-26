@@ -111,13 +111,13 @@ impl SafeBiometricAuthenticator {
 
         Ok(types)
     }
-
     /// Check if biometric hardware is available
+    #[must_use]
     pub const fn is_available(&self) -> bool {
         self.hardware_available
     }
-
     /// Get available biometric types
+    #[must_use]
     pub fn available_types(&self) -> &[BiometricType] {
         &self.available_types
     }
@@ -126,7 +126,7 @@ impl SafeBiometricAuthenticator {
     ///
     /// # Errors
     /// Returns an error if authentication fails or is unavailable
-    pub async fn authenticate(
+    pub fn authenticate(
         &self,
         policy: BiometricPolicy,
         reason: &str,
@@ -227,18 +227,18 @@ impl SafeBiometricAuthenticator {
             error_message: None,
         })
     }
-
     /// Check if Touch ID is available
+    #[must_use]
     pub fn has_touch_id(&self) -> bool {
         self.available_types.contains(&BiometricType::TouchId)
     }
-
     /// Check if Face ID is available
+    #[must_use]
     pub fn has_face_id(&self) -> bool {
         self.available_types.contains(&BiometricType::FaceId)
     }
-
     /// Get the primary biometric type for this device
+    #[must_use]
     pub fn primary_biometric(&self) -> Option<&BiometricType> {
         self.available_types.first()
     }
@@ -289,9 +289,8 @@ mod tests {
         if let Ok(auth) = authenticator {
             if auth.is_available() {
                 // Only test if biometric is available
-                let result = auth
-                    .authenticate(BiometricPolicy::DeviceDefault, "Test authentication")
-                    .await;
+                let result =
+                    auth.authenticate(BiometricPolicy::DeviceDefault, "Test authentication");
 
                 // Should either succeed or fail gracefully
                 assert!(result.is_ok() || result.is_err());
@@ -334,7 +333,6 @@ mod tests {
         let auth = SafeBiometricAuthenticator::default();
         let err = auth
             .authenticate(BiometricPolicy::None, "reason")
-            .await
             .expect_err("no hardware");
         assert!(err.to_string().contains("not available") || err.to_string().contains("hardware"));
     }

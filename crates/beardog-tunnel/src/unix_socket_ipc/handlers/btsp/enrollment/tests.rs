@@ -143,10 +143,7 @@ async fn verify_valid_proof_gen0() {
         "proof": proof,
     });
 
-    let result = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result = handler.handle_enrollment_verify(Some(&params)).unwrap();
 
     assert_eq!(result["verified"], true);
     assert_eq!(result["verified_generation"], 0);
@@ -171,10 +168,7 @@ async fn verify_valid_proof_gen1() {
         "seed_generation": 1,
     });
 
-    let result = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result = handler.handle_enrollment_verify(Some(&params)).unwrap();
 
     assert_eq!(result["verified"], true);
     assert_eq!(result["verified_generation"], 1);
@@ -199,10 +193,7 @@ async fn verify_grace_period_accepts_previous_gen() {
         "seed_generation": 1,
     });
 
-    let result = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result = handler.handle_enrollment_verify(Some(&params)).unwrap();
 
     assert_eq!(result["verified"], true);
     assert_eq!(result["verified_generation"], 1);
@@ -227,10 +218,7 @@ async fn verify_rejects_stale_generation() {
         "seed_generation": 2,
     });
 
-    let result = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result = handler.handle_enrollment_verify(Some(&params)).unwrap();
 
     assert_eq!(result["verified"], false);
     assert!(result["reason"].as_str().unwrap().contains("not accepted"));
@@ -250,10 +238,7 @@ async fn verify_invalid_proof() {
         "proof": base64::engine::general_purpose::STANDARD.encode(&[0u8; 32]),
     });
 
-    let result = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result = handler.handle_enrollment_verify(Some(&params)).unwrap();
 
     assert_eq!(result["verified"], false);
     assert!(
@@ -278,7 +263,7 @@ async fn verify_fails_without_seed() {
         "proof": base64::engine::general_purpose::STANDARD.encode(&[0u8; 32]),
     });
 
-    let result = handler.handle_enrollment_verify(Some(&params)).await;
+    let result = handler.handle_enrollment_verify(Some(&params));
     assert!(result.is_err());
 }
 
@@ -298,10 +283,7 @@ async fn verify_rejects_expired_timestamp() {
         "proof": proof,
     });
 
-    let result = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result = handler.handle_enrollment_verify(Some(&params)).unwrap();
 
     assert_eq!(result["verified"], false);
     assert!(
@@ -329,16 +311,10 @@ async fn verify_rejects_replay() {
         "proof": proof,
     });
 
-    let result = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result = handler.handle_enrollment_verify(Some(&params)).unwrap();
     assert_eq!(result["verified"], true);
 
-    let result2 = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result2 = handler.handle_enrollment_verify(Some(&params)).unwrap();
     assert_eq!(result2["verified"], false);
     assert!(result2["reason"].as_str().unwrap().contains("replay"));
 
@@ -361,10 +337,7 @@ async fn verify_rejects_far_future_timestamp() {
         "proof": proof,
     });
 
-    let result = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result = handler.handle_enrollment_verify(Some(&params)).unwrap();
 
     assert_eq!(result["verified"], false);
     assert!(
@@ -394,10 +367,7 @@ async fn cross_gen_proof_rejected_without_grace() {
         "seed_generation": 1,
     });
 
-    let result = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result = handler.handle_enrollment_verify(Some(&params)).unwrap();
 
     assert_eq!(result["verified"], false);
     assert!(result["reason"].as_str().unwrap().contains("not accepted"));
@@ -428,10 +398,7 @@ async fn verify_with_lineage_proof_returns_tier() {
         }
     });
 
-    let result = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result = handler.handle_enrollment_verify(Some(&params)).unwrap();
 
     assert_eq!(result["verified"], true);
     // Verifier is "root", enrollee is "child-1" in path [root, child-1]
@@ -458,10 +425,7 @@ async fn verify_without_lineage_proof_omits_tier() {
         "proof": proof,
     });
 
-    let result = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result = handler.handle_enrollment_verify(Some(&params)).unwrap();
 
     assert_eq!(result["verified"], true);
     assert!(result.get("enrollment_tier").is_none() || result["enrollment_tier"].is_null());
@@ -493,10 +457,7 @@ async fn verify_lineage_proof_sibling_distance() {
         }
     });
 
-    let result = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result = handler.handle_enrollment_verify(Some(&params)).unwrap();
 
     assert_eq!(result["verified"], true);
     // Verifier not in path → fallback to enrollee depth = 1 → "kin"
@@ -530,10 +491,7 @@ async fn verify_lineage_proof_deep_enrollee() {
         }
     });
 
-    let result = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result = handler.handle_enrollment_verify(Some(&params)).unwrap();
 
     assert_eq!(result["verified"], true);
     assert_eq!(result["enrollment_tier"], "extended");
@@ -565,10 +523,7 @@ async fn verify_lineage_proof_distant_enrollee() {
         }
     });
 
-    let result = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result = handler.handle_enrollment_verify(Some(&params)).unwrap();
 
     assert_eq!(result["verified"], true);
     assert_eq!(result["enrollment_tier"], "distant");
@@ -599,10 +554,7 @@ async fn verify_lineage_proof_self_enrollment() {
         }
     });
 
-    let result = handler
-        .handle_enrollment_verify(Some(&params))
-        .await
-        .unwrap();
+    let result = handler.handle_enrollment_verify(Some(&params)).unwrap();
 
     assert_eq!(result["verified"], true);
     // node_id == verifier_id → distance 0 → "identity"

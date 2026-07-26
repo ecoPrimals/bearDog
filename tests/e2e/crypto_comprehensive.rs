@@ -37,7 +37,6 @@ pub async fn test_complete_key_generation_lifecycle(
             "/api/v1/crypto/keys/generate",
             Some(r#"{"algorithm": "Ed25519", "purpose": "signing"}"#),
         )
-        .await
     })
     .await?;
 
@@ -57,7 +56,6 @@ pub async fn test_complete_key_generation_lifecycle(
             "/api/v1/crypto/keys/store",
             Some(r#"{"key_id": "key-123", "metadata": {"owner": "test-user"}}"#),
         )
-        .await
     })
     .await?;
 
@@ -68,10 +66,9 @@ pub async fn test_complete_key_generation_lifecycle(
 
     // Step 3: Retrieve key metadata
     info!("  Step 3: Retrieve key metadata");
-    let (retrieve_response, _) = measure_latency(|| async {
-        simulate_api_request("/api/v1/crypto/keys/key-123", None).await
-    })
-    .await?;
+    let (retrieve_response, _) =
+        measure_latency(|| async { simulate_api_request("/api/v1/crypto/keys/key-123", None) })
+            .await?;
 
     assert_success(&retrieve_response)?;
     latencies.push(retrieve_response.latency_ms);
@@ -85,7 +82,6 @@ pub async fn test_complete_key_generation_lifecycle(
             "/api/v1/crypto/sign",
             Some(r#"{"key_id": "key-123", "data": "Hello, BearDog!"}"#),
         )
-        .await
     })
     .await?;
 
@@ -101,7 +97,6 @@ pub async fn test_complete_key_generation_lifecycle(
             "/api/v1/crypto/verify",
             Some(r#"{"key_id": "key-123", "data": "Hello, BearDog!", "signature": "sig-xyz"}"#),
         )
-        .await
     })
     .await?;
 
@@ -117,7 +112,6 @@ pub async fn test_complete_key_generation_lifecycle(
             "/api/v1/crypto/keys/rotate",
             Some(r#"{"key_id": "key-123"}"#),
         )
-        .await
     })
     .await?;
 
@@ -129,7 +123,7 @@ pub async fn test_complete_key_generation_lifecycle(
     // Step 7: Verify old key deactivated
     info!("  Step 7: Verify old key deactivated");
     let (status_check, _) = measure_latency(|| async {
-        simulate_api_request("/api/v1/crypto/keys/key-123/status", None).await
+        simulate_api_request("/api/v1/crypto/keys/key-123/status", None)
     })
     .await?;
 
@@ -165,7 +159,6 @@ pub async fn test_data_encryption_decryption_flow(
             "/api/v1/crypto/keys/generate",
             Some(r#"{"algorithm": "AES-256-GCM", "purpose": "encryption"}"#),
         )
-        .await
     })
     .await?;
 
@@ -181,7 +174,6 @@ pub async fn test_data_encryption_decryption_flow(
             "/api/v1/crypto/encrypt",
             Some(r#"{"key_id": "enc-key-456", "data": "Sensitive information"}"#),
         )
-        .await
     })
     .await?;
 
@@ -197,7 +189,6 @@ pub async fn test_data_encryption_decryption_flow(
             "/api/v1/data/store",
             Some(r#"{"id": "data-789", "encrypted": true, "content": "encrypted-blob"}"#),
         )
-        .await
     })
     .await?;
 
@@ -209,8 +200,7 @@ pub async fn test_data_encryption_decryption_flow(
     // Step 4: Retrieve encrypted data
     info!("  Step 4: Retrieve encrypted data");
     let (retrieve_response, _) =
-        measure_latency(|| async { simulate_api_request("/api/v1/data/data-789", None).await })
-            .await?;
+        measure_latency(|| async { simulate_api_request("/api/v1/data/data-789", None) }).await?;
 
     assert_success(&retrieve_response)?;
     latencies.push(retrieve_response.latency_ms);
@@ -224,7 +214,6 @@ pub async fn test_data_encryption_decryption_flow(
             "/api/v1/crypto/decrypt",
             Some(r#"{"key_id": "enc-key-456", "encrypted_data": "encrypted-blob"}"#),
         )
-        .await
     })
     .await?;
 
@@ -240,7 +229,6 @@ pub async fn test_data_encryption_decryption_flow(
             "/api/v1/crypto/verify-integrity",
             Some(r#"{"original": "Sensitive information", "decrypted": "Sensitive information"}"#),
         )
-        .await
     })
     .await?;
 
@@ -276,7 +264,6 @@ pub async fn test_digital_signature_workflow(
             "/api/v1/crypto/keys/generate",
             Some(r#"{"algorithm": "Ed25519", "purpose": "signing"}"#),
         )
-        .await
     })
     .await?;
 
@@ -292,9 +279,7 @@ pub async fn test_digital_signature_workflow(
             "/api/v1/crypto/sign-document",
             Some(r#"{"key_id": "sign-key-001", "document": "Contract v1.0", "metadata": {"timestamp": "2025-11-24"}}"#),
         )
-        .await
-    })
-    .await?;
+    }).await?;
 
     assert_success(&sign_response)?;
     latencies.push(sign_response.latency_ms);
@@ -308,7 +293,6 @@ pub async fn test_digital_signature_workflow(
             "/api/v1/crypto/signatures/store",
             Some(r#"{"signature_id": "sig-001", "signature": "sig-data-xyz"}"#),
         )
-        .await
     })
     .await?;
 
@@ -324,7 +308,6 @@ pub async fn test_digital_signature_workflow(
             "/api/v1/crypto/verify-signature",
             Some(r#"{"signature_id": "sig-001", "document": "Contract v1.0"}"#),
         )
-        .await
     })
     .await?;
 
@@ -340,7 +323,6 @@ pub async fn test_digital_signature_workflow(
             "/api/v1/crypto/verify-signature",
             Some(r#"{"signature_id": "sig-001", "document": "Contract v1.1 MODIFIED"}"#),
         )
-        .await
     })
     .await?;
 
@@ -375,7 +357,6 @@ pub async fn test_hash_and_integrity_verification(
             "/api/v1/crypto/hash",
             Some(r#"{"algorithm": "SHA-256", "data": "Important data"}"#),
         )
-        .await
     })
     .await?;
 
@@ -391,7 +372,6 @@ pub async fn test_hash_and_integrity_verification(
             "/api/v1/crypto/hashes/store",
             Some(r#"{"data_id": "data-001", "hash": "hash-abc123"}"#),
         )
-        .await
     })
     .await?;
 
@@ -407,7 +387,6 @@ pub async fn test_hash_and_integrity_verification(
             "/api/v1/crypto/verify-hash",
             Some(r#"{"data": "Important data", "expected_hash": "hash-abc123"}"#),
         )
-        .await
     })
     .await?;
 
@@ -423,7 +402,6 @@ pub async fn test_hash_and_integrity_verification(
             "/api/v1/crypto/verify-hash",
             Some(r#"{"data": "Modified data", "expected_hash": "hash-abc123"}"#),
         )
-        .await
     })
     .await?;
 
@@ -438,7 +416,6 @@ pub async fn test_hash_and_integrity_verification(
             "/api/v1/crypto/hash",
             Some(r#"{"algorithm": "BLAKE3", "data": "Important data"}"#),
         )
-        .await
     })
     .await?;
 
@@ -474,7 +451,6 @@ pub async fn test_key_derivation_hierarchy(
             "/api/v1/crypto/keys/generate-master",
             Some(r#"{"algorithm": "Ed25519", "purpose": "master"}"#),
         )
-        .await
     })
     .await?;
 
@@ -490,7 +466,6 @@ pub async fn test_key_derivation_hierarchy(
             "/api/v1/crypto/keys/derive",
             Some(r#"{"master_key_id": "master-001", "path": "m/0"}"#),
         )
-        .await
     })
     .await?;
 
@@ -506,7 +481,6 @@ pub async fn test_key_derivation_hierarchy(
             "/api/v1/crypto/keys/derive",
             Some(r#"{"master_key_id": "master-001", "path": "m/1"}"#),
         )
-        .await
     })
     .await?;
 
@@ -522,7 +496,6 @@ pub async fn test_key_derivation_hierarchy(
             "/api/v1/crypto/sign",
             Some(r#"{"key_id": "child-0", "data": "Data for child 0"}"#),
         )
-        .await
     })
     .await?;
 
@@ -537,7 +510,6 @@ pub async fn test_key_derivation_hierarchy(
             "/api/v1/crypto/sign",
             Some(r#"{"key_id": "child-1", "data": "Data for child 1"}"#),
         )
-        .await
     })
     .await?;
 
@@ -549,7 +521,7 @@ pub async fn test_key_derivation_hierarchy(
     // Step 6: Verify hierarchy maintained
     info!("  Step 6: Verify key hierarchy");
     let (hierarchy_check, _) = measure_latency(|| async {
-        simulate_api_request("/api/v1/crypto/keys/master-001/hierarchy", None).await
+        simulate_api_request("/api/v1/crypto/keys/master-001/hierarchy", None)
     })
     .await?;
 

@@ -40,8 +40,8 @@ impl SafeAndroidProvider {
             .map(|v| v == "true")
             .unwrap_or(false)
     }
-
     /// Checks if hardware-backed security is available
+    #[must_use]
     pub const fn is_hardware_backed(&self) -> bool {
         self.strongbox_available
     }

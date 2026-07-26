@@ -60,6 +60,7 @@ impl OperationRouterConfig {
     ///
     /// - `BEARDOG_HSM_OPERATION_TIMEOUT_SECS` → `operation_timeout_ms` (×1000, default 5000ms)
     /// - `BEARDOG_HSM_MAX_RETRIES` → `max_retries` (default 3)
+    #[must_use]
     pub fn from_env() -> Self {
         let timeout_ms = std::env::var(env_keys::ENV_HSM_OPERATION_TIMEOUT_SECS)
             .ok()
@@ -125,14 +126,15 @@ pub struct HsmOperationRouter {
 
 impl HsmOperationRouter {
     /// Create a new operation router
+    #[must_use]
     pub fn new() -> Self {
         Self {
             config: OperationRouterConfig::default(),
             stats: OperationStats::default(),
         }
     }
-
     /// Create with custom configuration
+    #[must_use]
     pub fn with_config(config: OperationRouterConfig) -> Self {
         Self {
             config,
@@ -249,13 +251,13 @@ impl HsmOperationRouter {
         let success_rate = 1.0 - (err_f / tot_f);
         self.stats.success_rate.insert(provider_id, success_rate);
     }
-
     /// Get statistics
+    #[must_use]
     pub const fn stats(&self) -> &OperationStats {
         &self.stats
     }
-
     /// Get configuration
+    #[must_use]
     pub const fn config(&self) -> &OperationRouterConfig {
         &self.config
     }

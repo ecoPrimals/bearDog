@@ -95,6 +95,7 @@ pub struct HsmCache {
 
 impl HsmCache {
     /// Create new HSM cache
+    #[must_use]
     pub fn new() -> Self {
         Self {
             key_metadata: Arc::new(RwLock::new(HashMap::with_capacity(16))),

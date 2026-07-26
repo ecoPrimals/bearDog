@@ -2,9 +2,18 @@
 
 //! Android Keystore / attestation / health transport traits and stubs.
 //!
-//! These are the **JNI boundary ports** — the ONLY items that need real Android hardware.
-//! Production code injects real JNI transports; tests and non-Android hosts use the deterministic
-//! stubs defined here.
+//! ## Enum dispatch pattern (Silicon Atheism)
+//!
+//! Each transport exposes a trait (`KeystoreTransport`, `AttestationTransport`,
+//! `HealthMetricsTransport`) and a backend enum (`*TransportBackend`) that dispatches
+//! to either:
+//!
+//! - **Stub / in-memory** implementations on non-Android hosts and in unit tests
+//! - **JNI adapters** on Android (`AndroidJni*` types), fail-closed in production until
+//!   hardware-backed Keymaster / Key Attestation calls are wired
+//!
+//! Production code injects real JNI transports; tests and CI use deterministic stubs
+//! defined here — no `#ifdef` spaghetti in call sites.
 
 use std::future::{Future, ready};
 
@@ -69,11 +78,98 @@ pub trait KeystoreTransport: Send + Sync {
 #[derive(Debug)]
 pub enum KeystoreTransportBackend {
     /// Non-Android hosts: deterministic in-memory port (no JNI).
-    #[cfg(not(target_os = "android"))]
     Stub(MemoryKeystoreTransport),
     /// Android: Keystore JNI adapter (in-memory stub in tests; fail-closed in production).
-    #[cfg(target_os = "android")]
     AndroidJni(AndroidJniKeystoreTransport),
+}
+
+async fn keystore_backend_generate_key(
+    backend: &KeystoreTransportBackend,
+    alias: &str,
+    params: &AndroidKeyParams,
+) -> Result<Vec<u8>, BearDogError> {
+    match backend {
+        KeystoreTransportBackend::Stub(t) => t.jni_generate_key(alias, params).await,
+        KeystoreTransportBackend::AndroidJni(t) => t.jni_generate_key(alias, params).await,
+    }
+}
+
+async fn keystore_backend_sign(
+    backend: &KeystoreTransportBackend,
+    alias: &str,
+    data: &[u8],
+) -> Result<Vec<u8>, BearDogError> {
+    match backend {
+        KeystoreTransportBackend::Stub(t) => t.jni_sign(alias, data).await,
+        KeystoreTransportBackend::AndroidJni(t) => t.jni_sign(alias, data).await,
+    }
+}
+
+async fn keystore_backend_verify(
+    backend: &KeystoreTransportBackend,
+    alias: &str,
+    data: &[u8],
+    signature: &[u8],
+) -> Result<bool, BearDogError> {
+    match backend {
+        KeystoreTransportBackend::Stub(t) => t.jni_verify(alias, data, signature).await,
+        KeystoreTransportBackend::AndroidJni(t) => t.jni_verify(alias, data, signature).await,
+    }
+}
+
+async fn keystore_backend_encrypt(
+    backend: &KeystoreTransportBackend,
+    alias: &str,
+    plaintext: &[u8],
+) -> Result<Vec<u8>, BearDogError> {
+    match backend {
+        KeystoreTransportBackend::Stub(t) => t.jni_encrypt(alias, plaintext).await,
+        KeystoreTransportBackend::AndroidJni(t) => t.jni_encrypt(alias, plaintext).await,
+    }
+}
+
+async fn keystore_backend_decrypt(
+    backend: &KeystoreTransportBackend,
+    alias: &str,
+    ciphertext: &[u8],
+) -> Result<Vec<u8>, BearDogError> {
+    match backend {
+        KeystoreTransportBackend::Stub(t) => t.jni_decrypt(alias, ciphertext).await,
+        KeystoreTransportBackend::AndroidJni(t) => t.jni_decrypt(alias, ciphertext).await,
+    }
+}
+
+async fn keystore_backend_list_aliases(
+    backend: &KeystoreTransportBackend,
+) -> Result<Vec<String>, BearDogError> {
+    match backend {
+        KeystoreTransportBackend::Stub(t) => t.jni_list_aliases().await,
+        KeystoreTransportBackend::AndroidJni(t) => t.jni_list_aliases().await,
+    }
+}
+
+async fn keystore_backend_delete_key(
+    backend: &KeystoreTransportBackend,
+    alias: &str,
+) -> Result<(), BearDogError> {
+    match backend {
+        KeystoreTransportBackend::Stub(t) => t.jni_delete_key(alias).await,
+        KeystoreTransportBackend::AndroidJni(t) => t.jni_delete_key(alias).await,
+    }
+}
+
+async fn keystore_backend_import_key(
+    backend: &KeystoreTransportBackend,
+    alias: &str,
+    key_data: &[u8],
+    key_type: HsmKeyType,
+) -> Result<(), BearDogError> {
+    match backend {
+        KeystoreTransportBackend::Stub(t) => t.jni_import_key(alias, key_data, key_type).await,
+        KeystoreTransportBackend::AndroidJni(t) => {
+            t.jni_import_key(alias, key_data, key_type).await
+        }
+    }
 }
 
 impl KeystoreTransport for KeystoreTransportBackend {
@@ -82,12 +178,7 @@ impl KeystoreTransport for KeystoreTransportBackend {
         alias: &str,
         params: &AndroidKeyParams,
     ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
-        match self {
-            #[cfg(not(target_os = "android"))]
-            Self::Stub(t) => t.jni_generate_key(alias, params),
-            #[cfg(target_os = "android")]
-            Self::AndroidJni(t) => t.jni_generate_key(alias, params),
-        }
+        keystore_backend_generate_key(self, alias, params)
     }
 
     fn jni_sign(
@@ -95,12 +186,7 @@ impl KeystoreTransport for KeystoreTransportBackend {
         alias: &str,
         data: &[u8],
     ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
-        match self {
-            #[cfg(not(target_os = "android"))]
-            Self::Stub(t) => t.jni_sign(alias, data),
-            #[cfg(target_os = "android")]
-            Self::AndroidJni(t) => t.jni_sign(alias, data),
-        }
+        keystore_backend_sign(self, alias, data)
     }
 
     fn jni_verify(
@@ -109,12 +195,7 @@ impl KeystoreTransport for KeystoreTransportBackend {
         data: &[u8],
         signature: &[u8],
     ) -> impl Future<Output = Result<bool, BearDogError>> + Send {
-        match self {
-            #[cfg(not(target_os = "android"))]
-            Self::Stub(t) => t.jni_verify(alias, data, signature),
-            #[cfg(target_os = "android")]
-            Self::AndroidJni(t) => t.jni_verify(alias, data, signature),
-        }
+        keystore_backend_verify(self, alias, data, signature)
     }
 
     fn jni_encrypt(
@@ -122,12 +203,7 @@ impl KeystoreTransport for KeystoreTransportBackend {
         alias: &str,
         plaintext: &[u8],
     ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
-        match self {
-            #[cfg(not(target_os = "android"))]
-            Self::Stub(t) => t.jni_encrypt(alias, plaintext),
-            #[cfg(target_os = "android")]
-            Self::AndroidJni(t) => t.jni_encrypt(alias, plaintext),
-        }
+        keystore_backend_encrypt(self, alias, plaintext)
     }
 
     fn jni_decrypt(
@@ -135,30 +211,15 @@ impl KeystoreTransport for KeystoreTransportBackend {
         alias: &str,
         ciphertext: &[u8],
     ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
-        match self {
-            #[cfg(not(target_os = "android"))]
-            Self::Stub(t) => t.jni_decrypt(alias, ciphertext),
-            #[cfg(target_os = "android")]
-            Self::AndroidJni(t) => t.jni_decrypt(alias, ciphertext),
-        }
+        keystore_backend_decrypt(self, alias, ciphertext)
     }
 
     fn jni_list_aliases(&self) -> impl Future<Output = Result<Vec<String>, BearDogError>> + Send {
-        match self {
-            #[cfg(not(target_os = "android"))]
-            Self::Stub(t) => t.jni_list_aliases(),
-            #[cfg(target_os = "android")]
-            Self::AndroidJni(t) => t.jni_list_aliases(),
-        }
+        keystore_backend_list_aliases(self)
     }
 
     fn jni_delete_key(&self, alias: &str) -> impl Future<Output = Result<(), BearDogError>> + Send {
-        match self {
-            #[cfg(not(target_os = "android"))]
-            Self::Stub(t) => t.jni_delete_key(alias),
-            #[cfg(target_os = "android")]
-            Self::AndroidJni(t) => t.jni_delete_key(alias),
-        }
+        keystore_backend_delete_key(self, alias)
     }
 
     fn jni_import_key(
@@ -167,12 +228,7 @@ impl KeystoreTransport for KeystoreTransportBackend {
         key_data: &[u8],
         key_type: HsmKeyType,
     ) -> impl Future<Output = Result<(), BearDogError>> + Send {
-        match self {
-            #[cfg(not(target_os = "android"))]
-            Self::Stub(t) => t.jni_import_key(alias, key_data, key_type),
-            #[cfg(target_os = "android")]
-            Self::AndroidJni(t) => t.jni_import_key(alias, key_data, key_type),
-        }
+        keystore_backend_import_key(self, alias, key_data, key_type)
     }
 }
 
@@ -183,24 +239,16 @@ pub struct MemoryKeystoreTransport {
     keys: Mutex<std::collections::HashMap<String, Vec<u8>>>,
 }
 
-/// Host-only name for [`MemoryKeystoreTransport`] (not compiled on Android targets).
-#[cfg(not(target_os = "android"))]
+/// Host-only name for [`MemoryKeystoreTransport`] (alias for enum dispatch clarity).
 pub type StubKeystoreTransport = MemoryKeystoreTransport;
 
-/// Android Keystore JNI transport for unit tests (in-memory until JNI is wired).
-#[cfg(all(target_os = "android", test))]
-pub type AndroidJniKeystoreTransport = MemoryKeystoreTransport;
-
-/// Fail-closed Android Keystore JNI placeholder for production builds.
-#[cfg(all(target_os = "android", not(test)))]
+/// Fail-closed Android Keystore JNI placeholder (production and non-Android hosts).
 #[derive(Debug, Clone, Copy, Default)]
 pub struct UnwiredAndroidKeystoreTransport;
 
-#[cfg(all(target_os = "android", not(test)))]
 const ANDROID_KEYSTORE_JNI_MESSAGE: &str =
     "Android Keystore JNI integration is not yet available (hardware-backed operations required)";
 
-#[cfg(all(target_os = "android", not(test)))]
 impl KeystoreTransport for UnwiredAndroidKeystoreTransport {
     fn jni_generate_key(
         &self,
@@ -280,8 +328,7 @@ impl KeystoreTransport for UnwiredAndroidKeystoreTransport {
     }
 }
 
-/// Android Keystore JNI transport handle (fail-closed on production Android builds).
-#[cfg(all(target_os = "android", not(test)))]
+/// Android Keystore JNI transport handle (fail-closed until Keymaster JNI is wired).
 pub type AndroidJniKeystoreTransport = UnwiredAndroidKeystoreTransport;
 
 fn stub_digest(data: &[u8]) -> Vec<u8> {
@@ -382,10 +429,8 @@ impl KeystoreTransport for MemoryKeystoreTransport {
 
 // --- Attestation transport -----------------------------------------------------------------------
 
-#[cfg(not(target_os = "android"))]
 const STUB_ATTESTATION_MESSAGE: &str = "device attestation requires Android hardware";
 
-#[cfg(target_os = "android")]
 const ANDROID_ATTESTATION_JNI_MESSAGE: &str = "Android Key Attestation JNI integration is not yet available (hardware-backed attestation required)";
 
 /// Port for Android Key Attestation JNI (hardware-backed attestation).
@@ -401,11 +446,19 @@ pub trait AttestationTransport: Send + Sync {
 #[derive(Debug)]
 pub enum AttestationTransportBackend {
     /// Non-Android hosts: no-op stand-in (no JNI).
-    #[cfg(not(target_os = "android"))]
     Stub(StubAttestationTransport),
     /// Android: attestation JNI port (no-op until Key Attestation JNI is wired).
-    #[cfg(target_os = "android")]
     AndroidJni(AndroidJniAttestationTransport),
+}
+
+async fn attestation_backend_initialize(
+    backend: &AttestationTransportBackend,
+    level: AttestationLevel,
+) -> Result<(), BearDogError> {
+    match backend {
+        AttestationTransportBackend::Stub(t) => t.jni_initialize(level).await,
+        AttestationTransportBackend::AndroidJni(t) => t.jni_initialize(level).await,
+    }
 }
 
 impl AttestationTransport for AttestationTransportBackend {
@@ -413,21 +466,14 @@ impl AttestationTransport for AttestationTransportBackend {
         &self,
         level: AttestationLevel,
     ) -> impl Future<Output = Result<(), BearDogError>> + Send {
-        match self {
-            #[cfg(not(target_os = "android"))]
-            Self::Stub(t) => t.jni_initialize(level),
-            #[cfg(target_os = "android")]
-            Self::AndroidJni(t) => t.jni_initialize(level),
-        }
+        attestation_backend_initialize(self, level)
     }
 }
 
 /// Stub attestation transport for non-Android tests (no JNI).
-#[cfg(not(target_os = "android"))]
 #[derive(Debug, Clone, Copy, Default)]
 pub struct StubAttestationTransport;
 
-#[cfg(not(target_os = "android"))]
 impl AttestationTransport for StubAttestationTransport {
     fn jni_initialize(
         &self,
@@ -440,11 +486,9 @@ impl AttestationTransport for StubAttestationTransport {
 }
 
 /// Android Key Attestation JNI adapter (placeholder until hardware attestation JNI is implemented).
-#[cfg(target_os = "android")]
 #[derive(Debug, Clone, Copy, Default)]
 pub struct AndroidJniAttestationTransport;
 
-#[cfg(target_os = "android")]
 impl AttestationTransport for AndroidJniAttestationTransport {
     fn jni_initialize(
         &self,
@@ -471,7 +515,7 @@ pub trait HealthMetricsTransport: Send + Sync {
 pub enum HealthMetricsTransportBackend {
     /// Non-Android test stub (no JNI).
     Stub(StubHealthMetricsTransport),
-    #[cfg(target_os = "android")]
+    /// Android: process-level metrics via JNI-shaped port.
     AndroidJni(AndroidJniHealthMetricsTransport),
 }
 
@@ -482,7 +526,6 @@ async fn health_metrics_backend_collect(
         HealthMetricsTransportBackend::Stub(t) => {
             HealthMetricsTransport::collect_performance_metrics(t).await
         }
-        #[cfg(target_os = "android")]
         HealthMetricsTransportBackend::AndroidJni(t) => {
             HealthMetricsTransport::collect_performance_metrics(t).await
         }
@@ -530,13 +573,11 @@ impl HealthMetricsTransport for StubHealthMetricsTransport {
 }
 
 /// On Android, collects process-level metrics available without custom JNI.
-#[cfg(target_os = "android")]
 #[derive(Debug)]
 pub struct AndroidJniHealthMetricsTransport {
     start: std::time::Instant,
 }
 
-#[cfg(target_os = "android")]
 impl AndroidJniHealthMetricsTransport {
     #[must_use]
     pub fn new() -> Self {
@@ -546,8 +587,13 @@ impl AndroidJniHealthMetricsTransport {
     }
 }
 
-#[cfg(target_os = "android")]
+const ANDROID_HEALTH_METRICS_JNI_MESSAGE: &str =
+    "Android JNI health metrics require an Android runtime";
+
 fn android_resident_memory_mb() -> Option<f64> {
+    if !cfg!(target_os = "android") {
+        return None;
+    }
     let s = std::fs::read_to_string("/proc/self/statm").ok()?;
     let resident_pages: u64 = s.split_whitespace().nth(1)?.parse().ok()?;
     const PAGE_SIZE: u64 = 4096;
@@ -558,18 +604,22 @@ fn android_resident_memory_mb() -> Option<f64> {
     Some((resident_pages * PAGE_SIZE) as f64 / (1024.0 * 1024.0))
 }
 
-#[cfg(target_os = "android")]
 async fn android_jni_collect_performance_metrics(
     this: &AndroidJniHealthMetricsTransport,
 ) -> Result<status::PerformanceMetrics, BearDogError> {
-    let mut m = status::PerformanceMetrics::default();
-    m.uptime_seconds = this.start.elapsed().as_secs();
-    m.memory_usage_mb = android_resident_memory_mb().unwrap_or(0.0);
-    m.latency_ms = m.average_latency_ms;
-    Ok(m)
+    if cfg!(target_os = "android") {
+        let mut m = status::PerformanceMetrics::default();
+        m.uptime_seconds = this.start.elapsed().as_secs();
+        m.memory_usage_mb = android_resident_memory_mb().unwrap_or(0.0);
+        m.latency_ms = m.average_latency_ms;
+        Ok(m)
+    } else {
+        Err(BearDogError::not_yet_available(
+            ANDROID_HEALTH_METRICS_JNI_MESSAGE,
+        ))
+    }
 }
 
-#[cfg(target_os = "android")]
 impl HealthMetricsTransport for AndroidJniHealthMetricsTransport {
     fn collect_performance_metrics(
         &self,

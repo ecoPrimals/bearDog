@@ -220,8 +220,8 @@ pub struct DecisionEngine {
 }
 
 impl DecisionEngine {
-    #[must_use]
     /// Create a new decision engine
+    #[must_use]
     pub fn new(config: HybridIntelligenceConfig) -> Self {
         Self {
             config,

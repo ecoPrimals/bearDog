@@ -161,6 +161,7 @@ impl UnifiedConfigUtils {
     // =============================================================================
 
     /// Get standard configuration file paths in order of preference
+    #[must_use]
     pub fn get_standard_config_paths(app_name: &str) -> Vec<PathBuf> {
         let mut paths = Vec::new();
 
@@ -494,7 +495,7 @@ impl UnifiedConfigUtils {
                     .replace('_', ".");
 
                 debug!("🔧 Applying env override: {} = {}", config_key, value);
-                Self::set_nested_json_value(&mut config_json, &config_key, &value)?;
+                Self::set_nested_json_value(&mut config_json, &config_key, &value);
             }
         }
 
@@ -506,11 +507,7 @@ impl UnifiedConfigUtils {
     }
 
     /// Set nested JSON value using dot notation
-    fn set_nested_json_value(
-        json: &mut serde_json::Value,
-        path: &str,
-        value: &str,
-    ) -> Result<(), BearDogError> {
+    fn set_nested_json_value(json: &mut serde_json::Value, path: &str, value: &str) {
         let parts: Vec<&str> = path.split('.').collect();
         let mut current = json;
 
@@ -532,8 +529,6 @@ impl UnifiedConfigUtils {
                 }
             }
         }
-
-        Ok(())
     }
 
     // =============================================================================

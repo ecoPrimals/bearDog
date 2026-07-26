@@ -20,7 +20,7 @@ pub enum BtspCipher {
 impl BtspCipher {
     /// Wire name used in handshake negotiation.
     #[must_use]
-    pub fn wire_name(self) -> &'static str {
+    pub const fn wire_name(self) -> &'static str {
         match self {
             Self::ChaCha20Poly1305 => "chacha20_poly1305",
             Self::HmacPlain => "hmac_plain",
@@ -76,7 +76,7 @@ impl BtspSession {
     ///
     /// `encrypt_key` is used for server → client, `decrypt_key` for client → server.
     #[must_use]
-    pub fn new_server(
+    pub const fn new_server(
         session_id: String,
         cipher: BtspCipher,
         server_to_client_key: [u8; 32],
@@ -96,7 +96,7 @@ impl BtspSession {
     ///
     /// `encrypt_key` is used for client → server, `decrypt_key` for server → client.
     #[must_use]
-    pub fn new_client(
+    pub const fn new_client(
         session_id: String,
         cipher: BtspCipher,
         client_to_server_key: [u8; 32],
@@ -253,7 +253,7 @@ impl Phase3Session {
     ///
     /// `encrypt_key` = server→client, `decrypt_key` = client→server.
     #[must_use]
-    pub fn new(keys: super::crypto::Phase3SessionKeys) -> Self {
+    pub const fn new(keys: super::crypto::Phase3SessionKeys) -> Self {
         Self {
             encrypt_key: keys.encrypt_key,
             decrypt_key: keys.decrypt_key,

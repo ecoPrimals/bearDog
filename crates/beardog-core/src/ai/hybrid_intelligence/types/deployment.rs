@@ -94,16 +94,6 @@ impl ResourceRequirements {
     }
 }
 
-/// Health check configuration
-///
-/// **DEPRECATED**: Use `beardog_types::canonical::config::domains::network::monitoring::HealthCheckConfiguration` instead.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use beardog_types::canonical::config::domains::network::monitoring::HealthCheckConfiguration instead"
-)]
-pub type HealthCheckConfig =
-    beardog_types::canonical::config::domains::network::monitoring::HealthCheckConfiguration;
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -169,7 +159,7 @@ mod tests {
         reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
     )]
     fn deprecated_health_check_alias_matches_target() {
-        let h: HealthCheckConfig = HealthCheckConfiguration::default();
+        let h = HealthCheckConfiguration::default();
         assert!(h.enabled);
         assert_eq!(h.interval_seconds, 30);
         assert_eq!(h.endpoint, "/health");

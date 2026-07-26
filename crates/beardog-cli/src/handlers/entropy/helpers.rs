@@ -5,6 +5,7 @@
 use beardog_errors::BearDogError;
 
 /// Standard Base64-encode bytes (for seed payloads).
+#[must_use]
 pub fn base64_encode(data: &[u8]) -> String {
     use base64::Engine;
     use base64::engine::general_purpose::STANDARD;
@@ -29,6 +30,7 @@ pub fn base64_decode(data: &str) -> Result<Vec<u8>, BearDogError> {
     clippy::cast_precision_loss,
     reason = "Byte length as divisor; acceptable precision for normalized Shannon entropy"
 )]
+#[must_use]
 pub fn calculate_entropy_quality(bytes: &[u8]) -> f64 {
     if bytes.is_empty() {
         return 0.0;

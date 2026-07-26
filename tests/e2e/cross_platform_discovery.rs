@@ -37,7 +37,7 @@ use tracing::{debug, info};
 /// `TEST_CATEGORY`: e2e
 /// `TEST_DOMAIN`: `hsm_discovery`
 /// `TEST_PRIORITY`: critical
-pub async fn run_cross_platform_discovery_test(
+pub fn run_cross_platform_discovery_test(
     _config: &E2ETestConfig,
 ) -> Result<E2EMetrics, BearDogError> {
     info!("🔍 Starting cross-platform HSM discovery E2E test");
@@ -47,7 +47,7 @@ pub async fn run_cross_platform_discovery_test(
 
     // Step 1: Initialize discovery engine
     info!("Step 1: Initializing universal HSM discovery engine");
-    let discovery_result = initialize_discovery_engine().await;
+    let discovery_result = initialize_discovery_engine();
     metrics.total_requests += 1;
 
     if discovery_result.is_ok() {
@@ -61,28 +61,28 @@ pub async fn run_cross_platform_discovery_test(
 
     // Step 2: Platform-specific discovery
     info!("Step 2: Discovering platform-specific HSMs");
-    let platform_hsms = discover_platform_hsms().await?;
+    let platform_hsms = discover_platform_hsms()?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
     info!("✅ Discovered {} platform HSM(s)", platform_hsms);
 
     // Step 3: Network HSM discovery
     info!("Step 3: Discovering network HSMs");
-    let network_hsms = discover_network_hsms().await?;
+    let network_hsms = discover_network_hsms()?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
     info!("✅ Discovered {} network HSM(s)", network_hsms);
 
     // Step 4: Cloud HSM discovery
     info!("Step 4: Discovering cloud HSMs");
-    let cloud_hsms = discover_cloud_hsms().await?;
+    let cloud_hsms = discover_cloud_hsms()?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
     info!("✅ Discovered {} cloud HSM(s)", cloud_hsms);
 
     // Step 5: Software HSM (always available)
     info!("Step 5: Verifying software HSM fallback");
-    let software_hsm = discover_software_hsm().await?;
+    let software_hsm = discover_software_hsm()?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
     info!("✅ Software HSM available: {}", software_hsm);
@@ -122,7 +122,7 @@ pub async fn run_cross_platform_discovery_test(
 }
 
 /// Initialize the universal HSM discovery engine
-async fn initialize_discovery_engine() -> Result<(), BearDogError> {
+fn initialize_discovery_engine() -> Result<(), BearDogError> {
     debug!("Initializing HSM discovery engine with all providers");
 
     // Full engine wiring: `DiscoveryEngine::new()` from universal_hsm_discovery (when this E2E exercises discovery).
@@ -132,7 +132,7 @@ async fn initialize_discovery_engine() -> Result<(), BearDogError> {
 }
 
 /// Discover platform-specific HSMs (TPM, Secure Enclave, `StrongBox`)
-async fn discover_platform_hsms() -> Result<usize, BearDogError> {
+fn discover_platform_hsms() -> Result<usize, BearDogError> {
     debug!("Discovering platform-specific HSMs");
 
     let mut count = 0;
@@ -205,7 +205,7 @@ async fn discover_platform_hsms() -> Result<usize, BearDogError> {
 }
 
 /// Discover network HSMs
-async fn discover_network_hsms() -> Result<usize, BearDogError> {
+fn discover_network_hsms() -> Result<usize, BearDogError> {
     debug!("Discovering network HSMs");
 
     // Check for known endpoints from environment
@@ -224,7 +224,7 @@ async fn discover_network_hsms() -> Result<usize, BearDogError> {
 }
 
 /// Discover cloud HSMs
-async fn discover_cloud_hsms() -> Result<usize, BearDogError> {
+fn discover_cloud_hsms() -> Result<usize, BearDogError> {
     debug!("Discovering cloud HSMs");
 
     let mut count = 0;
@@ -269,7 +269,7 @@ async fn discover_cloud_hsms() -> Result<usize, BearDogError> {
 }
 
 /// Discover software HSM (always available)
-async fn discover_software_hsm() -> Result<bool, BearDogError> {
+fn discover_software_hsm() -> Result<bool, BearDogError> {
     debug!("Verifying software HSM availability");
     // Software HSM is always available as a fallback
     Ok(true)
@@ -280,14 +280,14 @@ async fn discover_software_hsm() -> Result<bool, BearDogError> {
 /// `TEST_CATEGORY`: e2e
 /// `TEST_DOMAIN`: `hsm_discovery`
 /// `TEST_PRIORITY`: high
-pub async fn test_discovery_with_configuration() -> Result<E2EMetrics, BearDogError> {
+pub fn test_discovery_with_configuration() -> Result<E2EMetrics, BearDogError> {
     info!("🔧 Testing HSM discovery with environment configuration");
 
     let mut metrics = E2EMetrics::default();
 
     // Test 1: Default configuration
     info!("Test 1: Discovery with default configuration");
-    let default_count = discover_with_defaults().await?;
+    let default_count = discover_with_defaults()?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
     info!("   ✅ Discovered {} HSMs with defaults", default_count);
@@ -295,7 +295,7 @@ pub async fn test_discovery_with_configuration() -> Result<E2EMetrics, BearDogEr
     // Test 2: Custom timeout configuration
     info!("Test 2: Discovery with custom timeout");
     beardog_errors::process_env::set_var("BEARDOG_HSM_PROBE_TIMEOUT_SECS", "10");
-    let custom_count = discover_with_custom_timeout().await?;
+    let custom_count = discover_with_custom_timeout()?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
     info!("   ✅ Discovered {} HSMs with custom timeout", custom_count);
@@ -306,7 +306,7 @@ pub async fn test_discovery_with_configuration() -> Result<E2EMetrics, BearDogEr
         "BEARDOG_HSM_KNOWN_ENDPOINTS",
         "https://test.example.com:8443",
     );
-    let endpoint_count = discover_with_known_endpoints().await?;
+    let endpoint_count = discover_with_known_endpoints()?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
     info!("   ✅ Processed {} known endpoint(s)", endpoint_count);
@@ -321,12 +321,12 @@ pub async fn test_discovery_with_configuration() -> Result<E2EMetrics, BearDogEr
     Ok(metrics)
 }
 
-async fn discover_with_defaults() -> Result<usize, BearDogError> {
+fn discover_with_defaults() -> Result<usize, BearDogError> {
     // Default discovery (software HSM always available)
     Ok(1)
 }
 
-async fn discover_with_custom_timeout() -> Result<usize, BearDogError> {
+fn discover_with_custom_timeout() -> Result<usize, BearDogError> {
     // Verify custom timeout is applied
     let timeout = beardog_errors::process_env::var("BEARDOG_HSM_PROBE_TIMEOUT_SECS")
         .ok()
@@ -342,7 +342,7 @@ async fn discover_with_custom_timeout() -> Result<usize, BearDogError> {
     }
 }
 
-async fn discover_with_known_endpoints() -> Result<usize, BearDogError> {
+fn discover_with_known_endpoints() -> Result<usize, BearDogError> {
     // Count configured endpoints
     let endpoints = beardog_errors::process_env::var("BEARDOG_HSM_KNOWN_ENDPOINTS")
         .ok()
@@ -360,13 +360,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_discovery_engine_initialization() {
-        let result = initialize_discovery_engine().await;
+        let result = initialize_discovery_engine();
         assert!(result.is_ok());
     }
 
     #[tokio::test]
     async fn test_software_hsm_always_available() {
-        let result = discover_software_hsm().await;
+        let result = discover_software_hsm();
         assert!(result.is_ok());
         assert!(result.unwrap());
     }

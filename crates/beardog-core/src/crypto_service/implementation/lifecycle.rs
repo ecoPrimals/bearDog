@@ -59,7 +59,7 @@ impl BearDogCryptoService {
         }
     }
 
-    pub(crate) async fn get_capabilities_impl(
+    pub(crate) fn get_capabilities_impl(
         &self,
     ) -> Result<beardog_types::crypto_service::ServiceCapabilities> {
         use beardog_types::crypto_service::ServiceCapabilities;
@@ -91,9 +91,7 @@ impl BearDogCryptoService {
         })
     }
 
-    pub(crate) async fn get_health_impl(
-        &self,
-    ) -> Result<beardog_types::crypto_service::HealthStatus> {
+    pub(crate) fn get_health_impl(&self) -> Result<beardog_types::crypto_service::HealthStatus> {
         use beardog_types::crypto_service::HealthStatus;
         let uptime = self.state.uptime();
         let operations = self.state.operation_count();

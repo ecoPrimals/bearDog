@@ -30,12 +30,10 @@ pub async fn create_key_management() -> Result<Arc<KeyManagementBackend>, KmsErr
     tracing::info!("🔍 Discovering available key management services (vendor-agnostic)");
 
     // Step 1: Auto-detect all available KMS services
-    let available_kms = discover_kms_services().await;
+    let available_kms = discover_kms_services();
 
     // Step 2: Select best KMS based on capabilities
-    if let Ok(kms_list) = available_kms
-        && let Some(kms) = select_best_kms(&kms_list)
-    {
+    if let Some(kms) = select_best_kms(&available_kms) {
         tracing::info!("✅ Using discovered KMS: {}", kms.endpoint);
         // For now, return software fallback (real implementation coming)
         // Real implementation would instantiate actual provider based on endpoint
@@ -54,29 +52,29 @@ pub async fn create_key_management() -> Result<Arc<KeyManagementBackend>, KmsErr
 // VENDOR-AGNOSTIC DISCOVERY FUNCTIONS
 
 /// Discover all available KMS services (vendor-agnostic)
-async fn discover_kms_services() -> Result<Vec<KmsDiscoveryResult>, KmsError> {
+fn discover_kms_services() -> Vec<KmsDiscoveryResult> {
     let mut discovered = Vec::new();
 
     // Check for cloud metadata endpoint (standard 169.254.169.254)
-    if let Ok(cloud_kms) = detect_cloud_kms_via_metadata().await {
+    if let Ok(cloud_kms) = detect_cloud_kms_via_metadata() {
         discovered.push(cloud_kms);
     }
 
     // Check for PKCS#11 hardware tokens
-    if let Ok(hsm_kms) = detect_hardware_kms().await {
+    if let Ok(hsm_kms) = detect_hardware_kms() {
         discovered.push(hsm_kms);
     }
 
     // Check for Kubernetes KMS plugin
-    if let Ok(k8s_kms) = detect_kubernetes_kms().await {
+    if let Ok(k8s_kms) = detect_kubernetes_kms() {
         discovered.push(k8s_kms);
     }
 
-    Ok(discovered)
+    discovered
 }
 
 /// Detect cloud KMS via metadata endpoint (vendor-agnostic)
-async fn detect_cloud_kms_via_metadata() -> Result<KmsDiscoveryResult, KmsError> {
+fn detect_cloud_kms_via_metadata() -> Result<KmsDiscoveryResult, KmsError> {
     // Check for cloud credentials (pattern-based, not vendor-specific)
     let auth_type = if std::env::var(env_keys::ENV_AWS_ACCESS_KEY_ID).is_ok() {
         "access_key"
@@ -109,7 +107,7 @@ async fn detect_cloud_kms_via_metadata() -> Result<KmsDiscoveryResult, KmsError>
 }
 
 /// Detect hardware KMS (PKCS#11)
-async fn detect_hardware_kms() -> Result<KmsDiscoveryResult, KmsError> {
+fn detect_hardware_kms() -> Result<KmsDiscoveryResult, KmsError> {
     // Check for PKCS#11 libraries in standard locations
     let pkcs11_paths = [
         "/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so",
@@ -144,7 +142,7 @@ async fn detect_hardware_kms() -> Result<KmsDiscoveryResult, KmsError> {
 }
 
 /// Detect Kubernetes KMS plugin
-async fn detect_kubernetes_kms() -> Result<KmsDiscoveryResult, KmsError> {
+fn detect_kubernetes_kms() -> Result<KmsDiscoveryResult, KmsError> {
     if std::path::Path::new("/var/run/secrets/kubernetes.io").exists() {
         Ok(KmsDiscoveryResult {
             endpoint: "kubernetes-kms://cluster".to_string(),

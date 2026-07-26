@@ -125,9 +125,8 @@ pub fn discovery_socket_dev_fallback_path() -> String {
 /// ```no_run
 /// use beardog_ipc::discover_ipc_socket;
 ///
-/// #[tokio::main]
-/// async fn main() {
-///     let socket = discover_ipc_socket().await;
+/// fn main() {
+///     let socket = discover_ipc_socket();
 ///     println!("IPC socket: {}", socket);
 /// }
 /// ```
@@ -146,6 +145,7 @@ pub struct IpcSocketDiscoveryOptions {
 
 impl IpcSocketDiscoveryOptions {
     /// Load from [`beardog_errors::process_env`] and capability env discovery.
+    #[must_use]
     pub fn from_env() -> Self {
         let ttl = beardog_discovery::DEFAULT_ENV_DISCOVERY_TTL_SECS;
         Self {
@@ -201,13 +201,14 @@ pub fn resolve_ipc_socket_from_options(opts: &IpcSocketDiscoveryOptions) -> Stri
 
 /// Resolve IPC socket path from injected options (async wrapper; identical to [`resolve_ipc_socket_from_options`]).
 #[must_use]
-pub async fn discover_ipc_socket_with(opts: IpcSocketDiscoveryOptions) -> String {
+pub fn discover_ipc_socket_with(opts: IpcSocketDiscoveryOptions) -> String {
     resolve_ipc_socket_from_options(&opts)
 }
 
 /// Discover IPC socket path via [`IpcSocketDiscoveryOptions::from_env`].
-pub async fn discover_ipc_socket() -> String {
-    discover_ipc_socket_with(IpcSocketDiscoveryOptions::from_env()).await
+#[must_use]
+pub fn discover_ipc_socket() -> String {
+    discover_ipc_socket_with(IpcSocketDiscoveryOptions::from_env())
 }
 
 /// JSON-RPC `ipc.resolve` params key for the target service instance id (legacy wire name).

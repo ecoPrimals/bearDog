@@ -142,6 +142,7 @@ pub enum LogRotationFrequency {
 
 impl LoggingConfig {
     /// Create `LoggingConfig` with hardcoded defaults
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             enabled: true,
@@ -160,6 +161,7 @@ impl LoggingConfig {
     }
 
     /// Create `LoggingConfig` from environment variables
+    #[must_use]
     pub fn from_env() -> Self {
         let level = std::env::var(env_keys::ENV_LOG_LEVEL)
             .ok()
@@ -201,6 +203,7 @@ impl LogLevel {
     pub const DEFAULT: Self = Self::Info;
 
     /// Create `LogLevel` with defaults
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self::DEFAULT
     }
@@ -217,6 +220,7 @@ impl LogFormat {
     pub const DEFAULT: Self = Self::Json;
 
     /// Create `LogFormat` with defaults
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self::DEFAULT
     }
@@ -239,6 +243,7 @@ impl LogRotationConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             max_size_mb: Self::DEFAULT_MAX_SIZE_MB,
@@ -254,6 +259,7 @@ impl LogRotationConfig {
     /// # Environment Variables
     /// - `BEARDOG_SYSTEM_LOG_MAX_SIZE_MB`: Max log file size in MB (default: 100)
     /// - `BEARDOG_SYSTEM_LOG_MAX_FILES`: Max number of log files (default: 10)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -280,6 +286,7 @@ impl Default for LogRotationConfig {
 
 impl LoggingConfig {
     /// Create a minimal configuration for stdout only
+    #[must_use]
     pub fn stdout_only() -> Self {
         Self {
             targets: vec![LogTarget {
@@ -291,6 +298,7 @@ impl LoggingConfig {
     }
 
     /// Create a file-based configuration with rotation
+    #[must_use]
     pub fn file_with_rotation(path: &str) -> Self {
         let mut config = HashMap::new();
         config.insert("path".to_string(), path.to_string());
@@ -333,7 +341,3 @@ impl LoggingConfig {
         Ok(())
     }
 }
-
-/// Backward compatibility alias
-#[deprecated(since = "3.1.0", note = "Use LoggingConfig instead")]
-pub type LoggingConfiguration = LoggingConfig;

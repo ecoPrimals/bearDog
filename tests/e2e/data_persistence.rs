@@ -28,7 +28,7 @@ pub struct DataPersistenceMetrics {
 }
 
 /// Test complete data persistence lifecycle
-pub async fn test_data_persistence_lifecycle() -> Result<DataPersistenceMetrics, BearDogError> {
+pub fn test_data_persistence_lifecycle() -> Result<DataPersistenceMetrics, BearDogError> {
     info!("💾 Testing data persistence lifecycle");
 
     let mut metrics = DataPersistenceMetrics::default();
@@ -36,14 +36,14 @@ pub async fn test_data_persistence_lifecycle() -> Result<DataPersistenceMetrics,
     // 1. Write data
     info!("Step 1: Writing data");
     for i in 0..10 {
-        simulate_data_write(&format!("record_{i}")).await?;
+        simulate_data_write(&format!("record_{i}"))?;
         metrics.write_operations += 1;
     }
 
     // 2. Read data back
     info!("Step 2: Reading data");
     for i in 0..10 {
-        let data = simulate_data_read(&format!("record_{i}")).await?;
+        let data = simulate_data_read(&format!("record_{i}"))?;
         assert!(!data.is_empty(), "Data should not be empty");
         metrics.read_operations += 1;
     }
@@ -51,64 +51,64 @@ pub async fn test_data_persistence_lifecycle() -> Result<DataPersistenceMetrics,
     // 3. Verify integrity
     info!("Step 3: Verifying data integrity");
     for i in 0..10 {
-        simulate_integrity_check(&format!("record_{i}")).await?;
+        simulate_integrity_check(&format!("record_{i}"))?;
         metrics.integrity_checks += 1;
     }
 
     // 4. Update data
     info!("Step 4: Updating data");
     for i in 0..5 {
-        simulate_data_update(&format!("record_{i}")).await?;
+        simulate_data_update(&format!("record_{i}"))?;
         metrics.write_operations += 1;
     }
 
     // 5. Delete data
     info!("Step 5: Deleting data");
-    simulate_data_delete("record_9").await?;
+    simulate_data_delete("record_9")?;
 
     info!("✅ Data persistence lifecycle complete");
     Ok(metrics)
 }
 
 /// Test ACID transaction handling
-pub async fn test_transaction_handling() -> Result<DataPersistenceMetrics, BearDogError> {
+pub fn test_transaction_handling() -> Result<DataPersistenceMetrics, BearDogError> {
     info!("🔄 Testing ACID transaction handling");
 
     let mut metrics = DataPersistenceMetrics::default();
 
     // 1. Successful transaction
     info!("Test 1: Successful transaction");
-    simulate_begin_transaction().await?;
+    simulate_begin_transaction()?;
     metrics.transactions += 1;
 
-    simulate_data_write("tx_record_1").await?;
+    simulate_data_write("tx_record_1")?;
     metrics.write_operations += 1;
-    simulate_data_write("tx_record_2").await?;
+    simulate_data_write("tx_record_2")?;
     metrics.write_operations += 1;
 
-    simulate_commit_transaction().await?;
+    simulate_commit_transaction()?;
 
     // Verify data persisted
-    let data1 = simulate_data_read("tx_record_1").await?;
-    let data2 = simulate_data_read("tx_record_2").await?;
+    let data1 = simulate_data_read("tx_record_1")?;
+    let data2 = simulate_data_read("tx_record_2")?;
     assert!(!data1.is_empty() && !data2.is_empty());
     metrics.read_operations += 2;
 
     // 2. Transaction with rollback
     info!("Test 2: Transaction rollback");
-    simulate_begin_transaction().await?;
+    simulate_begin_transaction()?;
     metrics.transactions += 1;
 
-    simulate_data_write("rollback_record_1").await?;
+    simulate_data_write("rollback_record_1")?;
     metrics.write_operations += 1;
 
     // Simulate error condition
     info!("Simulating error, rolling back...");
-    simulate_rollback_transaction().await?;
+    simulate_rollback_transaction()?;
     metrics.rollbacks += 1;
 
     // Verify data was NOT persisted
-    match simulate_data_read("rollback_record_1").await {
+    match simulate_data_read("rollback_record_1") {
         Ok(data) if data.is_empty() => {
             info!("✅ Rollback successful - data not found");
         }
@@ -122,7 +122,7 @@ pub async fn test_transaction_handling() -> Result<DataPersistenceMetrics, BearD
 }
 
 /// Test backup and restore operations
-pub async fn test_backup_restore() -> Result<DataPersistenceMetrics, BearDogError> {
+pub fn test_backup_restore() -> Result<DataPersistenceMetrics, BearDogError> {
     info!("💿 Testing backup and restore");
 
     let mut metrics = DataPersistenceMetrics::default();
@@ -130,31 +130,31 @@ pub async fn test_backup_restore() -> Result<DataPersistenceMetrics, BearDogErro
     // 1. Create test data
     info!("Creating test dataset");
     for i in 0..20 {
-        simulate_data_write(&format!("backup_record_{i}")).await?;
+        simulate_data_write(&format!("backup_record_{i}"))?;
         metrics.write_operations += 1;
     }
 
     // 2. Create backup
     info!("Creating backup");
-    let backup_id = simulate_create_backup().await?;
+    let backup_id = simulate_create_backup()?;
     metrics.backups += 1;
     info!("Backup created: {}", backup_id);
 
     // 3. Modify data (simulate data loss)
     info!("Simulating data modification/loss");
     for i in 0..10 {
-        simulate_data_delete(&format!("backup_record_{i}")).await?;
+        simulate_data_delete(&format!("backup_record_{i}"))?;
     }
 
     // 4. Restore from backup
     info!("Restoring from backup: {}", backup_id);
-    simulate_restore_backup(&backup_id).await?;
+    simulate_restore_backup(&backup_id)?;
     metrics.restores += 1;
 
     // 5. Verify restoration
     info!("Verifying data restoration");
     for i in 0..20 {
-        let data = simulate_data_read(&format!("backup_record_{i}")).await?;
+        let data = simulate_data_read(&format!("backup_record_{i}"))?;
         assert!(!data.is_empty(), "Restored data should exist");
         metrics.read_operations += 1;
     }
@@ -174,9 +174,7 @@ pub async fn test_concurrent_operations() -> Result<DataPersistenceMetrics, Bear
 
     for i in 0..10 {
         let task =
-            tokio::spawn(
-                async move { simulate_data_write(&format!("concurrent_record_{i}")).await },
-            );
+            tokio::spawn(async move { simulate_data_write(&format!("concurrent_record_{i}")) });
         write_tasks.push(task);
     }
 
@@ -189,7 +187,7 @@ pub async fn test_concurrent_operations() -> Result<DataPersistenceMetrics, Bear
 
     // Verify all writes succeeded
     for i in 0..10 {
-        let data = simulate_data_read(&format!("concurrent_record_{i}")).await?;
+        let data = simulate_data_read(&format!("concurrent_record_{i}"))?;
         assert!(!data.is_empty(), "Concurrent write data should exist");
         metrics.read_operations += 1;
     }
@@ -199,7 +197,7 @@ pub async fn test_concurrent_operations() -> Result<DataPersistenceMetrics, Bear
 }
 
 /// Test data integrity under stress
-pub async fn test_data_integrity_stress() -> Result<DataPersistenceMetrics, BearDogError> {
+pub fn test_data_integrity_stress() -> Result<DataPersistenceMetrics, BearDogError> {
     info!("🔨 Testing data integrity under stress");
 
     let mut metrics = DataPersistenceMetrics::default();
@@ -207,17 +205,17 @@ pub async fn test_data_integrity_stress() -> Result<DataPersistenceMetrics, Bear
     // 1. Rapid write operations
     info!("Performing rapid writes");
     for i in 0..50 {
-        simulate_data_write(&format!("stress_record_{i}")).await?;
+        simulate_data_write(&format!("stress_record_{i}"))?;
         metrics.write_operations += 1;
     }
 
     // 2. Interleaved read/write operations
     info!("Performing interleaved operations");
     for i in 0..25 {
-        simulate_data_write(&format!("interleaved_{i}")).await?;
+        simulate_data_write(&format!("interleaved_{i}"))?;
         metrics.write_operations += 1;
 
-        let data = simulate_data_read(&format!("stress_record_{i}")).await?;
+        let data = simulate_data_read(&format!("stress_record_{i}"))?;
         assert!(!data.is_empty());
         metrics.read_operations += 1;
     }
@@ -225,12 +223,12 @@ pub async fn test_data_integrity_stress() -> Result<DataPersistenceMetrics, Bear
     // 3. Integrity verification
     info!("Verifying integrity of all records");
     for i in 0..50 {
-        simulate_integrity_check(&format!("stress_record_{i}")).await?;
+        simulate_integrity_check(&format!("stress_record_{i}"))?;
         metrics.integrity_checks += 1;
     }
 
     // 4. Verify no data corruption
-    let corruption_detected = simulate_corruption_scan().await?;
+    let corruption_detected = simulate_corruption_scan()?;
     assert!(
         !corruption_detected,
         "No data corruption should be detected"
@@ -241,7 +239,7 @@ pub async fn test_data_integrity_stress() -> Result<DataPersistenceMetrics, Bear
 }
 
 /// Test incremental backup strategy
-pub async fn test_incremental_backup() -> Result<DataPersistenceMetrics, BearDogError> {
+pub fn test_incremental_backup() -> Result<DataPersistenceMetrics, BearDogError> {
     info!("📦 Testing incremental backup");
 
     let mut metrics = DataPersistenceMetrics::default();
@@ -249,42 +247,42 @@ pub async fn test_incremental_backup() -> Result<DataPersistenceMetrics, BearDog
     // 1. Initial full backup
     info!("Creating initial full backup");
     for i in 0..10 {
-        simulate_data_write(&format!("incremental_record_{i}")).await?;
+        simulate_data_write(&format!("incremental_record_{i}"))?;
         metrics.write_operations += 1;
     }
 
-    let full_backup_id = simulate_create_backup().await?;
+    let full_backup_id = simulate_create_backup()?;
     metrics.backups += 1;
     info!("Full backup created: {}", full_backup_id);
 
     // 2. Add new data
     info!("Adding new data");
     for i in 10..15 {
-        simulate_data_write(&format!("incremental_record_{i}")).await?;
+        simulate_data_write(&format!("incremental_record_{i}"))?;
         metrics.write_operations += 1;
     }
 
     // 3. Create incremental backup
     info!("Creating incremental backup");
-    let incremental_backup_id = simulate_create_incremental_backup(&full_backup_id).await?;
+    let incremental_backup_id = simulate_create_incremental_backup(&full_backup_id)?;
     metrics.backups += 1;
     info!("Incremental backup created: {}", incremental_backup_id);
 
     // 4. Simulate data loss
     info!("Simulating data loss");
     for i in 5..15 {
-        simulate_data_delete(&format!("incremental_record_{i}")).await?;
+        simulate_data_delete(&format!("incremental_record_{i}"))?;
     }
 
     // 5. Restore full + incremental
     info!("Restoring from full + incremental backups");
-    simulate_restore_backup(&full_backup_id).await?;
-    simulate_restore_backup(&incremental_backup_id).await?;
+    simulate_restore_backup(&full_backup_id)?;
+    simulate_restore_backup(&incremental_backup_id)?;
     metrics.restores += 2;
 
     // 6. Verify all data restored
     for i in 0..15 {
-        let data = simulate_data_read(&format!("incremental_record_{i}")).await?;
+        let data = simulate_data_read(&format!("incremental_record_{i}"))?;
         assert!(!data.is_empty(), "All data should be restored");
         metrics.read_operations += 1;
     }
@@ -295,68 +293,68 @@ pub async fn test_incremental_backup() -> Result<DataPersistenceMetrics, BearDog
 
 // Helper functions
 
-async fn simulate_data_write(key: &str) -> Result<(), BearDogError> {
+fn simulate_data_write(key: &str) -> Result<(), BearDogError> {
     // Simulate write (instant in tests, would be I/O in production)
     info!("  Written: {}", key);
     Ok(())
 }
 
-async fn simulate_data_read(key: &str) -> Result<String, BearDogError> {
+fn simulate_data_read(key: &str) -> Result<String, BearDogError> {
     // Simulate read (instant in tests)
     Ok(format!("data_{key}"))
 }
 
-async fn simulate_data_update(key: &str) -> Result<(), BearDogError> {
+fn simulate_data_update(key: &str) -> Result<(), BearDogError> {
     // Simulate update (instant in tests)
     info!("  Updated: {}", key);
     Ok(())
 }
 
-async fn simulate_data_delete(key: &str) -> Result<(), BearDogError> {
+fn simulate_data_delete(key: &str) -> Result<(), BearDogError> {
     // Simulate delete (instant in tests)
     info!("  Deleted: {}", key);
     Ok(())
 }
 
-async fn simulate_integrity_check(_key: &str) -> Result<(), BearDogError> {
+fn simulate_integrity_check(_key: &str) -> Result<(), BearDogError> {
     // Simulate integrity check (instant in tests)
     Ok(())
 }
 
-async fn simulate_begin_transaction() -> Result<(), BearDogError> {
+fn simulate_begin_transaction() -> Result<(), BearDogError> {
     // Simulate transaction start (instant in tests)
     info!("  Transaction started");
     Ok(())
 }
 
-async fn simulate_commit_transaction() -> Result<(), BearDogError> {
+fn simulate_commit_transaction() -> Result<(), BearDogError> {
     // Simulate commit (instant in tests)
     info!("  Transaction committed");
     Ok(())
 }
 
-async fn simulate_rollback_transaction() -> Result<(), BearDogError> {
+fn simulate_rollback_transaction() -> Result<(), BearDogError> {
     // Simulate rollback (instant in tests)
     info!("  Transaction rolled back");
     Ok(())
 }
 
-async fn simulate_create_backup() -> Result<String, BearDogError> {
+fn simulate_create_backup() -> Result<String, BearDogError> {
     // Simulate backup creation (instant in tests)
     Ok(format!("backup_{}", chrono::Utc::now().timestamp()))
 }
 
-async fn simulate_create_incremental_backup(_base_backup: &str) -> Result<String, BearDogError> {
+fn simulate_create_incremental_backup(_base_backup: &str) -> Result<String, BearDogError> {
     // Simulate incremental backup (instant in tests)
     Ok(format!("incremental_{}", chrono::Utc::now().timestamp()))
 }
 
-async fn simulate_restore_backup(_backup_id: &str) -> Result<(), BearDogError> {
+fn simulate_restore_backup(_backup_id: &str) -> Result<(), BearDogError> {
     // Simulate restore (instant in tests)
     Ok(())
 }
 
-async fn simulate_corruption_scan() -> Result<bool, BearDogError> {
+fn simulate_corruption_scan() -> Result<bool, BearDogError> {
     // Simulate corruption scan (instant in tests)
     Ok(false) // No corruption detected
 }
@@ -370,15 +368,12 @@ pub async fn run_data_persistence_test(
     let mut metrics = E2EMetrics::default();
 
     let scenarios: [(&str, DataPersistenceMetrics); 6] = [
-        (
-            "persistence lifecycle",
-            test_data_persistence_lifecycle().await?,
-        ),
-        ("transaction handling", test_transaction_handling().await?),
-        ("backup restore", test_backup_restore().await?),
+        ("persistence lifecycle", test_data_persistence_lifecycle()?),
+        ("transaction handling", test_transaction_handling()?),
+        ("backup restore", test_backup_restore()?),
         ("concurrent operations", test_concurrent_operations().await?),
-        ("integrity stress", test_data_integrity_stress().await?),
-        ("incremental backup", test_incremental_backup().await?),
+        ("integrity stress", test_data_integrity_stress()?),
+        ("incremental backup", test_incremental_backup()?),
     ];
 
     for (name, persistence_metrics) in scenarios {
@@ -409,7 +404,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_persistence_lifecycle() {
-        let result = test_data_persistence_lifecycle().await;
+        let result = test_data_persistence_lifecycle();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert!(metrics.write_operations >= 15); // 10 writes + 5 updates
@@ -419,7 +414,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_transactions() {
-        let result = test_transaction_handling().await;
+        let result = test_transaction_handling();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.transactions, 2);
@@ -428,7 +423,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_backup_restore_workflow() {
-        let result = test_backup_restore().await;
+        let result = test_backup_restore();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.backups, 1);
@@ -447,7 +442,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_integrity_stress() {
-        let result = test_data_integrity_stress().await;
+        let result = test_data_integrity_stress();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.write_operations, 75); // 50 + 25
@@ -456,7 +451,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_incremental_backup_workflow() {
-        let result = test_incremental_backup().await;
+        let result = test_incremental_backup();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.backups, 2); // Full + incremental

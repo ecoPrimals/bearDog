@@ -27,6 +27,7 @@ use beardog_core::socket_config::{
     IpcCapabilitySymlinksConfig, install_ipc_symlinks_at, remove_ipc_symlinks_at,
 };
 use beardog_ipc::protocol::JSONRPC_VERSION;
+use beardog_types::constants::domains::timeouts::NETWORK_READ_TIMEOUT;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
@@ -38,7 +39,7 @@ use tracing::{debug, error, info, warn};
 /// Prevents indefinite blocking when a client connects but never sends a
 /// newline (e.g. raw `nc` probes, `curl` health checks). On timeout the
 /// connection is closed and the task freed.
-pub(super) const IPC_READ_TIMEOUT: Duration = Duration::from_secs(30);
+pub(super) const IPC_READ_TIMEOUT: Duration = NETWORK_READ_TIMEOUT;
 
 /// Default max concurrent UDS connections (overridable via `BEARDOG_UDS_MAX_CONNECTIONS`).
 const DEFAULT_UDS_MAX_CONNECTIONS: usize = 512;

@@ -31,6 +31,7 @@ pub struct ConfigLoader {
 
 impl ConfigLoader {
     /// Create a new configuration loader with static defaults
+    #[must_use]
     pub fn new() -> Self {
         Self {
             hierarchy: ConfigHierarchy::new(),
@@ -38,11 +39,13 @@ impl ConfigLoader {
     }
 
     /// Apply defaults (already applied in `new()`)
+    #[must_use]
     pub const fn with_defaults(self) -> Self {
         self
     }
 
     /// Apply platform detection
+    #[must_use]
     pub fn with_platform_defaults(mut self) -> Self {
         self.hierarchy = self.hierarchy.with_platform_defaults();
         self
@@ -71,12 +74,14 @@ impl ConfigLoader {
     /// Apply environment variables (EXPLICIT loading)
     ///
     /// This method explicitly loads configuration from environment variables.
+    #[must_use]
     pub fn with_env_vars(mut self) -> Self {
         self.hierarchy = self.hierarchy.with_env_vars();
         self
     }
 
     /// Add CLI arguments
+    #[must_use]
     pub fn with_cli_args(mut self, args: HashMap<String, String>) -> Self {
         self.hierarchy = self.hierarchy.with_cli_args(args);
         self

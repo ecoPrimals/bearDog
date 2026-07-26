@@ -8,6 +8,7 @@
 /// - Underscores vs dots: `crypto_sign` → `crypto.sign` (no change if already dotted)
 /// - Trailing/leading whitespace
 /// - Case normalization (lowercase)
+#[must_use]
 pub fn normalize_method(method: &str) -> String {
     method.trim().to_ascii_lowercase()
 }

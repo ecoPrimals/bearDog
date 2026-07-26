@@ -44,6 +44,7 @@ impl EcosystemDiscoveryAdapter {
     }
 
     /// Create default bootstrap configuration for CLI usage
+    #[must_use]
     pub fn default_config() -> UnifiedBootstrapConfig {
         UnifiedBootstrapConfig {
             discovery: BootstrapDiscoveryConfig {

@@ -50,7 +50,7 @@ pub struct LineageSummary {
 /// Returns an error if the key home cannot be resolved, or lineage tree construction fails.
 pub async fn handle_key_lineage(key_id: &str, json: bool) -> Result<(), BearDogError> {
     let home = key_store::home_dir_for_keys()?;
-    handle_key_lineage_for_home(key_id, json, home.as_path()).await
+    handle_key_lineage_for_home(key_id, json, home.as_path())
 }
 
 /// Same as [`handle_key_lineage`], but uses keys under `home/.beardog/keys` (tests / DI).
@@ -59,7 +59,7 @@ pub async fn handle_key_lineage(key_id: &str, json: bool) -> Result<(), BearDogE
 ///
 /// Returns an error if the key cannot be loaded, the lineage root cannot be found, or the tree
 /// cannot be built.
-pub async fn handle_key_lineage_for_home(
+pub fn handle_key_lineage_for_home(
     key_id: &str,
     json: bool,
     home: &Path,
@@ -327,7 +327,6 @@ mod tests {
         key_store::save_key_to_home(&child, home).expect("save json-child");
 
         handle_key_lineage_for_home("json-child", true, home)
-            .await
             .expect("handle_key_lineage JSON output");
     }
 
@@ -339,7 +338,6 @@ mod tests {
         key_store::save_key_to_home(&k, home).expect("save human-only key");
 
         handle_key_lineage_for_home("human-only", false, home)
-            .await
             .expect("handle_key_lineage human-readable output");
     }
 

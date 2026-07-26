@@ -51,6 +51,7 @@ pub struct NetworkConfig {
 
 impl NetworkConfig {
     /// Pure static defaults (no environment variable reads)
+    #[must_use]
     pub fn const_defaults() -> Self {
         Self {
             ports: NetworkPortsConfig::default(),
@@ -62,6 +63,7 @@ impl NetworkConfig {
     }
 
     /// Load configuration from environment variables with fallback to defaults
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             ports: NetworkPortsConfig::from_env(),
@@ -138,6 +140,7 @@ pub struct ApiConfig {
 
 impl ApiConfig {
     /// Pure static defaults (no environment variable reads)
+    #[must_use]
     pub const fn const_defaults() -> Self {
         Self {
             bind_address: IpAddr::V4(Ipv4Addr::LOCALHOST),
@@ -150,6 +153,7 @@ impl ApiConfig {
     }
 
     /// Load configuration from environment variables with fallback to defaults
+    #[must_use]
     pub fn from_env() -> Self {
         let defaults = Self::const_defaults();
 
@@ -176,6 +180,7 @@ impl ApiConfig {
     }
 
     /// Create a builder for flexible configuration construction
+    #[must_use]
     pub fn builder() -> ApiConfigBuilder {
         ApiConfigBuilder::new()
     }
@@ -229,47 +234,55 @@ pub struct ApiConfigBuilder {
 
 impl ApiConfigBuilder {
     /// Starts a builder; unset fields use [`ApiConfig::const_defaults`].
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Address the public API listener binds to.
+    #[must_use]
     pub const fn bind_address(mut self, addr: IpAddr) -> Self {
         self.bind_address = Some(addr);
         self
     }
 
     /// TCP port for the primary API server.
+    #[must_use]
     pub const fn port(mut self, port: u16) -> Self {
         self.port = Some(port);
         self
     }
 
     /// Whether TLS terminates on this listener (vs offloaded upstream).
+    #[must_use]
     pub const fn tls_enabled(mut self, enabled: bool) -> Self {
         self.tls_enabled = Some(enabled);
         self
     }
 
     /// Filesystem path to the leaf certificate presented when TLS is enabled.
+    #[must_use]
     pub fn tls_cert_path(mut self, path: String) -> Self {
         self.tls_cert_path = Some(path);
         self
     }
 
     /// Filesystem path to the private key for `tls_cert_path`.
+    #[must_use]
     pub fn tls_key_path(mut self, path: String) -> Self {
         self.tls_key_path = Some(path);
         self
     }
 
     /// Upper bound on concurrent accepted connections for the API socket.
+    #[must_use]
     pub const fn max_connections(mut self, max: usize) -> Self {
         self.max_connections = Some(max);
         self
     }
 
     /// Produces an [`ApiConfig`] with defaults filling any omitted settings.
+    #[must_use]
     pub fn build(self) -> ApiConfig {
         let defaults = ApiConfig::const_defaults();
 
@@ -302,6 +315,7 @@ pub struct ServiceDiscoveryConfig {
 
 impl ServiceDiscoveryConfig {
     /// Pure static defaults (no environment variable reads)
+    #[must_use]
     pub fn const_defaults() -> Self {
         Self {
             port: DEFAULT_DISCOVERY_PORT,
@@ -312,6 +326,7 @@ impl ServiceDiscoveryConfig {
     }
 
     /// Load configuration from environment variables with fallback to defaults
+    #[must_use]
     pub fn from_env() -> Self {
         let defaults = Self::const_defaults();
 
@@ -335,6 +350,7 @@ impl ServiceDiscoveryConfig {
     }
 
     /// Create a builder for flexible configuration construction
+    #[must_use]
     pub fn builder() -> ServiceDiscoveryConfigBuilder {
         ServiceDiscoveryConfigBuilder::new()
     }
@@ -386,35 +402,41 @@ pub struct ServiceDiscoveryConfigBuilder {
 
 impl ServiceDiscoveryConfigBuilder {
     /// Starts a builder backed by [`ServiceDiscoveryConfig::const_defaults`].
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// UDP/TCP port used for discovery traffic (mDNS, etc.).
+    #[must_use]
     pub const fn port(mut self, port: u16) -> Self {
         self.port = Some(port);
         self
     }
 
     /// Ordered list of discovery backend identifiers (e.g. `dns-sd`, `static`).
+    #[must_use]
     pub fn backends(mut self, backends: Vec<String>) -> Self {
         self.backends = Some(backends);
         self
     }
 
     /// Multicast group and port string for mDNS or similar (e.g. `239.255.0.1:5353`).
+    #[must_use]
     pub fn multicast_address(mut self, addr: String) -> Self {
         self.multicast_address = Some(addr);
         self
     }
 
     /// Seconds between periodic re-announcement or refresh cycles.
+    #[must_use]
     pub const fn interval_secs(mut self, secs: u64) -> Self {
         self.interval_secs = Some(secs);
         self
     }
 
     /// Builds [`ServiceDiscoveryConfig`] with static defaults for unset fields.
+    #[must_use]
     pub fn build(self) -> ServiceDiscoveryConfig {
         let defaults = ServiceDiscoveryConfig::const_defaults();
 
@@ -442,6 +464,7 @@ pub struct AdminConfig {
 
 impl AdminConfig {
     /// Pure static defaults (no environment variable reads)
+    #[must_use]
     pub const fn const_defaults() -> Self {
         Self {
             bind_address: IpAddr::V4(Ipv4Addr::LOCALHOST),
@@ -451,6 +474,7 @@ impl AdminConfig {
     }
 
     /// Load configuration from environment variables with fallback to defaults
+    #[must_use]
     pub fn from_env() -> Self {
         let defaults = Self::const_defaults();
 
@@ -473,6 +497,7 @@ impl AdminConfig {
     }
 
     /// Create a builder for flexible configuration construction
+    #[must_use]
     pub fn builder() -> AdminConfigBuilder {
         AdminConfigBuilder::new()
     }
@@ -510,29 +535,34 @@ pub struct AdminConfigBuilder {
 
 impl AdminConfigBuilder {
     /// Starts a builder using [`AdminConfig::const_defaults`] for gaps.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Bind address for the administrative HTTP or control plane interface.
+    #[must_use]
     pub const fn bind_address(mut self, addr: IpAddr) -> Self {
         self.bind_address = Some(addr);
         self
     }
 
     /// TCP port for the admin interface when enabled.
+    #[must_use]
     pub const fn port(mut self, port: u16) -> Self {
         self.port = Some(port);
         self
     }
 
     /// Master switch for exposing the admin listener and routes.
+    #[must_use]
     pub const fn enabled(mut self, enabled: bool) -> Self {
         self.enabled = Some(enabled);
         self
     }
 
     /// Materializes [`AdminConfig`].
+    #[must_use]
     pub fn build(self) -> AdminConfig {
         let defaults = AdminConfig::const_defaults();
 

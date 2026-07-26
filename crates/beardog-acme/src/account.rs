@@ -106,7 +106,7 @@ impl AcmeAccount {
 
     /// Whether this account has been registered with the CA.
     #[must_use]
-    pub fn is_registered(&self) -> bool {
+    pub const fn is_registered(&self) -> bool {
         self.account_url.is_some()
     }
 }

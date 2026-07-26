@@ -79,7 +79,7 @@ ciborium = { workspace = true, optional = true }
 base64 = { workspace = true }  # Aligned with workspace version (0.21 → 0.22 upgrade eliminates dep duplication)
 data-encoding = { workspace = true }  # Base32 encoding for Tor v3 onion addresses
 bs58 = { workspace = true }  # Base58 encoding for did:key derivation
-directories = { workspace = true }
+etcetera = { workspace = true }
 
 # TLS termination (H2-10 sovereignty — feature-gated)
 rustls = { workspace = true, optional = true }
@@ -99,7 +99,12 @@ tempfile = { workspace = true }
 # Enable verbose crypto debugging: cargo build --features diagnostics
 diagnostics = []
 
-# Placeholder HSM backends — enable when wiring real TPM / PKCS#11 integrations
+# Placeholder HSM backends — reserved for external hardware integrations.
+# TPM and PKCS#11 are platform / vendor hardware concerns; bearDog gates stub providers
+# behind these flags until optional native bindings are linked. Enable when wiring real
+# TPM 2.0 (tss-esapi) or PKCS#11 library integration:
+#   cargo build -p beardog-tunnel --features tpm-provider
+#   cargo build -p beardog-tunnel --features pkcs11-provider
 tpm-provider = []
 pkcs11-provider = []
 

@@ -79,6 +79,7 @@ pub struct AuditLogFilter {
 
 impl AuditLogFilter {
     /// Check if entry matches filter
+    #[must_use]
     pub fn matches(&self, entry: &AuditLogEntry) -> bool {
         if let Some(ref op) = self.operation
             && &entry.operation != op

@@ -165,20 +165,6 @@ fn test_capability_type_custom_serialization() {
     assert_eq!(cap, deserialized);
 }
 
-#[test]
-#[expect(
-    deprecated,
-    reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
-)]
-fn test_capability_type_associated_primal_deprecated() {
-    // This should return None per zero-knowledge architecture
-    assert_eq!(CapabilityType::ServiceMesh.associated_primal(), None);
-    assert_eq!(
-        CapabilityType::ComputeIntelligence.associated_primal(),
-        None
-    );
-}
-
 // ============================================================================
 // SecurityLevel Tests
 // ============================================================================

@@ -59,10 +59,6 @@ pub use retry::RetryConfig;
 // Scheduling types
 pub use scheduling::SchedulingConfig;
 
-// Deprecated type alias (for backward compatibility)
-#[deprecated(since = "3.1.0", note = "Use super::network::RateLimitConfig instead")]
-pub use super::network::RateLimitConfig;
-
 // ============================================================================
 // Top-Level Consolidated Config
 // ============================================================================

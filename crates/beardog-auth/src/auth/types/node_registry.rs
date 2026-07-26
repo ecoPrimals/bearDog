@@ -38,6 +38,7 @@ pub struct ConsensusNodeRecord {
 /// [`CrossNodeAuthEngine::new`] starts with an empty registry; production deployments should
 /// populate [`CrossNodeAuthEngine::consensus_registry`] from configuration or discovery before
 /// relying on quorum APIs.
+#[must_use]
 pub fn default_consensus_registry() -> BTreeMap<String, ConsensusNodeRecord> {
     let now = Utc::now();
     ["node_1", "node_2", "node_3"]

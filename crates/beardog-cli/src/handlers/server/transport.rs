@@ -26,6 +26,7 @@ pub fn resolve_effective_tcp_listen(port: Option<u16>, listen: Option<&str>) -> 
 ///
 /// When `BindMode::Auto`, this mirrors the platform detection in `handle_server`
 /// — Android (by target or env) selects abstract sockets automatically.
+#[must_use]
 pub fn resolve_server_socket_path(args: &ServerArgs) -> String {
     let primal_name = resolve_primal_name();
     let use_abstract = match args.bind_mode {

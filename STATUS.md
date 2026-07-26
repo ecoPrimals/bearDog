@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 25, 2026 (Wave 151b — enrollment decomposition + hardcoding evolution)
+**Last Updated**: July 26, 2026 (Wave 151a — deep debt sweep, Silicon Atheism, pure Rust evolution)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant; 2 monoliths refactored Wave 119 (server.rs→7 files, orchestrator.rs→10 files) |
-| **Tests** | 13,973+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 13,990 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | all 4 pass | 2 advisory ignores (RSA Marvin, `paste`); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned; TLS backend is Pure Rust `rustls-rustcrypto` |
@@ -69,7 +69,7 @@
 | Standard | Status |
 |----------|--------|
 | Edition 2024 | MSRV 1.93.0, all crates, `rust-toolchain.toml` pinned |
-| Pure Rust (ecoBin) | Zero C deps; `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned in `deny.toml`; TLS backend is Pure Rust `rustls-rustcrypto`; CSR via `p256` + `x509-cert`; blake3 pure feature; sysinfo removed |
+| Pure Rust (ecoBin) | Zero C deps; `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned in `deny.toml`; TLS backend is Pure Rust `rustls-rustcrypto`; CSR via `p256` + `x509-cert`; blake3 pure feature; sysinfo removed; `directories`/`dirs-sys` replaced with `etcetera` (pure Rust) Wave 151a |
 | UniBin/ecoBin | Single binary, standalone identity fallback per UniBin v1.1, cross-compilation ready |
 | Dependency Injection | Pure `Default`, `from_env()` at startup, `from_env_provider()` for tests |
 | Zero Hardcoding | 850+ env_keys constants; capability-based discovery everywhere |
@@ -89,6 +89,18 @@
 ---
 
 ## Recent Improvements
+
+### Wave 151a — Deep Debt Sweep + Silicon Atheism + Pure Rust Evolution (Jul 26, 2026)
+
+- **475 files changed**, +3,119 / -4,969 lines — comprehensive deep debt resolution
+- **Silicon Atheism V1+V2**: `HsmKeyProviderBackend` and `KeystoreTransportBackend` enums unified — all variants compile on all platforms with runtime `is_available()` dispatch; zero `#[cfg]` on enum variants
+- **Clippy pedantic sweep**: 589 `#[must_use]` annotations + 119 `const fn` promotions + 290 `unused_async` + 83 `unnecessary_wraps` resolved
+- **Pure Rust evolution**: `directories`/`dirs-sys` (C-FFI) replaced with `etcetera` (pure Rust) across 3 crates
+- **Unsafe code tightened**: DPAPI module gets RAII `DpapiBlob` guard; unsafe blocks 6→4 with `// SAFETY:` docs
+- **Hardcoding eliminated**: `/tmp/` paths → `std::env::temp_dir()`; pricing URL → runtime env var; magic `Duration::from_secs(30)` → named constants; IPC namespace `"biomeos"` → env-driven `"ecosystem"`
+- **Silent failures fixed**: HID `discover()` returns `unsupported_platform` error on non-Linux (was empty vec); `service_registry::query_provider` logs structured warning when delegation is unwired
+- **Test monoliths decomposed**: `audit_comprehensive_tests.rs` (875L) → 5 files; `method_gate_tests.rs` (872L) → 4 files + helpers
+- **13,990 tests passing**, 0 failures, 131 ignored
 
 ### Wave 150x — Two-Layer Genetic Enrollment (Jul 25, 2026)
 

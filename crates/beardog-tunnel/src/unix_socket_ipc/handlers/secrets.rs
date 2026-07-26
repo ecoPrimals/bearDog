@@ -79,11 +79,11 @@ pub struct SecretsHandler {
 
 impl SecretsHandler {
     /// Create a new secrets handler with explicit identity and backend injection.
-    pub fn new(identity: Arc<PrimalIdentity>, backend: Arc<CredentialStoreBackend>) -> Self {
+    pub const fn new(identity: Arc<PrimalIdentity>, backend: Arc<CredentialStoreBackend>) -> Self {
         Self { identity, backend }
     }
-
     /// Create a new secrets handler with an in-memory backend (dev/test convenience).
+    #[must_use]
     pub fn new_in_memory(identity: Arc<PrimalIdentity>) -> Self {
         Self::new(identity, Arc::new(CredentialStoreBackend::in_memory()))
     }

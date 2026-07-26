@@ -237,11 +237,11 @@ pub fn validate_config(config: &SoftwareHsmConfig) -> Result<(), BearDogError> {
 
     Ok(())
 }
-
 /// Get Capabilities Summary operation.
 ///
 /// # Errors
 /// Returns an error if the operation fails.
+#[must_use]
 pub fn get_capabilities_summary() -> SoftwareHsmCapabilities {
     SoftwareHsmCapabilities {
         supported_key_types: vec![

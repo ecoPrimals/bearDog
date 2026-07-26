@@ -258,22 +258,6 @@ mod buffer_tests {
     // BACKWARD COMPATIBILITY TESTS
     // ============================================================================
 
-    #[test]
-    #[expect(
-        deprecated,
-        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
-    )]
-    fn test_deprecated_aliases_match() {
-        assert_eq!(
-            DEFAULT_BUFFER_SIZE_NETWORK, NETWORK_BUFFER_SIZE,
-            "Deprecated alias must match current constant"
-        );
-        assert_eq!(
-            DEFAULT_BUFFER_SIZE_FILE, FILE_BUFFER_SIZE,
-            "Deprecated alias must match current constant"
-        );
-    }
-
     // ============================================================================
     // PROPERTY TESTS (Invariants)
     // ============================================================================

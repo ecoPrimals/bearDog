@@ -4,13 +4,14 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::canonical::config::domains::network::ConnectionPoolConfig;
 use crate::canonical::traits::RetryStrategy;
 
 /// Performance configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceConfiguration {
     /// Connection pool settings
-    pub connection_pool: ConnectionPoolConfiguration,
+    pub connection_pool: ConnectionPoolConfig,
     
     /// Caching configuration
     pub caching: CachingConfiguration,
@@ -21,17 +22,6 @@ pub struct PerformanceConfiguration {
     /// Retry configuration
     pub retry: RetryConfiguration,
 }
-
-/// Connection pool configuration (DEPRECATED - use canonical config)
-///
-/// **MIGRATION**: Use `canonical::config::domains::network::ConnectionPoolConfig` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use canonical::config::domains::network::ConnectionPoolConfig instead"
-)]
-pub type ConnectionPoolConfiguration = crate::canonical::config::domains::network::ConnectionPoolConfig;
 
 /// Caching configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

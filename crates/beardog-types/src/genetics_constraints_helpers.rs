@@ -17,6 +17,7 @@
 /// assert!(path_matches("data/file.txt", "data/file.txt"));
 /// assert!(!path_matches("other/file.txt", "data/*"));
 /// ```
+#[must_use]
 pub fn path_matches(path: &str, pattern: &str) -> bool {
     // Handle exact matches
     if path == pattern {

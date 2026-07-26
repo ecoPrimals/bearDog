@@ -113,6 +113,7 @@ impl RustSoftwareHsm {
     /// # Returns
     ///
     /// `true` if HSM is initialized and healthy, `false` otherwise
+    #[must_use]
     pub const fn is_initialized(&self) -> bool {
         true // Always true after successful construction
     }
@@ -163,7 +164,7 @@ impl RustSoftwareHsm {
             ),
             clear_on_drop: true,
         };
-        let memory_protector = Arc::new(DefaultMemoryProtector::new(memory_config).await?);
+        let memory_protector = Arc::new(DefaultMemoryProtector::new(memory_config)?);
 
         let key_store_config = crate::tunnel::hsm::software_hsm::KeyStoreConfig {
             storage_type: config.key_storage,
@@ -174,10 +175,10 @@ impl RustSoftwareHsm {
             db_config: None,
         };
 
-        let key_store = Arc::new(RwLock::new(SoftwareKeyStore::new(&key_store_config).await?));
+        let key_store = Arc::new(RwLock::new(SoftwareKeyStore::new(&key_store_config)?));
 
         let audit_logger = Arc::new(DefaultAuditLogger::new().await?);
-        let health_monitor = Arc::new(SoftwareHealthMonitor::new().await?);
+        let health_monitor = Arc::new(SoftwareHealthMonitor::new()?);
 
         let crypto_manager = Arc::new(CryptoProviderManager::new());
         let rust_crypto = Arc::new(
@@ -210,12 +211,12 @@ impl RustSoftwareHsm {
                 GeneticCryptoProvider::new()?,
             ))),
             CryptoBackendType::RustCrypto => Ok(Arc::new(CryptoProviderBackend::RustCrypto(
-                SoftwareHsmCryptoProvider::new().await?,
+                SoftwareHsmCryptoProvider::new()?,
             ))),
             CryptoBackendType::Ring => {
                 tracing::warn!("Ring backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)");
                 Ok(Arc::new(CryptoProviderBackend::RustCrypto(
-                    SoftwareHsmCryptoProvider::new().await?,
+                    SoftwareHsmCryptoProvider::new()?,
                 )))
             }
             CryptoBackendType::OpenSsl => {
@@ -223,7 +224,7 @@ impl RustSoftwareHsm {
                     "OpenSSL backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)"
                 );
                 Ok(Arc::new(CryptoProviderBackend::RustCrypto(
-                    SoftwareHsmCryptoProvider::new().await?,
+                    SoftwareHsmCryptoProvider::new()?,
                 )))
             }
         }

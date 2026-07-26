@@ -134,16 +134,19 @@ impl Transport {
     }
 
     /// Check if this is a Unix socket transport
+    #[must_use]
     pub const fn is_unix_socket(&self) -> bool {
         matches!(self, Self::UnixSocket { .. })
     }
 
     /// Check if this is a TCP socket transport
+    #[must_use]
     pub const fn is_tcp_socket(&self) -> bool {
         matches!(self, Self::TcpSocket { .. })
     }
 
     /// Get the socket path (for Unix sockets)
+    #[must_use]
     pub const fn socket_path(&self) -> Option<&PathBuf> {
         match self {
             Self::UnixSocket { path } => Some(path),
@@ -152,6 +155,7 @@ impl Transport {
     }
 
     /// Get the host (for TCP sockets)
+    #[must_use]
     pub fn host(&self) -> Option<&str> {
         match self {
             Self::TcpSocket { host, .. } => Some(host),
@@ -160,6 +164,7 @@ impl Transport {
     }
 
     /// Get the port (for TCP sockets)
+    #[must_use]
     pub const fn port(&self) -> Option<u16> {
         match self {
             Self::TcpSocket { port, .. } => Some(*port),
@@ -168,6 +173,7 @@ impl Transport {
     }
 
     /// Convert to endpoint URI string
+    #[must_use]
     pub fn to_endpoint(&self) -> String {
         match self {
             Self::UnixSocket { path } => {

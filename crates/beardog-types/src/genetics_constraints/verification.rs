@@ -33,6 +33,7 @@ impl KeyConstraints {
     }
 
     /// Get a human-readable description of all constraints
+    #[must_use]
     pub fn description(&self) -> String {
         let mut parts = Vec::new();
 
@@ -112,7 +113,7 @@ impl KeyConstraints {
         }
 
         // 5. Check behavioral constraints
-        self.verify_behavior(operation)?;
+        self.verify_behavior(operation);
 
         // 6. Check compute quota
         if let Some(quota) = &self.compute_quota {
@@ -212,7 +213,7 @@ impl KeyConstraints {
         Ok(())
     }
 
-    fn verify_behavior(&self, operation: &KeyOperation) -> Result<(), BearDogError> {
+    fn verify_behavior(&self, operation: &KeyOperation) {
         // Get behavioral verification mode from environment
         let behavioral_mode = std::env::var("BEARDOG_BEHAVIORAL_VERIFICATION")
             .unwrap_or_else(|_| "advisory".to_string())
@@ -221,7 +222,6 @@ impl KeyConstraints {
         match behavioral_mode.as_str() {
             "permissionless" => {
                 // Testing mode: skip all verification
-                Ok(())
             }
             "strict" => {
                 // Strict mode: enforce all behavioral constraints
@@ -239,8 +239,6 @@ impl KeyConstraints {
                 // Check network constraints
                 // In production, verify operation is from expected network/location
                 tracing::debug!("Behavioral verification (strict): checking network constraints");
-
-                Ok(())
             }
             _ => {
                 // Advisory mode: log warnings but don't block
@@ -248,7 +246,6 @@ impl KeyConstraints {
                     "Behavioral verification (advisory): operation {:?} - checks advisory only",
                     operation
                 );
-                Ok(())
             }
         }
     }

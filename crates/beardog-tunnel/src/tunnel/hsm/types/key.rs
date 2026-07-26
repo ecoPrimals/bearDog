@@ -91,6 +91,7 @@ pub enum KeyMaterial {
 
 impl KeyMaterial {
     /// Get the raw key data (for encrypted variant) or identifier (for references)
+    #[must_use]
     pub fn data(&self) -> &[u8] {
         match self {
             Self::Encrypted { encrypted_data, .. } => encrypted_data,
@@ -172,6 +173,7 @@ pub struct KeyMetadata {
 
 impl KeyMetadata {
     /// Create new key metadata
+    #[must_use]
     pub fn new(key_id: String, key_type: KeyType) -> Self {
         Self {
             key_id,

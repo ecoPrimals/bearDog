@@ -306,8 +306,8 @@ impl ThreatSeverity {
         }
     }
 
-    #[must_use]
     /// Convert numeric score to severity level
+    #[must_use]
     pub const fn from_score(score: u8) -> Self {
         match score {
             0..=30 => Self::Low,
@@ -317,9 +317,8 @@ impl ThreatSeverity {
             _ => Self::Critical, // Fallback for any edge cases
         }
     }
- #[must_use]
-
     /// Convert to string representation (compatibility)
+ #[must_use]
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Low => "Low",

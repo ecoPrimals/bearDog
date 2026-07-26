@@ -166,7 +166,7 @@ impl UnifiedSecurityProvider for AndroidStrongBoxHsm {
 
     async fn generate_random(&self, length: usize) -> Result<Vec<u8>, BearDogError> {
         // Use Android's hardware RNG
-        self.keystore.generate_random_bytes(length).await
+        self.keystore.generate_random_bytes(length)
     }
 
     fn security_context(&self) -> SecurityContext {

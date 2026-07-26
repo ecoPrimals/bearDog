@@ -463,27 +463,3 @@ pub const GRACEFUL_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(30);
 ///
 /// **Rationale**: Must eventually force stop
 pub const FORCE_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(10);
-
-// ============================================================================
-// BACKWARD COMPATIBILITY ALIASES
-// ============================================================================
-
-/// Deprecated: Use `NETWORK_CONNECTION_TIMEOUT` instead
-#[deprecated(since = "3.1.0", note = "Use NETWORK_CONNECTION_TIMEOUT for clarity")]
-pub const DEFAULT_TIMEOUT: Duration = NETWORK_CONNECTION_TIMEOUT;
-
-/// Deprecated: Use `DEFAULT_OPERATION_TIMEOUT` instead
-#[deprecated(since = "3.1.0", note = "Use DEFAULT_OPERATION_TIMEOUT for clarity")]
-pub const DEFAULT_REQUEST_TIMEOUT: Duration = DEFAULT_OPERATION_TIMEOUT;
-
-/// Deprecated: Use `HTTP_REQUEST_TIMEOUT` instead
-#[deprecated(since = "3.1.0", note = "Use HTTP_REQUEST_TIMEOUT for clarity")]
-pub const REQUEST_TIMEOUT: Duration = HTTP_REQUEST_TIMEOUT;
-
-/// Deprecated: Use `NETWORK_CONNECTION_TIMEOUT` instead
-#[deprecated(since = "3.1.0", note = "Use NETWORK_CONNECTION_TIMEOUT for clarity")]
-pub const CONNECTION_TIMEOUT: Duration = NETWORK_CONNECTION_TIMEOUT;
-
-/// Deprecated: Use `DEFAULT_OPERATION_TIMEOUT` instead
-#[deprecated(since = "3.1.0", note = "Use DEFAULT_OPERATION_TIMEOUT for clarity")]
-pub const OPERATION_TIMEOUT: Duration = DEFAULT_OPERATION_TIMEOUT;

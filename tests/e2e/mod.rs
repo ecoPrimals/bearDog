@@ -295,15 +295,15 @@ impl E2ETestFramework {
     }
 
     async fn run_cross_platform_discovery(&self) -> Result<E2EMetrics, BearDogError> {
-        cross_platform_discovery::run_cross_platform_discovery_test(&self.config).await
+        cross_platform_discovery::run_cross_platform_discovery_test(&self.config)
     }
 
     async fn run_device_deployment(&self) -> Result<E2EMetrics, BearDogError> {
-        device_deployment::run_device_deployment_test(&self.config).await
+        device_deployment::run_device_deployment_test(&self.config)
     }
 
     async fn run_hsm_operations(&self) -> Result<E2EMetrics, BearDogError> {
-        hsm_operations::run_hsm_operations_test(&self.config).await
+        hsm_operations::run_hsm_operations_test(&self.config)
     }
 
     async fn run_configuration_management(&self) -> Result<E2EMetrics, BearDogError> {
@@ -319,7 +319,7 @@ impl E2ETestFramework {
     }
 
     async fn run_rate_limiting(&self) -> Result<E2EMetrics, BearDogError> {
-        rate_limiting::run_rate_limiting_test(&self.config).await
+        rate_limiting::run_rate_limiting_test(&self.config)
     }
 
     async fn run_monitoring_observability(&self) -> Result<E2EMetrics, BearDogError> {

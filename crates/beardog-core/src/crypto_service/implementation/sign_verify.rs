@@ -12,7 +12,7 @@ use beardog_types::crypto_service::{
 use std::time::SystemTime;
 
 impl BearDogCryptoService {
-    pub(crate) async fn sign_impl(
+    pub(crate) fn sign_impl(
         &self,
         data: &[u8],
         algorithm: SignatureAlgorithm,
@@ -63,7 +63,7 @@ impl BearDogCryptoService {
         })
     }
 
-    pub(crate) async fn verify_impl(
+    pub(crate) fn verify_impl(
         &self,
         data: &[u8],
         signature: &Signature,

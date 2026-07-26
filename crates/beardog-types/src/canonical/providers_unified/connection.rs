@@ -78,17 +78,6 @@ impl Default for KeepAliveConfig {
     }
 }
 
-/// Connection pool configuration (DEPRECATED - use canonical config)
-///
-/// **MIGRATION**: Use `canonical::config::domains::network::ConnectionPoolConfig` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use canonical::config::domains::network::ConnectionPoolConfig instead"
-)]
-pub type ConnectionPoolConfig = crate::canonical::config::domains::network::ConnectionPoolConfig;
-
 /// TLS configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TlsConfig {

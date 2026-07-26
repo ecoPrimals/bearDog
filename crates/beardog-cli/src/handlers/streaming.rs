@@ -104,7 +104,7 @@ pub async fn handle_streaming_encrypt_with_home(
 
         // Encrypt chunk (using BearDog crypto service)
         let plaintext = &buffer[..bytes_read];
-        let encrypted = encrypt_chunk_with_home(key_id, plaintext, chunk_index, &home).await?;
+        let encrypted = encrypt_chunk_with_home(key_id, plaintext, chunk_index, &home)?;
 
         // Write encrypted chunk with length prefix
         let chunk_len = encrypted.len() as u32;
@@ -253,8 +253,7 @@ pub async fn handle_streaming_decrypt_with_home(
         input_file.read_exact(&mut encrypted_chunk).await?;
 
         // Decrypt chunk
-        let decrypted =
-            decrypt_chunk_with_home(&key_id, &encrypted_chunk, chunk_index, &home).await?;
+        let decrypted = decrypt_chunk_with_home(&key_id, &encrypted_chunk, chunk_index, &home)?;
 
         // Write decrypted chunk
         output_file.write_all(&decrypted).await?;
@@ -280,7 +279,7 @@ pub async fn handle_streaming_decrypt_with_home(
 }
 
 /// Encrypt a single chunk
-async fn encrypt_chunk_with_home(
+fn encrypt_chunk_with_home(
     key_id: &str,
     plaintext: &[u8],
     chunk_index: u64,
@@ -323,7 +322,7 @@ async fn encrypt_chunk_with_home(
 }
 
 /// Decrypt a single chunk
-async fn decrypt_chunk_with_home(
+fn decrypt_chunk_with_home(
     key_id: &str,
     encrypted: &[u8],
     _chunk_index: u64,

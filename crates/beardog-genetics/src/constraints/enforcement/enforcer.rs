@@ -35,6 +35,7 @@ impl Default for ConstraintEnforcementPolicy {
 
 impl ConstraintEnforcementPolicy {
     /// Reads `BEARDOG_MULTISIG_MODE`, `BEARDOG_MULTISIG_THRESHOLD`, and `BEARDOG_BEHAVIORAL_MODE`.
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             multisig_mode: std::env::var(env_keys::ENV_MULTISIG_MODE)

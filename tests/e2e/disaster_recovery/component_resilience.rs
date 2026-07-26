@@ -36,13 +36,13 @@ impl ComponentFailureScenario {
         let mut metrics = E2EMetrics::default();
 
         // Test 1: Basic component initialization
-        Self::test_initialization(&ctx, &mut metrics, config).await?;
+        Self::test_initialization(&ctx, &mut metrics, config)?;
 
         // Test 2: Crash detection
         Self::test_crash_detection(&ctx, &mut metrics, config).await?;
 
         // Test 3: Automatic recovery
-        Self::test_automatic_recovery(&ctx, &mut metrics, config).await?;
+        Self::test_automatic_recovery(&ctx, &mut metrics, config)?;
 
         // Test 4: Service continuity during failover
         Self::test_service_continuity(&ctx, &mut metrics, config).await?;
@@ -55,7 +55,7 @@ impl ComponentFailureScenario {
         Ok(metrics)
     }
 
-    async fn test_initialization(
+    fn test_initialization(
         ctx: &ComponentResilienceContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
@@ -65,7 +65,7 @@ impl ComponentFailureScenario {
         let components = vec!["api-server", "database", "cache"];
 
         for component in components {
-            initialize_component(ctx, component).await?;
+            initialize_component(ctx, component)?;
             metrics.successful_requests += 1;
         }
 
@@ -83,11 +83,11 @@ impl ComponentFailureScenario {
         let component = "api-server";
 
         // Simulate crash
-        simulate_component_crash(ctx, component).await;
+        simulate_component_crash(ctx, component);
         metrics.total_requests += 1;
 
         // Verify crash detection
-        if is_crash_detected(ctx, component).await {
+        if is_crash_detected(ctx, component) {
             info!("  ✅ Crash detected successfully");
             metrics.successful_requests += 1;
         } else {
@@ -99,7 +99,7 @@ impl ComponentFailureScenario {
         Ok(())
     }
 
-    async fn test_automatic_recovery(
+    fn test_automatic_recovery(
         ctx: &ComponentResilienceContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
@@ -109,12 +109,12 @@ impl ComponentFailureScenario {
         let component = "database";
 
         // Trigger recovery
-        trigger_automatic_recovery(ctx, component).await?;
+        trigger_automatic_recovery(ctx, component)?;
         metrics.total_requests += 1;
         metrics.successful_requests += 1;
 
         // Verify recovery
-        let status = get_component_status(ctx, component).await;
+        let status = get_component_status(ctx, component);
         if status == "healthy" {
             info!("  ✅ Component recovered successfully");
             metrics.successful_requests += 1;
@@ -136,7 +136,7 @@ impl ComponentFailureScenario {
 
         // Send requests during failover
         for i in 0..5 {
-            match send_component_request(ctx, "api-server", "test-data").await {
+            match send_component_request(ctx, "api-server", "test-data") {
                 Ok(()) => {
                     metrics.successful_requests += 1;
                 }
@@ -157,7 +157,7 @@ impl ComponentFailureScenario {
 // =============================================================================
 
 /// Initialize component with self-knowledge only
-async fn initialize_component(
+fn initialize_component(
     ctx: &ComponentResilienceContext,
     component: &str,
 ) -> Result<(), BearDogError> {
@@ -171,7 +171,7 @@ async fn initialize_component(
 }
 
 /// Get component status (capability-based query)
-async fn get_component_status(ctx: &ComponentResilienceContext, component: &str) -> String {
+fn get_component_status(ctx: &ComponentResilienceContext, component: &str) -> String {
     let map = ctx.component_status.lock().unwrap();
     map.get(component)
         .cloned()
@@ -179,18 +179,18 @@ async fn get_component_status(ctx: &ComponentResilienceContext, component: &str)
 }
 
 /// Simulate component crash
-async fn simulate_component_crash(ctx: &ComponentResilienceContext, component: &str) {
+fn simulate_component_crash(ctx: &ComponentResilienceContext, component: &str) {
     let mut map = ctx.component_status.lock().unwrap();
     map.insert(component.to_string(), "crashed".to_string());
 }
 
 /// Check if crash is detected
-async fn is_crash_detected(ctx: &ComponentResilienceContext, component: &str) -> bool {
-    get_component_status(ctx, component).await == "crashed"
+fn is_crash_detected(ctx: &ComponentResilienceContext, component: &str) -> bool {
+    get_component_status(ctx, component) == "crashed"
 }
 
 /// Trigger automatic recovery
-async fn trigger_automatic_recovery(
+fn trigger_automatic_recovery(
     ctx: &ComponentResilienceContext,
     component: &str,
 ) -> Result<(), BearDogError> {
@@ -203,12 +203,12 @@ async fn trigger_automatic_recovery(
 }
 
 /// Send request to component
-async fn send_component_request(
+fn send_component_request(
     ctx: &ComponentResilienceContext,
     component: &str,
     _data: &str,
 ) -> Result<(), BearDogError> {
-    let status = get_component_status(ctx, component).await;
+    let status = get_component_status(ctx, component);
 
     match status.as_str() {
         "healthy" => Ok(()),

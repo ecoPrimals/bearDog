@@ -517,7 +517,7 @@ impl HsmProviderConfig {
 
     /// Get the base HSM configuration mutably
     /// Returns mutable reference to base config
-    pub fn base_config_mut(&mut self) -> &mut HsmConfig {
+    pub const fn base_config_mut(&mut self) -> &mut HsmConfig {
         match self {
             Self::Software(config) => &mut config.base,
             Self::Hardware(config) => &mut config.base,
@@ -644,14 +644,14 @@ impl HsmConfigBuilder {
 
     /// Set the operation timeout
     #[must_use]
-    pub fn operation_timeout(mut self, timeout: Duration) -> Self {
+    pub const fn operation_timeout(mut self, timeout: Duration) -> Self {
         self.config.base_config_mut().operation_timeout = timeout;
         self
     }
 
     /// Set the cache size
     #[must_use]
-    pub fn cache_size(mut self, size: u32) -> Self {
+    pub const fn cache_size(mut self, size: u32) -> Self {
         self.config.base_config_mut().cache_size = Some(size);
         self
     }

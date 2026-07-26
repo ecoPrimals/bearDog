@@ -20,7 +20,7 @@ impl BtspHandler {
     /// - **Certificate verification**: Handled by the transport peer (external mode)
     ///
     /// For certificate trust, use the transport peer's BTSP external mode API.
-    pub(super) async fn handle_verify_peer(
+    pub(super) fn handle_verify_peer(
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
@@ -92,7 +92,7 @@ impl BtspHandler {
     /// Bootstrap a trusted peer into the BTSP trust database.
     ///
     /// Params: `{ "peer_id": "...", "family_id": "..." }` or `{ "peers": "id:fam,id2:fam2" }`.
-    pub(super) async fn handle_trust_seed(
+    pub(super) fn handle_trust_seed(
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
@@ -112,7 +112,6 @@ impl BtspHandler {
                     .map_err(|e| format!("Invalid peers entry: {e}"))?;
                 if btsp_provider
                     .seed_trusted_peer(peer_id, family_id)
-                    .await
                     .map_err(|e| format!("Trust seed failed: {e}"))?
                 {
                     seeded += 1;
@@ -135,7 +134,6 @@ impl BtspHandler {
 
         let inserted = btsp_provider
             .seed_trusted_peer(peer_id, family_id)
-            .await
             .map_err(|e| format!("Trust seed failed: {e}"))?;
 
         Ok(serde_json::json!({

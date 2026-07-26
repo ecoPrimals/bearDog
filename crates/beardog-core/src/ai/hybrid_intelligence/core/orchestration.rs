@@ -217,8 +217,8 @@ impl HybridIntelligenceSystem {
         Ok(())
     }
     
-    #[must_use]
     /// Get current processing mode
+    #[must_use]
     pub fn get_processing_mode(&self) -> ProcessingMode {
         self.processing_mode
     }

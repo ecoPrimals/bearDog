@@ -20,9 +20,10 @@ use zeroize::Zeroize;
 
 use super::session::BtspCipher;
 use beardog_errors::BearDogError;
+use beardog_types::constants::domains::network::timeouts::TLS_HANDSHAKE_TIMEOUT;
 
 /// Maximum time a pending handshake can sit before it expires.
-const PENDING_HANDSHAKE_TTL: Duration = Duration::from_secs(30);
+const PENDING_HANDSHAKE_TTL: Duration = TLS_HANDSHAKE_TIMEOUT;
 
 /// Maximum number of concurrent pending handshakes (`DoS` guard).
 const MAX_PENDING_SESSIONS: usize = 256;

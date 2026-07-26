@@ -87,7 +87,6 @@ impl BtspHandler {
         } else if is_external {
             info!("🔸 External mode: Certificate trust + TLS 1.3");
             self.handle_tunnel_establish_external(params, btsp_provider)
-                .await
         } else {
             // Mixed mode (shouldn't happen with proper types, but handle gracefully)
             warn!("⚠️  Mixed mode detected (trust_mode and protocol mismatch)");
@@ -144,7 +143,7 @@ impl BtspHandler {
     /// `BearDog` provides the crypto primitives; the transport peer implements TLS/HTTP.
     ///
     /// This follows the **Tower Atomic pattern**: transport peer + `BearDog` = Secure HTTPS
-    async fn handle_tunnel_establish_external(
+    fn handle_tunnel_establish_external(
         &self,
         params: beardog_types::btsp::TunnelEstablishParams,
         _btsp_provider: &Arc<BeardogBtspProvider>,
@@ -341,7 +340,7 @@ impl BtspHandler {
     ///
     /// TLS configuration is part of external mode, handled by the transport peer.
     /// Use the transport peer's BTSP external mode API for TLS configuration.
-    pub(super) async fn handle_configure_tls(
+    pub(super) fn handle_configure_tls(
         &self,
         params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
@@ -372,7 +371,7 @@ impl BtspHandler {
     ///
     /// HTTP operations are part of external mode, handled by the transport peer.
     /// The transport peer implements the HTTP/2 client and uses `BearDog` for TLS crypto.
-    pub(super) async fn handle_tunnel_send_http(
+    pub(super) fn handle_tunnel_send_http(
         &self,
         params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,

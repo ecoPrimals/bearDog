@@ -79,6 +79,7 @@ impl ChainConfig {
     pub const DEFAULT_MAX_WORKERS: usize = 4;
 
     /// Create `ChainConfig` with hardcoded defaults
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             max_chain_length: Self::DEFAULT_MAX_CHAIN_LENGTH,
@@ -91,6 +92,7 @@ impl ChainConfig {
     }
 
     /// Create `ChainConfig` from environment variables
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             max_chain_length: std::env::var(env_keys::ENV_ADAPTER_MAX_CHAIN_LENGTH)

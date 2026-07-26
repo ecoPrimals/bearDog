@@ -9,7 +9,7 @@ use beardog_errors::BearDogError;
 #[tokio::test]
 async fn test_collect_is_not_zeros() -> Result<(), BearDogError> {
     let collector = EntropyCollector::new();
-    let entropy = collector.collect(32).await?;
+    let entropy = collector.collect(32)?;
 
     assert!(
         !entropy.iter().all(|&b| b == 0),
@@ -23,8 +23,8 @@ async fn test_collect_is_not_zeros() -> Result<(), BearDogError> {
 async fn test_collect_uniqueness() -> Result<(), BearDogError> {
     let collector = EntropyCollector::new();
 
-    let entropy1 = collector.collect(32).await?;
-    let entropy2 = collector.collect(32).await?;
+    let entropy1 = collector.collect(32)?;
+    let entropy2 = collector.collect(32)?;
 
     assert_ne!(
         entropy1, entropy2,
@@ -39,7 +39,7 @@ async fn test_collect_size_correct() -> Result<(), BearDogError> {
     let collector = EntropyCollector::new();
 
     for size in [16, 32, 64, 256] {
-        let entropy = collector.collect(size).await?;
+        let entropy = collector.collect(size)?;
         assert_eq!(entropy.len(), size, "Entropy size should match requested");
     }
 
@@ -50,7 +50,7 @@ async fn test_collect_size_correct() -> Result<(), BearDogError> {
 async fn test_quality_report_high_threshold() -> Result<(), BearDogError> {
     let collector = EntropyCollector::new();
 
-    let entropy = collector.collect(1024).await?;
+    let entropy = collector.collect(1024)?;
     let report = collector.assess_quality(&entropy);
 
     assert!(
@@ -66,7 +66,7 @@ async fn test_quality_report_high_threshold() -> Result<(), BearDogError> {
 async fn test_quality_report_large_sample() -> Result<(), BearDogError> {
     let collector = EntropyCollector::new();
 
-    let entropy = collector.collect(4096).await?;
+    let entropy = collector.collect(4096)?;
     let report = collector.assess_quality(&entropy);
 
     assert!(
@@ -98,7 +98,7 @@ async fn test_quality_report_rejects_zeros() {
 #[tokio::test]
 async fn test_entropy_distribution_balanced() -> Result<(), BearDogError> {
     let collector = EntropyCollector::new();
-    let entropy = collector.collect(2048).await?;
+    let entropy = collector.collect(2048)?;
 
     let mut frequency = [0u32; 256];
     for &byte in &entropy {
@@ -121,7 +121,7 @@ async fn test_concurrent_entropy_collection() -> Result<(), BearDogError> {
     let handles: Vec<_> = (0..10)
         .map(|_| {
             let c = collector.clone();
-            tokio::spawn(async move { c.collect(32).await })
+            tokio::spawn(async move { c.collect(32) })
         })
         .collect();
 
@@ -147,12 +147,12 @@ async fn test_concurrent_entropy_collection() -> Result<(), BearDogError> {
 async fn test_entropy_minimal_size() -> Result<(), BearDogError> {
     let collector = EntropyCollector::new();
 
-    let entropy = collector.collect(1).await?;
+    let entropy = collector.collect(1)?;
     assert_eq!(entropy.len(), 1);
 
     let mut has_nonzero = false;
     for _ in 0..10 {
-        let single = collector.collect(1).await?;
+        let single = collector.collect(1)?;
         if single[0] != 0 {
             has_nonzero = true;
             break;

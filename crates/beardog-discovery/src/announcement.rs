@@ -18,7 +18,8 @@ impl Announcer {
     /// Builds an announcer that will publish [`PrimalInfo`] using the given [`AnnouncementConfig`].
     ///
     /// No network I/O occurs until [`Announcer::start`] is called.
-    pub fn new(config: AnnouncementConfig, primal_info: PrimalInfo) -> Self {
+    #[must_use]
+    pub const fn new(config: AnnouncementConfig, primal_info: PrimalInfo) -> Self {
         Self {
             config,
             primal_info,
@@ -38,7 +39,7 @@ impl Announcer {
     /// # Errors
     ///
     /// Returns [`crate::error::DiscoveryError`] when announcement transport setup fails.
-    pub async fn start(&self) -> Result<()> {
+    pub fn start(&self) -> Result<()> {
         if !self.config.enabled {
             debug!("Announcement disabled");
             return Ok(());
@@ -56,9 +57,9 @@ impl Announcer {
 
         for method in &self.config.methods {
             match method.as_str() {
-                "mdns" => self.announce_via_mdns().await?,
-                "environment" => self.announce_via_environment().await?,
-                "service_registry" => self.announce_via_service_registry().await?,
+                "mdns" => self.announce_via_mdns(),
+                "environment" => self.announce_via_environment(),
+                "service_registry" => self.announce_via_service_registry(),
                 _ => debug!("Unknown announcement method: {}", method),
             }
         }
@@ -79,7 +80,7 @@ impl Announcer {
     /// - Include TXT records with capability metadata
     /// - Periodic re-announcement with TTL
     /// - Graceful shutdown announcement
-    async fn announce_via_mdns(&self) -> Result<()> {
+    fn announce_via_mdns(&self) {
         info!(
             "mDNS announcement for {} with capabilities: {} (full impl pending)",
             self.primal_info.primal_id,
@@ -93,10 +94,9 @@ impl Announcer {
 
         // Graceful no-op: service still functions via other discovery methods
         debug!("mDNS announcement pending full implementation");
-        Ok(())
     }
 
-    async fn announce_via_environment(&self) -> Result<()> {
+    fn announce_via_environment(&self) {
         // Environment announcement happens externally (set env vars)
         info!(
             "To announce via environment, set:\n\
@@ -112,7 +112,6 @@ impl Announcer {
                 .collect::<Vec<_>>()
                 .join(",")
         );
-        Ok(())
     }
 
     /// Announce service via service registry
@@ -131,7 +130,7 @@ impl Announcer {
     /// - Include health check endpoint
     /// - Periodic heartbeat/TTL refresh
     /// - Deregistration on shutdown
-    async fn announce_via_service_registry(&self) -> Result<()> {
+    fn announce_via_service_registry(&self) {
         if let Some(registry_url) = self.service_registry_url.as_ref() {
             warn!(
                 "Service registry configured at {}, registration for {} pending full implementation",
@@ -157,7 +156,6 @@ impl Announcer {
         }
 
         // Graceful no-op: service still functions via other discovery methods
-        Ok(())
     }
 }
 
@@ -206,7 +204,6 @@ mod tests {
             sample_primal("inline-ann-1"),
         );
         a.start()
-            .await
             .expect("disabled announcer should return Ok without I/O");
     }
 
@@ -219,7 +216,6 @@ mod tests {
         Announcer::new(config, sample_primal("inline-ann-2"))
             .with_service_registry_url(Some("http://registry:8500".to_string()))
             .start()
-            .await
             .expect("combined announcement paths should complete");
     }
 }

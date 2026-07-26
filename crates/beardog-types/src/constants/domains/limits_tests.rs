@@ -303,21 +303,6 @@ mod limit_tests {
     }
 
     // ============================================================================
-    // BACKWARD COMPATIBILITY TESTS
-    // ============================================================================
-
-    #[test]
-    #[expect(
-        deprecated,
-        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
-    )]
-    fn test_deprecated_aliases_match() {
-        assert_eq!(DEFAULT_MAX_CONNECTIONS, MAX_CONNECTIONS);
-        assert_eq!(DEFAULT_MAX_RETRIES, MAX_RETRIES);
-        assert_eq!(DEFAULT_MAX_REQUEST_SIZE, MAX_REQUEST_SIZE);
-    }
-
-    // ============================================================================
     // SAFETY INVARIANT TESTS
     // ============================================================================
 

@@ -153,6 +153,7 @@ impl BearDogGenetics {
     ///     return Err("Expired key");
     /// }
     /// ```
+    #[must_use]
     pub fn is_expired(&self) -> bool {
         if let Some(ref constraints) = self.constraints {
             use chrono::Utc;
@@ -172,6 +173,7 @@ impl BearDogGenetics {
     /// println!("Key constraints: {}", key.constraint_description());
     /// // Output: "Project-scoped to 'climate-modeling', cannot delete raw_data/*, expires 2025-12-31"
     /// ```
+    #[must_use]
     pub fn constraint_description(&self) -> String {
         if let Some(ref constraints) = self.constraints {
             constraints.description()

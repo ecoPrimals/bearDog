@@ -79,7 +79,7 @@ impl SafeAndroidKeystore {
     }
 
     #[cfg(not(target_os = "android"))]
-    fn detect_strongbox_version_safe() -> Result<Option<String>, BearDogError> {
+    const fn detect_strongbox_version_safe() -> Result<Option<String>, BearDogError> {
         Ok(None)
     }
 
@@ -95,7 +95,7 @@ impl SafeAndroidKeystore {
     }
 
     #[cfg(not(target_os = "android"))]
-    fn detect_titan_m_version_safe() -> Result<Option<String>, BearDogError> {
+    const fn detect_titan_m_version_safe() -> Result<Option<String>, BearDogError> {
         Ok(None)
     }
 }

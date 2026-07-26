@@ -11,20 +11,10 @@ mod registry;
 mod serving;
 mod training_config;
 
-#[expect(
-    deprecated,
-    reason = "re-export of deprecated type for backward-compatible migration path"
-)]
-pub use deployment::HealthCheckConfig;
 pub use deployment::{DeploymentConfig, DeploymentStrategy, ResourceRequirements};
 pub use metrics_alerting::{
     AlertRule, AlertingConfig, ComparisonOperator, MetricType, NotificationChannel,
 };
-#[expect(
-    deprecated,
-    reason = "re-export of deprecated type for backward-compatible migration path"
-)]
-pub use monitoring::MonitoringConfig;
 pub use monitoring::{AIMetricType, AIMonitoringConfig};
 pub use optimizer::{
     EarlyStoppingConfig, LearningRateSchedule, OptimizerConfig, OptimizerType, RegularizationConfig,
@@ -33,11 +23,6 @@ pub use preprocessing::{
     AugmentationTechnique, DataAugmentationConfig, FeatureSelectionConfig, FeatureSelectionMethod,
     MissingValueStrategy, NormalizationStrategy,
 };
-#[expect(
-    deprecated,
-    reason = "re-export of deprecated type for backward-compatible migration path"
-)]
-pub use registry::RegistryConfig;
 pub use registry::{AIRegistryConfig, AuthConfig, AuthType, RegistryType, VersioningStrategy};
 pub use serving::{CachingConfig, EvictionPolicy, LoadBalancingStrategy, ServingConfig};
 pub use training_config::{

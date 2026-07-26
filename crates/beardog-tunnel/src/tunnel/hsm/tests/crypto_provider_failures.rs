@@ -22,7 +22,7 @@ use beardog_errors::BearDogError;
 
 #[tokio::test]
 async fn test_rustcrypto_provider_initialization() -> Result<(), BearDogError> {
-    let provider = SoftwareHsmCryptoProvider::new().await?;
+    let provider = SoftwareHsmCryptoProvider::new()?;
     let result = provider.initialize().await;
     assert!(result.is_ok());
     Ok(())
@@ -245,7 +245,7 @@ async fn test_backend_switching_new_hsm() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_provider_initialize_multiple_times() -> Result<(), BearDogError> {
-    let provider = SoftwareHsmCryptoProvider::new().await?;
+    let provider = SoftwareHsmCryptoProvider::new()?;
 
     // Initialize multiple times
     provider.initialize().await?;

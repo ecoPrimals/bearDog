@@ -68,6 +68,7 @@ pub enum EvolutionTrigger {
 
 impl ConstraintEvolutionEngine {
     /// Create new evolution engine
+    #[must_use]
     pub fn new() -> Self {
         Self {
             trust_score: 0.5, // Start neutral
@@ -113,6 +114,7 @@ impl ConstraintEvolutionEngine {
     }
 
     /// Check if evolution should be triggered
+    #[must_use]
     pub fn should_evolve(
         &self,
         constraints: &KeyConstraints,
@@ -149,6 +151,7 @@ impl ConstraintEvolutionEngine {
     }
 
     /// Evolve constraints based on behavior
+    #[must_use]
     pub fn evolve_constraints(
         &self,
         current: &KeyConstraints,
@@ -210,11 +213,13 @@ impl ConstraintEvolutionEngine {
     }
 
     /// Get current trust score
+    #[must_use]
     pub const fn trust_score(&self) -> f64 {
         self.trust_score
     }
 
     /// Get usage statistics
+    #[must_use]
     pub const fn usage_stats(&self) -> &UsageStatistics {
         &self.usage_stats
     }

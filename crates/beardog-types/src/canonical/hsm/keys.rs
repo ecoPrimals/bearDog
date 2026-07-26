@@ -408,8 +408,8 @@ pub enum OperationResult {
 
 impl HsmKey {
     /// Create a new HSM key with specified parameters
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub fn new(key_id: String, algorithm: String, key_size: u32) -> Self {
         Self {
             key_id,
@@ -420,8 +420,8 @@ impl HsmKey {
     }
 
     /// Check if the key is active and can be used
-    #[must_use]
     /// Checks if active
+    #[must_use]
     pub fn is_active(&self) -> bool {
         self.health.status == "healthy" && self.expires_at.is_none_or(|exp| exp > SystemTime::now())
     }
@@ -458,15 +458,15 @@ impl HsmKey {
     }
 
     /// Get a custom attribute
-    #[must_use]
     /// Gets attribute
+    #[must_use]
     pub fn get_attribute(&self, key: &str) -> Option<&String> {
         self.metadata.attributes.get(key)
     }
 
     /// Check if the key is expired
-    #[must_use]
     /// Checks if expired
+    #[must_use]
     pub fn is_expired(&self) -> bool {
         self.expires_at.is_some_and(|exp| exp <= SystemTime::now())
     }
@@ -516,15 +516,15 @@ impl KeyManager {
         uuid::Uuid::new_v4().to_string()
     }
 
-    #[must_use]
     /// Validates `key_id`
+    #[must_use]
     pub const fn validate_key_id(key_id: &str) -> bool {
         !key_id.is_empty() && key_id.len() <= 255
     }
 
     /// Check if algorithm is supported
-    #[must_use]
     /// Checks if algorithm supported
+    #[must_use]
     pub fn is_algorithm_supported(algorithm: &str) -> bool {
         matches!(
             algorithm,

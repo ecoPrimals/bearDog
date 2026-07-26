@@ -143,6 +143,7 @@ impl LimitsConfig {
         clippy::too_many_arguments,
         reason = "construction params, builder would obscure required fields"
     )]
+    #[must_use]
     pub const fn new(
         buffer_size: usize,
         max_connections: usize,

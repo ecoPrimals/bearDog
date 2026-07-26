@@ -76,6 +76,7 @@ pub trait BearDogConfig:
     /// Get configuration version for migration support
     ///
     /// This enables configuration versioning and migration between versions.
+    #[must_use]
     fn version() -> u32
     where
         Self: Sized,

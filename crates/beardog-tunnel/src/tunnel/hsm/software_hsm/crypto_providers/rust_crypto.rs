@@ -28,7 +28,7 @@ impl SoftwareHsmCryptoProvider {
     ///
     /// # Errors
     /// Returns an error if the provider cannot be created
-    pub async fn new() -> Result<Self, BearDogError> {
+    pub fn new() -> Result<Self, BearDogError> {
         info!("Creating pure Rust crypto provider");
         Ok(Self)
     }
@@ -244,14 +244,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_rust_crypto_provider_creation() -> Result<(), BearDogError> {
-        let provider = SoftwareHsmCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new()?;
         assert!(provider.initialize().await.is_ok());
         Ok(())
     }
 
     #[tokio::test]
     async fn test_key_generation() -> Result<(), BearDogError> {
-        let provider = SoftwareHsmCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new()?;
         let key = provider.generate_key_material(&KeyType::Aes).await?; // Vendor-agnostic
         assert_eq!(key.len(), 32);
 
@@ -262,7 +262,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_encryption_decryption() -> Result<(), BearDogError> {
-        let provider = SoftwareHsmCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new()?;
         let key = provider.generate_key_material(&KeyType::ChaCha20).await?;
         let plaintext = b"Rust crypto test";
 
@@ -275,7 +275,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_signing_verification() -> Result<(), BearDogError> {
-        let provider = SoftwareHsmCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new()?;
         let key_material = provider.generate_key_material(&KeyType::Ed25519).await?;
 
         // Convert Vec<u8> to [u8; 32] for SigningKey
@@ -304,7 +304,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_key_derivation() -> Result<(), BearDogError> {
-        let provider = SoftwareHsmCryptoProvider::new().await?;
+        let provider = SoftwareHsmCryptoProvider::new()?;
         let root_key = b"rust_root_key_for_derivation";
         let context = b"derivation_context";
 

@@ -18,7 +18,7 @@ pub struct DiscoverSocketEnv {
     /// Effective user id for `/run/user/{uid}/` resolution.
     pub uid: Option<u32>,
     /// IPC namespace override (`BIOMEOS_IPC_NAMESPACE`); defaults to
-    /// [`BIOMEOS_RUNTIME_SOCKET_SUBDIR`] when `None`.
+    /// [`default_ecosystem_ipc_namespace`] when `None`.
     pub ipc_namespace: Option<String>,
 }
 
@@ -44,7 +44,7 @@ impl DiscoverSocketEnv {
 
 /// Discover primal's Unix socket path using the 5-tier standard (testable).
 ///
-/// The IPC namespace (default [`BIOMEOS_RUNTIME_SOCKET_SUBDIR`]) is resolved from
+/// The IPC namespace (default [`default_ecosystem_ipc_namespace`]) is resolved from
 /// `env.ipc_namespace` → `BIOMEOS_IPC_NAMESPACE` env → compile-time default, so
 /// deployments can override the ecosystem layout without code changes.
 ///
@@ -54,10 +54,7 @@ impl DiscoverSocketEnv {
 /// 3. `XDG_RUNTIME_DIR/{namespace}/{primal}.sock`
 /// 4. `/run/user/{uid}/{namespace}/{primal}.sock`
 /// 5. `{std::env::temp_dir()}/{namespace}/{primal}.sock` (last-resort fallback)
-pub async fn discover_primal_socket_with(
-    primal_name: &str,
-    env: &DiscoverSocketEnv,
-) -> Result<PathBuf> {
+pub fn discover_primal_socket_with(primal_name: &str, env: &DiscoverSocketEnv) -> Result<PathBuf> {
     let namespace = resolve_biomeos_ipc_subdir_from_optional(env.ipc_namespace.as_deref());
 
     // Tier 1: primal-specific env var (e.g. BEARDOG_SOCKET, {PRIMAL}_SOCKET)
@@ -128,13 +125,13 @@ pub async fn discover_primal_socket_with(
 
 /// Discover primal's Unix socket path using [`DiscoverSocketEnv::from_process_env`].
 pub async fn discover_primal_socket(primal_name: &str) -> Result<PathBuf> {
-    discover_primal_socket_with(primal_name, &DiscoverSocketEnv::from_process_env()).await
+    discover_primal_socket_with(primal_name, &DiscoverSocketEnv::from_process_env())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use beardog_types::constants::domains::network::ipc_discovery::BIOMEOS_RUNTIME_SOCKET_SUBDIR;
+    use beardog_types::constants::domains::network::ipc_discovery::default_ecosystem_ipc_namespace;
     use std::fs;
     use tempfile::tempdir;
 
@@ -154,7 +151,7 @@ mod tests {
             ipc_namespace: None,
         };
 
-        let result = discover_primal_socket_with("test_primal", &env).await;
+        let result = discover_primal_socket_with("test_primal", &env);
         assert!(result.is_ok());
         assert_eq!(
             result.expect("discover primal socket via BIOMEOS_SOCKET_DIR"),
@@ -165,7 +162,7 @@ mod tests {
     #[tokio::test]
     async fn test_discover_via_xdg_biomeos() {
         let dir = tempdir().expect("tempdir for XDG biomeos test");
-        let biomeos_dir = dir.path().join(BIOMEOS_RUNTIME_SOCKET_SUBDIR);
+        let biomeos_dir = dir.path().join(default_ecosystem_ipc_namespace());
         fs::create_dir_all(&biomeos_dir).expect("create XDG biomeos dir");
 
         let socket_path = biomeos_dir.join("test_primal.sock");
@@ -178,7 +175,7 @@ mod tests {
             ipc_namespace: None,
         };
 
-        let result = discover_primal_socket_with("test_primal", &env).await;
+        let result = discover_primal_socket_with("test_primal", &env);
         assert!(result.is_ok());
         assert_eq!(
             result.expect("discover primal socket via XDG_RUNTIME_DIR/biomeos"),
@@ -195,7 +192,7 @@ mod tests {
             ipc_namespace: None,
         };
 
-        let result = discover_primal_socket_with("nonexistent_primal", &env).await;
+        let result = discover_primal_socket_with("nonexistent_primal", &env);
         assert!(result.is_err());
         assert!(matches!(result, Err(Error::PrimalNotFound(_))));
     }

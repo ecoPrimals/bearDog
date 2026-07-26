@@ -130,16 +130,19 @@ pub enum CaBundle {
 
 impl TrustMode {
     /// Check if this is internal mode (genetic lineage)
+    #[must_use]
     pub const fn is_internal(&self) -> bool {
         matches!(self, Self::GeneticLineage { .. })
     }
 
     /// Check if this is external mode (certificate)
+    #[must_use]
     pub const fn is_external(&self) -> bool {
         matches!(self, Self::Certificate { .. })
     }
 
     /// Get the server name (for external mode)
+    #[must_use]
     pub fn server_name(&self) -> Option<&str> {
         match self {
             Self::Certificate { server_name, .. } => Some(server_name),
@@ -148,6 +151,7 @@ impl TrustMode {
     }
 
     /// Get the required family (for internal mode)
+    #[must_use]
     pub fn required_family(&self) -> Option<&str> {
         match self {
             Self::GeneticLineage {

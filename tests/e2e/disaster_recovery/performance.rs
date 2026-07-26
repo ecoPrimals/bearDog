@@ -43,16 +43,16 @@ impl ResourceExhaustionScenario {
         let mut metrics = E2EMetrics::default();
 
         // Test 1: Baseline performance
-        Self::test_baseline_performance(&ctx, &mut metrics, config).await?;
+        Self::test_baseline_performance(&ctx, &mut metrics, config)?;
 
         // Test 2: Resource exhaustion
-        Self::test_resource_exhaustion(&ctx, &mut metrics, config).await?;
+        Self::test_resource_exhaustion(&ctx, &mut metrics, config)?;
 
         // Test 3: Graceful degradation
-        Self::test_graceful_degradation(&ctx, &mut metrics, config).await?;
+        Self::test_graceful_degradation(&ctx, &mut metrics, config)?;
 
         // Test 4: Recovery after exhaustion
-        Self::test_recovery(&ctx, &mut metrics, config).await?;
+        Self::test_recovery(&ctx, &mut metrics, config)?;
 
         // Modern pattern: explicit data verification flag
         // Performance scenarios don't test data integrity
@@ -62,7 +62,7 @@ impl ResourceExhaustionScenario {
         Ok(metrics)
     }
 
-    async fn test_baseline_performance(
+    fn test_baseline_performance(
         ctx: &ResourceExhaustionContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
@@ -70,12 +70,12 @@ impl ResourceExhaustionScenario {
         info!("  Measuring baseline performance...");
 
         // Initialize system with full resources
-        initialize_system_with_full_resources(ctx).await?;
+        initialize_system_with_full_resources(ctx)?;
         metrics.total_requests += 1;
         metrics.successful_requests += 1;
 
         // Measure performance
-        let system_metrics = measure_system_performance(ctx).await?;
+        let system_metrics = measure_system_performance(ctx)?;
         metrics.total_requests += 1;
 
         if system_metrics.cpu_usage < 50.0 {
@@ -89,7 +89,7 @@ impl ResourceExhaustionScenario {
         Ok(())
     }
 
-    async fn test_resource_exhaustion(
+    fn test_resource_exhaustion(
         ctx: &ResourceExhaustionContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
@@ -97,12 +97,12 @@ impl ResourceExhaustionScenario {
         info!("  Testing resource exhaustion...");
 
         // Reduce available resources
-        set_resource_limits(ctx, 20).await?; // 20% capacity
+        set_resource_limits(ctx, 20)?; // 20% capacity
         metrics.total_requests += 1;
         metrics.successful_requests += 1;
 
         // Measure under constraint
-        let system_metrics = measure_system_performance(ctx).await?;
+        let system_metrics = measure_system_performance(ctx)?;
         metrics.total_requests += 1;
 
         if system_metrics.latency_ms > 100 {
@@ -116,7 +116,7 @@ impl ResourceExhaustionScenario {
         Ok(())
     }
 
-    async fn test_graceful_degradation(
+    fn test_graceful_degradation(
         ctx: &ResourceExhaustionContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
@@ -125,7 +125,7 @@ impl ResourceExhaustionScenario {
 
         // System should still function under constraints
         for i in 0..5 {
-            match send_component_request(ctx, "api-server", "test").await {
+            match send_component_request(ctx, "api-server", "test") {
                 Ok(()) => {
                     metrics.successful_requests += 1;
                 }
@@ -141,7 +141,7 @@ impl ResourceExhaustionScenario {
         Ok(())
     }
 
-    async fn test_recovery(
+    fn test_recovery(
         ctx: &ResourceExhaustionContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
@@ -149,12 +149,12 @@ impl ResourceExhaustionScenario {
         info!("  Testing recovery after exhaustion...");
 
         // Restore resources
-        set_resource_limits(ctx, 100).await?; // Full capacity
+        set_resource_limits(ctx, 100)?; // Full capacity
         metrics.total_requests += 1;
         metrics.successful_requests += 1;
 
         // Verify performance recovery
-        let system_metrics = measure_system_performance(ctx).await?;
+        let system_metrics = measure_system_performance(ctx)?;
         metrics.total_requests += 1;
 
         if system_metrics.latency_ms < 50 {
@@ -177,7 +177,7 @@ impl ResourceExhaustionScenario {
 // =============================================================================
 
 /// Initialize system with full resources
-async fn initialize_system_with_full_resources(
+fn initialize_system_with_full_resources(
     ctx: &ResourceExhaustionContext,
 ) -> Result<(), BearDogError> {
     let mut limits = ctx.resource_limits.lock().unwrap();
@@ -186,7 +186,7 @@ async fn initialize_system_with_full_resources(
 }
 
 /// Measure system performance metrics
-async fn measure_system_performance(
+fn measure_system_performance(
     ctx: &ResourceExhaustionContext,
 ) -> Result<SystemMetrics, BearDogError> {
     let limits = ctx.resource_limits.lock().unwrap();
@@ -203,7 +203,7 @@ async fn measure_system_performance(
 }
 
 /// Set resource limits (percentage of full capacity)
-async fn set_resource_limits(
+fn set_resource_limits(
     ctx: &ResourceExhaustionContext,
     percentage: u32,
 ) -> Result<(), BearDogError> {
@@ -214,7 +214,7 @@ async fn set_resource_limits(
 }
 
 /// Send request to component (for degradation testing)
-async fn send_component_request(
+fn send_component_request(
     ctx: &ResourceExhaustionContext,
     _component: &str,
     _data: &str,

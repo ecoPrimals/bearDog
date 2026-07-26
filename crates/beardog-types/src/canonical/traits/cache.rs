@@ -74,11 +74,13 @@ pub enum EvictionPolicy {
 
 impl EvictionPolicy {
     /// Returns true if this policy tracks access patterns
+    #[must_use]
     pub const fn tracks_access(&self) -> bool {
         matches!(self, Self::Lru | Self::Lfu)
     }
 
     /// Returns true if this policy is time-based
+    #[must_use]
     pub const fn is_time_based(&self) -> bool {
         matches!(self, Self::Ttl)
     }
@@ -86,6 +88,7 @@ impl EvictionPolicy {
     /// Returns the relative computational overhead of this policy
     ///
     /// Returns a value from 1 (lowest) to 5 (highest)
+    #[must_use]
     pub const fn overhead_level(&self) -> u8 {
         match self {
             Self::Fifo | Self::Random => 1,

@@ -88,14 +88,14 @@ impl HsmPerformanceTracker {
             operation_name, duration_ms, success
         );
     }
-
     /// Gets metrics for a specific operation
+    #[must_use]
     pub fn get_metrics(&self, operation_name: &str) -> Option<OperationMetrics> {
         let metrics_map = self.operation_metrics.read();
         metrics_map.get(operation_name).cloned()
     }
-
     /// Gets all metrics
+    #[must_use]
     pub fn get_all_metrics(&self) -> HashMap<String, OperationMetrics> {
         self.operation_metrics.read().clone()
     }

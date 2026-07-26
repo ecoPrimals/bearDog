@@ -114,7 +114,7 @@ impl CertificateIssuer {
         adapter_id: String,
         request_context: &RequestContext,
     ) -> Result<AdapterUnlockCertificate, BearDogError> {
-        let classification = self.classify_request(request_context).await?;
+        let classification = self.classify_request(request_context)?;
 
         info!(
             "Issuing certificate for adapter '{}': {:?}",
@@ -127,7 +127,7 @@ impl CertificateIssuer {
             ..
         } = &classification
             && matches!(risk_level, ExtractionRisk::High)
-            && !self.has_valid_license(request_context).await?
+            && !self.has_valid_license(request_context)?
         {
             warn!(
                 "High-risk commercial request without license (automation: {}%)",
@@ -141,11 +141,11 @@ impl CertificateIssuer {
         AdapterUnlockCertificate::issue(adapter_id, classification, &self.signing_key)
     }
 
-    async fn classify_request(
+    fn classify_request(
         &self,
         context: &RequestContext,
     ) -> Result<CertificateClassification, BearDogError> {
-        self.detector.classify(context).await
+        self.detector.classify(context)
     }
 
     /// Check if a valid license exists for this request
@@ -154,7 +154,7 @@ impl CertificateIssuer {
     /// - Validates format and expiration date from the key payload
     ///
     /// The trailing segment is reserved for future cryptographic verification of the token.
-    async fn has_valid_license(&self, context: &RequestContext) -> Result<bool, BearDogError> {
+    fn has_valid_license(&self, context: &RequestContext) -> Result<bool, BearDogError> {
         let license_key = match &self.license.license_key {
             Some(key) if !key.is_empty() => key.clone(),
             _ => {

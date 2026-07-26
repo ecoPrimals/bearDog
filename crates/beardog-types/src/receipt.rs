@@ -143,12 +143,14 @@ impl OperationReceipt {
     }
 
     /// Builder: Add key information
+    #[must_use]
     pub fn with_key_info(mut self, key_info: KeyInfo) -> Self {
         self.key_info = Some(key_info);
         self
     }
 
     /// Builder: Add HSM information
+    #[must_use]
     pub fn with_hsm_info(mut self, hsm_info: HsmInfo) -> Self {
         self.hsm_info = Some(hsm_info);
         self
@@ -231,11 +233,13 @@ impl OperationReceipt {
     }
 
     /// Check if operation was successful
+    #[must_use]
     pub const fn is_success(&self) -> bool {
         matches!(self.result, OperationResult::Success)
     }
 
     /// Get error message if operation failed
+    #[must_use]
     pub fn error_message(&self) -> Option<&str> {
         match &self.result {
             OperationResult::Failure { error } => Some(error),
@@ -245,6 +249,7 @@ impl OperationReceipt {
 }
 
 /// Helper to generate standardized receipt filename
+#[must_use]
 pub fn generate_receipt_filename(operation: &str) -> String {
     format!(
         "receipt-{}-{}.json",

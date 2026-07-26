@@ -179,7 +179,7 @@ impl<C: AndroidCapability> SafeMobileHardwareProvider<C> {
     }
 
     /// Returns the capability
-    pub fn capability(&self) -> &C {
+    pub const fn capability(&self) -> &C {
         &self.capability
     }
 
@@ -471,19 +471,20 @@ pub struct SafeKeyHandle {
 
 impl SafeKeyHandle {
     /// Creates a new key handle
+    #[must_use]
     pub fn new(key_id: &str, algorithm: KeyType) -> Self {
         Self {
             key_id: key_id.to_string(),
             algorithm,
         }
     }
-
     /// Returns the key ID
+    #[must_use]
     pub fn id(&self) -> &str {
         &self.key_id
     }
-
     /// Returns the algorithm
+    #[must_use]
     pub fn algorithm(&self) -> KeyType {
         self.algorithm.clone()
     }
@@ -504,7 +505,7 @@ mod tests {
     #[tokio::test]
     async fn test_algorithm_support_checking() -> Result<(), BearDogError> {
         let provider = SafeMobileHardwareProvider::<SoftwareFallback>::new(SoftwareFallback)?;
-        assert!(provider.supports_algorithm(Algorithm::EcdsaP256));
+        assert!(provider.supports_algorithm(Algorithm::EccP256));
         assert!(provider.supports_algorithm(Algorithm::Aes256Gcm));
         Ok(())
     }

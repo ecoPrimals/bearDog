@@ -33,7 +33,10 @@ impl IntrospectionHandler {
     }
 
     /// Tests / DI: explicit identity hints (no `PRIMAL_NAME` env mutation).
-    pub fn with_identity_hints(registry: Arc<HandlerRegistry>, identity: IdentityHints) -> Self {
+    pub const fn with_identity_hints(
+        registry: Arc<HandlerRegistry>,
+        identity: IdentityHints,
+    ) -> Self {
         Self { registry, identity }
     }
 }
@@ -50,7 +53,7 @@ impl MethodHandler for IntrospectionHandler {
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> HandlerResult {
         match method {
-            "primal.info" => self.handle_primal_info().await,
+            "primal.info" => self.handle_primal_info(),
             "rpc.methods" => self.handle_rpc_methods().await,
             "primal.capabilities" => self.handle_primal_capabilities().await,
             _ => Err(format!("Unknown introspection method: {method}").into()),
@@ -66,7 +69,7 @@ impl IntrospectionHandler {
     /// - Capabilities provided
     /// - Available method namespaces
     /// - Protocol version
-    async fn handle_primal_info(&self) -> Result<Value, super::HandlerError> {
+    fn handle_primal_info(&self) -> Result<Value, super::HandlerError> {
         Ok(json!({
             "name": get_primal_name_with(&self.identity),
             "version": env!("CARGO_PKG_VERSION"),
@@ -224,7 +227,7 @@ mod tests {
             },
         );
 
-        let result = handler.handle_primal_info().await.unwrap();
+        let result = handler.handle_primal_info().unwrap();
 
         // Validate structure
         assert!(result["name"].is_string());

@@ -32,9 +32,7 @@ use tracing::info;
 ///   "user_present": true
 /// }
 /// ```
-pub async fn handle_fido2_entropy(
-    params: Option<&Value>,
-) -> Result<Value, super::super::HandlerError> {
+pub fn handle_fido2_entropy(params: Option<&Value>) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for beardog.fido2.entropy")?;
 
     let rp_id = params

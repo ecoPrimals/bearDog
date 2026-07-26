@@ -320,6 +320,7 @@ impl AdapterUnlockCertificate {
     }
 
     /// Get current certificate status
+    #[must_use]
     pub fn status(&self) -> CertificateStatus {
         if Utc::now() > self.expires_at {
             CertificateStatus::Expired
@@ -329,7 +330,8 @@ impl AdapterUnlockCertificate {
     }
 
     /// Check if commercial usage requires license
-    pub fn requires_license(&self) -> bool {
+    #[must_use]
+    pub const fn requires_license(&self) -> bool {
         matches!(
             &self.classification,
             CertificateClassification::Commercial {

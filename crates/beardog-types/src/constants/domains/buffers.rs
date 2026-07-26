@@ -297,15 +297,3 @@ pub mod pool_sizes {
     /// **Total memory**: ~320 KB
     pub const NETWORK_POOL_COUNT: usize = 5;
 }
-
-// ============================================================================
-// BACKWARD COMPATIBILITY ALIASES
-// ============================================================================
-
-/// Deprecated: Use `NETWORK_BUFFER_SIZE` instead
-#[deprecated(since = "3.1.0", note = "Use NETWORK_BUFFER_SIZE for clarity")]
-pub const DEFAULT_BUFFER_SIZE_NETWORK: usize = NETWORK_BUFFER_SIZE;
-
-/// Deprecated: Use `FILE_BUFFER_SIZE` instead
-#[deprecated(since = "3.1.0", note = "Use FILE_BUFFER_SIZE for clarity")]
-pub const DEFAULT_BUFFER_SIZE_FILE: usize = FILE_BUFFER_SIZE;

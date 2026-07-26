@@ -317,7 +317,7 @@ async fn handle_version_command() -> Result<()> {
 
 /// Prints security and capability summary (same pathway as `status` without verbose detail).
 async fn handle_capabilities_command() -> Result<()> {
-    map_cli_error(status::handle_status(false).await)
+    map_cli_error(status::handle_status(false))
 }
 
 /// Key lifecycle: generate, list, derive, mix, export, import, revoke, etc.

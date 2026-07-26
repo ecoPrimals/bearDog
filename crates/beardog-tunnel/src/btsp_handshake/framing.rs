@@ -13,6 +13,7 @@
 //! Length is 4-byte big-endian. Maximum frame: 16 MiB (`0x0100_0000`).
 
 use beardog_errors::BearDogError;
+use beardog_types::constants::domains::timeouts::NETWORK_READ_TIMEOUT;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::time::Duration;
 
@@ -20,7 +21,7 @@ use tokio::time::Duration;
 const MAX_FRAME_SIZE: u32 = 0x0100_0000;
 
 /// Read timeout for a single BTSP frame.
-const FRAME_READ_TIMEOUT: Duration = Duration::from_secs(30);
+const FRAME_READ_TIMEOUT: Duration = NETWORK_READ_TIMEOUT;
 
 /// Read one length-prefixed frame from an async stream.
 ///

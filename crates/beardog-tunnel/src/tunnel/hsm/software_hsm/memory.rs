@@ -32,17 +32,17 @@ impl DefaultMemoryProtector {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub async fn new(config: MemoryProtectionConfig) -> Result<Self, BearDogError> {
+    pub fn new(config: MemoryProtectionConfig) -> Result<Self, BearDogError> {
         info!("Creating memory protector with config: {:?}", config);
         Ok(Self { config })
     }
-
     /// Get configuration
+    #[must_use]
     pub const fn get_config(&self) -> &MemoryProtectionConfig {
         &self.config
     }
-
     /// Check if protection is enabled
+    #[must_use]
     pub const fn is_protection_enabled(&self) -> bool {
         self.config.enable_protection
     }
@@ -51,7 +51,7 @@ impl DefaultMemoryProtector {
     ///
     /// # Errors
     /// Returns an error if protection fails
-    pub async fn protect_memory(&self, _data: &[u8]) -> Result<(), BearDogError> {
+    pub fn protect_memory(&self, _data: &[u8]) -> Result<(), BearDogError> {
         if self.config.enable_protection {
             debug!("Memory protection enabled for {} bytes", _data.len());
             // Platform-specific memory protection would go here
@@ -64,7 +64,7 @@ impl DefaultMemoryProtector {
     ///
     /// # Errors
     /// Returns an error if clearing fails
-    pub async fn clear_memory(&self, data: &mut [u8]) -> Result<(), BearDogError> {
+    pub fn clear_memory(&self, data: &mut [u8]) -> Result<(), BearDogError> {
         if self.config.clear_on_drop {
             debug!("Securely clearing {} bytes", data.len());
             data.zeroize();
@@ -76,7 +76,7 @@ impl DefaultMemoryProtector {
     ///
     /// # Errors
     /// Returns an error if locking fails
-    pub async fn lock_memory(&self, _data: &[u8]) -> Result<(), BearDogError> {
+    pub fn lock_memory(&self, _data: &[u8]) -> Result<(), BearDogError> {
         if self.config.enable_protection {
             debug!("Locking {} bytes in memory", _data.len());
             // Platform-specific memory locking
@@ -96,7 +96,7 @@ impl DefaultMemoryProtector {
     ///
     /// # Errors
     /// Returns an error if unlocking fails
-    pub async fn unlock_memory(&self, _data: &[u8]) -> Result<(), BearDogError> {
+    pub fn unlock_memory(&self, _data: &[u8]) -> Result<(), BearDogError> {
         if self.config.enable_protection {
             debug!("Unlocking {} bytes from memory", _data.len());
             // Platform-specific memory unlocking
@@ -116,7 +116,7 @@ impl DefaultMemoryProtector {
     ///
     /// # Errors
     /// Returns an error if zeroization fails
-    pub async fn zeroize(&self, data: &mut [u8]) -> Result<(), BearDogError> {
+    pub fn zeroize(&self, data: &mut [u8]) -> Result<(), BearDogError> {
         debug!("Zeroizing {} bytes", data.len());
         data.zeroize();
         Ok(())
@@ -126,7 +126,7 @@ impl DefaultMemoryProtector {
     ///
     /// # Errors
     /// Returns an error if unprotection fails
-    pub async fn unprotect(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+    pub fn unprotect(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         debug!("Unprotecting {} bytes", data.len());
         // For now, just return a copy
         // In a real implementation, this would decrypt or decode protected memory
@@ -137,10 +137,10 @@ impl DefaultMemoryProtector {
     ///
     /// # Errors
     /// Returns an error if protection fails
-    pub async fn protect(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+    pub fn protect(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         debug!("Protecting {} bytes", data.len());
         // Lock the memory if protection is enabled
-        self.protect_memory(data).await?;
+        self.protect_memory(data)?;
         // For now, just return a copy
         // In a real implementation, this would encrypt or encode the data
         Ok(data.to_vec())
@@ -150,7 +150,7 @@ impl DefaultMemoryProtector {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub async fn initialize(&self) -> Result<(), BearDogError> {
+    pub fn initialize(&self) -> Result<(), BearDogError> {
         debug!("Initializing memory protector");
         Ok(())
     }
@@ -167,15 +167,12 @@ impl ProtectedMemory {
     ///
     /// # Errors
     /// Returns an error if protection setup fails
-    pub async fn new(
-        data: Vec<u8>,
-        protector: DefaultMemoryProtector,
-    ) -> Result<Self, BearDogError> {
-        protector.protect_memory(&data).await?;
+    pub fn new(data: Vec<u8>, protector: DefaultMemoryProtector) -> Result<Self, BearDogError> {
+        protector.protect_memory(&data)?;
         Ok(Self { data, protector })
     }
-
     /// Get reference to protected data
+    #[must_use]
     pub fn data(&self) -> &[u8] {
         &self.data
     }
@@ -202,7 +199,7 @@ mod tests {
     #[tokio::test]
     async fn test_memory_protector_creation() -> Result<(), BearDogError> {
         let config = MemoryProtectionConfig::default();
-        let protector = DefaultMemoryProtector::new(config).await?;
+        let protector = DefaultMemoryProtector::new(config)?;
         assert!(protector.is_protection_enabled());
         Ok(())
     }
@@ -210,10 +207,10 @@ mod tests {
     #[tokio::test]
     async fn test_memory_clearing() -> Result<(), BearDogError> {
         let config = MemoryProtectionConfig::default();
-        let protector = DefaultMemoryProtector::new(config).await?;
+        let protector = DefaultMemoryProtector::new(config)?;
 
         let mut data = vec![0xAA; 32];
-        protector.clear_memory(&mut data).await?;
+        protector.clear_memory(&mut data)?;
 
         assert!(data.iter().all(|&b| b == 0));
         Ok(())
@@ -222,10 +219,10 @@ mod tests {
     #[tokio::test]
     async fn test_protected_memory() -> Result<(), BearDogError> {
         let config = MemoryProtectionConfig::default();
-        let protector = DefaultMemoryProtector::new(config).await?;
+        let protector = DefaultMemoryProtector::new(config)?;
 
         let sensitive_data = vec![1, 2, 3, 4, 5];
-        let protected = ProtectedMemory::new(sensitive_data.clone(), protector).await?;
+        let protected = ProtectedMemory::new(sensitive_data.clone(), protector)?;
 
         assert_eq!(protected.data(), &sensitive_data[..]);
         Ok(())
@@ -234,11 +231,11 @@ mod tests {
     #[tokio::test]
     async fn test_protected_memory_drop() -> Result<(), BearDogError> {
         let config = MemoryProtectionConfig::default();
-        let protector = DefaultMemoryProtector::new(config).await?;
+        let protector = DefaultMemoryProtector::new(config)?;
 
         let sensitive_data = vec![0xAA; 32];
         {
-            let _protected = ProtectedMemory::new(sensitive_data, protector).await?;
+            let _protected = ProtectedMemory::new(sensitive_data, protector)?;
             // Protected memory should be cleared when it goes out of scope
         }
         // Memory should be zeroed now (verified by Drop implementation)

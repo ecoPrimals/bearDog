@@ -63,9 +63,6 @@ async fn test_session_data_fields() {
     let credentials = "testuser:secure_password";
     let session = handler
         .authenticate(credentials)
-        // TEST_CATEGORY: integration
-        // TEST_DOMAIN: core
-        // TEST_PRIORITY: normal
         .await
         .expect("Auth should succeed");
 
@@ -337,9 +334,6 @@ async fn test_multiple_sessions() {
 
     let session1 = handler
         .authenticate("user1:password1")
-        // TEST_CATEGORY: integration
-        // TEST_DOMAIN: core
-        // TEST_PRIORITY: normal
         .await
         .expect("Auth1 should succeed");
     let session2 = handler

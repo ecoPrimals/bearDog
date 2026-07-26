@@ -122,25 +122,25 @@ impl AndroidDeviceInfo {
         }
         Self::new()
     }
-
     /// Returns whether StrongBox is available on this device
-    pub fn strongbox_available(&self) -> bool {
+    #[must_use]
+    pub const fn strongbox_available(&self) -> bool {
         self.strongbox_version.is_some()
     }
-
     /// Returns whether TEE (Trusted Execution Environment) is available
-    pub fn tee_available(&self) -> bool {
+    #[must_use]
+    pub const fn tee_available(&self) -> bool {
         // TEE is generally available on Android 9+ (API 28+)
         self.api_level >= 28
     }
-
     /// Returns whether hardware attestation is supported
-    pub fn hardware_attestation_supported(&self) -> bool {
+    #[must_use]
+    pub const fn hardware_attestation_supported(&self) -> bool {
         // Hardware attestation requires Android 8+ and StrongBox/TEE
         self.api_level >= 26 && (self.strongbox_available() || self.tee_available())
     }
-
     /// Returns the device model (alias for backward compatibility)
+    #[must_use]
     pub fn device_model(&self) -> &str {
         &self.model
     }
@@ -207,6 +207,7 @@ pub struct AndroidKeyParams {
 
 impl AndroidKeyParams {
     /// Creates new key parameters with defaults
+    #[must_use]
     pub fn new() -> Self {
         Self {
             algorithm: AndroidKeyAlgorithm::Ec,
@@ -222,13 +223,13 @@ impl AndroidKeyParams {
     }
 
     /// Sets algorithm
-    pub fn set_algorithm(&mut self, algorithm: AndroidKeyAlgorithm) -> &mut Self {
+    pub const fn set_algorithm(&mut self, algorithm: AndroidKeyAlgorithm) -> &mut Self {
         self.algorithm = algorithm;
         self
     }
 
     /// Sets key size
-    pub fn set_key_size(&mut self, size: u32) -> &mut Self {
+    pub const fn set_key_size(&mut self, size: u32) -> &mut Self {
         self.key_size = size;
         self
     }
@@ -240,19 +241,19 @@ impl AndroidKeyParams {
     }
 
     /// Sets StrongBox requirement
-    pub fn set_strongbox_required(&mut self, required: bool) -> &mut Self {
+    pub const fn set_strongbox_required(&mut self, required: bool) -> &mut Self {
         self.strongbox_required = required;
         self
     }
 
     /// Sets user authentication requirement
-    pub fn set_user_authentication_required(&mut self, required: bool) -> &mut Self {
+    pub const fn set_user_authentication_required(&mut self, required: bool) -> &mut Self {
         self.user_authentication_required = required;
         self
     }
 
     /// Sets user authentication validity duration
-    pub fn set_user_authentication_validity_duration(&mut self, duration: u32) -> &mut Self {
+    pub const fn set_user_authentication_validity_duration(&mut self, duration: u32) -> &mut Self {
         self.user_authentication_validity_duration = Some(duration);
         self
     }
@@ -264,13 +265,13 @@ impl AndroidKeyParams {
     }
 
     /// Sets key validity end time
-    pub fn set_key_validity_end(&mut self, end: chrono::DateTime<Utc>) -> &mut Self {
+    pub const fn set_key_validity_end(&mut self, end: chrono::DateTime<Utc>) -> &mut Self {
         self.key_validity_end = Some(end);
         self
     }
 
     /// Sets elliptic curve
-    pub fn set_curve(&mut self, curve: AndroidEcCurve) -> &mut Self {
+    pub const fn set_curve(&mut self, curve: AndroidEcCurve) -> &mut Self {
         self.curve = Some(curve);
         self
     }
@@ -319,6 +320,7 @@ pub struct StrongBoxError {
 
 impl StrongBoxError {
     /// Creates StrongBox error from code and message
+    #[must_use]
     pub fn from_code(code: i32, message: &str) -> Self {
         Self {
             code,
@@ -365,6 +367,7 @@ pub struct AndroidAttestationService {
 
 impl AndroidAttestationService {
     /// Creates a new attestation service
+    #[must_use]
     pub fn new(config: AttestationConfig) -> Self {
         Self {
             config,
@@ -403,7 +406,8 @@ pub struct ChallengeGenerator {
 
 impl ChallengeGenerator {
     /// Creates new challenge generator
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {}
     }
 
@@ -436,6 +440,7 @@ pub struct AndroidHealthMonitor {
 
 impl AndroidHealthMonitor {
     /// Creates a new health monitor
+    #[must_use]
     pub fn new() -> Self {
         Self {
             keystore_health: Arc::new(RwLock::new(HsmHealthStatus::Unknown)),
@@ -567,10 +572,11 @@ mod tests {
     }
 
     #[test]
-    fn test_android_device_info_new() {
+    fn test_android_device_info_new() -> Result<(), BearDogError> {
         let device_info = AndroidDeviceInfo::new()?;
         assert_eq!(device_info.manufacturer, "Google");
         assert_eq!(device_info.model, "Pixel 8");
+        Ok(())
     }
 
     #[test]
@@ -587,10 +593,11 @@ mod tests {
     }
 
     #[test]
-    fn test_challenge_generator() {
+    fn test_challenge_generator() -> Result<(), BearDogError> {
         let generator = ChallengeGenerator::new();
         let challenge = generator.generate_challenge(32)?;
         assert_eq!(challenge.len(), 32);
+        Ok(())
     }
 
     #[test]
@@ -599,11 +606,11 @@ mod tests {
         let beardog_error: BearDogError = sb_error.into();
 
         match beardog_error {
-            BearDogError::Hsm { message } => {
+            BearDogError::Cryptographic { message } => {
                 assert!(message.contains("42"));
                 assert!(message.contains("Test error"));
             }
-            _ => panic!("Expected Hsm error variant"),
+            _ => panic!("Expected Cryptographic error variant from BearDogError::hsm()"),
         }
     }
 }

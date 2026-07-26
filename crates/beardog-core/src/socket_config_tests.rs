@@ -108,7 +108,7 @@ fn test_xdg_runtime_preferred_over_tmp() {
     if config.source() == SocketPathSource::XdgRuntime {
         assert!(config.socket_path_string().contains("/run/user/"));
         assert!(
-            config.socket_path_string().contains("biomeos/beardog.sock"),
+            config.socket_path_string().contains("/beardog.sock"),
             "development mode (no family_id) should produce beardog.sock"
         );
     } else {

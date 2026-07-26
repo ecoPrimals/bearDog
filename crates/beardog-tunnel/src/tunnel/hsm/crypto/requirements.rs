@@ -62,6 +62,7 @@ impl Default for CryptoRequirements {
 
 impl CryptoRequirements {
     /// Create requirements from key metadata
+    #[must_use]
     pub fn from_key_metadata(metadata: &KeyMetadata) -> Self {
         let (operation, algorithm) = Self::algorithm_from_key_type(&metadata.key_type);
 
@@ -120,8 +121,8 @@ impl CryptoRequirements {
             ),
         }
     }
-
     /// Create requirements for encryption
+    #[must_use]
     pub fn for_encryption(algorithm: SymmetricAlgorithm) -> Self {
         Self {
             operation: CryptoOperation::SymmetricEncryption,
@@ -129,8 +130,8 @@ impl CryptoRequirements {
             ..Default::default()
         }
     }
-
     /// Create requirements for signing
+    #[must_use]
     pub fn for_signing(algorithm: SignatureAlgorithm) -> Self {
         Self {
             operation: CryptoOperation::Signing,

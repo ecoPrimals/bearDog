@@ -38,6 +38,7 @@ impl Default for CollaborationService {
 
 impl CollaborationService {
     /// Create new collaboration service
+    #[must_use]
     pub const fn new() -> Self {
         Self {}
     }
@@ -70,7 +71,7 @@ impl CollaborationService {
     ///
     /// Returns an error if the collaboration network cannot be reached or template metadata
     /// cannot be retrieved.
-    pub async fn get_template_info(&self, template_id: &str) -> Result<TemplateInfo> {
+    pub fn get_template_info(&self, template_id: &str) -> Result<TemplateInfo> {
         info!("Discovering primal with TemplateStorage capability for template: {template_id}");
         Err(Self::discovery_unavailable(
             "get_template_info",
@@ -87,7 +88,7 @@ impl CollaborationService {
     ///
     /// Returns an error if the collaboration network cannot be reached or user permissions
     /// cannot be retrieved.
-    pub async fn get_user_permissions(
+    pub fn get_user_permissions(
         &self,
         _user_id: &str,
         _resource_id: &str,
@@ -108,7 +109,7 @@ impl CollaborationService {
     ///
     /// Returns an error if the collaboration network cannot be reached or lineage cannot
     /// be retrieved.
-    pub async fn get_lineage(&self, _template_id: &str) -> Result<Vec<LineageVersion>> {
+    pub fn get_lineage(&self, _template_id: &str) -> Result<Vec<LineageVersion>> {
         info!("Discovering primal with LineageTracking capability");
         Err(Self::discovery_unavailable(
             "get_lineage",
@@ -125,7 +126,7 @@ impl CollaborationService {
     ///
     /// Returns an error if the collaboration network cannot be reached or community metrics
     /// cannot be retrieved.
-    pub async fn get_community_metrics(&self, _template_id: &str) -> Result<CommunityMetrics> {
+    pub fn get_community_metrics(&self, _template_id: &str) -> Result<CommunityMetrics> {
         info!("Discovering primal with CommunityMetrics capability");
         Err(Self::discovery_unavailable(
             "get_community_metrics",
@@ -142,7 +143,7 @@ impl CollaborationService {
     ///
     /// Returns an error if the collaboration network cannot be reached or the security
     /// assessment cannot be retrieved.
-    pub async fn get_security_assessment(&self, template_id: &str) -> Result<SecurityAssessment> {
+    pub fn get_security_assessment(&self, template_id: &str) -> Result<SecurityAssessment> {
         info!("Discovering primal with SecurityAssessment capability for template: {template_id}");
         Err(Self::discovery_unavailable(
             "get_security_assessment",
@@ -296,7 +297,6 @@ mod tests {
         let service = CollaborationService::new();
         let err = service
             .get_template_info("template-abc123")
-            .await
             .expect_err("template info should fail without collaboration network");
         assert_discovery_unavailable(err);
     }
@@ -306,7 +306,6 @@ mod tests {
         let service = CollaborationService::new();
         let err = service
             .get_user_permissions("user-123", "resource-456")
-            .await
             .expect_err("permissions should fail without collaboration network");
         assert_discovery_unavailable(err);
     }
@@ -316,7 +315,6 @@ mod tests {
         let service = CollaborationService::new();
         let err = service
             .get_lineage("template-abc123")
-            .await
             .expect_err("lineage should fail without collaboration network");
         assert_discovery_unavailable(err);
     }
@@ -326,7 +324,6 @@ mod tests {
         let service = CollaborationService::new();
         let err = service
             .get_community_metrics("template-abc")
-            .await
             .expect_err("community metrics should fail without collaboration network");
         assert_discovery_unavailable(err);
     }
@@ -336,7 +333,6 @@ mod tests {
         let service = CollaborationService::new();
         let err = service
             .get_security_assessment("template-secure")
-            .await
             .expect_err("security assessment should fail without collaboration network");
         assert_discovery_unavailable(err);
     }
@@ -352,7 +348,7 @@ mod tests {
                 let svc = Arc::clone(&service);
                 tokio::spawn(async move {
                     let template_id = format!("template-{i}");
-                    svc.get_template_info(&template_id).await
+                    svc.get_template_info(&template_id)
                 })
             })
             .collect();

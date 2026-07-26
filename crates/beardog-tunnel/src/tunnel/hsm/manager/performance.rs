@@ -45,6 +45,7 @@ impl Default for OperationMetrics {
 
 impl OperationMetrics {
     /// Calculate success rate
+    #[must_use]
     pub fn success_rate(&self) -> f64 {
         if self.total_operations == 0 {
             0.0
@@ -62,8 +63,8 @@ impl OperationMetrics {
             (succ / tot) * 100.0
         }
     }
-
     /// Calculate failure rate
+    #[must_use]
     pub fn failure_rate(&self) -> f64 {
         100.0 - self.success_rate()
     }
@@ -100,14 +101,15 @@ pub struct HsmPerformanceTracker {
 
 impl HsmPerformanceTracker {
     /// Create a new performance tracker
+    #[must_use]
     pub fn new() -> Self {
         Self {
             operation_metrics: Arc::new(RwLock::new(HashMap::new())),
             config: PerformanceConfig::default(),
         }
     }
-
     /// Create with custom configuration
+    #[must_use]
     pub fn with_config(config: PerformanceConfig) -> Self {
         Self {
             operation_metrics: Arc::new(RwLock::new(HashMap::new())),
@@ -174,8 +176,8 @@ impl HsmPerformanceTracker {
         metrics.remove(provider_id);
         info!("🔄 Reset performance metrics for {}", provider_id);
     }
-
     /// Get configuration
+    #[must_use]
     pub const fn config(&self) -> &PerformanceConfig {
         &self.config
     }

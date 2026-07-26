@@ -60,7 +60,7 @@ impl ThreatDetectionEngine {
             if self.matches_event_data(event_data, indicator) {
                 // Create threat event from matched indicator
                 let threat_event =
-                    self.create_threat_event_from_intelligence(feed, indicator, event_data)?;
+                    self.create_threat_event_from_intelligence(feed, indicator, event_data);
                 return Ok(Some(threat_event));
             }
         }
@@ -107,7 +107,7 @@ impl ThreatDetectionEngine {
         feed: &ThreatIntelligenceFeed,
         indicator: &ThreatIndicator,
         event_data: &HashMap<String, String>,
-    ) -> Result<ThreatEvent, BearDogError> {
+    ) -> ThreatEvent {
         let threat_id = Uuid::new_v4().to_string();
         let timestamp = Utc::now();
 
@@ -158,7 +158,8 @@ impl ThreatDetectionEngine {
         };
 
         // Create the threat event
-        let threat_event = ThreatEvent {
+
+        ThreatEvent {
             id: threat_id,
             threat_type: ThreatType::Malicious,
             severity: ThreatSeverity::High, // Intelligence matches are typically high severity
@@ -191,9 +192,7 @@ impl ThreatDetectionEngine {
             mitigation_actions: Vec::new(),
             metadata: HashMap::new(),
             mitigation_steps: vec![],
-        };
-
-        Ok(threat_event)
+        }
     }
 
     /// Update threat intelligence feed (delegated to engine)

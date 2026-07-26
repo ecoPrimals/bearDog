@@ -2,14 +2,14 @@ use super::*;
 
 #[tokio::test]
 async fn test_ios_provider_creation() -> Result<(), Box<dyn std::error::Error>> {
-    let provider = IosUniversalProvider::new().await;
+    let provider = IosUniversalProvider::new();
     assert!(provider.is_ok());
     Ok(())
 }
 
 #[tokio::test]
 async fn test_capabilities_detection() -> Result<(), Box<dyn std::error::Error>> {
-    let provider = IosUniversalProvider::new().await?;
+    let provider = IosUniversalProvider::new()?;
     let caps = provider.capabilities();
     assert!(caps.is_some());
     Ok(())
@@ -94,7 +94,7 @@ fn test_has_capabilities() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::test]
 async fn test_ios_capabilities() -> Result<(), Box<dyn std::error::Error>> {
-    let provider = IosUniversalProvider::new().await?;
+    let provider = IosUniversalProvider::new()?;
 
     if let Some(caps) = provider.capabilities() {
         // On actual iOS devices, we'd have hardware backing
@@ -316,7 +316,7 @@ fn test_vendor_info_with_different_models() -> Result<(), Box<dyn std::error::Er
 
 #[tokio::test]
 async fn test_capabilities_structure() -> Result<(), Box<dyn std::error::Error>> {
-    let provider = IosUniversalProvider::new().await?;
+    let provider = IosUniversalProvider::new()?;
 
     if let Some(caps) = provider.capabilities() {
         // Verify all capability fields are accessible
@@ -433,7 +433,7 @@ async fn test_concurrent_provider_creation() -> Result<(), Box<dyn std::error::E
     let mut handles = vec![];
 
     for _ in 0..5 {
-        let handle = tokio::spawn(async { IosUniversalProvider::new().await });
+        let handle = tokio::spawn(async { IosUniversalProvider::new() });
         handles.push(handle);
     }
 

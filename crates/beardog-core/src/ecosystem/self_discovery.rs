@@ -114,7 +114,7 @@ impl UniversalCapabilityDiscovery {
     ///
     /// # Errors
     /// - Returns `BearDogError` if initialization fails
-    pub fn new() -> Result<Self, BearDogError> {
+    pub const fn new() -> Result<Self, BearDogError> {
         Ok(Self { env_override: None })
     }
 
@@ -123,7 +123,7 @@ impl UniversalCapabilityDiscovery {
     /// # Errors
     ///
     /// Currently always succeeds; the `Result` type is reserved for future initialization failures.
-    pub fn with_env_override(env: HashMap<String, String>) -> Result<Self, BearDogError> {
+    pub const fn with_env_override(env: HashMap<String, String>) -> Result<Self, BearDogError> {
         Ok(Self {
             env_override: Some(env),
         })
@@ -383,7 +383,7 @@ impl SelfDiscoveryManager {
 
     /// Update health status
     /// Updates `health_status`
-    pub fn update_health_status(&mut self, status: HealthStatus) {
+    pub const fn update_health_status(&mut self, status: HealthStatus) {
         self.identity.health_status = status;
     }
 
@@ -490,13 +490,6 @@ impl SelfIdentity {
     #[must_use]
     pub fn from_environment() -> Self {
         Self::from_inputs(&SelfIdentityEnvInputs::from_env())
-    }
-
-    /// Deprecated alias for [`Self::from_environment`].
-    #[deprecated(note = "use SelfIdentity::from_environment()")]
-    #[must_use]
-    pub fn beardog() -> Self {
-        Self::from_environment()
     }
 
     /// Creates a new instance

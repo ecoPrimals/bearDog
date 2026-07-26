@@ -114,6 +114,7 @@ impl Default for CanonicalTestConfig {
 
 impl CanonicalTestConfig {
     /// Create a new test configuration with defaults
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -139,6 +140,7 @@ impl CanonicalTestConfig {
     }
 
     /// Create configuration for thorough testing
+    #[must_use]
     pub fn thorough() -> Self {
         Self {
             parallel_execution: true,
@@ -242,6 +244,7 @@ impl CanonicalApiTestConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub fn with_defaults() -> Self {
         use beardog_config::domains::network_ports::DEFAULT_API_PORT;
 
@@ -270,6 +273,7 @@ impl CanonicalApiTestConfig {
     /// - `BEARDOG_API_TEST_MAX_CONCURRENT`: Max concurrent requests (default: 10)
     /// - `BEARDOG_API_TEST_MAX_RETRIES`: Max retry attempts (default: 3)
     /// - `BEARDOG_API_TEST_RETRY_DELAY_MS`: Retry delay in ms (default: 1000)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -303,6 +307,7 @@ impl CanonicalApiTestConfig {
     }
 
     /// Create a new API test configuration
+    #[must_use]
     pub fn new(base_url: String) -> Self {
         Self {
             base_url,
@@ -311,6 +316,7 @@ impl CanonicalApiTestConfig {
     }
 
     /// Create configuration for local testing
+    #[must_use]
     pub fn local() -> Self {
         use beardog_config::domains::network_ports::DEFAULT_API_PORT;
 
@@ -322,6 +328,7 @@ impl CanonicalApiTestConfig {
     }
 
     /// Create configuration for production testing
+    #[must_use]
     pub fn production() -> Self {
         Self {
             base_url: "https://api.production.example.com".to_string(),
@@ -439,6 +446,7 @@ impl Default for CanonicalBenchmarkConfig {
 
 impl CanonicalBenchmarkConfig {
     /// Create a new benchmark configuration
+    #[must_use]
     pub fn new(name: String) -> Self {
         Self {
             name,
@@ -447,6 +455,7 @@ impl CanonicalBenchmarkConfig {
     }
 
     /// Create configuration for quick benchmarks
+    #[must_use]
     pub fn quick() -> Self {
         Self {
             iterations: std::env::var(env_keys::ENV_BENCHMARK_QUICK_ITERATIONS)
@@ -469,6 +478,7 @@ impl CanonicalBenchmarkConfig {
     }
 
     /// Create configuration for thorough benchmarks
+    #[must_use]
     pub fn thorough() -> Self {
         Self {
             iterations: std::env::var(env_keys::ENV_BENCHMARK_THOROUGH_ITERATIONS)
@@ -546,6 +556,7 @@ impl CanonicalProductionTestConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             environment: "production".to_string(),
@@ -570,6 +581,7 @@ impl CanonicalProductionTestConfig {
     /// # Environment Variables
     /// - `BEARDOG_PROD_TEST_HEALTH_TIMEOUT_SECS`: Health check timeout (default: 30)
     /// - `BEARDOG_CANARY_PERCENTAGE`: Canary deployment percentage (default: 5.0)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -605,6 +617,7 @@ impl Default for CanonicalProductionTestConfig {
 
 impl CanonicalProductionTestConfig {
     /// Create a new production test configuration
+    #[must_use]
     pub fn new(environment: String) -> Self {
         Self {
             environment,
@@ -613,6 +626,7 @@ impl CanonicalProductionTestConfig {
     }
 
     /// Create minimal production test configuration
+    #[must_use]
     pub fn minimal() -> Self {
         Self {
             smoke_tests_enabled: true,
@@ -625,6 +639,7 @@ impl CanonicalProductionTestConfig {
     }
 
     /// Create comprehensive production test configuration
+    #[must_use]
     pub fn comprehensive() -> Self {
         Self {
             smoke_tests_enabled: true,

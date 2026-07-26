@@ -334,6 +334,7 @@ impl CanonicalTimeoutConfig {
     ///
     /// Suitable for high-performance local networks where quick failure
     /// detection is preferred over waiting.
+    #[must_use]
     pub const fn aggressive() -> Self {
         Self {
             // Network timeouts
@@ -359,6 +360,7 @@ impl CanonicalTimeoutConfig {
     ///
     /// Suitable for unreliable networks or long-running operations where
     /// waiting longer is acceptable.
+    #[must_use]
     pub const fn conservative() -> Self {
         Self {
             // Network timeouts
@@ -384,6 +386,7 @@ impl CanonicalTimeoutConfig {
     ///
     /// Suitable for extremely fast local operations where any delay
     /// indicates a problem.
+    #[must_use]
     pub const fn minimal() -> Self {
         Self {
             // Network timeouts
@@ -409,6 +412,7 @@ impl CanonicalTimeoutConfig {
     ///
     /// Suitable for operations that may take a long time to complete,
     /// such as large file transfers or complex computations.
+    #[must_use]
     pub const fn long_running() -> Self {
         Self {
             // Network timeouts
@@ -478,6 +482,7 @@ impl CanonicalTimeoutConfig {
     }
 
     /// Check if the configuration is suitable for the given network type
+    #[must_use]
     pub fn is_suitable_for_network(&self, network_type: NetworkType) -> bool {
         match network_type {
             NetworkType::Local => {

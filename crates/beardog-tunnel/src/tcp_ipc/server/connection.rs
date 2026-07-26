@@ -262,7 +262,7 @@ impl TcpIpcServer {
 }
 
 /// Create a `CallerContext` based on the TCP peer address.
-fn caller_context_from_addr(addr: &SocketAddr) -> CallerContext {
+const fn caller_context_from_addr(addr: &SocketAddr) -> CallerContext {
     if addr.ip().is_loopback() {
         CallerContext::loopback()
     } else {

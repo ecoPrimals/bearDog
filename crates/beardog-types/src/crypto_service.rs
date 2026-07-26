@@ -23,6 +23,7 @@ pub enum CryptoAlgorithm {
 
 impl CryptoAlgorithm {
     /// Convert to canonical string name
+    #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Aes256Gcm => "aes-256-gcm",
@@ -98,6 +99,7 @@ pub enum SignatureAlgorithm {
 
 impl SignatureAlgorithm {
     /// Convert to canonical string name
+    #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Ed25519 => "ed25519",
@@ -175,6 +177,7 @@ impl KeyAlgorithm {
     ///
     /// Returns the full algorithm identifier including cipher mode where applicable.
     /// Modern Rust: Prefer complete, unambiguous identifiers over abbreviations.
+    #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Aes256 => "aes-256-gcm",

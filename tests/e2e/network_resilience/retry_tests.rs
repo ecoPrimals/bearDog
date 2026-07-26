@@ -8,7 +8,7 @@ use beardog_errors::BearDogError;
 use tracing::{info, warn};
 
 /// Test network retry with exponential backoff
-pub async fn test_network_retry_backoff() -> Result<NetworkE2EMetrics, BearDogError> {
+pub fn test_network_retry_backoff() -> Result<NetworkE2EMetrics, BearDogError> {
     info!("🔄 Testing network retry with exponential backoff");
 
     let mut metrics = NetworkE2EMetrics::default();
@@ -43,7 +43,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_exponential_backoff() {
-        let result = test_network_retry_backoff().await;
+        let result = test_network_retry_backoff();
         assert!(result.is_ok());
 
         let metrics = result.unwrap();

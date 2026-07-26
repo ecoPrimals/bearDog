@@ -241,6 +241,7 @@ pub enum CertificateExpiry {
 
 impl CertificateExpiry {
     /// Returns the nominal certificate lifetime in whole hours (see [`Self::minutes`] for commercial tier).
+    #[must_use]
     pub const fn hours(&self) -> u64 {
         match self {
             Self::Human => 24,
@@ -251,6 +252,7 @@ impl CertificateExpiry {
     }
 
     /// Returns the certificate lifetime in minutes (used when computing [`AdapterUnlockCertificate::expires_at`]).
+    #[must_use]
     pub fn minutes(&self) -> u64 {
         match self {
             Self::Human => 24 * 60,
@@ -273,21 +275,25 @@ impl Default for CertificateScope {
 
 impl AdapterUnlockCertificate {
     /// Returns `true` if the current UTC time is past [`Self::expires_at`].
+    #[must_use]
     pub fn is_expired(&self) -> bool {
         Utc::now() > self.expires_at
     }
 
     /// Returns whether [`CertificateScope::operations`] includes `operation`.
+    #[must_use]
     pub fn allows_operation(&self, operation: &AdapterOperation) -> bool {
         self.scope.operations.contains(operation)
     }
 
     /// Remaining lifetime from “now” until [`Self::expires_at`] (may be negative if expired).
+    #[must_use]
     pub fn time_until_expiry(&self) -> chrono::Duration {
         self.expires_at - Utc::now()
     }
 
     /// Heuristic: `true` when less than 10% of the issued lifetime remains before expiry.
+    #[must_use]
     pub fn needs_renewal(&self) -> bool {
         // Recommend renewal when < 10% of lifetime remains
         let time_left = self.time_until_expiry();

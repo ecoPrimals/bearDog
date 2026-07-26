@@ -59,8 +59,8 @@ impl Default for EncryptionConfig {
 
 impl CryptoConfig {
     /// Create new crypto configuration with secure defaults
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }

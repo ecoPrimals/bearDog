@@ -17,10 +17,10 @@ impl RustSoftwareHsm {
         info!("🔄 Initializing Rust Software HSM");
 
         self.crypto_provider.initialize().await?;
-        self.memory_protector.initialize().await?;
+        self.memory_protector.initialize()?;
 
-        let key_store = self.key_store.write().await;
-        key_store.initialize().await?;
+        let mut key_store = self.key_store.write().await;
+        key_store.initialize()?;
 
         self.audit_logger
             .log_audit_event(AuditEvent::new("initialize"))
@@ -35,7 +35,7 @@ impl RustSoftwareHsm {
     /// Reload HSM configuration (custom method, not part of trait)
     ///
     /// Intentional no-op until hot-reload of software HSM settings is implemented.
-    pub async fn reload_configuration(&self, _new_config: HsmConfig) -> Result<(), BearDogError> {
+    pub fn reload_configuration(&self, _new_config: HsmConfig) -> Result<(), BearDogError> {
         info!("🔧 Reloading HSM configuration");
         Ok(())
     }

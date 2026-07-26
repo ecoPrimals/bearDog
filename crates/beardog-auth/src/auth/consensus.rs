@@ -80,6 +80,7 @@ impl CrossNodeAuthEngine {
     }
 
     /// Get consensus threshold
+    #[must_use]
     pub const fn get_consensus_threshold(&self) -> usize {
         // Require 2/3 majority for consensus
         2

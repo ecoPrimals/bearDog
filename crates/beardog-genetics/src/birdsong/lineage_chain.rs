@@ -60,7 +60,7 @@ impl LineageChainManager {
     /// # Errors
     ///
     /// Returns error if chain generation fails
-    pub async fn generate_root_chain(
+    pub fn generate_root_chain(
         &self,
         root_node_id: String,
         metadata: Option<LineageMetadata>,
@@ -129,7 +129,7 @@ impl LineageChainManager {
     /// - Parent not found
     /// - Child already exists
     /// - Signing fails
-    pub async fn add_child(
+    pub fn add_child(
         &self,
         chain_id: &str,
         parent_id: &str,
@@ -311,6 +311,7 @@ impl LineageChainManager {
     }
 
     /// List all chain IDs with summary metadata.
+    #[must_use]
     pub fn list_chains(&self) -> Vec<LineageChainSummary> {
         let chains = self.chains.read();
         chains
@@ -326,11 +327,13 @@ impl LineageChainManager {
     }
 
     /// Get a lineage chain by ID
+    #[must_use]
     pub fn get_chain(&self, chain_id: &str) -> Option<LineageChain> {
         self.chains.read().get(chain_id).cloned()
     }
 
     /// Get all descendants of a node
+    #[must_use]
     pub fn get_descendants(&self, chain_id: &str, node_id: &str) -> Vec<LineageNode> {
         let chains = self.chains.read();
         let Some(chain) = chains.get(chain_id) else {
@@ -356,6 +359,7 @@ impl LineageChainManager {
     }
 
     /// Get the path from root to a specific node
+    #[must_use]
     pub fn get_path_from_root(&self, chain_id: &str, target_node_id: &str) -> Option<Vec<String>> {
         let chains = self.chains.read();
         let chain = chains.get(chain_id)?;
@@ -398,9 +402,7 @@ mod tests {
     async fn test_generate_root_chain() -> Result<(), BearDogError> {
         let manager = LineageChainManager::new();
 
-        let chain = manager
-            .generate_root_chain("root-node-1".to_string(), None)
-            .await?;
+        let chain = manager.generate_root_chain("root-node-1".to_string(), None)?;
 
         assert_eq!(chain.root_node.node_id, "root-node-1");
         assert_eq!(chain.root_node.depth, 0);
@@ -416,14 +418,10 @@ mod tests {
         let manager = LineageChainManager::new();
 
         // Create root
-        let chain = manager
-            .generate_root_chain("root".to_string(), None)
-            .await?;
+        let chain = manager.generate_root_chain("root".to_string(), None)?;
 
         // Add child
-        let child = manager
-            .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-            .await?;
+        let child = manager.add_child(&chain.chain_id, "root", "child-1".to_string(), None)?;
 
         assert_eq!(child.node_id, "child-1");
         assert_eq!(child.parent_id, Some("root".to_string()));
@@ -442,9 +440,7 @@ mod tests {
     #[tokio::test]
     async fn test_add_child_chain_not_found() {
         let manager = LineageChainManager::new();
-        let result = manager
-            .add_child("nonexistent-chain", "root", "child-1".to_string(), None)
-            .await;
+        let result = manager.add_child("nonexistent-chain", "root", "child-1".to_string(), None);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Chain not found"));
     }
@@ -454,16 +450,13 @@ mod tests {
         let manager = LineageChainManager::new();
         let chain = manager
             .generate_root_chain("root".to_string(), None)
-            .await
             .expect("generate_root_chain for parent-not-found test");
-        let result = manager
-            .add_child(
-                &chain.chain_id,
-                "nonexistent-parent",
-                "child-1".to_string(),
-                None,
-            )
-            .await;
+        let result = manager.add_child(
+            &chain.chain_id,
+            "nonexistent-parent",
+            "child-1".to_string(),
+            None,
+        );
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Parent not found"));
     }
@@ -473,15 +466,11 @@ mod tests {
         let manager = LineageChainManager::new();
         let chain = manager
             .generate_root_chain("root".to_string(), None)
-            .await
             .expect("generate_root_chain for duplicate child test");
         manager
             .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-            .await
             .expect("first add_child for duplicate test");
-        let result = manager
-            .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-            .await;
+        let result = manager.add_child(&chain.chain_id, "root", "child-1".to_string(), None);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("already exists"));
     }
@@ -510,7 +499,6 @@ mod tests {
         let manager = LineageChainManager::new();
         let chain = manager
             .generate_root_chain("root".to_string(), None)
-            .await
             .expect("generate_root_chain for get_path missing node test");
         assert!(
             manager
@@ -524,11 +512,9 @@ mod tests {
         let manager = LineageChainManager::new();
         let chain = manager
             .generate_root_chain("root".to_string(), None)
-            .await
             .expect("generate_root_chain for verify_relationship test");
         let child = manager
             .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-            .await
             .expect("add_child for verify_relationship test");
 
         let updated_chain = manager
@@ -555,7 +541,6 @@ mod tests {
         };
         let chain = manager
             .generate_root_chain("root".to_string(), Some(metadata))
-            .await
             .expect("generate_root_chain with metadata");
         assert_eq!(
             chain.root_node.metadata.biome_type,
@@ -568,20 +553,13 @@ mod tests {
         let manager = LineageChainManager::new();
 
         // Create root
-        let chain = manager
-            .generate_root_chain("root".to_string(), None)
-            .await?;
+        let chain = manager.generate_root_chain("root".to_string(), None)?;
 
         // Add children at multiple levels
-        manager
-            .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
-            .await?;
-        manager
-            .add_child(&chain.chain_id, "root", "child-2".to_string(), None)
-            .await?;
-        let grandchild = manager
-            .add_child(&chain.chain_id, "child-1", "grandchild-1".to_string(), None)
-            .await?;
+        manager.add_child(&chain.chain_id, "root", "child-1".to_string(), None)?;
+        manager.add_child(&chain.chain_id, "root", "child-2".to_string(), None)?;
+        let grandchild =
+            manager.add_child(&chain.chain_id, "child-1", "grandchild-1".to_string(), None)?;
 
         assert_eq!(grandchild.depth, 2);
 

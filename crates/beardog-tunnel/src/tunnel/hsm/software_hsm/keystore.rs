@@ -19,7 +19,7 @@ impl SoftwareKeyStore {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub async fn new(config: &KeyStoreConfig) -> Result<Self, BearDogError> {
+    pub fn new(config: &KeyStoreConfig) -> Result<Self, BearDogError> {
         info!("Creating software key store with config: {:?}", config);
 
         // Validate storage type
@@ -49,7 +49,7 @@ impl SoftwareKeyStore {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub async fn initialize(&self) -> Result<(), BearDogError> {
+    pub fn initialize(&self) -> Result<(), BearDogError> {
         info!("Initializing software key store");
         debug!("Software key store initialized successfully");
         Ok(())
@@ -173,16 +173,16 @@ mod tests {
     #[tokio::test]
     async fn test_keystore_creation() -> Result<(), BearDogError> {
         let config = create_test_config();
-        let keystore = SoftwareKeyStore::new(&config).await?;
-        assert!(keystore.initialize().await.is_ok());
+        let keystore = SoftwareKeyStore::new(&config)?;
+        assert!(keystore.initialize().is_ok());
         Ok(())
     }
 
     #[tokio::test]
     async fn test_store_and_retrieve_key() -> Result<(), BearDogError> {
         let config = create_test_config();
-        let keystore = SoftwareKeyStore::new(&config).await?;
-        keystore.initialize().await?;
+        let keystore = SoftwareKeyStore::new(&config)?;
+        keystore.initialize()?;
 
         let key = create_test_key("test-key-1");
         keystore.store_key(&key).await?;
@@ -195,8 +195,8 @@ mod tests {
     #[tokio::test]
     async fn test_delete_key() -> Result<(), BearDogError> {
         let config = create_test_config();
-        let keystore = SoftwareKeyStore::new(&config).await?;
-        keystore.initialize().await?;
+        let keystore = SoftwareKeyStore::new(&config)?;
+        keystore.initialize()?;
 
         let key = create_test_key("test-key-2");
         keystore.store_key(&key).await?;
@@ -210,8 +210,8 @@ mod tests {
     #[tokio::test]
     async fn test_list_keys() -> Result<(), BearDogError> {
         let config = create_test_config();
-        let keystore = SoftwareKeyStore::new(&config).await?;
-        keystore.initialize().await?;
+        let keystore = SoftwareKeyStore::new(&config)?;
+        keystore.initialize()?;
 
         keystore.store_key(&create_test_key("key-1")).await?;
         keystore.store_key(&create_test_key("key-2")).await?;
@@ -225,8 +225,8 @@ mod tests {
     #[tokio::test]
     async fn test_key_count() -> Result<(), BearDogError> {
         let config = create_test_config();
-        let keystore = SoftwareKeyStore::new(&config).await?;
-        keystore.initialize().await?;
+        let keystore = SoftwareKeyStore::new(&config)?;
+        keystore.initialize()?;
 
         assert_eq!(keystore.key_count().await, 0);
 

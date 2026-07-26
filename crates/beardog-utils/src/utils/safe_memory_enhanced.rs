@@ -29,7 +29,7 @@ pub struct GlobalBufferPools {
 impl GlobalBufferPools {
     /// Creates a new buffer pool
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             _marker: std::marker::PhantomData,
         }
@@ -78,7 +78,7 @@ impl SafePinnedBuffer {
 
     /// Creates a buffer from existing Vec
     #[must_use]
-    pub fn from_vec(data: Vec<u8>) -> Self {
+    pub const fn from_vec(data: Vec<u8>) -> Self {
         let size = data.len();
         Self { data, size }
     }
@@ -158,13 +158,13 @@ impl SensitiveByteBuf {
 
     /// Logical length.
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.data.len()
     }
 
     /// Returns true when no bytes are allocated.
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
 
@@ -202,7 +202,7 @@ impl<const SIZE: usize> SafePooledBuffer<SIZE> {
     }
 
     /// Mutable reference to the underlying [`SafePinnedBuffer`].
-    pub fn buffer_mut(&mut self) -> &mut SafePinnedBuffer {
+    pub const fn buffer_mut(&mut self) -> &mut SafePinnedBuffer {
         &mut self.buffer
     }
 

@@ -53,11 +53,13 @@ impl KeyId {
     }
 
     /// Returns the ID as a string slice
+    #[must_use]
     pub fn as_str(&self) -> &str {
         &self.0
     }
 
     /// Consumes the `KeyId` and returns the inner String
+    #[must_use]
     pub fn into_inner(self) -> String {
         self.0
     }
@@ -95,11 +97,13 @@ impl Borrow<str> for KeyId {
 
 impl KeyId {
     /// Returns the ID as bytes for cryptographic operations
-    pub fn as_bytes(&self) -> &[u8] {
+    #[must_use]
+    pub const fn as_bytes(&self) -> &[u8] {
         self.0.as_bytes()
     }
 
     /// Checks if the ID contains a substring
+    #[must_use]
     pub fn contains(&self, pat: &str) -> bool {
         self.0.contains(pat)
     }
@@ -128,11 +132,13 @@ impl ServiceInstanceId {
     }
 
     /// Returns the ID as a string slice
+    #[must_use]
     pub fn as_str(&self) -> &str {
         &self.0
     }
 
     /// Consumes the `ServiceInstanceId` and returns the inner String
+    #[must_use]
     pub fn into_inner(self) -> String {
         self.0
     }
@@ -191,11 +197,13 @@ impl RegistrationId {
     }
 
     /// Returns the ID as a string slice
+    #[must_use]
     pub fn as_str(&self) -> &str {
         &self.0
     }
 
     /// Consumes the `RegistrationId` and returns the inner String
+    #[must_use]
     pub fn into_inner(self) -> String {
         self.0
     }

@@ -91,7 +91,7 @@ impl MemoryHsmStorage {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub async fn initialize(&self) -> Result<(), BearDogError> {
+    pub fn initialize(&self) -> Result<(), BearDogError> {
         info!("Initializing memory HSM storage");
         Ok(())
     }
@@ -328,7 +328,7 @@ impl DefaultEncryptionKey {
     ///
     /// Returns an error if decryption fails.
     /// Initialize the encryption key
-    pub async fn initialize(&self) -> Result<(), BearDogError> {
+    pub const fn initialize(&self) -> Result<(), BearDogError> {
         Ok(())
     }
 
@@ -336,7 +336,7 @@ impl DefaultEncryptionKey {
     ///
     /// Returns an error if decryption fails.
     /// Encrypt data
-    pub async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+    pub fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
         self.ensure_initialized();
         let nonce_bytes = rand::random::<[u8; 12]>();
         let nonce = GenericArray::<u8, NonceSize>::from_slice(&nonce_bytes);
@@ -359,7 +359,7 @@ impl DefaultEncryptionKey {
     ///
     /// Returns an error if key deletion fails in the underlying HSM provider.
     /// Decrypt data
-    pub async fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+    pub fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
         self.ensure_initialized();
         if ciphertext.len() < 12 {
             return Err(BearDogError::Cryptographic {
@@ -385,14 +385,14 @@ mod tests {
     #[tokio::test]
     async fn test_memory_storage_creation() -> Result<(), BearDogError> {
         let storage = MemoryHsmStorage::new()?;
-        storage.initialize().await?;
+        storage.initialize()?;
         Ok(())
     }
 
     #[tokio::test]
     async fn test_store_and_retrieve() -> Result<(), BearDogError> {
         let storage = MemoryHsmStorage::new()?;
-        storage.initialize().await?;
+        storage.initialize()?;
 
         let key_data = b"test-key-data";
         let metadata = KeyMetadata {
@@ -432,11 +432,11 @@ mod tests {
     #[tokio::test]
     async fn test_encryption_key() -> Result<(), BearDogError> {
         let enc_key = DefaultEncryptionKey::new()?;
-        enc_key.initialize().await?;
+        enc_key.initialize()?;
 
         let plaintext = b"sensitive data";
-        let ciphertext = enc_key.encrypt(plaintext).await?;
-        let decrypted = enc_key.decrypt(&ciphertext).await?;
+        let ciphertext = enc_key.encrypt(plaintext)?;
+        let decrypted = enc_key.decrypt(&ciphertext)?;
 
         assert_eq!(plaintext, &decrypted[..]);
         Ok(())

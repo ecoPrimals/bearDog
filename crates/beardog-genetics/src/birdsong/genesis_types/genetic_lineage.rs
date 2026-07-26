@@ -43,6 +43,7 @@ impl GeneticLineage {
     }
 
     /// Get lineage depth (number of generations from genesis)
+    #[must_use]
     pub fn depth(&self) -> usize {
         self.lineage_chain.nodes.len()
     }
@@ -52,6 +53,7 @@ impl GeneticLineage {
         clippy::cast_possible_truncation,
         reason = "lineage depth fits u32 for broadcast hint"
     )]
+    #[must_use]
     pub fn lineage_hint(&self) -> LineageHint {
         LineageHint {
             root_id: self.lineage_chain.root_node.node_id.clone(),

@@ -33,10 +33,10 @@ pub fn derive_primal_signing_key(primal_name: &str, node_id: &str) -> SigningKey
 pub fn derive_primal_verifying_key(primal_name: &str, node_id: &str) -> VerifyingKey {
     derive_primal_signing_key(primal_name, node_id).verifying_key()
 }
-
 /// Sign arbitrary bytes with the primal's identity key.
 ///
 /// Returns `(signature_base64, public_key_base64)` using standard base64.
+#[must_use]
 pub fn sign_with_primal_identity(
     primal_name: &str,
     node_id: &str,

@@ -26,14 +26,15 @@ impl Default for EntropyCollector {
 
 impl EntropyCollector {
     /// Create a collector with the default quality threshold (0.95).
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             quality_threshold: 0.95,
         }
     }
-
     /// Create a collector with a custom quality threshold (clamped to 0.0–1.0).
-    pub fn with_quality_threshold(threshold: f64) -> Self {
+    #[must_use]
+    pub const fn with_quality_threshold(threshold: f64) -> Self {
         Self {
             quality_threshold: threshold.clamp(0.0, 1.0),
         }
@@ -45,7 +46,7 @@ impl EntropyCollector {
     ///
     /// Returns an error when the collected entropy falls below the quality
     /// threshold.
-    pub async fn collect(&self, num_bytes: usize) -> Result<Vec<u8>, BearDogError> {
+    pub fn collect(&self, num_bytes: usize) -> Result<Vec<u8>, BearDogError> {
         let mut entropy_pool = Vec::with_capacity(num_bytes * 3);
 
         let mut os_entropy = vec![0u8; num_bytes];
@@ -149,13 +150,13 @@ impl EntropyCollector {
 
         entropy / 8.0
     }
-
     /// Current quality threshold.
-    pub fn get_quality(&self) -> f64 {
+    #[must_use]
+    pub const fn get_quality(&self) -> f64 {
         self.quality_threshold
     }
-
     /// Comprehensive quality assessment for diagnostics.
+    #[must_use]
     pub fn assess_quality(&self, data: &[u8]) -> EntropyQualityReport {
         let shannon_entropy = Self::assess_entropy_quality(data);
         let chi_square = Self::chi_square_test(data);
@@ -220,7 +221,7 @@ mod tests {
     #[tokio::test]
     async fn test_entropy_collection() -> Result<(), BearDogError> {
         let collector = EntropyCollector::new();
-        let entropy = collector.collect(32).await?;
+        let entropy = collector.collect(32)?;
 
         assert_eq!(entropy.len(), 32);
         assert!(
@@ -234,7 +235,7 @@ mod tests {
     #[tokio::test]
     async fn test_entropy_quality_assessment() -> Result<(), BearDogError> {
         let collector = EntropyCollector::new();
-        let entropy = collector.collect(1024).await?;
+        let entropy = collector.collect(1024)?;
 
         let report = collector.assess_quality(&entropy);
 
@@ -266,8 +267,8 @@ mod tests {
     async fn test_entropy_uniqueness() -> Result<(), BearDogError> {
         let collector = EntropyCollector::new();
 
-        let sample1 = collector.collect(32).await?;
-        let sample2 = collector.collect(32).await?;
+        let sample1 = collector.collect(32)?;
+        let sample2 = collector.collect(32)?;
 
         assert_ne!(
             sample1, sample2,

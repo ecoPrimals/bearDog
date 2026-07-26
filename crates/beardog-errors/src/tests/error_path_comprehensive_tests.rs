@@ -165,22 +165,18 @@ mod error_path_tests {
     // TEST_PRIORITY: normal
     #[test]
     fn test_early_return_pattern() {
-        fn step1() -> Result<(), BearDogError> {
-            Ok(())
-        }
+        fn step1() {}
 
         fn step2() -> Result<(), BearDogError> {
             Err(BearDogError::invalid_input("Step 2 failed"))
         }
 
-        fn step3() -> Result<(), BearDogError> {
-            Ok(())
-        }
+        fn step3() {}
 
         fn process() -> Result<(), BearDogError> {
-            step1()?;
+            step1();
             step2()?;
-            step3()?;
+            step3();
             Ok(())
         }
 

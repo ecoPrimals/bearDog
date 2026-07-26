@@ -359,13 +359,13 @@ impl AcmeClient {
 
     /// Get a reference to the HTTP-01 solver (for starting the challenge server).
     #[must_use]
-    pub fn solver(&self) -> &Http01Solver {
+    pub const fn solver(&self) -> &Http01Solver {
         &self.solver
     }
 
     /// Get a reference to the certificate store.
     #[must_use]
-    pub fn store(&self) -> &CertificateStore {
+    pub const fn store(&self) -> &CertificateStore {
         &self.store
     }
 }

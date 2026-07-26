@@ -202,6 +202,7 @@ pub enum CryptographicAlgorithm {
 
 impl CryptographicAlgorithm {
     /// Get the recommended key size for this algorithm
+    #[must_use]
     pub const fn recommended_key_size(&self) -> Option<u32> {
         match self {
             Self::Aes128Gcm | Self::Aes128Cbc => Some(128),
@@ -218,16 +219,16 @@ impl CryptographicAlgorithm {
             Self::ChaCha20Poly1305 => Some(256),
         }
     }
-
     /// Check if this algorithm supports authenticated encryption
+    #[must_use]
     pub const fn is_authenticated_encryption(&self) -> bool {
         matches!(
             self,
             Self::Aes128Gcm | Self::Aes256Gcm | Self::ChaCha20Poly1305
         )
     }
-
     /// Check if this algorithm is for signing/verification
+    #[must_use]
     pub const fn is_signature_algorithm(&self) -> bool {
         matches!(
             self,
@@ -321,6 +322,7 @@ pub enum Algorithm {
 
 impl Algorithm {
     /// Returns the security strength in bits
+    #[must_use]
     pub const fn security_bits(&self) -> usize {
         match self {
             Self::Aes256Gcm | Self::EccP256 | Self::EcdsaP256 | Self::Ed25519 | Self::X25519 => 256,
@@ -332,8 +334,8 @@ impl Algorithm {
             Self::HkdfSha256 | Self::EcdsaSha256 => 256,
         }
     }
-
     /// Returns whether this is a signature algorithm
+    #[must_use]
     pub const fn is_signature_algorithm(&self) -> bool {
         matches!(
             self,
@@ -347,8 +349,8 @@ impl Algorithm {
                 | Self::Ed25519
         )
     }
-
     /// Returns whether this is an encryption algorithm
+    #[must_use]
     pub const fn is_encryption_algorithm(&self) -> bool {
         matches!(self, Self::Aes256Gcm | Self::ChaCha20Poly1305)
     }

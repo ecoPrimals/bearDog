@@ -9,7 +9,7 @@ use beardog_errors::BearDogError;
 use tracing::{info, warn};
 
 /// Test recovery after transient network failures
-pub async fn test_recovery_scenarios() -> Result<NetworkE2EMetrics, BearDogError> {
+pub fn test_recovery_scenarios() -> Result<NetworkE2EMetrics, BearDogError> {
     info!("Testing recovery scenarios");
 
     let mut metrics = NetworkE2EMetrics::default();
@@ -50,7 +50,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_basic_recovery() {
-        let result = test_recovery_scenarios().await;
+        let result = test_recovery_scenarios();
         assert!(result.is_ok());
 
         let metrics = result.unwrap();

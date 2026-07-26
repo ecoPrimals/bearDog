@@ -24,16 +24,16 @@ impl SecureTunnelProvider for BeardogBtspProvider {
         info!("🌉 Establishing secure tunnel with peer: {}", peer.id);
 
         // 1. Check peer trust status
-        let trust_level = match self.get_peer_trust(&peer.id).await {
+        let trust_level = match self.get_peer_trust(&peer.id) {
             Some(level) => {
                 debug!("📋 Peer {} has existing trust: {:?}", peer.id, level);
-                self.update_peer_trust(&peer.id).await?;
+                self.update_peer_trust(&peer.id)?;
                 level
             }
             None => {
                 // TOFU: Trust On First Use
                 if let Some(ref public_key) = peer.public_key {
-                    self.pin_peer_key(&peer.id, public_key).await?
+                    self.pin_peer_key(&peer.id, public_key)?
                 } else {
                     warn!("⚠️  Peer {} has no public key - tentative trust", peer.id);
                     TrustLevel::Tentative
@@ -42,10 +42,10 @@ impl SecureTunnelProvider for BeardogBtspProvider {
         };
 
         // 2. Generate session key using genetic cryptography
-        let session_key = self.generate_session_key(&peer.id).await?;
+        let session_key = self.generate_session_key(&peer.id)?;
 
         // 3. Establish mTLS connection
-        self.establish_mtls(&peer, &session_key).await?;
+        self.establish_mtls(&peer, &session_key)?;
 
         // 4. Create tunnel
         let tunnel_id = format!("btsp_{}", uuid::Uuid::new_v4().simple());
@@ -66,7 +66,7 @@ impl SecureTunnelProvider for BeardogBtspProvider {
 
         Ok(CapabilityTunnelHandle {
             id: tunnel_id,
-            peer_id: peer.id.clone(),
+            peer_id: peer.id,
             established_at: established_at.to_rfc3339(),
         })
     }
@@ -86,7 +86,7 @@ impl SecureTunnelProvider for BeardogBtspProvider {
         };
 
         // Encrypt with genetic key lineage
-        let ciphertext = self.encrypt_with_lineage(data, &session_key).await?;
+        let ciphertext = self.encrypt_with_lineage(data, &session_key)?;
 
         // Update statistics
         {
@@ -116,7 +116,7 @@ impl SecureTunnelProvider for BeardogBtspProvider {
         };
 
         // Decrypt with genetic key lineage verification
-        let plaintext = self.decrypt_with_lineage(data, &session_key).await?;
+        let plaintext = self.decrypt_with_lineage(data, &session_key)?;
 
         // Update statistics
         {
@@ -174,7 +174,7 @@ impl SecureTunnelProvider for BeardogBtspProvider {
         };
 
         // Clean up session key from HSM first
-        self.cleanup_session_key(&peer_id).await?;
+        self.cleanup_session_key(&peer_id)?;
 
         // Remove tunnel (Drop impl will zeroize session key in memory)
         let mut tunnels = self.tunnels.write();

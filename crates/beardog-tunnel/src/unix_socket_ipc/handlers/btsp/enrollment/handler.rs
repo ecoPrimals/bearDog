@@ -6,10 +6,12 @@ use base64::Engine;
 use serde::Deserialize;
 use tracing::{info, warn};
 
-use crate::unix_socket_ipc::handlers::HandlerError;
-use super::config::{current_unix_timestamp, load_family_seed, load_seed_generation, load_timestamp_window};
+use super::config::{
+    current_unix_timestamp, load_family_seed, load_seed_generation, load_timestamp_window,
+};
 use super::crypto::{build_enrollment_message, compute_hmac_sha256, derive_enrollment_key};
 use super::lineage::classify_lineage_distance;
+use crate::unix_socket_ipc::handlers::HandlerError;
 use crate::unix_socket_ipc::handlers::btsp::BtspHandler;
 
 /// Build a rejection `EnrollmentVerifyResponse` as JSON.
@@ -65,7 +67,7 @@ impl BtspHandler {
     ///
     /// Returns `HandlerError` on missing params, invalid base64, or missing
     /// `FAMILY_SEED` environment variable.
-    pub(in crate::unix_socket_ipc::handlers::btsp) async fn handle_enrollment_verify(
+    pub(in crate::unix_socket_ipc::handlers::btsp) fn handle_enrollment_verify(
         &self,
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, HandlerError> {

@@ -11,7 +11,7 @@ use tracing::{info, warn};
 const FAILURE_THRESHOLD: usize = 3;
 
 /// Test circuit breaker failure detection and recovery
-pub async fn test_circuit_breaker() -> Result<NetworkE2EMetrics, BearDogError> {
+pub fn test_circuit_breaker() -> Result<NetworkE2EMetrics, BearDogError> {
     info!("Testing circuit breaker pattern");
 
     let mut metrics = NetworkE2EMetrics::default();
@@ -80,7 +80,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_breaker_opens_on_failures() {
-        let result = test_circuit_breaker().await;
+        let result = test_circuit_breaker();
         assert!(result.is_ok());
 
         let metrics = result.unwrap();

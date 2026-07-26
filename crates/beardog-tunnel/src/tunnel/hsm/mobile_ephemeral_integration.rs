@@ -201,8 +201,8 @@ impl MobileEphemeralKeyManager {
 
         Ok(removed_count)
     }
-
     /// Gets active key count
+    #[must_use]
     pub fn active_key_count(&self) -> usize {
         self.active_keys.len()
     }
@@ -228,7 +228,7 @@ impl MobileEphemeralKeyManager {
 /// # Errors
 ///
 /// Returns an error if entropy collection fails.
-pub async fn collect_mobile_entropy(user_id: &str) -> Result<HumanEntropyData, BearDogError> {
+pub fn collect_mobile_entropy(user_id: &str) -> Result<HumanEntropyData, BearDogError> {
     info!("📱 Collecting mobile sensor entropy for user: {}", user_id);
 
     let mut sensor_data = HashMap::new();
@@ -274,14 +274,14 @@ pub async fn collect_mobile_entropy(user_id: &str) -> Result<HumanEntropyData, B
 /// # Errors
 ///
 /// Returns an error if any step of the demo (entropy, key generation, or cleanup) fails.
-pub async fn demo_ephemeral_key_lifecycle() -> Result<(), BearDogError> {
+pub fn demo_ephemeral_key_lifecycle() -> Result<(), BearDogError> {
     info!("🎬 Demonstrating ephemeral key lifecycle");
 
     let config = MobileEphemeralConfig::default();
     let mut manager = MobileEphemeralKeyManager::new(config)?;
 
     // Collect entropy
-    let entropy_data = collect_mobile_entropy("demo_user").await?;
+    let entropy_data = collect_mobile_entropy("demo_user")?;
 
     // Generate ephemeral key
     let key = manager.generate_ephemeral_key(&entropy_data, KeyType::Ed25519)?;
@@ -341,7 +341,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_entropy_collection() -> Result<(), Box<dyn std::error::Error>> {
-        let result = collect_mobile_entropy("test_user").await;
+        let result = collect_mobile_entropy("test_user");
         assert!(result.is_ok());
 
         let entropy = result?;
@@ -352,7 +352,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_lifecycle_demo() -> Result<(), Box<dyn std::error::Error>> {
-        let result = demo_ephemeral_key_lifecycle().await;
+        let result = demo_ephemeral_key_lifecycle();
         // May fail without proper HSM setup, but should not panic
         let _ = result;
         Ok(())

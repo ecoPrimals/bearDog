@@ -51,7 +51,6 @@ async fn announcer_new_and_start_ok_when_disabled() {
     let announcer = Announcer::new(config, info);
     announcer
         .start()
-        .await
         .expect("disabled announcement should return Ok");
 }
 
@@ -62,7 +61,6 @@ async fn announcer_with_service_registry_url_chains() {
     Announcer::new(config, info)
         .with_service_registry_url(Some("http://registry.local:8500".to_string()))
         .start()
-        .await
         .expect("service_registry announcement path should return Ok");
 }
 
@@ -72,7 +70,6 @@ async fn announcer_start_enabled_mdns() {
     let info = sample_primal_info("wave10-mdns");
     Announcer::new(config, info)
         .start()
-        .await
         .expect("mDNS announcement path should return Ok");
 }
 
@@ -82,7 +79,6 @@ async fn announcer_start_enabled_environment() {
     let info = sample_primal_info("wave10-env-announce");
     Announcer::new(config, info)
         .start()
-        .await
         .expect("environment announcement path should return Ok");
 }
 
@@ -94,13 +90,11 @@ async fn announcer_start_service_registry_with_and_without_url() {
     Announcer::new(config.clone(), info.clone())
         .with_service_registry_url(None)
         .start()
-        .await
         .expect("service_registry without URL should still Ok");
 
     Announcer::new(config, info)
         .with_service_registry_url(Some("http://consul:8500".to_string()))
         .start()
-        .await
         .expect("service_registry with URL should Ok");
 }
 
@@ -110,7 +104,6 @@ async fn announcer_start_unknown_method_is_no_op() {
     let info = sample_primal_info("wave10-unknown");
     Announcer::new(config, info)
         .start()
-        .await
         .expect("unknown announcement method should be ignored");
 }
 
@@ -124,7 +117,6 @@ async fn announcer_all_methods_combined() {
     Announcer::new(config, info)
         .with_service_registry_url(Some("http://etcd:2379".to_string()))
         .start()
-        .await
         .expect("combined announcement methods should complete");
 }
 

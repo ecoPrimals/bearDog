@@ -106,6 +106,7 @@ impl Default for ProductionCoreConfig {
 
 impl ProductionFeatureFlags {
     /// Create `ProductionFeatureFlags` with hardcoded defaults
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             enable_advanced_monitoring: true,
@@ -122,6 +123,7 @@ impl ProductionFeatureFlags {
     }
 
     /// Create `ProductionFeatureFlags` from environment variables
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -171,8 +173,8 @@ impl Default for ProductionFeatureFlags {
 
 impl ProductionCoreConfig {
     /// Create a new production core configuration
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub fn new(service_name: &str, service_version: &str) -> Self {
         Self {
             service_name: service_name.to_string(),
@@ -182,32 +184,32 @@ impl ProductionCoreConfig {
     }
 
     /// Set the environment level
-    #[must_use]
     /// Creates instance with environment level
+    #[must_use]
     pub const fn with_environment_level(mut self, level: EnvironmentLevel) -> Self {
         self.environment_level = level;
         self
     }
 
     /// Set the deployment region
-    #[must_use]
     /// Creates instance with region
+    #[must_use]
     pub fn with_region(mut self, region: &str) -> Self {
         self.region = region.to_string();
         self
     }
 
     /// Set the availability zone
-    #[must_use]
     /// Creates instance with availability zone
+    #[must_use]
     pub fn with_availability_zone(mut self, az: Option<&str>) -> Self {
         self.availability_zone = az.map(String::from);
         self
     }
 
     /// Set the cluster ID
-    #[must_use]
     /// Creates instance with cluster id
+    #[must_use]
     pub fn with_cluster_id(mut self, cluster_id: &str) -> Self {
         self.cluster_id = cluster_id.to_string();
         self
@@ -266,8 +268,8 @@ impl ProductionCoreConfig {
     }
 
     /// Check if this is a production environment
-    #[must_use]
     /// Checks if production
+    #[must_use]
     pub const fn is_production(&self) -> bool {
         matches!(
             self.environment_level,

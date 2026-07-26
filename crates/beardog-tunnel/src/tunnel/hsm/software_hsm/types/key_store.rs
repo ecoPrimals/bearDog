@@ -28,7 +28,7 @@ impl SoftwareKeyStore {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub async fn new(
+    pub fn new(
         _config: &crate::tunnel::hsm::software_hsm::KeyStoreConfig,
     ) -> Result<Self, BearDogError> {
         Ok(Self {
@@ -66,7 +66,7 @@ impl SoftwareKeyStore {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub async fn initialize(&self) -> Result<(), BearDogError> {
+    pub fn initialize(&self) -> Result<(), BearDogError> {
         debug!("Initializing key store");
         Ok(())
     }

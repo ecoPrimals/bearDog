@@ -101,6 +101,7 @@ impl Default for EvolutionConfig {
 
 impl EvolutionConfig {
     /// Load evolution parameters from `BEARDOG_GENETICS_*` environment variables (see source for names).
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             population_size: std::env::var(env_keys::ENV_GENETICS_POPULATION_SIZE)

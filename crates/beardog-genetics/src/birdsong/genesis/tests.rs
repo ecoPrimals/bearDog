@@ -16,9 +16,7 @@ async fn test_genesis_lineage_provider_creation() {
 
 #[tokio::test]
 async fn test_genesis_lineage_provider_with_custom_trust() {
-    let provider = GenesisLineageProvider::with_config(TrustLevel::Maximum)
-        .await
-        .unwrap();
+    let provider = GenesisLineageProvider::with_config(TrustLevel::Maximum).unwrap();
     assert_eq!(provider.min_trust_level, TrustLevel::Maximum);
 }
 

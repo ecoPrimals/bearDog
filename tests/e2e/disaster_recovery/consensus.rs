@@ -36,16 +36,16 @@ impl ConsensusFailureScenario {
         let mut metrics = E2EMetrics::default();
 
         // Test 1: Normal consensus
-        Self::test_normal_consensus(&ctx, &mut metrics, config).await?;
+        Self::test_normal_consensus(&ctx, &mut metrics, config)?;
 
         // Test 2: Byzantine behavior detection
-        Self::test_byzantine_detection(&ctx, &mut metrics, config).await?;
+        Self::test_byzantine_detection(&ctx, &mut metrics, config)?;
 
         // Test 3: Network partition recovery
-        Self::test_partition_recovery(&ctx, &mut metrics, config).await?;
+        Self::test_partition_recovery(&ctx, &mut metrics, config)?;
 
         // Test 4: Node reputation system
-        Self::test_reputation_system(&ctx, &mut metrics, config).await?;
+        Self::test_reputation_system(&ctx, &mut metrics, config)?;
 
         // Modern pattern: explicit data verification flag
         // Consensus scenarios don't directly test data integrity
@@ -55,7 +55,7 @@ impl ConsensusFailureScenario {
         Ok(metrics)
     }
 
-    async fn test_normal_consensus(
+    fn test_normal_consensus(
         ctx: &ConsensusContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
@@ -70,13 +70,13 @@ impl ConsensusFailureScenario {
 
         // Initialize nodes
         for node in &nodes {
-            initialize_node(ctx, node).await?;
+            initialize_node(ctx, node)?;
             metrics.successful_requests += 1;
         }
         metrics.total_requests += nodes.len() as u64;
 
         // Achieve consensus
-        if achieve_consensus(ctx, &nodes, 1).await? {
+        if achieve_consensus(ctx, &nodes, 1)? {
             info!("  ✅ Consensus achieved");
             metrics.successful_requests += 1;
         } else {
@@ -88,7 +88,7 @@ impl ConsensusFailureScenario {
         Ok(())
     }
 
-    async fn test_byzantine_detection(
+    fn test_byzantine_detection(
         ctx: &ConsensusContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
@@ -96,15 +96,15 @@ impl ConsensusFailureScenario {
         info!("  Testing Byzantine behavior detection...");
 
         let malicious_node = "node-evil";
-        initialize_node(ctx, malicious_node).await?;
+        initialize_node(ctx, malicious_node)?;
         metrics.total_requests += 1;
 
         // Inject Byzantine behavior
-        inject_byzantine_behavior(ctx, malicious_node, "double-spend").await?;
+        inject_byzantine_behavior(ctx, malicious_node, "double-spend")?;
         metrics.total_requests += 1;
 
         // Verify detection
-        let reputation = get_node_reputation(ctx, malicious_node).await?;
+        let reputation = get_node_reputation(ctx, malicious_node)?;
         if reputation < 0.5 {
             info!("  ✅ Byzantine node detected (reputation: {})", reputation);
             metrics.successful_requests += 1;
@@ -117,7 +117,7 @@ impl ConsensusFailureScenario {
         Ok(())
     }
 
-    async fn test_partition_recovery(
+    fn test_partition_recovery(
         ctx: &ConsensusContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
@@ -125,11 +125,11 @@ impl ConsensusFailureScenario {
         info!("  Testing network partition recovery...");
 
         let isolated_node = "node-isolated";
-        initialize_node(ctx, isolated_node).await?;
+        initialize_node(ctx, isolated_node)?;
         metrics.total_requests += 1;
 
         // Simulate partition
-        if is_node_isolated(ctx, isolated_node).await? {
+        if is_node_isolated(ctx, isolated_node)? {
             info!("  ✅ Partition detected");
             metrics.successful_requests += 1;
         }
@@ -138,7 +138,7 @@ impl ConsensusFailureScenario {
         Ok(())
     }
 
-    async fn test_reputation_system(
+    fn test_reputation_system(
         ctx: &ConsensusContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
@@ -146,7 +146,7 @@ impl ConsensusFailureScenario {
         info!("  Testing node reputation system...");
 
         let honest_node = "node-honest";
-        let reputation = get_node_reputation(ctx, honest_node).await?;
+        let reputation = get_node_reputation(ctx, honest_node)?;
 
         if reputation >= 0.9 {
             info!("  ✅ Honest node has high reputation: {}", reputation);
@@ -163,14 +163,14 @@ impl ConsensusFailureScenario {
 // =============================================================================
 
 /// Initialize consensus node with self-knowledge
-async fn initialize_node(ctx: &ConsensusContext, node_id: &str) -> Result<(), BearDogError> {
+fn initialize_node(ctx: &ConsensusContext, node_id: &str) -> Result<(), BearDogError> {
     let mut map = ctx.node_reputation.lock().unwrap();
     map.insert(node_id.to_string(), 1.0); // Start with perfect reputation
     Ok(())
 }
 
 /// Achieve distributed consensus
-async fn achieve_consensus(
+fn achieve_consensus(
     ctx: &ConsensusContext,
     nodes: &[String],
     _round: usize,
@@ -186,7 +186,7 @@ async fn achieve_consensus(
 }
 
 /// Inject Byzantine behavior (test capability)
-async fn inject_byzantine_behavior(
+fn inject_byzantine_behavior(
     ctx: &ConsensusContext,
     node_id: &str,
     _behavior_type: &str,
@@ -197,13 +197,13 @@ async fn inject_byzantine_behavior(
 }
 
 /// Check if node is isolated
-async fn is_node_isolated(ctx: &ConsensusContext, node_id: &str) -> Result<bool, BearDogError> {
+fn is_node_isolated(ctx: &ConsensusContext, node_id: &str) -> Result<bool, BearDogError> {
     let map = ctx.node_reputation.lock().unwrap();
     Ok(!map.contains_key(node_id))
 }
 
 /// Get node reputation score
-async fn get_node_reputation(ctx: &ConsensusContext, node_id: &str) -> Result<f64, BearDogError> {
+fn get_node_reputation(ctx: &ConsensusContext, node_id: &str) -> Result<f64, BearDogError> {
     let map = ctx.node_reputation.lock().unwrap();
     Ok(map.get(node_id).copied().unwrap_or(0.5))
 }

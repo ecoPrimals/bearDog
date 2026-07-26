@@ -53,17 +53,6 @@ impl Default for ProviderMonitoringConfig {
     }
 }
 
-/// Logging configuration (DEPRECATED - use canonical)
-///
-/// **MIGRATION**: Use `super::super::config::domains::system::LoggingConfig` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use super::super::config::domains::system::LoggingConfig instead"
-)]
-pub type LoggingConfig = super::super::config::domains::system::LoggingConfig;
-
 /// Metrics configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MetricsConfig {

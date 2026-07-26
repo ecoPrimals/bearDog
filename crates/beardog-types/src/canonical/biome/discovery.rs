@@ -33,6 +33,7 @@ impl Default for BiomeDiscoveryConfig {
 
 impl BiomeDiscoveryConfig {
     /// Create a configuration with manual partner discovery only
+    #[must_use]
     pub fn manual_only() -> Self {
         Self {
             auto_discovery_partners: false,

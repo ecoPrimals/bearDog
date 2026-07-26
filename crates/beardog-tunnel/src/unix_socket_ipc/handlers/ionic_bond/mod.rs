@@ -87,8 +87,8 @@ impl IonicBondHandler {
             event_bus: None,
         }
     }
-
     /// Attach an auth event bus for cross-gate trust provenance.
+    #[must_use]
     pub fn with_event_bus(mut self, bus: AuthEventBus) -> Self {
         self.event_bus = Some(bus);
         self
@@ -127,11 +127,11 @@ impl MethodHandler for IonicBondHandler {
             "crypto.ionic_bond.verify_proposal" => self.handle_verify_proposal(params).await,
             "crypto.ionic_bond.revoke" => self.handle_revoke(params).await,
             "crypto.ionic_bond.list" => self.handle_list(params).await,
-            "crypto.sign_contract" => self.handle_sign_contract(params, btsp_provider).await,
-            "crypto.verify_contract" => Self::handle_verify_contract(params).await,
+            "crypto.sign_contract" => self.handle_sign_contract(params, btsp_provider),
+            "crypto.verify_contract" => Self::handle_verify_contract(params),
             "crypto.contract.propose" => self.handle_contract_propose(params, btsp_provider).await,
             "crypto.contract.countersign" => self.handle_contract_countersign(params).await,
-            "crypto.contract.verify" => Self::handle_contract_verify(params).await,
+            "crypto.contract.verify" => Self::handle_contract_verify(params),
             _ => Err(format!("Unknown ionic bond method: {method}").into()),
         }
     }

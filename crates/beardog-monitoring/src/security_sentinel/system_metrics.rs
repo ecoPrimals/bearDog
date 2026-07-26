@@ -150,6 +150,7 @@ impl Default for SystemMetrics {
 
 impl SystemMetrics {
     /// Create a new system metrics collector.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             prev_cpu: Mutex::new(None),

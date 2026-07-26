@@ -38,7 +38,6 @@ pub async fn test_complete_user_registration_flow(
             "/api/v1/auth/register",
             Some(r#"{"email": "test@beardog.io", "password": "SecurePass123!"}"#),
         )
-        .await
     })
     .await?;
 
@@ -58,7 +57,6 @@ pub async fn test_complete_user_registration_flow(
             "/api/v1/auth/verify-email-status",
             Some(r#"{"email": "test@beardog.io"}"#),
         )
-        .await
     })
     .await?;
 
@@ -74,7 +72,6 @@ pub async fn test_complete_user_registration_flow(
             "/api/v1/auth/confirm-email",
             Some(r#"{"token": "verification-token-123"}"#),
         )
-        .await
     })
     .await?;
 
@@ -90,7 +87,6 @@ pub async fn test_complete_user_registration_flow(
             "/api/v1/auth/login",
             Some(r#"{"email": "test@beardog.io", "password": "SecurePass123!"}"#),
         )
-        .await
     })
     .await?;
 
@@ -106,7 +102,6 @@ pub async fn test_complete_user_registration_flow(
             "/api/v1/auth/token-info",
             Some(r#"{"token": "jwt-token-xyz"}"#),
         )
-        .await
     })
     .await?;
 
@@ -118,8 +113,7 @@ pub async fn test_complete_user_registration_flow(
     // Step 6: Access protected resource
     info!("  Step 6: Access protected resource");
     let (protected_response, _) =
-        measure_latency(|| async { simulate_api_request("/api/v1/user/profile", None).await })
-            .await?;
+        measure_latency(|| async { simulate_api_request("/api/v1/user/profile", None) }).await?;
 
     assert_success(&protected_response)?;
     latencies.push(protected_response.latency_ms);
@@ -133,7 +127,6 @@ pub async fn test_complete_user_registration_flow(
             "/api/v1/auth/refresh",
             Some(r#"{"refresh_token": "refresh-token-abc"}"#),
         )
-        .await
     })
     .await?;
 
@@ -145,8 +138,7 @@ pub async fn test_complete_user_registration_flow(
     // Step 8: Logout
     info!("  Step 8: Logout");
     let (logout_response, _) =
-        measure_latency(|| async { simulate_api_request("/api/v1/auth/logout", None).await })
-            .await?;
+        measure_latency(|| async { simulate_api_request("/api/v1/auth/logout", None) }).await?;
 
     assert_success(&logout_response)?;
     latencies.push(logout_response.latency_ms);
@@ -187,7 +179,6 @@ pub async fn test_multi_factor_authentication_flow(
             "/api/v1/auth/login",
             Some(r#"{"email": "user@beardog.io", "password": "SecurePass123!"}"#),
         )
-        .await
     })
     .await?;
 
@@ -199,8 +190,7 @@ pub async fn test_multi_factor_authentication_flow(
     // Step 2: Enable 2FA
     info!("  Step 2: Enable 2FA");
     let (enable_2fa, _) =
-        measure_latency(|| async { simulate_api_request("/api/v1/auth/2fa/enable", None).await })
-            .await?;
+        measure_latency(|| async { simulate_api_request("/api/v1/auth/2fa/enable", None) }).await?;
 
     assert_success(&enable_2fa)?;
     latencies.push(enable_2fa.latency_ms);
@@ -210,8 +200,7 @@ pub async fn test_multi_factor_authentication_flow(
     // Step 3: Get QR code (simulated)
     info!("  Step 3: Get TOTP QR code");
     let (qr_response, _) =
-        measure_latency(|| async { simulate_api_request("/api/v1/auth/2fa/qr", None).await })
-            .await?;
+        measure_latency(|| async { simulate_api_request("/api/v1/auth/2fa/qr", None) }).await?;
 
     assert_success(&qr_response)?;
     latencies.push(qr_response.latency_ms);
@@ -221,7 +210,7 @@ pub async fn test_multi_factor_authentication_flow(
     // Step 4: Verify TOTP setup
     info!("  Step 4: Verify TOTP code");
     let (verify_response, _) = measure_latency(|| async {
-        simulate_api_request("/api/v1/auth/2fa/verify", Some(r#"{"code": "123456"}"#)).await
+        simulate_api_request("/api/v1/auth/2fa/verify", Some(r#"{"code": "123456"}"#))
     })
     .await?;
 
@@ -233,8 +222,7 @@ pub async fn test_multi_factor_authentication_flow(
     // Step 5: Logout
     info!("  Step 5: Logout");
     let (logout_response, _) =
-        measure_latency(|| async { simulate_api_request("/api/v1/auth/logout", None).await })
-            .await?;
+        measure_latency(|| async { simulate_api_request("/api/v1/auth/logout", None) }).await?;
 
     assert_success(&logout_response)?;
     latencies.push(logout_response.latency_ms);
@@ -248,7 +236,6 @@ pub async fn test_multi_factor_authentication_flow(
             "/api/v1/auth/login",
             Some(r#"{"email": "user@beardog.io", "password": "SecurePass123!", "totp": "123456"}"#),
         )
-        .await
     })
     .await?;
 
@@ -260,8 +247,7 @@ pub async fn test_multi_factor_authentication_flow(
     // Step 7: Access protected resource
     info!("  Step 7: Access protected resource with 2FA");
     let (protected_response, _) =
-        measure_latency(|| async { simulate_api_request("/api/v1/secure/data", None).await })
-            .await?;
+        measure_latency(|| async { simulate_api_request("/api/v1/secure/data", None) }).await?;
 
     assert_success(&protected_response)?;
     latencies.push(protected_response.latency_ms);
@@ -295,7 +281,6 @@ pub async fn test_session_management_and_expiry(
             "/api/v1/auth/login",
             Some(r#"{"email": "user@beardog.io", "password": "pass"}"#),
         )
-        .await
     })
     .await?;
 
@@ -306,10 +291,9 @@ pub async fn test_session_management_and_expiry(
 
     // Step 2: Verify session active
     info!("  Step 2: Verify session active");
-    let (session_check, _) = measure_latency(|| async {
-        simulate_api_request("/api/v1/auth/session-status", None).await
-    })
-    .await?;
+    let (session_check, _) =
+        measure_latency(|| async { simulate_api_request("/api/v1/auth/session-status", None) })
+            .await?;
 
     assert_success(&session_check)?;
     latencies.push(session_check.latency_ms);
@@ -318,10 +302,9 @@ pub async fn test_session_management_and_expiry(
 
     // Step 3: Refresh session
     info!("  Step 3: Refresh session");
-    let (refresh_response, _) = measure_latency(|| async {
-        simulate_api_request("/api/v1/auth/refresh-session", None).await
-    })
-    .await?;
+    let (refresh_response, _) =
+        measure_latency(|| async { simulate_api_request("/api/v1/auth/refresh-session", None) })
+            .await?;
 
     assert_success(&refresh_response)?;
     latencies.push(refresh_response.latency_ms);
@@ -331,7 +314,7 @@ pub async fn test_session_management_and_expiry(
     // Step 4: Verify extended session
     info!("  Step 4: Verify session extended");
     let (extended_check, _) =
-        measure_latency(|| async { simulate_api_request("/api/v1/auth/session-info", None).await })
+        measure_latency(|| async { simulate_api_request("/api/v1/auth/session-info", None) })
             .await?;
 
     assert_success(&extended_check)?;
@@ -365,7 +348,7 @@ pub async fn test_permission_based_access_control(
         let payload =
             format!(r#"{{"email": "{role}@beardog.io", "password": "pass", "role": "{role}"}}"#);
         let (response, _) = measure_latency(|| async {
-            simulate_api_request("/api/v1/auth/register", Some(&payload)).await
+            simulate_api_request("/api/v1/auth/register", Some(&payload))
         })
         .await?;
 
@@ -382,7 +365,6 @@ pub async fn test_permission_based_access_control(
             "/api/v1/auth/login",
             Some(r#"{"email": "user@beardog.io", "password": "pass"}"#),
         )
-        .await
     })
     .await?;
 
@@ -394,8 +376,7 @@ pub async fn test_permission_based_access_control(
     // Step 3: Access user-level resource (should succeed)
     info!("  Step 3: Access user resource (should succeed)");
     let (user_resource, _) =
-        measure_latency(|| async { simulate_api_request("/api/v1/user/profile", None).await })
-            .await?;
+        measure_latency(|| async { simulate_api_request("/api/v1/user/profile", None) }).await?;
 
     assert_success(&user_resource)?;
     latencies.push(user_resource.latency_ms);
@@ -405,8 +386,7 @@ pub async fn test_permission_based_access_control(
     // Step 4: Access admin resource (should fail)
     info!("  Step 4: Access admin resource (should fail)");
     let (admin_resource, _) =
-        measure_latency(|| async { simulate_api_request("/api/v1/admin/users", None).await })
-            .await?;
+        measure_latency(|| async { simulate_api_request("/api/v1/admin/users", None) }).await?;
 
     // Expect failure (403 Forbidden)
     latencies.push(admin_resource.latency_ms);
@@ -420,7 +400,6 @@ pub async fn test_permission_based_access_control(
             "/api/v1/auth/login",
             Some(r#"{"email": "admin@beardog.io", "password": "pass"}"#),
         )
-        .await
     })
     .await?;
 
@@ -432,8 +411,7 @@ pub async fn test_permission_based_access_control(
     // Step 6: Access admin resource (should succeed)
     info!("  Step 6: Access admin resource (should succeed)");
     let (admin_access, _) =
-        measure_latency(|| async { simulate_api_request("/api/v1/admin/users", None).await })
-            .await?;
+        measure_latency(|| async { simulate_api_request("/api/v1/admin/users", None) }).await?;
 
     assert_success(&admin_access)?;
     latencies.push(admin_access.latency_ms);
@@ -443,8 +421,7 @@ pub async fn test_permission_based_access_control(
     // Step 7: Verify audit logs
     info!("  Step 7: Verify audit logs");
     let (audit_check, _) =
-        measure_latency(|| async { simulate_api_request("/api/v1/audit/recent", None).await })
-            .await?;
+        measure_latency(|| async { simulate_api_request("/api/v1/audit/recent", None) }).await?;
 
     assert_success(&audit_check)?;
     latencies.push(audit_check.latency_ms);
@@ -478,7 +455,6 @@ pub async fn test_credential_recovery_flow(
             "/api/v1/auth/reset-password",
             Some(r#"{"email": "user@beardog.io"}"#),
         )
-        .await
     })
     .await?;
 
@@ -494,7 +470,6 @@ pub async fn test_credential_recovery_flow(
             "/api/v1/auth/reset-status",
             Some(r#"{"email": "user@beardog.io"}"#),
         )
-        .await
     })
     .await?;
 
@@ -510,7 +485,6 @@ pub async fn test_credential_recovery_flow(
             "/api/v1/auth/verify-reset-token",
             Some(r#"{"token": "reset-token-xyz"}"#),
         )
-        .await
     })
     .await?;
 
@@ -526,7 +500,6 @@ pub async fn test_credential_recovery_flow(
             "/api/v1/auth/update-password",
             Some(r#"{"token": "reset-token-xyz", "new_password": "NewSecurePass456!"}"#),
         )
-        .await
     })
     .await?;
 
@@ -542,7 +515,6 @@ pub async fn test_credential_recovery_flow(
             "/api/v1/auth/login",
             Some(r#"{"email": "user@beardog.io", "password": "NewSecurePass456!"}"#),
         )
-        .await
     })
     .await?;
 
@@ -558,7 +530,6 @@ pub async fn test_credential_recovery_flow(
             "/api/v1/auth/login",
             Some(r#"{"email": "user@beardog.io", "password": "SecurePass123!"}"#),
         )
-        .await
     })
     .await?;
 

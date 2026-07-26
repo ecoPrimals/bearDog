@@ -15,6 +15,7 @@ pub async fn discover_hsms_agnostic() -> Result<Vec<hsm_agnostic::CliHsmInfo>, B
 }
 
 /// Resolve `hsm_id` against a discovery list (id equality or name substring), shared by discover/capabilities/test.
+#[must_use]
 pub fn find_hsm_for_cli<'a>(
     hsms: &'a [hsm_agnostic::CliHsmInfo],
     hsm_id: &str,

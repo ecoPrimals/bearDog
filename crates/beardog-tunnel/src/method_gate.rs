@@ -286,13 +286,13 @@ impl MethodGate {
 
     /// Access the trusted issuer registry for cross-gate trust management.
     #[must_use]
-    pub fn trusted_issuers(&self) -> &TrustedIssuerRegistry {
+    pub const fn trusted_issuers(&self) -> &TrustedIssuerRegistry {
         &self.trusted_issuers
     }
 
     /// Access the auth event bus for trust provenance.
     #[must_use]
-    pub fn auth_events(&self) -> &AuthEventBus {
+    pub const fn auth_events(&self) -> &AuthEventBus {
         &self.auth_events
     }
 

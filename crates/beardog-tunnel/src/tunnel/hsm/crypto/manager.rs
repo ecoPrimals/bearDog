@@ -22,6 +22,7 @@ pub struct CryptoProviderManager {
 
 impl CryptoProviderManager {
     /// Create a new provider manager
+    #[must_use]
     pub fn new() -> Self {
         Self {
             providers: Arc::new(RwLock::new(Vec::new())),

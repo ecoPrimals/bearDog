@@ -2,8 +2,14 @@
 
 //! Safe iOS Provider Implementation
 //!
-//! This module provides a safe interface to iOS Secure Enclave
-//! without using unchecked memory patterns directly.
+//! This module provides a safe interface to iOS Secure Enclave without using unchecked
+//! memory patterns directly.
+//!
+//! ## Platform gating (Silicon Atheism)
+//!
+//! On non-iOS hosts, operations return `unsupported_platform`. On iOS hosts without wired
+//! Secure Enclave JNI, operations return `not_yet_available` (`NotImplemented` semantics)
+//! until real device hardware and native crypto bindings are available.
 
 use super::traits::PlatformSecurityProvider;
 use crate::tunnel::hsm::types::{HsmKey, KeyType};
@@ -46,8 +52,8 @@ impl SafeIosProvider {
             .map(|v| v == "true")
             .unwrap_or(false)
     }
-
     /// Checks if hardware-backed security is available
+    #[must_use]
     pub const fn is_hardware_backed(&self) -> bool {
         self.secure_enclave_available
     }
@@ -209,8 +215,8 @@ impl SafeIosProvider {
             "iOS Secure Enclave not available on this platform",
         ))
     }
-
     /// Get capabilities of this provider
+    #[must_use]
     pub const fn capabilities(&self) -> &HashMap<String, bool> {
         &self.capabilities
     }

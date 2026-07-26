@@ -27,7 +27,7 @@ pub struct MonitoringMetrics {
 }
 
 /// Test metrics collection workflow
-pub async fn test_metrics_collection() -> Result<MonitoringMetrics, BearDogError> {
+pub fn test_metrics_collection() -> Result<MonitoringMetrics, BearDogError> {
     info!("📊 Testing metrics collection");
 
     let mut metrics = MonitoringMetrics::default();
@@ -35,28 +35,28 @@ pub async fn test_metrics_collection() -> Result<MonitoringMetrics, BearDogError
     // Collect various metric types
     info!("Collecting counter metrics");
     for i in 0..10 {
-        simulate_counter_metric("requests_total", i).await?;
+        simulate_counter_metric("requests_total", i)?;
         metrics.metrics_collected += 1;
     }
 
     info!("Collecting gauge metrics");
     for i in 0..10 {
-        simulate_gauge_metric("active_connections", i * 5).await?;
+        simulate_gauge_metric("active_connections", i * 5)?;
         metrics.metrics_collected += 1;
     }
 
     info!("Collecting histogram metrics");
     for i in 0..10 {
-        simulate_histogram_metric("request_duration_ms", f64::from(i * 10)).await?;
+        simulate_histogram_metric("request_duration_ms", f64::from(i * 10))?;
         metrics.metrics_collected += 1;
     }
 
     // Query metrics
     info!("Querying collected metrics");
-    let counter_value = simulate_query_metric("requests_total").await?;
+    let counter_value = simulate_query_metric("requests_total")?;
     assert!(counter_value > 0.0, "Counter metric should have value");
 
-    let gauge_value = simulate_query_metric("active_connections").await?;
+    let gauge_value = simulate_query_metric("active_connections")?;
     assert!(gauge_value >= 0.0, "Gauge metric should exist");
 
     info!("✅ Metrics collection complete");
@@ -64,7 +64,7 @@ pub async fn test_metrics_collection() -> Result<MonitoringMetrics, BearDogError
 }
 
 /// Test alert triggering and resolution
-pub async fn test_alert_triggering() -> Result<MonitoringMetrics, BearDogError> {
+pub fn test_alert_triggering() -> Result<MonitoringMetrics, BearDogError> {
     info!("🚨 Testing alert triggering");
 
     let mut metrics = MonitoringMetrics::default();
@@ -77,48 +77,48 @@ pub async fn test_alert_triggering() -> Result<MonitoringMetrics, BearDogError> 
     // Simulate normal conditions
     info!("Simulating normal conditions");
     for _ in 0..5 {
-        simulate_metric_value("cpu_usage", 50.0).await?;
-        simulate_metric_value("memory_usage", 60.0).await?;
-        simulate_metric_value("error_rate", 1.0).await?;
+        simulate_metric_value("cpu_usage", 50.0)?;
+        simulate_metric_value("memory_usage", 60.0)?;
+        simulate_metric_value("error_rate", 1.0)?;
         metrics.metrics_collected += 3;
         // No delay needed - metric collection is synchronous in tests
     }
 
     // Trigger CPU alert
     info!("Triggering CPU alert");
-    simulate_metric_value("cpu_usage", 85.0).await?;
+    simulate_metric_value("cpu_usage", 85.0)?;
     metrics.metrics_collected += 1;
 
-    if simulate_check_alert_threshold("cpu_usage", 85.0, cpu_threshold).await? {
+    if simulate_check_alert_threshold("cpu_usage", 85.0, cpu_threshold)? {
         info!("  🚨 CPU alert triggered");
         metrics.alerts_triggered += 1;
     }
 
     // Trigger memory alert
     info!("Triggering memory alert");
-    simulate_metric_value("memory_usage", 95.0).await?;
+    simulate_metric_value("memory_usage", 95.0)?;
     metrics.metrics_collected += 1;
 
-    if simulate_check_alert_threshold("memory_usage", 95.0, memory_threshold).await? {
+    if simulate_check_alert_threshold("memory_usage", 95.0, memory_threshold)? {
         info!("  🚨 Memory alert triggered");
         metrics.alerts_triggered += 1;
     }
 
     // Trigger error rate alert
     info!("Triggering error rate alert");
-    simulate_metric_value("error_rate", 8.0).await?;
+    simulate_metric_value("error_rate", 8.0)?;
     metrics.metrics_collected += 1;
 
-    if simulate_check_alert_threshold("error_rate", 8.0, error_rate_threshold).await? {
+    if simulate_check_alert_threshold("error_rate", 8.0, error_rate_threshold)? {
         info!("  🚨 Error rate alert triggered");
         metrics.alerts_triggered += 1;
     }
 
     // Resolve alerts
     info!("Resolving alerts (returning to normal)");
-    simulate_metric_value("cpu_usage", 45.0).await?;
-    simulate_metric_value("memory_usage", 55.0).await?;
-    simulate_metric_value("error_rate", 1.0).await?;
+    simulate_metric_value("cpu_usage", 45.0)?;
+    simulate_metric_value("memory_usage", 55.0)?;
+    simulate_metric_value("error_rate", 1.0)?;
     metrics.metrics_collected += 3;
 
     info!("✅ Alert triggering complete");
@@ -126,7 +126,7 @@ pub async fn test_alert_triggering() -> Result<MonitoringMetrics, BearDogError> 
 }
 
 /// Test health check system
-pub async fn test_health_checks() -> Result<MonitoringMetrics, BearDogError> {
+pub fn test_health_checks() -> Result<MonitoringMetrics, BearDogError> {
     info!("💚 Testing health check system");
 
     let mut metrics = MonitoringMetrics::default();
@@ -144,7 +144,7 @@ pub async fn test_health_checks() -> Result<MonitoringMetrics, BearDogError> {
     for component in &components {
         metrics.health_checks += 1;
 
-        let healthy = simulate_component_health_check(component).await?;
+        let healthy = simulate_component_health_check(component)?;
 
         if healthy {
             info!("  ✅ {} is healthy", component);
@@ -156,7 +156,7 @@ pub async fn test_health_checks() -> Result<MonitoringMetrics, BearDogError> {
 
     // Overall system health
     info!("Checking overall system health");
-    let system_healthy = simulate_system_health_check().await?;
+    let system_healthy = simulate_system_health_check()?;
     metrics.health_checks += 1;
 
     if !system_healthy {
@@ -175,9 +175,9 @@ pub async fn test_health_checks() -> Result<MonitoringMetrics, BearDogError> {
     // Simulate recovery
     if !system_healthy {
         info!("Simulating component recovery");
-        simulate_component_recovery("cache").await?;
+        simulate_component_recovery("cache")?;
 
-        let recovered = simulate_system_health_check().await?;
+        let recovered = simulate_system_health_check()?;
         metrics.health_checks += 1;
 
         if recovered {
@@ -190,28 +190,28 @@ pub async fn test_health_checks() -> Result<MonitoringMetrics, BearDogError> {
 }
 
 /// Test distributed tracing
-pub async fn test_distributed_tracing() -> Result<MonitoringMetrics, BearDogError> {
+pub fn test_distributed_tracing() -> Result<MonitoringMetrics, BearDogError> {
     info!("🔍 Testing distributed tracing");
 
     let mut metrics = MonitoringMetrics::default();
 
     // Start trace
-    let trace_id = simulate_start_trace("user_request").await?;
+    let trace_id = simulate_start_trace("user_request")?;
     info!("Started trace: {}", trace_id);
     metrics.traces_captured += 1;
 
     // Add spans
-    simulate_add_span(&trace_id, "authentication", 50).await?;
-    simulate_add_span(&trace_id, "database_query", 120).await?;
-    simulate_add_span(&trace_id, "cache_lookup", 30).await?;
-    simulate_add_span(&trace_id, "api_response", 20).await?;
+    simulate_add_span(&trace_id, "authentication", 50)?;
+    simulate_add_span(&trace_id, "database_query", 120)?;
+    simulate_add_span(&trace_id, "cache_lookup", 30)?;
+    simulate_add_span(&trace_id, "api_response", 20)?;
     metrics.traces_captured += 4;
 
     // End trace
-    simulate_end_trace(&trace_id).await?;
+    simulate_end_trace(&trace_id)?;
 
     // Query trace
-    let trace_data = simulate_query_trace(&trace_id).await?;
+    let trace_data = simulate_query_trace(&trace_id)?;
     assert!(!trace_data.is_empty(), "Trace data should exist");
 
     info!("✅ Distributed tracing complete");
@@ -219,7 +219,7 @@ pub async fn test_distributed_tracing() -> Result<MonitoringMetrics, BearDogErro
 }
 
 /// Test log aggregation and querying
-pub async fn test_log_aggregation() -> Result<MonitoringMetrics, BearDogError> {
+pub fn test_log_aggregation() -> Result<MonitoringMetrics, BearDogError> {
     info!("📝 Testing log aggregation");
 
     let mut metrics = MonitoringMetrics::default();
@@ -228,30 +228,30 @@ pub async fn test_log_aggregation() -> Result<MonitoringMetrics, BearDogError> {
     info!("Generating log entries");
 
     for i in 0..20 {
-        simulate_log_entry("INFO", &format!("Processing request {i}")).await?;
+        simulate_log_entry("INFO", &format!("Processing request {i}"))?;
         metrics.log_entries += 1;
     }
 
     for i in 0..5 {
-        simulate_log_entry("WARN", &format!("Warning condition {i}")).await?;
+        simulate_log_entry("WARN", &format!("Warning condition {i}"))?;
         metrics.log_entries += 1;
     }
 
     for i in 0..2 {
-        simulate_log_entry("ERROR", &format!("Error condition {i}")).await?;
+        simulate_log_entry("ERROR", &format!("Error condition {i}"))?;
         metrics.log_entries += 1;
     }
 
     // Query logs
     info!("Querying log entries");
-    let error_logs = simulate_query_logs("ERROR").await?;
+    let error_logs = simulate_query_logs("ERROR")?;
     assert_eq!(error_logs.len(), 2, "Should have 2 error logs");
 
-    let warn_logs = simulate_query_logs("WARN").await?;
+    let warn_logs = simulate_query_logs("WARN")?;
     assert_eq!(warn_logs.len(), 5, "Should have 5 warning logs");
 
     // Search logs
-    let search_results = simulate_search_logs("Processing request").await?;
+    let search_results = simulate_search_logs("Processing request")?;
     assert!(search_results.len() >= 20, "Should find request logs");
 
     info!("✅ Log aggregation complete");
@@ -260,22 +260,22 @@ pub async fn test_log_aggregation() -> Result<MonitoringMetrics, BearDogError> {
 
 // Helper functions
 
-async fn simulate_counter_metric(_name: &str, _value: usize) -> Result<(), BearDogError> {
+fn simulate_counter_metric(_name: &str, _value: usize) -> Result<(), BearDogError> {
     // Simulate metric recording (instant in tests, would be async I/O in production)
     Ok(())
 }
 
-async fn simulate_gauge_metric(_name: &str, _value: usize) -> Result<(), BearDogError> {
+fn simulate_gauge_metric(_name: &str, _value: usize) -> Result<(), BearDogError> {
     // Simulate gauge update (instant in tests)
     Ok(())
 }
 
-async fn simulate_histogram_metric(_name: &str, _value: f64) -> Result<(), BearDogError> {
+fn simulate_histogram_metric(_name: &str, _value: f64) -> Result<(), BearDogError> {
     // Simulate histogram observation (instant in tests)
     Ok(())
 }
 
-async fn simulate_query_metric(name: &str) -> Result<f64, BearDogError> {
+fn simulate_query_metric(name: &str) -> Result<f64, BearDogError> {
     // Simulate metric query (instant in tests)
     Ok(if name == "requests_total" {
         100.0
@@ -284,12 +284,12 @@ async fn simulate_query_metric(name: &str) -> Result<f64, BearDogError> {
     })
 }
 
-async fn simulate_metric_value(_name: &str, _value: f64) -> Result<(), BearDogError> {
+fn simulate_metric_value(_name: &str, _value: f64) -> Result<(), BearDogError> {
     // Simulate metric value recording (instant in tests)
     Ok(())
 }
 
-async fn simulate_check_alert_threshold(
+fn simulate_check_alert_threshold(
     _name: &str,
     value: f64,
     threshold: f64,
@@ -297,52 +297,48 @@ async fn simulate_check_alert_threshold(
     Ok(value > threshold)
 }
 
-async fn simulate_component_health_check(component: &str) -> Result<bool, BearDogError> {
+fn simulate_component_health_check(component: &str) -> Result<bool, BearDogError> {
     // Simulate health check (instant in tests, would be network call in production)
     // Simulate cache being unhealthy
     Ok(component != "cache")
 }
 
-async fn simulate_system_health_check() -> Result<bool, BearDogError> {
+fn simulate_system_health_check() -> Result<bool, BearDogError> {
     // Simulate overall health check (instant in tests)
     Ok(false) // System degraded due to cache
 }
 
-async fn simulate_component_recovery(_component: &str) -> Result<(), BearDogError> {
+fn simulate_component_recovery(_component: &str) -> Result<(), BearDogError> {
     // Simulate recovery (instant in tests, would be orchestration in production)
     Ok(())
 }
 
-async fn simulate_start_trace(_name: &str) -> Result<String, BearDogError> {
+fn simulate_start_trace(_name: &str) -> Result<String, BearDogError> {
     // Simulate trace start (instant in tests)
     Ok(format!("trace_{}", chrono::Utc::now().timestamp()))
 }
 
-async fn simulate_add_span(
-    _trace_id: &str,
-    _name: &str,
-    _duration_ms: u64,
-) -> Result<(), BearDogError> {
+fn simulate_add_span(_trace_id: &str, _name: &str, _duration_ms: u64) -> Result<(), BearDogError> {
     // Simulate span recording (instant in tests)
     Ok(())
 }
 
-async fn simulate_end_trace(_trace_id: &str) -> Result<(), BearDogError> {
+fn simulate_end_trace(_trace_id: &str) -> Result<(), BearDogError> {
     // Simulate trace completion (instant in tests)
     Ok(())
 }
 
-async fn simulate_query_trace(_trace_id: &str) -> Result<String, BearDogError> {
+fn simulate_query_trace(_trace_id: &str) -> Result<String, BearDogError> {
     // Simulate trace query (instant in tests)
     Ok(format!("trace_data_{_trace_id}"))
 }
 
-async fn simulate_log_entry(_level: &str, _message: &str) -> Result<(), BearDogError> {
+fn simulate_log_entry(_level: &str, _message: &str) -> Result<(), BearDogError> {
     // Simulate log writing (instant in tests)
     Ok(())
 }
 
-async fn simulate_query_logs(level: &str) -> Result<Vec<String>, BearDogError> {
+fn simulate_query_logs(level: &str) -> Result<Vec<String>, BearDogError> {
     // Simulate log query (instant in tests)
     let count = match level {
         "ERROR" => 2,
@@ -352,7 +348,7 @@ async fn simulate_query_logs(level: &str) -> Result<Vec<String>, BearDogError> {
     Ok((0..count).map(|i| format!("{level} log {i}")).collect())
 }
 
-async fn simulate_search_logs(_query: &str) -> Result<Vec<String>, BearDogError> {
+fn simulate_search_logs(_query: &str) -> Result<Vec<String>, BearDogError> {
     // Simulate log search (instant in tests)
     Ok((0..20).map(|i| format!("log entry {i}")).collect())
 }
@@ -366,11 +362,11 @@ pub async fn run_monitoring_observability_test(
     let mut metrics = E2EMetrics::default();
 
     let scenarios: [(&str, MonitoringMetrics); 5] = [
-        ("metrics collection", test_metrics_collection().await?),
-        ("alert triggering", test_alert_triggering().await?),
-        ("health checks", test_health_checks().await?),
-        ("distributed tracing", test_distributed_tracing().await?),
-        ("log aggregation", test_log_aggregation().await?),
+        ("metrics collection", test_metrics_collection()?),
+        ("alert triggering", test_alert_triggering()?),
+        ("health checks", test_health_checks()?),
+        ("distributed tracing", test_distributed_tracing()?),
+        ("log aggregation", test_log_aggregation()?),
     ];
 
     for (name, monitoring_metrics) in scenarios {
@@ -403,7 +399,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_metrics_collection_workflow() {
-        let result = test_metrics_collection().await;
+        let result = test_metrics_collection();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.metrics_collected, 30); // 10 counters + 10 gauges + 10 histograms
@@ -411,7 +407,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_alert_triggering_workflow() {
-        let result = test_alert_triggering().await;
+        let result = test_alert_triggering();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.alerts_triggered, 3); // CPU, memory, error rate
@@ -419,7 +415,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_health_checks_workflow() {
-        let result = test_health_checks().await;
+        let result = test_health_checks();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert!(metrics.health_checks >= 5);
@@ -428,7 +424,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_distributed_tracing_workflow() {
-        let result = test_distributed_tracing().await;
+        let result = test_distributed_tracing();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.traces_captured, 5); // 1 trace + 4 spans
@@ -436,7 +432,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_log_aggregation_workflow() {
-        let result = test_log_aggregation().await;
+        let result = test_log_aggregation();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.log_entries, 27); // 20 INFO + 5 WARN + 2 ERROR

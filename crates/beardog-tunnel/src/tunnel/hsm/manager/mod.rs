@@ -103,6 +103,7 @@ impl Default for HsmAutoInitConfig {
 
 impl HsmAutoInitConfig {
     /// Create config from environment variables (for production use)
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             mode: beardog_errors::process_env::var(env_keys::ENV_HSM_MODE)
@@ -281,6 +282,7 @@ impl HsmManager {
     ///
     /// * [`register_hsm_provider`](Self::register_hsm_provider) - Register providers
     /// * [`HsmManagerConfig`] - Configuration options
+    #[must_use]
     pub fn new() -> Self {
         Self {
             hsm_providers: HashMap::new(),
@@ -511,7 +513,6 @@ impl HsmManager {
         self.hsm_providers.insert(tier_key, provider);
         Ok(())
     }
-
     /// Get Routing Metrics
     ///
     /// Returns metrics about HSM provider selection and routing, including
@@ -542,6 +543,7 @@ impl HsmManager {
     ///
     /// * `HsmPerformanceTracker` - Detailed performance metrics
     /// * Provider statistics available through performance tracking
+    #[must_use]
     pub fn get_routing_metrics(&self) -> std::collections::HashMap<String, u64> {
         // Use tokio's block_in_place to get async metrics synchronously
         tokio::task::block_in_place(|| {
@@ -693,14 +695,14 @@ impl HsmManager {
         self.canonical_registry
             .select(SelectionPreference::PreferHardware)
     }
-
     /// Reference to the underlying canonical provider registry.
-    pub fn canonical_registry(&self) -> &HsmProviderRegistry {
+    #[must_use]
+    pub const fn canonical_registry(&self) -> &HsmProviderRegistry {
         &self.canonical_registry
     }
 
     /// Mutable reference to register additional canonical providers.
-    pub fn canonical_registry_mut(&mut self) -> &mut HsmProviderRegistry {
+    pub const fn canonical_registry_mut(&mut self) -> &mut HsmProviderRegistry {
         &mut self.canonical_registry
     }
 }

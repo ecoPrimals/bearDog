@@ -17,11 +17,13 @@ pub struct PortDiscoverer {
 
 impl PortDiscoverer {
     /// Create new port discoverer with configuration
+    #[must_use]
     pub const fn new(config: PortDiscoveryConfig) -> Self {
         Self { config }
     }
 
     /// Create discoverer with default configuration
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self::new(PortDiscoveryConfig::default())
     }
@@ -67,7 +69,7 @@ impl PortDiscoverer {
     /// - Cooperative, not competitive
     async fn discover_from_primals(&self) -> Result<u16, BearDogError> {
         // Collect ports used by discovered primals
-        let used_ports = self.query_primal_ports().await?;
+        let used_ports = self.query_primal_ports();
 
         // Find first available port not in use by other primals
         for candidate in self.config.min_port..=self.config.max_port {
@@ -122,38 +124,25 @@ impl PortDiscoverer {
     /// # Returns
     ///
     /// Set of ports currently in use by primals or system services.
-    async fn query_primal_ports(&self) -> Result<HashSet<u16>, BearDogError> {
+    fn query_primal_ports(&self) -> HashSet<u16> {
         let mut used_ports = HashSet::new();
 
         // Phase 1: Query local system for TCP listeners
         // This catches all local processes including primals
-        match self.query_local_tcp_ports() {
-            Ok(ports) => {
-                tracing::debug!("Discovered {} local TCP ports in use", ports.len());
-                used_ports.extend(ports);
-            }
-            Err(e) => {
-                tracing::warn!("Failed to query local TCP ports: {}", e);
-                // Continue - this is not fatal, we'll use other discovery methods
-            }
-        }
+        let ports = self.query_local_tcp_ports();
+        tracing::debug!("Discovered {} local TCP ports in use", ports.len());
+        used_ports.extend(ports);
 
         // Phase 2: merge ports from mDNS hooks / sidecar announcements (env-driven, no extra deps)
-        match self.query_mdns_primal_ports().await {
-            Ok(ports) => {
-                if !ports.is_empty() {
-                    tracing::debug!(
-                        "Merged {} port(s) from {} / mDNS hook",
-                        ports.len(),
-                        env_keys::ENV_DISCOVERED_PRIMAL_PORTS
-                    );
-                }
-                used_ports.extend(ports);
-            }
-            Err(e) => {
-                tracing::debug!("Primal announcement port discovery: {}", e);
-            }
+        let mdns_ports = self.query_mdns_primal_ports();
+        if !mdns_ports.is_empty() {
+            tracing::debug!(
+                "Merged {} port(s) from {} / mDNS hook",
+                mdns_ports.len(),
+                env_keys::ENV_DISCOVERED_PRIMAL_PORTS
+            );
         }
+        used_ports.extend(mdns_ports);
 
         // Phase 3 & 4: Future implementations
         // Will be added when service registry and P2P discovery are available
@@ -163,7 +152,7 @@ impl PortDiscoverer {
             used_ports.len()
         );
 
-        Ok(used_ports)
+        used_ports
     }
 
     /// Query local TCP ports in use (Phase 1 implementation)
@@ -181,17 +170,17 @@ impl PortDiscoverer {
     /// # Returns
     ///
     /// Set of TCP ports with listeners on localhost.
-    fn query_local_tcp_ports(&self) -> Result<HashSet<u16>, BearDogError> {
+    fn query_local_tcp_ports(&self) -> HashSet<u16> {
         #[cfg(target_os = "linux")]
         {
             // Try efficient /proc parsing first
-            match self.query_linux_tcp_ports() {
-                Ok(ports) if !ports.is_empty() => Ok(ports),
-                _ => {
-                    // Fallback to probe if /proc parsing fails
-                    tracing::debug!("Falling back to port probing");
-                    self.probe_common_ports()
-                }
+            let ports = self.query_linux_tcp_ports();
+            if ports.is_empty() {
+                // Fallback to probe if /proc parsing fails
+                tracing::debug!("Falling back to port probing");
+                self.probe_common_ports()
+            } else {
+                ports
             }
         }
 
@@ -205,7 +194,7 @@ impl PortDiscoverer {
 
     /// Query TCP ports on Linux via /proc/net/tcp
     #[cfg(target_os = "linux")]
-    fn query_linux_tcp_ports(&self) -> Result<HashSet<u16>, BearDogError> {
+    fn query_linux_tcp_ports(&self) -> HashSet<u16> {
         use std::fs::File;
         use std::io::{BufRead, BufReader};
 
@@ -231,7 +220,7 @@ impl PortDiscoverer {
             }
         }
 
-        Ok(ports)
+        ports
     }
 
     /// Parse a line from /proc/net/tcp or /proc/net/tcp6
@@ -258,7 +247,7 @@ impl PortDiscoverer {
     ///
     /// This is less efficient but works on all platforms.
     /// Only probes ports in the configured range.
-    fn probe_common_ports(&self) -> Result<HashSet<u16>, BearDogError> {
+    fn probe_common_ports(&self) -> HashSet<u16> {
         let mut used_ports = HashSet::new();
 
         // Only probe the configured range
@@ -272,7 +261,7 @@ impl PortDiscoverer {
             }
         }
 
-        Ok(used_ports)
+        used_ports
     }
 
     /// Query primal ports via mDNS (Phase 2 implementation)
@@ -281,7 +270,7 @@ impl PortDiscoverer {
     /// deployments often expose discovered ports via environment (sidecar or init) — we merge
     /// `BEARDOG_DISCOVERED_PRIMAL_PORTS` (comma-separated) so port selection avoids conflicts
     /// without extra dependencies.
-    async fn query_mdns_primal_ports(&self) -> Result<HashSet<u16>, BearDogError> {
+    fn query_mdns_primal_ports(&self) -> HashSet<u16> {
         let mut ports = HashSet::new();
         if let Ok(s) = process_env::var(env_keys::ENV_DISCOVERED_PRIMAL_PORTS) {
             for part in s.split(',') {
@@ -304,7 +293,7 @@ impl PortDiscoverer {
                 }
             }
         }
-        Ok(ports)
+        ports
     }
 
     /// Find any available port from system

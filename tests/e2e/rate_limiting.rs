@@ -27,7 +27,7 @@ pub struct RateLimitMetrics {
 }
 
 /// Test basic rate limiting enforcement
-pub async fn test_rate_limit_enforcement() -> Result<RateLimitMetrics, BearDogError> {
+pub fn test_rate_limit_enforcement() -> Result<RateLimitMetrics, BearDogError> {
     info!("🚦 Testing rate limit enforcement");
 
     let mut metrics = RateLimitMetrics::default();
@@ -79,7 +79,7 @@ pub async fn test_rate_limit_enforcement() -> Result<RateLimitMetrics, BearDogEr
 }
 
 /// Test throttling with exponential backoff
-pub async fn test_throttling_backoff() -> Result<RateLimitMetrics, BearDogError> {
+pub fn test_throttling_backoff() -> Result<RateLimitMetrics, BearDogError> {
     info!("⏱️ Testing throttling with backoff");
 
     let mut metrics = RateLimitMetrics::default();
@@ -114,7 +114,7 @@ pub async fn test_throttling_backoff() -> Result<RateLimitMetrics, BearDogError>
 }
 
 /// Test quota management (daily/monthly limits)
-pub async fn test_quota_management() -> Result<RateLimitMetrics, BearDogError> {
+pub fn test_quota_management() -> Result<RateLimitMetrics, BearDogError> {
     info!("📊 Testing quota management");
 
     let mut metrics = RateLimitMetrics::default();
@@ -151,7 +151,7 @@ pub async fn test_quota_management() -> Result<RateLimitMetrics, BearDogError> {
 }
 
 /// Test burst handling with token bucket
-pub async fn test_burst_handling() -> Result<RateLimitMetrics, BearDogError> {
+pub fn test_burst_handling() -> Result<RateLimitMetrics, BearDogError> {
     info!("💥 Testing burst handling (token bucket)");
 
     let mut metrics = RateLimitMetrics::default();
@@ -200,7 +200,7 @@ pub async fn test_burst_handling() -> Result<RateLimitMetrics, BearDogError> {
 }
 
 /// Test per-user rate limiting
-pub async fn test_per_user_rate_limiting() -> Result<RateLimitMetrics, BearDogError> {
+pub fn test_per_user_rate_limiting() -> Result<RateLimitMetrics, BearDogError> {
     info!("👤 Testing per-user rate limiting");
 
     let mut metrics = RateLimitMetrics::default();
@@ -307,17 +307,17 @@ fn simulate_api_request_fast() -> Result<(), BearDogError> {
 }
 
 /// Run comprehensive rate limiting E2E test
-pub async fn run_rate_limiting_test(_config: &E2ETestConfig) -> Result<E2EMetrics, BearDogError> {
+pub fn run_rate_limiting_test(_config: &E2ETestConfig) -> Result<E2EMetrics, BearDogError> {
     info!("Starting Rate Limiting E2E test");
 
     let mut metrics = E2EMetrics::default();
 
     let scenarios: [(&str, RateLimitMetrics); 5] = [
-        ("enforcement", test_rate_limit_enforcement().await?),
-        ("throttling backoff", test_throttling_backoff().await?),
-        ("quota management", test_quota_management().await?),
-        ("burst handling", test_burst_handling().await?),
-        ("per-user limiting", test_per_user_rate_limiting().await?),
+        ("enforcement", test_rate_limit_enforcement()?),
+        ("throttling backoff", test_throttling_backoff()?),
+        ("quota management", test_quota_management()?),
+        ("burst handling", test_burst_handling()?),
+        ("per-user limiting", test_per_user_rate_limiting()?),
     ];
 
     for (name, rate_metrics) in scenarios {
@@ -350,7 +350,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_rate_limit_enforcement_workflow() {
-        let result = test_rate_limit_enforcement().await;
+        let result = test_rate_limit_enforcement();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert!(
@@ -362,7 +362,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_throttling_backoff_workflow() {
-        let result = test_throttling_backoff().await;
+        let result = test_throttling_backoff();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert!(metrics.throttle_delays > 0, "Throttling should occur");
@@ -371,7 +371,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_quota_management_workflow() {
-        let result = test_quota_management().await;
+        let result = test_quota_management();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert!(metrics.quota_exceeded > 0, "Quota should be exceeded");
@@ -380,7 +380,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_burst_handling_workflow() {
-        let result = test_burst_handling().await;
+        let result = test_burst_handling();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert!(metrics.requests_allowed >= 20, "Burst should be handled");
@@ -388,7 +388,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_per_user_rate_limiting_workflow() {
-        let result = test_per_user_rate_limiting().await;
+        let result = test_per_user_rate_limiting();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.requests_sent, 45); // 3 users * 15 requests

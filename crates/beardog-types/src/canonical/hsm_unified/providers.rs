@@ -192,8 +192,8 @@ impl HsmProviderType {
         None
     }
 
-    #[must_use]
     /// Converts to capability type
+    #[must_use]
     pub fn to_capability_type(&self) -> CapabilityType {
         match self {
             Self::Universal {
@@ -204,8 +204,8 @@ impl HsmProviderType {
     }
 
     /// Check if provider supports cloud-based operations
-    #[must_use]
     /// Checks if cloud based
+    #[must_use]
     pub fn is_cloud_based(&self) -> bool {
         match self {
             Self::Cloud { .. } => true,
@@ -217,8 +217,8 @@ impl HsmProviderType {
     }
 
     /// Check if provider is hardware-based
-    #[must_use]
     /// Checks if hardware based
+    #[must_use]
     pub fn is_hardware_based(&self) -> bool {
         match self {
             Self::Hardware { capabilities }
@@ -233,6 +233,7 @@ impl HsmProviderType {
     /// Checks if the HSM provider supports hardware-based cryptographic operations
     ///
     /// Returns `true` if the provider has hardware crypto capabilities, `false` otherwise.
+    #[must_use]
     pub fn supports_hardware_crypto(&self) -> bool {
         match self {
             Self::Hardware { capabilities }
@@ -247,8 +248,8 @@ impl HsmProviderType {
 
 impl HsmProviderConfig {
     /// Create a new modern HSM provider config with capability discovery
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub fn new_with_capability_discovery(
         name: String,
         capability_type: CapabilityType,
@@ -278,8 +279,8 @@ impl HsmProviderConfig {
         false
     }
 
-    #[must_use]
     /// Gets `migration_recommendation`
+    #[must_use]
     pub fn get_migration_recommendation(&self) -> Option<String> {
         if self.uses_deprecated_patterns() {
             Some(format!(

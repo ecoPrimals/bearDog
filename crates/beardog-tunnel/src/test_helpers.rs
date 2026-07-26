@@ -138,7 +138,7 @@ pub mod mocks {
         /// # Errors
         ///
         /// Returns an error if genetic or lineage processing fails.
-        pub async fn contact_exchange(
+        pub fn contact_exchange(
             &self,
             target_peer_id: &str,
             _requester_lineage: &str,
@@ -193,7 +193,6 @@ pub mod mocks {
 
         Arc::new(
             crate::btsp_provider::BeardogBtspProvider::new_for_testing(hsm_manager, genetic_engine)
-                .await
                 .expect("Failed to create test BTSP provider"),
         )
     }

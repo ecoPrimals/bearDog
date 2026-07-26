@@ -140,7 +140,7 @@ async fn test_cleanup_session_key_no_op() {
         .expect("Provider init failed");
 
     // Cleanup should succeed (no-op for BirdSong)
-    let result = provider.cleanup_session_key("test_peer").await;
+    let result = provider.cleanup_session_key("test_peer");
     assert!(result.is_ok(), "Cleanup should succeed");
 }
 
@@ -411,7 +411,6 @@ async fn test_generate_lineage_proof_helper_hashes_path() {
 
     let proof = provider
         .generate_lineage_proof(&["a".to_string(), "b".to_string()])
-        .await
         .expect("lineage proof");
     assert!(proof.starts_with("lineage_proof_"));
     assert!(proof.len() > 32);
@@ -427,7 +426,6 @@ async fn test_find_lineage_path_empty_for_unknown_peer() {
 
     let path = provider
         .find_lineage_path("any-lineage", "not-in-trust-db", 5)
-        .await
         .expect("find_lineage_path");
     assert!(path.is_empty());
 }
@@ -443,13 +441,11 @@ async fn test_encrypt_decrypt_lineage_roundtrip() {
     let key = [9u8; 32];
     let ciphertext = provider
         .encrypt_with_lineage(b"payload-bytes", &key)
-        .await
         .expect("encrypt");
     assert!(ciphertext.len() > 12);
 
     let plaintext = provider
         .decrypt_with_lineage(&ciphertext, &key)
-        .await
         .expect("decrypt");
     assert_eq!(plaintext, b"payload-bytes");
 }
@@ -465,7 +461,6 @@ async fn test_decrypt_lineage_rejects_short_ciphertext() {
     let key = [1u8; 32];
     let err = provider
         .decrypt_with_lineage(b"short", &key)
-        .await
         .expect_err("too short");
     assert!(format!("{err}").to_lowercase().contains("short"));
 }
@@ -478,18 +473,12 @@ async fn test_pin_and_update_peer_trust_promotes_after_three_connections() {
         .await
         .expect("provider");
 
-    let level = provider
-        .pin_peer_key("peer-pin", &[5u8; 32])
-        .await
-        .expect("pin");
+    let level = provider.pin_peer_key("peer-pin", &[5u8; 32]).expect("pin");
     assert_eq!(level, TrustLevel::Tentative);
 
     // Pin starts connection_count at 1; two more updates reach 3 and promote to Trusted.
     for _ in 0..2 {
-        provider
-            .update_peer_trust("peer-pin")
-            .await
-            .expect("update");
+        provider.update_peer_trust("peer-pin").expect("update");
     }
 
     let record = provider.get_peer_trust_record("peer-pin").expect("record");
@@ -500,30 +489,24 @@ async fn test_pin_and_update_peer_trust_promotes_after_three_connections() {
 async fn test_seed_trusted_peer_enables_lineage_path() {
     let hsm = create_test_hsm().await;
     let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
-    let provider = BeardogBtspProvider::new_for_testing(hsm, genetics)
-        .await
-        .expect("provider");
+    let provider = BeardogBtspProvider::new_for_testing(hsm, genetics).expect("provider");
 
     let path = provider
         .find_lineage_path("requester-lineage", "wan-peer-1", 3)
-        .await
         .expect("lineage");
     assert!(path.is_empty(), "unseeded peer should have no lineage path");
 
     provider
         .seed_trusted_peer("wan-peer-1", "family-alpha")
-        .await
         .expect("seed");
 
     let path = provider
         .find_lineage_path("requester-lineage", "wan-peer-1", 3)
-        .await
         .expect("lineage after seed");
     assert_eq!(path.last().map(String::as_str), Some("wan-peer-1"));
 
     let again = provider
         .seed_trusted_peer("wan-peer-1", "family-alpha")
-        .await
         .expect("re-seed");
     assert!(!again, "duplicate seed should be idempotent");
 }
@@ -537,14 +520,9 @@ async fn test_seed_trusted_peers_from_env() {
 
     let hsm = create_test_hsm().await;
     let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
-    let provider = BeardogBtspProvider::new_for_testing(hsm, genetics)
-        .await
-        .expect("provider");
+    let provider = BeardogBtspProvider::new_for_testing(hsm, genetics).expect("provider");
 
-    let seeded = provider
-        .seed_trusted_peers_from_env()
-        .await
-        .expect("env seed");
+    let seeded = provider.seed_trusted_peers_from_env().expect("env seed");
     assert_eq!(seeded, 2);
     assert!(provider.get_peer_trust_record("peer-a").is_some());
     assert!(provider.get_peer_trust_record("peer-b").is_some());

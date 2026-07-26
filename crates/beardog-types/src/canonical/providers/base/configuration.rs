@@ -76,16 +76,6 @@ pub struct ResourceLimits {
     pub max_concurrent_operations: Option<u32>,
 }
 
-/// Logging configuration (DEPRECATED - use canonical)
-///
-/// **MIGRATION**: Use `crate::canonical::config::domains::system::LoggingConfig` instead.
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use crate::canonical::config::domains::system::LoggingConfig instead"
-)]
-pub type LoggingConfiguration = crate::canonical::config::domains::system::LoggingConfig;
 
 /// Security configuration for providers
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -49,6 +49,7 @@ pub enum PhysicalChannelType {
 
 impl PhysicalChannelType {
     /// Get the trust level for this physical channel
+    #[must_use]
     pub const fn trust_level(self) -> TrustLevel {
         match self {
             Self::HardwareKey => TrustLevel::Maximum,
@@ -58,11 +59,13 @@ impl PhysicalChannelType {
     }
 
     /// Check if this channel requires out-of-band verification
+    #[must_use]
     pub const fn requires_oob(self) -> bool {
         matches!(self, Self::QrCodeWithOob)
     }
 
     /// Get human-readable description of this channel
+    #[must_use]
     pub const fn description(self) -> &'static str {
         match self {
             Self::HardwareKey => "Hardware Security Key (SoloKey/YubiKey)",
@@ -73,6 +76,7 @@ impl PhysicalChannelType {
     }
 
     /// Whether this channel supports hardware attestation
+    #[must_use]
     pub const fn supports_attestation(self) -> bool {
         matches!(self, Self::HardwareKey | Self::Nfc)
     }
@@ -100,6 +104,7 @@ pub enum TrustLevel {
 
 impl TrustLevel {
     /// Get human-readable description of trust level
+    #[must_use]
     pub const fn description(self) -> &'static str {
         match self {
             Self::Low => "Low (⭐)",
@@ -112,11 +117,13 @@ impl TrustLevel {
     /// Check if this trust level is sufficient for genesis ceremony
     ///
     /// Minimum trust level for genesis is Medium (⭐⭐⭐).
+    #[must_use]
     pub fn is_sufficient_for_genesis(self) -> bool {
         self >= Self::Medium
     }
 
     /// Get star rating as string
+    #[must_use]
     pub const fn stars(self) -> &'static str {
         match self {
             Self::Low => "⭐",
@@ -127,6 +134,7 @@ impl TrustLevel {
     }
 
     /// Check if this trust level meets or exceeds the threshold
+    #[must_use]
     pub fn meets_threshold(self, threshold: Self) -> bool {
         self >= threshold
     }

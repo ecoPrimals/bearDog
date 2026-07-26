@@ -29,7 +29,7 @@ pub struct HsmE2EMetrics {
 }
 
 /// Test complete HSM workflow with multiple providers
-pub async fn test_hsm_multi_provider_workflow() -> Result<HsmE2EMetrics, BearDogError> {
+pub fn test_hsm_multi_provider_workflow() -> Result<HsmE2EMetrics, BearDogError> {
     info!("Testing HSM multi-provider workflow");
 
     let mut metrics = HsmE2EMetrics::default();
@@ -45,7 +45,7 @@ pub async fn test_hsm_multi_provider_workflow() -> Result<HsmE2EMetrics, BearDog
 }
 
 /// Test HSM failover and fallback scenarios
-pub async fn test_hsm_failover_scenario() -> Result<HsmE2EMetrics, BearDogError> {
+pub fn test_hsm_failover_scenario() -> Result<HsmE2EMetrics, BearDogError> {
     info!("Testing HSM failover scenario");
 
     let mut metrics = HsmE2EMetrics::default();
@@ -58,7 +58,7 @@ pub async fn test_hsm_failover_scenario() -> Result<HsmE2EMetrics, BearDogError>
 }
 
 /// Test HSM key rotation workflow
-pub async fn test_hsm_key_rotation() -> Result<HsmE2EMetrics, BearDogError> {
+pub fn test_hsm_key_rotation() -> Result<HsmE2EMetrics, BearDogError> {
     info!("Testing HSM key rotation");
 
     let mut metrics = HsmE2EMetrics::default();
@@ -86,7 +86,7 @@ pub async fn test_hsm_key_rotation() -> Result<HsmE2EMetrics, BearDogError> {
 }
 
 /// Test HSM performance under load
-pub async fn test_hsm_load_performance() -> Result<HsmE2EMetrics, BearDogError> {
+pub fn test_hsm_load_performance() -> Result<HsmE2EMetrics, BearDogError> {
     info!("Testing HSM load performance");
 
     let mut metrics = HsmE2EMetrics::default();
@@ -114,7 +114,7 @@ pub async fn test_hsm_load_performance() -> Result<HsmE2EMetrics, BearDogError> 
 }
 
 /// Test HSM attestation workflow
-pub async fn test_hsm_attestation() -> Result<HsmE2EMetrics, BearDogError> {
+pub fn test_hsm_attestation() -> Result<HsmE2EMetrics, BearDogError> {
     info!("Testing HSM attestation");
 
     let mut metrics = HsmE2EMetrics::default();
@@ -133,7 +133,7 @@ pub async fn test_hsm_attestation() -> Result<HsmE2EMetrics, BearDogError> {
 }
 
 /// Run comprehensive HSM operations E2E test
-pub async fn run_hsm_operations_test(_config: &E2ETestConfig) -> Result<E2EMetrics, BearDogError> {
+pub fn run_hsm_operations_test(_config: &E2ETestConfig) -> Result<E2EMetrics, BearDogError> {
     info!("Starting HSM Operations E2E test");
 
     let mut metrics = E2EMetrics::default();
@@ -141,12 +141,12 @@ pub async fn run_hsm_operations_test(_config: &E2ETestConfig) -> Result<E2EMetri
     let scenarios: [(&str, HsmE2EMetrics); 5] = [
         (
             "multi-provider workflow",
-            test_hsm_multi_provider_workflow().await?,
+            test_hsm_multi_provider_workflow()?,
         ),
-        ("failover scenario", test_hsm_failover_scenario().await?),
-        ("key rotation", test_hsm_key_rotation().await?),
-        ("load performance", test_hsm_load_performance().await?),
-        ("attestation", test_hsm_attestation().await?),
+        ("failover scenario", test_hsm_failover_scenario()?),
+        ("key rotation", test_hsm_key_rotation()?),
+        ("load performance", test_hsm_load_performance()?),
+        ("attestation", test_hsm_attestation()?),
     ];
 
     for (name, hsm_metrics) in scenarios {
@@ -181,7 +181,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_hsm_multi_provider() {
-        let result = test_hsm_multi_provider_workflow().await;
+        let result = test_hsm_multi_provider_workflow();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert!(metrics.key_generations > 0);
@@ -189,7 +189,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_hsm_failover() {
-        let result = test_hsm_failover_scenario().await;
+        let result = test_hsm_failover_scenario();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert!(metrics.key_generations > 0);
@@ -197,7 +197,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_hsm_rotation() {
-        let result = test_hsm_key_rotation().await;
+        let result = test_hsm_key_rotation();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.key_generations, 2); // Initial + rotated
@@ -206,7 +206,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_hsm_load() {
-        let result = test_hsm_load_performance().await;
+        let result = test_hsm_load_performance();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.key_generations, 10);
@@ -216,7 +216,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_hsm_attestation_workflow() {
-        let result = test_hsm_attestation().await;
+        let result = test_hsm_attestation();
         assert!(result.is_ok());
         let metrics = result.unwrap();
         assert_eq!(metrics.key_generations, 1);
@@ -238,7 +238,7 @@ mod tests {
 
         let mut detected_capabilities = Vec::new();
         for hsm in &discovered_hsms {
-            let caps = detect_hsm_capabilities(hsm).await;
+            let caps = detect_hsm_capabilities(hsm);
             detected_capabilities.push(((*hsm).to_string(), caps));
         }
         assert!(
@@ -282,17 +282,17 @@ mod tests {
     async fn test_e2e_hsm_003_tpm_integration() {
         let mut ctx = HsmTestContext::new();
 
-        let tpm_available = detect_tpm_availability().await;
+        let tpm_available = detect_tpm_availability();
         if !tpm_available {
             ctx.initialize_hsm("software").unwrap();
             return;
         }
 
         let sensitive_data = b"secret data for TPM E2E test";
-        let sealed = tpm_seal(sensitive_data).await.unwrap();
-        let unsealed = tpm_unseal(&sealed).await.unwrap();
+        let sealed = tpm_seal(sensitive_data).unwrap();
+        let unsealed = tpm_unseal(&sealed).unwrap();
         assert_eq!(unsealed, sensitive_data);
-        tpm_attest().await.unwrap();
+        tpm_attest().unwrap();
     }
 
     #[tokio::test]
@@ -421,7 +421,7 @@ impl HsmTestContext {
     }
 }
 
-async fn detect_hsm_capabilities(_hsm: &str) -> Vec<String> {
+fn detect_hsm_capabilities(_hsm: &str) -> Vec<String> {
     vec![
         "key_generation".to_string(),
         "signing".to_string(),
@@ -463,21 +463,21 @@ struct HsmMetrics {
     keys_generated: u64,
 }
 
-async fn detect_tpm_availability() -> bool {
+fn detect_tpm_availability() -> bool {
     beardog_errors::process_env::var("TPM_AVAILABLE")
         .map(|v| v == "true")
         .unwrap_or(false)
 }
 
-async fn tpm_seal(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+fn tpm_seal(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
     Ok(data.to_vec())
 }
 
-async fn tpm_unseal(sealed_data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+fn tpm_unseal(sealed_data: &[u8]) -> Result<Vec<u8>, BearDogError> {
     Ok(sealed_data.to_vec())
 }
 
-async fn tpm_attest() -> Result<(), BearDogError> {
+fn tpm_attest() -> Result<(), BearDogError> {
     Ok(())
 }
 

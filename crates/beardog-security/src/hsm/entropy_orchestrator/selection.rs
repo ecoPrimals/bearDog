@@ -17,7 +17,7 @@ use tracing::debug;
 
 impl HsmEntropyOrchestrator {
     /// Select best available HSM based on request and config
-    pub(super) async fn select_best_hsm(
+    pub(super) fn select_best_hsm(
         &self,
         request: &EntropyGenerationRequest,
     ) -> Result<HsmSource, BearDogError> {
@@ -58,7 +58,7 @@ impl HsmEntropyOrchestrator {
     }
 
     /// Find device by ID
-    pub(super) fn find_device_by_id(&self, device_id: &str) -> Option<HsmSource> {
+    pub(super) const fn find_device_by_id(&self, device_id: &str) -> Option<HsmSource> {
         #[cfg(feature = "fido2")]
         {
             if device_id.starts_with("fido2_")

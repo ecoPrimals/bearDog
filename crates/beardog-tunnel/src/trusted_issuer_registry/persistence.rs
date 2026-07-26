@@ -11,22 +11,23 @@ use super::types::{IssuerInfo, PersistedIssuer, PersistedRegistry, TrustMethod};
 impl TrustedIssuerRegistry {
     /// Default on-disk path for the trusted issuer registry.
     ///
-    /// Uses `$XDG_DATA_HOME/beardog/trusted_issuers.json` via [`directories::ProjectDirs`],
+    /// Uses `$XDG_DATA_HOME/beardog/trusted_issuers.json` via [`etcetera::choose_app_strategy`],
     /// falling back to `$HOME/.local/share/beardog/trusted_issuers.json`.
     #[must_use]
     pub fn save_path() -> PathBuf {
-        directories::ProjectDirs::from("org", "beardog", "beardog").map_or_else(
-            || {
-                directories::BaseDirs::new().map_or_else(
-                    || PathBuf::from(".local/share/beardog/trusted_issuers.json"),
-                    |d| {
-                        d.home_dir()
-                            .join(".local/share/beardog/trusted_issuers.json")
-                    },
-                )
-            },
-            |dirs| dirs.data_dir().join("trusted_issuers.json"),
-        )
+        use etcetera::app_strategy::{AppStrategy, AppStrategyArgs, choose_app_strategy};
+
+        choose_app_strategy(AppStrategyArgs {
+            top_level_domain: "org".to_string(),
+            author: "beardog".to_string(),
+            app_name: "beardog".to_string(),
+        })
+        .map(|dirs| dirs.data_dir().join("trusted_issuers.json"))
+        .unwrap_or_else(|_| {
+            etcetera::home_dir()
+                .map(|home| home.join(".local/share/beardog/trusted_issuers.json"))
+                .unwrap_or_else(|_| PathBuf::from(".local/share/beardog/trusted_issuers.json"))
+        })
     }
 
     /// Serialize the registry to JSON at `path`.

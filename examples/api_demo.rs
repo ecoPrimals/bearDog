@@ -24,20 +24,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("==================");
 
     println!("[SEARCH] Security Event Analysis:");
-    demo_security_analysis().await?;
+    demo_security_analysis()?;
 
     println!("🧠 ML Threat Prediction:");
-    demo_ml_predictions().await?;
+    demo_ml_predictions()?;
 
     println!("[LIGHTNING] Performance Features:");
-    demo_performance().await?;
+    demo_performance()?;
 
     println!("[OK] API Demo completed!");
 
     Ok(())
 }
 
-async fn demo_security_analysis() -> Result<(), Box<dyn std::error::Error>> {
+fn demo_security_analysis() -> Result<(), Box<dyn std::error::Error>> {
     let event = json!({
         "event_type": "login",
         "source_ip": "203.0.113.42",
@@ -51,7 +51,7 @@ async fn demo_security_analysis() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn demo_ml_predictions() -> Result<(), Box<dyn std::error::Error>> {
+fn demo_ml_predictions() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Model: login_anomaly_v1");
     println!("   Confidence: 0.87");
     println!("   Prediction: SUSPICIOUS_LOGIN");
@@ -59,7 +59,7 @@ async fn demo_ml_predictions() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn demo_performance() -> Result<(), Box<dyn std::error::Error>> {
+fn demo_performance() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Cache hit rate: 84.7%");
     println!("   Rate limiting: Active");
     println!("   Response time: 18ms avg");

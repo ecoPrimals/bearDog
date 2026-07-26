@@ -33,17 +33,20 @@ impl PrimalName {
     }
 
     /// Primal name (lowercase)
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.0
     }
 
     /// Human-readable label (generic title-case; no special-casing by ecosystem member name).
+    #[must_use]
     pub fn display_name(&self) -> String {
         title_case_slug(&self.0)
     }
 
     /// Default genome bundle targets from manifest data, optionally overridden by
     /// `ECOPRIMALS_GENOME_TARGETS` (comma-separated slugs).
+    #[must_use]
     pub fn genome_bundle_defaults() -> Vec<Self> {
         if let Ok(s) = beardog_errors::process_env::var("ECOPRIMALS_GENOME_TARGETS") {
             let parsed: Vec<Self> = s
@@ -58,11 +61,13 @@ impl PrimalName {
     }
 
     /// Backwards-compatible alias for [`Self::genome_bundle_defaults`].
+    #[must_use]
     pub fn well_known() -> Vec<Self> {
         Self::genome_bundle_defaults()
     }
 
     /// Parse a genome artifact slug: lowercase letters, digits, `-`, `_`.
+    #[must_use]
     pub fn parse_name(s: &str) -> Option<Self> {
         let s = s.trim();
         if s.is_empty() {
@@ -175,6 +180,7 @@ pub struct DeploymentProgress {
 
 impl DeploymentProgress {
     /// Create new progress entry
+    #[must_use]
     pub const fn new(
         primal: PrimalName,
         status: DeploymentStatus,
@@ -190,6 +196,7 @@ impl DeploymentProgress {
     }
 
     /// Create pending entry
+    #[must_use]
     pub fn pending(primal: PrimalName) -> Self {
         Self::new(
             primal,
@@ -219,7 +226,8 @@ pub struct DeploymentReport {
 
 impl DeploymentReport {
     /// Check if all deployments succeeded
-    pub fn is_success(&self) -> bool {
+    #[must_use]
+    pub const fn is_success(&self) -> bool {
         self.failures.is_empty()
     }
 
@@ -228,6 +236,7 @@ impl DeploymentReport {
         clippy::cast_precision_loss,
         reason = "Deployment success ratio; acceptable f64 precision for percentage"
     )]
+    #[must_use]
     pub fn success_rate(&self) -> f64 {
         if self.total == 0 {
             0.0

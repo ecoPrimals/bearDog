@@ -48,7 +48,7 @@ impl JsonRpcRequest {
 
     /// Returns `true` when this is a notification (no `id` field).
     #[must_use]
-    pub fn is_notification(&self) -> bool {
+    pub const fn is_notification(&self) -> bool {
         self.id.is_none()
     }
 }
@@ -71,7 +71,7 @@ pub struct JsonRpcResponse {
 impl JsonRpcResponse {
     /// Construct a success response
     #[must_use]
-    pub fn success(id: Value, result: Value) -> Self {
+    pub const fn success(id: Value, result: Value) -> Self {
         Self {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             result: Some(result),

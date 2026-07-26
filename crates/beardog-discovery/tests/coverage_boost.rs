@@ -202,7 +202,6 @@ reliability = 0.25
     );
     let env_map_clone = env_map.clone();
     let d = CapabilityDiscovery::from_config(&path)
-        .await
         .expect("from_config")
         .with_environment_discovery(move |cap, ttl| {
             discovered_services_from_environment_with(
@@ -265,8 +264,8 @@ reliability = 0.25
     )
     .expect("parse");
     let info = cfg_off.primal_info();
-    let ann = Announcer::new(cfg_off.primal_self.announcement.clone(), info);
-    ann.start().await.expect("noop announce");
+    let ann = Announcer::new(cfg_off.primal_self.announcement, info);
+    ann.start().expect("noop announce");
 
     let cfg_on: DiscoveryConfig = toml::from_str(
         r#"
@@ -317,12 +316,12 @@ reliability = 0.25
         cfg_on.primal_info(),
     )
     .with_service_registry_url(Some("http://127.0.0.1:8500".to_string()));
-    ann2.start().await.expect("paths");
+    ann2.start().expect("paths");
 }
 
 #[tokio::test]
 async fn service_registry_discover_and_refresh() {
-    let r = ServiceRegistryDiscovery::new().await.expect("new");
+    let r = ServiceRegistryDiscovery::new().expect("new");
     let err = r.discover("any-cap").await.expect_err("no providers");
     assert!(matches!(err, DiscoveryError::BackendUnavailable { .. }));
     let e2 = r.refresh_providers().await;
@@ -492,5 +491,5 @@ reliability = 0.25
     .expect("parse announcer cfg");
     let ann = Announcer::new(cfg.primal_self.announcement.clone(), cfg.primal_info())
         .with_service_registry_url(None);
-    ann.start().await.expect("registry url unset is ok");
+    ann.start().expect("registry url unset is ok");
 }

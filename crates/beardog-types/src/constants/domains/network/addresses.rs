@@ -11,11 +11,8 @@
 //!    ports from the configuration hierarchy (see [`super::defaults`] and `beardog-config`).
 //! 3. **Config file / merged config** — `BEARDOG_CONFIG` and layered config sources.
 //! 4. **Platform / compiled config defaults** — defaults shipped with the config crate.
-//! 5. **Compile-time string fallbacks** — deprecated constants such as [`DEFAULT_METRICS_BIND`] and
-//!    [`DEFAULT_HEALTH_BIND`] are *tier-5* last resorts for legacy call sites only. They must not be
-//!    treated as primary sources; prefer env vars and config. Use [`default_metrics_bind_from_env`],
-//!    [`default_health_bind_from_env`], or the config APIs first; reference these constants only when
-//!    every other tier is unavailable (e.g. static data in old binaries).
+//! 5. **Compile-time string fallbacks** — prefer env vars and config. Use [`default_metrics_bind_from_env`],
+//!    [`default_health_bind_from_env`], or the config APIs first.
 
 use beardog_config::env_keys;
 
@@ -143,38 +140,6 @@ pub fn multicast_address_from_env() -> String {
     multicast_address()
 }
 
-// Legacy const exports for backward compatibility (deprecated)
-#[deprecated(
-    since = "3.1.0",
-    note = "Use default_bind_address() for environment-aware configuration"
-)]
-/// Deprecated: use [`default_bind_address`].
-pub const DEFAULT_BIND_ADDRESS: &str = WILDCARD_IPV4;
-#[deprecated(
-    since = "3.1.0",
-    note = "Use default_metrics_bind() for environment-aware configuration"
-)]
-/// Deprecated: use [`default_metrics_bind`].
-///
-/// **Tier-5 fallback only** — literal `0.0.0.0:9190` when no env, config, or higher tier applies.
-/// Primary sources: `BEARDOG_METRICS_BIND`, then address/port from env and [`super::defaults`].
-pub const DEFAULT_METRICS_BIND: &str = "0.0.0.0:9190";
-#[deprecated(
-    since = "3.1.0",
-    note = "Use default_health_bind() for environment-aware configuration"
-)]
-/// Deprecated: use [`default_health_bind`].
-///
-/// **Tier-5 fallback only** — literal `0.0.0.0:8081` when no env, config, or higher tier applies.
-/// Primary sources: `BEARDOG_HEALTH_BIND`, then address/port from env and [`super::defaults`].
-pub const DEFAULT_HEALTH_BIND: &str = "0.0.0.0:8081";
-#[deprecated(
-    since = "3.1.0",
-    note = "Use multicast_address() for environment-aware configuration"
-)]
-/// Deprecated: use [`multicast_address`].
-pub const MULTICAST_ADDRESS: &str = "224.0.0.251";
-
 /// Broadcast address (universal constant)
 /// Configuration constant: broadcast address
 pub const BROADCAST_ADDRESS: &str = "255.255.255.255";
@@ -191,6 +156,7 @@ pub const FALLBACK_DNS_SERVERS: &[&str] = &["8.8.8.8", "8.8.4.4", "1.1.1.1"];
 ///
 /// Reads from `BEARDOG_DNS_SERVERS` environment variable (comma-separated).
 /// Falls back to well-known public DNS servers if not set.
+#[must_use]
 pub fn dns_servers() -> Vec<String> {
     FALLBACK_DNS_SERVERS
         .iter()
@@ -199,6 +165,7 @@ pub fn dns_servers() -> Vec<String> {
 }
 
 /// DNS servers from `BEARDOG_DNS_SERVERS`, falling back to [`dns_servers`].
+#[must_use]
 pub fn dns_servers_from_env() -> Vec<String> {
     std::env::var(env_keys::ENV_DNS_SERVERS).map_or_else(
         |_| dns_servers(),
@@ -224,18 +191,6 @@ mod tests {
         assert_eq!(LOCALHOST_IPV6, DEFAULT_LOCALHOST_IPV6_STR);
         assert_eq!(WILDCARD_IPV4, DEFAULT_WILDCARD_IPV4_STR);
         assert_eq!(WILDCARD_IPV6, DEFAULT_WILDCARD_IPV6_STR);
-    }
-
-    #[test]
-    #[expect(
-        deprecated,
-        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
-    )]
-    fn deprecated_bind_and_metrics_constants_exist() {
-        assert_eq!(DEFAULT_BIND_ADDRESS, WILDCARD_IPV4);
-        assert!(DEFAULT_METRICS_BIND.contains(':'));
-        assert!(DEFAULT_HEALTH_BIND.contains(':'));
-        assert_eq!(MULTICAST_ADDRESS, "224.0.0.251");
     }
 
     #[test]

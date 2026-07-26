@@ -176,7 +176,7 @@ fn check_android_keystore_strongbox() -> Result<bool, BearDogError> {
 }
 
 /// Returns true if running on Android platform
-fn is_android_platform() -> bool {
+const fn is_android_platform() -> bool {
     cfg!(target_os = "android")
 }
 
@@ -203,8 +203,8 @@ fn get_device_manufacturer() -> Result<String, BearDogError> {
 fn get_device_manufacturer() -> Result<String, BearDogError> {
     Ok("Unknown".to_string())
 }
-
 /// Detects Pixel generation from model string
+#[must_use]
 pub fn detect_pixel_generation(model: &str) -> u32 {
     if model.contains("Pixel 8") {
         8
@@ -240,7 +240,7 @@ mod tests {
     }
 
     #[test]
-    fn test_strongbox_detection_non_android() {
+    fn test_strongbox_detection_non_android() -> Result<(), BearDogError> {
         let result = detect_strongbox_implementation();
         assert!(result.is_ok());
 
@@ -254,6 +254,7 @@ mod tests {
                 panic!("Expected Generic implementation on non-Android platform");
             }
         }
+        Ok(())
     }
 
     #[test]
@@ -272,63 +273,54 @@ mod tests {
     }
 
     #[test]
-    fn test_device_model_query() {
+    fn test_device_model_query() -> Result<(), BearDogError> {
         let result = get_device_model();
         assert!(result.is_ok());
         assert!(!result?.is_empty());
+        Ok(())
     }
 
     #[test]
-    fn test_device_manufacturer_query() {
+    fn test_device_manufacturer_query() -> Result<(), BearDogError> {
         let result = get_device_manufacturer();
         assert!(result.is_ok());
         assert!(!result?.is_empty());
+        Ok(())
     }
 
     #[test]
-    fn test_device_info_detection() {
+    fn test_device_info_detection() -> Result<(), BearDogError> {
         let result = detect_device_info();
         assert!(result.is_ok());
 
         let info = result?;
         assert!(!info.manufacturer.is_empty());
         assert!(!info.model.is_empty());
+        Ok(())
     }
 
     #[test]
-    fn test_google_strongbox_detection() {
-        let device_info = AndroidDeviceInfo {
-            manufacturer: "Google".to_string(),
-            model: "Pixel 8".to_string(),
-            android_version: "14".to_string(),
-            strongbox_version: Some("1.0".to_string()),
-            titan_m_version: Some("1.0".to_string()),
-            security_patch_level: "2024-01-01".to_string(),
-            verified_boot_state: VerifiedBootState::Verified,
-        };
+    fn test_google_strongbox_detection() -> Result<(), BearDogError> {
+        let mut device_info = AndroidDeviceInfo::new()?;
+        device_info.manufacturer = "Google".to_string();
+        device_info.model = "Pixel 8".to_string();
 
         let result = detect_google_strongbox(&device_info);
         assert!(result.is_ok());
 
         match result? {
-            StrongBoxImplementation::TitanM { .. } => {
-                // Expected for Pixel with Titan M
-            }
+            StrongBoxImplementation::TitanM { .. } => {}
             _ => panic!("Expected TitanM implementation"),
         }
+        Ok(())
     }
 
     #[test]
-    fn test_qualcomm_strongbox_detection() {
-        let device_info = AndroidDeviceInfo {
-            manufacturer: "Qualcomm".to_string(),
-            model: "Test Device".to_string(),
-            android_version: "13".to_string(),
-            strongbox_version: Some("1.0".to_string()),
-            titan_m_version: None,
-            security_patch_level: "2024-01-01".to_string(),
-            verified_boot_state: VerifiedBootState::Verified,
-        };
+    fn test_qualcomm_strongbox_detection() -> Result<(), BearDogError> {
+        let mut device_info = AndroidDeviceInfo::new()?;
+        device_info.manufacturer = "Qualcomm".to_string();
+        device_info.model = "Test Device".to_string();
+        device_info.titan_m_version = None;
 
         let result = detect_qualcomm_strongbox(&device_info);
         assert!(result.is_ok());
@@ -341,5 +333,6 @@ mod tests {
             }
             _ => panic!("Expected QualcommSpu implementation"),
         }
+        Ok(())
     }
 }

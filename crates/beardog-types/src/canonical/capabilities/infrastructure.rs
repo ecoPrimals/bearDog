@@ -222,7 +222,7 @@ impl SystemCapabilities {
 
     /// Check if the system meets minimum security requirements
     #[must_use]
-    pub fn meets_security_requirements(&self) -> bool {
+    pub const fn meets_security_requirements(&self) -> bool {
         self.security_capabilities.rbac
             && self.security_capabilities.audit_logging
             && !self.security_capabilities.secure_protocols.is_empty()

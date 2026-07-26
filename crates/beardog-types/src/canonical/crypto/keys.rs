@@ -126,8 +126,8 @@ pub struct CryptoKeyPair {
 
 impl CryptoKeyPair {
     /// Create a new key pair
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub const fn new(
         public_key: Vec<u8>,
         private_key: Vec<u8>,

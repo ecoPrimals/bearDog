@@ -35,6 +35,7 @@ mod overrides;
 mod tests;
 
 use crate::{BearDogConfig, ConfigError, ConfigResult};
+use etcetera::base_strategy::BaseStrategy;
 use overrides::{apply_cli_overrides, apply_env_overrides};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -94,6 +95,7 @@ pub struct ConfigHierarchy {
 
 impl ConfigHierarchy {
     /// Create a new hierarchy with fallback defaults
+    #[must_use]
     pub fn new() -> Self {
         Self {
             base: BearDogConfig::default(),
@@ -104,6 +106,7 @@ impl ConfigHierarchy {
     }
 
     /// Apply platform-specific defaults
+    #[must_use]
     pub const fn with_platform_defaults(self) -> Self {
         self
     }
@@ -140,6 +143,7 @@ impl ConfigHierarchy {
     }
 
     /// Load from environment variables
+    #[must_use]
     pub fn with_env_vars(mut self) -> Self {
         for (key, value) in std::env::vars() {
             if key.starts_with("BEARDOG_") {
@@ -150,12 +154,14 @@ impl ConfigHierarchy {
     }
 
     /// Add CLI argument override
+    #[must_use]
     pub fn with_cli_arg(mut self, key: String, value: String) -> Self {
         self.cli_overrides.insert(key, value);
         self
     }
 
     /// Add multiple CLI arguments
+    #[must_use]
     pub fn with_cli_args(mut self, args: HashMap<String, String>) -> Self {
         self.cli_overrides.extend(args);
         self
@@ -198,7 +204,7 @@ impl ConfigHierarchy {
             PathBuf::from("/etc/beardog/config.toml"),
         ];
 
-        if let Some(base_dirs) = directories::BaseDirs::new() {
+        if let Ok(base_dirs) = etcetera::choose_base_strategy() {
             locations.push(base_dirs.config_dir().join("beardog/config.toml"));
         }
 

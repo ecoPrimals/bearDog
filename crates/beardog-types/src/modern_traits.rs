@@ -266,7 +266,7 @@ impl TrustLevel {
     /// assert_eq!(clamped.value(), 1.0);
     /// ```
     #[must_use]
-    pub fn new(value: f64) -> Self {
+    pub const fn new(value: f64) -> Self {
         Self(value.clamp(0.0, 1.0))
     }
 

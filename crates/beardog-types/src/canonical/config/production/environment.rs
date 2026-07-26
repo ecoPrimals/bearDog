@@ -109,8 +109,8 @@ impl Default for EnvironmentConfig {
 
 impl EnvironmentConfig {
     /// Create a new environment configuration
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub fn new(environment_type: EnvironmentType) -> Self {
         Self {
             environment_type,
@@ -121,16 +121,16 @@ impl EnvironmentConfig {
     }
 
     /// Add an environment override
-    #[must_use]
     /// Creates instance with override
+    #[must_use]
     pub fn with_override(mut self, key: &str, value: &str) -> Self {
         self.overrides.insert(key.to_string(), value.to_string());
         self
     }
 
     /// Set secrets provider
-    #[must_use]
     /// Creates instance with secrets provider
+    #[must_use]
     pub fn with_secrets_provider(mut self, provider: ModernSecretsConfig) -> Self {
         self.secrets = provider;
         self
@@ -237,6 +237,7 @@ impl EnvironmentValidation {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             validate_on_startup: true,
@@ -256,6 +257,7 @@ impl EnvironmentValidation {
     ///
     /// # Environment Variables
     /// - `BEARDOG_ENV_VALIDATION_INTERVAL_SECS`: Validation interval (default: 300)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -423,8 +425,8 @@ impl ModernSecretsConfig {
         }
     }
 
-    #[must_use]
     /// Converts to capability type
+    #[must_use]
     pub fn to_capability_type(&self) -> crate::canonical::capabilities::CapabilityType {
         use crate::canonical::capabilities::CapabilityType;
         // This logic is now handled by required_capabilities

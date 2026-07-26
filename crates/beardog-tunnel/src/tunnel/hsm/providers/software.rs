@@ -54,6 +54,7 @@ pub use beardog_types::hsm::providers::CryptoProviderType;
 
 /// Parse a provider type string into a `CryptoProviderType`
 // Helper function for legacy code migration
+#[must_use]
 pub fn parse_provider_type(s: &str) -> CryptoProviderType {
     match s {
         "rust-crypto" | "RustCrypto" => CryptoProviderType::Software,
@@ -72,7 +73,7 @@ impl SoftwareUniversalProvider {
         // Create real crypto provider based on type
         let crypto_impl: Arc<CryptoProviderBackend> = match &provider_type {
             CryptoProviderType::Software => {
-                let provider = SoftwareHsmCryptoProvider::new().await?;
+                let provider = SoftwareHsmCryptoProvider::new()?;
                 Arc::new(CryptoProviderBackend::RustCrypto(provider))
             }
             CryptoProviderType::OpenSsl => {
@@ -80,12 +81,12 @@ impl SoftwareUniversalProvider {
                 tracing::warn!(
                     "OpenSSL backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)"
                 );
-                let provider = SoftwareHsmCryptoProvider::new().await?;
+                let provider = SoftwareHsmCryptoProvider::new()?;
                 Arc::new(CryptoProviderBackend::RustCrypto(provider))
             }
             CryptoProviderType::Ring => {
                 tracing::warn!("Ring backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)");
-                let provider = SoftwareHsmCryptoProvider::new().await?;
+                let provider = SoftwareHsmCryptoProvider::new()?;
                 Arc::new(CryptoProviderBackend::RustCrypto(provider))
             }
             CryptoProviderType::Hardware => {
@@ -114,7 +115,7 @@ impl SoftwareUniversalProvider {
         // Initialize metadata
         provider.initialize_metadata();
 
-        let capabilities = provider.discover_capabilities().await?;
+        let capabilities = provider.discover_capabilities()?;
         provider.capabilities = Some(capabilities);
 
         info!("✅ Software HSM provider initialized with real crypto");
@@ -134,7 +135,7 @@ impl SoftwareUniversalProvider {
     }
 
     /// Discover software HSM capabilities
-    async fn discover_capabilities(&self) -> Result<SoftwareCapabilities, BearDogError> {
+    fn discover_capabilities(&self) -> Result<SoftwareCapabilities, BearDogError> {
         let supported_algorithms = vec![
             "AES-256-GCM".to_string(),
             "ChaCha20-Poly1305".to_string(),
@@ -151,13 +152,13 @@ impl SoftwareUniversalProvider {
             key_derivation_supported: true,
         })
     }
-
     /// Get security level (software is level 1)
+    #[must_use]
     pub const fn get_security_level(&self) -> u8 {
         1 // Software HSM
     }
-
     /// Get vendor information
+    #[must_use]
     pub fn get_vendor_info(&self) -> VendorInfo {
         VendorInfo {
             name: "BearDog".to_string(),
@@ -166,13 +167,13 @@ impl SoftwareUniversalProvider {
             metadata: self.metadata.clone(),
         }
     }
-
     /// Get crypto provider type
+    #[must_use]
     pub const fn crypto_provider(&self) -> &CryptoProviderType {
         &self.crypto_provider
     }
-
     /// Get capabilities
+    #[must_use]
     pub const fn capabilities(&self) -> Option<&SoftwareCapabilities> {
         self.capabilities.as_ref()
     }

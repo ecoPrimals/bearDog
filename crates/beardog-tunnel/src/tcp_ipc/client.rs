@@ -39,6 +39,7 @@ pub struct TcpIpcClient {
 
 impl TcpIpcClient {
     /// Create new TCP client
+    #[must_use]
     pub const fn new(server_addr: SocketAddr) -> Self {
         Self { server_addr }
     }
@@ -116,7 +117,7 @@ pub struct BtspTcpClient {
 impl BtspTcpClient {
     /// Create a new BTSP TCP client.
     #[must_use]
-    pub fn new(server_addr: SocketAddr, family_seed: FamilySeed) -> Self {
+    pub const fn new(server_addr: SocketAddr, family_seed: FamilySeed) -> Self {
         Self {
             server_addr,
             family_seed,

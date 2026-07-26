@@ -48,7 +48,7 @@ impl KeyStore {
         }
     }
 
-    pub(crate) fn storage_dir(&self) -> Option<&PathBuf> {
+    pub(crate) const fn storage_dir(&self) -> Option<&PathBuf> {
         self.storage_dir.as_ref()
     }
 

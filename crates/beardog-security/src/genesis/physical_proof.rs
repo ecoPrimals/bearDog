@@ -55,16 +55,19 @@ impl PhysicalProximityVerifier {
     /// # Arguments
     ///
     /// * `minimum_trust` - Minimum trust level required for genesis
+    #[must_use]
     pub const fn new(minimum_trust: TrustLevel) -> Self {
         Self { minimum_trust }
     }
 
     /// Create verifier with default settings (Medium trust minimum)
+    #[must_use]
     pub const fn default_genesis_config() -> Self {
         Self::new(TrustLevel::Medium)
     }
 
     /// Create verifier requiring maximum trust (Hardware key only)
+    #[must_use]
     pub const fn maximum_security() -> Self {
         Self::new(TrustLevel::Maximum)
     }
@@ -146,11 +149,13 @@ impl PhysicalProximityVerifier {
     }
 
     /// Check if a channel is acceptable for genesis
+    #[must_use]
     pub fn is_channel_acceptable(&self, channel: PhysicalChannelType) -> bool {
         self.verify(channel).is_ok()
     }
 
     /// Get minimum trust level required
+    #[must_use]
     pub const fn minimum_trust_level(&self) -> TrustLevel {
         self.minimum_trust
     }

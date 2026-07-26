@@ -73,11 +73,10 @@ impl MethodHandler for CapabilitiesHandler {
             }
             "discover_capabilities" => self
                 .handle_discover_capabilities()
-                .await
                 .map_err(HandlerError::from),
-            "identity.get" => self.handle_identity_get().await.map_err(HandlerError::from),
+            "identity.get" => self.handle_identity_get().map_err(HandlerError::from),
             "identity" | "whoami" | "get_identity" => {
-                self.handle_identity().await.map_err(HandlerError::from)
+                self.handle_identity().map_err(HandlerError::from)
             }
             _ => Err(HandlerError::MethodNotFound(method.to_owned())),
         }
@@ -98,7 +97,7 @@ impl CapabilitiesHandler {
     }
 
     /// Tests / DI: explicit primal name hints (no `PRIMAL_NAME` env mutation).
-    pub fn with_hints(
+    pub const fn with_hints(
         identity: Arc<PrimalIdentity>,
         primal_hints: IdentityHints,
         registry: Arc<HandlerRegistry>,
@@ -438,7 +437,7 @@ impl CapabilitiesHandler {
         clippy::items_after_statements,
         reason = "CAPABILITIES const placed near its usage for readability"
     )]
-    async fn handle_discover_capabilities(&self) -> Result<serde_json::Value, String> {
+    fn handle_discover_capabilities(&self) -> Result<serde_json::Value, String> {
         info!("discover_capabilities requested");
 
         const CAPABILITIES: &[&str] = &[
@@ -497,7 +496,7 @@ impl CapabilitiesHandler {
     /// Handle `identity.get` — Wire Standard Level 2 identity endpoint.
     ///
     /// Returns `{primal, version, domain, license}` per `CAPABILITY_WIRE_STANDARD.md` §4.
-    async fn handle_identity_get(&self) -> Result<serde_json::Value, String> {
+    fn handle_identity_get(&self) -> Result<serde_json::Value, String> {
         info!("identity.get requested (Wire Standard L2)");
 
         Ok(serde_json::json!({
@@ -512,7 +511,7 @@ impl CapabilitiesHandler {
     ///
     /// Returns the primal's identity including family and node IDs,
     /// plus an encryption tag for discovery/federation.
-    async fn handle_identity(&self) -> Result<serde_json::Value, String> {
+    fn handle_identity(&self) -> Result<serde_json::Value, String> {
         let family_id = self.identity.family_id();
         let node_id = self.identity.node_id();
         let encryption_tag = self.identity.encryption_tag();

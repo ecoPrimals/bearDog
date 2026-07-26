@@ -50,6 +50,7 @@ impl TestNetworkConfig {
     ///
     /// Uses localhost with standard ports, TLS disabled.
     /// Suitable for unit and integration tests.
+    #[must_use]
     pub fn local() -> RuntimeNetworkConfig {
         RuntimeNetworkConfig {
             discovery_endpoint: "http://127.0.0.1:8080/discover".to_string(),
@@ -72,6 +73,7 @@ impl TestNetworkConfig {
     /// Mock external service configuration
     ///
     /// Uses mock server addresses for testing external integrations.
+    #[must_use]
     pub fn mock_external() -> RuntimeNetworkConfig {
         RuntimeNetworkConfig {
             discovery_endpoint: "http://mock.example.com:8080/discover".to_string(),
@@ -95,6 +97,7 @@ impl TestNetworkConfig {
     ///
     /// Mimics production settings for integration tests.
     /// Uses TLS and production-like timeouts.
+    #[must_use]
     pub fn production_like() -> RuntimeNetworkConfig {
         RuntimeNetworkConfig {
             discovery_endpoint: "https://api.test.example.com/discover".to_string(),
@@ -118,6 +121,7 @@ impl TestNetworkConfig {
     ///
     /// Uses port 0 to let the OS assign random available ports.
     /// Ideal for parallel test execution without port conflicts.
+    #[must_use]
     pub fn ephemeral() -> RuntimeNetworkConfig {
         RuntimeNetworkConfig {
             discovery_endpoint: "http://127.0.0.1:0/discover".to_string(),
@@ -145,6 +149,7 @@ impl TestHsmConfig {
     /// Software HSM for testing
     ///
     /// Uses in-memory software HSM, no hardware required.
+    #[must_use]
     pub fn software() -> RuntimeHsmConfig {
         RuntimeHsmConfig {
             pkcs11_library_path: "/usr/lib/softhsm/libsofthsm2.so".to_string(),
@@ -157,6 +162,7 @@ impl TestHsmConfig {
     /// Mock hardware HSM for testing
     ///
     /// Simulates hardware HSM without actual hardware.
+    #[must_use]
     pub fn mock_hardware() -> RuntimeHsmConfig {
         RuntimeHsmConfig {
             pkcs11_library_path: "/tmp/mock-pkcs11.so".to_string(),
@@ -174,6 +180,7 @@ impl TestRuntimeConfig {
     /// Standard test configuration
     ///
     /// Combines local network with software HSM.
+    #[must_use]
     pub fn standard() -> RuntimeConfig {
         RuntimeConfig {
             network: TestNetworkConfig::local(),
@@ -185,6 +192,7 @@ impl TestRuntimeConfig {
     /// Production-like test configuration
     ///
     /// Mimics production setup for integration testing.
+    #[must_use]
     pub fn production_like() -> RuntimeConfig {
         RuntimeConfig {
             network: TestNetworkConfig::production_like(),
@@ -196,6 +204,7 @@ impl TestRuntimeConfig {
     /// Ephemeral test configuration
     ///
     /// Uses random ports for parallel test execution.
+    #[must_use]
     pub fn ephemeral() -> RuntimeConfig {
         RuntimeConfig {
             network: TestNetworkConfig::ephemeral(),
@@ -210,51 +219,61 @@ impl TestRuntimeConfig {
 /// Get test API URL
 ///
 /// Returns a consistent test API URL for all tests.
+#[must_use]
 pub fn test_api_url() -> String {
     "http://127.0.0.1:8080".to_string()
 }
 
 /// Get test API host
+#[must_use]
 pub fn test_api_host() -> String {
     "127.0.0.1".to_string()
 }
 
 /// Get test API port
+#[must_use]
 pub const fn test_api_port() -> u16 {
     8080
 }
 
 /// Get test metrics URL
+#[must_use]
 pub fn test_metrics_url() -> String {
     "http://127.0.0.1:9090/metrics".to_string()
 }
 
 /// Get test health URL
+#[must_use]
 pub fn test_health_url() -> String {
     "http://127.0.0.1:8081/health".to_string()
 }
 
 /// Get test WebSocket URL
+#[must_use]
 pub fn test_ws_url() -> String {
     "ws://127.0.0.1:3000".to_string()
 }
 
 /// Get test gRPC endpoint
+#[must_use]
 pub fn test_grpc_endpoint() -> String {
     "127.0.0.1:50051".to_string()
 }
 
 /// Get test discovery endpoint
+#[must_use]
 pub fn test_discovery_endpoint() -> String {
     "http://127.0.0.1:8080/discover".to_string()
 }
 
 /// Get test database URL
+#[must_use]
 pub fn test_database_url() -> String {
     "postgresql://test:test@127.0.0.1:5432/beardog_test".to_string()
 }
 
 /// Get test Redis URL
+#[must_use]
 pub fn test_redis_url() -> String {
     "redis://127.0.0.1:6379/0".to_string()
 }

@@ -59,6 +59,7 @@ pub struct AndroidKeyParams {
 
 impl AndroidKeyParams {
     /// Create new Android key parameters with defaults
+    #[must_use]
     pub fn new() -> Self {
         Self {
             algorithm: "Ed25519".to_string(),
@@ -72,15 +73,15 @@ impl AndroidKeyParams {
             attestation_challenge: None,
         }
     }
-
     /// Set the cryptographic algorithm
+    #[must_use]
     pub fn set_algorithm(mut self, algorithm: &str) -> Self {
         self.algorithm = algorithm.to_string();
         self
     }
 
     /// Set the key size
-    pub fn set_key_size(&mut self, size: u32) {
+    pub const fn set_key_size(&mut self, size: u32) {
         self.key_size = size;
     }
 
@@ -90,17 +91,17 @@ impl AndroidKeyParams {
     }
 
     /// Set `StrongBox` requirement
-    pub fn set_strongbox_required(&mut self, required: bool) {
+    pub const fn set_strongbox_required(&mut self, required: bool) {
         self.strongbox_required = required;
     }
 
     /// Set user authentication requirement
-    pub fn set_user_authentication_required(&mut self, required: bool) {
+    pub const fn set_user_authentication_required(&mut self, required: bool) {
         self.user_authentication_required = required;
     }
 
     /// Set key validity end time
-    pub fn set_key_validity_end(&mut self, end: chrono::DateTime<chrono::Utc>) {
+    pub const fn set_key_validity_end(&mut self, end: chrono::DateTime<chrono::Utc>) {
         self.key_validity_end = Some(end);
     }
 
@@ -179,17 +180,13 @@ pub struct AndroidDeviceCapabilities {
 }
 
 // Re-export transport traits and stubs from the dedicated module.
-#[cfg(target_os = "android")]
-pub use super::android_transports::AndroidJniHealthMetricsTransport;
-#[cfg(target_os = "android")]
-pub use super::android_transports::{AndroidJniAttestationTransport, AndroidJniKeystoreTransport};
 pub use super::android_transports::{
+    AndroidJniAttestationTransport, AndroidJniHealthMetricsTransport, AndroidJniKeystoreTransport,
     AttestationTransport, AttestationTransportBackend, HealthMetricsTransport,
     HealthMetricsTransportBackend, KeystoreTransport, KeystoreTransportBackend,
-    MemoryKeystoreTransport, StubHealthMetricsTransport,
+    MemoryKeystoreTransport, StubAttestationTransport, StubHealthMetricsTransport,
+    StubKeystoreTransport,
 };
-#[cfg(not(target_os = "android"))]
-pub use super::android_transports::{StubAttestationTransport, StubKeystoreTransport};
 
 // --- Android keystore (logic + delegation) -------------------------------------------------------
 
@@ -208,7 +205,7 @@ impl AndroidKeystore {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub fn new(
+    pub const fn new(
         config: AndroidHsmConfig,
         transport: Arc<KeystoreTransportBackend>,
     ) -> Result<Self, BearDogError> {
@@ -235,24 +232,22 @@ impl AndroidKeystore {
     pub fn with_platform_keystore_transport(
         config: AndroidHsmConfig,
     ) -> Result<Self, BearDogError> {
-        #[cfg(target_os = "android")]
-        {
-            Self::new(
-                config,
-                Arc::new(KeystoreTransportBackend::AndroidJni(
-                    AndroidJniKeystoreTransport::default(),
-                )),
-            )
-        }
-        #[cfg(not(target_os = "android"))]
-        {
-            Self::new(
-                config,
+        let transport = if cfg!(target_os = "android") {
+            if cfg!(test) {
                 Arc::new(KeystoreTransportBackend::Stub(
                     StubKeystoreTransport::default(),
-                )),
-            )
-        }
+                ))
+            } else {
+                Arc::new(KeystoreTransportBackend::AndroidJni(
+                    AndroidJniKeystoreTransport::default(),
+                ))
+            }
+        } else {
+            Arc::new(KeystoreTransportBackend::Stub(
+                StubKeystoreTransport::default(),
+            ))
+        };
+        Self::new(config, transport)
     }
 
     /// Non-Android only: explicit stub transport for unit tests and CI.
@@ -407,8 +402,8 @@ impl AndroidKeystore {
         tracing::debug!("Generated attestation challenge of {} bytes", size);
         Ok(challenge)
     }
-
     /// Check if `StrongBox` is available on this device
+    #[must_use]
     pub const fn is_strongbox_available(&self) -> bool {
         self.capabilities.strongbox_available
     }
@@ -417,7 +412,7 @@ impl AndroidKeystore {
     ///
     /// # Errors
     /// Returns an error if RNG fails
-    pub async fn generate_random_bytes(&self, count: usize) -> Result<Vec<u8>, BearDogError> {
+    pub fn generate_random_bytes(&self, count: usize) -> Result<Vec<u8>, BearDogError> {
         use rand::RngCore;
 
         tracing::debug!(
@@ -502,7 +497,8 @@ pub struct AndroidAttestationService {
 
 impl AndroidAttestationService {
     /// Create new attestation service with a transport (JNI on device).
-    pub fn new(
+    #[must_use]
+    pub const fn new(
         attestation_level: AttestationLevel,
         transport: Arc<AttestationTransportBackend>,
     ) -> Self {
@@ -512,29 +508,22 @@ impl AndroidAttestationService {
             transport,
         }
     }
-
     /// Attestation transport for the current platform (stub on hosts, JNI adapter on Android).
+    #[must_use]
     pub fn with_platform_attestation_transport(attestation_level: AttestationLevel) -> Self {
-        #[cfg(target_os = "android")]
-        {
-            Self::new(
-                attestation_level,
-                Arc::new(AttestationTransportBackend::AndroidJni(
-                    AndroidJniAttestationTransport::default(),
-                )),
-            )
-        }
-        #[cfg(not(target_os = "android"))]
-        {
-            Self::new(
-                attestation_level,
-                Arc::new(AttestationTransportBackend::Stub(StubAttestationTransport)),
-            )
-        }
+        let transport = if cfg!(target_os = "android") {
+            Arc::new(AttestationTransportBackend::AndroidJni(
+                AndroidJniAttestationTransport::default(),
+            ))
+        } else {
+            Arc::new(AttestationTransportBackend::Stub(StubAttestationTransport))
+        };
+        Self::new(attestation_level, transport)
     }
 
     /// Non-Android only: explicit stub for tests.
     #[cfg(not(target_os = "android"))]
+    #[must_use]
     pub fn with_stub_transport(attestation_level: AttestationLevel) -> Self {
         Self::with_platform_attestation_transport(attestation_level)
     }
@@ -572,23 +561,22 @@ pub struct AndroidHealthMonitor {
 
 impl AndroidHealthMonitor {
     /// Create a monitor using stub metrics (non-Android) or `AndroidJniHealthMetricsTransport` on Android.
+    #[must_use]
     pub fn new() -> Self {
-        #[cfg(target_os = "android")]
-        {
-            Self::with_transport(Arc::new(HealthMetricsTransportBackend::AndroidJni(
+        let transport = if cfg!(target_os = "android") {
+            Arc::new(HealthMetricsTransportBackend::AndroidJni(
                 AndroidJniHealthMetricsTransport::new(),
-            )))
-        }
-        #[cfg(not(target_os = "android"))]
-        {
-            Self::with_transport(Arc::new(HealthMetricsTransportBackend::Stub(
+            ))
+        } else {
+            Arc::new(HealthMetricsTransportBackend::Stub(
                 StubHealthMetricsTransport::default(),
-            )))
-        }
+            ))
+        };
+        Self::with_transport(transport)
     }
-
     /// Full control (e.g. inject stub in tests on Android).
-    pub fn with_transport(metrics_transport: Arc<HealthMetricsTransportBackend>) -> Self {
+    #[must_use]
+    pub const fn with_transport(metrics_transport: Arc<HealthMetricsTransportBackend>) -> Self {
         Self {
             check_interval_seconds: 60,
             metrics_transport,

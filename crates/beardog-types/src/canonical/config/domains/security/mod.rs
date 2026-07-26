@@ -429,6 +429,7 @@ impl ConsolidatedSecurityConfiguration {
         clippy::cast_possible_truncation,
         reason = "default pool size fits u32 for login attempt limits"
     )]
+    #[must_use]
     pub fn development() -> Self {
         let mut config = Self::default();
 
@@ -450,6 +451,7 @@ impl ConsolidatedSecurityConfiguration {
     }
 
     /// Create a production-hardened configuration
+    #[must_use]
     pub fn production() -> Self {
         let mut config = Self::default();
 

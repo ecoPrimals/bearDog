@@ -53,6 +53,7 @@ pub enum IpcEndpoint {
 
 impl IpcEndpoint {
     /// Get display string for logging
+    #[must_use]
     pub fn display(&self) -> String {
         match self {
             Self::UnixSocket(path) => format!("unix:{}", path.display()),
@@ -61,6 +62,7 @@ impl IpcEndpoint {
     }
 
     /// Check if this is the optimal transport (Unix socket)
+    #[must_use]
     pub const fn is_optimal(&self) -> bool {
         matches!(self, Self::UnixSocket(_))
     }

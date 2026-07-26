@@ -222,12 +222,10 @@ async fn test_derive_lineage_key_deterministic() -> Result<(), BearDogError> {
 
     // Note: Keys will be different each time due to fresh entropy mixing
     // But the lineage component is deterministic
-    let key1 = provider
-        .derive_lineage_key("beardog-family", "peer-family-alpha", b"session-123")
-        .await?;
-    let key2 = provider
-        .derive_lineage_key("beardog-family", "peer-family-alpha", b"session-123")
-        .await?;
+    let key1 =
+        provider.derive_lineage_key("beardog-family", "peer-family-alpha", b"session-123")?;
+    let key2 =
+        provider.derive_lineage_key("beardog-family", "peer-family-alpha", b"session-123")?;
 
     // Keys are different due to entropy, but both are 32 bytes
     assert_eq!(key1.len(), 32, "Key should be 32 bytes");
@@ -245,12 +243,8 @@ async fn test_derive_lineage_key_symmetric() -> Result<(), BearDogError> {
     let provider = GeneticCryptoProvider::new_with_lineage(lineage_seed)?;
 
     // Keys should be independent of order (symmetric)
-    let key1 = provider
-        .derive_lineage_key("beardog-family", "peer-family-alpha", b"test")
-        .await?;
-    let key2 = provider
-        .derive_lineage_key("peer-family-alpha", "beardog-family", b"test")
-        .await?;
+    let key1 = provider.derive_lineage_key("beardog-family", "peer-family-alpha", b"test")?;
+    let key2 = provider.derive_lineage_key("peer-family-alpha", "beardog-family", b"test")?;
 
     // Both are valid 32-byte keys (order doesn't matter)
     assert_eq!(key1.len(), 32);
@@ -263,9 +257,7 @@ async fn test_derive_lineage_key_symmetric() -> Result<(), BearDogError> {
 async fn test_derive_lineage_key_without_seed_fails() -> Result<(), BearDogError> {
     let provider = GeneticCryptoProvider::new()?;
 
-    let result = provider
-        .derive_lineage_key("beardog-family", "peer-family-alpha", b"session")
-        .await;
+    let result = provider.derive_lineage_key("beardog-family", "peer-family-alpha", b"session");
 
     assert!(
         result.is_err(),
@@ -280,7 +272,7 @@ async fn test_mix_entropy_tier1_only() -> Result<(), BearDogError> {
     let provider = GeneticCryptoProvider::new()?;
 
     // Tier 1 only (machine entropy)
-    let (mixed, quality) = provider.mix_entropy(None, None, None).await?;
+    let (mixed, quality) = provider.mix_entropy(None, None, None)?;
 
     assert_eq!(mixed.len(), 32, "Mixed entropy should be 32 bytes");
     assert!(
@@ -297,9 +289,7 @@ async fn test_mix_entropy_tier3_human() -> Result<(), BearDogError> {
     let provider = GeneticCryptoProvider::new()?;
 
     let human_entropy = b"human_lived_experience_entropy_data".to_vec();
-    let (mixed, quality) = provider
-        .mix_entropy(Some(&human_entropy), None, None)
-        .await?;
+    let (mixed, quality) = provider.mix_entropy(Some(&human_entropy), None, None)?;
 
     assert_eq!(mixed.len(), 32, "Mixed entropy should be 32 bytes");
     assert!(
@@ -319,9 +309,7 @@ async fn test_mix_entropy_all_tiers() -> Result<(), BearDogError> {
     let tier2 = b"human_supervised_machine_data".to_vec();
     let tier1 = b"machine_generated_entropy_data".to_vec();
 
-    let (mixed, quality) = provider
-        .mix_entropy(Some(&tier3), Some(&tier2), Some(&tier1))
-        .await?;
+    let (mixed, quality) = provider.mix_entropy(Some(&tier3), Some(&tier2), Some(&tier1))?;
 
     assert_eq!(mixed.len(), 32, "Mixed entropy should be 32 bytes");
     assert!(
@@ -338,7 +326,7 @@ async fn test_mix_entropy_short_input_fails() -> Result<(), BearDogError> {
     let provider = GeneticCryptoProvider::new()?;
 
     let short_entropy = b"short".to_vec(); // Too short (< 16 bytes)
-    let result = provider.mix_entropy(Some(&short_entropy), None, None).await;
+    let result = provider.mix_entropy(Some(&short_entropy), None, None);
 
     assert!(result.is_err(), "Short entropy should fail validation");
 
@@ -358,13 +346,11 @@ async fn test_verify_lineage_valid() -> Result<(), BearDogError> {
     hasher.update(b"GENETIC_LINEAGE_PROOF_V1");
     let valid_proof = hasher.finalize();
 
-    let is_valid = provider
-        .verify_lineage(
-            "beardog-family",
-            "peer-family-alpha",
-            valid_proof.as_bytes(),
-        )
-        .await?;
+    let is_valid = provider.verify_lineage(
+        "beardog-family",
+        "peer-family-alpha",
+        valid_proof.as_bytes(),
+    )?;
 
     assert!(is_valid, "Valid lineage proof should verify");
 
@@ -378,9 +364,8 @@ async fn test_verify_lineage_invalid() -> Result<(), BearDogError> {
 
     let invalid_proof = b"this_is_not_a_valid_lineage_proof_just_random_bytes!".to_vec();
 
-    let is_valid = provider
-        .verify_lineage("beardog-family", "peer-family-alpha", &invalid_proof)
-        .await?;
+    let is_valid =
+        provider.verify_lineage("beardog-family", "peer-family-alpha", &invalid_proof)?;
 
     assert!(!is_valid, "Invalid lineage proof should not verify");
 
@@ -392,9 +377,7 @@ async fn test_verify_lineage_without_seed_fails() -> Result<(), BearDogError> {
     let provider = GeneticCryptoProvider::new()?;
 
     let proof = b"some_proof_bytes_here".to_vec();
-    let result = provider
-        .verify_lineage("beardog-family", "peer-family-alpha", &proof)
-        .await;
+    let result = provider.verify_lineage("beardog-family", "peer-family-alpha", &proof);
 
     assert!(
         result.is_err(),

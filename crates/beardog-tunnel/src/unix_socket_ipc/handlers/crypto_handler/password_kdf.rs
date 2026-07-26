@@ -13,7 +13,7 @@ use tracing::info;
 /// # Errors
 ///
 /// Returns an error if hashing fails.
-pub async fn route(
+pub fn route(
     method: &str,
     params: Option<&serde_json::Value>,
 ) -> Result<Option<serde_json::Value>, super::super::HandlerError> {
@@ -78,9 +78,7 @@ mod tests {
     #[tokio::test]
     async fn route_argon2id_hash_returns_hash() {
         let params = json!({ "password": "test-password-kdf-argon2" });
-        let out = route("crypto.argon2id_hash", Some(&params))
-            .await
-            .expect("route");
+        let out = route("crypto.argon2id_hash", Some(&params)).expect("route");
         let v = out.expect("some result");
         assert!(v.get("hash").and_then(|x| x.as_str()).is_some());
         assert_eq!(
@@ -93,7 +91,6 @@ mod tests {
     async fn route_argon2id_verify_roundtrip() {
         let hash_params = json!({ "password": "verify-me-password" });
         let hashed = route("crypto.argon2id_hash", Some(&hash_params))
-            .await
             .expect("route")
             .expect("hash result");
         let hash_str = hashed
@@ -107,7 +104,6 @@ mod tests {
             "hash": hash_str,
         });
         let verified = route("crypto.argon2id_verify", Some(&verify_params))
-            .await
             .expect("route")
             .expect("verify result");
         assert_eq!(verified.get("valid").and_then(|x| x.as_bool()), Some(true));
@@ -123,7 +119,6 @@ mod tests {
             "output_length": 32
         });
         let out = route("crypto.pbkdf2_sha256", Some(&params))
-            .await
             .expect("route")
             .expect("pbkdf2");
         assert!(out.get("derived_key").and_then(|x| x.as_str()).is_some());
@@ -134,7 +129,6 @@ mod tests {
         let pw = BASE64.encode(b"bcrypt-test-password");
         let hash_params = json!({ "password": pw, "cost": 4 });
         let hashed = route("crypto.bcrypt_hash", Some(&hash_params))
-            .await
             .expect("route")
             .expect("bcrypt hash");
         let hash_str = hashed
@@ -145,7 +139,6 @@ mod tests {
 
         let verify_params = json!({ "password": pw, "hash": hash_str });
         let ok = route("crypto.bcrypt_verify", Some(&verify_params))
-            .await
             .expect("route")
             .expect("bcrypt verify");
         assert_eq!(ok.get("valid").and_then(|x| x.as_bool()), Some(true));
@@ -162,7 +155,6 @@ mod tests {
             "key_length": 32
         });
         let out = route("crypto.scrypt", Some(&params))
-            .await
             .expect("route")
             .expect("scrypt");
         assert!(out.get("derived_key").and_then(|x| x.as_str()).is_some());
@@ -170,9 +162,7 @@ mod tests {
 
     #[tokio::test]
     async fn route_missing_params_errors() {
-        let err = route("crypto.argon2id_hash", None)
-            .await
-            .expect_err("missing params");
+        let err = route("crypto.argon2id_hash", None).expect_err("missing params");
         assert!(err.contains("Missing parameters"));
     }
 
@@ -181,7 +171,6 @@ mod tests {
         let params = json!({ "password": "x" });
         assert!(
             route("crypto.not_a_real_method", Some(&params))
-                .await
                 .expect("route")
                 .is_none()
         );
@@ -191,7 +180,6 @@ mod tests {
     async fn route_argon2id_verify_rejects_wrong_password() {
         let hash_params = json!({ "password": "correct-horse-battery" });
         let hashed = route("crypto.argon2id_hash", Some(&hash_params))
-            .await
             .expect("route")
             .expect("hash");
         let hash_str = hashed
@@ -204,7 +192,6 @@ mod tests {
             "hash": hash_str,
         });
         let verified = route("crypto.argon2id_verify", Some(&verify_params))
-            .await
             .expect("route")
             .expect("verify");
         assert_eq!(verified.get("valid").and_then(|x| x.as_bool()), Some(false));
@@ -218,9 +205,7 @@ mod tests {
             "iterations": 1000,
             "output_length": 16
         });
-        let err = route("crypto.pbkdf2_sha256", Some(&params))
-            .await
-            .expect_err("invalid salt");
+        let err = route("crypto.pbkdf2_sha256", Some(&params)).expect_err("invalid salt");
         assert!(!err.is_empty());
     }
 
@@ -229,7 +214,6 @@ mod tests {
         let pw = BASE64.encode(b"bcrypt-route-wrong-pw");
         let hash_params = json!({ "password": pw, "cost": 4 });
         let hashed = route("crypto.bcrypt_hash", Some(&hash_params))
-            .await
             .expect("route")
             .expect("bcrypt hash");
         let hash_str = hashed
@@ -242,7 +226,6 @@ mod tests {
             "hash": hash_str,
         });
         let out = route("crypto.bcrypt_verify", Some(&verify_params))
-            .await
             .expect("route")
             .expect("verify");
         assert_eq!(out.get("valid").and_then(|x| x.as_bool()), Some(false));
@@ -251,9 +234,7 @@ mod tests {
     #[tokio::test]
     async fn route_scrypt_missing_required_fields_errors() {
         let params = json!({ "password": BASE64.encode(b"x") });
-        let err = route("crypto.scrypt", Some(&params))
-            .await
-            .expect_err("scrypt params");
+        let err = route("crypto.scrypt", Some(&params)).expect_err("scrypt params");
         assert!(!err.is_empty());
     }
 
@@ -263,9 +244,7 @@ mod tests {
             "password": BASE64.encode(b"pw"),
             "cost": 3
         });
-        let err = route("crypto.bcrypt_hash", Some(&params))
-            .await
-            .expect_err("bcrypt cost");
+        let err = route("crypto.bcrypt_hash", Some(&params)).expect_err("bcrypt cost");
         assert!(!err.is_empty());
     }
 }

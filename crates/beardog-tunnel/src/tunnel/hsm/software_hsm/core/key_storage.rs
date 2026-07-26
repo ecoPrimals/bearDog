@@ -26,7 +26,7 @@ impl RustSoftwareHsm {
             .generate_key_material(&request.key_type)
             .await?;
 
-        let protected_bytes = self.memory_protector.protect(&key_material).await?;
+        let protected_bytes = self.memory_protector.protect(&key_material)?;
         let buf = Bytes::from(protected_bytes);
         let encrypted_data = buf.to_vec();
         let protected_material = ProtectedMemory::from_bytes(buf, true);
@@ -82,22 +82,19 @@ impl RustSoftwareHsm {
 
         let mut root_key_material = self
             .memory_protector
-            .unprotect(root_key.key_material.data())
-            .await?;
+            .unprotect(root_key.key_material.data())?;
 
         let derived_material = self
             .crypto_provider
             .derive_key(&root_key_material, derivation_data)
             .await?;
 
-        let protected_bytes = self.memory_protector.protect(&derived_material).await?;
+        let protected_bytes = self.memory_protector.protect(&derived_material)?;
         let buf = Bytes::from(protected_bytes);
         let encrypted_derived_data = buf.to_vec();
         let protected_derived = ProtectedMemory::from_bytes(buf, true);
 
-        self.memory_protector
-            .zeroize(&mut root_key_material)
-            .await?;
+        self.memory_protector.zeroize(&mut root_key_material)?;
 
         let derived_key_id = format!(
             "{}_{}",
@@ -157,7 +154,7 @@ impl RustSoftwareHsm {
         dead_code,
         reason = "reserved for key-type mapping when wiring algorithm metadata"
     )]
-    pub(super) fn algorithm_to_key_type(algorithm: HsmAlgorithm) -> KeyType {
+    pub(super) const fn algorithm_to_key_type(algorithm: HsmAlgorithm) -> KeyType {
         match algorithm {
             HsmAlgorithm::Aes256Gcm | HsmAlgorithm::HmacSha256 => KeyType::Aes,
             HsmAlgorithm::ChaCha20Poly1305 => KeyType::ChaCha20,

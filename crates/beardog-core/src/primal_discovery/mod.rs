@@ -176,7 +176,7 @@ impl PrimalDiscovery {
     ///
     /// Returns an error if discovery fails.
     #[cfg(test)]
-    pub async fn discover_with_env(
+    pub fn discover_with_env(
         &mut self,
         query: DiscoveryQuery,
         env_vars: HashMap<String, String>,

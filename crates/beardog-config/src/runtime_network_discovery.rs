@@ -61,11 +61,13 @@ pub struct NetworkDiscovery {
 
 impl NetworkDiscovery {
     /// Create new network discovery with preferences
+    #[must_use]
     pub const fn new(preferences: NetworkPreferences) -> Self {
         Self { preferences }
     }
 
     /// Create with default preferences
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self::new(NetworkPreferences::default())
     }
@@ -84,11 +86,11 @@ impl NetworkDiscovery {
         info!("🔍 Discovering runtime network capabilities...");
 
         // Discover local IP addresses
-        let local_addresses = self.discover_local_addresses()?;
+        let local_addresses = self.discover_local_addresses();
         debug!("Found {} local addresses", local_addresses.len());
 
         // Discover available ports
-        let available_ports = self.discover_available_ports()?;
+        let available_ports = self.discover_available_ports();
         debug!("Found {} available ports", available_ports.len());
 
         Ok(NetworkCapabilities {
@@ -99,7 +101,7 @@ impl NetworkDiscovery {
     }
 
     /// Discover local IP addresses (no hardcoding)
-    fn discover_local_addresses(&self) -> Result<Vec<IpAddr>> {
+    fn discover_local_addresses(&self) -> Vec<IpAddr> {
         let mut addresses = Vec::new();
 
         // Try to discover real network interfaces
@@ -135,7 +137,7 @@ impl NetworkDiscovery {
             addresses.insert(0, addr); // Prioritize config
         }
 
-        Ok(addresses)
+        addresses
     }
 
     /// Get primary network interface IP (best effort)
@@ -166,7 +168,7 @@ impl NetworkDiscovery {
     }
 
     /// Discover available ports in configured range
-    fn discover_available_ports(&self) -> Result<Vec<u16>> {
+    fn discover_available_ports(&self) -> Vec<u16> {
         let mut available = Vec::new();
         let (start, end) = self.preferences.port_range;
 
@@ -175,7 +177,7 @@ impl NetworkDiscovery {
             if self.is_port_available(preferred) {
                 available.push(preferred);
                 info!("✅ Preferred port {} is available", preferred);
-                return Ok(available); // Use preferred if available
+                return available; // Use preferred if available
             }
             warn!(
                 "⚠️  Preferred port {} not available, searching range",
@@ -202,7 +204,7 @@ impl NetworkDiscovery {
             available.push(0);
         }
 
-        Ok(available)
+        available
     }
 
     /// Check if a port is available for binding

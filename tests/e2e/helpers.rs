@@ -103,7 +103,7 @@ where
 }
 
 /// Simulate API request
-pub async fn simulate_api_request(
+pub fn simulate_api_request(
     endpoint: &str,
     _payload: Option<&str>,
 ) -> Result<SimulatedResponse, BearDogError> {
@@ -127,7 +127,7 @@ pub struct SimulatedResponse {
 }
 
 /// Verify data integrity
-pub async fn verify_data_integrity(_data_id: &str) -> Result<bool, BearDogError> {
+pub fn verify_data_integrity(_data_id: &str) -> Result<bool, BearDogError> {
     info!("Verifying data integrity");
 
     // Simulate data verification (instant in tests)
@@ -136,10 +136,7 @@ pub async fn verify_data_integrity(_data_id: &str) -> Result<bool, BearDogError>
 }
 
 /// Create test data
-pub async fn create_test_data(
-    _data_type: &str,
-    _count: usize,
-) -> Result<Vec<String>, BearDogError> {
+pub fn create_test_data(_data_type: &str, _count: usize) -> Result<Vec<String>, BearDogError> {
     info!("Creating test data");
 
     // Simulate test data creation
@@ -153,7 +150,7 @@ pub async fn create_test_data(
 }
 
 /// Cleanup test data
-pub async fn cleanup_test_data(_data_ids: &[String]) -> Result<(), BearDogError> {
+pub fn cleanup_test_data(_data_ids: &[String]) -> Result<(), BearDogError> {
     info!("Cleaning up test data");
 
     // Simulate cleanup (instant in tests)
@@ -206,7 +203,7 @@ pub fn calculate_peak_latency(latencies: &[f64]) -> f64 {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Initialize a real `BearDog` Core instance for E2E testing
-pub async fn initialize_real_beardog_core() -> Result<Arc<BearDogCore>, BearDogError> {
+pub fn initialize_real_beardog_core() -> Result<Arc<BearDogCore>, BearDogError> {
     info!("🚀 Initializing real BearDog Core for E2E testing");
 
     let config = UnifiedBearDogConfig::development();
@@ -231,7 +228,7 @@ pub async fn verify_real_health_status(
 }
 
 /// Test real configuration loading
-pub async fn test_real_configuration_load() -> Result<UnifiedBearDogConfig, BearDogError> {
+pub fn test_real_configuration_load() -> Result<UnifiedBearDogConfig, BearDogError> {
     info!("📋 Testing real configuration loading");
 
     let config = UnifiedBearDogConfig::development();
@@ -338,7 +335,7 @@ pub async fn test_real_concurrent_access(core: &Arc<BearDogCore>) -> Result<(), 
 }
 
 /// Shutdown real `BearDog` Core
-pub async fn shutdown_real_beardog_core(_core: Arc<BearDogCore>) -> Result<(), BearDogError> {
+pub fn shutdown_real_beardog_core(_core: Arc<BearDogCore>) -> Result<(), BearDogError> {
     info!("🛑 Shutting down BearDog Core");
     // Core cleanup happens via Arc drop
     info!("  ✅ BearDog Core shutdown complete");

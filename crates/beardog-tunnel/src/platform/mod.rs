@@ -81,6 +81,7 @@ pub enum SocketEndpoint {
 
 impl SocketEndpoint {
     /// Get the display string for logging
+    #[must_use]
     pub fn display(&self) -> String {
         match self {
             Self::Filesystem(path) => format!("{}", path.display()),
@@ -135,6 +136,7 @@ pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEn
 
 /// Returns the default socket endpoint for the current Unix platform
 #[cfg(all(unix, not(target_os = "android")))]
+#[must_use]
 pub fn default_socket_endpoint() -> SocketEndpoint {
     default_socket_endpoint_for_primal(None)
 }
@@ -154,6 +156,7 @@ pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEn
 
 /// Same as [`default_socket_endpoint_for_primal`] but reads `PRIMAL_NAME` from the environment.
 #[cfg(all(unix, not(target_os = "android")))]
+#[must_use]
 pub fn default_socket_endpoint_from_env() -> SocketEndpoint {
     default_socket_endpoint_for_primal(
         beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME)
@@ -213,10 +216,10 @@ pub fn default_socket_endpoint_from_env() -> SocketEndpoint {
             .as_deref(),
     )
 }
-
 /// Convert socket endpoint to string path (for CLI defaults)
 ///
 /// **Deep Debt Principle #4**: Capability-based, not hardcoded
+#[must_use]
 pub fn default_socket_path() -> String {
     default_socket_endpoint().display()
 }

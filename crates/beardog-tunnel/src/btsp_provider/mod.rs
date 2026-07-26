@@ -61,12 +61,12 @@ impl BeardogBtspProvider {
     /// # Errors
     ///
     /// Returns an error if key generation fails in the underlying HSM provider.
-    pub async fn new_for_testing(
+    pub fn new_for_testing(
         hsm: Arc<HsmManager>,
         genetics: Arc<EcosystemGeneticEngine>,
     ) -> Result<Self, BearDogError> {
         let dummy_master_key = vec![0u8; 32];
-        let birdsong = Arc::new(BirdSongManager::new(dummy_master_key, None).await?);
+        let birdsong = Arc::new(BirdSongManager::new(dummy_master_key, None)?);
 
         Ok(Self {
             _hsm: hsm,
@@ -122,11 +122,9 @@ impl BeardogBtspProvider {
             }
         };
 
-        let birdsong = BirdSongManager::new(master_secret, None)
-            .await
-            .map_err(|e| {
-                BearDogError::system(format!("Failed to initialize BirdSong manager: {e}"))
-            })?;
+        let birdsong = BirdSongManager::new(master_secret, None).map_err(|e| {
+            BearDogError::system(format!("Failed to initialize BirdSong manager: {e}"))
+        })?;
 
         info!("✅ BearDog BTSP Provider initialized with BirdSong genetics");
 
@@ -142,7 +140,7 @@ impl BeardogBtspProvider {
             trust_eval_count: Arc::new(AtomicU64::new(0)),
         };
 
-        if let Err(e) = provider.seed_trusted_peers_from_env().await {
+        if let Err(e) = provider.seed_trusted_peers_from_env() {
             warn!(
                 "Failed to seed trusted peers from {}: {}",
                 env_keys::ENV_TRUSTED_PEERS,
@@ -152,13 +150,13 @@ impl BeardogBtspProvider {
 
         Ok(provider)
     }
-
     /// Get `BirdSong` manager (for API server integration)
+    #[must_use]
     pub fn birdsong_manager(&self) -> Arc<BirdSongManager> {
         self.birdsong.clone()
     }
-
     /// Get BTSP metrics
+    #[must_use]
     pub fn get_metrics(&self) -> BtspMetrics {
         BtspMetrics {
             tunnels_established: self.tunnels_established.load(Ordering::Relaxed),
@@ -168,22 +166,22 @@ impl BeardogBtspProvider {
             trust_evaluations: self.trust_eval_count.load(Ordering::Relaxed),
         }
     }
-
     /// Get tunnel by ID (public API for handlers)
+    #[must_use]
     pub fn get_tunnel(&self, tunnel_id: &str) -> Option<(String, String)> {
         self.tunnels
             .read()
             .get(tunnel_id)
             .map(|t| (t.id.clone(), t.peer_id.clone()))
     }
-
     /// Get peer trust record (public API for handlers)
+    #[must_use]
     pub fn get_peer_trust_record(&self, peer_id: &str) -> Option<PeerTrustRecord> {
         self.trust_db.read().get(peer_id).cloned()
     }
 
     /// Get peer trust level (used by `SecureTunnelProvider`).
-    pub(crate) async fn get_peer_trust(&self, peer_id: &str) -> Option<types::TrustLevel> {
+    pub(crate) fn get_peer_trust(&self, peer_id: &str) -> Option<types::TrustLevel> {
         self.trust_db.read().get(peer_id).map(|r| r.trust_level)
     }
 }

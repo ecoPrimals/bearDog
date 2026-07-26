@@ -234,7 +234,7 @@ mod discovery_tests {
     #[tokio::test]
     async fn test_universal_hsm_discovery_creation() -> Result<(), BearDogError> {
         let config = DiscoveryConfig::default();
-        let _discovery = UniversalHsmDiscovery::new(config).await?;
+        let _discovery = UniversalHsmDiscovery::new(config)?;
         Ok(())
     }
 
@@ -246,7 +246,7 @@ mod discovery_tests {
             // Note: timeout moved to base.timeout field
             ..Default::default()
         };
-        let _discovery = UniversalHsmDiscovery::new(config).await?;
+        let _discovery = UniversalHsmDiscovery::new(config)?;
         Ok(())
     }
 
@@ -368,7 +368,7 @@ mod discovery_tests {
             ..Default::default()
         };
 
-        let _discovery = UniversalHsmDiscovery::new(config).await?;
+        let _discovery = UniversalHsmDiscovery::new(config)?;
         Ok(())
     }
 

@@ -352,12 +352,12 @@ fn test_error_with_type_conversions() {
 #[tokio::test]
 async fn test_async_error_immediate() {
     // Helper async function
-    async fn async_operation() -> Result<(), BearDogError> {
+    fn async_operation() -> Result<(), BearDogError> {
         Err(BearDogError::internal("Async error".to_string()))
     }
 
     // When: calling async operation
-    let result = async_operation().await;
+    let result = async_operation();
 
     // Then: should handle error correctly
     assert!(result.is_err());
@@ -371,12 +371,12 @@ async fn test_async_error_immediate() {
 #[tokio::test]
 async fn test_async_error_propagation() {
     // Helper async functions
-    async fn async_step_3() -> Result<i32, BearDogError> {
+    fn async_step_3() -> Result<i32, BearDogError> {
         Err(BearDogError::network("Network error".to_string()))
     }
 
     async fn async_step_2() -> Result<i32, BearDogError> {
-        async_step_3().await
+        async_step_3()
     }
 
     async fn async_step_1() -> Result<i32, BearDogError> {

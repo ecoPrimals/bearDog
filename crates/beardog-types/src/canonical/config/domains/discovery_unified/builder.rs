@@ -36,11 +36,13 @@ pub struct UnifiedDiscoveryConfigBuilder {
 
 impl UnifiedDiscoveryConfigBuilder {
     /// Creates an empty builder; call `build()` to merge with [`UnifiedDiscoveryConfig::default`].
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Sets whether discovery subsystems are active for this primal.
+    #[must_use]
     pub const fn enabled(mut self, enabled: bool) -> Self {
         self.enabled = Some(enabled);
         self
@@ -53,48 +55,56 @@ impl UnifiedDiscoveryConfigBuilder {
     }
 
     /// Appends a protocol-specific discovery configuration (HTTP, DNS, mDNS, etc.).
+    #[must_use]
     pub fn add_protocol(mut self, protocol: DiscoveryProtocol) -> Self {
         self.enabled_protocols.push(protocol);
         self
     }
 
     /// Sets centralized registry (Consul, etcd, …) connection parameters.
+    #[must_use]
     pub fn registry(mut self, registry: ServiceRegistryConfig) -> Self {
         self.registry = Some(registry);
         self
     }
 
     /// Sets passive/active network scan and retry behavior.
+    #[must_use]
     pub fn network(mut self, network: NetworkDiscoveryConfig) -> Self {
         self.network = Some(network);
         self
     }
 
     /// Sets experimental quantum-assisted discovery parameters.
+    #[must_use]
     pub fn quantum(mut self, quantum: QuantumDiscoveryConfig) -> Self {
         self.quantum = Some(quantum);
         self
     }
 
     /// Sets TTL, size, and eviction for the discovery cache.
+    #[must_use]
     pub fn cache(mut self, cache: DiscoveryCacheConfig) -> Self {
         self.cache = Some(cache);
         self
     }
 
     /// Sets authentication and TLS requirements for discovery traffic.
+    #[must_use]
     pub fn security(mut self, security: DiscoverySecurityConfig) -> Self {
         self.security = Some(security);
         self
     }
 
     /// Sets how traffic is spread across discovered healthy endpoints.
+    #[must_use]
     pub fn load_balancing(mut self, load_balancing: LoadBalancingConfig) -> Self {
         self.load_balancing = Some(load_balancing);
         self
     }
 
     /// Load values from environment variables
+    #[must_use]
     pub const fn from_env(self) -> Self {
         // Builder-based environment loading would go here
         // For now, users should use UnifiedDiscoveryConfig::from_env() directly
@@ -102,6 +112,7 @@ impl UnifiedDiscoveryConfigBuilder {
     }
 
     /// Consumes the builder, applying each `Some` field over [`UnifiedDiscoveryConfig::default`].
+    #[must_use]
     pub fn build(self) -> UnifiedDiscoveryConfig {
         let defaults = UnifiedDiscoveryConfig::default();
 

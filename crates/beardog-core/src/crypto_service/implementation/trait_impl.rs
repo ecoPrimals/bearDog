@@ -18,11 +18,11 @@ impl CryptoService for BearDogCryptoService {
         algorithm: CryptoAlgorithm,
         options: EncryptOptions,
     ) -> Result<EncryptedData> {
-        self.encrypt_impl(data, algorithm, options).await
+        self.encrypt_impl(data, algorithm, options)
     }
 
     async fn decrypt(&self, encrypted: &EncryptedData, options: DecryptOptions) -> Result<Vec<u8>> {
-        self.decrypt_impl(encrypted, options).await
+        self.decrypt_impl(encrypted, options)
     }
 
     async fn sign(
@@ -31,7 +31,7 @@ impl CryptoService for BearDogCryptoService {
         algorithm: SignatureAlgorithm,
         options: SignOptions,
     ) -> Result<Signature> {
-        self.sign_impl(data, algorithm, options).await
+        self.sign_impl(data, algorithm, options)
     }
 
     async fn verify(
@@ -40,7 +40,7 @@ impl CryptoService for BearDogCryptoService {
         signature: &Signature,
         options: VerifyOptions,
     ) -> Result<bool> {
-        self.verify_impl(data, signature, options).await
+        self.verify_impl(data, signature, options)
     }
 
     async fn generate_key(
@@ -48,14 +48,14 @@ impl CryptoService for BearDogCryptoService {
         algorithm: KeyAlgorithm,
         options: KeyGenOptions,
     ) -> Result<KeyInfo> {
-        self.generate_key_impl(algorithm, options).await
+        self.generate_key_impl(algorithm, options)
     }
 
     async fn get_capabilities(&self) -> Result<ServiceCapabilities> {
-        self.get_capabilities_impl().await
+        self.get_capabilities_impl()
     }
 
     async fn get_health(&self) -> Result<HealthStatus> {
-        self.get_health_impl().await
+        self.get_health_impl()
     }
 }

@@ -57,9 +57,9 @@ impl HealthHandler {
             capabilities_count: count,
         }
     }
-
     /// Tests / DI: explicit identity hints (no `PRIMAL_NAME` env mutation).
-    pub fn with_identity_hints(identity: IdentityHints) -> Self {
+    #[must_use]
+    pub const fn with_identity_hints(identity: IdentityHints) -> Self {
         Self {
             identity,
             capabilities_count: 0,

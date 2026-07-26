@@ -64,15 +64,14 @@ impl SecurityEvent {
         }
     }
 
-    #[must_use]
     /// Add event data key-value pair
+    #[must_use]
     pub fn with_data(mut self, key: String, value: String) -> Self {
         self.event_data.insert(key, value);
         self
     }
- #[must_use]
-
     /// Add a tag to the event
+ #[must_use]
     pub fn with_tag(mut self, tag: String) -> Self {
         self.tags.push(tag);
         self

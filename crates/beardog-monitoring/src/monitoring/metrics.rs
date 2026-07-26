@@ -28,8 +28,8 @@ impl Default for MetricsCollector {
 
 impl MetricsCollector {
     /// Creates a new `MetricsCollector` instance
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
             metrics: Arc::new(RwLock::new(HashMap::new())),
@@ -102,8 +102,8 @@ impl MetricsCollector {
     }
 
     /// Gets the total number of recorded metrics
-    #[must_use]
     /// Gets `metric_count`
+    #[must_use]
     pub fn get_metric_count(&self) -> usize {
         self.counter.load(Ordering::Relaxed)
     }

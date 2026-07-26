@@ -43,7 +43,7 @@ impl SoftwareHsmProvider {
         dead_code,
         reason = "public API hook; not referenced in this crate — dead_code lint not always emitted; expect would be unfulfilled"
     )]
-    pub async fn with_config(
+    pub fn with_config(
         #[expect(
             unused_variables,
             reason = "Parameter reserved for future SecureSoftwareHsm options"

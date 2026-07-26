@@ -9,7 +9,7 @@ use beardog_errors::BearDogError;
 use tracing::{info, warn};
 
 /// Test graceful degradation under increasing network stress
-pub async fn test_graceful_degradation() -> Result<NetworkE2EMetrics, BearDogError> {
+pub fn test_graceful_degradation() -> Result<NetworkE2EMetrics, BearDogError> {
     info!("Testing graceful degradation");
 
     let mut metrics = NetworkE2EMetrics::default();
@@ -64,7 +64,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_degradation_handling() {
-        let result = test_graceful_degradation().await;
+        let result = test_graceful_degradation();
         assert!(result.is_ok());
 
         let metrics = result.unwrap();

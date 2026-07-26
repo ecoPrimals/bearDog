@@ -69,6 +69,7 @@ impl Default for HsmDiscoveryConfig {
 
 impl HsmDiscoveryConfig {
     /// Create a restrictive configuration (only essential HSM types)
+    #[must_use]
     pub fn restrictive() -> Self {
         Self {
             enable_cloud_kms: false,
@@ -84,6 +85,7 @@ impl HsmDiscoveryConfig {
     }
 
     /// Create a permissive configuration (all HSM types)
+    #[must_use]
     pub fn permissive() -> Self {
         Self::default()
     }

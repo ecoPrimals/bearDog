@@ -54,7 +54,7 @@ fn ipc_discovery_resolve_subdir_and_paths() {
     );
     assert_eq!(
         ipc_discovery::resolve_biomeos_ipc_subdir_from_optional(None),
-        ipc_discovery::BIOMEOS_RUNTIME_SOCKET_SUBDIR
+        ipc_discovery::default_ecosystem_ipc_namespace()
     );
 
     let p =
@@ -97,22 +97,19 @@ fn ipc_discovery_resolve_upa_registry_endpoint_from_env_matches_default_uri_or_o
 }
 
 #[test]
-fn addresses_deprecated_aliases_resolve() {
-    #[expect(
-        deprecated,
-        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
-    )]
-    {
-        assert_eq!(addresses::DEFAULT_BIND_ADDRESS, addresses::WILDCARD_IPV4);
-        assert!(addresses::DEFAULT_METRICS_BIND.contains(':'));
-        assert!(addresses::DEFAULT_HEALTH_BIND.contains(':'));
-        assert_eq!(addresses::MULTICAST_ADDRESS, "224.0.0.251");
-    }
+fn addresses_env_aware_helpers_resolve() {
+    assert_eq!(
+        addresses::default_bind_address(),
+        addresses::WILDCARD_IPV4.to_string()
+    );
+    assert!(addresses::default_metrics_bind().contains(':'));
+    assert!(addresses::default_health_bind().contains(':'));
+    assert_eq!(addresses::multicast_address(), "224.0.0.251".to_string());
 }
 
 #[test]
 fn ipc_discovery_public_constants_are_non_empty() {
-    assert!(!ipc_discovery::BIOMEOS_RUNTIME_SOCKET_SUBDIR.is_empty());
+    assert!(!ipc_discovery::default_ecosystem_ipc_namespace().is_empty());
     assert!(!ipc_discovery::BEARDOG_TCP_DISCOVERY_FILENAME.is_empty());
     assert!(!ipc_discovery::DEFAULT_UPA_REGISTRY_SOCKET_NAME.is_empty());
     assert!(!ipc_discovery::ENV_BIOMEOS_SOCKET_DIR_OVERRIDE.is_empty());

@@ -24,7 +24,7 @@ pub async fn create_crypto_provider(
             GeneticCryptoProvider::new()?,
         ))),
         CryptoBackend::RustCrypto => Ok(Arc::new(CryptoProviderBackend::RustCrypto(
-            SoftwareHsmCryptoProvider::new().await?,
+            SoftwareHsmCryptoProvider::new()?,
         ))),
         CryptoBackend::Ring => {
             // Ring variant maps to RustCrypto
@@ -32,33 +32,33 @@ pub async fn create_crypto_provider(
                 "Ring backend deprecated - evolved to RustCrypto (100% Pure Rust, ARM-ready!)"
             );
             Ok(Arc::new(CryptoProviderBackend::RustCrypto(
-                SoftwareHsmCryptoProvider::new().await?,
+                SoftwareHsmCryptoProvider::new()?,
             )))
         }
         CryptoBackend::OpenSsl => {
             // OpenSSL evolved to RustCrypto (100% Pure Rust sovereignty)
             tracing::warn!("OpenSSL backend evolved to RustCrypto (100% Pure Rust, ARM-ready!)");
             Ok(Arc::new(CryptoProviderBackend::RustCrypto(
-                SoftwareHsmCryptoProvider::new().await?,
+                SoftwareHsmCryptoProvider::new()?,
             )))
         }
     }
 }
-
 /// Get Supported Crypto Backends operation.
 ///
 /// **TRUE PRIMAL**: Only 100% Pure Rust backends supported! 🦀
 ///
 /// - `GeneticCrypto`: RECOMMENDED (100% Pure Rust, hardware acceleration)
 /// - `RustCrypto`: Standard (100% Pure Rust, ARM-ready, no C compiler needed)
+#[must_use]
 pub fn get_supported_crypto_backends() -> Vec<CryptoBackend> {
     vec![
         CryptoBackend::GeneticCrypto, // RECOMMENDED: 100% Pure Rust + Hardware Acceleration
         CryptoBackend::RustCrypto,    // 100% Pure Rust, ARM Cross-Compile Ready!
     ]
 }
-
 /// Get Supported Storage Backends operation.
+#[must_use]
 pub fn get_supported_storage_backends() -> Vec<KeyStorageType> {
     vec![
         KeyStorageType::Memory,
@@ -81,10 +81,10 @@ pub struct CryptoProviderCapabilities {
     /// Hardware acceleration availability
     pub supports_hardware_acceleration: bool,
 }
-
 /// Get Crypto Provider Capabilities operation.
 ///
 /// **TRUE PRIMAL**: Only 100% Pure Rust backends! 🦀
+#[must_use]
 pub const fn get_crypto_provider_capabilities(
     backend: &CryptoBackend,
 ) -> CryptoProviderCapabilities {
@@ -122,7 +122,6 @@ pub const fn get_crypto_provider_capabilities(
         // Vendor-agnostic: Custom and Hardware variants removed
     }
 }
-
 /// Check if Crypto Backend is Supported.
 ///
 /// **TRUE PRIMAL**: Only 100% Pure Rust backends! 🦀
@@ -131,6 +130,7 @@ pub const fn get_crypto_provider_capabilities(
 /// - `RustCrypto`: ✅ Standard (100% Pure Rust)
 /// - `Ring`: ❌ Removed (evolved to `RustCrypto`)
 /// - `OpenSsl`: ❌ Removed (evolved to `RustCrypto`)
+#[must_use]
 pub const fn is_crypto_backend_supported(backend: &CryptoBackend) -> bool {
     // Only Pure Rust backends supported - Ring and OpenSsl evolved out! 🦀
     matches!(
@@ -138,7 +138,6 @@ pub const fn is_crypto_backend_supported(backend: &CryptoBackend) -> bool {
         CryptoBackend::GeneticCrypto | CryptoBackend::RustCrypto
     )
 }
-
 /// Get Recommended Crypto Backend.
 ///
 /// **UPDATED**: Now recommends `GeneticCrypto` (100% Pure Rust, zero FFI)
@@ -149,6 +148,7 @@ pub const fn is_crypto_backend_supported(backend: &CryptoBackend) -> bool {
 /// - Hardware acceleration (AES-NI, AVX2)
 /// - Single language audit (no C code)
 /// - Genetic crypto enhancements (future)
+#[must_use]
 pub const fn get_recommended_crypto_backend() -> CryptoBackend {
     CryptoBackend::GeneticCrypto // Changed from Ring!
 }

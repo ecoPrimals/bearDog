@@ -57,6 +57,7 @@ pub enum TlsVersion {
 
 impl TlsVersion {
     /// Returns the string representation of the TLS version
+    #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Tls10 => "TLSv1.0",
@@ -67,11 +68,13 @@ impl TlsVersion {
     }
 
     /// Returns true if this TLS version is considered secure by modern standards
+    #[must_use]
     pub fn is_secure(&self) -> bool {
         *self >= Self::Tls12
     }
 
     /// Returns true if this TLS version is deprecated
+    #[must_use]
     pub fn is_deprecated(&self) -> bool {
         *self < Self::Tls12
     }

@@ -98,8 +98,8 @@ impl ProductionMetricsCollector {
     /// # Arguments
     ///
     /// # Returns
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub const fn new(config: MetricsConfig) -> Self {
         Self {
             config,
@@ -195,15 +195,15 @@ impl ProductionMetricsCollector {
     }
 
     /// Get metrics collection configuration
-    #[must_use]
     /// Gets config
+    #[must_use]
     pub const fn get_config(&self) -> &MetricsConfig {
         &self.config
     }
 
     /// Get historical metrics data
-    #[must_use]
     /// Gets `metrics_history`
+    #[must_use]
     pub fn get_metrics_history(&self) -> &[CurrentMetrics] {
         &self.metrics_history
     }

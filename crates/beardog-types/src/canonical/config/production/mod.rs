@@ -99,8 +99,8 @@ pub struct UnifiedProductionConfig {
 
 impl UnifiedProductionConfig {
     /// Create a new production configuration with sensible defaults
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }

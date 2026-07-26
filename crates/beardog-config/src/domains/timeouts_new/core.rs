@@ -62,6 +62,7 @@ pub struct TimeoutConfig {
 
 impl TimeoutConfig {
     /// Create a new builder for `TimeoutConfig`
+    #[must_use]
     pub fn builder() -> crate::domains::timeouts::TimeoutConfigBuilder {
         crate::domains::timeouts::TimeoutConfigBuilder::new()
     }
@@ -78,6 +79,7 @@ impl TimeoutConfig {
     /// - `BEARDOG_AI_BATCH_TIMEOUT_MS`
     /// - `BEARDOG_POOL_IDLE_TIMEOUT_SECS`
     /// - `BEARDOG_MAX_CONNECTION_AGE_SECS`
+    #[must_use]
     pub fn from_env() -> Self {
         Self::builder().from_env().build()
     }
@@ -106,66 +108,79 @@ impl TimeoutConfig {
     // Duration conversion methods
 
     /// Get health check timeout as Duration
+    #[must_use]
     pub const fn health_check_duration(&self) -> Duration {
         Duration::from_secs(self.health_check_secs)
     }
 
     /// Get HSM operation timeout as Duration
+    #[must_use]
     pub const fn hsm_operation_duration(&self) -> Duration {
         Duration::from_secs(self.hsm_operation_secs)
     }
 
     /// Get HSM probe timeout as Duration
+    #[must_use]
     pub const fn hsm_probe_duration(&self) -> Duration {
         Duration::from_millis(self.hsm_probe_millis)
     }
 
     /// Get discovery operation timeout as Duration
+    #[must_use]
     pub const fn discovery_operation_duration(&self) -> Duration {
         Duration::from_secs(self.discovery_operation_secs)
     }
 
     /// Get AI decision timeout as Duration
+    #[must_use]
     pub const fn ai_decision_duration(&self) -> Duration {
         Duration::from_secs(self.ai_decision_secs)
     }
 
     /// Get AI request timeout as Duration
+    #[must_use]
     pub const fn ai_request_duration(&self) -> Duration {
         Duration::from_secs(self.ai_request_secs)
     }
 
     /// Get AI batch timeout as Duration
+    #[must_use]
     pub const fn ai_batch_timeout_duration(&self) -> Duration {
         Duration::from_millis(self.ai_batch_timeout_millis)
     }
 
     /// Get pool idle timeout as Duration
+    #[must_use]
     pub const fn pool_idle_duration(&self) -> Duration {
         Duration::from_secs(self.pool_idle_secs)
     }
 
     /// Get max connection age as Duration
+    #[must_use]
     pub const fn max_connection_age_duration(&self) -> Duration {
         Duration::from_secs(self.max_connection_age_secs)
     }
 
     /// Get network operation timeout as Duration
+    #[must_use]
     pub const fn network_operation_duration(&self) -> Duration {
         Duration::from_secs(self.network_operation_secs)
     }
 
     /// Get DNS resolution timeout as Duration
+    #[must_use]
     pub const fn dns_resolution_timeout_duration(&self) -> Duration {
         Duration::from_secs(self.dns_resolution_timeout_secs)
     }
 
     /// Get connection timeout as Duration
+    #[must_use]
     pub const fn connection_timeout_duration(&self) -> Duration {
         Duration::from_secs(self.connection_timeout_secs)
     }
 
     /// Get request timeout as Duration
+    #[must_use]
     pub const fn request_timeout_duration(&self) -> Duration {
         Duration::from_secs(self.request_timeout_secs)
     }

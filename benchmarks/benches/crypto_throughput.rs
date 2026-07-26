@@ -4,7 +4,7 @@
 //!
 //! Measures raw encrypt/decrypt throughput for the crypto primitives bearDog
 //! provides to the Tower Atomic stack. songBird uses these numbers for the
-//! parity assessment against WireGuard.
+//! parity assessment against `WireGuard`.
 //!
 //! Run: `cargo bench --bench crypto_throughput -p benchmarks`
 

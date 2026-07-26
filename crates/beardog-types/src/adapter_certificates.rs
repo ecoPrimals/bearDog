@@ -197,6 +197,7 @@ impl AdapterUnlockCertificate {
     ///
     /// This is used to create the signature and verify it later.
     /// The format is deterministic to ensure consistent signatures.
+    #[must_use]
     pub fn signable_data(&self) -> Vec<u8> {
         use sha3::{Digest, Sha3_256};
 

@@ -150,15 +150,15 @@ fn parse_ip_env(key: &str, fallback: IpAddr) -> IpAddr {
         .unwrap_or(fallback)
 }
 
-fn default_localhost_ipv4() -> IpAddr {
+const fn default_localhost_ipv4() -> IpAddr {
     IpAddr::V4(Ipv4Addr::LOCALHOST)
 }
 
-fn default_localhost_ipv6() -> IpAddr {
+const fn default_localhost_ipv6() -> IpAddr {
     IpAddr::V6(std::net::Ipv6Addr::LOCALHOST)
 }
 
-fn default_wildcard_ipv4() -> IpAddr {
+const fn default_wildcard_ipv4() -> IpAddr {
     IpAddr::V4(Ipv4Addr::UNSPECIFIED)
 }
 

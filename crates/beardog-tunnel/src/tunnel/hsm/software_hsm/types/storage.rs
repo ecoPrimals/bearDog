@@ -38,7 +38,7 @@ impl FileStorageBackend {
     ///
     /// Returns an error if filesystem access fails.
     /// Create new file storage backend
-    pub async fn new(config: &KeyStoreConfig) -> Result<Self, BearDogError> {
+    pub fn new(config: &KeyStoreConfig) -> Result<Self, BearDogError> {
         let path = config.path.to_string_lossy().to_string();
         Ok(Self { path })
     }
@@ -55,7 +55,7 @@ impl MemoryStorageBackend {
     ///
     /// Returns an error if encryption fails.
     /// Create new memory storage backend
-    pub async fn new() -> Result<Self, BearDogError> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             storage: Arc::new(RwLock::new(HashMap::with_capacity(16))),
         })

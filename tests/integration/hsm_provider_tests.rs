@@ -169,14 +169,14 @@ mod test_helpers {
     use super::*;
 
     /// Helper to simulate provider failure
-    pub async fn simulate_provider_failure() -> Result<(), BearDogError> {
+    pub fn simulate_provider_failure() -> Result<(), BearDogError> {
         // In a real scenario, this would trigger actual failure conditions
         // using channels or state machines, not sleeps
         Ok(())
     }
 
     /// Helper to wait for provider recovery
-    pub async fn wait_for_recovery(max_wait: Duration) -> bool {
+    pub fn wait_for_recovery(max_wait: Duration) -> bool {
         // In production, use tokio::sync::watch for health state monitoring
         // Or tokio::sync::Notify for health change events
         // For test infrastructure validation, immediate return
@@ -189,7 +189,7 @@ mod test_helpers {
 
     #[tokio::test]
     async fn test_helper_functions() {
-        assert!(simulate_provider_failure().await.is_ok());
-        assert!(wait_for_recovery(Duration::from_secs(1)).await);
+        assert!(simulate_provider_failure().is_ok());
+        assert!(wait_for_recovery(Duration::from_secs(1)));
     }
 }

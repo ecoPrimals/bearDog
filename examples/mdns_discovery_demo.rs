@@ -38,7 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("📢 BearDog mDNS Announcement Demo");
             println!("==================================\n");
 
-            announce_service().await?;
+            announce_service()?;
 
             println!("\n✅ Service announced. Press Ctrl+C to stop.");
             println!("   Other primals can now discover this service.\n");
@@ -67,7 +67,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Announce this primal's services via mDNS
-async fn announce_service() -> Result<(), Box<dyn std::error::Error>> {
+fn announce_service() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "mdns")]
     {
         use beardog_core::primal_discovery_mdns::MdnsServiceAnnouncer;

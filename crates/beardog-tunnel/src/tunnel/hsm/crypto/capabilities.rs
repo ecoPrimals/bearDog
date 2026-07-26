@@ -45,16 +45,17 @@ pub struct CryptoCapabilities {
 
 impl CryptoCapabilities {
     /// Check if this provider supports a specific symmetric algorithm
+    #[must_use]
     pub fn supports_symmetric(&self, algorithm: &SymmetricAlgorithm) -> bool {
         self.symmetric_algorithms.contains(algorithm)
     }
-
     /// Check if this provider supports a specific signature algorithm
+    #[must_use]
     pub fn supports_signature(&self, algorithm: &SignatureAlgorithm) -> bool {
         self.signature_algorithms.contains(algorithm)
     }
-
     /// Check if this provider supports a specific hash algorithm
+    #[must_use]
     pub fn supports_hash(&self, algorithm: &HashAlgorithm) -> bool {
         self.hash_algorithms.contains(algorithm)
     }

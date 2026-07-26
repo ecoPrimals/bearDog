@@ -44,7 +44,7 @@ impl TpmUniversalProvider {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub async fn new() -> Result<Self, BearDogError> {
+    pub fn new() -> Result<Self, BearDogError> {
         #[cfg(not(feature = "tpm-provider"))]
         {
             Err(BearDogError::requires_capability(
@@ -63,27 +63,27 @@ impl TpmUniversalProvider {
             Ok(provider)
         }
     }
-
     /// Get security level (TPM is level 2-3 depending on implementation)
+    #[must_use]
     pub const fn get_security_level(&self) -> u8 {
         match self.tpm_version {
             TpmVersion::V1_2 => 2,
             TpmVersion::V2_0 => 3,
         }
     }
-
     /// Get TPM version
+    #[must_use]
     pub const fn tpm_version(&self) -> &TpmVersion {
         &self.tpm_version
     }
-
     /// Get capabilities
+    #[must_use]
     pub const fn capabilities(&self) -> Option<&TpmCapabilities> {
         self.capabilities.as_ref()
     }
-
     /// Get provider metadata
-    pub fn metadata(&self) -> &HashMap<String, String> {
+    #[must_use]
+    pub const fn metadata(&self) -> &HashMap<String, String> {
         &self.metadata
     }
 }
@@ -418,7 +418,7 @@ mod tests_always {
     async fn tpm_new_matches_feature_flag() {
         #[cfg(not(feature = "tpm-provider"))]
         {
-            let err = match TpmUniversalProvider::new().await {
+            let err = match TpmUniversalProvider::new() {
                 Err(e) => e,
                 Ok(_) => panic!("TPM provider should be disabled without feature"),
             };

@@ -11,9 +11,14 @@
 //! ## Platform gating
 //!
 //! The struct and its `HsmKeyProvider` impl compile on all platforms so
-//! that `HsmKeyProviderBackend` can reference the type unconditionally
-//! inside `#[cfg(windows)]` arms.  On non-Windows hosts, `is_available()`
-//! returns `false` and every operation returns an error.
+//! that `HsmKeyProviderBackend` can reference the type unconditionally.
+//! On non-Windows hosts, `is_available()` returns `false` and every
+//! operation returns an error.
+//!
+//! ## Unsafe code
+//!
+//! Windows DPAPI requires FFI calls to CryptProtectData/CryptUnprotectData
+//! (gated to `#[cfg(windows)]` functions below).
 
 mod hsm_key_provider;
 
@@ -21,6 +26,41 @@ use beardog_errors::BearDogError;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use tokio::sync::RwLock;
+
+/// RAII guard for DPAPI output buffers allocated by the Windows API.
+///
+/// `CryptProtectData` / `CryptUnprotectData` return heap memory that must be
+/// freed with `LocalFree`.  This type ensures cleanup on drop, including early
+/// returns after a successful FFI call.
+#[cfg(windows)]
+struct DpapiBlob {
+    data: *mut u8,
+    len: usize,
+}
+
+#[cfg(windows)]
+impl DpapiBlob {
+    /// Copies the DPAPI output into an owned `Vec`.
+    fn to_vec(&self) -> Vec<u8> {
+        if self.data.is_null() || self.len == 0 {
+            return Vec::new();
+        }
+        // SAFETY: `data` points to `len` valid bytes returned by a successful
+        // CryptProtectData / CryptUnprotectData call.
+        unsafe { std::slice::from_raw_parts(self.data, self.len) }.to_vec()
+    }
+}
+
+#[cfg(windows)]
+impl Drop for DpapiBlob {
+    fn drop(&mut self) {
+        if !self.data.is_null() {
+            // SAFETY: `data` was allocated by CryptProtectData / CryptUnprotectData
+            // and must be released with LocalFree per the Windows API contract.
+            unsafe { windows_sys::Win32::System::Memory::LocalFree(self.data.cast()) };
+        }
+    }
+}
 
 /// Metadata for a single DPAPI-protected key stored on disk.
 #[derive(Debug, Clone)]
@@ -75,23 +115,13 @@ impl WindowsDpapiHsm {
         }
         #[cfg(not(windows))]
         {
-            Ok(PathBuf::from("/tmp/beardog-dpapi-stub"))
+            Ok(std::env::temp_dir().join("beardog-dpapi-stub"))
         }
     }
 
     /// Encrypt raw key material with DPAPI (Windows).
-    ///
-    /// # Safety invariants (for `unsafe` FFI blocks below)
-    ///
-    /// - `input.pbData` points to a valid, live `plaintext` slice for the duration of the call.
-    /// - `output.pbData` is set by `CryptProtectData` on success; we copy its contents
-    ///   into a `Vec<u8>` immediately and free via `LocalFree` before returning.
-    /// - `from_raw_parts` reads exactly `output.cbData` bytes from `output.pbData`,
-    ///   which is the contract documented by the Windows API.
-    ///
-    /// When cross-compiling for Windows, `#![forbid(unsafe_code)]` in `lib.rs` must
-    /// be relaxed for this module (e.g. `#[allow(unsafe_code)]` on the containing mod).
     #[cfg(windows)]
+    #[allow(unsafe_code)]
     fn dpapi_protect(plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
         use std::ptr;
         use windows_sys::Win32::Security::Cryptography::{CRYPTOAPI_BLOB, CryptProtectData};
@@ -106,6 +136,8 @@ impl WindowsDpapiHsm {
         };
 
         let ok = unsafe {
+            // SAFETY: `input.pbData` points to a valid, live `plaintext` slice for the
+            // duration of the call.  Optional pointer parameters are null as documented.
             CryptProtectData(
                 &mut input,
                 ptr::null(),
@@ -122,18 +154,16 @@ impl WindowsDpapiHsm {
             ));
         }
 
-        let protected =
-            unsafe { std::slice::from_raw_parts(output.pbData, output.cbData as usize) }.to_vec();
-        unsafe { windows_sys::Win32::System::Memory::LocalFree(output.pbData.cast()) };
-        Ok(protected)
+        let blob = DpapiBlob {
+            data: output.pbData,
+            len: output.cbData as usize,
+        };
+        Ok(blob.to_vec())
     }
 
     /// Decrypt a DPAPI-protected blob back to plaintext key material.
-    ///
-    /// Same safety invariants as [`dpapi_protect`] — `output.pbData` is valid
-    /// for `output.cbData` bytes after a successful `CryptUnprotectData` call,
-    /// copied immediately, and freed via `LocalFree`.
     #[cfg(windows)]
+    #[allow(unsafe_code)]
     fn dpapi_unprotect(protected: &[u8]) -> Result<Vec<u8>, BearDogError> {
         use std::ptr;
         use windows_sys::Win32::Security::Cryptography::{CRYPTOAPI_BLOB, CryptUnprotectData};
@@ -148,6 +178,8 @@ impl WindowsDpapiHsm {
         };
 
         let ok = unsafe {
+            // SAFETY: `input.pbData` points to a valid, live `protected` slice for the
+            // duration of the call.  Optional pointer parameters are null as documented.
             CryptUnprotectData(
                 &mut input,
                 ptr::null_mut(),
@@ -164,10 +196,11 @@ impl WindowsDpapiHsm {
             ));
         }
 
-        let plaintext =
-            unsafe { std::slice::from_raw_parts(output.pbData, output.cbData as usize) }.to_vec();
-        unsafe { windows_sys::Win32::System::Memory::LocalFree(output.pbData.cast()) };
-        Ok(plaintext)
+        let blob = DpapiBlob {
+            data: output.pbData,
+            len: output.cbData as usize,
+        };
+        Ok(blob.to_vec())
     }
 
     /// Persist a DPAPI-protected key blob to disk.

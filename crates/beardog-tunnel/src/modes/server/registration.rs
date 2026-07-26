@@ -23,6 +23,7 @@ pub struct NeuralRegistrationParams {
 
 impl NeuralRegistrationParams {
     /// Read `BEARDOG_NEURAL_REGISTRATION_INSTANCE`, `PRIMAL_TYPE`, `BEARDOG_PRIMAL_TYPE`.
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             instance_override: beardog_errors::process_env::var(
@@ -36,8 +37,8 @@ impl NeuralRegistrationParams {
             .ok(),
         }
     }
-
     /// Registry instance id (capability-oriented; not a fixed product name).
+    #[must_use]
     pub fn registration_instance_id(
         &self,
         identity: &beardog_types::primal_identity::PrimalIdentity,

@@ -29,12 +29,13 @@ impl CapabilityDiscovery {
     /// # Errors
     ///
     /// Propagates errors from [`DiscoveryConfig::from_file`].
-    pub async fn from_config<P: AsRef<Path>>(path: P) -> Result<Self> {
+    pub fn from_config<P: AsRef<Path>>(path: P) -> Result<Self> {
         let config = DiscoveryConfig::from_file(path)?;
         Ok(Self::new(config))
     }
 
     /// Create with configuration
+    #[must_use]
     pub fn new(config: DiscoveryConfig) -> Self {
         Self {
             config,
@@ -93,7 +94,7 @@ impl CapabilityDiscovery {
         }
 
         // Perform discovery
-        let services = self.discover_services(capability).await?;
+        let services = self.discover_services(capability);
 
         // Update cache
         {
@@ -107,7 +108,7 @@ impl CapabilityDiscovery {
     }
 
     /// Discover services using configured methods
-    async fn discover_services(&self, capability: &str) -> Result<Vec<DiscoveredService>> {
+    fn discover_services(&self, capability: &str) -> Vec<DiscoveredService> {
         let mut all_services = Vec::new();
 
         // Try each discovery method in order
@@ -115,8 +116,8 @@ impl CapabilityDiscovery {
             debug!("Trying discovery method: {}", method);
 
             let services = match method.as_str() {
-                "environment" => self.discover_via_environment(capability).await?,
-                "service_registry" => self.discover_via_service_registry(capability).await?,
+                "environment" => self.discover_via_environment(capability),
+                "service_registry" => self.discover_via_service_registry(capability),
                 "mdns" | "dns_sd" => {
                     debug!("Skipping {method} — orchestrator layer owns network discovery");
                     continue;
@@ -148,15 +149,12 @@ impl CapabilityDiscovery {
             );
         }
 
-        Ok(all_services)
+        all_services
     }
 
     /// Discover services via environment variables
-    async fn discover_via_environment(&self, capability: &str) -> Result<Vec<DiscoveredService>> {
-        Ok((self.discover_env)(
-            capability,
-            self.config.discovery.cache_ttl_secs,
-        ))
+    fn discover_via_environment(&self, capability: &str) -> Vec<DiscoveredService> {
+        (self.discover_env)(capability, self.config.discovery.cache_ttl_secs)
     }
 
     /// Discover services via service registry (Consul, etcd, etc.)
@@ -177,10 +175,7 @@ impl CapabilityDiscovery {
     /// - Query by capability tags/labels
     /// - Watch for service changes (real-time updates)
     /// - Health check integration
-    async fn discover_via_service_registry(
-        &self,
-        capability: &str,
-    ) -> Result<Vec<DiscoveredService>> {
+    fn discover_via_service_registry(&self, capability: &str) -> Vec<DiscoveredService> {
         if let Some(registry_url) = self.service_registry_url.as_ref() {
             warn!(
                 registry_url = %registry_url,
@@ -198,10 +193,11 @@ impl CapabilityDiscovery {
             );
         }
 
-        Ok(vec![])
+        vec![]
     }
 
     /// Select best service from discovered services
+    #[must_use]
     pub fn select_best(&self, services: &[DiscoveredService]) -> Option<DiscoveredService> {
         if services.is_empty() {
             return None;
@@ -331,9 +327,7 @@ reliability = 0.25
         let path = dir.path().join("d.toml");
         std::fs::write(&path, minimal_config_toml("\"environment\""))
             .expect("write minimal discovery config");
-        let d = CapabilityDiscovery::from_config(&path)
-            .await
-            .expect("from_config with minimal TOML");
+        let d = CapabilityDiscovery::from_config(&path).expect("from_config with minimal TOML");
         assert_eq!(d.config.primal_self.primal_id, "t");
     }
 
@@ -354,7 +348,6 @@ reliability = 0.25
         });
         let env_for_closure = env.clone();
         let d = CapabilityDiscovery::from_config(&path)
-            .await
             .expect("from_config for env hook test")
             .with_environment_discovery(move |cap, ttl| {
                 let e = env_for_closure.clone();
@@ -490,7 +483,7 @@ reliability = 0.25
 
     #[tokio::test]
     async fn from_config_missing_file_errors() {
-        let res = CapabilityDiscovery::from_config("/nonexistent/discovery-config-xyz.toml").await;
+        let res = CapabilityDiscovery::from_config("/nonexistent/discovery-config-xyz.toml");
         assert!(
             res.is_err(),
             "missing file should not load discovery config"
@@ -555,7 +548,6 @@ reliability = 0.25
         let toml = minimal_config_toml("\"environment\"");
         std::fs::write(&path, toml).expect("write discovery TOML");
         let d = CapabilityDiscovery::from_config(&path)
-            .await
             .expect("from_config")
             .with_environment_discovery(|_cap, _ttl| vec![]);
         let out = d

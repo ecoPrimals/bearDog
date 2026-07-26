@@ -24,11 +24,13 @@ pub struct SystemInfo {
 }
 
 /// Format version string with 'v' prefix
+#[must_use]
 pub fn format_version(version: &str) -> String {
     format!("v{version}")
 }
 
 /// Get build information
+#[must_use]
 pub fn get_build_info() -> BuildInfo {
     BuildInfo {
         version: format_version(env!("CARGO_PKG_VERSION")),
@@ -43,6 +45,7 @@ pub fn get_build_info() -> BuildInfo {
 }
 
 /// Get system information
+#[must_use]
 pub fn get_system_info() -> SystemInfo {
     SystemInfo {
         os: std::env::consts::OS.to_string(),
@@ -55,7 +58,7 @@ pub fn get_system_info() -> SystemInfo {
 /// # Errors
 ///
 /// This handler currently only prints status and always returns `Ok(())`.
-pub async fn handle_status(verbose: bool) -> Result<(), BearDogError> {
+pub fn handle_status(verbose: bool) -> Result<(), BearDogError> {
     let build_info = get_build_info();
     let system_info = get_system_info();
 
@@ -140,5 +143,5 @@ pub async fn handle_version() -> Result<(), BearDogError> {
 ///
 /// Returns an error only if [`handle_status`] does (currently none).
 pub async fn show_status() -> Result<(), BearDogError> {
-    handle_status(true).await
+    handle_status(true)
 }

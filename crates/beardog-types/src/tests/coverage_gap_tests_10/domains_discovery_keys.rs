@@ -376,33 +376,27 @@ mod service_discovery_extra_tests {
     }
 
     #[test]
-    fn test_dns_http_discovery_default() {
+    fn test_localhost_discovery_default() {
         let d = DnsHttpDiscovery::default();
         let _ = format!("{d:?}");
     }
 
     #[test]
-    fn test_dns_http_discovery_new() {
+    fn test_localhost_discovery_new() {
         let d = DnsHttpDiscovery::new();
         let _ = format!("{d:?}");
     }
 
     #[test]
-    fn test_dns_http_discovery_with_domains() {
-        let d = DnsHttpDiscovery::with_domains(vec!["example.com".to_string()]);
-        let _ = format!("{d:?}");
+    fn test_consul_discovery_unavailable() {
+        let result = ConsulDiscovery::try_create();
+        assert!(result.is_err());
     }
 
-    #[tokio::test]
-    async fn test_consul_discovery_try_create() {
-        let result = ConsulDiscovery::try_create().await;
-        assert!(result.is_err()); // Not implemented yet
-    }
-
-    #[tokio::test]
-    async fn test_etcd_discovery_try_create() {
-        let result = EtcdDiscovery::try_create().await;
-        assert!(result.is_err()); // Not implemented yet
+    #[test]
+    fn test_etcd_discovery_unavailable() {
+        let result = EtcdDiscovery::try_create();
+        assert!(result.is_err());
     }
 }
 

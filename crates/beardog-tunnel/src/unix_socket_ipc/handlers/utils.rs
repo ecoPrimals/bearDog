@@ -28,6 +28,7 @@ pub struct IdentityHints {
 
 impl IdentityHints {
     /// Load from [`beardog_errors::process_env`].
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             primal_name: beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME_PREFIXED)

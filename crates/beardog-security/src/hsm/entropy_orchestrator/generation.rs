@@ -20,23 +20,22 @@ impl HsmEntropyOrchestrator {
     /// # Errors
     ///
     /// Returns an error if no suitable HSM is available, entropy generation fails, or mixing fails.
-    pub async fn generate_entropy(
+    pub fn generate_entropy(
         &mut self,
         request: EntropyGenerationRequest,
     ) -> Result<EntropyGenerationResult, BearDogError> {
         info!("🌱 Generating human entropy ({} bytes)", request.length);
 
         // Step 1: Select best available HSM
-        let hsm_source = self.select_best_hsm(&request).await?;
+        let hsm_source = self.select_best_hsm(&request)?;
 
         // Step 2: Generate entropy (currently OS RNG fallback until hardware is wired)
         let (hardware_entropy, source_report) =
-            self.generate_from_hsm(&hsm_source, request.length).await?;
+            self.generate_from_hsm(&hsm_source, request.length)?;
 
         // Step 3: Mix with human input if provided
         let mixed_entropy = if let Some(human_input) = request.human_input {
-            self.mix_with_human_input(hardware_entropy, human_input)
-                .await?
+            self.mix_with_human_input(hardware_entropy, human_input)?
         } else {
             hardware_entropy
         };
@@ -86,7 +85,7 @@ impl HsmEntropyOrchestrator {
     /// **Current behavior:** Always uses the OS CSPRNG fallback and returns honest
     /// software-only metadata. Future Phase 2 work will call FIDO2/TPM/StrongBox
     /// hardware RNG when the selected provider is wired.
-    pub(super) async fn generate_from_hsm(
+    pub(super) fn generate_from_hsm(
         &self,
         source: &HsmSource,
         length: usize,

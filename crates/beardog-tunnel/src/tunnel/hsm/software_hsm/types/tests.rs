@@ -29,7 +29,7 @@ fn test_software_key_creation() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::test]
 async fn test_memory_storage_backend() -> Result<(), Box<dyn std::error::Error>> {
-    let backend = StorageBackend::Memory(MemoryStorageBackend::new().await?);
+    let backend = StorageBackend::Memory(MemoryStorageBackend::new()?);
 
     backend.initialize().await?;
 
@@ -54,14 +54,14 @@ async fn test_memory_storage_backend() -> Result<(), Box<dyn std::error::Error>>
 
 #[tokio::test]
 async fn test_memory_storage_backup_restore() -> Result<(), Box<dyn std::error::Error>> {
-    let backend = StorageBackend::Memory(MemoryStorageBackend::new().await?);
+    let backend = StorageBackend::Memory(MemoryStorageBackend::new()?);
 
     backend.store("key1", &[1, 2, 3]).await?;
     backend.store("key2", &[4, 5, 6]).await?;
 
     let backup = backend.backup().await?;
 
-    let backend2 = StorageBackend::Memory(MemoryStorageBackend::new().await?);
+    let backend2 = StorageBackend::Memory(MemoryStorageBackend::new()?);
     backend2.restore(&backup).await?;
 
     let key1 = backend2.retrieve("key1").await?;
@@ -82,7 +82,7 @@ async fn test_default_encryption_key() -> Result<(), Box<dyn std::error::Error>>
         max_keys: Some(100),
     };
 
-    let enc_key = DefaultEncryptionKey::create(&config).await?;
+    let enc_key = DefaultEncryptionKey::create(&config)?;
 
     let plaintext = b"Hello, BearDog!";
     let ciphertext = enc_key.encrypt(plaintext).await?;
@@ -106,7 +106,7 @@ async fn test_default_encryption_key_invalid_ciphertext() -> Result<(), Box<dyn 
         max_keys: Some(100),
     };
 
-    let enc_key = DefaultEncryptionKey::create(&config).await?;
+    let enc_key = DefaultEncryptionKey::create(&config)?;
 
     // Too short
     let result = enc_key.decrypt(&[1, 2, 3]).await;

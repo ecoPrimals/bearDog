@@ -152,7 +152,8 @@ impl PrimalRegistryClient {
     ///
     /// We don't know or care what's on the other end of this endpoint.
     /// Could be any registry implementation that speaks the wire protocol.
-    pub fn new(socket_path: PathBuf) -> Self {
+    #[must_use]
+    pub const fn new(socket_path: PathBuf) -> Self {
         Self {
             endpoint: TransportEndpoint::Uds { path: socket_path },
             stream: None,
@@ -161,7 +162,8 @@ impl PrimalRegistryClient {
     }
 
     /// Create a registry client from an explicit [`TransportEndpoint`].
-    pub fn from_endpoint(endpoint: TransportEndpoint) -> Self {
+    #[must_use]
+    pub const fn from_endpoint(endpoint: TransportEndpoint) -> Self {
         Self {
             endpoint,
             stream: None,

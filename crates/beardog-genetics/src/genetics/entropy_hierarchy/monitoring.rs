@@ -18,7 +18,7 @@ struct RollingTiming {
 }
 
 impl RollingTiming {
-    fn record(&mut self, elapsed: Duration) {
+    const fn record(&mut self, elapsed: Duration) {
         self.sum_ns += elapsed.as_nanos();
         self.count += 1;
     }
@@ -86,21 +86,22 @@ impl EntropyMonitor {
     }
 
     /// Records wall-clock time for creating a seed (validation + mixing + construction).
-    pub fn record_seed_creation_duration(&mut self, elapsed: Duration) {
+    pub const fn record_seed_creation_duration(&mut self, elapsed: Duration) {
         self.seed_creation_timing.record(elapsed);
     }
 
     /// Records time spent in entropy mixing / seed construction inside the mixing engine.
-    pub fn record_entropy_mixing_duration(&mut self, elapsed: Duration) {
+    pub const fn record_entropy_mixing_duration(&mut self, elapsed: Duration) {
         self.entropy_mixing_timing.record(elapsed);
     }
 
     /// Records time spent in entropy validation (quality and age checks).
-    pub fn record_validation_duration(&mut self, elapsed: Duration) {
+    pub const fn record_validation_duration(&mut self, elapsed: Duration) {
         self.validation_timing.record(elapsed);
     }
 
     /// Merge counter fields, hierarchy-derived averages, and rolling timings into one snapshot.
+    #[must_use]
     pub fn snapshot_performance_metrics(
         &self,
         active_seeds: &HashMap<Uuid, EntropySeed>,
@@ -271,7 +272,7 @@ impl EntropyMonitor {
     }
 
     /// Overwrites the stored counters with externally-computed values.
-    pub fn update_metrics(&mut self, metrics: PerformanceMetrics) {
+    pub const fn update_metrics(&mut self, metrics: PerformanceMetrics) {
         self.metrics = metrics;
     }
 

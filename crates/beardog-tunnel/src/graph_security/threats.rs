@@ -15,20 +15,20 @@ use std::collections::{HashMap, HashSet};
 /// # Errors
 ///
 /// Returns an error if threat checks cannot be completed (e.g. internal validation failures).
-pub async fn detect_modification_threats(
+pub fn detect_modification_threats(
     modification: &GraphModification,
     _graph: &Graph,
 ) -> Result<Option<ThreatDetails>, BearDogError> {
     // Check for code injection in node config
     if let Some(node) = &modification.node
-        && let Some(threat) = check_code_injection(node).await?
+        && let Some(threat) = check_code_injection(node)?
     {
         return Ok(Some(threat));
     }
 
     // Check for suspicious changes
     if let Some(changes) = &modification.changes
-        && let Some(threat) = check_suspicious_changes(changes).await?
+        && let Some(threat) = check_suspicious_changes(changes)?
     {
         return Ok(Some(threat));
     }
@@ -41,14 +41,14 @@ pub async fn detect_modification_threats(
 /// # Errors
 ///
 /// Returns an error if threat scanning cannot be completed (e.g. internal validation failures).
-pub async fn detect_template_threats(
+pub fn detect_template_threats(
     template: &GraphTemplate,
 ) -> Result<Vec<ThreatDetails>, BearDogError> {
     let mut threats = Vec::new();
 
     // Check each node for threats
     for node in &template.nodes {
-        if let Some(threat) = check_code_injection(node).await? {
+        if let Some(threat) = check_code_injection(node)? {
             threats.push(threat);
         }
     }
@@ -66,7 +66,7 @@ pub async fn detect_template_threats(
 }
 
 /// Check for code injection in node configuration
-async fn check_code_injection(node: &GraphNode) -> Result<Option<ThreatDetails>, BearDogError> {
+fn check_code_injection(node: &GraphNode) -> Result<Option<ThreatDetails>, BearDogError> {
     // Patterns that indicate code injection attempts
     let dangerous_patterns = vec![
         "eval(",
@@ -99,7 +99,7 @@ async fn check_code_injection(node: &GraphNode) -> Result<Option<ThreatDetails>,
 }
 
 /// Check for suspicious changes that might indicate an attack
-async fn check_suspicious_changes(
+fn check_suspicious_changes(
     changes: &HashMap<String, serde_json::Value>,
 ) -> Result<Option<ThreatDetails>, BearDogError> {
     // Check for privilege escalation attempts
@@ -191,7 +191,6 @@ mod tests {
 
         let node = create_test_node("node-1", config);
         let result = check_code_injection(&node)
-            .await
             .expect("check_code_injection completes for malicious config");
 
         assert!(result.is_some());
@@ -205,9 +204,8 @@ mod tests {
         config.insert("memory".to_string(), serde_json::json!("4GB"));
 
         let node = create_test_node("node-1", config);
-        let result = check_code_injection(&node)
-            .await
-            .expect("check_code_injection completes for benign config");
+        let result =
+            check_code_injection(&node).expect("check_code_injection completes for benign config");
 
         assert!(result.is_none());
     }

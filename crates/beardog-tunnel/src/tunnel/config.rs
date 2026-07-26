@@ -171,6 +171,7 @@ impl Default for SecurityConfig {
 
 impl SecurityConfig {
     /// Merge `BEARDOG_TUNNEL_KEY_STORAGE_PATH` when set.
+    #[must_use]
     pub fn from_env() -> Self {
         let mut s = Self::default();
         if let Ok(p) = beardog_errors::process_env::var(env_keys::ENV_TUNNEL_KEY_STORAGE_PATH) {
@@ -222,6 +223,7 @@ impl Default for GamingConfig {
 
 impl GamingConfig {
     /// Merge `BEARDOG_GAMING_ANTI_CHEAT_CAPABILITY` when set.
+    #[must_use]
     pub fn from_env() -> Self {
         let mut g = Self::default();
         if let Ok(v) = beardog_errors::process_env::var(env_keys::ENV_GAMING_ANTI_CHEAT_CAPABILITY)
@@ -354,10 +356,6 @@ pub struct TunnelMonitoringConfig {
     /// Window duration for metric aggregation
     pub aggregation_window: Duration,
 }
-
-/// Backward compatibility alias for [`TunnelMonitoringConfig`]
-#[deprecated(since = "3.1.0", note = "Use TunnelMonitoringConfig instead")]
-pub type MonitoringConfig = TunnelMonitoringConfig;
 
 /// Threshold values that trigger monitoring alerts
 #[derive(Debug, Clone, Serialize, Deserialize)]

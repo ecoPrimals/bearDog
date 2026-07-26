@@ -263,33 +263,6 @@ pub struct TracingConfig {
 
 /// Generic health check configuration (DEPRECATED)
 ///
-/// This generic health check config is being phased out in favor of
-/// domain-specific configurations. Use the appropriate domain config instead:
-/// - Production: `canonical::config::production::operations::HealthCheckConfig`
-/// - Discovery: `canonical::config::discovery::HealthCheckConfig`
-/// - Network: `canonical::network::HealthCheckConfig`
-/// - Services: `canonical::services::endpoints::HealthCheckConfig`
-/// - AI: `beardog_core::ai::hybrid_intelligence::types::HealthCheckConfig`
-/// Health check configuration
-///
-/// **DEPRECATED**: Use `super::domains::network::monitoring::HealthCheckConfiguration` instead.
-///
-/// For specialized health checks, see:
-/// - Production: `super::production::operations::HealthCheckConfig`
-/// - Discovery: `super::discovery::HealthCheckConfig`
-/// - Services: `canonical::services::endpoints::HealthCheckConfig`
-///
-/// This type alias will be removed in v3.3.0.
-#[deprecated(
-    since = "3.1.0",
-    note = "Use canonical::config::domains::network::monitoring::HealthCheckConfiguration instead"
-)]
-#[allow(
-    deprecated,
-    reason = "alias to deprecated name; no deprecated-use lint on this declaration — expect would be unfulfilled"
-)]
-pub type HealthCheckConfig = super::domains::network::monitoring::HealthCheckConfiguration;
-
 /// Alerting configuration
 ///
 /// Configures the alerting system for notifying operators of system issues,

@@ -45,19 +45,20 @@ pub struct BtspMetrics {
 
 impl BtspMetrics {
     /// Create new metrics with all counters at zero
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
-
     /// Check if any operations have been performed
+    #[must_use]
     pub const fn has_activity(&self) -> bool {
         self.tunnels_established > 0
             || self.encryption_operations > 0
             || self.decryption_operations > 0
             || self.trust_evaluations > 0
     }
-
     /// Get total cryptographic operations (encryption + decryption)
+    #[must_use]
     pub const fn total_crypto_ops(&self) -> u64 {
         self.encryption_operations
             .saturating_add(self.decryption_operations)

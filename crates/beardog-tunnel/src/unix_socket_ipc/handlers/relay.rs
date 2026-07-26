@@ -57,6 +57,7 @@ pub struct RelayHandler {
 
 impl RelayHandler {
     /// Create a new relay handler with explicit identity injection
+    #[must_use]
     pub const fn new(identity: Arc<PrimalIdentity>) -> Self {
         Self { identity }
     }
@@ -75,7 +76,7 @@ impl RelayHandler {
     /// - `reason`: Human-readable authorization reason
     /// - `our_family_id`: Our family ID (for logging/debugging)
     /// - `provider`: Primal name (self-knowledge)
-    async fn handle_authorize(
+    fn handle_authorize(
         &self,
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, HandlerError> {
@@ -209,7 +210,7 @@ impl MethodHandler for RelayHandler {
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> HandlerResult {
         match method {
-            "relay.authorize" => self.handle_authorize(params).await,
+            "relay.authorize" => self.handle_authorize(params),
             _ => Err(format!("Unknown relay method: {method}").into()),
         }
     }
@@ -243,7 +244,7 @@ mod tests {
             "requester_family_id": "test-family",
         });
 
-        let result = handler.handle_authorize(Some(&params)).await;
+        let result = handler.handle_authorize(Some(&params));
         assert!(result.is_ok());
 
         let resp = result.expect("authorize same family should succeed");
@@ -264,7 +265,7 @@ mod tests {
             "requester_family_id": "other-family",
         });
 
-        let result = handler.handle_authorize(Some(&params)).await;
+        let result = handler.handle_authorize(Some(&params));
         assert!(result.is_ok());
 
         let resp = result.expect("authorize deny response");
@@ -293,7 +294,7 @@ mod tests {
             "lineage_proof": proof_b64,
         });
 
-        let result = handler.handle_authorize(Some(&params)).await;
+        let result = handler.handle_authorize(Some(&params));
         assert!(result.is_ok());
 
         let resp = result.expect("lineage proof authorize");
@@ -315,7 +316,7 @@ mod tests {
             "lineage_proof": bad_proof,
         });
 
-        let result = handler.handle_authorize(Some(&params)).await;
+        let result = handler.handle_authorize(Some(&params));
         assert!(result.is_ok());
 
         let resp = result.expect("invalid lineage response");
@@ -334,7 +335,7 @@ mod tests {
             "lineage_proof": "not-valid-base64!!!",
         });
 
-        let result = handler.handle_authorize(Some(&params)).await;
+        let result = handler.handle_authorize(Some(&params));
         assert!(result.is_ok());
 
         let resp = result.expect("invalid base64 proof response");
@@ -354,7 +355,7 @@ mod tests {
         let handler = RelayHandler::new(test_identity());
 
         // No params at all
-        let result = handler.handle_authorize(None).await;
+        let result = handler.handle_authorize(None);
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("Missing params"));
     }
@@ -367,7 +368,7 @@ mod tests {
         let params = serde_json::json!({
             "requester_node_id": "some-node",
         });
-        let result = handler.handle_authorize(Some(&params)).await;
+        let result = handler.handle_authorize(Some(&params));
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("requester_family_id"));
 
@@ -375,7 +376,7 @@ mod tests {
         let params = serde_json::json!({
             "requester_family_id": "some-family",
         });
-        let result = handler.handle_authorize(Some(&params)).await;
+        let result = handler.handle_authorize(Some(&params));
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("requester_node_id"));
     }
@@ -456,14 +457,12 @@ mod tests {
         // Handler A should authorize (same family)
         let result_a = handler_a
             .handle_authorize(Some(&params))
-            .await
             .expect("handler_a authorize");
         assert_eq!(result_a["authorized"], true);
 
         // Handler B should deny (different family)
         let result_b = handler_b
             .handle_authorize(Some(&params))
-            .await
             .expect("handler_b authorize");
         assert_eq!(result_b["authorized"], false);
     }

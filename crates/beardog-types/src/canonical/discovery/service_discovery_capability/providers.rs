@@ -30,7 +30,7 @@ impl ConsulDiscovery {
     /// # Errors
     ///
     /// Always returns [`DiscoveryError::BackendUnavailable`] until Consul support is implemented.
-    pub async fn try_create() -> Result<Self, DiscoveryError> {
+    pub fn try_create() -> Result<Self, DiscoveryError> {
         // PHASE-2(Discovery): Implement Consul client creation
         Err(DiscoveryError::BackendUnavailable {
             provider: "consul".to_string(),
@@ -52,7 +52,7 @@ impl EtcdDiscovery {
     /// # Errors
     ///
     /// Always returns [`DiscoveryError::BackendUnavailable`] until etcd support is implemented.
-    pub async fn try_create() -> Result<Self, DiscoveryError> {
+    pub fn try_create() -> Result<Self, DiscoveryError> {
         // PHASE-2(Discovery): Implement etcd client creation
         Err(DiscoveryError::BackendUnavailable {
             provider: "etcd".to_string(),
@@ -75,11 +75,13 @@ pub struct DnsHttpDiscovery {
 
 impl DnsHttpDiscovery {
     /// Create a new DNS/HTTP discovery with default settings
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Create DNS/HTTP discovery with custom search domains
+    #[must_use]
     pub const fn with_domains(domains: Vec<String>) -> Self {
         Self {
             search_domains: domains,
@@ -106,7 +108,7 @@ impl DnsHttpDiscovery {
     /// DNS resolution lives in the runtime layer (`beardog-core` / `beardog-discovery`)
     /// rather than in this types crate. Returns [`DiscoveryError::BackendUnavailable`]
     /// until a resolver is wired in.
-    async fn query_dns_srv(&self, service: &str) -> Result<Vec<ServiceDescriptor>, DiscoveryError> {
+    fn query_dns_srv(&self, service: &str) -> Result<Vec<ServiceDescriptor>, DiscoveryError> {
         Err(DiscoveryError::BackendUnavailable {
             provider: "dns-srv".to_string(),
             reason: format!(
@@ -117,7 +119,7 @@ impl DnsHttpDiscovery {
     }
 
     /// Resolve service name to IP addresses
-    async fn resolve_service_name(&self, name: &str) -> Result<Vec<String>, DiscoveryError> {
+    fn resolve_service_name(&self, name: &str) -> Vec<String> {
         // Real implementation would use DNS A/AAAA lookups
         // For now, check if it's already an IP or localhost
         if name == LOCALHOST_NAME || name == LOCALHOST_IPV4 {
@@ -128,10 +130,10 @@ impl DnsHttpDiscovery {
             let host = std::env::var(env_keys::ENV_API_HOST)
                 .or_else(|_| std::env::var(env_keys::ENV_LOCALHOST))
                 .unwrap_or_else(|_| LOCALHOST_V4.to_string());
-            return Ok(vec![format!("http://{}:{}", host, default_port)]);
+            return vec![format!("http://{}:{}", host, default_port)];
         }
 
-        Ok(Vec::new())
+        Vec::new()
     }
 }
 
@@ -169,7 +171,7 @@ impl ServiceDiscoveryCapability for DnsHttpDiscovery {
 
         for domain in domains {
             let full_service = format!("{service_name}.{domain}");
-            let services = self.query_dns_srv(&full_service).await?;
+            let services = self.query_dns_srv(&full_service)?;
             discovered_services.extend(services);
         }
 
@@ -187,7 +189,8 @@ impl ServiceDiscoveryCapability for DnsHttpDiscovery {
         tracing::info!("DNS/HTTP: Discovering service by name: {}", service_name);
 
         // Try DNS A/AAAA records first
-        if let Ok(endpoints) = self.resolve_service_name(service_name).await {
+        let endpoints = self.resolve_service_name(service_name);
+        if !endpoints.is_empty() {
             let descriptors: Vec<ServiceDescriptor> = endpoints
                 .into_iter()
                 .map(|endpoint| ServiceDescriptor {
@@ -270,7 +273,6 @@ mod tests {
     #[tokio::test]
     async fn consul_try_create_returns_backend_unavailable() {
         let e = ConsulDiscovery::try_create()
-            .await
             .expect_err("consul backend should be unavailable until implemented");
         match e {
             DiscoveryError::BackendUnavailable { provider, .. } => {
@@ -283,7 +285,6 @@ mod tests {
     #[tokio::test]
     async fn etcd_try_create_returns_backend_unavailable() {
         let e = EtcdDiscovery::try_create()
-            .await
             .expect_err("etcd backend should be unavailable until implemented");
         match e {
             DiscoveryError::BackendUnavailable { provider, .. } => {

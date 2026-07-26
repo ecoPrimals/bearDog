@@ -23,9 +23,7 @@ use tracing::info;
 ///   "count": 1
 /// }
 /// ```
-pub async fn handle_fido2_discover(
-    _params: Option<&Value>,
-) -> Result<Value, super::super::HandlerError> {
+pub fn handle_fido2_discover(_params: Option<&Value>) -> Result<Value, super::super::HandlerError> {
     #[cfg(feature = "ctap2")]
     {
         let raw_devices = beardog_hid::discover()

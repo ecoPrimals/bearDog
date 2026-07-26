@@ -42,9 +42,7 @@ use tracing::info;
 ///   "purpose": "loam_seed"
 /// }
 /// ```
-pub async fn handle_fido2_ceremony(
-    params: Option<&Value>,
-) -> Result<Value, super::super::HandlerError> {
+pub fn handle_fido2_ceremony(params: Option<&Value>) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for beardog.fido2.ceremony")?;
 
     let rp_id = params

@@ -19,6 +19,7 @@ pub struct KdfConfig {
 
 impl KdfConfig {
     /// Build configuration for [`KdfConfig::derive_key`].
+    #[must_use]
     pub const fn new(
         kdf_type: String,
         iterations: Option<u32>,
@@ -150,6 +151,7 @@ impl KdfConfig {
         dead_code,
         reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
     )]
+    #[must_use]
     pub fn to_metadata(&self) -> serde_json::Value {
         serde_json::json!({
             "kdf_type": self.kdf_type,

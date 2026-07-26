@@ -27,8 +27,8 @@ impl RustBuilder {
     ///
     /// # Returns
     /// A new `RustBuilder` instance
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub fn new(project_root: &std::path::Path) -> Self {
         Self {
             project_root: project_root.to_path_buf(),

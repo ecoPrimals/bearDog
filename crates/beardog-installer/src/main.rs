@@ -127,7 +127,7 @@ async fn main() -> Result<()> {
         }
 
         Commands::Paths => {
-            show_paths().await?;
+            show_paths()?;
         }
 
         Commands::Version => {
@@ -211,7 +211,7 @@ async fn uninstall_primals(source_dir: &Path, primals: &[PrimalName]) -> Result<
 }
 
 /// Show installation paths
-async fn show_paths() -> Result<()> {
+fn show_paths() -> Result<()> {
     let paths = PlatformPaths::discover()?;
 
     println!("📂 Installation Paths:\n");

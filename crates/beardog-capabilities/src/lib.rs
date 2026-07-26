@@ -50,7 +50,7 @@
 //! ```rust,no_run
 //! use beardog_capabilities::{CapabilityMetadata, CapabilityRegistry};
 //!
-//! # async fn example() -> Result<(), beardog_errors::BearDogError> {
+//! # fn example() -> Result<(), beardog_errors::BearDogError> {
 //! // 1. Create capability registry (HTTP/mDNS from BEARDOG_* env; see metadata module)
 //! let registry = CapabilityRegistry::new(
 //!     "550e8400-e29b-41d4-a716-446655440000",
@@ -68,7 +68,7 @@
 //! registry.register("secure_tunnel", (), metadata);
 //!
 //! // 4. Advertise capabilities via mDNS/HTTP
-//! registry.advertise().await?;
+//! registry.advertise()?;
 //! # Ok(())
 //! # }
 //! ```

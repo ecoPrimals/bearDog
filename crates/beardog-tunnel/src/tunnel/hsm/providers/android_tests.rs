@@ -4,14 +4,14 @@ use super::*;
 
 #[tokio::test]
 async fn test_android_provider_creation() -> Result<(), Box<dyn std::error::Error>> {
-    let provider = AndroidUniversalProvider::new().await;
+    let provider = AndroidUniversalProvider::new();
     assert!(provider.is_ok());
     Ok(())
 }
 
 #[tokio::test]
 async fn test_capabilities_detection() -> Result<(), Box<dyn std::error::Error>> {
-    let provider = AndroidUniversalProvider::new().await?;
+    let provider = AndroidUniversalProvider::new()?;
     let caps = provider.capabilities();
     assert!(caps.is_some());
     Ok(())
@@ -97,7 +97,7 @@ fn test_has_capabilities() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::test]
 async fn test_android_capabilities() -> Result<(), Box<dyn std::error::Error>> {
-    let provider = AndroidUniversalProvider::new().await?;
+    let provider = AndroidUniversalProvider::new()?;
 
     if let Some(caps) = provider.capabilities() {
         // On non-Android (Linux CI), software fallback is used:
@@ -192,7 +192,7 @@ fn test_vendor_info_with_different_models() -> Result<(), Box<dyn std::error::Er
 
 #[tokio::test]
 async fn test_capabilities_structure() -> Result<(), Box<dyn std::error::Error>> {
-    let provider = AndroidUniversalProvider::new().await?;
+    let provider = AndroidUniversalProvider::new()?;
 
     if let Some(caps) = provider.capabilities() {
         // Verify all capability fields are accessible
@@ -308,7 +308,7 @@ async fn test_concurrent_provider_creation() -> Result<(), Box<dyn std::error::E
     let mut handles = vec![];
 
     for _ in 0..5 {
-        let handle = tokio::spawn(async { AndroidUniversalProvider::new().await });
+        let handle = tokio::spawn(async { AndroidUniversalProvider::new() });
         handles.push(handle);
     }
 

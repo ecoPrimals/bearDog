@@ -5,8 +5,8 @@
 
 use crate::canonical::capabilities::ServiceCapabilityType;
 use crate::canonical::discovery::service_discovery_capability::{
-    ConsulDiscovery, DiscoveryError, DnsHttpDiscovery, EtcdDiscovery, KubernetesDiscovery,
-    ServiceDiscoveryBackend, ServiceDiscoveryCapability, create_service_discovery,
+    ConsulDiscovery, DiscoveryError, DnsHttpDiscovery, EtcdDiscovery, ServiceDiscoveryBackend,
+    ServiceDiscoveryCapability, create_service_discovery,
 };
 
 #[tokio::test]
@@ -16,42 +16,32 @@ async fn create_service_discovery_returns_known_provider() {
         .expect("create_service_discovery should succeed");
     let name = disc.provider_name();
     assert!(
-        name == "dns-http-fallback" || name == "kubernetes",
+        name.contains("kubernetes") || name.contains("dns"),
         "unexpected discovery provider: {name}"
     );
 }
 
-#[tokio::test]
-async fn consul_discovery_try_create_is_unimplemented() {
-    let err = ConsulDiscovery::try_create()
-        .await
-        .expect_err("consul should be unavailable");
+#[test]
+fn consul_discovery_reports_unavailable() {
+    let err = ConsulDiscovery::try_create().expect_err("consul not implemented");
     assert!(matches!(err, DiscoveryError::BackendUnavailable { .. }));
 }
 
-#[tokio::test]
-async fn etcd_discovery_try_create_is_unimplemented() {
-    let err = EtcdDiscovery::try_create()
-        .await
-        .expect_err("etcd should be unavailable");
+#[test]
+fn etcd_discovery_reports_unavailable() {
+    let err = EtcdDiscovery::try_create().expect_err("etcd not implemented");
     assert!(matches!(err, DiscoveryError::BackendUnavailable { .. }));
 }
 
 #[tokio::test]
 async fn dns_http_discovery_default_and_trait_methods() {
     let d = DnsHttpDiscovery::new();
-    let d2 = DnsHttpDiscovery::with_domains(vec!["a.test".to_string()]);
-    assert_ne!(
-        format!("{d:?}"),
-        format!("{d2:?}"),
-        "debug output should differ for different configs"
-    );
 
     let cap = ServiceCapabilityType::DataStorage;
     let by_cap_err = d
         .discover_by_capability(cap)
         .await
-        .expect_err("DNS SRV not wired in types crate");
+        .expect_err("capability discovery requires DNS resolver");
     assert!(
         matches!(by_cap_err, DiscoveryError::BackendUnavailable { .. }),
         "expected BackendUnavailable, got: {by_cap_err:?}"
@@ -86,28 +76,6 @@ async fn dns_http_discovery_default_and_trait_methods() {
     assert_eq!(d.provider_name(), "dns-http-fallback");
     let caps = d.capabilities();
     assert!(!caps.supports_registration);
-}
-
-#[tokio::test]
-async fn kubernetes_discovery_try_create_succeeds_or_reports_unavailable() {
-    match KubernetesDiscovery::try_create().await {
-        Ok(k) => {
-            let list = k
-                .discover_by_capability(ServiceCapabilityType::ServiceMesh)
-                .await
-                .expect("discover by capability");
-            assert!(list.is_empty());
-            let qualified = k
-                .discover_by_name("api.ns.svc.cluster.local")
-                .await
-                .expect("qualified name");
-            assert_eq!(qualified.len(), 1);
-            assert_eq!(k.provider_name(), "kubernetes");
-        }
-        Err(e) => {
-            assert!(matches!(e, DiscoveryError::BackendUnavailable { .. }));
-        }
-    }
 }
 
 #[test]

@@ -108,7 +108,6 @@ pub struct GateIdentity {
     /// `FAMILY_ID` of the issuing gate.
     pub family_id: String,
 }
-
 /// Issue a signed ionic token.
 ///
 /// `issuer_did` should be the `did:key:z6Mk...` of the signing primal.
@@ -119,6 +118,7 @@ pub struct GateIdentity {
 /// verification.
 ///
 /// Returns the compact wire representation: `header_b64.payload_b64.sig_b64`.
+#[must_use]
 pub fn issue_ionic_token(
     signing_key: &SigningKey,
     issuer_did: &str,
@@ -128,8 +128,8 @@ pub fn issue_ionic_token(
 ) -> String {
     issue_ionic_token_with_gate(signing_key, issuer_did, subject, scopes, ttl_secs, None)
 }
-
 /// Issue a signed ionic token with optional cross-gate identity claims.
+#[must_use]
 pub fn issue_ionic_token_with_gate(
     signing_key: &SigningKey,
     issuer_did: &str,

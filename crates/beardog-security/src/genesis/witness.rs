@@ -75,6 +75,7 @@ impl GenesisWitness {
     /// * `physical_channel` - Type of physical channel used
     /// * `timestamp` - Unix timestamp of ceremony
     /// * `signature` - Ed25519 signature (64 bytes)
+    #[must_use]
     pub const fn new(
         device_id: String,
         public_key: Vec<u8>,
@@ -92,6 +93,7 @@ impl GenesisWitness {
     }
 
     /// Get the trust level for this witness based on physical channel
+    #[must_use]
     pub const fn trust_level(&self) -> TrustLevel {
         self.physical_channel.trust_level()
     }
@@ -119,16 +121,19 @@ impl GenesisWitnessVerifier {
     ///
     /// * `trusted_witnesses` - Optional list of trusted witness device IDs.
     ///   If None, all witnesses are accepted (use for development).
+    #[must_use]
     pub const fn new(trusted_witnesses: Option<Vec<String>>) -> Self {
         Self { trusted_witnesses }
     }
 
     /// Create verifier that accepts all witnesses (development mode)
+    #[must_use]
     pub const fn permissive() -> Self {
         Self::new(None)
     }
 
     /// Create verifier with specific trusted witnesses (production mode)
+    #[must_use]
     pub const fn with_trusted_witnesses(witness_ids: Vec<String>) -> Self {
         Self::new(Some(witness_ids))
     }

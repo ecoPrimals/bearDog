@@ -24,7 +24,7 @@ impl Default for PerformanceAnalyzer {
 impl PerformanceAnalyzer {
     /// Creates a new analyzer with the default anomaly threshold (2.0 standard deviations).
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             threshold_std_devs: 2.0,
         }
@@ -32,7 +32,7 @@ impl PerformanceAnalyzer {
 
     /// Creates a new analyzer with a custom anomaly threshold (in standard deviations).
     #[must_use]
-    pub fn with_threshold(std_devs: f64) -> Self {
+    pub const fn with_threshold(std_devs: f64) -> Self {
         Self {
             threshold_std_devs: std_devs,
         }

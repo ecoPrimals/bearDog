@@ -63,14 +63,14 @@ impl SafeAndroidStrongBoxManager {
             device_info,
         })
     }
-
     /// Returns device information
-    pub fn device_info(&self) -> &AndroidDeviceInfo {
+    #[must_use]
+    pub const fn device_info(&self) -> &AndroidDeviceInfo {
         &self.device_info
     }
-
     /// Returns keystore operations interface
-    pub fn keystore(&self) -> &SafeAndroidKeystore {
+    #[must_use]
+    pub const fn keystore(&self) -> &SafeAndroidKeystore {
         &self.keystore
     }
 }
@@ -131,7 +131,7 @@ mod tests {
     #[tokio::test]
     async fn test_safe_android_manager_creation() -> Result<(), BearDogError> {
         let manager = SafeAndroidStrongBoxManager::new().await?;
-        assert!(!manager.device_info().device_model.is_empty());
+        assert!(!manager.device_info().device_model().is_empty());
         Ok(())
     }
 
@@ -146,7 +146,7 @@ mod tests {
     #[tokio::test]
     async fn test_safe_strongbox_factory() -> Result<(), BearDogError> {
         let strongbox = create_safe_android_strongbox().await?;
-        assert!(!strongbox.device_info().device_model.is_empty());
+        assert!(!strongbox.device_info().device_model().is_empty());
         Ok(())
     }
 }

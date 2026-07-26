@@ -127,8 +127,8 @@ impl DeploymentOptimizationConfig {
     /// Gets the rustc optimization flags based on configuration
     ///
     /// # Returns
-    #[must_use]
     /// Gets `rustc_flags`
+    #[must_use]
     pub fn get_rustc_flags(&self) -> Vec<String> {
         let mut flags = Vec::new();
 
@@ -161,8 +161,8 @@ impl DeploymentOptimizationConfig {
     /// Gets the cargo build flags based on configuration
     ///
     /// # Returns
-    #[must_use]
     /// Gets `cargo_flags`
+    #[must_use]
     pub fn get_cargo_flags(&self) -> Vec<String> {
         let mut flags = Vec::new();
 

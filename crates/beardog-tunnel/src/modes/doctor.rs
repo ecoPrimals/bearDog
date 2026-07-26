@@ -39,11 +39,7 @@ pub(crate) fn doctor_json_status_line(comprehensive: bool) -> String {
 /// # Errors
 ///
 /// Returns an error if diagnostics cannot be completed or report failure.
-pub async fn run(
-    comprehensive: bool,
-    socket: Option<String>,
-    format: String,
-) -> anyhow::Result<()> {
+pub fn run(comprehensive: bool, socket: Option<String>, format: String) -> anyhow::Result<()> {
     let socket_path = doctor_resolve_socket_path(socket)?;
 
     if format == "json" {
@@ -200,7 +196,7 @@ mod doctor_tests {
 
     #[tokio::test]
     async fn doctor_run_json_format_completes_ok() {
-        let res = run(true, Some("/nonexistent/doctor.sock".into()), "json".into()).await;
+        let res = run(true, Some("/nonexistent/doctor.sock".into()), "json".into());
         assert!(res.is_ok());
     }
 
@@ -210,8 +206,7 @@ mod doctor_tests {
             false,
             Some("/nonexistent/doctor-text.sock".into()),
             "text".into(),
-        )
-        .await;
+        );
         assert!(res.is_ok());
     }
 
@@ -221,8 +216,7 @@ mod doctor_tests {
             true,
             Some("/nonexistent/doctor-comprehensive.sock".into()),
             "text".into(),
-        )
-        .await;
+        );
         assert!(res.is_ok());
     }
 
@@ -230,7 +224,7 @@ mod doctor_tests {
     async fn doctor_run_text_when_socket_path_exists_file() {
         let tmp = tempfile::NamedTempFile::new().expect("temp file for doctor path");
         let path = tmp.path().to_string_lossy().into_owned();
-        let res = run(false, Some(path), "text".into()).await;
+        let res = run(false, Some(path), "text".into());
         assert!(res.is_ok());
     }
 
@@ -260,8 +254,7 @@ mod doctor_tests {
             false,
             Some("/nonexistent/doctor-fmt.sock".into()),
             "pretty".into(),
-        )
-        .await;
+        );
         assert!(res.is_ok());
     }
 }

@@ -58,6 +58,7 @@ impl UnifiedDiscoveryConfig {
     ///
     /// This method returns default values and is safe for
     /// concurrent access without any risk of race conditions.
+    #[must_use]
     pub fn const_defaults() -> Self {
         Self {
             enabled: true,
@@ -73,11 +74,13 @@ impl UnifiedDiscoveryConfig {
     }
 
     /// Create a builder for flexible configuration construction
+    #[must_use]
     pub fn builder() -> UnifiedDiscoveryConfigBuilder {
         UnifiedDiscoveryConfigBuilder::new()
     }
 
     /// Create an aggressive discovery configuration (fast timeouts, aggressive retries)
+    #[must_use]
     pub fn aggressive() -> Self {
         let discovery_endpoint = resolve_discovery_endpoint_from_env();
 
@@ -107,6 +110,7 @@ impl UnifiedDiscoveryConfig {
     }
 
     /// Create a conservative discovery configuration (long timeouts, fewer retries)
+    #[must_use]
     pub fn conservative() -> Self {
         let discovery_endpoint = resolve_discovery_endpoint_from_env();
 
@@ -149,6 +153,7 @@ impl UnifiedDiscoveryConfig {
 
 impl ServiceRegistryConfig {
     /// Static defaults for tests and const contexts (no environment reads).
+    #[must_use]
     pub const fn const_defaults() -> Self {
         Self {
             backend: String::new(),
@@ -164,6 +169,7 @@ impl ServiceRegistryConfig {
 
 impl NetworkDiscoveryConfig {
     /// Static defaults for tests and const contexts (no environment reads).
+    #[must_use]
     pub const fn const_defaults() -> Self {
         // Note: CanonicalRetryConfig doesn't have const_defaults, so we use default() in Default impl
         Self {
@@ -186,6 +192,7 @@ impl NetworkDiscoveryConfig {
 
 impl QuantumDiscoveryConfig {
     /// Static defaults for tests and const contexts (no environment reads).
+    #[must_use]
     pub const fn const_defaults() -> Self {
         Self {
             enabled: false,         // Quantum discovery is experimental
@@ -199,6 +206,7 @@ impl QuantumDiscoveryConfig {
 
 impl DiscoveryCacheConfig {
     /// Static defaults for tests (no environment reads); mirrors conservative cache sizing.
+    #[must_use]
     pub fn const_defaults() -> Self {
         Self {
             enabled: true,
@@ -212,6 +220,7 @@ impl DiscoveryCacheConfig {
 
 impl DiscoverySecurityConfig {
     /// Static defaults for tests and const contexts (no environment reads).
+    #[must_use]
     pub const fn const_defaults() -> Self {
         Self {
             enabled: true,
@@ -227,6 +236,7 @@ impl DiscoverySecurityConfig {
 
 impl LoadBalancingConfig {
     /// Static defaults for tests and const contexts (no environment reads).
+    #[must_use]
     pub const fn const_defaults() -> Self {
         Self {
             algorithm: LoadBalancingAlgorithm::RoundRobin,
@@ -239,6 +249,7 @@ impl LoadBalancingConfig {
 
 impl CircuitBreakerConfig {
     /// Static defaults for tests and const contexts (no environment reads).
+    #[must_use]
     pub const fn const_defaults() -> Self {
         Self {
             failure_threshold: 5,

@@ -31,7 +31,6 @@ pub async fn handle_key_mix(
         expires_in,
         home.as_path(),
     )
-    .await
 }
 
 /// Same as [`handle_key_mix`] but keys and receipts are rooted at `home` (tests / isolation).
@@ -39,7 +38,7 @@ pub async fn handle_key_mix(
 /// # Errors
 ///
 /// Returns an error if keys cannot be loaded or decoded, mixing fails, or persistence fails.
-pub async fn handle_key_mix_with_home(
+pub fn handle_key_mix_with_home(
     key1_id: &str,
     key2_id: &str,
     output_key_id: &str,
@@ -237,7 +236,6 @@ mod tests {
         key_store::save_key_to_home(&k2, home).expect("save mix-b");
 
         handle_key_mix_with_home("mix-a", "mix-b", "mix-out", "2-of-2", None, home)
-            .await
             .expect("mix keys mix-a and mix-b");
 
         let mixed = key_store::load_key_from_home("mix-out", home).expect("load mix-out");
@@ -273,7 +271,6 @@ mod tests {
         key_store::save_key_to_home(&k2, home).expect("save key b");
 
         let err = handle_key_mix_with_home("a", "b", "out", "t", None, home)
-            .await
             .expect_err("mix should fail on length mismatch");
         assert!(err.to_string().contains("same length"));
     }
@@ -303,7 +300,6 @@ mod tests {
         }
         assert!(
             handle_key_mix_with_home("e-a", "e-b", "e-out", "t", Some("not-a-duration"), home)
-                .await
                 .is_err()
         );
     }

@@ -54,11 +54,11 @@ pub fn collaboration_service() -> Arc<CollaborationService> {
 /// # Returns
 ///
 /// Template information including creator details
-pub async fn get_creator_info(
+pub fn get_creator_info(
     template_id: &str,
 ) -> Result<crate::graph_security::collaboration_service::TemplateInfo, BearDogError> {
     let collab = collaboration_service();
-    collab.get_template_info(template_id).await
+    collab.get_template_info(template_id)
 }
 
 /// # Errors
@@ -76,11 +76,11 @@ pub async fn get_creator_info(
 /// # Returns
 ///
 /// Vector of lineage versions (chronological order, oldest first)
-pub async fn get_lineage(
+pub fn get_lineage(
     template_id: &str,
 ) -> Result<Vec<crate::graph_security::collaboration_service::LineageVersion>, BearDogError> {
     let collab = collaboration_service();
-    collab.get_lineage(template_id).await
+    collab.get_lineage(template_id)
 }
 
 /// # Errors
@@ -98,11 +98,11 @@ pub async fn get_lineage(
 /// # Returns
 ///
 /// Community metrics (deployments, success rate, ratings)
-pub async fn get_community_metrics(
+pub fn get_community_metrics(
     template_id: &str,
 ) -> Result<crate::graph_security::collaboration_service::CommunityMetrics, BearDogError> {
     let collab = collaboration_service();
-    collab.get_community_metrics(template_id).await
+    collab.get_community_metrics(template_id)
 }
 
 /// # Errors
@@ -121,12 +121,12 @@ pub async fn get_community_metrics(
 /// # Returns
 ///
 /// User permissions including role and capabilities
-pub async fn get_user_permissions(
+pub fn get_user_permissions(
     user_id: &str,
     resource_id: &str,
 ) -> Result<crate::graph_security::collaboration_service::UserPermissions, BearDogError> {
     let collab = collaboration_service();
-    collab.get_user_permissions(user_id, resource_id).await
+    collab.get_user_permissions(user_id, resource_id)
 }
 
 #[cfg(test)]
@@ -153,7 +153,6 @@ mod tests {
     #[tokio::test]
     async fn test_get_creator_info_integration() {
         let err = get_creator_info("test-template")
-            .await
             .expect_err("creator info should fail without collaboration network");
         assert!(
             err.to_string().contains("collaboration network")
@@ -164,7 +163,6 @@ mod tests {
     #[tokio::test]
     async fn test_get_lineage_integration() {
         let err = get_lineage("test-template")
-            .await
             .expect_err("lineage should fail without collaboration network");
         assert!(
             err.to_string().contains("collaboration network")
@@ -175,7 +173,6 @@ mod tests {
     #[tokio::test]
     async fn test_get_community_metrics_integration() {
         let err = get_community_metrics("test-template")
-            .await
             .expect_err("community metrics should fail without collaboration network");
         assert!(
             err.to_string().contains("collaboration network")
@@ -186,7 +183,6 @@ mod tests {
     #[tokio::test]
     async fn test_get_user_permissions_integration() {
         let err = get_user_permissions("user-1", "graph-1")
-            .await
             .expect_err("permissions should fail without collaboration network");
         assert!(
             err.to_string().contains("collaboration network")

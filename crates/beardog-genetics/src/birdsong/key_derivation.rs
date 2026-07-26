@@ -155,11 +155,13 @@ impl LineageKeyDerivation {
     }
 
     /// Check if a key is expired
+    #[must_use]
     pub fn is_key_expired(&self, key: &BirdSongKey) -> bool {
         Utc::now() > key.expires_at
     }
 
     /// Check if a key is valid for a given lineage depth
+    #[must_use]
     pub const fn is_key_valid_for_depth(&self, key: &BirdSongKey, depth: LineageDepth) -> bool {
         depth >= key.hint.min_depth && depth <= key.hint.max_depth
     }

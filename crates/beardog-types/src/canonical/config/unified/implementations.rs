@@ -93,6 +93,7 @@ impl UnifiedBearDogConfig {
     /// let config = UnifiedBearDogConfig::development();
     /// assert_eq!(config.metadata.environment, beardog_types::canonical::config::unified::metadata::Environment::Development);
     /// ```
+    #[must_use]
     pub fn development() -> Self {
         let mut config = Self::default();
         config.metadata.environment = Environment::Development;
@@ -112,6 +113,7 @@ impl UnifiedBearDogConfig {
     /// let config = UnifiedBearDogConfig::production();
     /// assert_eq!(config.metadata.environment, beardog_types::canonical::config::unified::metadata::Environment::Production);
     /// ```
+    #[must_use]
     pub fn production() -> Self {
         let mut config = Self::default();
         config.metadata.environment = Environment::Production;

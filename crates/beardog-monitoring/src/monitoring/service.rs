@@ -98,8 +98,8 @@ pub struct MonitoringService {
 
 impl MonitoringService {
     /// Creates a new monitoring service instance
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub fn new(config: MonitoringConfig) -> Self {
         let metrics_collector = Arc::new(MetricsCollector::new());
         let prometheus_exporter = if config.prometheus.enabled {
@@ -183,7 +183,7 @@ impl MonitoringService {
         let alerts = self.alerts.read().await.clone();
 
         // Collect detailed health information
-        let health_details = self.collect_component_health().await?;
+        let health_details = self.collect_component_health();
 
         let snapshot = MonitoringSnapshot {
             id: uuid::Uuid::new_v4().to_string(),
@@ -245,8 +245,8 @@ impl MonitoringService {
     }
 
     /// Gets system uptime in seconds
-    #[must_use]
     /// Gets `uptime_seconds`
+    #[must_use]
     pub fn get_uptime_seconds(&self) -> u64 {
         self.start_time.elapsed().as_secs()
     }
@@ -347,7 +347,7 @@ impl MonitoringService {
 
     fn collect_health_summary(&self) -> Result<HealthSummary, BearDogError> {
         // Collect health checks from all monitored components
-        let health_results = self.perform_health_checks()?;
+        let health_results = self.perform_health_checks();
 
         let component_count = u32::try_from(health_results.len())
             .map_err(|_| BearDogError::system("Component count overflow".to_string()))?;
@@ -377,7 +377,7 @@ impl MonitoringService {
     }
 
     /// Perform health checks on all monitored components
-    fn perform_health_checks(&self) -> Result<Vec<ComponentHealth>, BearDogError> {
+    fn perform_health_checks(&self) -> Vec<ComponentHealth> {
         let health_results = vec![
             // Check core monitoring service itself
             ComponentHealth {
@@ -396,7 +396,7 @@ impl MonitoringService {
             self.check_snapshot_storage(),
         ];
 
-        Ok(health_results)
+        health_results
     }
 
     /// Check metrics collection health
@@ -436,8 +436,7 @@ impl MonitoringService {
     }
 
     /// Collect detailed component health asynchronously
-    async fn collect_component_health(&self) -> Result<Vec<ComponentHealth>, BearDogError> {
-        // Perform synchronous health checks
+    fn collect_component_health(&self) -> Vec<ComponentHealth> {
         self.perform_health_checks()
     }
 

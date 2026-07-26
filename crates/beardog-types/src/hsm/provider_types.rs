@@ -96,7 +96,7 @@ pub struct KeyGenParams {
 impl KeyGenParams {
     /// Shorthand: generate a non-extractable key with the given algorithm.
     #[must_use]
-    pub fn new(algorithm: HsmAlgorithm) -> Self {
+    pub const fn new(algorithm: HsmAlgorithm) -> Self {
         Self {
             algorithm,
             label: None,

@@ -180,10 +180,10 @@ impl SafeAndroidStrongBoxWrapper {
 
         Ok(is_valid)
     }
-
     /// Get device capabilities
     /// Gets device_capabilities
-    pub fn get_device_capabilities(&self) -> &DeviceCapabilities {
+    #[must_use]
+    pub const fn get_device_capabilities(&self) -> &DeviceCapabilities {
         &self.device_capabilities
     }
 
@@ -225,13 +225,13 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    fn test_safe_wrapper_initialization() {
+    async fn test_safe_wrapper_initialization() {
         let wrapper = SafeAndroidStrongBoxWrapper::new();
         assert!(!wrapper.native_handle_initialized);
     }
 
     #[tokio::test]
-    fn test_device_capabilities() {
+    async fn test_device_capabilities() {
         let wrapper = SafeAndroidStrongBoxWrapper::new();
         let capabilities = wrapper.get_device_capabilities();
         assert!(capabilities.hardware_backed);

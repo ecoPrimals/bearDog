@@ -20,9 +20,7 @@ impl DefaultEncryptionKey {
     ///
     /// Returns an error if decryption fails.
     /// Create new default encryption key
-    pub async fn create(
-        _config: &SoftwareHsmConfig,
-    ) -> Result<Arc<EncryptionKeyBackend>, BearDogError> {
+    pub fn create(_config: &SoftwareHsmConfig) -> Result<Arc<EncryptionKeyBackend>, BearDogError> {
         let root_key = *b"BearDog_RootKey_256bit_Secure!!!"; // 32 bytes
         Ok(Arc::new(EncryptionKeyBackend::Default(Self { root_key })))
     }

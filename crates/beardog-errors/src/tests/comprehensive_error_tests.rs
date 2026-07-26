@@ -129,11 +129,11 @@ mod error_conversion_tests {
 
     #[test]
     fn test_result_propagation() -> Result<(), BearDogError> {
-        fn inner() -> Result<i32, BearDogError> {
-            Ok(42)
+        fn inner() -> i32 {
+            42
         }
 
-        let value = inner()?;
+        let value = inner();
         assert_eq!(value, 42);
         Ok(())
         // TEST_CATEGORY: integration

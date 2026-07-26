@@ -23,11 +23,7 @@ impl BeardogBtspProvider {
     /// # Errors
     ///
     /// Returns an error if `peer_id` or `family_id` is empty.
-    pub async fn seed_trusted_peer(
-        &self,
-        peer_id: &str,
-        family_id: &str,
-    ) -> Result<bool, BearDogError> {
+    pub fn seed_trusted_peer(&self, peer_id: &str, family_id: &str) -> Result<bool, BearDogError> {
         let peer_id = peer_id.trim();
         let family_id = family_id.trim();
         if peer_id.is_empty() {
@@ -72,7 +68,7 @@ impl BeardogBtspProvider {
     /// # Errors
     ///
     /// Returns an error if any peer entry is malformed.
-    pub async fn seed_trusted_peers_from_env(&self) -> Result<usize, BearDogError> {
+    pub fn seed_trusted_peers_from_env(&self) -> Result<usize, BearDogError> {
         let Ok(raw) = beardog_errors::process_env::var(env_keys::ENV_TRUSTED_PEERS) else {
             return Ok(0);
         };
@@ -84,7 +80,7 @@ impl BeardogBtspProvider {
                 continue;
             }
             let (peer_id, family_id) = super::parse_trusted_peer_pair(entry)?;
-            if self.seed_trusted_peer(peer_id, family_id).await? {
+            if self.seed_trusted_peer(peer_id, family_id)? {
                 seeded += 1;
             }
         }
@@ -92,7 +88,7 @@ impl BeardogBtspProvider {
     }
 
     /// Pin peer's public key (TOFU - Trust On First Use)
-    pub(super) async fn pin_peer_key(
+    pub(super) fn pin_peer_key(
         &self,
         peer_id: &str,
         public_key: &[u8],
@@ -116,7 +112,7 @@ impl BeardogBtspProvider {
     }
 
     /// Update peer trust record
-    pub(super) async fn update_peer_trust(&self, peer_id: &str) -> Result<(), BearDogError> {
+    pub(super) fn update_peer_trust(&self, peer_id: &str) -> Result<(), BearDogError> {
         let mut db = self.trust_db.write();
 
         if let Some(record) = db.get_mut(peer_id) {
@@ -134,7 +130,7 @@ impl BeardogBtspProvider {
     }
 
     /// Establish mTLS connection with peer
-    pub(super) async fn establish_mtls(
+    pub(super) fn establish_mtls(
         &self,
         peer: &PeerEndpoint,
         _session_key: &[u8],
@@ -161,10 +157,7 @@ impl BeardogBtspProvider {
     ///
     /// This uses `BirdSong` to encrypt a random session key for the peer's lineage,
     /// ensuring only trusted peers in the same cryptographic family can derive it.
-    pub(super) async fn generate_session_key(
-        &self,
-        peer_id: &str,
-    ) -> Result<Vec<u8>, BearDogError> {
+    pub(super) fn generate_session_key(&self, peer_id: &str) -> Result<Vec<u8>, BearDogError> {
         debug!(
             "🎵 Generating BirdSong lineage-aware session key for peer: {}",
             peer_id
@@ -213,7 +206,7 @@ impl BeardogBtspProvider {
     }
 
     /// Clean up ephemeral session key from HSM
-    pub(super) async fn cleanup_session_key(&self, peer_id: &str) -> Result<(), BearDogError> {
+    pub(super) fn cleanup_session_key(&self, peer_id: &str) -> Result<(), BearDogError> {
         debug!("🗑️  Cleaning up BirdSong session key for peer: {}", peer_id);
 
         // BirdSong uses ephemeral encryption - no HSM cleanup needed
@@ -224,7 +217,7 @@ impl BeardogBtspProvider {
     }
 
     /// Encrypt with genetic key lineage
-    pub(super) async fn encrypt_with_lineage(
+    pub(super) fn encrypt_with_lineage(
         &self,
         data: &[u8],
         session_key: &[u8],
@@ -258,7 +251,7 @@ impl BeardogBtspProvider {
     }
 
     /// Decrypt with genetic key lineage verification
-    pub(super) async fn decrypt_with_lineage(
+    pub(super) fn decrypt_with_lineage(
         &self,
         data: &[u8],
         session_key: &[u8],

@@ -42,7 +42,7 @@ mod genesis_provider_tests {
 
     #[tokio::test]
     async fn test_genesis_provider_with_config() -> Result<(), BearDogError> {
-        let provider = GenesisLineageProvider::with_config(TrustLevel::High).await?;
+        let provider = GenesisLineageProvider::with_config(TrustLevel::High)?;
         let _ = provider;
         Ok(())
     }
@@ -64,9 +64,7 @@ mod genesis_provider_tests {
         // Register the witness
         provider.add_trusted_witness(&witness.device_id, witness.public_key.clone());
 
-        let lineage = provider
-            .establish_genesis_lineage("new-node-001", &witness)
-            .await?;
+        let lineage = provider.establish_genesis_lineage("new-node-001", &witness)?;
 
         assert!(!lineage.genetic_id.is_empty());
         assert_eq!(lineage.trust_level, TrustLevel::Maximum);
@@ -83,9 +81,7 @@ mod genesis_provider_tests {
         provider.add_trusted_witness("other-device", vec![99u8; 32]);
 
         // The actual witness is not registered → should fail
-        let result = provider
-            .establish_genesis_lineage("new-node", &witness)
-            .await;
+        let result = provider.establish_genesis_lineage("new-node", &witness);
         assert!(result.is_err());
         Ok(())
     }

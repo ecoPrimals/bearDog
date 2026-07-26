@@ -20,7 +20,7 @@
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Discover services that provide "orchestration" capability
-//! let discovery = CapabilityDiscovery::from_config("configs/beardog-primal-capabilities.toml").await?;
+//! let discovery = CapabilityDiscovery::from_config("configs/beardog-primal-capabilities.toml")?;
 //!
 //! // Find ANY service that provides orchestration (don't care who!)
 //! let orchestrators = discovery.find_by_capability("orchestration").await?;

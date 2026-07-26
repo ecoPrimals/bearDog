@@ -55,7 +55,7 @@ impl AndroidUniversalProvider {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub async fn new() -> Result<Self, BearDogError> {
+    pub fn new() -> Result<Self, BearDogError> {
         let mut provider = Self {
             capabilities: None,
             strongbox_available: false,
@@ -67,7 +67,7 @@ impl AndroidUniversalProvider {
         provider.detect_strongbox();
         provider.detect_tee();
 
-        let capabilities = provider.discover_capabilities().await?;
+        let capabilities = provider.discover_capabilities()?;
         provider.capabilities = Some(capabilities);
 
         Ok(provider)
@@ -150,7 +150,7 @@ impl AndroidUniversalProvider {
     }
 
     /// Discover Android HSM capabilities
-    async fn discover_capabilities(&self) -> Result<AndroidCapabilities, BearDogError> {
+    fn discover_capabilities(&self) -> Result<AndroidCapabilities, BearDogError> {
         let strongbox_level = if self.strongbox_available {
             StrongBoxLevel::Full
         } else if self.tee_available {
@@ -167,8 +167,8 @@ impl AndroidUniversalProvider {
             biometric_auth: true, // Most modern Android devices support biometrics
         })
     }
-
     /// Get security level
+    #[must_use]
     pub const fn get_security_level(&self) -> u8 {
         if self.strongbox_available {
             3 // Highest: StrongBox
@@ -178,8 +178,8 @@ impl AndroidUniversalProvider {
             1 // Basic: Software
         }
     }
-
     /// Get vendor information
+    #[must_use]
     pub fn get_vendor_info(&self) -> VendorInfo {
         VendorInfo {
             name: "Android".to_string(),
@@ -195,18 +195,18 @@ impl AndroidUniversalProvider {
                 .unwrap_or_else(|| "Unknown".to_string()),
         }
     }
-
     /// Check if `StrongBox` is available
+    #[must_use]
     pub const fn has_strongbox(&self) -> bool {
         self.strongbox_available
     }
-
     /// Check if TEE is available
+    #[must_use]
     pub const fn has_tee(&self) -> bool {
         self.tee_available
     }
-
     /// Get capabilities
+    #[must_use]
     pub const fn capabilities(&self) -> Option<&AndroidCapabilities> {
         self.capabilities.as_ref()
     }

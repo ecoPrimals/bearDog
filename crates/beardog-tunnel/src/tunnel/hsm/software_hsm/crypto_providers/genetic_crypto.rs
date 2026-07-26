@@ -119,13 +119,13 @@ impl GeneticCryptoProvider {
             lineage_seed: Some(lineage_seed),
         })
     }
-
     /// Get provider name
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.name
     }
-
     /// Check if provider has lineage seed (Phase 5)
+    #[must_use]
     pub const fn has_lineage(&self) -> bool {
         self.lineage_seed.is_some()
     }
@@ -421,7 +421,7 @@ impl GeneticCryptoProvider {
     /// # Performance
     ///
     /// Blake3 is 10x faster than SHA-256 and provides better security margins.
-    async fn _derive_key_blake3(
+    fn _derive_key_blake3(
         &self,
         root_key: &[u8],
         derivation_data: &[u8],
@@ -481,7 +481,7 @@ impl GeneticCryptoProvider {
     ///     b"tunnel-session-12345"
     /// ).await?;
     /// ```
-    pub async fn derive_lineage_key(
+    pub fn derive_lineage_key(
         &self,
         our_family_id: &str,
         peer_family_id: &str,
@@ -573,7 +573,7 @@ impl GeneticCryptoProvider {
     /// // Standard operation (Tier 1)
     /// let entropy = provider.mix_entropy(None, None, None).await?;
     /// ```
-    pub async fn mix_entropy(
+    pub fn mix_entropy(
         &self,
         tier3_human: Option<&[u8]>,
         tier2_supervised: Option<&[u8]>,
@@ -671,7 +671,7 @@ impl GeneticCryptoProvider {
     ///
     /// In production, this would integrate with `beardog-genetics` for full
     /// lineage chain verification. For Phase 5, we implement basic verification.
-    pub async fn verify_lineage(
+    pub fn verify_lineage(
         &self,
         our_family_id: &str,
         peer_family_id: &str,

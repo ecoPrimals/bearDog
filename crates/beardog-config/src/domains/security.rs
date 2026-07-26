@@ -59,6 +59,7 @@ pub struct SecurityConfig {
 
 impl SecurityConfig {
     /// Pure static defaults (no environment variable reads)
+    #[must_use]
     pub const fn const_defaults() -> Self {
         Self {
             strict_mode: false,
@@ -77,6 +78,7 @@ impl SecurityConfig {
     /// Recognized variables: `BEARDOG_STRICT_MODE`, `BEARDOG_REQUIRE_MTLS`, `BEARDOG_MIN_TLS_VERSION`,
     /// `BEARDOG_ALLOW_LOCALHOST_BYPASS`, `BEARDOG_ENABLE_AUDIT_LOG`, `BEARDOG_ENABLE_RATE_LIMITING`,
     /// `BEARDOG_AUTO_BLOCK_SUSPICIOUS_IPS`, `BEARDOG_REQUIRE_AUTHENTICATION` (truthy: `1`, `true`, `yes`, `on`, case-insensitive).
+    #[must_use]
     pub fn from_env() -> Self {
         let defaults = Self::default();
         Self {
@@ -107,6 +109,7 @@ impl SecurityConfig {
     }
 
     /// Create a builder for flexible configuration construction
+    #[must_use]
     pub fn builder() -> SecurityConfigBuilder {
         SecurityConfigBuilder::new()
     }
@@ -151,59 +154,69 @@ pub struct SecurityConfigBuilder {
 
 impl SecurityConfigBuilder {
     /// Starts a builder; unset toggles use [`SecurityConfig::default`].
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Enforces stricter validation and rejects ambiguous security posture.
+    #[must_use]
     pub const fn strict_mode(mut self, enabled: bool) -> Self {
         self.strict_mode = Some(enabled);
         self
     }
 
     /// Requires mutual TLS for API clients when supported by the deployment.
+    #[must_use]
     pub const fn require_mtls(mut self, enabled: bool) -> Self {
         self.require_mtls = Some(enabled);
         self
     }
 
     /// Minimum TLS protocol version string accepted by listeners (e.g. `1.2`).
+    #[must_use]
     pub fn min_tls_version(mut self, version: String) -> Self {
         self.min_tls_version = Some(version);
         self
     }
 
     /// Permits relaxed checks for loopback clients (useful in dev, risky in prod).
+    #[must_use]
     pub const fn allow_localhost_bypass(mut self, enabled: bool) -> Self {
         self.allow_localhost_bypass = Some(enabled);
         self
     }
 
     /// Persists security-relevant actions to the audit subsystem.
+    #[must_use]
     pub const fn enable_audit_log(mut self, enabled: bool) -> Self {
         self.enable_audit_log = Some(enabled);
         self
     }
 
     /// Applies request rate limits to mitigate abuse and credential stuffing.
+    #[must_use]
     pub const fn enable_rate_limiting(mut self, enabled: bool) -> Self {
         self.enable_rate_limiting = Some(enabled);
         self
     }
 
     /// Automatically blocks source IPs that trip threat heuristics.
+    #[must_use]
     pub const fn auto_block_suspicious_ips(mut self, enabled: bool) -> Self {
         self.auto_block_suspicious_ips = Some(enabled);
         self
     }
 
     /// Denies anonymous access to protected API surface area.
+    #[must_use]
     pub const fn require_authentication(mut self, enabled: bool) -> Self {
         self.require_authentication = Some(enabled);
         self
     }
 
     /// Builds the final [`SecurityConfig`].
+    #[must_use]
     pub fn build(self) -> SecurityConfig {
         let defaults = SecurityConfig::default();
 

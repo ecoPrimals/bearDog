@@ -198,31 +198,31 @@ pub const DEFAULT_CONSUL_PORT: u16 = 8500;
 /// Default Redis server port (IANA assigned)
 pub const DEFAULT_REDIS_PORT: u16 = 6379;
 
-fn default_api_port() -> u16 {
+const fn default_api_port() -> u16 {
     DEFAULT_API_PORT
 }
 
-fn default_discovery_port() -> u16 {
+const fn default_discovery_port() -> u16 {
     DEFAULT_DISCOVERY_PORT
 }
 
-fn default_admin_port() -> u16 {
+const fn default_admin_port() -> u16 {
     DEFAULT_ADMIN_PORT
 }
 
-fn default_https_port() -> u16 {
+const fn default_https_port() -> u16 {
     DEFAULT_HTTPS_PORT
 }
 
-fn default_metrics_port() -> u16 {
+const fn default_metrics_port() -> u16 {
     DEFAULT_METRICS_PORT
 }
 
-fn default_health_port() -> u16 {
+const fn default_health_port() -> u16 {
     DEFAULT_HEALTH_PORT
 }
 
-fn default_tcp_ipc_port() -> u16 {
+const fn default_tcp_ipc_port() -> u16 {
     DEFAULT_TCP_IPC_PORT
 }
 
@@ -247,7 +247,7 @@ impl NetworkPortsConfig {
     /// assert_eq!(ports.api_port, 8080);
     /// ```
     #[must_use]
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             api_port: default_api_port(),
             discovery_port: default_discovery_port(),

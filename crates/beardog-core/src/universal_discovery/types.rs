@@ -230,8 +230,7 @@ impl UniversalDiscoveryConfig {
             .or_else(|_| std::env::var(env_keys::ENV_SERVICE_TYPE))
             .unwrap_or_else(|_| "primal".to_string());
 
-        let mdns_interface = std::env::var(env_keys::ENV_MDNS_INTERFACE)
-            .unwrap_or_default();
+        let mdns_interface = std::env::var(env_keys::ENV_MDNS_INTERFACE).unwrap_or_default();
         let mdns_service_type = std::env::var(env_keys::ENV_MDNS_SERVICE_TYPE)
             .unwrap_or_else(|_| "_http._tcp".to_string());
 

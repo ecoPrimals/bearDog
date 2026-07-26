@@ -103,6 +103,7 @@ pub struct DefaultHsmManager {
 
 impl DefaultHsmManager {
     /// Create a new HSM manager
+    #[must_use]
     pub fn new() -> Self {
         Self {
             hsm_providers: HashMap::new(),
@@ -135,8 +136,8 @@ impl DefaultHsmManager {
             .map(std::convert::AsRef::as_ref)
             .ok_or_else(|| BearDogError::not_found(format!("Provider not found: {id}")))
     }
-
     /// List all registered providers
+    #[must_use]
     pub fn list_providers(&self) -> Vec<String> {
         self.hsm_providers.keys().cloned().collect()
     }

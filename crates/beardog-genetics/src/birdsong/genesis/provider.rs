@@ -39,7 +39,7 @@ impl GenesisLineageProvider {
     ///
     /// Returns [`beardog_errors::BearDogError`] if [`Self::with_config`] fails.
     pub async fn new() -> Result<Self, BearDogError> {
-        Self::with_config(TrustLevel::Medium).await
+        Self::with_config(TrustLevel::Medium)
     }
 
     /// Create genesis lineage provider with custom trust threshold
@@ -47,7 +47,7 @@ impl GenesisLineageProvider {
     /// # Errors
     ///
     /// Currently always succeeds; the `Result` type is reserved for future initialization failures.
-    pub async fn with_config(min_trust_level: TrustLevel) -> Result<Self, BearDogError> {
+    pub fn with_config(min_trust_level: TrustLevel) -> Result<Self, BearDogError> {
         let lineage_chain_mgr = Arc::new(LineageChainManager::new());
         let lineage_proof_mgr = Arc::new(LineageProofManager::new(lineage_chain_mgr.clone()));
 
@@ -69,6 +69,7 @@ impl GenesisLineageProvider {
     }
 
     /// Set [`Self::genesis_mode`] from `BEARDOG_GENESIS_MODE` (default `permissioned` when unset).
+    #[must_use]
     pub fn with_genesis_mode_from_env(mut self) -> Self {
         self.genesis_mode = std::env::var(env_keys::ENV_GENESIS_MODE)
             .unwrap_or_else(|_| "permissioned".to_string())
@@ -93,7 +94,7 @@ impl GenesisLineageProvider {
     /// Returns [`beardog_errors::BearDogError`] when witness authority checks fail, the witness signature is invalid,
     /// trust is below [`Self::min_trust_level`], genetic ID or lineage construction fails, or
     /// [`GeneticLineage::verify`] reports an integrity failure.
-    pub async fn establish_genesis_lineage(
+    pub fn establish_genesis_lineage(
         &self,
         new_node_id: &str,
         witness: &GenesisWitness,
@@ -200,7 +201,7 @@ impl GenesisLineageProvider {
             });
         }
 
-        match self.establish_genesis_lineage(new_node_id, witness).await {
+        match self.establish_genesis_lineage(new_node_id, witness) {
             Ok(genetic_lineage) => {
                 info!(
                     "✅ Genesis ceremony complete for {} in {}ms",
@@ -241,6 +242,7 @@ impl GenesisLineageProvider {
     }
 
     /// Retrieve established genetic lineage for a node
+    #[must_use]
     pub fn get_lineage(&self, node_id: &str) -> Option<GeneticLineage> {
         self.lineage_store.read().get(node_id).cloned()
     }

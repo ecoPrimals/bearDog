@@ -7,7 +7,7 @@ use crate::tunnel::hsm::crypto::algorithms::Signature;
 use beardog_errors::BearDogError;
 
 impl RustCryptoProvider {
-    pub(super) async fn sign_ed25519(
+    pub(super) fn sign_ed25519(
         &self,
         private_key: &[u8],
         message: &[u8],
@@ -28,7 +28,7 @@ impl RustCryptoProvider {
         })
     }
 
-    pub(super) async fn verify_ed25519(
+    pub(super) fn verify_ed25519(
         &self,
         key_material: &[u8],
         message: &[u8],
@@ -62,7 +62,7 @@ impl RustCryptoProvider {
         Ok(verifying_key.verify(message, &sig).is_ok())
     }
 
-    pub(super) async fn sign_ecdsa_p256(
+    pub(super) fn sign_ecdsa_p256(
         &self,
         private_key: &[u8],
         message: &[u8],
@@ -84,7 +84,7 @@ impl RustCryptoProvider {
         })
     }
 
-    pub(super) async fn verify_ecdsa_p256(
+    pub(super) fn verify_ecdsa_p256(
         &self,
         public_key: &[u8],
         message: &[u8],
@@ -110,7 +110,7 @@ impl RustCryptoProvider {
         Ok(verifying_key.verify(message, &sig).is_ok())
     }
 
-    pub(super) async fn sign_ecdsa_p384(
+    pub(super) fn sign_ecdsa_p384(
         &self,
         private_key: &[u8],
         message: &[u8],
@@ -128,7 +128,7 @@ impl RustCryptoProvider {
         })
     }
 
-    pub(super) async fn verify_ecdsa_p384(
+    pub(super) fn verify_ecdsa_p384(
         &self,
         public_key: &[u8],
         message: &[u8],

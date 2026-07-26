@@ -12,7 +12,7 @@ use beardog_types::crypto_service::{
 use std::time::SystemTime;
 
 impl BearDogCryptoService {
-    pub(crate) async fn encrypt_impl(
+    pub(crate) fn encrypt_impl(
         &self,
         data: &[u8],
         algorithm: CryptoAlgorithm,
@@ -67,7 +67,7 @@ impl BearDogCryptoService {
         })
     }
 
-    pub(crate) async fn decrypt_impl(
+    pub(crate) fn decrypt_impl(
         &self,
         encrypted: &EncryptedData,
         options: DecryptOptions,

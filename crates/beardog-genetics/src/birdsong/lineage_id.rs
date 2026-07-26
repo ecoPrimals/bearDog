@@ -54,6 +54,7 @@ impl LineageID {
     /// let id = LineageID::format("tower", "chain-abc", "node-123");
     /// assert!(id.as_str().starts_with("lineage:tower:"));
     /// ```
+    #[must_use]
     pub fn format(service_type: &str, chain_id: &str, node_id: &str) -> Self {
         use std::time::SystemTime;
 
@@ -165,11 +166,13 @@ impl LineageID {
     }
 
     /// Get the raw string representation
+    #[must_use]
     pub fn as_str(&self) -> &str {
         &self.0
     }
 
     /// Convert to owned String
+    #[must_use]
     pub fn into_string(self) -> String {
         self.0
     }

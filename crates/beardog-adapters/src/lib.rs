@@ -301,7 +301,11 @@ impl UniversalAdapter {
     ) -> Result<CapabilityResponse, BearDogError> {
         let timeout_duration = Duration::from_secs(self.config.timeout_seconds);
 
-        match timeout(timeout_duration, self.dispatch_capability(request)).await {
+        match timeout(timeout_duration, async {
+            self.dispatch_capability(request)
+        })
+        .await
+        {
             Ok(result) => result,
             Err(_) => Err(BearDogError::Adapter {
                 message: format!(
@@ -317,7 +321,7 @@ impl UniversalAdapter {
     /// Dispatches the capability request to the target primal via the
     /// ecosystem's IPC resolution mechanism. Returns an error until
     /// real IPC dispatch is wired (requires `ipc.resolve` integration).
-    async fn dispatch_capability(
+    fn dispatch_capability(
         &self,
         request: &CapabilityRequest,
     ) -> Result<CapabilityResponse, BearDogError> {

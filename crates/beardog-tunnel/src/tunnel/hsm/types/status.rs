@@ -207,6 +207,7 @@ pub struct ComprehensiveHsmStatus {
 
 impl ComprehensiveHsmStatus {
     /// Create new comprehensive status with defaults
+    #[must_use]
     pub fn new() -> Self {
         Self {
             health: HsmHealthStatus {
@@ -251,8 +252,8 @@ impl ComprehensiveHsmStatus {
             status_entries: Vec::new(),
         }
     }
-
     /// Check if status is overall healthy
+    #[must_use]
     pub const fn is_healthy(&self) -> bool {
         self.health.is_healthy
             && self.operational.is_online
@@ -260,8 +261,8 @@ impl ComprehensiveHsmStatus {
             && self.security.is_secure
             && !self.security.tamper_detected
     }
-
     /// Get current status level
+    #[must_use]
     pub fn get_status_level(&self) -> StatusLevel {
         if !self.is_healthy() {
             StatusLevel::Critical

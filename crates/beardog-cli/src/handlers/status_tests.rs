@@ -128,7 +128,7 @@ fn test_get_system_info_arch() {
 
 #[tokio::test]
 async fn test_handle_status_basic() {
-    let result = handle_status(false).await;
+    let result = handle_status(false);
 
     // Should always succeed
     assert!(
@@ -140,7 +140,7 @@ async fn test_handle_status_basic() {
 
 #[tokio::test]
 async fn test_handle_status_verbose() {
-    let result = handle_status(true).await;
+    let result = handle_status(true);
 
     // Should succeed with verbose output
     assert!(
@@ -169,8 +169,8 @@ async fn test_handle_version() {
 #[tokio::test]
 async fn test_status_consistency() {
     // Multiple status calls should return consistent info
-    let result1 = handle_status(false).await;
-    let result2 = handle_status(false).await;
+    let result1 = handle_status(false);
+    let result2 = handle_status(false);
 
     // Both should succeed
     assert!(result1.is_ok(), "first status call should succeed");
@@ -274,7 +274,7 @@ fn test_get_system_info_performance() {
 async fn test_handle_status_performance() {
     // Should complete quickly (< 100ms)
     let start = std::time::Instant::now();
-    let _ = handle_status(false).await;
+    let _ = handle_status(false);
     let elapsed = start.elapsed();
 
     assert!(

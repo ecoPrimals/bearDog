@@ -247,6 +247,7 @@ impl ConsolidatedComplianceConfiguration {
     }
 
     /// Create development configuration
+    #[must_use]
     pub fn development() -> Self {
         let mut config = Self::default();
         config.audit_retention_days =
@@ -264,11 +265,13 @@ impl ConsolidatedComplianceConfiguration {
     }
 
     /// Create production configuration
+    #[must_use]
     pub fn production() -> Self {
         Self::default()
     }
 
     /// Check if a specific standard is enabled
+    #[must_use]
     pub fn is_standard_enabled(&self, standard: &ComplianceStandard) -> bool {
         self.enabled && self.enabled_standards.contains(standard)
     }

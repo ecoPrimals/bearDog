@@ -61,6 +61,7 @@ pub struct ServiceEndpoint {
 
 impl ServiceEndpoint {
     /// Get the full URL with path
+    #[must_use]
     pub fn full_url(&self, path: &str) -> String {
         let base = &self.primary_url;
         let prefix = self.path_prefix.as_deref().unwrap_or("");
@@ -117,6 +118,7 @@ impl Default for QoSMetrics {
 
 impl QoSMetrics {
     /// Calculate weighted score based on weights
+    #[must_use]
     pub fn calculate_score(&self, weights: &QoSWeights) -> f64 {
         // Normalize latency (lower is better, 0-100ms range)
         let latency_score = (100.0 - self.latency_ms.min(100.0)) / 100.0;

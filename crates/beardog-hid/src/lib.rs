@@ -144,7 +144,9 @@ pub async fn discover() -> Result<Vec<HidDeviceInfo>, beardog_errors::BearDogErr
 
     #[cfg(not(target_os = "linux"))]
     {
-        Ok(Vec::new())
+        Err(beardog_errors::BearDogError::unsupported_platform(
+            "HID device discovery is only supported on Linux (/dev/hidraw)",
+        ))
     }
 }
 

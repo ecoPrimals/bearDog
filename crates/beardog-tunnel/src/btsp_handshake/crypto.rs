@@ -84,8 +84,8 @@ pub fn verify_challenge_response(
     }
     Ok(())
 }
-
 /// Generate an X25519 ephemeral keypair for forward secrecy.
+#[must_use]
 pub fn generate_ephemeral_keypair() -> (StaticSecret, PublicKey) {
     let mut secret_bytes = [0u8; 32];
     rand::rng().fill_bytes(&mut secret_bytes);
@@ -93,8 +93,8 @@ pub fn generate_ephemeral_keypair() -> (StaticSecret, PublicKey) {
     let public = PublicKey::from(&secret);
     (secret, public)
 }
-
 /// Compute the X25519 shared secret.
+#[must_use]
 pub fn x25519_shared_secret(our_secret: &StaticSecret, their_public: &PublicKey) -> [u8; 32] {
     *our_secret.diffie_hellman(their_public).as_bytes()
 }

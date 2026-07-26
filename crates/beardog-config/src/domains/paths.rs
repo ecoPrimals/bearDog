@@ -4,6 +4,7 @@
 
 use crate::env_keys;
 use crate::error::{ConfigError, ConfigResult};
+use etcetera::base_strategy::BaseStrategy;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::path::PathBuf;
@@ -151,6 +152,7 @@ impl PathConfig {
     /// Get the PKCS#11 library to use
     ///
     /// Returns the explicitly configured library, or discovers available ones.
+    #[must_use]
     pub fn get_pkcs11_library(&self) -> Option<PathBuf> {
         // Explicit library takes precedence
         if let Some(ref lib) = self.pkcs11_library {
@@ -168,24 +170,21 @@ impl PathConfig {
 }
 
 fn default_config_dir() -> PathBuf {
-    directories::BaseDirs::new().map_or_else(
-        || PathBuf::from("/etc/beardog"),
-        |d| d.config_dir().join("beardog"),
-    )
+    etcetera::choose_base_strategy()
+        .map(|d| d.config_dir().join("beardog"))
+        .unwrap_or_else(|_| PathBuf::from("/etc/beardog"))
 }
 
 fn default_data_dir() -> PathBuf {
-    directories::BaseDirs::new().map_or_else(
-        || PathBuf::from("/var/lib/beardog"),
-        |d| d.data_dir().join("beardog"),
-    )
+    etcetera::choose_base_strategy()
+        .map(|d| d.data_dir().join("beardog"))
+        .unwrap_or_else(|_| PathBuf::from("/var/lib/beardog"))
 }
 
 fn default_log_dir() -> PathBuf {
-    directories::BaseDirs::new().map_or_else(
-        || PathBuf::from("/var/log/beardog"),
-        |d| d.cache_dir().join("beardog").join("logs"),
-    )
+    etcetera::choose_base_strategy()
+        .map(|d| d.cache_dir().join("beardog").join("logs"))
+        .unwrap_or_else(|_| PathBuf::from("/var/log/beardog"))
 }
 
 #[cfg(test)]

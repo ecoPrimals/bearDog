@@ -23,7 +23,8 @@ pub enum SimpleHsmTier {
 
 impl SimpleHsmTier {
     /// Return the canonical string representation for this tier.
-    pub fn as_str(&self) -> &'static str {
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Smartphone => "Smartphone",
             Self::Software => "Software",
@@ -31,8 +32,8 @@ impl SimpleHsmTier {
             Self::Hybrid => "Hybrid",
         }
     }
-
     /// Convert to string representation
+    #[must_use]
     pub fn to_string_repr(&self) -> String {
         self.as_str().to_string()
     }

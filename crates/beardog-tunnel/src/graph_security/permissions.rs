@@ -45,7 +45,7 @@ async fn determine_user_role(user_id: &UserId, graph: &Graph) -> Result<UserRole
     }
 
     // Check collaborator status via collaboration capability (runtime discovery)
-    match crate::graph_security::internal::get_user_permissions(user_id, &graph.id).await {
+    match crate::graph_security::internal::get_user_permissions(user_id, &graph.id) {
         Ok(permissions) => {
             // Map permissions role to UserRole
             match permissions.role.as_str() {
@@ -80,8 +80,8 @@ const fn is_action_allowed(role: UserRole, action: &ModificationAction) -> bool 
         UserRole::Viewer | UserRole::Public => false, // No modifications allowed
     }
 }
-
 /// Verify graph ownership
+#[must_use]
 pub fn verify_ownership(user_id: &UserId, graph: &Graph) -> bool {
     user_id == &graph.owner
 }

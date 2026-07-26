@@ -118,12 +118,12 @@ impl DetectionRule {
     }
 
     /// Enable the detection rule
-    pub fn enable(&mut self) {
+    pub const fn enable(&mut self) {
         self.enabled = true;
     }
 
     /// Disable the detection rule
-    pub fn disable(&mut self) {
+    pub const fn disable(&mut self) {
         self.enabled = false;
     }
 }

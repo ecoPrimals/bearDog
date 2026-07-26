@@ -92,11 +92,13 @@ impl EndpointsConfiguration {
     }
 
     /// Get a custom endpoint URL
+    #[must_use]
     pub fn get_custom_endpoint(&self, name: &str) -> Option<&String> {
         self.custom_endpoints.get(name)
     }
 
     /// Get versioned API URL
+    #[must_use]
     pub fn get_versioned_api_url(&self, path: &str) -> String {
         if self.enable_versioning {
             format!(

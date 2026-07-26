@@ -11,12 +11,12 @@ use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 
 /// License/pricing page URL shown when verification requires a commercial license.
 ///
-/// Set at **compile time** with the `BEARDOG_LICENSE_PRICING_URL` environment variable
-/// (e.g. `BEARDOG_LICENSE_PRICING_URL=https://example.com/pricing cargo build -p beardog-adapters`).
-pub const LICENSE_PRICING_URL: &str = match option_env!("BEARDOG_LICENSE_PRICING_URL") {
-    Some(url) => url,
-    None => "https://beardog.dev/pricing",
-};
+/// Set at **runtime** with the `BEARDOG_LICENSE_PRICING_URL` environment variable.
+#[must_use]
+pub fn license_pricing_url() -> String {
+    beardog_errors::process_env::var("BEARDOG_LICENSE_PRICING_URL")
+        .unwrap_or_else(|_| "https://beardog.dev/pricing".to_string())
+}
 
 /// Verifies adapter unlock certificates
 pub struct CertificateVerifier {
@@ -26,6 +26,7 @@ pub struct CertificateVerifier {
 
 impl CertificateVerifier {
     /// Create new verifier with public key
+    #[must_use]
     pub const fn new(verifying_key: VerifyingKey) -> Self {
         Self { verifying_key }
     }
@@ -94,6 +95,7 @@ impl CertificateVerifier {
                     .as_ref()
                     .ok_or_else(|| VerificationError::LicenseRequired {
                         classification: format!("{:?}", cert.classification),
+                        pricing_url: license_pricing_url(),
                     })?;
 
             // Check license expiry
@@ -177,10 +179,12 @@ pub enum VerificationError {
     },
 
     /// License required but not present
-    #[error("🔒 License required for {classification} classification. Visit {LICENSE_PRICING_URL}")]
+    #[error("🔒 License required for {classification} classification. Visit {pricing_url}")]
     LicenseRequired {
         /// Serialized or debug representation of the classification that triggered the requirement.
         classification: String,
+        /// License/pricing page URL (from `BEARDOG_LICENSE_PRICING_URL` or default).
+        pricing_url: String,
     },
 
     /// License has expired
@@ -372,6 +376,7 @@ mod tests {
 
         let license_req = VerificationError::LicenseRequired {
             classification: "Commercial/High".to_string(),
+            pricing_url: license_pricing_url(),
         };
         assert!(format!("{license_req}").contains("License required"));
 

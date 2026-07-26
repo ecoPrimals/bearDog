@@ -204,7 +204,7 @@ impl ThreatDetectionEngine {
 }
 
 /// Maps a managed incident to the legacy string status expected by older call sites.
-fn legacy_status_label(phase: &IncidentLifecyclePhase) -> &'static str {
+const fn legacy_status_label(phase: &IncidentLifecyclePhase) -> &'static str {
     match phase {
         IncidentLifecyclePhase::Created | IncidentLifecyclePhase::Classified => "open",
         IncidentLifecyclePhase::Escalated => "in_progress",

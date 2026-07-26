@@ -88,26 +88,25 @@ impl MethodHandler for SecurityHandler {
             "security.evaluate"
             | "trust.evaluate"
             | "security.evaluate_trust"
-            | "trust.evaluate_peer" => self.handle_trust_evaluation(params).await,
+            | "trust.evaluate_peer" => self.handle_trust_evaluation(params),
             "security.lineage" | "trust.lineage" | "security.get_lineage" | "trust.get_lineage" => {
-                self.handle_lineage().await
+                self.handle_lineage()
             }
-            "security.verify_consent" => self.handle_verify_consent(params).await,
-            "security.issue_consent_token" => self.handle_issue_consent_token(params).await,
+            "security.verify_consent" => self.handle_verify_consent(params),
+            "security.issue_consent_token" => self.handle_issue_consent_token(params),
             "birdsong.encrypt" | "beardog.birdsong.encrypt" => {
-                self.handle_birdsong_encrypt(params, btsp_provider).await
+                self.handle_birdsong_encrypt(params, btsp_provider)
             }
             "birdsong.decrypt" | "beardog.birdsong.decrypt" => {
-                self.handle_birdsong_decrypt(params, btsp_provider).await
+                self.handle_birdsong_decrypt(params, btsp_provider)
             }
             "birdsong.generate_encrypted_beacon" => {
                 self.handle_generate_encrypted_beacon(params, btsp_provider)
-                    .await
             }
             "security.generate_jwt_secret"
             | "security.jwt_secret"
             | "beardog.generate_jwt_secret"
-            | "beardog.jwt_secret" => self.handle_generate_jwt_secret(params).await,
+            | "beardog.jwt_secret" => self.handle_generate_jwt_secret(params),
             _ => Err(format!("Method not found: {method}").into()),
         }
     }
@@ -130,6 +129,7 @@ impl SecurityHandler {
     /// let identity = Arc::new(PrimalIdentity::for_test("nat0", "tower1"));
     /// let handler = SecurityHandler::new(identity);
     /// ```
+    #[must_use]
     pub const fn new(identity: Arc<PrimalIdentity>) -> Self {
         Self { identity }
     }
@@ -139,7 +139,7 @@ impl SecurityHandler {
     /// Evaluates trust level based on genetic family matching.
     /// Same family = auto-accept with limited capabilities.
     /// Different/unknown family = reject.
-    async fn handle_trust_evaluation(
+    fn handle_trust_evaluation(
         &self,
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, HandlerError> {
@@ -239,7 +239,7 @@ impl SecurityHandler {
     /// Handle lineage information request
     ///
     /// Returns genetic lineage information for identity verification.
-    async fn handle_lineage(&self) -> Result<serde_json::Value, HandlerError> {
+    fn handle_lineage(&self) -> Result<serde_json::Value, HandlerError> {
         // Use injected identity (no environment variables!)
         let family_id = self.identity.family_id();
         let node_id = self.identity.node_id();
@@ -284,7 +284,7 @@ impl SecurityHandler {
     ///
     /// wetSpring calls this via Neural API `capability.call("security", "verify_consent", …)`
     /// to gate vault data access. The token is an HMAC-SHA256 over `owner_id:scope`.
-    async fn handle_verify_consent(
+    fn handle_verify_consent(
         &self,
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, HandlerError> {
@@ -341,7 +341,7 @@ impl SecurityHandler {
     /// ```
     ///
     /// The returned token can later be verified via `security.verify_consent`.
-    async fn handle_issue_consent_token(
+    fn handle_issue_consent_token(
         &self,
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, HandlerError> {
@@ -380,7 +380,7 @@ impl SecurityHandler {
     /// Handle `BirdSong` encryption request
     ///
     /// Encrypts plaintext for a specific family using `BirdSong` protocol.
-    async fn handle_birdsong_encrypt(
+    fn handle_birdsong_encrypt(
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
@@ -413,7 +413,7 @@ impl SecurityHandler {
     ///
     /// Decrypts ciphertext from a specific family using `BirdSong` protocol.
     /// Gracefully returns success=false if not for our family (privacy).
-    async fn handle_birdsong_decrypt(
+    fn handle_birdsong_decrypt(
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
@@ -466,7 +466,7 @@ impl SecurityHandler {
     /// ```json
     /// { "family_id": "nat0" }
     /// ```
-    async fn handle_generate_encrypted_beacon(
+    fn handle_generate_encrypted_beacon(
         &self,
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
@@ -497,7 +497,7 @@ impl SecurityHandler {
     ///
     /// Generates a cryptographically secure JWT secret for authentication systems.
     /// Supports different strength levels: high (64 bytes), medium (48 bytes), low (32 bytes).
-    async fn handle_generate_jwt_secret(
+    fn handle_generate_jwt_secret(
         &self,
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, HandlerError> {

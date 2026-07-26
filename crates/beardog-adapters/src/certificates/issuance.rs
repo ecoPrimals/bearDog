@@ -21,6 +21,7 @@ pub struct CertificateIssuer {
 
 impl CertificateIssuer {
     /// Create new issuer with signing key
+    #[must_use]
     pub const fn new(signing_key: SigningKey) -> Self {
         Self { signing_key }
     }

@@ -148,13 +148,13 @@ impl MethodHandler for BtspHandler {
         {
             self.handle_tunnel_close(params, btsp_provider).await
         } else if method == "btsp.configure_tls" {
-            self.handle_configure_tls(params, btsp_provider).await
+            self.handle_configure_tls(params, btsp_provider)
         } else if method == "btsp.verify_peer" {
-            self.handle_verify_peer(params, btsp_provider).await
+            self.handle_verify_peer(params, btsp_provider)
         } else if method == "btsp.trust.seed" {
-            self.handle_trust_seed(params, btsp_provider).await
+            self.handle_trust_seed(params, btsp_provider)
         } else if method == "btsp.tunnel_send_http" {
-            self.handle_tunnel_send_http(params, btsp_provider).await
+            self.handle_tunnel_send_http(params, btsp_provider)
         } else if method == "btsp.server.create_session" || method == "btsp.session.create" {
             self.handle_server_create_session(params).await
         } else if method == "btsp.server.verify" || method == "btsp.session.verify" {
@@ -164,11 +164,11 @@ impl MethodHandler for BtspHandler {
         } else if method == "btsp.server.negotiate" || method == "btsp.session.negotiate" {
             self.handle_server_negotiate(params).await
         } else if method == "btsp.negotiate" {
-            self.handle_phase3_negotiate(params).await
+            self.handle_phase3_negotiate(params)
         } else if method == "btsp.server.status" {
             self.handle_server_status().await
         } else if method == "enrollment.verify" {
-            self.handle_enrollment_verify(params).await
+            self.handle_enrollment_verify(params)
         } else {
             Err(format!("Unknown BTSP method: {method}").into())
         }

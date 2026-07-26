@@ -30,7 +30,7 @@ pub enum CredentialStoreBackend {
 impl CredentialStoreBackend {
     /// Create an in-memory backend.
     #[must_use]
-    pub fn in_memory() -> Self {
+    pub const fn in_memory() -> Self {
         Self::InMemory(InMemoryCredentialStore::new())
     }
 

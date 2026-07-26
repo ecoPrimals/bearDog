@@ -86,7 +86,7 @@ pub async fn audit_origin(template_id: &TemplateId) -> Result<OriginAudit, BearD
 }
 
 async fn verify_creator_identity(template_id: &TemplateId) -> Result<CreatorInfo, BearDogError> {
-    let template_info = crate::graph_security::internal::get_creator_info(template_id).await?;
+    let template_info = crate::graph_security::internal::get_creator_info(template_id)?;
 
     Ok(CreatorInfo {
         user_id: template_info.creator_id,
@@ -101,7 +101,7 @@ async fn verify_creator_identity(template_id: &TemplateId) -> Result<CreatorInfo
 async fn get_template_lineage(
     template_id: &TemplateId,
 ) -> Result<Vec<LineageVersion>, BearDogError> {
-    let collab_lineage = crate::graph_security::internal::get_lineage(template_id).await?;
+    let collab_lineage = crate::graph_security::internal::get_lineage(template_id)?;
 
     Ok(collab_lineage
         .into_iter()
@@ -119,8 +119,7 @@ async fn get_template_lineage(
 }
 
 async fn get_community_usage(template_id: &TemplateId) -> Result<CommunityUsage, BearDogError> {
-    let collab_metrics =
-        crate::graph_security::internal::get_community_metrics(template_id).await?;
+    let collab_metrics = crate::graph_security::internal::get_community_metrics(template_id)?;
 
     Ok(CommunityUsage {
         deployments: collab_metrics.deployments,

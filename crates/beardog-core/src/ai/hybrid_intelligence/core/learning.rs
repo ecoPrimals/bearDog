@@ -125,8 +125,8 @@ impl OnlineLearningSystem {
 }
 
 impl PerformanceTracker {
-    #[must_use]
     /// Create a new performance tracker
+    #[must_use]
     pub fn new() -> Self {
         Self {
             history: Vec::new(),

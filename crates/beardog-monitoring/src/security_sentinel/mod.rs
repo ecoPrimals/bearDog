@@ -120,8 +120,8 @@ pub struct SecuritySentinel {
 
 impl SecuritySentinel {
     /// Creates a new `SecuritySentinel` instance
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub fn new(config: SecuritySentinelConfig) -> Self {
         Self {
             config,
@@ -229,15 +229,15 @@ impl SecuritySentinel {
     }
 
     /// Checks if monitoring is currently active
-    #[must_use]
     /// Checks if monitoring active
+    #[must_use]
     pub fn is_monitoring_active(&self) -> bool {
         self.monitoring_active.load(Ordering::Relaxed)
     }
 
     /// Gets the current event count
-    #[must_use]
     /// Gets `event_count`
+    #[must_use]
     pub fn get_event_count(&self) -> usize {
         self.event_counter.load(Ordering::Relaxed)
     }

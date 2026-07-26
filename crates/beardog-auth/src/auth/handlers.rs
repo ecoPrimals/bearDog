@@ -141,7 +141,7 @@ impl AuthenticationHandler {
         }
 
         // Simulate authentication (replace with actual authentication logic)
-        let auth_success = self.verify_credentials(credentials).await?;
+        let auth_success = self.verify_credentials(credentials)?;
 
         if auth_success {
             // Reset failed attempts on successful login
@@ -215,7 +215,7 @@ impl AuthenticationHandler {
     /// - Support multiple authentication methods (password, OAuth, SAML, biometric)
     /// - Integrate with HSM for sensitive operations
     /// - Log authentication attempts for security auditing
-    async fn verify_credentials(&self, credentials: &str) -> Result<bool, BearDogError> {
+    fn verify_credentials(&self, credentials: &str) -> Result<bool, BearDogError> {
         // Parse credentials in format "username:password"
         let parts: Vec<&str> = credentials.split(':').collect();
         if parts.len() != 2 {

@@ -56,9 +56,17 @@ pub mod compliance;
 pub use audit::{AuditEngine, AuditEvent, AuditEventType, AuditSeverity};
 pub use compliance::*;
 
-// October 27, 2025: Comprehensive test expansion
+// October 27, 2025: Comprehensive test expansion (decomposed by concern)
 #[cfg(test)]
-mod audit_comprehensive_tests;
+mod audit_compliance_report_tests;
+#[cfg(test)]
+mod audit_engine_tests;
+#[cfg(test)]
+mod audit_event_tests;
+#[cfg(test)]
+mod audit_filtering_tests;
+#[cfg(test)]
+mod audit_severity_tests;
 
 // October 31, 2025: Week 3 Test Expansion - Compliance Validation
 #[cfg(test)]

@@ -174,6 +174,7 @@ pub enum HsmTier {
 
 impl HsmTier {
     /// Get the security level of this tier (0-3)
+    #[must_use]
     pub const fn security_level(&self) -> u8 {
         match self {
             Self::Software => 0,
@@ -183,8 +184,8 @@ impl HsmTier {
             Self::Cloud => 2,
         }
     }
-
     /// Check if this tier meets minimum security requirements
+    #[must_use]
     pub const fn meets_requirement(&self, required: &Self) -> bool {
         self.security_level() >= required.security_level()
     }

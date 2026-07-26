@@ -27,14 +27,14 @@ async fn main() -> Result<(), BearDogError> {
     let core = BearDogCore::with_default_config()?;
     println!("[OK] BearDog Core initialized with default config");
 
-    demo_system_info(&core).await?;
-    demo_security_status(&core).await?;
+    demo_system_info(&core)?;
+    demo_security_status(&core)?;
 
     println!("[OK] Simple demo completed successfully!");
     Ok(())
 }
 
-async fn demo_system_info(_core: &BearDogCore) -> Result<(), BearDogError> {
+fn demo_system_info(_core: &BearDogCore) -> Result<(), BearDogError> {
     println!("\n[CHART] System Information:");
     println!("   Status: OPERATIONAL");
     println!("   Version: v3.2.0");
@@ -42,7 +42,7 @@ async fn demo_system_info(_core: &BearDogCore) -> Result<(), BearDogError> {
     Ok(())
 }
 
-async fn demo_security_status(_core: &BearDogCore) -> Result<(), BearDogError> {
+fn demo_security_status(_core: &BearDogCore) -> Result<(), BearDogError> {
     println!("\n[LOCK] Security Status:");
     println!("   Encryption: ACTIVE");
     println!("   Memory Safety: GUARANTEED");

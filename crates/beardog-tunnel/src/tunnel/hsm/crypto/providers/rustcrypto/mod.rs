@@ -32,6 +32,7 @@ pub struct RustCryptoProvider {
 
 impl RustCryptoProvider {
     /// Create a new `RustCrypto` provider
+    #[must_use]
     pub fn new() -> Self {
         Self {
             capabilities: Self::build_capabilities(),
@@ -176,18 +177,17 @@ impl UniversalCryptoProvider for RustCryptoProvider {
                     key_size: 256,
                 }
                 | SymmetricAlgorithm::Aes256Gcm => {
-                    this.encrypt_aes_256_gcm(&key, &plaintext, &options).await
+                    this.encrypt_aes_256_gcm(&key, &plaintext, &options)
                 }
                 SymmetricAlgorithm::Aes {
                     mode: AesMode::Gcm,
                     key_size: 128,
                 }
                 | SymmetricAlgorithm::Aes128Gcm => {
-                    this.encrypt_aes_128_gcm(&key, &plaintext, &options).await
+                    this.encrypt_aes_128_gcm(&key, &plaintext, &options)
                 }
                 SymmetricAlgorithm::ChaCha20Poly1305 => {
                     this.encrypt_chacha20_poly1305(&key, &plaintext, &options)
-                        .await
                 }
                 _ => Err(BearDogError::unsupported_operation(format!(
                     "RustCrypto doesn't support: {algorithm}"
@@ -214,18 +214,17 @@ impl UniversalCryptoProvider for RustCryptoProvider {
                     key_size: 256,
                 }
                 | SymmetricAlgorithm::Aes256Gcm => {
-                    this.decrypt_aes_256_gcm(&key, &ciphertext, &options).await
+                    this.decrypt_aes_256_gcm(&key, &ciphertext, &options)
                 }
                 SymmetricAlgorithm::Aes {
                     mode: AesMode::Gcm,
                     key_size: 128,
                 }
                 | SymmetricAlgorithm::Aes128Gcm => {
-                    this.decrypt_aes_128_gcm(&key, &ciphertext, &options).await
+                    this.decrypt_aes_128_gcm(&key, &ciphertext, &options)
                 }
                 SymmetricAlgorithm::ChaCha20Poly1305 => {
                     this.decrypt_chacha20_poly1305(&key, &ciphertext, &options)
-                        .await
                 }
                 _ => Err(BearDogError::unsupported_operation(format!(
                     "RustCrypto doesn't support: {algorithm}"
@@ -270,12 +269,12 @@ impl UniversalCryptoProvider for RustCryptoProvider {
         let this = self;
         async move {
             match algorithm {
-                SignatureAlgorithm::Ed25519 => this.sign_ed25519(&private_key, &message).await,
+                SignatureAlgorithm::Ed25519 => this.sign_ed25519(&private_key, &message),
                 SignatureAlgorithm::EcdsaP256 { .. } => {
-                    this.sign_ecdsa_p256(&private_key, &message).await
+                    this.sign_ecdsa_p256(&private_key, &message)
                 }
                 SignatureAlgorithm::EcdsaP384 { .. } => {
-                    this.sign_ecdsa_p384(&private_key, &message).await
+                    this.sign_ecdsa_p384(&private_key, &message)
                 }
                 _ => Err(BearDogError::unsupported_operation(format!(
                     "RustCrypto doesn't support signing with: {algorithm}"
@@ -299,15 +298,13 @@ impl UniversalCryptoProvider for RustCryptoProvider {
         async move {
             match algorithm {
                 SignatureAlgorithm::Ed25519 => {
-                    this.verify_ed25519(&public_key, &message, &signature).await
+                    this.verify_ed25519(&public_key, &message, &signature)
                 }
                 SignatureAlgorithm::EcdsaP256 { .. } => {
                     this.verify_ecdsa_p256(&public_key, &message, &signature)
-                        .await
                 }
                 SignatureAlgorithm::EcdsaP384 { .. } => {
                     this.verify_ecdsa_p384(&public_key, &message, &signature)
-                        .await
                 }
                 _ => Err(BearDogError::unsupported_operation(format!(
                     "RustCrypto doesn't support verification with: {algorithm}"

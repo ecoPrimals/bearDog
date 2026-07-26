@@ -55,7 +55,7 @@ impl HsmProvider for RustSoftwareHsm {
             key_data.len()
         );
 
-        let protected_bytes = self.memory_protector.protect(&key_data).await?;
+        let protected_bytes = self.memory_protector.protect(&key_data)?;
         let buf = Bytes::from(protected_bytes);
         let encrypted_blob = buf.to_vec();
         let protected_material = ProtectedMemory::from_bytes(buf, true);
@@ -110,10 +110,7 @@ impl HsmProvider for RustSoftwareHsm {
 
         let provider = self.crypto_manager.select_provider(&requirements).await?;
 
-        let mut key_material = self
-            .memory_protector
-            .unprotect(key.key_material.data())
-            .await?;
+        let mut key_material = self.memory_protector.unprotect(key.key_material.data())?;
 
         let algorithm = requirements
             .algorithm
@@ -129,7 +126,7 @@ impl HsmProvider for RustSoftwareHsm {
             )
             .await?;
 
-        self.memory_protector.zeroize(&mut key_material).await?;
+        self.memory_protector.zeroize(&mut key_material)?;
 
         let mut result = Vec::new();
         if let Some(ref nonce) = encrypted_data.nonce {
@@ -156,10 +153,7 @@ impl HsmProvider for RustSoftwareHsm {
 
         let provider = self.crypto_manager.select_provider(&requirements).await?;
 
-        let mut key_material = self
-            .memory_protector
-            .unprotect(key.key_material.data())
-            .await?;
+        let mut key_material = self.memory_protector.unprotect(key.key_material.data())?;
 
         let algorithm = requirements
             .algorithm
@@ -189,7 +183,7 @@ impl HsmProvider for RustSoftwareHsm {
             )
             .await?;
 
-        self.memory_protector.zeroize(&mut key_material).await?;
+        self.memory_protector.zeroize(&mut key_material)?;
 
         debug!(
             "✅ Data decrypted successfully with {}",
@@ -210,10 +204,7 @@ impl HsmProvider for RustSoftwareHsm {
 
         let provider = self.crypto_manager.select_provider(&requirements).await?;
 
-        let mut key_material = self
-            .memory_protector
-            .unprotect(key.key_material.data())
-            .await?;
+        let mut key_material = self.memory_protector.unprotect(key.key_material.data())?;
 
         let algorithm = requirements
             .algorithm
@@ -224,7 +215,7 @@ impl HsmProvider for RustSoftwareHsm {
             .sign(algorithm, &key_material, &data, &SigningOptions::default())
             .await?;
 
-        self.memory_protector.zeroize(&mut key_material).await?;
+        self.memory_protector.zeroize(&mut key_material)?;
 
         debug!(
             "✅ Data signed successfully with {}",
@@ -251,10 +242,7 @@ impl HsmProvider for RustSoftwareHsm {
 
         let provider = self.crypto_manager.select_provider(&requirements).await?;
 
-        let mut key_material = self
-            .memory_protector
-            .unprotect(key.key_material.data())
-            .await?;
+        let mut key_material = self.memory_protector.unprotect(key.key_material.data())?;
 
         let algorithm = requirements
             .algorithm
@@ -276,7 +264,7 @@ impl HsmProvider for RustSoftwareHsm {
             )
             .await?;
 
-        self.memory_protector.zeroize(&mut key_material).await?;
+        self.memory_protector.zeroize(&mut key_material)?;
 
         debug!(
             "✅ Signature verification complete with {}: {}",

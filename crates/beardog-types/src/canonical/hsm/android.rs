@@ -398,8 +398,8 @@ impl Default for PerformanceSettings {
 
 impl AndroidHsmConfig {
     /// Create new Android HSM configuration with defaults
-    #[must_use]
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -469,7 +469,7 @@ impl AndroidHsmConfig {
 
     /// Check if biometric authentication is available and configured
     #[must_use]
-    pub fn biometric_available(&self) -> bool {
+    pub const fn biometric_available(&self) -> bool {
         self.biometric.available && !self.biometric.supported_types.is_empty()
     }
 

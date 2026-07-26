@@ -69,6 +69,7 @@ impl DatabaseConnectionConfig {
         clippy::cast_possible_truncation,
         reason = "default pool size fits u32 for connection limits"
     )]
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             url: Self::DEFAULT_URL.to_string(),
@@ -87,6 +88,7 @@ impl DatabaseConnectionConfig {
     /// - `DATABASE_MAX_CONNECTIONS`: Maximum connections (default: `DEFAULT_POOL_SIZE`)
     /// - `DATABASE_TIMEOUT_SECONDS`: Connection timeout (default: 30)
     /// - `DATABASE_SSL`: Enable SSL/TLS (default: false)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -143,6 +145,7 @@ impl DatabasePoolConfig {
         clippy::cast_possible_truncation,
         reason = "default pool size fits u32 for pool sizing"
     )]
+    #[must_use]
     pub const fn with_defaults() -> Self {
         Self {
             min_idle: Self::DEFAULT_MIN_IDLE,
@@ -159,6 +162,7 @@ impl DatabasePoolConfig {
     /// - `DATABASE_POOL_MIN_IDLE`: Minimum idle connections (default: 1)
     /// - `DATABASE_POOL_MAX_SIZE`: Maximum pool size (default: `DEFAULT_POOL_SIZE`)
     /// - `DATABASE_POOL_IDLE_TIMEOUT_SECONDS`: Idle timeout (default: 600)
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -206,6 +210,7 @@ impl MigrationConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             auto_migrate: Self::DEFAULT_AUTO_MIGRATE,
@@ -220,6 +225,7 @@ impl MigrationConfig {
     /// # Environment Variables
     /// - `DATABASE_AUTO_MIGRATE`: Enable auto-migration (default: true)
     /// - `DATABASE_MIGRATION_DIR`: Migration directory (default: "migrations")
+    #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }

@@ -39,7 +39,7 @@ impl Pkcs11UniversalProvider {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub async fn new(library_path: String, slot_id: u64) -> Result<Self, BearDogError> {
+    pub fn new(library_path: String, slot_id: u64) -> Result<Self, BearDogError> {
         #[cfg(not(feature = "pkcs11-provider"))]
         {
             tracing::debug!(
@@ -64,29 +64,29 @@ impl Pkcs11UniversalProvider {
             Ok(provider)
         }
     }
-
     /// Get security level (hardware HSM is level 3)
+    #[must_use]
     pub const fn get_security_level(&self) -> u8 {
         3 // Hardware HSM
     }
-
     /// Get capabilities
+    #[must_use]
     pub const fn capabilities(&self) -> Option<&Pkcs11Capabilities> {
         self.capabilities.as_ref()
     }
-
     /// Get the configured PKCS#11 library path
+    #[must_use]
     pub fn library_path(&self) -> &str {
         &self.library_path
     }
-
     /// Get the configured slot ID
+    #[must_use]
     pub const fn slot_id(&self) -> u64 {
         self.slot_id
     }
-
     /// Get provider metadata
-    pub fn metadata(&self) -> &HashMap<String, String> {
+    #[must_use]
+    pub const fn metadata(&self) -> &HashMap<String, String> {
         &self.metadata
     }
 }

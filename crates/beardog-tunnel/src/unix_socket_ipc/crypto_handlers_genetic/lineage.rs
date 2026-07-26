@@ -52,13 +52,11 @@ pub async fn handle_derive_lineage_key(params: &Value) -> Result<Value, BearDogE
     })?;
 
     let provider = GeneticCryptoProvider::new_with_lineage(lineage_seed)?;
-    let key = provider
-        .derive_lineage_key(
-            &request.our_family_id,
-            &request.peer_family_id,
-            request.context.as_bytes(),
-        )
-        .await?;
+    let key = provider.derive_lineage_key(
+        &request.our_family_id,
+        &request.peer_family_id,
+        request.context.as_bytes(),
+    )?;
 
     let key_b64 = BASE64.encode(&key);
 
@@ -177,9 +175,8 @@ pub async fn handle_mix_entropy(params: &Value) -> Result<Value, BearDogError> {
     let tiers_used = u8::from(tier3.is_some()) + u8::from(tier2.is_some()) + 1;
 
     let provider = GeneticCryptoProvider::new()?;
-    let (mixed, quality) = provider
-        .mix_entropy(tier3.as_deref(), tier2.as_deref(), tier1.as_deref())
-        .await?;
+    let (mixed, quality) =
+        provider.mix_entropy(tier3.as_deref(), tier2.as_deref(), tier1.as_deref())?;
 
     let entropy_b64 = BASE64.encode(&mixed);
 
@@ -255,13 +252,11 @@ pub async fn handle_verify_lineage(
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid lineage_seed: {e}")))?;
 
     let provider = GeneticCryptoProvider::new_with_lineage(lineage_seed)?;
-    let is_valid = provider
-        .verify_lineage(
-            &request.our_family_id,
-            &request.peer_family_id,
-            &lineage_proof,
-        )
-        .await?;
+    let is_valid = provider.verify_lineage(
+        &request.our_family_id,
+        &request.peer_family_id,
+        &lineage_proof,
+    )?;
 
     let response = if is_valid {
         info!(
@@ -371,12 +366,8 @@ pub async fn handle_generate_lineage_proof(
 mod tests {
     use super::*;
 
-    async fn test_birdsong() -> Arc<BirdSongManager> {
-        Arc::new(
-            BirdSongManager::new(vec![0xAB; 32], None)
-                .await
-                .expect("BirdSongManager::new in test"),
-        )
+    fn test_birdsong() -> Arc<BirdSongManager> {
+        Arc::new(BirdSongManager::new(vec![0xAB; 32], None).expect("BirdSongManager::new in test"))
     }
 
     #[tokio::test]
@@ -446,7 +437,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_and_verify_lineage() -> Result<(), Box<dyn std::error::Error>> {
-        let bs = test_birdsong().await;
+        let bs = test_birdsong();
         let lineage_seed = BASE64.encode(b"test_lineage_seed_for_roundtrip");
 
         let gen_params = json!({
@@ -477,7 +468,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_verify_lineage_invalid_proof() -> Result<(), Box<dyn std::error::Error>> {
-        let bs = test_birdsong().await;
+        let bs = test_birdsong();
         let lineage_seed = BASE64.encode(b"test_lineage_seed_for_invalid_");
         let invalid_proof = BASE64.encode(b"this_is_not_a_valid_proof_data");
 
@@ -499,7 +490,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_chain_based_proof_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
-        let bs = test_birdsong().await;
+        let bs = test_birdsong();
 
         let chain = bs
             .generate_root_lineage("root-node".to_string(), None)

@@ -313,23 +313,6 @@ mod timeout_tests {
     }
 
     // ============================================================================
-    // BACKWARD COMPATIBILITY TESTS
-    // ============================================================================
-
-    #[test]
-    #[expect(
-        deprecated,
-        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
-    )]
-    fn test_deprecated_aliases_match() {
-        assert_eq!(DEFAULT_TIMEOUT, NETWORK_CONNECTION_TIMEOUT);
-        assert_eq!(DEFAULT_REQUEST_TIMEOUT, DEFAULT_OPERATION_TIMEOUT);
-        assert_eq!(REQUEST_TIMEOUT, HTTP_REQUEST_TIMEOUT);
-        assert_eq!(CONNECTION_TIMEOUT, NETWORK_CONNECTION_TIMEOUT);
-        assert_eq!(OPERATION_TIMEOUT, DEFAULT_OPERATION_TIMEOUT);
-    }
-
-    // ============================================================================
     // PROPERTY TESTS (Invariants)
     // ============================================================================
 

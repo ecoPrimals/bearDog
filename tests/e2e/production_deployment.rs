@@ -78,7 +78,7 @@ pub async fn run_production_deployment_test(
     info!("Step 4: Health Check Validation");
     for i in 0..5 {
         let (response, latency) =
-            measure_latency(|| async { simulate_api_request("/health", None).await }).await?;
+            measure_latency(|| async { simulate_api_request("/health", None) }).await?;
 
         assert_success(&response)?;
         latencies.push(response.latency_ms);
@@ -101,7 +101,7 @@ pub async fn run_production_deployment_test(
 
     for endpoint in &endpoints {
         let (response, _) =
-            measure_latency(|| async { simulate_api_request(endpoint, None).await }).await?;
+            measure_latency(|| async { simulate_api_request(endpoint, None) }).await?;
 
         assert_success(&response)?;
         latencies.push(response.latency_ms);
@@ -115,12 +115,12 @@ pub async fn run_production_deployment_test(
 
     // Step 6: Data persistence verification
     info!("Step 6: Data Persistence Verification");
-    let test_data = create_test_data("test-entity", 3).await?;
+    let test_data = create_test_data("test-entity", 3)?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
 
     for data_id in &test_data {
-        let integrity_ok = verify_data_integrity(data_id).await?;
+        let integrity_ok = verify_data_integrity(data_id)?;
         if !integrity_ok {
             return Err(BearDogError::internal(format!(
                 "Data integrity check failed for: {data_id}"
@@ -135,7 +135,7 @@ pub async fn run_production_deployment_test(
     // Step 7: Cleanup
     if config.enable_cleanup {
         info!("Step 7: Cleanup");
-        cleanup_test_data(&test_data).await?;
+        cleanup_test_data(&test_data)?;
     }
 
     // Calculate metrics

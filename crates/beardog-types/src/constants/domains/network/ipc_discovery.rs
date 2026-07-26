@@ -1,24 +1,40 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Primal IPC discovery layout (XDG runtime dir + biomeOS socket namespace).
+//! Primal IPC discovery layout (XDG runtime dir + ecosystem socket namespace).
 //!
 //! Resolution order for socket directories:
 //! 1. `BEARDOG_BIOMEOS_SOCKET_DIR` — operator / test override for the whole directory
-//! 2. `$XDG_RUNTIME_DIR/biomeos/` — standard biomeOS layout
-//! 3. `{std::env::temp_dir()}/biomeos/` — last-resort default (configurable via temp dir)
+//! 2. `$XDG_RUNTIME_DIR/<namespace>/` — standard layout when namespace is configured
+//! 3. `{std::env::temp_dir()}/<namespace>/` — last-resort default (configurable via temp dir)
 //!
 //! Environment:
-//! - `BIOMEOS_IPC_NAMESPACE` — subdirectory name under XDG/temp (default: [`BIOMEOS_RUNTIME_SOCKET_SUBDIR`])
+//! - `BIOMEOS_IPC_NAMESPACE` — subdirectory name under XDG/temp (see [`default_ecosystem_ipc_namespace`])
 //! - `BIOMEOS_TMP_ROOT` — root for temp fallback layout (default: `/tmp`)
 
 use std::path::PathBuf;
 
-/// Default **ecosystem namespace** segment for biomeOS IPC paths (under XDG runtime, temp, etc.).
+/// Generic fallback IPC namespace when no env vars are configured.
 ///
-/// This names the biomeOS **ecosystem** layout, not an individual primal. Primals are discovered at
-/// runtime; this string is only the shared namespace prefix for sockets and related paths.
-/// Override at runtime with [`ENV_BIOMEOS_IPC_NAMESPACE`] (see [`resolve_biomeos_ipc_subdir_from_optional`]).
-pub const BIOMEOS_RUNTIME_SOCKET_SUBDIR: &str = "biomeos";
+/// Not a primal name — ecosystem layout is discovered via env vars at runtime.
+const FALLBACK_ECOSYSTEM_IPC_NAMESPACE: &str = "ecosystem";
+
+/// Default ecosystem namespace segment for IPC paths.
+///
+/// Prefer [`default_ecosystem_ipc_namespace`] for env-aware resolution.
+#[deprecated(
+    since = "0.10.0",
+    note = "Use default_ecosystem_ipc_namespace() for env-aware resolution"
+)]
+pub const BIOMEOS_RUNTIME_SOCKET_SUBDIR: &str = FALLBACK_ECOSYSTEM_IPC_NAMESPACE;
+
+/// Resolve the ecosystem IPC namespace from the environment.
+///
+/// Precedence: explicit `ipc_namespace` argument → [`ENV_BIOMEOS_IPC_NAMESPACE`] →
+/// [`FALLBACK_ECOSYSTEM_IPC_NAMESPACE`].
+#[must_use]
+pub fn default_ecosystem_ipc_namespace() -> String {
+    resolve_biomeos_ipc_subdir_from_optional(None)
+}
 
 /// Override the IPC subdirectory name (e.g. `biomeos`) without changing the full socket directory.
 pub const ENV_BIOMEOS_IPC_NAMESPACE: &str = "BIOMEOS_IPC_NAMESPACE";
@@ -62,7 +78,7 @@ pub fn resolve_biomeos_ipc_subdir_from_optional(ipc_namespace: Option<&str>) -> 
         .ok()
         .filter(|s| !s.trim().is_empty())
         .map_or_else(
-            || BIOMEOS_RUNTIME_SOCKET_SUBDIR.to_string(),
+            || FALLBACK_ECOSYSTEM_IPC_NAMESPACE.to_string(),
             |s| s.trim().to_string(),
         )
 }
@@ -162,7 +178,7 @@ mod tests {
 
     #[test]
     fn constants_are_non_empty() {
-        assert!(!BIOMEOS_RUNTIME_SOCKET_SUBDIR.is_empty());
+        assert!(!default_ecosystem_ipc_namespace().is_empty());
         assert!(!BEARDOG_CAPABILITY_DOMAIN.is_empty());
         assert!(!BEARDOG_TCP_DISCOVERY_FILENAME.is_empty());
         assert!(!DEFAULT_UPA_REGISTRY_SOCKET_NAME.is_empty());
@@ -180,7 +196,7 @@ mod tests {
     fn resolve_biomeos_ipc_subdir_falls_back_to_default() {
         assert_eq!(
             resolve_biomeos_ipc_subdir_from_optional(None),
-            BIOMEOS_RUNTIME_SOCKET_SUBDIR.to_string()
+            FALLBACK_ECOSYSTEM_IPC_NAMESPACE.to_string()
         );
     }
 

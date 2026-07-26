@@ -41,13 +41,13 @@ impl EphemeralSeed {
 
     /// Gets the seed size in bytes
     #[must_use]
-    pub fn size(&self) -> usize {
+    pub const fn size(&self) -> usize {
         self.seed_data.len()
     }
 
     /// Checks if the seed is empty
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.seed_data.is_empty()
     }
 }
@@ -123,7 +123,7 @@ pub struct HumanEntropyCapabilities {
 impl HumanEntropyCapabilities {
     /// Creates new capabilities
     #[must_use]
-    pub fn new(available_methods: Vec<HumanEntropyMethod>, quality_estimate: f64) -> Self {
+    pub const fn new(available_methods: Vec<HumanEntropyMethod>, quality_estimate: f64) -> Self {
         Self {
             available_methods,
             quality_estimate: quality_estimate.clamp(0.0, 1.0),
@@ -154,7 +154,7 @@ impl HumanEntropyCapabilities {
 
     /// Gets the number of available methods
     #[must_use]
-    pub fn method_count(&self) -> usize {
+    pub const fn method_count(&self) -> usize {
         self.available_methods.len()
     }
 }

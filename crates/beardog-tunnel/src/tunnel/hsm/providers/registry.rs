@@ -78,6 +78,7 @@ pub struct RegistryStats {
 
 impl UniversalProviderRegistry {
     /// Create a new provider registry
+    #[must_use]
     pub fn new() -> Self {
         Self {
             providers: HashMap::new(),
@@ -136,8 +137,8 @@ impl UniversalProviderRegistry {
             None
         }
     }
-
     /// Select best provider based on strategy
+    #[must_use]
     pub fn select_provider(&self) -> Option<&ProviderInfo> {
         match self.strategy {
             SelectionStrategy::HighestSecurity => self.select_highest_security(),
@@ -189,31 +190,31 @@ impl UniversalProviderRegistry {
         info!("🎯 Setting provider selection strategy: {:?}", strategy);
         self.strategy = strategy;
     }
-
     /// Get all registered providers
+    #[must_use]
     pub fn list_providers(&self) -> Vec<&ProviderInfo> {
         self.providers.values().collect()
     }
-
     /// Get provider by ID
+    #[must_use]
     pub fn get_provider(&self, provider_id: &str) -> Option<&ProviderInfo> {
         self.providers.get(provider_id)
     }
-
     /// Get registry statistics
+    #[must_use]
     pub const fn stats(&self) -> &RegistryStats {
         &self.stats
     }
-
     /// Get providers by type
+    #[must_use]
     pub fn get_providers_by_type(&self, provider_type: &ProviderType) -> Vec<&ProviderInfo> {
         self.providers
             .values()
             .filter(|p| &p.provider_type == provider_type)
             .collect()
     }
-
     /// Get available providers
+    #[must_use]
     pub fn get_available_providers(&self) -> Vec<&ProviderInfo> {
         self.providers.values().filter(|p| p.available).collect()
     }
@@ -242,7 +243,7 @@ pub struct HsmProviderRegistry {
 impl HsmProviderRegistry {
     /// Create an empty registry.
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             providers: Vec::new(),
         }
@@ -250,8 +251,8 @@ impl HsmProviderRegistry {
 
     /// Probe the current platform and register all available providers.
     ///
-    /// On non-Android hosts this registers only the software provider.
-    /// On Android it additionally probes for `StrongBox` availability.
+    /// Always attempts to construct every platform backend; only registers those
+    /// that report available via [`HsmKeyProvider::is_available`].
     pub async fn discover() -> Self {
         let mut registry = Self::new();
 
@@ -264,43 +265,32 @@ impl HsmProviderRegistry {
             registry.providers.push(provider);
         }
 
-        // On Android, try to register StrongBox
-        #[cfg(target_os = "android")]
+        if let Ok(sb) = crate::tunnel::hsm::android_strongbox::AndroidStrongBoxHsm::with_defaults()
         {
-            if let Ok(sb) =
-                crate::tunnel::hsm::android_strongbox::AndroidStrongBoxHsm::with_defaults()
-            {
-                if beardog_traits::hsm::HsmKeyProvider::is_available(&sb) {
-                    info!("HSM registry: registered android-strongbox provider");
-                    registry.providers.push(Arc::new(
-                        crate::tunnel::hsm::HsmKeyProviderBackend::AndroidStrongBox(sb),
-                    ));
-                }
+            if beardog_traits::hsm::HsmKeyProvider::is_available(&sb) {
+                info!("HSM registry: registered android-strongbox provider");
+                registry.providers.push(Arc::new(
+                    crate::tunnel::hsm::HsmKeyProviderBackend::AndroidStrongBox(sb),
+                ));
             }
         }
 
-        // On Windows, try to register DPAPI backend
-        #[cfg(windows)]
-        {
-            if let Ok(dpapi) = crate::tunnel::hsm::windows_dpapi::WindowsDpapiHsm::new() {
-                if beardog_traits::hsm::HsmKeyProvider::is_available(&dpapi) {
-                    info!("HSM registry: registered windows-dpapi provider");
-                    registry.providers.push(Arc::new(
-                        crate::tunnel::hsm::HsmKeyProviderBackend::WindowsDpapi(dpapi),
-                    ));
-                }
+        if let Ok(dpapi) = crate::tunnel::hsm::windows_dpapi::WindowsDpapiHsm::new() {
+            if beardog_traits::hsm::HsmKeyProvider::is_available(&dpapi) {
+                info!("HSM registry: registered windows-dpapi provider");
+                registry.providers.push(Arc::new(
+                    crate::tunnel::hsm::HsmKeyProviderBackend::WindowsDpapi(dpapi),
+                ));
             }
         }
 
-        // On Linux, try to register Secret Service backend
-        #[cfg(target_os = "linux")]
-        if let Ok(ss) = crate::tunnel::hsm::linux_secret_service::LinuxSecretServiceHsm::new()
-            && beardog_traits::hsm::HsmKeyProvider::is_available(&ss)
-        {
-            info!("HSM registry: registered linux-secret-service provider");
-            registry.providers.push(Arc::new(
-                crate::tunnel::hsm::HsmKeyProviderBackend::LinuxSecretService(ss),
-            ));
+        if let Ok(ss) = crate::tunnel::hsm::linux_secret_service::LinuxSecretServiceHsm::new() {
+            if beardog_traits::hsm::HsmKeyProvider::is_available(&ss) {
+                info!("HSM registry: registered linux-secret-service provider");
+                registry.providers.push(Arc::new(
+                    crate::tunnel::hsm::HsmKeyProviderBackend::LinuxSecretService(ss),
+                ));
+            }
         }
 
         registry
@@ -378,13 +368,13 @@ impl HsmProviderRegistry {
 
     /// Number of registered providers.
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.providers.len()
     }
 
     /// Whether the registry is empty.
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.providers.is_empty()
     }
 
@@ -666,20 +656,25 @@ mod tests {
         assert_eq!(sw.provider_type(), CanonicalType::Software);
     }
 
-    #[cfg(target_os = "linux")]
     #[tokio::test]
     async fn canonical_registry_discover_registers_linux_secret_service() {
         let reg = HsmProviderRegistry::discover().await;
         let has_ss = reg
             .iter()
             .any(|p| p.provider_type() == CanonicalType::LinuxSecretService);
-        assert!(
-            has_ss,
-            "Linux Secret Service backend should be registered on Linux"
-        );
+        if cfg!(target_os = "linux") {
+            assert!(
+                has_ss,
+                "Linux Secret Service backend should be registered on Linux"
+            );
+        } else {
+            assert!(
+                !has_ss,
+                "Linux Secret Service backend should not be registered off Linux"
+            );
+        }
     }
 
-    #[cfg(target_os = "linux")]
     #[test]
     fn canonical_registry_linux_backend_manual_registration() {
         let ss = crate::tunnel::hsm::linux_secret_service::LinuxSecretServiceHsm::new()
@@ -690,8 +685,12 @@ mod tests {
         ));
 
         assert_eq!(reg.len(), 1);
-        let p = reg.select(SelectionPreference::PreferHardware).unwrap();
-        assert_eq!(p.provider_type(), CanonicalType::LinuxSecretService);
+        if cfg!(target_os = "linux") {
+            let p = reg.select(SelectionPreference::PreferHardware).unwrap();
+            assert_eq!(p.provider_type(), CanonicalType::LinuxSecretService);
+        } else {
+            assert!(reg.select(SelectionPreference::PreferHardware).is_err());
+        }
     }
 
     #[tokio::test]

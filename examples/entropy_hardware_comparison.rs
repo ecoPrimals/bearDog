@@ -269,7 +269,7 @@ async fn test_solokey_entropy(size: usize) -> Result<EntropyTestResult, BearDogE
 }
 
 #[cfg(not(feature = "fido2"))]
-async fn test_solokey_entropy(_size: usize) -> Result<EntropyTestResult, BearDogError> {
+fn test_solokey_entropy(_size: usize) -> Result<EntropyTestResult, BearDogError> {
     Err(BearDogError::system(
         "FIDO2 feature not enabled. Compile with --features fido2".to_string(),
     ))
@@ -316,7 +316,7 @@ async fn test_pixel_titan_m(size: usize) -> Result<EntropyTestResult, BearDogErr
 }
 
 #[cfg(not(target_os = "android"))]
-async fn test_pixel_titan_m(_size: usize) -> Result<EntropyTestResult, BearDogError> {
+fn test_pixel_titan_m(_size: usize) -> Result<EntropyTestResult, BearDogError> {
     Err(BearDogError::system(
         "Android-only test. Run on Pixel 8a device.".to_string(),
     ))
@@ -368,7 +368,7 @@ fn test_human_entropy() -> Result<EntropyTestResult, BearDogError> {
 }
 
 /// Run comprehensive comparison
-async fn run_comparison() -> Result<(), BearDogError> {
+fn run_comparison() -> Result<(), BearDogError> {
     println!("╔════════════════════════════════════════════════════════════════╗");
     println!("║    🎲 Hardware Entropy Comparison Suite - January 13, 2026    ║");
     println!("╚════════════════════════════════════════════════════════════════╝");
@@ -400,7 +400,7 @@ async fn run_comparison() -> Result<(), BearDogError> {
     }
 
     // Test 2: SoloKey FIDO2
-    match test_solokey_entropy(256).await {
+    match test_solokey_entropy(256) {
         Ok(result) => {
             result.print_report();
             results.push(result);
@@ -409,7 +409,7 @@ async fn run_comparison() -> Result<(), BearDogError> {
     }
 
     // Test 3: Pixel 8a Titan M
-    match test_pixel_titan_m(256).await {
+    match test_pixel_titan_m(256) {
         Ok(result) => {
             result.print_report();
             results.push(result);
@@ -527,5 +527,5 @@ async fn main() -> Result<(), BearDogError> {
     // Initialize logging (optional, comment out if you want clean output)
     // tracing_subscriber::fmt::init();
 
-    run_comparison().await
+    run_comparison()
 }

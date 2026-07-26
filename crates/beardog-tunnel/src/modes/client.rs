@@ -21,7 +21,7 @@ use crate::ribocipher;
 /// # Errors
 ///
 /// Returns an error if socket connection or I/O fails.
-pub async fn run(endpoint: Option<String>, command: Option<String>) -> anyhow::Result<()> {
+pub fn run(endpoint: Option<String>, command: Option<String>) -> anyhow::Result<()> {
     info!("🐻 BearDog Client v{}", env!("CARGO_PKG_VERSION"));
 
     let socket_path = if let Some(ep) = endpoint {

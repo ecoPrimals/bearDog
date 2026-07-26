@@ -77,9 +77,3 @@ impl AIMonitoringConfig {
         self.enabled_metrics.contains(&AIMetricType::ResourceUsage)
     }
 }
-
-/// Backward compatibility alias for `AIMonitoringConfig`
-///
-/// Deprecated: Use `AIMonitoringConfig` directly instead.
-#[deprecated(since = "3.1.0", note = "Use AIMonitoringConfig instead")]
-pub type MonitoringConfig = AIMonitoringConfig;

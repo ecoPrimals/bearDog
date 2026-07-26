@@ -52,6 +52,7 @@ where
 impl SafeZeroCopyMemoryPool {
     /// Create a new safe memory pool with specified alignment
     /// Creates a new instance
+    #[must_use]
     pub fn new(pool_sizes: &[usize], alignment: usize) -> Self {
         let mut pools = HashMap::new();
 
@@ -281,6 +282,7 @@ impl Default for SafeSimdCapabilities {
 impl SafeSimdCapabilities {
     /// Create new SIMD capabilities
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         #[cfg(target_arch = "x86_64")]
         {
@@ -307,11 +309,13 @@ impl SafeSimdCapabilities {
     }
 
     /// Detect SIMD capabilities (compatibility method)
+    #[must_use]
     pub fn detect() -> Self {
         Self::new()
     }
 
     /// Vectorized hash function using safe operations
+    #[must_use]
     pub fn vectorized_hash(&self, data: &[u8]) -> Vec<u8> {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};

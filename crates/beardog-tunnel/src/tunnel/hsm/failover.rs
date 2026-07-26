@@ -41,6 +41,7 @@ pub enum CircuitBreakerState {
 
 impl CircuitBreaker {
     /// Creates a new circuit breaker
+    #[must_use]
     pub const fn new(max_failures: u32, timeout: Duration) -> Self {
         Self {
             max_failures,
@@ -110,8 +111,8 @@ impl HsmFailoverManager {
             },
         }
     }
-
     /// Checks if primary HSM is available
+    #[must_use]
     pub const fn is_primary_available(&self) -> bool {
         self.primary_available
     }
