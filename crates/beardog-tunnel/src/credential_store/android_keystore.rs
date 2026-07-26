@@ -30,7 +30,7 @@
 use beardog_errors::BearDogError;
 use beardog_traits::unified::storage::{CredentialStore, SecretMetadata};
 use std::path::PathBuf;
-use tracing::{debug, warn};
+use tracing::debug;
 
 use super::file_vault::FileVaultCredentialStore;
 
