@@ -598,14 +598,67 @@ impl MobileHsmDiscoverer {
         })
     }
 
-    /// Discovers mobile HSMs
+    /// Discovers mobile HSMs via runtime platform probing.
+    ///
+    /// On Android: probes for `keystore_cli_v2` and StrongBox availability.
+    /// On non-Android: returns empty (no mobile HSMs expected).
     ///
     /// # Errors
     ///
     /// Returns an error if mobile HSM discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
-        info!("Mobile HSM discovery skipped (not running on Android/iOS)");
-        Ok(Vec::new())
+        use crate::tunnel::hsm::types::android_transports::Keystore2CliTransport;
+
+        if !cfg!(target_os = "android") {
+            info!("Mobile HSM discovery: not on Android/iOS platform");
+            return Ok(Vec::new());
+        }
+
+        if !Keystore2CliTransport::is_available() {
+            info!("Mobile HSM discovery: keystore_cli_v2 not found on Android device");
+            return Ok(Vec::new());
+        }
+
+        let has_strongbox = Keystore2CliTransport::probe_strongbox();
+        let (model, chip_name, tier) = if has_strongbox {
+            (
+                "Android StrongBox HSM".to_string(),
+                "StrongBox".to_string(),
+                HsmTier::Hardware,
+            )
+        } else {
+            (
+                "Android TEE HSM".to_string(),
+                "TEE".to_string(),
+                HsmTier::SecureEnclave,
+            )
+        };
+
+        info!(
+            "Mobile HSM discovery: found {} (strongbox={})",
+            model, has_strongbox
+        );
+
+        Ok(vec![DiscoveredHsm {
+            vendor: "Android".to_string(),
+            model,
+            interface_type: HsmInterfaceType::MobileHsm {
+                platform: "Android".to_string(),
+                chip: Some(chip_name),
+            },
+            connection_info: HsmConnectionInfo {
+                endpoint: "/system/bin/keystore_cli_v2".to_string(),
+                auth_method: AuthenticationMethod::None,
+                timeout_ms: 5000,
+                encrypted: true,
+                parameters: std::collections::HashMap::new(),
+            },
+            capabilities: UniversalHsmCapabilities::default(),
+            assigned_tier: tier,
+            supports_human_entropy: false,
+            health_status: HsmHealthStatus::Healthy,
+            discovered_at: chrono::Utc::now(),
+        }])
     }
 }
 

@@ -150,7 +150,7 @@ pub struct AndroidHsmConfig {
     /// Keystore configuration
     pub keystore_config: AndroidKeystoreConfig,
     /// Attestation configuration (using default for now)
-    pub attestation_config: String, // Placeholder - will use proper type once AttestationConfig is accessible
+    pub attestation_config: String,
 }
 
 impl Default for AndroidHsmConfig {
@@ -183,9 +183,9 @@ pub struct AndroidDeviceCapabilities {
 pub use super::android_transports::{
     AndroidJniAttestationTransport, AndroidJniHealthMetricsTransport, AndroidJniKeystoreTransport,
     AttestationTransport, AttestationTransportBackend, HealthMetricsTransport,
-    HealthMetricsTransportBackend, KeystoreTransport, KeystoreTransportBackend,
-    MemoryKeystoreTransport, StubAttestationTransport, StubHealthMetricsTransport,
-    StubKeystoreTransport,
+    HealthMetricsTransportBackend, Keystore2CliTransport, KeystoreTransport,
+    KeystoreTransportBackend, MemoryKeystoreTransport, StubAttestationTransport,
+    StubHealthMetricsTransport, StubKeystoreTransport,
 };
 
 // --- Android keystore (logic + delegation) -------------------------------------------------------
@@ -205,16 +205,11 @@ impl AndroidKeystore {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub const fn new(
+    pub fn new(
         config: AndroidHsmConfig,
         transport: Arc<KeystoreTransportBackend>,
     ) -> Result<Self, BearDogError> {
-        let capabilities = AndroidDeviceCapabilities {
-            strongbox_available: true,
-            key_attestation_available: true,
-            hardware_backed_keystore: true,
-            verified_boot: true,
-        };
+        let capabilities = Self::detect_capabilities();
 
         Ok(Self {
             config,
@@ -223,8 +218,42 @@ impl AndroidKeystore {
         })
     }
 
-    /// Build with the platform-appropriate keystore transport: in-memory stub on non-Android
-    /// hosts; JNI-shaped backend on Android (see [`MemoryKeystoreTransport`]).
+    /// Runtime capability detection — probes real hardware when on Android,
+    /// returns conservative defaults on non-Android hosts.
+    fn detect_capabilities() -> AndroidDeviceCapabilities {
+        if cfg!(target_os = "android") {
+            let strongbox = Keystore2CliTransport::probe_strongbox();
+            let cli_available = Keystore2CliTransport::is_available();
+            AndroidDeviceCapabilities {
+                strongbox_available: strongbox,
+                key_attestation_available: cli_available,
+                hardware_backed_keystore: cli_available,
+                verified_boot: std::path::Path::new(
+                    "/proc/device-tree/firmware/android/verifiedbootstate",
+                )
+                .exists()
+                    || std::path::Path::new(
+                        "/sys/firmware/devicetree/base/firmware/android/verifiedbootstate",
+                    )
+                    .exists(),
+            }
+        } else {
+            AndroidDeviceCapabilities {
+                strongbox_available: false,
+                key_attestation_available: false,
+                hardware_backed_keystore: false,
+                verified_boot: false,
+            }
+        }
+    }
+
+    /// Build with the platform-appropriate keystore transport.
+    ///
+    /// Discovery order on Android (non-test):
+    /// 1. `Keystore2Cli` — if `/system/bin/keystore_cli_v2` exists, use real hardware ops
+    /// 2. `AndroidJni` — fall-closed stub (future Binder transport slot)
+    ///
+    /// Non-Android and tests always use the in-memory stub.
     ///
     /// # Errors
     ///
@@ -236,6 +265,11 @@ impl AndroidKeystore {
             if cfg!(test) {
                 Arc::new(KeystoreTransportBackend::Stub(
                     StubKeystoreTransport::default(),
+                ))
+            } else if Keystore2CliTransport::is_available() {
+                tracing::info!("Using Keystore2 CLI transport (hardware-backed)");
+                Arc::new(KeystoreTransportBackend::Keystore2Cli(
+                    Keystore2CliTransport::default(),
                 ))
             } else {
                 Arc::new(KeystoreTransportBackend::AndroidJni(

@@ -214,10 +214,10 @@ fn encrypt_with_keystore(plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
     //           cipher.doFinal(plaintext)
     //           → iv || ciphertext
     //
-    // Stub: until JNI bridge is validated on grapheneGate, we use
-    // a fallback that derives a device-bound key from Android ID +
-    // Build.FINGERPRINT. This is NOT hardware-backed and will be
-    // replaced by the real JNI path after eastGate validation.
+    // Wave 151b: device-bound key derivation from Android ID + hostname.
+    // This is software-backed (not TEE/StrongBox-sealed). Phase 2 will
+    // replace this with keystore_cli_v2 or Binder-wrapped AES-GCM key
+    // stored in the hardware enclave under KEYSTORE_ALIAS.
 
     use chacha20poly1305::{
         ChaCha20Poly1305,
@@ -313,17 +313,13 @@ fn retrieve_or_generate_master_key() -> Result<[u8; 32], BearDogError> {
     ))
 }
 
-/// Probe whether the Android Keystore API is reachable.
-#[cfg(target_os = "android")]
+/// Probe whether the Android Keystore is reachable (via `keystore_cli_v2` or filesystem presence).
 fn probe_android_keystore() -> bool {
-    // On real Android, try KeyStore.getInstance("AndroidKeyStore")
-    // For now, check if we're running on Android at all
-    true
-}
-
-#[cfg(not(target_os = "android"))]
-const fn probe_android_keystore() -> bool {
-    false
+    use crate::tunnel::hsm::types::android_transports::Keystore2CliTransport;
+    if !cfg!(target_os = "android") {
+        return false;
+    }
+    Keystore2CliTransport::is_available()
 }
 
 #[cfg(not(target_os = "android"))]
@@ -364,14 +360,12 @@ fn app_data_local_dir(args: etcetera::app_strategy::AppStrategyArgs) -> Option<P
 
 #[cfg(target_os = "android")]
 fn resolve_vault_dir() -> PathBuf {
-    // Prefer app-private files dir
-    beardog_errors::process_env::var("ANDROID_DATA")
-        .map(|d| PathBuf::from(d).join("beardog").join("credentials"))
-        .unwrap_or_else(|_| {
-            app_data_local_dir(beardog_credential_app_args())
-                .map(|d| d.join("credentials"))
-                .unwrap_or_else(|| std::env::temp_dir().join("beardog").join("credentials"))
-        })
+    // For non-app processes (adb shell), /data/local/tmp is the writable area.
+    // For Android apps, ANDROID_DATA points to app-private storage.
+    // We try env vars from most-specific to least-specific, falling back to temp_dir().
+    beardog_errors::process_env::var("BEARDOG_VAULT_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| std::env::temp_dir().join("beardog").join("credentials"))
 }
 
 #[cfg(test)]

@@ -333,7 +333,8 @@ impl PrimalDiscovery {
                 stream.write_all(request_str.as_bytes()).await?;
                 stream.write_all(b"\n").await?;
 
-                let mut buffer = vec![0u8; 8192];
+                let mut buffer =
+                    vec![0u8; beardog_types::constants::domains::buffers::UDP_PACKET_SIZE];
                 let n = stream.read(&mut buffer).await?;
                 let response_str = String::from_utf8_lossy(&buffer[..n]);
 

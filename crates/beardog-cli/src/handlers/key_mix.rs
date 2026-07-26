@@ -216,7 +216,7 @@ mod tests {
             key_id: "mix-a".to_string(),
             algorithm: "aes-256-gcm".to_string(),
             hsm_name: "h1".to_string(),
-            key_material_b64: mat.clone(),
+            key_material_b64: mat,
             created_at: Utc::now().to_rfc3339(),
             generation: 1,
             parent_key_id: None,

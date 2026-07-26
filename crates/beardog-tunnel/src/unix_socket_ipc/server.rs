@@ -41,6 +41,10 @@ use tracing::{debug, error, info, warn};
 /// connection is closed and the task freed.
 pub(super) const IPC_READ_TIMEOUT: Duration = NETWORK_READ_TIMEOUT;
 
+/// Timeout for the initial protocol-detection byte peek (BTSP vs JSON-RPC).
+/// Short because clients must send the first byte quickly to identify protocol.
+pub(super) const PROTOCOL_PEEK_TIMEOUT: Duration = Duration::from_secs(5);
+
 /// Default max concurrent UDS connections (overridable via `BEARDOG_UDS_MAX_CONNECTIONS`).
 const DEFAULT_UDS_MAX_CONNECTIONS: usize = 512;
 
@@ -432,7 +436,7 @@ impl UnixSocketIpcServer {
                 // use a 4-byte big-endian length prefix. PrefixedStream puts the
                 // consumed byte back for whichever handler wins.
                 let mut peek = [0u8; 1];
-                match tokio::time::timeout(Duration::from_secs(5), stream.read_exact(&mut peek))
+                match tokio::time::timeout(PROTOCOL_PEEK_TIMEOUT, stream.read_exact(&mut peek))
                     .await
                 {
                     Ok(Ok(1)) if peek[0] == b'{' && !self.require_btsp => {

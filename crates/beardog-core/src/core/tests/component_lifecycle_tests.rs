@@ -37,7 +37,6 @@ async fn test_component_registry_initialization() {
 
     // Components registry should be initialized
     let _components = &state.components;
-    // Test passes (placeholder removed)
 }
 
 #[tokio::test]
@@ -81,8 +80,6 @@ async fn test_multiple_component_access() {
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     drop(state2);
-
-    // Test passes (placeholder removed)
 }
 
 #[tokio::test]

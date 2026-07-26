@@ -129,8 +129,13 @@ impl SafeMobileHardwareProvider<StrongBoxAvailable> {
     }
 
     fn check_strongbox_with_safe_api() -> Result<bool, BearDogError> {
-        debug!("🛡️ Checking StrongBox with safe API");
-        Ok(beardog_errors::process_env::var("STRONGBOX_MOCK_AVAILABLE").is_ok())
+        debug!("Checking StrongBox via hardware probe");
+        if cfg!(target_os = "android") {
+            use crate::tunnel::hsm::types::android_transports::Keystore2CliTransport;
+            Ok(Keystore2CliTransport::probe_strongbox())
+        } else {
+            Ok(false)
+        }
     }
 }
 
@@ -156,7 +161,12 @@ impl SafeMobileHardwareProvider<TeeAvailable> {
     }
 
     fn check_tee_with_safe_api() -> Result<bool, BearDogError> {
-        debug!("🔐 Checking TEE with safe API");
-        Ok(false)
+        debug!("Checking TEE availability");
+        if cfg!(target_os = "android") {
+            use crate::tunnel::hsm::types::android_transports::Keystore2CliTransport;
+            Ok(Keystore2CliTransport::is_available())
+        } else {
+            Ok(false)
+        }
     }
 }

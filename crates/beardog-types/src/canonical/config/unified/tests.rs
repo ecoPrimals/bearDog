@@ -381,7 +381,6 @@ mod unified_config_tests {
 
         // File descriptor limit should be accessible
         let _fd = config.app.max_file_descriptors;
-        // Test passes (placeholder removed)
     }
 
     // TEST_CATEGORY: unit
@@ -415,7 +414,7 @@ mod unified_config_tests {
 
         // Configs should be independently constructed
         let _ = (&default_config, &dev_config);
-        // Test passes (placeholder removed) // If we got here, both configs exist
+        // If we got here, both configs exist
     }
 
     // TEST_CATEGORY: unit
@@ -430,6 +429,5 @@ mod unified_config_tests {
         assert!(prod_config.monitoring.enabled);
 
         let _ = &default_config;
-        // Test passes (placeholder removed)
     }
 }

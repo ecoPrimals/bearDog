@@ -11,7 +11,7 @@
 //! - Standards-compliant: XDG, macOS, Windows conventions
 //! - Modern: Async-ready, type-safe
 
-use beardog_types::constants::domains::network::ipc_discovery::BIOMEOS_RUNTIME_SOCKET_SUBDIR;
+use beardog_types::constants::domains::network::ipc_discovery::default_ecosystem_ipc_namespace;
 use etcetera::app_strategy::{AppStrategy, AppStrategyArgs, choose_app_strategy};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -125,7 +125,7 @@ pub struct PlatformPaths {
     /// - Windows: `%LOCALAPPDATA%\<ecosystem-namespace>\bin`
     /// - Android: `$ANDROID_DATA/data/org.<ecosystem-namespace>.nucleus/bin`
     ///
-    /// Default ecosystem namespace string: `BIOMEOS_RUNTIME_SOCKET_SUBDIR` in `beardog-types`
+    /// Default ecosystem namespace string: `default_ecosystem_ipc_namespace()` in `beardog-types`
     /// (`ipc_discovery`); not a primal name.
     pub bin_dir: PathBuf,
 
@@ -176,10 +176,12 @@ impl PlatformPaths {
     /// # Errors
     /// Returns `PlatformError::NoHomeDir` if home directory cannot be determined.
     pub fn discover() -> Result<Self, PlatformError> {
+        let primal_name = beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME")
+            .unwrap_or_else(|_| "beardog".to_string());
         let project = choose_app_strategy(AppStrategyArgs {
-            top_level_domain: "org".to_string(),
-            author: BIOMEOS_RUNTIME_SOCKET_SUBDIR.to_string(),
-            app_name: "nucleus".to_string(),
+            top_level_domain: "eco".to_string(),
+            author: default_ecosystem_ipc_namespace(),
+            app_name: primal_name,
         })
         .map_err(|_| PlatformError::NoHomeDir)?;
 
@@ -204,32 +206,21 @@ impl PlatformPaths {
         data_dir.join("bin")
     }
 
-    /// Discover runtime directory (fast temporary storage)
     fn discover_runtime_dir() -> PathBuf {
-        // 1. Try XDG_RUNTIME_DIR (Linux, guaranteed fast tmpfs)
+        let ns = default_ecosystem_ipc_namespace();
         if let Ok(xdg_runtime) = beardog_errors::process_env::var("XDG_RUNTIME_DIR") {
-            let runtime_dir = PathBuf::from(xdg_runtime).join(BIOMEOS_RUNTIME_SOCKET_SUBDIR);
-            return runtime_dir;
+            return PathBuf::from(xdg_runtime).join(&ns);
         }
-
-        // 2. Try TMPDIR (macOS, Linux fallback)
         if let Ok(tmpdir) = beardog_errors::process_env::var("TMPDIR") {
-            return PathBuf::from(tmpdir).join(BIOMEOS_RUNTIME_SOCKET_SUBDIR);
+            return PathBuf::from(tmpdir).join(&ns);
         }
-
-        // 3. Try TEMP (Windows)
         if let Ok(temp) = beardog_errors::process_env::var("TEMP") {
-            return PathBuf::from(temp).join(BIOMEOS_RUNTIME_SOCKET_SUBDIR);
+            return PathBuf::from(temp).join(&ns);
         }
-
-        // 4. Android fallback
-        #[cfg(target_os = "android")]
-        {
-            return PathBuf::from("/data/local/tmp").join(BIOMEOS_RUNTIME_SOCKET_SUBDIR);
+        if cfg!(target_os = "android") {
+            return std::env::temp_dir().join(&ns);
         }
-
-        // 5. Final fallback: system temp
-        std::env::temp_dir().join(BIOMEOS_RUNTIME_SOCKET_SUBDIR)
+        std::env::temp_dir().join(&ns)
     }
 
     /// Create all directories if they don't exist
@@ -331,21 +322,20 @@ mod tests {
         let paths = PlatformPaths::discover().expect("discover paths");
 
         // Paths should be valid and contain expected patterns
+        let ns = default_ecosystem_ipc_namespace();
         let bin_str = paths.bin_dir.to_str().expect("bin_dir utf-8");
-        assert!(bin_str.contains(BIOMEOS_RUNTIME_SOCKET_SUBDIR) || bin_str.contains(".local/bin"));
+        assert!(bin_str.contains(&ns) || bin_str.contains(".local/bin"));
 
-        // data_dir should contain either ecosystem namespace or "nucleus" (from ProjectDirs)
         let data_str = paths.data_dir.to_str().expect("data_dir utf-8");
         assert!(
-            data_str.contains(BIOMEOS_RUNTIME_SOCKET_SUBDIR) || data_str.contains("nucleus"),
-            "data_dir should contain ecosystem namespace or nucleus, got: {data_str}"
+            data_str.contains(&ns) || data_str.contains("beardog"),
+            "data_dir should contain ecosystem namespace or beardog, got: {data_str}"
         );
 
-        // config_dir should contain either ecosystem namespace or "nucleus"
         let config_str = paths.config_dir.to_str().expect("config_dir utf-8");
         assert!(
-            config_str.contains(BIOMEOS_RUNTIME_SOCKET_SUBDIR) || config_str.contains("nucleus"),
-            "config_dir should contain ecosystem namespace or nucleus, got: {config_str}"
+            config_str.contains(&ns) || config_str.contains("beardog"),
+            "config_dir should contain ecosystem namespace or beardog, got: {config_str}"
         );
 
         assert!(
@@ -353,14 +343,13 @@ mod tests {
                 .runtime_dir
                 .to_str()
                 .expect("runtime_dir utf-8")
-                .contains(BIOMEOS_RUNTIME_SOCKET_SUBDIR)
+                .contains(&ns)
         );
 
-        // cache_dir should contain either ecosystem namespace or "nucleus"
         let cache_str = paths.cache_dir.to_str().expect("cache_dir utf-8");
         assert!(
-            cache_str.contains(BIOMEOS_RUNTIME_SOCKET_SUBDIR) || cache_str.contains("nucleus"),
-            "cache_dir should contain ecosystem namespace or nucleus, got: {cache_str}"
+            cache_str.contains(&ns) || cache_str.contains("beardog"),
+            "cache_dir should contain ecosystem namespace or beardog, got: {cache_str}"
         );
     }
 

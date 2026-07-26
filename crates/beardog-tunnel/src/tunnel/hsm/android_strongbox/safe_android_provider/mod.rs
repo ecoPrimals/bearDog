@@ -496,7 +496,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_safe_android_provider_creation() -> Result<(), BearDogError> {
-        let provider = SafeMobileHardwareProvider::<SoftwareFallback>::new(SoftwareFallback)?;
+        let _provider = SafeMobileHardwareProvider::<SoftwareFallback>::new(SoftwareFallback)?;
         assert_eq!(SoftwareFallback::security_level(), SecurityLevel::Software);
         assert!(!SoftwareFallback::hardware_backed());
         Ok(())

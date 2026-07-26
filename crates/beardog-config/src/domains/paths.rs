@@ -170,21 +170,24 @@ impl PathConfig {
 }
 
 fn default_config_dir() -> PathBuf {
-    etcetera::choose_base_strategy()
-        .map(|d| d.config_dir().join("beardog"))
-        .unwrap_or_else(|_| PathBuf::from("/etc/beardog"))
+    etcetera::choose_base_strategy().map_or_else(
+        |_| PathBuf::from("/etc/beardog"),
+        |d| d.config_dir().join("beardog"),
+    )
 }
 
 fn default_data_dir() -> PathBuf {
-    etcetera::choose_base_strategy()
-        .map(|d| d.data_dir().join("beardog"))
-        .unwrap_or_else(|_| PathBuf::from("/var/lib/beardog"))
+    etcetera::choose_base_strategy().map_or_else(
+        |_| PathBuf::from("/var/lib/beardog"),
+        |d| d.data_dir().join("beardog"),
+    )
 }
 
 fn default_log_dir() -> PathBuf {
-    etcetera::choose_base_strategy()
-        .map(|d| d.cache_dir().join("beardog").join("logs"))
-        .unwrap_or_else(|_| PathBuf::from("/var/log/beardog"))
+    etcetera::choose_base_strategy().map_or_else(
+        |_| PathBuf::from("/var/log/beardog"),
+        |d| d.cache_dir().join("beardog").join("logs"),
+    )
 }
 
 #[cfg(test)]

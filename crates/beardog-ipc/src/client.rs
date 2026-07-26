@@ -352,7 +352,7 @@ impl OrchestratorRegistryClient {
             .map_err(IpcError::Io)?;
         stream.write_all(b"\n").await.map_err(IpcError::Io)?;
 
-        let mut buffer = vec![0u8; 8192];
+        let mut buffer = vec![0u8; beardog_types::constants::domains::buffers::UDP_PACKET_SIZE];
         let n = stream.read(&mut buffer).await.map_err(IpcError::Io)?;
 
         let response: JsonRpcResponse = serde_json::from_slice(&buffer[..n])

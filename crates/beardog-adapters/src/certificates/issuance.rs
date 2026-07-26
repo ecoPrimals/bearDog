@@ -51,10 +51,12 @@ impl CertificateIssuer {
             CommercialClassification::Commercial { risk, .. } => {
                 if matches!(risk, RiskLevel::High | RiskLevel::Critical) {
                     // High risk commercial must have license
-                    return Err(BearDogError::security(
-                        "Commercial usage requires license. Visit https://beardog.dev/pricing"
-                            .to_string(),
-                    ));
+                    let pricing_url =
+                        beardog_errors::process_env::var("BEARDOG_LICENSE_PRICING_URL")
+                            .unwrap_or_else(|_| "https://beardog.dev/pricing".to_string());
+                    return Err(BearDogError::security(format!(
+                        "Commercial usage requires license. Visit {pricing_url}"
+                    )));
                 }
                 None
             }

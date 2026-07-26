@@ -151,14 +151,9 @@ fn detect_device_info() -> Result<AndroidDeviceInfo, BearDogError> {
 
 /// Checks if Samsung Knox is available
 fn detect_knox_availability(device_info: &AndroidDeviceInfo) -> Result<bool, BearDogError> {
-    #[cfg(target_os = "android")]
-    {
-        // Real implementation would check Knox API availability
+    if cfg!(target_os = "android") {
         Ok(device_info.model.contains("Galaxy") && device_info.android_version >= "9".to_string())
-    }
-
-    #[cfg(not(target_os = "android"))]
-    {
+    } else {
         debug!("Non-Android platform: Knox unavailable (host build)");
         Ok(false)
     }
@@ -166,13 +161,20 @@ fn detect_knox_availability(device_info: &AndroidDeviceInfo) -> Result<bool, Bea
 
 /// Checks Android KeyStore for StrongBox capability.
 ///
-/// Requires JNI wiring to `KeyStore.getInstance("AndroidKeyStore")` and
-/// `KeyProperties.SECURITY_LEVEL_STRONGBOX`. Fail-closed until the native
-/// bridge is available.
+/// Probes real hardware by attempting a StrongBox key generation via `keystore_cli_v2`.
+/// Falls back to `false` if the CLI is not available or the probe fails.
 #[cfg(target_os = "android")]
 fn check_android_keystore_strongbox() -> Result<bool, BearDogError> {
-    debug!("Checking Android KeyStore for StrongBox support (JNI bridge pending)");
-    Ok(false)
+    use crate::tunnel::hsm::types::android_transports::Keystore2CliTransport;
+
+    debug!("Probing Android KeyStore for StrongBox support via keystore_cli_v2");
+    let result = Keystore2CliTransport::probe_strongbox();
+    if result {
+        info!("StrongBox probe succeeded — Titan M2 / hardware HSM confirmed");
+    } else {
+        debug!("StrongBox probe returned false — falling back to TEE/software");
+    }
+    Ok(result)
 }
 
 /// Returns true if running on Android platform
@@ -180,28 +182,38 @@ const fn is_android_platform() -> bool {
     cfg!(target_os = "android")
 }
 
-/// Gets the Android device model string
-#[cfg(target_os = "android")]
-fn get_device_model() -> Result<String, BearDogError> {
-    // Real implementation would query android.os.Build.MODEL
-    Ok("unknown".to_string())
+/// Reads an Android system property via `getprop`.
+fn android_getprop(prop: &str) -> Option<String> {
+    std::process::Command::new("getprop")
+        .arg(prop)
+        .output()
+        .ok()
+        .and_then(|o| {
+            if o.status.success() {
+                let val = String::from_utf8_lossy(&o.stdout).trim().to_string();
+                if val.is_empty() { None } else { Some(val) }
+            } else {
+                None
+            }
+        })
 }
 
-#[cfg(not(target_os = "android"))]
+/// Gets the Android device model string
 fn get_device_model() -> Result<String, BearDogError> {
-    Ok("Non-Android Device".to_string())
+    if cfg!(target_os = "android") {
+        Ok(android_getprop("ro.product.model").unwrap_or_else(|| "unknown".to_string()))
+    } else {
+        Ok("Non-Android Device".to_string())
+    }
 }
 
 /// Gets the Android device manufacturer string
-#[cfg(target_os = "android")]
 fn get_device_manufacturer() -> Result<String, BearDogError> {
-    // Real implementation would query android.os.Build.MANUFACTURER
-    Ok("Google".to_string())
-}
-
-#[cfg(not(target_os = "android"))]
-fn get_device_manufacturer() -> Result<String, BearDogError> {
-    Ok("Unknown".to_string())
+    if cfg!(target_os = "android") {
+        Ok(android_getprop("ro.product.manufacturer").unwrap_or_else(|| "Unknown".to_string()))
+    } else {
+        Ok("Unknown".to_string())
+    }
 }
 /// Detects Pixel generation from model string
 #[must_use]

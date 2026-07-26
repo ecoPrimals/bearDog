@@ -13,6 +13,9 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
 use tracing::{debug, error, info, warn};
 
+/// Timeout for the initial protocol-detection byte peek (BTSP vs JSON-RPC).
+const PROTOCOL_PEEK_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
+
 use super::TCP_READ_TIMEOUT;
 
 impl TcpIpcServer {
@@ -42,12 +45,7 @@ impl TcpIpcServer {
         // connections still get full BTSP enforcement.
         if let BtspSecurityMode::Production { ref family_seed } = security_mode {
             let mut peek_buf = [0u8; 1];
-            match tokio::time::timeout(
-                std::time::Duration::from_secs(5),
-                stream.peek(&mut peek_buf),
-            )
-            .await
-            {
+            match tokio::time::timeout(PROTOCOL_PEEK_TIMEOUT, stream.peek(&mut peek_buf)).await {
                 Ok(Ok(1)) if peek_buf[0] == b'{' => {
                     debug!(
                         peer = %peer_addr,

@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 26, 2026 (Wave 151a — deep debt sweep, Silicon Atheism, pure Rust evolution)
+**Last Updated**: July 26, 2026 (Wave 151c — Deep Debt Sweep + Production Mock Evolution)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -89,6 +89,37 @@
 ---
 
 ## Recent Improvements
+
+### Wave 151b — Android HSM Hardware Integration (Jul 26, 2026)
+
+- **`Keystore2CliTransport` implemented** — real hardware transport that shells out to `/system/bin/keystore_cli_v2` for StrongBox/TEE operations (generate, sign/verify, encrypt/decrypt, list, delete)
+- **Hardware HSM discovered on grapheneGate** — `beardog hsm discover` now finds "Android StrongBox HSM (Hardware tier)" via real Titan M2 probe
+- **Availability probes fixed** — `check_android_keystore_strongbox()` and `probe_android_keystore()` replaced hardcoded `true`/`false` with real `keystore_cli_v2` probing; device info via `getprop` instead of stubs
+- **`KeystoreTransportBackend::Keystore2Cli` variant** wired into all 8 dispatch functions (generate_key, sign, verify, encrypt, decrypt, list_aliases, delete_key, import_key)
+- **Platform transport factory** (`with_platform_keystore_transport`) now prefers CLI transport on Android when `/system/bin/keystore_cli_v2` is available
+- **`CredentialStoreBackend::platform_default()`** auto-selects Android Keystore on device, in-memory fallback elsewhere
+- **Server startup wired** — `SecretsHandler` now uses `platform_default()` instead of `in_memory()` — confirmed `"backend":"android-keystore"` in production logs on grapheneGate
+- **`MobileHsmDiscoverer::discover()`** replaced stub with real runtime probing — returns StrongBox (Hardware tier) or TEE (SecureEnclave tier)
+- **Knox detection** evolved from `#[cfg]` to runtime `cfg!()` (Silicon Atheism)
+- **Vault path fix** — Android credential vault resolves to writable `std::env::temp_dir()` instead of root-only `/data/beardog/`
+- **Android `AndroidDeviceCapabilities::detect_capabilities()`** — runtime detection replaces hardcoded `strongbox_available: true`
+- **Deployed + validated on grapheneGate (Pixel 8a)** — all JSON-RPC crypto ops confirmed: Ed25519 keygen, sign/verify, ChaCha20-Poly1305 encrypt/decrypt, secrets.store/retrieve with `android-keystore` backend
+
+### Wave 151c — Deep Debt Sweep + Production Mock Evolution (Jul 26, 2026)
+
+- **StrongBox detection evolved**: `check_strongbox_with_safe_api()` and `check_tee_with_safe_api()` replaced env-var mock (`STRONGBOX_MOCK_AVAILABLE`) with real `Keystore2CliTransport::probe_strongbox()` / `is_available()` hardware probes
+- **Memory protection evolved**: `DefaultMemoryProtector::protect()` / `unprotect()` upgraded from no-op copy to real ChaCha20-Poly1305 encrypt-at-rest with ephemeral key (defends against cold-boot / memory-scan attacks)
+- **Stub health metrics fixed**: `StubHealthMetricsTransport` no longer emits fabricated performance numbers (42.0 ops/s, 99.5% success) — zero-valued fail-closed metrics
+- **Hardcoded primal name fixed**: `beardog-installer/platform.rs` replaced hardcoded `"nucleus"` with `BEARDOG_PRIMAL_NAME` env-aware resolution
+- **Hardcoded URLs fixed**: `issuance.rs` pricing URL → `BEARDOG_LICENSE_PRICING_URL` env-aware
+- **CLI transport temp paths**: `Keystore2CliTransport` sign/encrypt/decrypt temp files evolved from hardcoded `/data/local/tmp/` to `std::env::temp_dir()`
+- **Magic number centralization**: IPC read buffers (3 files) → `beardog_types::constants::domains::buffers::UDP_PACKET_SIZE`; protocol-peek timeouts → named `PROTOCOL_PEEK_TIMEOUT` constants
+- **`android_transports.rs` refactored**: 929→670 lines; `Keystore2CliTransport` extracted to standalone `keystore2_cli_transport.rs` (273 lines)
+- **Unawaited futures fixed**: `SafeAndroidStrongBoxWrapper` metrics recording evolved from leaked async futures to sync `parking_lot::RwLock` (was `tokio::sync::RwLock`)
+- **Items-after-statements fixed**: 11 `use`/`const` items moved before statements across 6 files
+- **Deprecated constant migrated**: `beardog-installer` fully migrated from `BIOMEOS_RUNTIME_SOCKET_SUBDIR` to `default_ecosystem_ipc_namespace()`; Silicon Atheism `cfg!()` runtime check replaces `#[cfg(target_os = "android")]`
+- **Clippy auto-fix applied**: `redundant_clone`, `format!` variable capture, and other auto-fixable warnings resolved workspace-wide
+- **72 test suites**, 0 failures, all passing
 
 ### Wave 151a — Deep Debt Sweep + Silicon Atheism + Pure Rust Evolution (Jul 26, 2026)
 

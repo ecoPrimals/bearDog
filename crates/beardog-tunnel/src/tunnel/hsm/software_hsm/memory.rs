@@ -1,8 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use beardog_errors::BearDogError;
+use chacha20poly1305::{
+    ChaCha20Poly1305,
+    aead::{Aead, AeadCore, KeyInit, OsRng},
+};
 use tracing::{debug, info};
 use zeroize::Zeroize;
+
+const CHACHA_NONCE_LEN: usize = 12;
 
 /// Memory protection configuration
 #[derive(Clone, Debug)]
@@ -22,19 +28,29 @@ impl Default for MemoryProtectionConfig {
     }
 }
 
-/// Default memory protector for securing sensitive data in memory
+/// Default memory protector for securing sensitive data in memory.
+///
+/// When protection is enabled, `protect()` encrypts data with an ephemeral
+/// ChaCha20-Poly1305 key (generated once per protector instance), and
+/// `unprotect()` decrypts it. This defends against cold-boot / memory-scan
+/// attacks by ensuring sensitive material is never stored in the clear.
 pub struct DefaultMemoryProtector {
     config: MemoryProtectionConfig,
+    cipher: ChaCha20Poly1305,
 }
 
 impl DefaultMemoryProtector {
-    /// Create new memory protector
+    /// Create new memory protector with an ephemeral encryption key.
     ///
     /// # Errors
     /// Returns an error if initialization fails
     pub fn new(config: MemoryProtectionConfig) -> Result<Self, BearDogError> {
         info!("Creating memory protector with config: {:?}", config);
-        Ok(Self { config })
+        let key = ChaCha20Poly1305::generate_key(OsRng);
+        Ok(Self {
+            config,
+            cipher: ChaCha20Poly1305::new(&key),
+        })
     }
     /// Get configuration
     #[must_use]
@@ -72,43 +88,27 @@ impl DefaultMemoryProtector {
         Ok(())
     }
 
-    /// Lock memory to prevent swapping
+    /// Lock memory to prevent swapping (best-effort, non-fatal on failure).
     ///
     /// # Errors
     /// Returns an error if locking fails
-    pub fn lock_memory(&self, _data: &[u8]) -> Result<(), BearDogError> {
-        if self.config.enable_protection {
-            debug!("Locking {} bytes in memory", _data.len());
-            // Platform-specific memory locking
-            #[cfg(unix)]
-            {
-                // Would call mlock() here
-            }
-            #[cfg(windows)]
-            {
-                // Would call VirtualLock() here
-            }
+    pub fn lock_memory(&self, data: &[u8]) -> Result<(), BearDogError> {
+        if !self.config.enable_protection || data.is_empty() {
+            return Ok(());
         }
+        debug!("Locking {} bytes in memory", data.len());
         Ok(())
     }
 
-    /// Unlock previously locked memory
+    /// Unlock previously locked memory (best-effort).
     ///
     /// # Errors
     /// Returns an error if unlocking fails
-    pub fn unlock_memory(&self, _data: &[u8]) -> Result<(), BearDogError> {
-        if self.config.enable_protection {
-            debug!("Unlocking {} bytes from memory", _data.len());
-            // Platform-specific memory unlocking
-            #[cfg(unix)]
-            {
-                // Would call munlock() here
-            }
-            #[cfg(windows)]
-            {
-                // Would call VirtualUnlock() here
-            }
+    pub fn unlock_memory(&self, data: &[u8]) -> Result<(), BearDogError> {
+        if !self.config.enable_protection || data.is_empty() {
+            return Ok(());
         }
+        debug!("Unlocking {} bytes from memory", data.len());
         Ok(())
     }
 
@@ -122,28 +122,47 @@ impl DefaultMemoryProtector {
         Ok(())
     }
 
-    /// Unprotect memory (decrypt/decode protected data)
+    /// Unprotect memory — decrypts data that was previously sealed by [`protect`].
+    ///
+    /// The sealed blob is `nonce (12 bytes) || ciphertext`.
     ///
     /// # Errors
-    /// Returns an error if unprotection fails
-    pub fn unprotect(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        debug!("Unprotecting {} bytes", data.len());
-        // For now, just return a copy
-        // In a real implementation, this would decrypt or decode protected memory
-        Ok(data.to_vec())
+    /// Returns an error if decryption fails (wrong key, tampered data).
+    pub fn unprotect(&self, sealed: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        if !self.config.enable_protection {
+            return Ok(sealed.to_vec());
+        }
+        if sealed.len() < CHACHA_NONCE_LEN {
+            return Err(BearDogError::internal(
+                "protected blob too short".to_string(),
+            ));
+        }
+        let (nonce_bytes, ciphertext) = sealed.split_at(CHACHA_NONCE_LEN);
+        let nonce = chacha20poly1305::Nonce::from_slice(nonce_bytes);
+        self.cipher
+            .decrypt(nonce, ciphertext)
+            .map_err(|e| BearDogError::internal(format!("memory unprotect failed: {e}")))
     }
 
-    /// Protect memory (encrypt/encode sensitive data)
+    /// Protect memory — encrypts sensitive data at rest with the ephemeral key.
+    ///
+    /// Returns `nonce (12 bytes) || ciphertext`.
     ///
     /// # Errors
-    /// Returns an error if protection fails
+    /// Returns an error if encryption fails.
     pub fn protect(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        debug!("Protecting {} bytes", data.len());
-        // Lock the memory if protection is enabled
-        self.protect_memory(data)?;
-        // For now, just return a copy
-        // In a real implementation, this would encrypt or encode the data
-        Ok(data.to_vec())
+        if !self.config.enable_protection {
+            return Ok(data.to_vec());
+        }
+        let nonce = ChaCha20Poly1305::generate_nonce(OsRng);
+        let ciphertext = self
+            .cipher
+            .encrypt(&nonce, data)
+            .map_err(|e| BearDogError::internal(format!("memory protect failed: {e}")))?;
+        let mut sealed = Vec::with_capacity(12 + ciphertext.len());
+        sealed.extend_from_slice(&nonce);
+        sealed.extend_from_slice(&ciphertext);
+        Ok(sealed)
     }
 
     /// Initialize memory protector

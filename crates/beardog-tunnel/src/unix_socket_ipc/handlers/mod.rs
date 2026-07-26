@@ -412,8 +412,9 @@ impl HandlerRegistry {
                 MethodHandlerKind::Encryption(encryption::EncryptionHandler),
                 MethodHandlerKind::GraphSecurity(graph_security::GraphSecurityHandler),
                 MethodHandlerKind::Beacon(beacon::BeaconHandler::new()),
-                MethodHandlerKind::Secrets(secrets::SecretsHandler::new_in_memory(
+                MethodHandlerKind::Secrets(secrets::SecretsHandler::new(
                     identity.clone(),
+                    Arc::new(crate::credential_store::CredentialStoreBackend::platform_default()),
                 )),
                 MethodHandlerKind::Relay(relay::RelayHandler::new(identity.clone())),
                 MethodHandlerKind::Fido2(fido2::Fido2Handler::new()),

@@ -12,6 +12,7 @@ pub mod capability;
 pub mod config;
 pub mod ios;
 pub mod key;
+pub mod keystore2_cli_transport;
 pub mod ops;
 pub mod security_level;
 pub mod status;

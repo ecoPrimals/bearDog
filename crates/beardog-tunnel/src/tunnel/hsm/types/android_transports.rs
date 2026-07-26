@@ -2,18 +2,33 @@
 
 //! Android Keystore / attestation / health transport traits and stubs.
 //!
+//! ## Transport evolution architecture
+//!
+//! ```text
+//! HsmKeyProvider trait (beardog-traits)           ← platform-agnostic contract
+//!   └─ HsmKeyProviderBackend enum (beardog-tunnel)  ← dispatch across platforms
+//!        └─ AndroidStrongBoxHsm
+//!             └─ AndroidKeystore
+//!                  └─ KeystoreTransportBackend enum  ← wire-protocol layer
+//!                       ├─ Stub          (in-memory, non-Android / tests)
+//!                       ├─ AndroidJni    (fail-closed, future JNI slot)
+//!                       ├─ Keystore2Cli  (production: shells out to keystore_cli_v2)
+//!                       └─ [future]      Keystore2Binder (native AIDL, Phase 2)
+//! ```
+//!
 //! ## Enum dispatch pattern (Silicon Atheism)
 //!
 //! Each transport exposes a trait (`KeystoreTransport`, `AttestationTransport`,
 //! `HealthMetricsTransport`) and a backend enum (`*TransportBackend`) that dispatches
-//! to either:
+//! to the appropriate implementation:
 //!
-//! - **Stub / in-memory** implementations on non-Android hosts and in unit tests
-//! - **JNI adapters** on Android (`AndroidJni*` types), fail-closed in production until
-//!   hardware-backed Keymaster / Key Attestation calls are wired
+//! - **Stub / in-memory**: non-Android hosts and unit tests (deterministic)
+//! - **Keystore2Cli**: production Android — delegates to `/system/bin/keystore_cli_v2`
+//!   for real hardware-backed StrongBox / TEE operations via the platform's Keystore2 binder
+//! - **AndroidJni**: reserved slot for future direct Binder IPC transport
 //!
-//! Production code injects real JNI transports; tests and CI use deterministic stubs
-//! defined here — no `#ifdef` spaghetti in call sites.
+//! New transports slot in by adding an enum variant + trait impl — zero changes
+//! to any code above `KeystoreTransportBackend` in the call stack.
 
 use std::future::{Future, ready};
 
@@ -81,6 +96,9 @@ pub enum KeystoreTransportBackend {
     Stub(MemoryKeystoreTransport),
     /// Android: Keystore JNI adapter (in-memory stub in tests; fail-closed in production).
     AndroidJni(AndroidJniKeystoreTransport),
+    /// Android: Keystore2 CLI transport — delegates to `keystore_cli_v2` for real
+    /// hardware-backed StrongBox / TEE operations via the platform's Keystore2 binder service.
+    Keystore2Cli(Keystore2CliTransport),
 }
 
 async fn keystore_backend_generate_key(
@@ -91,6 +109,7 @@ async fn keystore_backend_generate_key(
     match backend {
         KeystoreTransportBackend::Stub(t) => t.jni_generate_key(alias, params).await,
         KeystoreTransportBackend::AndroidJni(t) => t.jni_generate_key(alias, params).await,
+        KeystoreTransportBackend::Keystore2Cli(t) => t.jni_generate_key(alias, params).await,
     }
 }
 
@@ -102,6 +121,7 @@ async fn keystore_backend_sign(
     match backend {
         KeystoreTransportBackend::Stub(t) => t.jni_sign(alias, data).await,
         KeystoreTransportBackend::AndroidJni(t) => t.jni_sign(alias, data).await,
+        KeystoreTransportBackend::Keystore2Cli(t) => t.jni_sign(alias, data).await,
     }
 }
 
@@ -114,6 +134,7 @@ async fn keystore_backend_verify(
     match backend {
         KeystoreTransportBackend::Stub(t) => t.jni_verify(alias, data, signature).await,
         KeystoreTransportBackend::AndroidJni(t) => t.jni_verify(alias, data, signature).await,
+        KeystoreTransportBackend::Keystore2Cli(t) => t.jni_verify(alias, data, signature).await,
     }
 }
 
@@ -125,6 +146,7 @@ async fn keystore_backend_encrypt(
     match backend {
         KeystoreTransportBackend::Stub(t) => t.jni_encrypt(alias, plaintext).await,
         KeystoreTransportBackend::AndroidJni(t) => t.jni_encrypt(alias, plaintext).await,
+        KeystoreTransportBackend::Keystore2Cli(t) => t.jni_encrypt(alias, plaintext).await,
     }
 }
 
@@ -136,6 +158,7 @@ async fn keystore_backend_decrypt(
     match backend {
         KeystoreTransportBackend::Stub(t) => t.jni_decrypt(alias, ciphertext).await,
         KeystoreTransportBackend::AndroidJni(t) => t.jni_decrypt(alias, ciphertext).await,
+        KeystoreTransportBackend::Keystore2Cli(t) => t.jni_decrypt(alias, ciphertext).await,
     }
 }
 
@@ -145,6 +168,7 @@ async fn keystore_backend_list_aliases(
     match backend {
         KeystoreTransportBackend::Stub(t) => t.jni_list_aliases().await,
         KeystoreTransportBackend::AndroidJni(t) => t.jni_list_aliases().await,
+        KeystoreTransportBackend::Keystore2Cli(t) => t.jni_list_aliases().await,
     }
 }
 
@@ -155,6 +179,7 @@ async fn keystore_backend_delete_key(
     match backend {
         KeystoreTransportBackend::Stub(t) => t.jni_delete_key(alias).await,
         KeystoreTransportBackend::AndroidJni(t) => t.jni_delete_key(alias).await,
+        KeystoreTransportBackend::Keystore2Cli(t) => t.jni_delete_key(alias).await,
     }
 }
 
@@ -167,6 +192,9 @@ async fn keystore_backend_import_key(
     match backend {
         KeystoreTransportBackend::Stub(t) => t.jni_import_key(alias, key_data, key_type).await,
         KeystoreTransportBackend::AndroidJni(t) => {
+            t.jni_import_key(alias, key_data, key_type).await
+        }
+        KeystoreTransportBackend::Keystore2Cli(t) => {
             t.jni_import_key(alias, key_data, key_type).await
         }
     }
@@ -330,6 +358,8 @@ impl KeystoreTransport for UnwiredAndroidKeystoreTransport {
 
 /// Android Keystore JNI transport handle (fail-closed until Keymaster JNI is wired).
 pub type AndroidJniKeystoreTransport = UnwiredAndroidKeystoreTransport;
+
+pub use super::keystore2_cli_transport::Keystore2CliTransport;
 
 fn stub_digest(data: &[u8]) -> Vec<u8> {
     Sha256::digest(data).to_vec()
@@ -549,16 +579,27 @@ pub struct StubHealthMetricsTransport {
 impl Default for StubHealthMetricsTransport {
     fn default() -> Self {
         Self {
+            metrics: status::PerformanceMetrics::default(),
+        }
+    }
+}
+
+impl StubHealthMetricsTransport {
+    /// Stub transport reports zero-valued metrics (fail-closed).
+    /// Real metrics come from `AndroidJniHealthMetricsTransport` or platform-specific collectors.
+    #[must_use]
+    pub const fn new() -> Self {
+        Self {
             metrics: status::PerformanceMetrics {
-                operations_per_second: 42.0,
-                average_latency_ms: 2.5,
-                success_rate: 99.5,
-                memory_usage_mb: 12.0,
-                cpu_usage_percent: 3.0,
-                network_throughput_bps: 50_000.0,
-                latency_ms: 2.5,
-                throughput_mbps: 0.05,
-                uptime_seconds: 3_600,
+                operations_per_second: 0.0,
+                average_latency_ms: 0.0,
+                success_rate: 0.0,
+                memory_usage_mb: 0.0,
+                cpu_usage_percent: 0.0,
+                network_throughput_bps: 0.0,
+                latency_ms: 0.0,
+                throughput_mbps: 0.0,
+                uptime_seconds: 0,
             },
         }
     }
@@ -591,12 +632,12 @@ const ANDROID_HEALTH_METRICS_JNI_MESSAGE: &str =
     "Android JNI health metrics require an Android runtime";
 
 fn android_resident_memory_mb() -> Option<f64> {
+    const PAGE_SIZE: u64 = 4096;
     if !cfg!(target_os = "android") {
         return None;
     }
     let s = std::fs::read_to_string("/proc/self/statm").ok()?;
     let resident_pages: u64 = s.split_whitespace().nth(1)?.parse().ok()?;
-    const PAGE_SIZE: u64 = 4096;
     #[expect(
         clippy::cast_precision_loss,
         reason = "memory size in MiB; f64 precision is sufficient"

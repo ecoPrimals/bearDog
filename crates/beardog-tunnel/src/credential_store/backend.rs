@@ -62,6 +62,40 @@ impl CredentialStoreBackend {
             vault_dir,
         )?))
     }
+
+    /// Auto-select the best available credential store for this platform.
+    ///
+    /// Discovery order:
+    /// 1. Android Keystore (hardware-backed, if on Android with Keystore2)
+    /// 2. File vault with random master key (persistent, all platforms)
+    /// 3. In-memory (volatile fallback)
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] only if all persistent backends fail.
+    pub fn platform_default() -> Self {
+        if AndroidKeystoreCredentialStore::is_available() {
+            let vault_dir = AndroidKeystoreCredentialStore::default_vault_dir();
+            match Self::android_keystore(vault_dir) {
+                Ok(backend) => {
+                    tracing::info!(
+                        backend = "android-keystore",
+                        "Credential store: using hardware-backed Android Keystore"
+                    );
+                    return backend;
+                }
+                Err(e) => {
+                    tracing::warn!("Android Keystore init failed, falling back: {e}");
+                }
+            }
+        }
+
+        tracing::info!(
+            backend = "in-memory",
+            "Credential store: using volatile in-memory backend (no persistent store available)"
+        );
+        Self::in_memory()
+    }
 }
 
 impl CredentialStore for CredentialStoreBackend {

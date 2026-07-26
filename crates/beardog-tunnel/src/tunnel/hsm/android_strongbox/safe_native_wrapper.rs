@@ -5,13 +5,12 @@
 // Provides safe Rust interface to Android StrongBox hardware security module.
 // This implementation prioritizes safety and error handling over raw performance.
 
-use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::KeyType;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
@@ -19,7 +18,7 @@ use uuid::Uuid;
 pub struct SafeAndroidStrongBoxWrapper {
     /// Device capabilities
     device_capabilities: DeviceCapabilities,
-    operation_metrics: Arc<RwLock<HashMap<String, OperationMetrics>>>,
+    operation_metrics: Arc<parking_lot::RwLock<HashMap<String, OperationMetrics>>>,
     /// Native handle state
     native_handle_initialized: bool,
 }
@@ -61,16 +60,18 @@ impl SafeAndroidStrongBoxWrapper {
                 biometric_support: true,
                 attestation_support: true,
             },
-            operation_metrics: Arc::new(RwLock::new(HashMap::new())),
+            operation_metrics: Arc::new(parking_lot::RwLock::new(HashMap::new())),
             native_handle_initialized: false,
         }
     }
 
-    /// Check if StrongBox is available on this device
     fn check_strongbox_availability() -> bool {
-        beardog_errors::process_env::var(env_keys::ENV_STRONGBOX_AVAILABLE)
-            .unwrap_or_else(|_| "false".to_string())
-            == "true"
+        if cfg!(target_os = "android") {
+            use crate::tunnel::hsm::types::android_transports::Keystore2CliTransport;
+            Keystore2CliTransport::probe_strongbox()
+        } else {
+            false
+        }
     }
 
     /// # Errors
@@ -137,8 +138,6 @@ impl SafeAndroidStrongBoxWrapper {
         // Record operation attempt
         self.record_operation_attempt(key_id);
 
-        // Safe signing implementation
-        use sha2::{Digest, Sha256};
         let mut hasher = Sha256::new();
         hasher.update(data);
         hasher.update(key_id.as_bytes());
@@ -163,8 +162,6 @@ impl SafeAndroidStrongBoxWrapper {
     ) -> Result<bool, BearDogError> {
         debug!("🔍 Safe signature verification for key: {}", key_id);
 
-        // Recreate expected signature
-        use sha2::{Digest, Sha256};
         let mut hasher = Sha256::new();
         hasher.update(data);
         hasher.update(key_id.as_bytes());
@@ -187,8 +184,8 @@ impl SafeAndroidStrongBoxWrapper {
         &self.device_capabilities
     }
 
-    async fn record_operation_attempt(&self, operation: &str) {
-        let mut guard = self.operation_metrics.write().await;
+    fn record_operation_attempt(&self, operation: &str) {
+        let mut guard = self.operation_metrics.write();
         let entry = guard
             .entry(operation.to_string())
             .or_insert(OperationMetrics {
@@ -199,18 +196,16 @@ impl SafeAndroidStrongBoxWrapper {
         entry.last_operation_time = std::time::SystemTime::now();
     }
 
-    /// Record successful operation
-    async fn record_operation_success(&self, operation: &str) {
-        let mut guard = self.operation_metrics.write().await;
+    fn record_operation_success(&self, operation: &str) {
+        let mut guard = self.operation_metrics.write();
         if let Some(entry) = guard.get_mut(operation) {
             entry.success_count += 1;
         }
     }
 
-    /// Get operation metrics
-    /// Gets operation_metrics
-    pub async fn get_operation_metrics(&self) -> HashMap<String, OperationMetrics> {
-        self.operation_metrics.read().await.clone()
+    #[must_use]
+    pub fn get_operation_metrics(&self) -> HashMap<String, OperationMetrics> {
+        self.operation_metrics.read().clone()
     }
 }
 

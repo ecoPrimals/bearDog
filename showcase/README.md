@@ -10,4 +10,4 @@ dynamic config, performance profiling, ecosystem integration, advanced
 features) powered the prokaryotic → post-primordial evolution and are
 preserved as fossil record.
 
-Active patterns live in `primalSpring/wateringHole/`.
+Active patterns live in `infra/wateringHole/`.

@@ -325,7 +325,7 @@ mod error_edge_cases {
             42
         }
 
-        let mut err_branch_ran = false;
+        let err_branch_ran = false;
         assert_eq!(mk_ok(), 42);
         assert!(
             !err_branch_ran,

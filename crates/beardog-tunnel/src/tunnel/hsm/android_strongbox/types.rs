@@ -416,9 +416,8 @@ impl ChallengeGenerator {
     /// # Errors
     /// Returns error if challenge generation fails
     pub fn generate_challenge(&self, length: usize) -> Result<Vec<u8>, BearDogError> {
-        // Use secure random generation
-        let mut challenge = vec![0u8; length];
         use rand::RngCore;
+        let mut challenge = vec![0u8; length];
         rand::rng().fill_bytes(&mut challenge);
         Ok(challenge)
     }
