@@ -86,7 +86,7 @@ impl AndroidKeystoreCredentialStore {
 
     /// Whether the Android Keystore is available on this platform.
     #[must_use]
-    pub const fn is_available() -> bool {
+    pub fn is_available() -> bool {
         probe_android_keystore()
     }
 
