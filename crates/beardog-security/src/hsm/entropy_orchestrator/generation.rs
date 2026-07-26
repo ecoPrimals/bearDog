@@ -86,14 +86,13 @@ impl HsmEntropyOrchestrator {
     /// OS RNG, since HID I/O is inherently async.
     pub(super) fn generate_from_hsm(
         &self,
-        source: &HsmSource,
+        _source: &HsmSource,
         length: usize,
     ) -> Result<(Vec<u8>, EntropySourceReport), BearDogError> {
-        use rand::RngCore;
 
         #[cfg(feature = "fido2")]
         #[expect(irrefutable_let_patterns, reason = "HsmSource has cfg-conditional variants")]
-        if let HsmSource::Fido2(idx) = source
+        if let HsmSource::Fido2(idx) = _source
             && self.fido2_providers.get(*idx).is_some()
         {
             debug!(
@@ -104,7 +103,7 @@ impl HsmEntropyOrchestrator {
 
         let mut rng = rand::rng();
         let mut entropy = vec![0u8; length];
-        rng.fill_bytes(&mut entropy);
+        rand::RngCore::fill_bytes(&mut rng, &mut entropy);
 
         debug!(
             "Generated {} bytes of entropy via OS RNG ({})",
@@ -125,8 +124,6 @@ impl HsmEntropyOrchestrator {
         source: &HsmSource,
         length: usize,
     ) -> Result<(Vec<u8>, EntropySourceReport), BearDogError> {
-        use rand::RngCore;
-
         #[cfg(feature = "fido2")]
         #[expect(irrefutable_let_patterns, reason = "HsmSource has cfg-conditional variants")]
         if let HsmSource::Fido2(idx) = source
@@ -137,7 +134,7 @@ impl HsmEntropyOrchestrator {
                     Ok(hw_entropy) => {
                         let mut os_rng = rand::rng();
                         let mut os_bytes = vec![0u8; length];
-                        os_rng.fill_bytes(&mut os_bytes);
+                        rand::RngCore::fill_bytes(&mut os_rng, &mut os_bytes);
 
                         let mut mixed = Vec::with_capacity(length);
                         for i in 0..hw_entropy.len().min(os_bytes.len()) {

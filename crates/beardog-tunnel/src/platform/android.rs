@@ -147,6 +147,11 @@ impl PlatformSocket for AndroidSocket {
                 std::io::ErrorKind::InvalidInput,
                 "AndroidSocket requires Abstract endpoint",
             )),
+            #[allow(unreachable_patterns)]
+            _ => Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "AndroidSocket requires Abstract endpoint",
+            )),
         }
     }
 }

@@ -23,7 +23,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 800 lines of code (production) — `enrollment.rs` (1061L) decomposed into 7 focused modules; `lineage_proof.rs` (877L) tests extracted
 - Hardcoded `eth0` → `BEARDOG_MDNS_INTERFACE` env var; `/tmp/` fallbacks → `std::env::temp_dir()`
-- 14,065+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
+- 13,995+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
 - 90.51% line coverage (llvm-cov workspace) — target 90% met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - `#[serial]` minimized — 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent
@@ -36,7 +36,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - Dark Forest beacon (zero metadata leakage discovery)
 - Universal IPC (Unix sockets, abstract sockets, TCP)
 - Android StrongBox integration (complete)
-- HSM abstraction (software, PKCS#11, StrongBox, Windows DPAPI, Linux SecretService)
+- HSM abstraction (software, PKCS#11, StrongBox, Windows DPAPI, Linux SecretService, iOS Secure Enclave, FIDO2/CTAP2)
 - Enrollment seed rotation via genetic HKDF hierarchy (generation-based, grace-period dual verification)
 - Two-layer genetic enrollment: mitochondrial gate (HMAC/family seed) + nuclear lineage distance (tree proximity → trust tier)
 - Bond-type cipher awareness: `BtspBondType` (Covalent/Ionic) drives per-type cipher floors in BTSP negotiation
@@ -76,11 +76,27 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 | macOS (Intel, M-series) | Unix sockets | Validated |
 | Android (ARM64) | Abstract sockets + TCP | Ready |
 | Windows (x86_64, ARM64) | Named pipes + TCP | Ready |
-| iOS (ARM64) | TCP | Ready |
+| iOS (ARM64) | Unix sockets (sandbox) | Ready |
 
 ---
 
 ## Recently Completed
+
+### Wave 154 — HSM Agnostic Evolution + Transport Abstraction — DONE
+
+Full HSM layer audit across 10+ providers on 5 platforms. iOS Safe FFI stubs eliminated (wired to real Security.framework P-256/ECDSA). iOS Secure Enclave module fixed and properly integrated into module tree. Health monitor stub removed. IPC transport finding: Unix domain sockets are the universal standard (Linux, macOS, Android, iOS) — XPC is unnecessary for single-process daemon model.
+
+### Wave 153c — iosGate Deployment + Secure Enclave — DONE
+
+iPhone XS provisioned as iosGate (iOS 18.5, paired, cross-compilation verified). Five iOS build errors fixed. `SafeSecureEnclave` wired to real Security.framework. iOS IPC evolved from XPC stubs to Unix domain sockets in sandbox. IPA build pipeline automated with `zsign`. Deploy blocked on Apple Developer certificate (in progress).
+
+### Wave 153 — Deep Debt Sweep + Production Mock Evolution — DONE
+
+Workspace-wide clippy reduced from 296+ warnings to 0. `solo_v2/provider.rs` refactored 936→736 LOC. FIDO2 VID/PID registry consolidated. 47 hardcoded latency constants replaced. Dead code removed. Android stub tests fixed.
+
+### Wave 152 — SoloKey FIDO2 Hardware Integration + iosGate Prep — DONE
+
+End-to-end FIDO2/CTAP2 hardware path on eastGate with SoloKey v2. udev rules shipped. HID interface selection fixed via usage page filtering. EAGAIN retry/polling for reliable CTAP2 transport. ClientPIN protocol (ECDH, AES-256-CBC, HMAC) implemented. `hmac-secret` CTAP2 extension for hardware-backed entropy. Live discovery via real CTAP2 GetInfo. Gate registration for iosGate, eastGate, grapheneGate.
 
 ### Cross-Gate Trust Hardening — DONE (Wave 123)
 
@@ -369,4 +385,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: Jul 24, 2026 (Wave 150x)
+**Last Updated**: Jul 26, 2026 (Wave 154)

@@ -54,10 +54,12 @@
 //! - biomeOS IPC standard: cross-platform socket layout
 
 use super::{PlatformListenerBackend, PlatformSocket, SocketEndpoint};
-use beardog_config::env_keys;
 use beardog_types::constants::domains::network::ipc_discovery as ipc_layout;
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 use tokio::net::UnixListener;
-use tracing::{debug, info, warn};
+#[cfg(target_os = "macos")]
+use tracing::debug;
+use tracing::{info, warn};
 
 /// iOS/macOS socket implementation
 ///
@@ -102,22 +104,35 @@ impl PlatformSocket for IOSSocket {
             Ok(SocketEndpoint::Filesystem(socket_path))
         }
 
-        // iOS: XPC is preferred but requires platform-specific bindings
+        // iOS: Unix sockets within the app sandbox container.
+        //
+        // iOS apps can use Unix domain sockets within their own sandbox.
+        // The socket is placed in the app's tmp directory (accessible without
+        // special entitlements). For inter-app IPC, an app group entitlement
+        // with a shared container would be needed.
+        //
+        // XPC remains the long-term goal once Pure Rust bindings exist.
         #[cfg(target_os = "ios")]
         {
-            let ns = ipc_layout::resolve_biomeos_ipc_subdir_from_optional(None);
-            let xpc_service = format!("org.{ns}.{primal_name}");
+            let socket_dir = std::env::temp_dir()
+                .join(ipc_layout::resolve_biomeos_ipc_subdir_from_optional(None));
 
-            info!("📱 iOS XPC service identifier: {}", xpc_service);
-            warn!("⚠️  iOS XPC transport requires platform-specific bindings");
-            warn!("   Options:");
-            warn!("   1. Pure Rust XPC bindings (when available)");
-            warn!("   2. launchd + Unix sockets (with proper entitlements)");
-            warn!("   3. TCP localhost fallback (works but not optimal)");
+            if let Err(e) = std::fs::create_dir_all(&socket_dir) {
+                warn!(
+                    "Failed to create iOS socket directory {}: {}",
+                    socket_dir.display(),
+                    e
+                );
+            }
 
-            // For now, document the XPC endpoint
-            // Future implementation will use XPC framework bindings
-            Ok(SocketEndpoint::XPC(xpc_service))
+            let socket_path = socket_dir.join(format!("{primal_name}.sock"));
+
+            info!(
+                "iOS Unix socket (sandbox): {}",
+                socket_path.display()
+            );
+
+            Ok(SocketEndpoint::Filesystem(socket_path))
         }
     }
 
@@ -143,20 +158,32 @@ impl PlatformSocket for IOSSocket {
                 )))
             }
 
-            // iOS: XPC endpoint (not yet implemented)
+            // iOS: Unix socket within app sandbox
+            #[cfg(target_os = "ios")]
+            SocketEndpoint::Filesystem(path) => {
+                if path.exists() {
+                    info!("Removing stale iOS socket: {}", path.display());
+                    std::fs::remove_file(path)?;
+                }
+
+                let listener = tokio::net::UnixListener::bind(path)?;
+                let path_str = path.display().to_string();
+
+                info!("iOS Unix socket bound: {}", path.display());
+
+                Ok(Box::new(PlatformListenerBackend::Unix(
+                    super::unix::UnixPlatformListener::new(listener, path_str),
+                )))
+            }
+
+            // iOS XPC fallback (future — when Pure Rust bindings exist)
             #[cfg(target_os = "ios")]
             SocketEndpoint::XPC(service) => {
-                warn!("iOS XPC binding not yet implemented: {}", service);
-                warn!("Implementation requires:");
-                warn!("  1. Pure Rust XPC bindings (e.g., xpc-sys crate)");
-                warn!("  2. iOS entitlements configuration");
-                warn!("  3. XPC service registration with launchd");
-
                 Err(std::io::Error::new(
                     std::io::ErrorKind::Unsupported,
                     format!(
-                        "iOS XPC transport not yet implemented ({}). Use TCP localhost fallback or wait for Pure Rust XPC bindings.",
-                        service
+                        "iOS XPC transport not yet implemented ({service}). \
+                         Use Filesystem endpoint via create_endpoint() instead."
                     ),
                 ))
             }
@@ -198,18 +225,19 @@ mod tests {
 
     #[test]
     #[cfg(target_os = "ios")]
-    fn test_ios_xpc_format() -> Result<(), BearDogError> {
+    fn test_ios_sandbox_socket_format() -> Result<(), BearDogError> {
         let endpoint = IOSSocket::create_endpoint("beardog")
-            .map_err(|e| BearDogError::system(format!("iOS XPC endpoint: {e}")))?;
+            .map_err(|e| BearDogError::system(format!("iOS socket endpoint: {e}")))?;
         match endpoint {
-            SocketEndpoint::XPC(service) => {
-                assert_eq!(service, "org.biomeos.beardog");
-                assert!(service.starts_with("org.biomeos."));
-                println!("✅ iOS XPC service: {}", service);
+            SocketEndpoint::Filesystem(path) => {
+                let path_str = path.to_string_lossy();
+                assert!(path_str.contains("beardog"));
+                assert!(path_str.ends_with(".sock"));
+                println!("iOS sandbox socket: {}", path.display());
             }
             other => {
                 return Err(BearDogError::invalid_input(format!(
-                    "Expected XPC endpoint on iOS, got {:?}",
+                    "Expected Filesystem endpoint on iOS, got {:?}",
                     other
                 )));
             }
@@ -239,14 +267,15 @@ mod tests {
 
             #[cfg(target_os = "ios")]
             match endpoint {
-                SocketEndpoint::XPC(service) => {
-                    assert!(service.contains(primal));
-                    assert!(service.starts_with("org.biomeos."));
-                    println!("✅ iOS {} → {}", primal, service);
+                SocketEndpoint::Filesystem(path) => {
+                    let path_str = path.to_string_lossy();
+                    assert!(path_str.contains(primal));
+                    assert!(path_str.ends_with(".sock"));
+                    println!("iOS {} -> {}", primal, path.display());
                 }
                 other => {
                     return Err(BearDogError::invalid_input(format!(
-                        "Expected XPC endpoint on iOS, got {:?}",
+                        "Expected Filesystem endpoint on iOS, got {:?}",
                         other
                     )));
                 }

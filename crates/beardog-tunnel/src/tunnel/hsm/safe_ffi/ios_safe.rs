@@ -90,16 +90,17 @@ impl SafeIosProvider {
     fn generate_key_secure_enclave(
         &self,
         key_id: &str,
-        _key_type: &KeyType,
+        key_type: &KeyType,
     ) -> Result<HsmKey, BearDogError> {
-        info!(
-            "🍎 Using iOS Secure Enclave for key generation (not yet wired): {}",
-            key_id
-        );
+        use crate::tunnel::hsm::ios_secure_enclave::SafeSecureEnclave;
 
-        Err(BearDogError::not_yet_available(
-            "iOS Secure Enclave integration requires Secure Enclave device binding and native crypto wiring",
-        ))
+        let rt = tokio::runtime::Handle::try_current()
+            .map_err(|e| BearDogError::internal(format!("no tokio runtime: {e}")))?;
+
+        rt.block_on(async {
+            let enclave = SafeSecureEnclave::new().await?;
+            enclave.safe_generate_key(key_id, key_type).await
+        })
     }
 
     #[cfg(not(target_os = "ios"))]
@@ -140,16 +141,17 @@ impl SafeIosProvider {
     fn sign_data_secure_enclave(
         &self,
         key_id: &str,
-        _data: &[u8],
+        data: &[u8],
     ) -> Result<Vec<u8>, BearDogError> {
-        info!(
-            "🍎 Using iOS Secure Enclave for signing (not yet wired): {}",
-            key_id
-        );
+        use crate::tunnel::hsm::ios_secure_enclave::SafeSecureEnclave;
 
-        Err(BearDogError::not_yet_available(
-            "iOS Secure Enclave integration requires Secure Enclave device binding and native crypto wiring",
-        ))
+        let rt = tokio::runtime::Handle::try_current()
+            .map_err(|e| BearDogError::internal(format!("no tokio runtime: {e}")))?;
+
+        rt.block_on(async {
+            let enclave = SafeSecureEnclave::new().await?;
+            enclave.safe_sign(key_id, data).await
+        })
     }
 
     #[cfg(not(target_os = "ios"))]
@@ -191,17 +193,18 @@ impl SafeIosProvider {
     fn verify_signature_secure_enclave(
         &self,
         key_id: &str,
-        _data: &[u8],
-        _signature: &[u8],
+        data: &[u8],
+        signature: &[u8],
     ) -> Result<bool, BearDogError> {
-        info!(
-            "🍎 Using iOS Secure Enclave for signature verification (not yet wired): {}",
-            key_id
-        );
+        use crate::tunnel::hsm::ios_secure_enclave::SafeSecureEnclave;
 
-        Err(BearDogError::not_yet_available(
-            "iOS Secure Enclave integration requires Secure Enclave device binding and native crypto wiring",
-        ))
+        let rt = tokio::runtime::Handle::try_current()
+            .map_err(|e| BearDogError::internal(format!("no tokio runtime: {e}")))?;
+
+        rt.block_on(async {
+            let enclave = SafeSecureEnclave::new().await?;
+            enclave.safe_verify(key_id, data, signature).await
+        })
     }
 
     #[cfg(not(target_os = "ios"))]
@@ -257,20 +260,13 @@ mod tests {
     use serial_test::serial;
 
     fn assert_ios_secure_enclave_stub_err(err: BearDogError) {
-        match err {
-            BearDogError::System { category, message } => {
-                assert!(
-                    category == SystemErrorCategory::NotImplemented
-                        || category == SystemErrorCategory::NotSupported,
-                    "unexpected category: {category:?}"
-                );
-                assert!(
-                    message.contains("iOS Secure Enclave"),
-                    "unexpected message: {message}"
-                );
-            }
-            other => panic!("expected System error, got {other:?}"),
-        }
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Secure Enclave")
+                || msg.contains("Unsupported platform")
+                || msg.contains("not available"),
+            "unexpected error: {msg}"
+        );
     }
 
     #[test]

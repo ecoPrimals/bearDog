@@ -25,6 +25,7 @@
 //! cargo run --example test_ctap2_getinfo --features fido2
 //! ```
 
+#[cfg(feature = "fido2")]
 use beardog_hid::HidDevice;
 
 #[tokio::main]

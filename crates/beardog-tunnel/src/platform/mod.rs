@@ -55,6 +55,7 @@ use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
 use beardog_config::env_keys;
 use beardog_types::constants::domains::config::system::DEFAULT_SYSTEM_NAME;
+#[cfg(all(unix, not(target_os = "android"), not(target_os = "ios")))]
 use beardog_types::constants::domains::network::ipc_discovery;
 
 /// Platform-specific socket endpoint types
@@ -135,14 +136,14 @@ pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEn
 }
 
 /// Returns the default socket endpoint for the current Unix platform
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "android"), not(target_os = "ios")))]
 #[must_use]
 pub fn default_socket_endpoint() -> SocketEndpoint {
     default_socket_endpoint_for_primal(None)
 }
 
 /// Default Unix filesystem socket using an optional primal name (`None` → env / `beardog`).
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "android"), not(target_os = "ios")))]
 pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEndpoint {
     let primal_name = primal_name
         .map(str::to_string)
@@ -155,7 +156,7 @@ pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEn
 }
 
 /// Same as [`default_socket_endpoint_for_primal`] but reads `PRIMAL_NAME` from the environment.
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(all(unix, not(target_os = "android"), not(target_os = "ios")))]
 #[must_use]
 pub fn default_socket_endpoint_from_env() -> SocketEndpoint {
     default_socket_endpoint_for_primal(
@@ -185,12 +186,17 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
     })
 }
 
+/// iOS sandbox Unix socket endpoint (within the app's tmp directory).
 #[cfg(target_os = "ios")]
 pub fn default_socket_endpoint() -> SocketEndpoint {
+    use beardog_types::constants::domains::network::ipc_discovery;
+
     let primal_name = beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME)
         .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_PRIMAL_NAME_PREFIXED))
         .unwrap_or_else(|_| DEFAULT_SYSTEM_NAME.to_string());
-    SocketEndpoint::XPC(format!("com.ecoprimals.{primal_name}"))
+    let socket_dir = std::env::temp_dir()
+        .join(ipc_discovery::resolve_biomeos_ipc_subdir_from_optional(None));
+    SocketEndpoint::Filesystem(socket_dir.join(format!("{primal_name}.sock")))
 }
 
 #[cfg(target_family = "wasm")]

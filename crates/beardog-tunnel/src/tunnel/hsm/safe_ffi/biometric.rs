@@ -5,7 +5,9 @@
 //! Provides safe interfaces for biometric authentication (Touch ID/Face ID) on iOS
 
 use beardog_errors::BearDogError;
-use tracing::{info, warn};
+use tracing::info;
+#[cfg(not(target_os = "ios"))]
+use tracing::warn;
 
 /// Biometric authentication types supported on iOS
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -74,7 +76,8 @@ impl SafeBiometricAuthenticator {
 
     /// Detect available biometric authentication methods
     fn detect_available_biometrics() -> Result<Vec<BiometricType>, BearDogError> {
-        let types = Vec::new();
+        #[allow(unused_mut)]
+        let mut types = Vec::new();
 
         #[cfg(target_os = "ios")]
         {
@@ -126,7 +129,7 @@ impl SafeBiometricAuthenticator {
     ///
     /// # Errors
     /// Returns an error if authentication fails or is unavailable
-    pub fn authenticate(
+    pub async fn authenticate(
         &self,
         policy: BiometricPolicy,
         reason: &str,
@@ -139,7 +142,6 @@ impl SafeBiometricAuthenticator {
             ));
         }
 
-        // Validate policy is supported
         self.validate_policy(&policy)?;
 
         #[cfg(target_os = "ios")]
@@ -290,7 +292,7 @@ mod tests {
             if auth.is_available() {
                 // Only test if biometric is available
                 let result =
-                    auth.authenticate(BiometricPolicy::DeviceDefault, "Test authentication");
+                    auth.authenticate(BiometricPolicy::DeviceDefault, "Test authentication").await;
 
                 // Should either succeed or fail gracefully
                 assert!(result.is_ok() || result.is_err());
@@ -333,6 +335,7 @@ mod tests {
         let auth = SafeBiometricAuthenticator::default();
         let err = auth
             .authenticate(BiometricPolicy::None, "reason")
+            .await
             .expect_err("no hardware");
         assert!(err.to_string().contains("not available") || err.to_string().contains("hardware"));
     }

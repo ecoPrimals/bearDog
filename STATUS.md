@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 26, 2026 (Wave 153 — Deep Debt Sweep + Production Mock Evolution)
+**Last Updated**: July 26, 2026 (Wave 154 — HSM Agnostic Evolution + Transport Abstraction)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant; 2 monoliths refactored Wave 119 (server.rs→7 files, orchestrator.rs→10 files) |
-| **Tests** | 14,065 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 13,995 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | all 4 pass | 2 advisory ignores (RSA Marvin, `paste`); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned; TLS backend is Pure Rust `rustls-rustcrypto` |
@@ -89,6 +89,24 @@
 ---
 
 ## Recent Improvements
+
+### Wave 154 — HSM Agnostic Evolution + Transport Abstraction (Jul 26, 2026)
+
+- **Full HSM layer audit**: Mapped all 10+ providers across 5 platforms — identified dual provider stacks, production stubs, and abstraction gaps
+- **iOS Safe FFI stubs eliminated**: `not_yet_available` stubs in `ios_safe.rs` now delegate to real `SafeSecureEnclave` with Security.framework P-256/ECDSA
+- **iOS Secure Enclave module tree fixed**: Was orphaned from module tree; now properly declared, legacy prototypes excluded
+- **Health monitor evolved**: Removed misleading "provider probe not yet wired" stub
+- **IPC transport finding**: Unix domain sockets work on Linux, macOS, Android, and iOS — XPC is unnecessary for bearDog's single-process daemon model
+- **Zero production mocks**: All remaining stubs are fail-closed by design (return errors, never simulated success)
+
+### Wave 153c — iosGate Deployment + Secure Enclave (Jul 26, 2026)
+
+- **iPhone XS provisioned as iosGate**: Paired over USB, UDID and hardware model registered in `infra/gates/iosGate.toml`
+- **iOS cross-compilation verified**: Five build errors fixed (`aarch64-apple-ios` target compiles clean alongside host)
+- **Secure Enclave wired to Security.framework**: `SafeSecureEnclave` evolved from software Ed25519 fallback to real P-256 keygen + ECDSA-SHA256 signing via `security-framework` crate; private keys never leave hardware
+- **iOS IPC evolved from XPC stubs to Unix domain sockets**: `create_endpoint` and `bind` now produce working `Filesystem` endpoints within the iOS app sandbox
+- **IPA build pipeline automated**: `ios/build-ipa.sh` script handles cross-compile, bundle assembly, and env-var-driven signing with `zsign`
+- **Deploy blocked on Apple Developer certificate**: Ad-hoc signed IPA verified but iOS 18 requires Apple-issued cert; enrollment in progress
 
 ### Wave 153 — Deep Debt Sweep + Production Mock Evolution (Jul 26, 2026)
 

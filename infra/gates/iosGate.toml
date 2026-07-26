@@ -3,33 +3,46 @@
 
 [device]
 name = "iosGate"
-model = "iPhone XS (A1920)"
+model = "iPhone XS (iPhone11,2)"
+hardware_model = "D321AP"
 chip = "A12 Bionic"
-arch = "aarch64-apple-ios"
-os = "iOS 16.x"
+arch = "arm64e"
+rust_target = "aarch64-apple-ios"
+os = "iOS 18.5"
+build = "22F76"
+udid = "00008020-001E68D00A3A002E"
+serial = "GR4G809UKPFV"
 secure_enclave = true
 face_id = true
 
 [capabilities]
-# Secure Enclave supports P-256 key generation/signing
+# Secure Enclave P-256 key generation and ECDSA signing
 secure_enclave_keygen = true
 secure_enclave_ecdsa_p256 = true
-# Keychain for key storage
+# iOS Keychain for persistent key storage
 keychain = true
 # No FIDO2/CTAP2 over USB (Lightning only supports MFi accessories)
 fido2_usb = false
-# Potential NFC FIDO2 via CoreNFC (iPhone XS has NFC)
+# NFC FIDO2 via CoreNFC (iPhone XS has NFC hardware)
 fido2_nfc = true
+# IPC via Unix domain sockets within app sandbox
+ipc_unix_socket = true
+# Biometric authentication via FaceID
+biometric_faceid = true
+biometric_touchid = false
 
 [deployment]
-# Cross-compile from Linux is possible but codesigning requires macOS
 rust_target = "aarch64-apple-ios"
-codesign_host = "macos-required"
-# Sideloading via Xcode or AltStore
-sideload_method = "xcode-or-altstore"
+cross_compile_from = "eastGate"
+codesign_tool = "zsign"
+codesign_status = "pending-apple-developer-cert"
+sideload_method = "ideviceinstaller"
+ipa_path = "target/ios-build/beardog-signed.ipa"
 
 [status]
 registered = "2026-07-26"
-wave = "152-prep"
+paired = "2026-07-26"
+wave = "153-iosGate-deployment"
 active = false
-notes = "Registered for Wave 153. Device wipe and provisioning pending."
+deploy_blocker = "Apple Developer certificate required for code signing"
+notes = "Device paired and cross-compilation verified. IPA built and ad-hoc signed. Awaiting Apple Developer account activation for proper code signing."

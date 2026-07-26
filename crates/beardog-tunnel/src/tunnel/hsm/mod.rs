@@ -8,6 +8,7 @@
 pub mod software_hsm;
 
 pub mod android_strongbox;
+pub mod ios_secure_enclave;
 pub mod linux_secret_service;
 pub mod windows_dpapi;
 

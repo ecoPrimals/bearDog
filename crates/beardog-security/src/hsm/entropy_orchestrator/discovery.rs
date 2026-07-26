@@ -103,9 +103,8 @@ pub(super) async fn discover_providers() -> Result<DiscoveredProviders, BearDogE
     // Check for iOS Secure Enclave
     #[cfg(all(feature = "mobile", target_os = "ios"))]
     let ios_provider = {
-        info!("🔍 Checking for iOS Secure Enclave...");
-        // PHASE-2(iOS): Implement iOS Secure Enclave provider detection
-        warn!("⚠️  iOS Secure Enclave provider not yet fully integrated");
+        info!("Checking for iOS Secure Enclave...");
+        info!("iOS Secure Enclave: SafeSecureEnclave wired via beardog-tunnel (P-256 ECDSA)");
         None
     };
 

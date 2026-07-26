@@ -10,7 +10,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 25 | **JSON-RPC Methods**: 231 | **Tests**: 14,065+ | **Coverage**: 90.51% | **Last Updated**: July 26, 2026
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 25 | **JSON-RPC Methods**: 231 | **Tests**: 13,995+ | **Coverage**: 90.51% | **Last Updated**: July 26, 2026
 
 ---
 
@@ -37,7 +37,7 @@ BearDog provides secure cryptographic operations for all primals through the **T
 - **Secret Storage** — Encrypted secrets with family-scoped keys + `CredentialStore` trait (in-memory, file-vault backends)
 - **Relay Authorization** — Lineage-gated access for relay-assisted coordinated punch
 - **Universal IPC** — Multi-transport, platform-agnostic
-- **HSM Integration** — Software, Windows DPAPI, Linux SecretService, Android StrongBox backends
+- **HSM Integration** — Software, Windows DPAPI, Linux SecretService, Android StrongBox, iOS Secure Enclave, FIDO2/CTAP2 backends
 - **Dark Forest Beacon** — Zero metadata leakage discovery
 
 ---
@@ -88,7 +88,7 @@ TCP is opt-in via `--port`/`--listen`/`BEARDOG_TCP_IPC_PORT`. Without those, Bea
 | macOS | Unix sockets | Production |
 | Android | Abstract sockets + TCP | Production |
 | Windows | Named pipes + TCP | Ready |
-| iOS | TCP | Ready |
+| iOS | Unix sockets (sandbox) | Ready |
 
 BearDog auto-detects the platform and binds appropriate transports.
 
@@ -239,7 +239,7 @@ export FAMILY_SEED=my-secret-seed
 | **TODO/FIXME** | 0 |
 | **Files > 800 LOC** | 0 (production code) |
 | **Rust files** | 1,947 |
-| **Tests** | 13,937+ (concurrent; 35 `#[serial]` in `beardog-production`) |
+| **Tests** | 13,995+ (concurrent; 35 `#[serial]` in `beardog-production`) |
 | **Coverage** | 90.51% line (llvm-cov workspace, target 90% met) |
 | **Serial Tests** | 35 (`beardog-production` shared `AtomicBool` state) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |

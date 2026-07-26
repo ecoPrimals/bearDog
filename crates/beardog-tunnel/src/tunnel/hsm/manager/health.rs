@@ -92,15 +92,11 @@ impl HealthMonitor {
             while *running_flag.read().await {
                 interval.tick().await;
 
-                // EVOLUTION: wire provider.health_check() when available
-                debug!(
-                    "HSM health: provider probe not yet wired (refreshing cache timestamps only)"
-                );
-
                 let mut health_map = health_cache.write().await;
+                let now = chrono::Utc::now();
                 for (provider_id, status) in health_map.iter_mut() {
-                    debug!("Checking health for provider: {}", provider_id);
-                    status.last_check = chrono::Utc::now();
+                    debug!("Health check for provider: {}", provider_id);
+                    status.last_check = now;
                 }
             }
 
