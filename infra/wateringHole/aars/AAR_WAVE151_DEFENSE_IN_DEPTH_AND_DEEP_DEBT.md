@@ -1,4 +1,4 @@
-# After Action Report: Wave 151a/151b/151c
+# After Action Report: Wave 151a/151b/151c/151d
 
 **Date**: July 25, 2026
 **Author**: flockGate
@@ -8,9 +8,9 @@
 
 ## Scope
 
-Three back-to-back waves delivering defense-in-depth UDS enforcement (151a),
-deep debt sweep with smart file decomposition (151b), and spec audit + env wiring
-+ DNS bug fix (151c).
+Four back-to-back waves delivering defense-in-depth UDS enforcement (151a),
+deep debt sweep with smart file decomposition (151b), spec audit + env wiring
++ DNS bug fix (151c), and publication readiness pen test + security hardening (151d).
 
 ---
 
@@ -126,6 +126,43 @@ Items found during audit but not actioned this wave (external deps or low priori
 
 ---
 
+## Wave 151d — Publication Readiness Pen Test + Security Hardening
+
+### Pen test findings (3-surface audit: JSON-RPC, HTTP API, BTSP TCP)
+
+| Severity | Count | Status |
+|----------|-------|--------|
+| CRITICAL | 3 | **ALL RESOLVED** |
+| HIGH | 4 | Documented, deployment-hardened |
+| MEDIUM | 6 | Justified or scoped |
+| LOW | 3 | By design |
+
+### Critical fixes shipped
+
+| Finding | Fix |
+|---------|-----|
+| `BearDogError` text with filesystem paths forwarded to IPC clients | `sanitize_error_message()` strips paths + OS errors; full errors logged server-side |
+| `capability.call` in PUBLIC_METHODS — auth bypass on re-dispatch to crypto | Moved to Protected — requires valid token |
+| `auth.issue_ionic` mints wildcard `["*"]` scope to unauthenticated callers | Default scope → `[]` (empty); explicit scope required |
+| BTSP initial handshake accepts `null` cipher (floor only on re-negotiation) | Cipher floor enforced at Phase 2 via `BtspCipher::rank()` |
+| TCP BTSP server forwards parse/business errors verbatim | Sanitized via `into_json_rpc_error()` |
+
+### Android target compile fixes (eastGate readiness)
+
+| File | Fix |
+|------|-----|
+| `credential_store/android_keystore.rs` | Removed `whoami` dep; added `tracing::warn!` |
+| `android_strongbox/core/unified.rs` | `HashMap` → `BTreeMap` for unified provider traits |
+
+### Remaining HIGH items (deployment hardening, not code)
+
+- `BEARDOG_AUTH_MODE` defaults Permissive (set `=enforced` in production)
+- `BEARDOG_UDS_REQUIRE_BTSP` defaults OFF (set `=1` in production)
+- No per-method crypto rate limiting (connection-level cap exists at 512)
+- Same-UID UDS bypass (defense-in-depth; acceptable for single-user gates)
+
+---
+
 ## What went well
 
 - Four-dimensional parallel audit (large files, unsafe, hardcoding, deps) enabled efficient triage
@@ -141,3 +178,7 @@ Items found during audit but not actioned this wave (external deps or low priori
 - `DEFAULT_POOL_SIZE` was being used as a generic "10" constant across 30+ call sites, including DNS timeout — semantic constants prevent category errors
 - Specs drift even faster than root docs — 7 specs had incorrect status labels that would mislead upstream auditors
 - `from_env()` should be added at struct creation time, not bolted on later; 3 config structs had Default but no env wiring
+- Security pen tests are most effective post-integration: songBird crypto delegation 6/6 meant the full API surface was exercised for the first time
+- Error sanitization must happen at the boundary, not at each error site — one `sanitize_error_message()` covers all 36+ `BearDogError` propagation paths
+- `PUBLIC_METHODS` list is a critical security surface — any method there bypasses auth entirely; should be reviewed on every handler addition
+- Android target compilation diverges from host — `HashMap`/`BTreeMap` mismatches only surface in `#[cfg(target_os = "android")]` blocks

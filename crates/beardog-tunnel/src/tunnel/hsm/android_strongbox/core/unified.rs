@@ -11,7 +11,7 @@ use beardog_types::canonical::providers_unified::traits::{
     AuthorizationResponse, BackupInfo, HsmDeviceInfo, KeyBackupSpec, KeyGenerationSpec, KeyInfo,
     KeyType, KeyUsage, SecurityContext, UnifiedHsmProvider, UnifiedSecurityProvider,
 };
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use tracing::{info, warn};
 
 // Implement UnifiedProvider (base trait)

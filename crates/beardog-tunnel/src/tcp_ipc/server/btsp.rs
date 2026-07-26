@@ -51,22 +51,19 @@ impl TcpIpcServer {
                 continue;
             }
 
-            let request: Value = match serde_json::from_str(trimmed) {
-                Ok(req) => req,
-                Err(e) => {
-                    let err_resp = serde_json::json!({
-                        "jsonrpc": "2.0",
-                        "error": {"code": -32700, "message": format!("Parse error: {e}")},
-                        "id": null
-                    });
-                    if let Ok(s) = serde_json::to_string(&err_resp) {
-                        let encrypted = session
-                            .encrypt_frame(s.as_bytes())
-                            .map_err(|e| BearDogError::system(format!("BTSP encrypt: {e}")))?;
-                        let _ = btsp_handshake::write_frame(stream, &encrypted).await;
-                    }
-                    continue;
+            let request: Value = if let Ok(req) = serde_json::from_str(trimmed) { req } else {
+                let err_resp = serde_json::json!({
+                    "jsonrpc": "2.0",
+                    "error": {"code": -32700, "message": "Parse error: invalid JSON"},
+                    "id": null
+                });
+                if let Ok(s) = serde_json::to_string(&err_resp) {
+                    let encrypted = session
+                        .encrypt_frame(s.as_bytes())
+                        .map_err(|e| BearDogError::system(format!("BTSP encrypt: {e}")))?;
+                    let _ = btsp_handshake::write_frame(stream, &encrypted).await;
                 }
+                continue;
             };
 
             let method = request["method"].as_str().unwrap_or("");
@@ -118,11 +115,15 @@ impl TcpIpcServer {
 
             let json_response = match response {
                 Ok(result) => serde_json::json!({"jsonrpc":"2.0","result":result,"id":id}),
-                Err(e) => serde_json::json!({
-                    "jsonrpc":"2.0",
-                    "error":{"code":-32601,"message":format!("Business error: {e}")},
-                    "id":id
-                }),
+                Err(e) => {
+                    tracing::error!(raw = %e, "BTSP TCP handler error");
+                    let err = e.into_json_rpc_error();
+                    serde_json::json!({
+                        "jsonrpc":"2.0",
+                        "error":{"code":err.code,"message":err.message},
+                        "id":id
+                    })
+                }
             };
 
             let resp_str = serde_json::to_string(&json_response)

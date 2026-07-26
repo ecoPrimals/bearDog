@@ -296,12 +296,10 @@ fn decrypt_with_keystore(blob: &[u8]) -> Result<[u8; 32], BearDogError> {
 
 #[cfg(target_os = "android")]
 fn get_android_device_id() -> String {
-    // android.provider.Settings.Secure.ANDROID_ID
-    // Fallback: Build.FINGERPRINT + Build.SERIAL
     beardog_errors::process_env::var("ANDROID_ID")
         .or_else(|_| beardog_errors::process_env::var("ANDROID_SERIAL"))
         .unwrap_or_else(|_| {
-            warn!("No Android device ID available; using hostname fallback");
+            tracing::warn!("No Android device ID available; using hostname fallback");
             std::fs::read_to_string("/proc/sys/kernel/hostname")
                 .map(|s| s.trim().to_string())
                 .unwrap_or_else(|_| "unknown-android".to_string())

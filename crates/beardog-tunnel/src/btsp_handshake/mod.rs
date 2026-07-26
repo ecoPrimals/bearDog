@@ -135,6 +135,22 @@ fn load_family_seed() -> Result<Vec<u8>, BearDogError> {
     ))
 }
 
+/// Resolve the cipher floor for the initial BTSP handshake.
+///
+/// Reads `BEARDOG_BTSP_CIPHER_FLOOR` (default `chacha20-poly1305`).
+pub(crate) fn load_cipher_floor() -> BtspCipher {
+    static FLOOR: std::sync::OnceLock<BtspCipher> = std::sync::OnceLock::new();
+    *FLOOR.get_or_init(|| {
+        let raw = beardog_errors::process_env::var(env_keys::ENV_BTSP_CIPHER_FLOOR)
+            .unwrap_or_default();
+        match raw.as_str() {
+            "null" => BtspCipher::Null,
+            "hmac-plain" | "hmac_plain" => BtspCipher::HmacPlain,
+            _ => BtspCipher::ChaCha20Poly1305,
+        }
+    })
+}
+
 impl BtspSecurityMode {
     /// Returns `true` when BTSP handshake enforcement is active.
     #[must_use]

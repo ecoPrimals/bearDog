@@ -120,7 +120,7 @@ pub fn handle_auth_issue_ionic_with_identity(
             .filter_map(Value::as_str)
             .map(String::from)
             .collect(),
-        None => vec!["*".to_owned()],
+        None => vec![],
     };
 
     let ttl_secs = params
@@ -520,10 +520,10 @@ mod tests {
     }
 
     #[test]
-    fn issue_defaults_wildcard_scope() {
+    fn issue_defaults_empty_scope() {
         let params = serde_json::json!({ "subject": "admin" });
         let result = handle_auth_issue_ionic(PRIMAL, NODE, Some(&params));
-        assert_eq!(result["scope"], serde_json::json!(["*"]));
+        assert_eq!(result["scope"], serde_json::json!([]));
     }
 
     #[test]

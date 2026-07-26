@@ -38,6 +38,31 @@ use beardog_ipc::{DispatchOutcome, IpcErrorPhase, OrchestratorRegistryClient};
 use std::collections::HashMap;
 use std::sync::Arc;
 
+/// Strip filesystem paths, OS error details, and internal state from error
+/// messages before they cross the IPC boundary.  Full details are logged
+/// server-side via `tracing::error!`.
+fn sanitize_error_message(raw: &str) -> String {
+    let mut out = String::with_capacity(raw.len());
+    let mut chars = raw.chars().peekable();
+
+    while let Some(ch) = chars.next() {
+        if ch == '/' && chars.peek().is_some_and(|c| c.is_alphanumeric() || *c == '.') {
+            out.push_str("<path>");
+            for c in chars.by_ref() {
+                if c == ' ' || c == ':' || c == '\'' || c == '"' || c == ')' {
+                    out.push(c);
+                    break;
+                }
+            }
+        } else {
+            out.push(ch);
+        }
+    }
+
+    out.replace("(os error", "(os error)")
+        .replace("(os error))", "(os error)")
+}
+
 /// Typed error for JSON-RPC method handlers.
 ///
 /// Replaces raw `String` errors with structured variants that map directly
@@ -129,8 +154,14 @@ impl HandlerError {
                 };
                 JsonRpcError::invalid_params(msg)
             }
-            Self::Application(msg) => JsonRpcError::internal_error(msg),
-            Self::Domain(err) => JsonRpcError::internal_error(err.to_string()),
+            Self::Application(msg) => {
+                tracing::error!(raw = %msg, "handler application error");
+                JsonRpcError::internal_error(sanitize_error_message(&msg))
+            }
+            Self::Domain(err) => {
+                tracing::error!(raw = %err, "handler domain error");
+                JsonRpcError::internal_error(sanitize_error_message(&err.to_string()))
+            }
         }
     }
 

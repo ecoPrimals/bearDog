@@ -28,6 +28,16 @@ impl BtspCipher {
         }
     }
 
+    /// Strength ranking for floor enforcement (higher = stronger).
+    #[must_use]
+    pub const fn rank(self) -> u8 {
+        match self {
+            Self::ChaCha20Poly1305 => 3,
+            Self::HmacPlain => 2,
+            Self::Null => 1,
+        }
+    }
+
     /// Parse a wire name into a cipher variant.
     ///
     /// # Errors

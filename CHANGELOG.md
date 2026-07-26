@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### July 25, 2026 -- Wave 151d: Publication Readiness Pen Test + Security Hardening
+
+#### Security Hardening (CRITICAL → RESOLVED)
+- **Error sanitization layer**: `HandlerError::into_json_rpc_error()` now strips filesystem paths and OS error details from JSON-RPC responses via `sanitize_error_message()`; full errors logged server-side via `tracing::error!`
+- **TCP BTSP error leakage**: Parse errors and business errors no longer forward raw `BearDogError` text to wire clients
+- **`capability.call` → Protected**: Removed from `PUBLIC_METHODS` — callers now require valid auth token to invoke capability routing (prevents auth bypass on re-dispatch to crypto/signing methods)
+- **Token scope restriction**: `auth.issue_ionic` / `auth.issue_session` default scope changed from `["*"]` (wildcard) to `[]` (empty) — callers must explicitly request scopes
+- **BTSP cipher floor on initial handshake**: Server now enforces `BEARDOG_BTSP_CIPHER_FLOOR` during the Phase 2 binary handshake, not only on re-negotiation — prevents client-initiated downgrade to `null` or `hmac_plain`
+- Added `BtspCipher::rank()` method for consistent cipher strength comparison
+
+#### Android Target Compile Fixes (eastGate readiness)
+- Fixed `android_keystore.rs`: replaced `whoami` crate reference with env-based hostname fallback; added `tracing::warn!` import
+- Fixed `android_strongbox/core/unified.rs`: corrected `HashMap` → `BTreeMap` for `ProviderHealth.details`, `ResourceUsage.disk_io`, and `ProviderMetrics.performance` fields
+
+#### Pen Test Summary
+- 3 CRITICAL findings (error info leakage, `capability.call` auth bypass, wildcard token minting) — all RESOLVED
+- 4 HIGH findings documented (auth defaults, cipher downgrade, rate limits, BTSP strict default)
+- Publication dependency audit completed (git dep, path versions, publish guards documented)
+- 13,974+ tests, 0 failures, 0 clippy warnings
+
 ### July 25, 2026 -- Wave 151c: Spec Audit + Env Wiring + DNS Bug Fix
 
 #### Spec Status Corrections (7 specs)

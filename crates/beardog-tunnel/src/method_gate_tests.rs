@@ -58,9 +58,13 @@ fn capabilities_list_is_public() {
         classify_method("capability.list"),
         MethodAccessLevel::Public
     );
+}
+
+#[test]
+fn capability_call_is_protected() {
     assert_eq!(
         classify_method("capability.call"),
-        MethodAccessLevel::Public
+        MethodAccessLevel::Protected
     );
 }
 

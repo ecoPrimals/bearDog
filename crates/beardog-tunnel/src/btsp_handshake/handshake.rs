@@ -10,6 +10,7 @@ use super::crypto::{
     verify_challenge_response, x25519_shared_secret,
 };
 use super::framing::{read_frame, write_frame};
+use super::load_cipher_floor;
 use super::session::{BtspCipher, BtspSession};
 use super::types::{
     BTSP_HANDSHAKE_VERSION, ChallengeResponse, ClientHello, HandshakeComplete, HandshakeError,
@@ -118,9 +119,20 @@ where
 
     debug!("BTSP handshake: challenge verified");
 
-    // ── Negotiate cipher ───────────────────────────────────────────────
-    let cipher = BtspCipher::from_wire_name(&response.preferred_cipher)
+    // ── Negotiate cipher (enforce floor) ────────────────────────────────
+    let requested = BtspCipher::from_wire_name(&response.preferred_cipher)
         .unwrap_or(BtspCipher::ChaCha20Poly1305);
+    let floor = load_cipher_floor();
+    let cipher = if requested.rank() < floor.rank() {
+        warn!(
+            requested = requested.wire_name(),
+            floor = floor.wire_name(),
+            "BTSP handshake: client cipher below floor, upgrading"
+        );
+        floor
+    } else {
+        requested
+    };
 
     // ── Generate session ID ────────────────────────────────────────────
     let mut session_id_bytes = [0u8; 16];
