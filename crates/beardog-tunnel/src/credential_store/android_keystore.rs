@@ -30,7 +30,7 @@
 use beardog_errors::BearDogError;
 use beardog_traits::unified::storage::{CredentialStore, SecretMetadata};
 use std::path::PathBuf;
-use tracing::debug;
+use tracing::{debug, warn};
 
 use super::file_vault::FileVaultCredentialStore;
 
@@ -302,7 +302,9 @@ fn get_android_device_id() -> String {
         .or_else(|_| beardog_errors::process_env::var("ANDROID_SERIAL"))
         .unwrap_or_else(|_| {
             warn!("No Android device ID available; using hostname fallback");
-            whoami::fallible::hostname().unwrap_or_else(|_| "unknown-android".to_string())
+            std::fs::read_to_string("/proc/sys/kernel/hostname")
+                .map(|s| s.trim().to_string())
+                .unwrap_or_else(|_| "unknown-android".to_string())
         })
 }
 

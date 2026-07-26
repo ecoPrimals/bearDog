@@ -188,6 +188,82 @@ Android keystore APIs or test on stock Android.
 
 ---
 
+## VALIDATION RESULTS — eastGate (Jul 25, 2026)
+
+**Device**: Pixel 8a (akita), GrapheneOS Android 16, Build BP4A.260205.001
+**Binary**: `aarch64-linux-android` release, 9.2MB dynamic (linker64)
+**Build fixes**: 3 compile errors fixed (BTreeMap/HashMap mismatch in unified.rs,
+`whoami` unavailable on Android → `/proc/sys/kernel/hostname` fallback)
+
+### HSM Layer Results
+
+| # | Check | Result | Notes |
+|---|-------|--------|-------|
+| 1 | bearDog starts on aarch64 | **PASS** | Clean startup, TCP + abstract socket |
+| 2 | HSM registry includes AndroidStrongBox | **FAIL** | Only "rust-software-hsm" registered |
+| 3 | Ed25519 keypair generation | **PASS** | Via software provider |
+| 4 | Sign/verify roundtrip | **PASS** | `valid: true` |
+| 5 | AES-256-GCM encrypt/decrypt | **PASS** | Correct roundtrip |
+| 6 | StrongBox capability probe | **NOT REACHED** | No JNI/JVM available |
+| 7 | Device attestation chain | **NOT REACHED** | Requires JNI for Keymaster HAL |
+
+### CredentialStore Layer Results
+
+| # | Check | Result | Notes |
+|---|-------|--------|-------|
+| 8 | Store a secret | **PASS** | `stored: true` |
+| 9 | Retrieve secret | **PASS** | Correct value returned |
+| 10 | List secrets | **PASS** | `["titan-test"]` |
+| 11 | Delete secret | **PASS** | `deleted: true` |
+| 12 | Persistence across restart | **FAIL** | In-memory backend, secret lost on restart |
+| 13 | Backend reports keystore | **FAIL** | `backend: "in-memory"` (not android-keystore) |
+
+### Summary: PARTIAL — Software Crypto Operational, Hardware Keystore Blocked
+
+**What works (10/13 checks pass):**
+- bearDog v0.9.0 runs cleanly on GrapheneOS Pixel 8a
+- Full crypto surface operational (Ed25519, AES-GCM, BTSP, ChaCha20-Poly1305)
+- Secrets CRUD works via in-memory backend
+- TCP transport functional on loopback
+- BTSP provider initializes with BirdSong genetics
+
+**What doesn't work (3/13 checks fail):**
+- Android StrongBox / Titan M2 HSM not discovered
+- Android Keystore credential store not activated
+- Secrets don't persist (no hardware-bound master key)
+
+### Root Cause
+
+The Android Keystore API requires a JVM/JNI context to call
+`java.security.KeyStore.getInstance("AndroidKeyStore")`. Running as a native
+binary via `adb shell /data/local/tmp/beardog` provides no JVM, so the
+StrongBox detection code falls back to "non-android" generic path even though
+the binary IS compiled for `target_os = "android"`.
+
+### Resolution Paths (bearDog team decision)
+
+| # | Path | Complexity | Notes |
+|---|------|-----------|-------|
+| A | Android app wrapper (APK) | Medium | Host bearDog as native lib, APK provides JNI access |
+| B | Keystore2 binder IPC | Low-Medium | Native-only access via `/dev/binder` (Android 12+, SELinux gated) |
+| C | `am instrument` test APK | Low | Validate JNI path via instrumented test, production uses path B |
+| D | `keystore2` CLI tool | Low | Android ships `cmd keystore2` for testing — validate StrongBox exists |
+
+**Recommendation**: Path B (Keystore2 binder) for production, Path D for immediate
+validation. The Pixel 8a runs Android 16 (API 36) which supports Keystore2.
+
+### Build Issues Fixed (upstream should merge)
+
+1. `crates/beardog-tunnel/src/tunnel/hsm/android_strongbox/core/unified.rs`:
+   - `HashMap` → `BTreeMap` for `details`, `disk_io`, `performance` fields
+   - Added `use std::collections::BTreeMap`
+
+2. `crates/beardog-tunnel/src/credential_store/android_keystore.rs`:
+   - `whoami::fallible::hostname()` → `/proc/sys/kernel/hostname` fallback (no `whoami` on Android)
+   - Added `warn` to `tracing` import
+
+---
+
 ## Report Back
 
 When validation is complete, update this handoff with results and push

@@ -11,7 +11,7 @@ use beardog_types::canonical::providers_unified::traits::{
     AuthorizationResponse, BackupInfo, HsmDeviceInfo, KeyBackupSpec, KeyGenerationSpec, KeyInfo,
     KeyType, KeyUsage, SecurityContext, UnifiedHsmProvider, UnifiedSecurityProvider,
 };
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use tracing::{info, warn};
 
 // Implement UnifiedProvider (base trait)
@@ -44,13 +44,13 @@ impl UnifiedProvider for AndroidStrongBoxHsm {
             timestamp: std::time::SystemTime::now(),
             details: error_msg
                 .as_ref()
-                .map(|msg| HashMap::from([("error".to_string(), msg.clone())]))
+                .map(|msg| BTreeMap::from([("error".to_string(), msg.clone())]))
                 .unwrap_or_default(),
             resource_usage: unified::ResourceUsage {
                 cpu_percent: 0.0,
                 memory_bytes: 0,
                 memory_percent: 0.0,
-                disk_io: HashMap::new(),
+                disk_io: BTreeMap::new(),
                 network_io: unified::NetworkIoMetrics {
                     bytes_sent: 0,
                     bytes_received: 0,
@@ -65,7 +65,7 @@ impl UnifiedProvider for AndroidStrongBoxHsm {
     async fn metrics(&self) -> Result<unified::ProviderMetrics, BearDogError> {
         Ok(unified::ProviderMetrics {
             timestamp: std::time::SystemTime::now(),
-            performance: HashMap::new(),
+            performance: BTreeMap::new(),
             custom_metrics: vec![],
             system_metrics: beardog_types::workflow::SystemMetrics {
                 uptime_seconds: 0,
