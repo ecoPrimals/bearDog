@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 26, 2026 (Wave 151c — Deep Debt Sweep + Production Mock Evolution)
+**Last Updated**: July 26, 2026 (Wave 153 — Deep Debt Sweep + Production Mock Evolution)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant; 2 monoliths refactored Wave 119 (server.rs→7 files, orchestrator.rs→10 files) |
-| **Tests** | 13,990 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,065 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | all 4 pass | 2 advisory ignores (RSA Marvin, `paste`); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned; TLS backend is Pure Rust `rustls-rustcrypto` |
@@ -89,6 +89,30 @@
 ---
 
 ## Recent Improvements
+
+### Wave 153 — Deep Debt Sweep + Production Mock Evolution (Jul 26, 2026)
+
+- **Clippy clean**: Workspace-wide clippy reduced from 296+ warnings to 0 (1 expected build-script notice). Applied auto-fixes, `let...else`, collapsible `if`, `map_or_else`, cast suppressions with reasons, moved `use` items before statements
+- **`solo_v2/provider.rs` refactored**: 936 LOC down to 736 LOC — extracted `ceremony.rs` (tap timing analysis) and `client_pin.rs` (PIN protocol helpers) as clean modules
+- **FIDO2 VID/PID registry consolidated**: Inline vendor/product name maps in `discovery.rs` replaced with shared `beardog_hid::types::fido2_names` module and lookup functions
+- **Hardcoded constants eliminated**: CTAPHID settle delay, FIDO2 provider config defaults, capability latency tiers all use named constants; 47 inline latency values replaced
+- **Dead code removed**: Unused `POLL_INTERVAL_MS`, orphaned imports, unreachable code, unfulfilled lint expectations
+- **Android stub tests fixed**: 3 pre-existing test failures corrected — assertions now match non-Android platform reality (`strongbox_available: false`, `operations_per_second: 0.0`)
+- **All 14,065 tests pass**: Zero failures across full workspace with `--features fido2`
+
+### Wave 152 — SoloKey FIDO2 Hardware Integration + iosGate Prep (Jul 26, 2026)
+
+- **FIDO2 end-to-end wired**: SoloKey v2 → HidCtap2Transport → SoloV2Provider → JSON-RPC IPC — all 5 methods (discover, register, authenticate, entropy, ceremony) validated
+- **udev rules shipped**: `infra/udev/70-fido2.rules` covering Solo 2, YubiKey, Titan, Feitian, generic CTAPHID usage page
+- **hidraw interface selection fixed**: HID report descriptor parsing filters by usage page (0xF1D0), preventing CTAP2 on wrong U2F interface
+- **PIN auth fixed**: `SoloV2Provider` now uses full ClientPIN protocol 1 (P-256 ECDH + AES-256-CBC + HMAC-SHA-256) instead of raw PIN bytes
+- **Live discovery**: `discovery.rs` calls real `ctap2_get_info()` for AAGUID, versions, extensions, algorithms — no more hardcoded defaults
+- **Fido2HsmProvider wired**: HSM trait hierarchy delegates to real CTAP2 transport for entropy generation
+- **Entropy orchestrator wired**: Constructs real `Fido2MultiCredentialProvider` instances from discovered FIDO2 devices; async hardware entropy path
+- **hmac-secret extension implemented**: Full CTAP2 hmac-secret encoding (ECDH, salt encryption, extension parsing from authData and response map)
+- **Transport dedup assessed**: Two transports retained by design — lightweight (security crate) and production-grade (tunnel crate with CANCEL, timing, ceremony)
+- **iosGate prepared**: `aarch64-apple-ios` target installed, `beardog-security` cross-compiles for iOS, gate registrations created
+- **All tests pass**: 1,161+ tests across workspace with `--features fido2`, zero failures
 
 ### Wave 151b — Android HSM Hardware Integration (Jul 26, 2026)
 

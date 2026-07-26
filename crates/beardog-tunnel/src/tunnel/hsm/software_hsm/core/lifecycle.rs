@@ -19,7 +19,7 @@ impl RustSoftwareHsm {
         self.crypto_provider.initialize().await?;
         self.memory_protector.initialize()?;
 
-        let mut key_store = self.key_store.write().await;
+        let key_store = self.key_store.write().await;
         key_store.initialize()?;
 
         self.audit_logger

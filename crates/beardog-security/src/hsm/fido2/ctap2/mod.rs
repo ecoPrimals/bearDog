@@ -23,6 +23,8 @@ pub mod types;
 
 #[cfg(feature = "fido2")]
 pub mod client_pin;
+#[cfg(feature = "fido2")]
+pub mod hmac_secret;
 
 pub use parse::parse_get_info_cbor;
 pub use types::{Ctap2Command, Ctap2DeviceInfo, Ctap2Status, CtapHidCommand};

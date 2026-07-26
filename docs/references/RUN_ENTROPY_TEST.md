@@ -1,7 +1,7 @@
 # 🚀 AGENTIC EXECUTION - Entropy Testing Ready!
 
 **Status**: ✅ **BUILT AND READY TO RUN**  
-**Date**: January 13, 2026
+**Date**: July 26, 2026
 
 ---
 
@@ -120,7 +120,7 @@ cargo ndk -t aarch64-linux-android build --example entropy_hardware_comparison -
 ```
 🔑 Testing SoloKey FIDO2 Hardware Entropy...
    Found: Solo 2 Security Key
-   ⚠️  Note: Using simulated hardware entropy (CTAP2 hmac-secret in Phase 2)
+   Using CTAP2 hardware entropy (hmac-secret extension + GetInfo mixing)
 
 ╔════════════════════════════════════════════════════════════════╗
 ║  Source: SoloKey: Solo 2 Security Key                          ║

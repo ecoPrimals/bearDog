@@ -19,6 +19,8 @@ use super::ctap2_protocol::{
     parse_make_credential_response,
 };
 #[cfg(feature = "ctap2")]
+use super::ceremony::{CeremonyResult, CeremonyTap};
+#[cfg(feature = "ctap2")]
 use super::hid_transport::Ctap2TransportBackend;
 #[cfg(feature = "ctap2")]
 use super::transport::Ctap2Transport;
@@ -269,22 +271,10 @@ impl SoloV2Provider {
 
         #[cfg(feature = "ctap2")]
         {
-            // CTAP2 key generation implementation
-            // Step 1: Verify PIN if needed
-            let pin_auth = {
-                let pin_config = self.pin_config.read().await;
-                pin_config
-                    .cached_pin
-                    .as_ref()
-                    .map(|pin| pin.as_bytes().to_vec())
-            };
-
-            // Step 2: Prepare credential parameters
             let rp_id = &self.config.relying_party_id;
             let user_id = _key_id.as_bytes();
             let client_data_hash = [0u8; 32]; // In real use, hash of client data
 
-            // Step 3: Send CTAP2 MakeCredential command
             let result = self
                 .ctap2_make_credential(
                     rp_id,
@@ -292,7 +282,6 @@ impl SoloV2Provider {
                     _key_id.as_str(),
                     &client_data_hash,
                     _key_type,
-                    pin_auth.as_deref(),
                 )
                 .await?;
 
@@ -325,6 +314,10 @@ impl SoloV2Provider {
     /// Sign data using a key on the Solo V2 device (requires prior registration
     /// in the same provider session — use [`Self::authenticate_with_credential`]
     /// for stateless assertion with a known `credential_id`).
+    ///
+    /// # Errors
+    ///
+    /// Returns `BearDogError` if the key is not found in the session or CTAP2 assertion fails.
     pub async fn sign_with_device(
         &self,
         key_id: &str,
@@ -347,6 +340,10 @@ impl SoloV2Provider {
     /// to have been registered in the same provider session. The CTAP2 protocol
     /// uses the `credential_id` as an allow-list entry, so the authenticator
     /// looks up the credential internally.
+    ///
+    /// # Errors
+    ///
+    /// Returns `BearDogError` if the device is disconnected, CTAP2 transport is unavailable, or `GetAssertion` fails.
     pub async fn authenticate_with_credential(
         &self,
         credential_id: &[u8],
@@ -362,14 +359,6 @@ impl SoloV2Provider {
         {
             use sha2::{Digest, Sha256};
 
-            let pin_auth = {
-                let pin_config = self.pin_config.read().await;
-                pin_config
-                    .cached_pin
-                    .as_ref()
-                    .map(|pin| pin.as_bytes().to_vec())
-            };
-
             let rp_id = &self.config.relying_party_id;
             let client_data_hash = {
                 let mut hasher = Sha256::new();
@@ -378,7 +367,7 @@ impl SoloV2Provider {
             };
 
             let result = self
-                .ctap2_get_assertion(rp_id, &client_data_hash, credential_id, pin_auth.as_deref())
+                .ctap2_get_assertion(rp_id, &client_data_hash, credential_id)
                 .await?;
 
             info!(
@@ -399,6 +388,129 @@ impl SoloV2Provider {
         }
     }
 
+    /// Obtain `(pinUvAuthParam, pinUvAuthProtocol)` for a given `client_data_hash`
+    /// using the `ClientPIN` protocol via the existing transport.
+    ///
+    /// If no PIN is cached, returns `None`. Otherwise, runs the full
+    /// pinProtocol 1 ECDH exchange, acquires a `pinUvAuthToken`, and
+    /// computes `pinUvAuthParam = HMAC-SHA-256(token, clientDataHash)[:16]`.
+    #[cfg(feature = "ctap2")]
+    async fn get_pin_uv_auth(
+        &self,
+        client_data_hash: &[u8],
+    ) -> Result<Option<(Vec<u8>, u64)>, BearDogError> {
+        use hmac::{Hmac, Mac};
+        use p256::ecdh::EphemeralSecret;
+        use p256::elliptic_curve::rand_core::OsRng;
+        use p256::elliptic_curve::sec1::ToEncodedPoint;
+        use sha2::{Digest, Sha256};
+
+        let pin = {
+            let pin_config = self.pin_config.read().await;
+            pin_config.cached_pin.clone()
+        };
+
+        let Some(pin) = pin else { return Ok(None) };
+
+        let transport = self.ctap_transport.as_ref().ok_or_else(|| {
+            BearDogError::system(
+                "CTAP2 transport not configured; use SoloV2Provider::with_ctap2_transport or with_hid_device_path"
+                    .to_string(),
+            )
+        })?;
+
+        // Step 1: getKeyAgreement — send ClientPIN subCommand=2
+        let get_ka_cbor = {
+            let map = ciborium::Value::Map(vec![
+                (ciborium::Value::Integer(1.into()), ciborium::Value::Integer(1.into())),
+                (ciborium::Value::Integer(2.into()), ciborium::Value::Integer(2.into())),
+            ]);
+            let mut buf = vec![0x06_u8]; // Ctap2Command::ClientPin
+            ciborium::into_writer(&map, &mut buf)
+                .map_err(|e| BearDogError::system(format!("CBOR encode: {e}")))?;
+            buf
+        };
+
+        let resp = {
+            let mut guard = transport.lock().await;
+            guard.send_receive(&get_ka_cbor).await?
+        };
+
+        // Parse response — first byte is CTAP2 status
+        if resp.is_empty() || resp[0] != 0x00 {
+            return Err(BearDogError::system(format!(
+                "ClientPIN getKeyAgreement failed: status 0x{:02X}",
+                resp.first().copied().unwrap_or(0xFF)
+            )));
+        }
+
+        let cbor_resp: ciborium::Value = ciborium::from_reader(&resp[1..])
+            .map_err(|e| BearDogError::system(format!("getKeyAgreement CBOR decode: {e}")))?;
+
+        // Extract authenticator P-256 public key from key 1 in the map
+        let auth_pubkey = parse_cose_p256_from_map(&cbor_resp)?;
+
+        // Step 2: Generate ephemeral key pair + shared secret
+        let ephemeral_secret = EphemeralSecret::random(&mut OsRng);
+        let ephemeral_public = p256::PublicKey::from(&ephemeral_secret);
+        let shared_point = ephemeral_secret.diffie_hellman(&auth_pubkey);
+        let shared_secret: [u8; 32] = Sha256::digest(shared_point.raw_secret_bytes()).into();
+
+        // Step 3: getPinToken — send ClientPIN subCommand=5
+        let pin_hash = Sha256::digest(pin.as_bytes());
+        let pin_hash_left16 = &pin_hash[..16];
+        let pin_hash_enc = aes256_cbc_encrypt_zero_iv(&shared_secret, pin_hash_left16)?;
+
+        let ephemeral_point = ephemeral_public.to_encoded_point(false);
+        let platform_key_cbor = ciborium::Value::Map(vec![
+            (ciborium::Value::Integer(1.into()), ciborium::Value::Integer(2.into())),
+            (ciborium::Value::Integer(3.into()), ciborium::Value::Integer((-25_i64).into())),
+            (ciborium::Value::Integer((-1_i64).into()), ciborium::Value::Integer(1.into())),
+            (ciborium::Value::Integer((-2_i64).into()), ciborium::Value::Bytes(ephemeral_point.x().map_or_else(Vec::new, |x| x.to_vec()))),
+            (ciborium::Value::Integer((-3_i64).into()), ciborium::Value::Bytes(ephemeral_point.y().map_or_else(Vec::new, |y| y.to_vec()))),
+        ]);
+
+        let get_token_cbor = {
+            let map = ciborium::Value::Map(vec![
+                (ciborium::Value::Integer(1.into()), ciborium::Value::Integer(1.into())),
+                (ciborium::Value::Integer(2.into()), ciborium::Value::Integer(5.into())),
+                (ciborium::Value::Integer(3.into()), platform_key_cbor),
+                (ciborium::Value::Integer(6.into()), ciborium::Value::Bytes(pin_hash_enc)),
+            ]);
+            let mut buf = vec![0x06_u8];
+            ciborium::into_writer(&map, &mut buf)
+                .map_err(|e| BearDogError::system(format!("CBOR encode: {e}")))?;
+            buf
+        };
+
+        let token_resp = {
+            let mut guard = transport.lock().await;
+            guard.send_receive(&get_token_cbor).await?
+        };
+
+        if token_resp.is_empty() || token_resp[0] != 0x00 {
+            return Err(BearDogError::system(format!(
+                "ClientPIN getPinToken failed: status 0x{:02X}",
+                token_resp.first().copied().unwrap_or(0xFF)
+            )));
+        }
+
+        let token_cbor: ciborium::Value = ciborium::from_reader(&token_resp[1..])
+            .map_err(|e| BearDogError::system(format!("getPinToken CBOR decode: {e}")))?;
+
+        // Extract encrypted pinToken from key 2
+        let encrypted_token = extract_bytes_from_cbor_map(&token_cbor, 2)?;
+        let pin_token = aes256_cbc_decrypt_zero_iv(&shared_secret, &encrypted_token)?;
+
+        // Step 4: Compute pinUvAuthParam = left(HMAC-SHA-256(pinToken, clientDataHash), 16)
+        let mut mac = Hmac::<Sha256>::new_from_slice(&pin_token)
+            .map_err(|e| BearDogError::system(format!("HMAC init: {e}")))?;
+        mac.update(client_data_hash);
+        let pin_uv_auth_param = mac.finalize().into_bytes()[..16].to_vec();
+
+        Ok(Some((pin_uv_auth_param, 1)))
+    }
+
     /// CTAP2 `MakeCredential` helper (feature-gated)
     #[cfg(feature = "ctap2")]
     async fn ctap2_make_credential(
@@ -408,7 +520,6 @@ impl SoloV2Provider {
         user_name: &str,
         client_data_hash: &[u8],
         key_type: KeyType,
-        pin_auth: Option<&[u8]>,
     ) -> Result<Ctap2MakeCredentialResult, BearDogError> {
         let transport = self.ctap_transport.as_ref().ok_or_else(|| {
             BearDogError::system(
@@ -421,8 +532,9 @@ impl SoloV2Provider {
             KeyType::Ed25519 => -8_i64,
             KeyType::EcdsaP256 => -7_i64,
         };
-        let pin_uv = pin_auth.map(|p| (p, 1_u64));
-        let cmd = build_make_credential(rp_id, user_id, user_name, client_data_hash, alg, pin_uv)?;
+        let pin_uv = self.get_pin_uv_auth(client_data_hash).await?;
+        let pin_uv_ref = pin_uv.as_ref().map(|(param, proto)| (param.as_slice(), *proto));
+        let cmd = build_make_credential(rp_id, user_id, user_name, client_data_hash, alg, pin_uv_ref)?;
 
         let mut guard = transport.lock().await;
         let resp = guard.send_receive(&cmd).await?;
@@ -443,7 +555,6 @@ impl SoloV2Provider {
         rp_id: &str,
         client_data_hash: &[u8],
         credential_id: &[u8],
-        pin_auth: Option<&[u8]>,
     ) -> Result<Ctap2GetAssertionResult, BearDogError> {
         let transport = self.ctap_transport.as_ref().ok_or_else(|| {
             BearDogError::system(
@@ -452,8 +563,9 @@ impl SoloV2Provider {
             )
         })?;
 
-        let pin_uv = pin_auth.map(|p| (p, 1_u64));
-        let cmd = build_get_assertion(rp_id, client_data_hash, &[credential_id], pin_uv)?;
+        let pin_uv = self.get_pin_uv_auth(client_data_hash).await?;
+        let pin_uv_ref = pin_uv.as_ref().map(|(param, proto)| (param.as_slice(), *proto));
+        let cmd = build_get_assertion(rp_id, client_data_hash, &[credential_id], pin_uv_ref)?;
 
         let mut guard = transport.lock().await;
         let resp = guard.send_receive(&cmd).await?;
@@ -473,6 +585,10 @@ impl SoloV2Provider {
     /// The protocol is strictly serial — one command, one touch, one response — but
     /// the next command is issued immediately after each response, creating a rapid-fire
     /// tap sequence.
+    ///
+    /// # Errors
+    ///
+    /// Returns `BearDogError` if `tap_count` is out of range, CTAP2 transport is unavailable, or any timed `GetAssertion` fails.
     #[cfg(feature = "ctap2")]
     pub async fn ceremony_tap_sequence(
         &self,
@@ -497,14 +613,6 @@ impl SoloV2Provider {
         })?;
 
         let rp_id = &self.config.relying_party_id;
-        let pin_auth = {
-            let pin_config = self.pin_config.read().await;
-            pin_config
-                .cached_pin
-                .as_ref()
-                .map(|pin| pin.as_bytes().to_vec())
-        };
-        let pin_uv = pin_auth.as_deref().map(|p| (p, 1_u64));
 
         let ceremony_start = Instant::now();
         let mut taps: Vec<CeremonyTap> = Vec::with_capacity(tap_count);
@@ -514,11 +622,13 @@ impl SoloV2Provider {
 
             let client_data_hash = {
                 let mut hasher = Sha256::new();
-                hasher.update(&challenge);
+                hasher.update(challenge);
                 hasher.finalize().to_vec()
             };
 
-            let cmd = build_get_assertion(rp_id, &client_data_hash, &[credential_id], pin_uv)?;
+            let pin_uv = self.get_pin_uv_auth(&client_data_hash).await?;
+            let pin_uv_ref = pin_uv.as_ref().map(|(param, proto)| (param.as_slice(), *proto));
+            let cmd = build_get_assertion(rp_id, &client_data_hash, &[credential_id], pin_uv_ref)?;
 
             info!(
                 tap = i + 1,
@@ -548,6 +658,10 @@ impl SoloV2Provider {
             );
         }
 
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "ceremony is bounded to 20 taps (~60s each); elapsed millis fit in u64"
+        )]
         let total_duration_ms = ceremony_start.elapsed().as_millis() as u64;
 
         Ok(CeremonyResult {
@@ -556,112 +670,6 @@ impl SoloV2Provider {
             total_duration_ms,
             purpose: purpose.to_string(),
         })
-    }
-}
-
-/// A single tap in a ceremony sequence.
-#[cfg(feature = "ctap2")]
-pub struct CeremonyTap {
-    /// Zero-based tap index within the ceremony.
-    pub index: usize,
-    /// Fresh OS-RNG challenge sent for this tap (Tier 1).
-    pub challenge: Vec<u8>,
-    /// Signature from the authenticator containing hardware RNG nonce (Tier 2).
-    pub signature: Vec<u8>,
-    /// Transport-layer timing metadata (Tier 3 human temporal entropy).
-    pub timing: super::hid_transport::TapTimingEntropy,
-}
-
-/// Result of a completed tap-sequence ceremony.
-#[cfg(feature = "ctap2")]
-pub struct CeremonyResult {
-    /// All taps collected during the ceremony.
-    pub taps: Vec<CeremonyTap>,
-    /// How many taps were originally requested.
-    pub taps_requested: usize,
-    /// Total wall-clock duration of the ceremony in milliseconds.
-    pub total_duration_ms: u64,
-    /// Caller-supplied purpose label (e.g. `"loam_seed"`, `"entropy_harvest"`).
-    pub purpose: String,
-}
-
-#[cfg(feature = "ctap2")]
-impl CeremonyResult {
-    /// Number of taps actually completed.
-    #[must_use]
-    pub fn taps_completed(&self) -> usize {
-        self.taps.len()
-    }
-
-    /// Inter-tap intervals in nanoseconds.
-    #[must_use]
-    pub fn inter_tap_intervals_ns(&self) -> Vec<u64> {
-        self.taps
-            .windows(2)
-            .map(|w| {
-                w[1].timing
-                    .response_received_ns
-                    .saturating_sub(w[0].timing.response_received_ns)
-            })
-            .collect()
-    }
-
-    /// Inter-tap intervals in milliseconds (for display).
-    #[must_use]
-    pub fn inter_tap_intervals_ms(&self) -> Vec<u64> {
-        self.inter_tap_intervals_ns()
-            .iter()
-            .map(|ns| ns / 1_000_000)
-            .collect()
-    }
-
-    /// Mean human reaction time in milliseconds (keepalive/command → response).
-    #[must_use]
-    pub fn mean_reaction_ms(&self) -> u64 {
-        if self.taps.is_empty() {
-            return 0;
-        }
-        let sum: u64 = self.taps.iter().map(|t| t.timing.reaction_ns()).sum();
-        sum / (self.taps.len() as u64) / 1_000_000
-    }
-
-    /// Standard deviation of reaction times in milliseconds (jitter = entropy quality).
-    #[must_use]
-    pub fn reaction_jitter_ms(&self) -> u64 {
-        if self.taps.len() < 2 {
-            return 0;
-        }
-        let mean_ns = {
-            let sum: u64 = self.taps.iter().map(|t| t.timing.reaction_ns()).sum();
-            sum / self.taps.len() as u64
-        };
-        let variance: u64 = self
-            .taps
-            .iter()
-            .map(|t| {
-                let diff = t.timing.reaction_ns() as i128 - mean_ns as i128;
-                (diff * diff) as u64
-            })
-            .sum::<u64>()
-            / (self.taps.len() as u64 - 1);
-        let std_dev_ns = (variance as f64).sqrt() as u64;
-        std_dev_ns / 1_000_000
-    }
-
-    /// Rough estimate of timing entropy bits (log2 of inter-tap jitter range).
-    #[must_use]
-    pub fn timing_entropy_bits_estimate(&self) -> u32 {
-        let intervals = self.inter_tap_intervals_ns();
-        if intervals.len() < 2 {
-            return 0;
-        }
-        let min = intervals.iter().copied().min().unwrap_or(0);
-        let max = intervals.iter().copied().max().unwrap_or(0);
-        let range_us = (max.saturating_sub(min)) / 1_000;
-        if range_us == 0 {
-            return 0;
-        }
-        (range_us as f64).log2() as u32
     }
 }
 
@@ -731,6 +739,13 @@ impl UniversalHsmProvider for SoloV2Provider {
         ]
     }
 }
+
+// PIN protocol helpers live in `super::client_pin`.
+#[cfg(feature = "ctap2")]
+use super::client_pin::{
+    aes256_cbc_decrypt_zero_iv, aes256_cbc_encrypt_zero_iv, extract_bytes_from_cbor_map,
+    parse_cose_p256_from_map,
+};
 
 #[cfg(test)]
 #[path = "provider_tests.rs"]

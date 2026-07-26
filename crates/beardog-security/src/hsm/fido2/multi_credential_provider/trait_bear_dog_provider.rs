@@ -7,7 +7,7 @@ use beardog_errors::BearDogError;
 use beardog_types::canonical::providers_unified::traits::{
     ProviderCapability, ProviderHealth, ProviderMetrics,
 };
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 impl beardog_traits::unified::BearDogProvider for Fido2MultiCredentialProvider {
@@ -53,7 +53,7 @@ impl beardog_traits::unified::BearDogProvider for Fido2MultiCredentialProvider {
         Ok(ProviderHealth {
             status: HealthStatus::Healthy,
             timestamp: SystemTime::now(),
-            details: HashMap::from([
+            details: BTreeMap::from([
                 ("device".to_string(), self.device_info.product.clone()),
                 (
                     "protocol".to_string(),
@@ -70,7 +70,7 @@ impl beardog_traits::unified::BearDogProvider for Fido2MultiCredentialProvider {
                     packets_sent: 0,
                     packets_received: 0,
                 },
-                disk_io: HashMap::new(),
+                disk_io: BTreeMap::new(),
             },
             last_error: None,
         })
@@ -86,21 +86,21 @@ impl beardog_traits::unified::BearDogProvider for Fido2MultiCredentialProvider {
         let creds = self.credentials.read().await;
         Ok(ProviderMetrics {
             timestamp: SystemTime::now(),
-            performance: HashMap::new(),
+            performance: BTreeMap::new(),
             custom_metrics: vec![
                 CustomMetric {
                     name: "credentials_count".to_string(),
                     value: creds.len() as f64,
                     unit: "count".to_string(),
                     description: "Number of credentials stored".to_string(),
-                    tags: HashMap::new(),
+                    tags: BTreeMap::new(),
                 },
                 CustomMetric {
                     name: "max_credentials".to_string(),
                     value: self.device_info.capabilities.max_resident_keys.unwrap_or(0) as f64,
                     unit: "count".to_string(),
                     description: "Maximum credentials supported".to_string(),
-                    tags: HashMap::new(),
+                    tags: BTreeMap::new(),
                 },
             ],
             system_metrics: beardog_types::canonical::providers_unified::traits::SystemMetrics {
@@ -116,5 +116,3 @@ impl beardog_traits::unified::BearDogProvider for Fido2MultiCredentialProvider {
     }
 }
 
-// Note: SecurityProvider and CryptoProvider implementations would go here
-// For brevity, marking as stub implementations

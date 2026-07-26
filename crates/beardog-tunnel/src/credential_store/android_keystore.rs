@@ -324,9 +324,10 @@ fn probe_android_keystore() -> bool {
 
 #[cfg(not(target_os = "android"))]
 fn resolve_vault_dir() -> PathBuf {
-    app_data_local_dir(beardog_credential_app_args())
-        .map(|d| d.join("credentials"))
-        .unwrap_or_else(|| std::env::temp_dir().join("beardog").join("credentials"))
+    app_data_local_dir(beardog_credential_app_args()).map_or_else(
+        || std::env::temp_dir().join("beardog").join("credentials"),
+        |d| d.join("credentials"),
+    )
 }
 
 fn beardog_credential_app_args() -> etcetera::app_strategy::AppStrategyArgs {
@@ -339,22 +340,23 @@ fn beardog_credential_app_args() -> etcetera::app_strategy::AppStrategyArgs {
 
 /// Platform-local application data directory (equivalent to `ProjectDirs::data_local_dir`).
 fn app_data_local_dir(args: etcetera::app_strategy::AppStrategyArgs) -> Option<PathBuf> {
-    use etcetera::app_strategy::{AppStrategy, choose_app_strategy, choose_native_strategy};
-    use etcetera::base_strategy::{BaseStrategy, Windows as BaseWindows};
+    use etcetera::app_strategy::{choose_app_strategy, AppStrategy};
 
     #[cfg(windows)]
     {
-        return BaseWindows::new()
+        use etcetera::base_strategy::Windows as BaseWindows;
+        BaseWindows::new()
             .ok()
-            .map(|base| base.cache_dir().join(&args.author).join(&args.app_name));
+            .map(|base| base.cache_dir().join(&args.author).join(&args.app_name))
     }
     #[cfg(target_os = "macos")]
     {
-        return choose_native_strategy(args).ok().map(|s| s.data_dir());
+        use etcetera::app_strategy::choose_native_strategy;
+        choose_native_strategy(args).ok().map(|s| s.data_dir())
     }
     #[cfg(not(any(windows, target_os = "macos")))]
     {
-        return choose_app_strategy(args).ok().map(|s| s.data_dir());
+        choose_app_strategy(args).ok().map(|s| s.data_dir())
     }
 }
 

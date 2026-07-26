@@ -69,12 +69,22 @@ pub(super) async fn discover_providers() -> Result<DiscoveredProviders, BearDogE
         match discover_fido2_devices().await {
             Ok(devices) => {
                 info!("✅ Found {} FIDO2 device(s)", devices.len());
-                // For now, just store device count since we need the actual implementation
-                // PHASE-2(CTAP2): Properly construct Fido2MultiCredentialProvider once CTAP2 is ready
-                vec![]
+                let mut providers = Vec::new();
+                for device_info in devices {
+                    match Fido2MultiCredentialProvider::new(device_info.clone(), None).await {
+                        Ok(provider) => {
+                            info!("Initialized FIDO2 provider: {} {}", device_info.manufacturer, device_info.product);
+                            providers.push(provider);
+                        }
+                        Err(e) => {
+                            warn!("Failed to init FIDO2 provider for {}: {}", device_info.product, e);
+                        }
+                    }
+                }
+                providers
             }
             Err(e) => {
-                warn!("⚠️  FIDO2 discovery failed: {}", e);
+                warn!("FIDO2 discovery failed: {}", e);
                 Vec::new()
             }
         }

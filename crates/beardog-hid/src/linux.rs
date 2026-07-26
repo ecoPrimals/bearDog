@@ -39,7 +39,7 @@
 //!
 //! Then reload: `sudo udevadm control --reload-rules && sudo udevadm trigger`
 
-use super::types::{HidDevice, HidDeviceInfo, ProductId, VendorId};
+use super::types::{HidDevice, HidDeviceInfo, ProductId, VendorId, parse_usage_page_from_descriptor};
 use beardog_errors::BearDogError;
 use std::fmt;
 use std::path::PathBuf;
@@ -168,6 +168,8 @@ impl LinuxHidDevice {
             .await
             .unwrap_or_else(|_| String::new());
 
+        let usage_page = read_report_descriptor(&format!("{hidraw_path}/device/report_descriptor")).await;
+
         Ok(HidDeviceInfo {
             vendor_id: VendorId(vendor_id),
             product_id: ProductId(product_id),
@@ -175,6 +177,7 @@ impl LinuxHidDevice {
             product,
             serial,
             path: path.to_string(),
+            usage_page,
         })
     }
 }
@@ -319,6 +322,23 @@ fn parse_hid_id(uevent_content: &str) -> Result<(u16, u16), BearDogError> {
     Err(BearDogError::invalid_input(
         "HID_ID not found in uevent file",
     ))
+}
+
+/// Read the HID report descriptor binary from sysfs and extract the usage page.
+async fn read_report_descriptor(path: &str) -> Option<u16> {
+    match tokio::fs::read(path).await {
+        Ok(bytes) => {
+            let page = parse_usage_page_from_descriptor(&bytes);
+            if let Some(p) = page {
+                trace!("Parsed usage page 0x{:04X} from {}", p, path);
+            }
+            page
+        }
+        Err(e) => {
+            trace!("Could not read report descriptor {}: {}", path, e);
+            None
+        }
+    }
 }
 
 /// Read a string file from sysfs (Pure Rust)

@@ -103,7 +103,7 @@ pub mod types;
 mod linux_tests;
 
 pub use hid_device_backend::HidDeviceBackend;
-pub use types::{HidDevice, HidDeviceInfo, ProductId, VendorId};
+pub use types::{HidDevice, HidDeviceInfo, ProductId, VendorId, FIDO_USAGE_PAGE};
 
 /// Discover all HID devices on the system
 ///

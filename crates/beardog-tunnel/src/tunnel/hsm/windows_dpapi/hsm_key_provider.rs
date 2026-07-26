@@ -2,7 +2,7 @@
 
 //! [`HsmKeyProvider`] implementation for the Windows DPAPI backend.
 
-use super::{DpapiKeyEntry, WindowsDpapiHsm};
+use super::WindowsDpapiHsm;
 use beardog_errors::BearDogError;
 use beardog_traits::hsm::HsmKeyProvider;
 use beardog_types::hsm::{
@@ -41,11 +41,18 @@ impl HsmKeyProvider for WindowsDpapiHsm {
         }
     }
 
+    #[expect(
+        clippy::manual_async_fn,
+        reason = "trait method returns impl Future; async fn would refine the signature"
+    )]
     fn generate_key(
         &self,
+        #[cfg_attr(
+            not(windows),
+            expect(unused_variables, reason = "key generation params only used on Windows DPAPI")
+        )]
         params: &KeyGenParams,
     ) -> impl Future<Output = Result<KeyHandle, BearDogError>> + Send {
-        let params = params.clone();
         async move {
             if !self.is_available() {
                 return Err(BearDogError::not_yet_available(
@@ -53,47 +60,47 @@ impl HsmKeyProvider for WindowsDpapiHsm {
                 ));
             }
 
-            let key_id = params
-                .label
-                .clone()
-                .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
-
-            let key_material = generate_raw_key_material(params.algorithm)?;
-
             #[cfg(windows)]
             {
+                let params = params.clone();
+                let key_id = params
+                    .label
+                    .clone()
+                    .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+
+                let key_material = generate_raw_key_material(params.algorithm)?;
+
                 let protected = Self::dpapi_protect(&key_material)?;
                 self.store_blob(&key_id, &protected).await?;
+
+                let now_ms = u64::try_from(
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_millis(),
+                )
+                .unwrap_or(0);
+
+                let entry = super::DpapiKeyEntry {
+                    key_id: key_id.clone(),
+                    algorithm: params.algorithm,
+                    created_at_ms: now_ms,
+                };
+                self.keys.write().await.insert(key_id.clone(), entry);
+
+                Ok(KeyHandle {
+                    key_id,
+                    algorithm: params.algorithm,
+                    hardware_backed: true,
+                    created_at_ms: now_ms,
+                })
             }
             #[cfg(not(windows))]
             {
-                let _ = &key_material;
-                return Err(BearDogError::not_yet_available(
+                Err(BearDogError::not_yet_available(
                     "DPAPI not available on this platform",
-                ));
+                ))
             }
-
-            let now_ms = u64::try_from(
-                std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_millis(),
-            )
-            .unwrap_or(0);
-
-            let entry = DpapiKeyEntry {
-                key_id: key_id.clone(),
-                algorithm: params.algorithm,
-                created_at_ms: now_ms,
-            };
-            self.keys.write().await.insert(key_id.clone(), entry);
-
-            Ok(KeyHandle {
-                key_id,
-                algorithm: params.algorithm,
-                hardware_backed: true,
-                created_at_ms: now_ms,
-            })
         }
     }
 
@@ -196,6 +203,7 @@ impl WindowsDpapiHsm {
     }
 }
 
+#[cfg(windows)]
 fn generate_raw_key_material(algorithm: HsmAlgorithm) -> Result<Vec<u8>, BearDogError> {
     use rand_core::RngCore;
 

@@ -212,7 +212,15 @@ impl UnifiedHsmProvider for AndroidStrongBoxHsm {
         Ok(KeyInfo {
             key_id: key_id.to_string(),
             key_type,
-            key_size: key_data.len() as u32 * 8, // Convert bytes to bits
+            key_size: {
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "key sizes in StrongBox are bounded well below u32::MAX bits"
+                )]
+                {
+                    key_data.len() as u32 * 8
+                }
+            },
             key_usage: vec![KeyUsage::Sign, KeyUsage::Verify], // Default usage
             created_at: std::time::SystemTime::now(),
             extractable: false, // StrongBox keys are hardware-bound
@@ -227,8 +235,7 @@ impl UnifiedHsmProvider for AndroidStrongBoxHsm {
             key_id
         );
         Err(BearDogError::hsm(format!(
-            "Key export not supported for StrongBox key '{}' - keys are hardware-bound for security",
-            key_id
+            "Key export not supported for StrongBox key '{key_id}' - keys are hardware-bound for security"
         )))
     }
 

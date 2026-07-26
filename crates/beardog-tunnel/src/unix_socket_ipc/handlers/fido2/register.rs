@@ -20,7 +20,7 @@ use tracing::info;
 /// - `user_name` (string, required): user display name
 /// - `device_path` (string, optional): HID device path (auto-selects first FIDO2 device)
 /// - `pin` (string, optional): device PIN for ClientPIN-authenticated registration
-pub fn handle_fido2_register(params: Option<&Value>) -> Result<Value, super::super::HandlerError> {
+pub async fn handle_fido2_register(params: Option<&Value>) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for beardog.fido2.register")?;
 
     let rp_id = params
@@ -50,6 +50,7 @@ pub fn handle_fido2_register(params: Option<&Value>) -> Result<Value, super::sup
     {
         use base64::Engine;
         use base64::engine::general_purpose::STANDARD as BASE64;
+        use crate::tunnel::hsm::solo_v2::types::KeyType;
 
         let device_path = super::helpers::resolve_device_path(_device_path).await?;
 
@@ -82,7 +83,6 @@ pub fn handle_fido2_register(params: Option<&Value>) -> Result<Value, super::sup
 
         let provider = super::helpers::create_ctap2_provider(&device_path, rp_id).await?;
 
-        use crate::tunnel::hsm::solo_v2::types::KeyType;
         let key_label = format!("{rp_id}:{user_name}");
         let result = provider
             .generate_key_on_device(KeyType::Ed25519, key_label)

@@ -20,7 +20,7 @@ fn fido2_handler_method_list() {
 
 #[tokio::test]
 async fn fido2_discover_returns_valid_response() {
-    let result = discover::handle_fido2_discover(None).expect("discover");
+    let result = discover::handle_fido2_discover(None).await.expect("discover");
     assert!(result.get("devices").is_some());
     assert!(result.get("count").is_some());
     let count = result["count"].as_u64().expect("count is u64");
@@ -30,75 +30,75 @@ async fn fido2_discover_returns_valid_response() {
 
 #[tokio::test]
 async fn fido2_register_requires_params() {
-    let err = register::handle_fido2_register(None).expect_err("no params");
+    let err = register::handle_fido2_register(None).await.expect_err("no params");
     assert!(err.contains("Missing params"));
 }
 
 #[tokio::test]
 async fn fido2_register_requires_rp_id() {
     let params = json!({"user_id": "dXNlcg==", "user_name": "test"});
-    let err = register::handle_fido2_register(Some(&params)).expect_err("no rp_id");
+    let err = register::handle_fido2_register(Some(&params)).await.expect_err("no rp_id");
     assert!(err.contains("rp_id"));
 }
 
 #[tokio::test]
 async fn fido2_register_requires_user_id() {
     let params = json!({"rp_id": "primals.eco", "user_name": "test"});
-    let err = register::handle_fido2_register(Some(&params)).expect_err("no user_id");
+    let err = register::handle_fido2_register(Some(&params)).await.expect_err("no user_id");
     assert!(err.contains("user_id"));
 }
 
 #[tokio::test]
 async fn fido2_register_requires_user_name() {
     let params = json!({"rp_id": "primals.eco", "user_id": "dXNlcg=="});
-    let err = register::handle_fido2_register(Some(&params)).expect_err("no user_name");
+    let err = register::handle_fido2_register(Some(&params)).await.expect_err("no user_name");
     assert!(err.contains("user_name"));
 }
 
 #[tokio::test]
 async fn fido2_authenticate_requires_params() {
-    let err = authenticate::handle_fido2_authenticate(None).expect_err("no params");
+    let err = authenticate::handle_fido2_authenticate(None).await.expect_err("no params");
     assert!(err.contains("Missing params"));
 }
 
 #[tokio::test]
 async fn fido2_authenticate_requires_rp_id() {
     let params = json!({"credential_id": "Y3JlZA==", "challenge": "Y2hhbA=="});
-    let err = authenticate::handle_fido2_authenticate(Some(&params)).expect_err("no rp_id");
+    let err = authenticate::handle_fido2_authenticate(Some(&params)).await.expect_err("no rp_id");
     assert!(err.contains("rp_id"));
 }
 
 #[tokio::test]
 async fn fido2_authenticate_requires_credential_id() {
     let params = json!({"rp_id": "primals.eco", "challenge": "Y2hhbA=="});
-    let err = authenticate::handle_fido2_authenticate(Some(&params)).expect_err("no credential_id");
+    let err = authenticate::handle_fido2_authenticate(Some(&params)).await.expect_err("no credential_id");
     assert!(err.contains("credential_id"));
 }
 
 #[tokio::test]
 async fn fido2_authenticate_requires_challenge() {
     let params = json!({"rp_id": "primals.eco", "credential_id": "Y3JlZA=="});
-    let err = authenticate::handle_fido2_authenticate(Some(&params)).expect_err("no challenge");
+    let err = authenticate::handle_fido2_authenticate(Some(&params)).await.expect_err("no challenge");
     assert!(err.contains("challenge"));
 }
 
 #[tokio::test]
 async fn fido2_entropy_requires_params() {
-    let err = entropy::handle_fido2_entropy(None).expect_err("no params");
+    let err = entropy::handle_fido2_entropy(None).await.expect_err("no params");
     assert!(err.contains("Missing params"));
 }
 
 #[tokio::test]
 async fn fido2_entropy_requires_rp_id() {
     let params = json!({"credential_id": "Y3JlZA=="});
-    let err = entropy::handle_fido2_entropy(Some(&params)).expect_err("no rp_id");
+    let err = entropy::handle_fido2_entropy(Some(&params)).await.expect_err("no rp_id");
     assert!(err.contains("rp_id"));
 }
 
 #[tokio::test]
 async fn fido2_entropy_requires_credential_id() {
     let params = json!({"rp_id": "primals.eco"});
-    let err = entropy::handle_fido2_entropy(Some(&params)).expect_err("no credential_id");
+    let err = entropy::handle_fido2_entropy(Some(&params)).await.expect_err("no credential_id");
     assert!(err.contains("credential_id"));
 }
 
@@ -126,20 +126,20 @@ async fn fido2_handler_unknown_method_errors() {
 
 #[tokio::test]
 async fn fido2_ceremony_requires_params() {
-    let err = ceremony::handle_fido2_ceremony(None).expect_err("no params");
+    let err = ceremony::handle_fido2_ceremony(None).await.expect_err("no params");
     assert!(err.contains("Missing params"));
 }
 
 #[tokio::test]
 async fn fido2_ceremony_requires_rp_id() {
     let params = json!({"credential_id": "Y3JlZA=="});
-    let err = ceremony::handle_fido2_ceremony(Some(&params)).expect_err("no rp_id");
+    let err = ceremony::handle_fido2_ceremony(Some(&params)).await.expect_err("no rp_id");
     assert!(err.contains("rp_id"));
 }
 
 #[tokio::test]
 async fn fido2_ceremony_requires_credential_id() {
     let params = json!({"rp_id": "primals.eco"});
-    let err = ceremony::handle_fido2_ceremony(Some(&params)).expect_err("no credential_id");
+    let err = ceremony::handle_fido2_ceremony(Some(&params)).await.expect_err("no credential_id");
     assert!(err.contains("credential_id"));
 }

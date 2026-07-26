@@ -8,64 +8,82 @@ use beardog_config::env_keys;
 use beardog_errors::BearDogError;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-/// StrongBox implementation variants on Android devices
+/// `StrongBox` implementation variants on Android devices.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum StrongBoxImplementation {
-    /// Google Titan M security chip
+    /// Google Titan M security chip.
     TitanM {
+        /// Titan M firmware version string.
         version: String,
+        /// Common Criteria or vendor security level label.
         security_level: String,
     },
-    /// Qualcomm SPU (Secure Processing Unit)
-    QualcommSpu { attestation_support: bool },
-    /// Samsung Knox security platform
-    SamsungKnox { version: String },
-    /// MediaTek HSM implementation
-    MediaTekHsm { features: Vec<String> },
-    /// Generic StrongBox implementation
+    /// Qualcomm SPU (Secure Processing Unit).
+    QualcommSpu {
+        /// Whether hardware attestation is supported.
+        attestation_support: bool,
+    },
+    /// Samsung Knox security platform.
+    SamsungKnox {
+        /// Knox platform version string.
+        version: String,
+    },
+    /// `MediaTek` `HSM` implementation.
+    MediaTekHsm {
+        /// Supported cryptographic feature identifiers.
+        features: Vec<String>,
+    },
+    /// Generic `StrongBox` implementation for unknown vendors.
     Generic {
+        /// Device or silicon vendor name.
         vendor: String,
+        /// Reported capability identifiers.
         capabilities: Vec<String>,
     },
 }
 
 impl Default for StrongBoxImplementation {
     fn default() -> Self {
-        StrongBoxImplementation::TitanM {
+        Self::TitanM {
             version: "1.0".to_string(),
             security_level: "EAL4+".to_string(),
         }
     }
 }
 
-/// Android device information - canonical definition
+/// Android device information — canonical definition.
 ///
 /// Single source of truth for Android device metadata across the codebase.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AndroidDeviceInfo {
-    // Core identification
+    /// Device manufacturer (e.g. `"Google"`).
     pub manufacturer: String,
+    /// Marketing model name (e.g. `"Pixel 8"`).
     pub model: String,
-    pub device: String, // Device codename (e.g., "shiba" for Pixel 8)
-
-    // Hardware details
-    pub hardware: Option<String>, // Hardware platform (e.g., "google_tensor_g3")
-    pub board: Option<String>,    // Board name
-    pub brand: Option<String>,    // Brand name
-
-    // Android version info
-    pub android_version: String,        // Human readable (e.g., "14")
-    pub api_level: u32,                 // Android API level (e.g., 34)
-    pub security_patch: Option<String>, // Security patch date
-    pub security_patch_level: String,   // Alias for compatibility
-
-    // Security features
+    /// Device codename (e.g. `"shiba"` for Pixel 8).
+    pub device: String,
+    /// Hardware platform identifier (e.g. `"google_tensor_g3"`).
+    pub hardware: Option<String>,
+    /// Board name reported by the bootloader.
+    pub board: Option<String>,
+    /// Brand name (often matches manufacturer).
+    pub brand: Option<String>,
+    /// Human-readable Android version (e.g. `"14"`).
+    pub android_version: String,
+    /// Android API level (e.g. `34`).
+    pub api_level: u32,
+    /// Security patch date string.
+    pub security_patch: Option<String>,
+    /// Alias for [`Self::security_patch`] used by legacy callers.
+    pub security_patch_level: String,
+    /// Detected `StrongBox` version, if available.
     pub strongbox_version: Option<String>,
+    /// Detected Titan M version, if present.
     pub titan_m_version: Option<String>,
+    /// Verified boot state from bootloader attestation.
     pub verified_boot_state: VerifiedBootState,
 }
 
@@ -73,7 +91,8 @@ impl AndroidDeviceInfo {
     /// Creates a new instance with generic Google Tensor defaults (fallback when detection fails).
     ///
     /// # Errors
-    /// Returns error if initialization fails
+    ///
+    /// Returns an error if initialization fails.
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             manufacturer: "Google".to_string(),
@@ -92,10 +111,11 @@ impl AndroidDeviceInfo {
         })
     }
 
-    /// Pixel 8a defaults (codename `akita`, Tensor G3, Titan M2 StrongBox).
+    /// Pixel 8a defaults (codename `akita`, Tensor G3, Titan M2 `StrongBox`).
     ///
     /// # Errors
-    /// Returns error if initialization fails
+    ///
+    /// Returns an error if initialization fails.
     pub fn pixel_8a() -> Result<Self, BearDogError> {
         Ok(Self {
             manufacturer: "Google".to_string(),
@@ -122,33 +142,33 @@ impl AndroidDeviceInfo {
         }
         Self::new()
     }
-    /// Returns whether StrongBox is available on this device
+
+    /// Returns whether `StrongBox` is available on this device.
     #[must_use]
     pub const fn strongbox_available(&self) -> bool {
         self.strongbox_version.is_some()
     }
-    /// Returns whether TEE (Trusted Execution Environment) is available
+
+    /// Returns whether TEE (Trusted Execution Environment) is available.
     #[must_use]
     pub const fn tee_available(&self) -> bool {
         // TEE is generally available on Android 9+ (API 28+)
         self.api_level >= 28
     }
-    /// Returns whether hardware attestation is supported
+
+    /// Returns whether hardware attestation is supported.
     #[must_use]
     pub const fn hardware_attestation_supported(&self) -> bool {
         // Hardware attestation requires Android 8+ and StrongBox/TEE
         self.api_level >= 26 && (self.strongbox_available() || self.tee_available())
     }
-    /// Returns the device model (alias for backward compatibility)
+
+    /// Returns the device model (alias for backward compatibility).
     #[must_use]
     pub fn device_model(&self) -> &str {
         &self.model
     }
 
-    /// Detect device information from system
-    ///
-    /// # Errors
-    /// Returns error if detection fails
     /// Detect device information from system properties or environment overrides.
     ///
     /// # Errors
@@ -164,7 +184,7 @@ impl AndroidDeviceInfo {
 impl Default for AndroidDeviceInfo {
     fn default() -> Self {
         // Use a fallback if platform detection fails
-        Self::new().unwrap_or_else(|_| AndroidDeviceInfo {
+        Self::new().unwrap_or_else(|_| Self {
             manufacturer: "unknown".to_string(),
             model: "unknown".to_string(),
             device: "unknown".to_string(),
@@ -182,31 +202,44 @@ impl Default for AndroidDeviceInfo {
     }
 }
 
-/// Verified boot state
+/// Verified boot state reported by the Android bootloader.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum VerifiedBootState {
+    /// Boot chain verified with a trusted key.
     Verified,
+    /// Boot chain signed with a user key.
     SelfSigned,
+    /// Boot verification disabled or unknown.
     Unverified,
+    /// Boot verification failed.
     Failed,
 }
 
-/// Android key parameters for StrongBox
+/// Android key parameters for `StrongBox` key generation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AndroidKeyParams {
+    /// Key algorithm (RSA, EC, AES, HMAC).
     pub algorithm: AndroidKeyAlgorithm,
+    /// Key size in bits.
     pub key_size: u32,
+    /// Allowed key purposes.
     pub purposes: Vec<AndroidKeyPurpose>,
+    /// Require hardware `StrongBox` backing.
     pub strongbox_required: bool,
+    /// Require user authentication before use.
     pub user_authentication_required: bool,
+    /// Duration (seconds) user auth remains valid, if required.
     pub user_authentication_validity_duration: Option<u32>,
+    /// Optional attestation challenge bytes.
     pub attestation_challenge: Option<Vec<u8>>,
+    /// Optional key expiration timestamp.
     pub key_validity_end: Option<chrono::DateTime<Utc>>,
+    /// Elliptic curve for EC keys.
     pub curve: Option<AndroidEcCurve>,
 }
 
 impl AndroidKeyParams {
-    /// Creates new key parameters with defaults
+    /// Creates new key parameters with defaults.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -222,55 +255,55 @@ impl AndroidKeyParams {
         }
     }
 
-    /// Sets algorithm
+    /// Sets algorithm.
     pub const fn set_algorithm(&mut self, algorithm: AndroidKeyAlgorithm) -> &mut Self {
         self.algorithm = algorithm;
         self
     }
 
-    /// Sets key size
+    /// Sets key size.
     pub const fn set_key_size(&mut self, size: u32) -> &mut Self {
         self.key_size = size;
         self
     }
 
-    /// Sets purposes
+    /// Sets purposes.
     pub fn set_purposes(&mut self, purposes: Vec<AndroidKeyPurpose>) -> &mut Self {
         self.purposes = purposes;
         self
     }
 
-    /// Sets StrongBox requirement
+    /// Sets `StrongBox` requirement.
     pub const fn set_strongbox_required(&mut self, required: bool) -> &mut Self {
         self.strongbox_required = required;
         self
     }
 
-    /// Sets user authentication requirement
+    /// Sets user authentication requirement.
     pub const fn set_user_authentication_required(&mut self, required: bool) -> &mut Self {
         self.user_authentication_required = required;
         self
     }
 
-    /// Sets user authentication validity duration
+    /// Sets user authentication validity duration.
     pub const fn set_user_authentication_validity_duration(&mut self, duration: u32) -> &mut Self {
         self.user_authentication_validity_duration = Some(duration);
         self
     }
 
-    /// Sets attestation challenge
+    /// Sets attestation challenge.
     pub fn set_attestation_challenge(&mut self, challenge: Vec<u8>) -> &mut Self {
         self.attestation_challenge = Some(challenge);
         self
     }
 
-    /// Sets key validity end time
+    /// Sets key validity end time.
     pub const fn set_key_validity_end(&mut self, end: chrono::DateTime<Utc>) -> &mut Self {
         self.key_validity_end = Some(end);
         self
     }
 
-    /// Sets elliptic curve
+    /// Sets elliptic curve.
     pub const fn set_curve(&mut self, curve: AndroidEcCurve) -> &mut Self {
         self.curve = Some(curve);
         self
@@ -283,43 +316,57 @@ impl Default for AndroidKeyParams {
     }
 }
 
-/// Android key algorithms
+/// Android key algorithms supported by Keystore.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AndroidKeyAlgorithm {
+    /// RSA key pair.
     Rsa,
+    /// Elliptic curve key pair.
     Ec,
+    /// AES symmetric key.
     Aes,
+    /// HMAC symmetric key.
     Hmac,
 }
 
-/// Android key purposes
+/// Android key purposes (Keystore `KeyPurpose` flags).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AndroidKeyPurpose {
+    /// Encrypt data.
     Encrypt,
+    /// Decrypt data.
     Decrypt,
+    /// Sign data.
     Sign,
+    /// Verify signatures.
     Verify,
+    /// Wrap other keys.
     WrapKey,
 }
 
-/// Android elliptic curves
+/// Android elliptic curves for EC keys.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AndroidEcCurve {
+    /// NIST P-256.
     P256,
+    /// NIST P-384.
     P384,
+    /// NIST P-521.
     P521,
 }
 
-/// StrongBox error types
+/// `StrongBox`-specific error with vendor error code.
 #[derive(Debug, Clone, thiserror::Error)]
 #[error("StrongBox error (code {code}): {message}")]
 pub struct StrongBoxError {
+    /// Vendor or Keystore error code.
     pub code: i32,
+    /// Human-readable error message.
     pub message: String,
 }
 
 impl StrongBoxError {
-    /// Creates StrongBox error from code and message
+    /// Creates a `StrongBox` error from code and message.
     #[must_use]
     pub fn from_code(code: i32, message: &str) -> Self {
         Self {
@@ -331,19 +378,21 @@ impl StrongBoxError {
 
 impl From<StrongBoxError> for BearDogError {
     fn from(err: StrongBoxError) -> Self {
-        // Use modern error constructor
-        BearDogError::hsm(format!(
+        Self::hsm(format!(
             "StrongBox error (code {}): {}",
             err.code, err.message
         ))
     }
 }
 
-/// Android attestation configuration
+/// Android attestation configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AttestationConfig {
+    /// Verify the attestation certificate chain.
     pub verify_chain: bool,
+    /// Require `StrongBox`-backed attestation.
     pub require_strongbox: bool,
+    /// Maximum certificate chain depth to accept.
     pub max_chain_depth: usize,
 }
 
@@ -357,16 +406,19 @@ impl Default for AttestationConfig {
     }
 }
 
-/// Android attestation service
+/// Android attestation service coordinating hardware attestation requests.
 #[derive(Debug, Clone)]
 pub struct AndroidAttestationService {
+    /// Attestation verification settings.
     pub config: AttestationConfig,
+    /// PEM/DER trusted root certificates for chain validation.
     pub trusted_certificates: Vec<Vec<u8>>,
+    /// Challenge generator for attestation requests.
     pub challenge_generator: Arc<ChallengeGenerator>,
 }
 
 impl AndroidAttestationService {
-    /// Creates a new attestation service
+    /// Creates a new attestation service.
     #[must_use]
     pub fn new(config: AttestationConfig) -> Self {
         Self {
@@ -376,10 +428,11 @@ impl AndroidAttestationService {
         }
     }
 
-    /// Attest device integrity
+    /// Attest device integrity.
     ///
     /// # Errors
-    /// Returns error if attestation fails
+    ///
+    /// Returns an error if attestation fails or JNI integration is unavailable.
     pub async fn attest_device(&self, challenge: &[u8]) -> Result<Vec<u8>, BearDogError> {
         tracing::info!(
             "🔐 Performing device attestation with {} byte challenge",
@@ -398,23 +451,24 @@ impl AndroidAttestationService {
     }
 }
 
-/// Challenge generator for attestation
+/// Challenge generator for attestation.
 #[derive(Debug)]
 pub struct ChallengeGenerator {
     // Placeholder for entropy source
 }
 
 impl ChallengeGenerator {
-    /// Creates new challenge generator
+    /// Creates new challenge generator.
     #[must_use]
     pub const fn new() -> Self {
         Self {}
     }
 
-    /// Generates attestation challenge
+    /// Generates attestation challenge.
     ///
     /// # Errors
-    /// Returns error if challenge generation fails
+    ///
+    /// Returns an error if challenge generation fails.
     pub fn generate_challenge(&self, length: usize) -> Result<Vec<u8>, BearDogError> {
         use rand::RngCore;
         let mut challenge = vec![0u8; length];
@@ -429,16 +483,19 @@ impl Default for ChallengeGenerator {
     }
 }
 
-/// Android health monitor
-#[derive(Debug, Clone)]
+/// Android health monitor tracking Keystore, `StrongBox`, and attestation status.
+#[derive(Debug, Clone, Default)]
 pub struct AndroidHealthMonitor {
+    /// Keystore subsystem health.
     pub keystore_health: Arc<RwLock<HsmHealthStatus>>,
+    /// `StrongBox` subsystem health.
     pub strongbox_health: Arc<RwLock<HsmHealthStatus>>,
+    /// Attestation subsystem health.
     pub attestation_health: Arc<RwLock<HsmHealthStatus>>,
 }
 
 impl AndroidHealthMonitor {
-    /// Creates a new health monitor
+    /// Creates a new health monitor.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -448,10 +505,11 @@ impl AndroidHealthMonitor {
         }
     }
 
-    /// Check overall health status
+    /// Check overall health status.
     ///
     /// # Errors
-    /// Returns error if health check fails
+    ///
+    /// Returns an error if health check fails.
     pub async fn check(&self) -> Result<HealthCheckResult, BearDogError> {
         let keystore = *self.keystore_health.read().await;
         let strongbox = *self.strongbox_health.read().await;
@@ -477,52 +535,64 @@ impl AndroidHealthMonitor {
         })
     }
 
-    /// Returns whether the monitor is reporting healthy status
+    /// Returns whether the monitor is reporting healthy status.
     pub async fn is_healthy(&self) -> bool {
         self.check().await.map(|r| r.is_healthy).unwrap_or(false)
     }
 }
 
-/// Health check result
+/// Health check result aggregating subsystem statuses.
 #[derive(Debug, Clone)]
 pub struct HealthCheckResult {
+    /// Overall health across all subsystems.
     pub is_healthy: bool,
+    /// Keystore health status.
     pub keystore_status: HsmHealthStatus,
+    /// `StrongBox` health status.
     pub strongbox_status: HsmHealthStatus,
+    /// Attestation health status.
     pub attestation_status: HsmHealthStatus,
+    /// Last error message, if any subsystem failed.
     pub last_error: Option<String>,
+    /// Additional diagnostic key/value pairs.
     pub details: std::collections::HashMap<String, String>,
 }
 
-/// HSM health status
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// HSM health status for a single subsystem.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum HsmHealthStatus {
+    /// Fully operational.
     Healthy,
+    /// Partially operational with degraded performance.
     Degraded,
+    /// Not operational.
     Unhealthy,
+    /// Status not yet determined.
+    #[default]
     Unknown,
 }
 
-impl Default for HsmHealthStatus {
-    fn default() -> Self {
-        HsmHealthStatus::Unknown
-    }
-}
-
-/// Key health status
+/// Key health status for individual keys.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum KeyHealthStatus {
+    /// Key is active and usable.
     Active,
+    /// Key has expired.
     Expired,
+    /// Key was revoked.
     Revoked,
+    /// Key may be compromised.
     Compromised,
 }
 
-/// Key usage policy
+/// Key usage policy enforcing limits and allowed operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyUsagePolicy {
+    /// Maximum number of operations before key retirement.
     pub max_usage_count: Option<u64>,
+    /// Optional expiration timestamp.
     pub expiration: Option<chrono::DateTime<Utc>>,
+    /// Allowed key purposes.
     pub allowed_purposes: Vec<AndroidKeyPurpose>,
 }
 
@@ -536,18 +606,23 @@ impl Default for KeyUsagePolicy {
     }
 }
 
-/// Key type enumeration
+/// Key type enumeration (symmetric vs asymmetric).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum KeyType {
+    /// Symmetric key (AES, HMAC).
     Symmetric,
+    /// Asymmetric key pair (RSA, EC).
     Asymmetric,
 }
 
-/// HSM tier classification
+/// HSM tier classification by security backing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HsmTier {
+    /// Software-only HSM.
     Software,
+    /// Hardware-backed TEE.
     Hardware,
+    /// Dedicated `StrongBox` secure element.
     StrongBox,
 }
 

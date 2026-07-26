@@ -65,8 +65,11 @@ impl Drop for DpapiBlob {
 /// Metadata for a single DPAPI-protected key stored on disk.
 #[derive(Debug, Clone)]
 struct DpapiKeyEntry {
+    #[expect(dead_code, reason = "retained for key listing and audit logging")]
     key_id: String,
+    #[expect(dead_code, reason = "retained for algorithm-specific crypto operations")]
     algorithm: beardog_types::hsm::HsmAlgorithm,
+    #[expect(dead_code, reason = "retained for key expiration policy")]
     created_at_ms: u64,
 }
 
@@ -209,6 +212,7 @@ impl WindowsDpapiHsm {
     }
 
     /// Store a DPAPI-protected blob for `key_id`.
+    #[expect(dead_code, reason = "used by Windows DPAPI key generation path")]
     async fn store_blob(&self, key_id: &str, blob: &[u8]) -> Result<(), BearDogError> {
         let path = self.blob_path(key_id);
         tokio::fs::write(&path, blob).await.map_err(|e| {
@@ -217,6 +221,7 @@ impl WindowsDpapiHsm {
     }
 
     /// Load a DPAPI-protected blob for `key_id`.
+    #[expect(dead_code, reason = "used by Windows DPAPI key unwrap path")]
     async fn load_blob(&self, key_id: &str) -> Result<Vec<u8>, BearDogError> {
         let path = self.blob_path(key_id);
         tokio::fs::read(&path).await.map_err(|e| {

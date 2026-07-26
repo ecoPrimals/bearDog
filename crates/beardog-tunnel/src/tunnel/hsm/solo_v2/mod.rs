@@ -84,6 +84,10 @@ pub mod transport;
 pub mod types;
 
 #[cfg(feature = "ctap2")]
+pub mod ceremony;
+#[cfg(feature = "ctap2")]
+pub mod client_pin;
+#[cfg(feature = "ctap2")]
 pub mod hid_transport;
 
 #[cfg(feature = "ctap2")]
@@ -97,6 +101,6 @@ pub use ctap2_protocol::{
 };
 pub use provider::SoloV2Provider;
 #[cfg(feature = "ctap2")]
-pub use provider::{CeremonyResult, CeremonyTap};
+pub use ceremony::{CeremonyResult, CeremonyTap};
 pub use transport::Ctap2Transport;
 pub use types::*;

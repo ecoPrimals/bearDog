@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Safe Android Provider
+//! Safe Android Provider.
 //!
 //! This module provides safe Android hardware-backed cryptographic operations.
 
@@ -17,72 +17,125 @@ use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
+#[cfg(target_os = "android")]
+use tracing::warn;
+use tracing::{debug, info};
 
 // Complete types to replace archived safe_keystore_replacement
+/// Request to generate a new hardware-backed key.
 #[derive(Debug, Clone)]
 pub struct KeyGenerationRequest {
-    pub key_id: String,            // Unique key identifier
-    pub key_size: usize,           // Key size in bits
-    pub algorithm: Algorithm,      // Crypto algorithm
-    pub hardware_backed: bool,     // Require hardware backing
-    pub purposes: Vec<KeyPurpose>, // Intended key usage
+    /// Unique key identifier.
+    pub key_id: String,
+    /// Key size in bits.
+    pub key_size: usize,
+    /// Cryptographic algorithm.
+    pub algorithm: Algorithm,
+    /// Require hardware backing.
+    pub hardware_backed: bool,
+    /// Intended key usage purposes.
+    pub purposes: Vec<KeyPurpose>,
 }
 
+/// Key usage purpose flags matching Android Keystore semantics.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum KeyPurpose {
+    /// Encrypt data.
     Encrypt,
+    /// Decrypt data.
     Decrypt,
+    /// Sign data.
     Sign,
+    /// Verify signatures.
     Verify,
+    /// Wrap other keys.
     WrapKey,
+    /// Derive sub-keys.
     DeriveKey,
 }
 
+/// Metadata describing a stored key.
 #[derive(Debug, Clone)]
 pub struct KeyInfo {
+    /// Key identifier (primary).
     pub id: String,
-    pub key_id: String, // Alias for compatibility
+    /// Key identifier alias for compatibility.
+    pub key_id: String,
+    /// Cryptographic algorithm.
     pub algorithm: Algorithm,
+    /// Whether the key is hardware-backed.
     pub hardware_backed: bool,
 }
 
+/// Request to sign data with a hardware-backed key.
 #[derive(Debug, Clone)]
 pub struct SigningRequest {
-    pub key_id: String,       // Key to use for signing
-    pub data: Vec<u8>,        // Data to sign
-    pub algorithm: Algorithm, // Signature algorithm
+    /// Key to use for signing.
+    pub key_id: String,
+    /// Data to sign.
+    pub data: Vec<u8>,
+    /// Signature algorithm.
+    pub algorithm: Algorithm,
 }
 
+/// Request to verify a signature.
 #[derive(Debug, Clone)]
 pub struct VerificationRequest {
-    pub key_id: String,       // Key to use for verification
-    pub data: Vec<u8>,        // Original data
-    pub signature: Vec<u8>,   // Signature to verify
-    pub algorithm: Algorithm, // Signature algorithm
+    /// Key to use for verification.
+    pub key_id: String,
+    /// Original data.
+    pub data: Vec<u8>,
+    /// Signature to verify.
+    pub signature: Vec<u8>,
+    /// Signature algorithm.
+    pub algorithm: Algorithm,
 }
 
-/// Safe hardware provider trait - complete definition
+/// Safe hardware provider trait — complete definition.
 pub trait SafeHardwareProvider: Send + Sync {
-    /// Check if StrongBox is available
+    /// Check if `StrongBox` is available.
     fn supports_strongbox(&self) -> bool;
 
-    /// Generate a new key
+    /// Generate a new key.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails.
     fn generate_key(&self, request: &KeyGenerationRequest) -> Result<HsmKey, BearDogError>;
 
-    /// Sign data
+    /// Sign data.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if signing fails.
     fn sign(&self, request: &SigningRequest) -> Result<SafePinnedBuffer, BearDogError>;
 
-    /// Verify signature
+    /// Verify signature.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if verification fails.
     fn verify(&self, request: &VerificationRequest) -> Result<bool, BearDogError>;
 
-    /// Delete a key
+    /// Delete a key.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if deletion fails.
     fn delete_key(&self, key_id: &str) -> Result<(), BearDogError>;
 
-    /// Check if key exists
+    /// Check if key exists.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the lookup fails.
     fn key_exists(&self, key_id: &str) -> Result<bool, BearDogError>;
 
-    /// Get key information
+    /// Get key information.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key is not found.
     fn get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError>;
 }
 
@@ -98,7 +151,7 @@ pub trait AndroidCapability: Send + Sync + 'static {
     fn hardware_backed() -> bool;
 }
 
-/// StrongBox security level
+/// `StrongBox` security level capability marker.
 pub struct StrongBoxAvailable;
 
 impl AndroidCapability for StrongBoxAvailable {
@@ -149,10 +202,11 @@ impl AndroidCapability for SoftwareFallback {
     }
 }
 
-/// Safe mobile hardware provider
+/// Safe mobile hardware provider parameterized by [`AndroidCapability`].
 pub struct SafeMobileHardwareProvider<C: AndroidCapability> {
     capability: C,
     keystore: SafeAndroidKeystore,
+    #[expect(dead_code, reason = "reserved for zero-copy buffer pooling in JNI path")]
     buffer_pools: Arc<GlobalBufferPools>,
     _marker: PhantomData<C>,
 }
@@ -388,6 +442,11 @@ impl SafeAndroidKeystore {
     }
 
     #[cfg(not(target_os = "android"))]
+    /// Signs data safely (non-Android stub).
+    ///
+    /// # Errors
+    ///
+    /// Always returns an error on non-Android platforms.
     pub fn sign_data_safe(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::unsupported_operation(
             "Android StrongBox is only available on Android platform. \
@@ -420,6 +479,11 @@ impl SafeAndroidKeystore {
     }
 
     #[cfg(not(target_os = "android"))]
+    /// Verifies a signature safely (non-Android stub).
+    ///
+    /// # Errors
+    ///
+    /// Always returns an error on non-Android platforms.
     pub fn verify_signature_safe(
         &self,
         _key_id: &str,
@@ -431,20 +495,32 @@ impl SafeAndroidKeystore {
         ))
     }
 
-    /// Deletes a key safely
+    /// Deletes a key safely.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if deletion fails.
     pub fn delete_key_safe(&self, key_id: &str) -> Result<(), BearDogError> {
         let mut keys = self.keys.blocking_write();
         keys.remove(key_id);
         Ok(())
     }
 
-    /// Checks if a key exists
+    /// Checks if a key exists.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the lookup fails.
     pub fn key_exists_safe(&self, key_id: &str) -> Result<bool, BearDogError> {
         let keys = self.keys.blocking_read();
         Ok(keys.contains_key(key_id))
     }
 
-    /// Gets the algorithm for a key
+    /// Gets the algorithm for a key.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key is not found.
     pub fn get_key_algorithm(&self, key_id: &str) -> Result<Algorithm, BearDogError> {
         let keys = self.keys.blocking_read();
         keys.get(key_id)
@@ -453,19 +529,24 @@ impl SafeAndroidKeystore {
     }
 }
 
-/// Safe key metadata
+/// Safe key metadata stored in the in-memory keystore.
 #[derive(Debug, Clone)]
 pub struct SafeKeyMetadata {
+    #[expect(dead_code, reason = "retained for key-type validation in future JNI integration")]
     key_type: KeyType,
     algorithm: Algorithm,
+    #[expect(dead_code, reason = "reserved for usage-policy enforcement")]
     created_at: std::time::SystemTime,
+    #[expect(dead_code, reason = "reserved for usage-policy enforcement")]
     usage_count: u64,
 }
 
-/// Safe key handle
+/// Safe key handle referencing a hardware-backed key.
 #[derive(Debug, Clone)]
 pub struct SafeKeyHandle {
+    /// Key identifier.
     pub key_id: String,
+    /// Key algorithm type.
     pub algorithm: KeyType,
 }
 

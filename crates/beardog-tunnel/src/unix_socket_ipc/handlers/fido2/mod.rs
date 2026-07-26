@@ -73,11 +73,11 @@ impl MethodHandler for Fido2Handler {
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> HandlerResult {
         match method {
-            "beardog.fido2.discover" => discover::handle_fido2_discover(params),
-            "beardog.fido2.register" => register::handle_fido2_register(params),
-            "beardog.fido2.authenticate" => authenticate::handle_fido2_authenticate(params),
-            "beardog.fido2.entropy" => entropy::handle_fido2_entropy(params),
-            "beardog.fido2.ceremony" => ceremony::handle_fido2_ceremony(params),
+            "beardog.fido2.discover" => discover::handle_fido2_discover(params).await,
+            "beardog.fido2.register" => register::handle_fido2_register(params).await,
+            "beardog.fido2.authenticate" => authenticate::handle_fido2_authenticate(params).await,
+            "beardog.fido2.entropy" => entropy::handle_fido2_entropy(params).await,
+            "beardog.fido2.ceremony" => ceremony::handle_fido2_ceremony(params).await,
             _ => Err(format!("Unknown FIDO2 method: {method}").into()),
         }
     }

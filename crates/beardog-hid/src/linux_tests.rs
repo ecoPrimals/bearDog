@@ -20,6 +20,7 @@ fn test_hid_device_info_creation() {
         manufacturer: "Test Manufacturer".to_string(),
         product: "Test Product".to_string(),
         serial: "12345678".to_string(),
+        usage_page: None,
     };
 
     assert_eq!(info.path, "/dev/hidraw0");
@@ -39,6 +40,7 @@ fn test_hid_device_info_empty_serial() {
         manufacturer: "Another Manufacturer".to_string(),
         product: "Another Product".to_string(),
         serial: String::new(),
+        usage_page: None,
     };
 
     assert!(info.serial.is_empty());
@@ -53,6 +55,7 @@ fn test_hid_device_info_display() {
         manufacturer: "Test".to_string(),
         product: "Device".to_string(),
         serial: "SERIAL".to_string(),
+        usage_page: None,
     };
 
     let formatted = format!("{info}");
@@ -325,6 +328,7 @@ fn test_hid_device_info_clone() {
         manufacturer: "Test".to_string(),
         product: "Device".to_string(),
         serial: "SERIAL".to_string(),
+        usage_page: None,
     };
 
     let cloned = info.clone();

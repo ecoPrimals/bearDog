@@ -1,0 +1,35 @@
+# iosGate — iPhone XS Device Registration
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+[device]
+name = "iosGate"
+model = "iPhone XS (A1920)"
+chip = "A12 Bionic"
+arch = "aarch64-apple-ios"
+os = "iOS 16.x"
+secure_enclave = true
+face_id = true
+
+[capabilities]
+# Secure Enclave supports P-256 key generation/signing
+secure_enclave_keygen = true
+secure_enclave_ecdsa_p256 = true
+# Keychain for key storage
+keychain = true
+# No FIDO2/CTAP2 over USB (Lightning only supports MFi accessories)
+fido2_usb = false
+# Potential NFC FIDO2 via CoreNFC (iPhone XS has NFC)
+fido2_nfc = true
+
+[deployment]
+# Cross-compile from Linux is possible but codesigning requires macOS
+rust_target = "aarch64-apple-ios"
+codesign_host = "macos-required"
+# Sideloading via Xcode or AltStore
+sideload_method = "xcode-or-altstore"
+
+[status]
+registered = "2026-07-26"
+wave = "152-prep"
+active = false
+notes = "Registered for Wave 153. Device wipe and provisioning pending."

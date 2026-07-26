@@ -600,7 +600,7 @@ impl MobileHsmDiscoverer {
 
     /// Discovers mobile HSMs via runtime platform probing.
     ///
-    /// On Android: probes for `keystore_cli_v2` and StrongBox availability.
+    /// On Android: probes for `keystore_cli_v2` and `StrongBox` availability.
     /// On non-Android: returns empty (no mobile HSMs expected).
     ///
     /// # Errors

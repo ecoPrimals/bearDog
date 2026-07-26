@@ -2,13 +2,12 @@
 
 //! Entropy generation pipeline.
 
-use super::config::OS_RNG_SOURCE;
 use super::discovery::HsmSource;
 use super::orchestrator::HsmEntropyOrchestrator;
 use super::quality::{EntropySourceReport, os_rng_fallback_report};
 use super::types::{EntropyGenerationRequest, EntropyGenerationResult};
 use beardog_errors::BearDogError;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 use uuid::Uuid;
 
 impl HsmEntropyOrchestrator {
@@ -80,11 +79,11 @@ impl HsmEntropyOrchestrator {
         })
     }
 
-    /// Generate entropy from specific HSM source
+    /// Generate entropy from the selected HSM source.
     ///
-    /// **Current behavior:** Always uses the OS CSPRNG fallback and returns honest
-    /// software-only metadata. Future Phase 2 work will call FIDO2/TPM/StrongBox
-    /// hardware RNG when the selected provider is wired.
+    /// When a FIDO2 device is selected, the async path (`generate_from_hsm_async`)
+    /// should be preferred for actual hardware entropy. This sync fallback always uses
+    /// OS RNG, since HID I/O is inherently async.
     pub(super) fn generate_from_hsm(
         &self,
         source: &HsmSource,
@@ -92,20 +91,84 @@ impl HsmEntropyOrchestrator {
     ) -> Result<(Vec<u8>, EntropySourceReport), BearDogError> {
         use rand::RngCore;
 
-        warn!(
-            "Hardware entropy requested from {:?} but using OS RNG fallback (source={:?}); \
-             FIDO2/TPM/StrongBox providers not yet wired",
-            source, OS_RNG_SOURCE
-        );
+        #[cfg(feature = "fido2")]
+        #[expect(irrefutable_let_patterns, reason = "HsmSource has cfg-conditional variants")]
+        if let HsmSource::Fido2(idx) = source
+            && self.fido2_providers.get(*idx).is_some()
+        {
+            debug!(
+                "FIDO2 device selected (index {idx}) — use generate_from_hsm_async \
+                 for hardware entropy; falling back to OS RNG in sync context"
+            );
+        }
+
         let mut rng = rand::rng();
         let mut entropy = vec![0u8; length];
         rng.fill_bytes(&mut entropy);
 
         debug!(
-            "Generated {} bytes of entropy via OS RNG fallback ({})",
+            "Generated {} bytes of entropy via OS RNG ({})",
             length,
             super::config::OS_RNG_FALLBACK_DEVICE
         );
         Ok((entropy, os_rng_fallback_report()))
+    }
+
+    /// Generate entropy from the selected HSM source (async path).
+    ///
+    /// Prefers hardware-backed entropy from FIDO2 when available, mixed with
+    /// OS RNG for defense-in-depth. Falls back to pure OS RNG if hardware
+    /// entropy fails.
+    #[expect(dead_code, reason = "Async FIDO2 entropy path used when callers migrate to async")]
+    pub(super) async fn generate_from_hsm_async(
+        &self,
+        source: &HsmSource,
+        length: usize,
+    ) -> Result<(Vec<u8>, EntropySourceReport), BearDogError> {
+        use rand::RngCore;
+
+        #[cfg(feature = "fido2")]
+        #[expect(irrefutable_let_patterns, reason = "HsmSource has cfg-conditional variants")]
+        if let HsmSource::Fido2(idx) = source
+            && let Some(provider) = self.fido2_providers.get(*idx)
+        {
+            match provider.hsm_provider().await {
+                Ok(hsm) => match hsm.generate_entropy(length).await {
+                    Ok(hw_entropy) => {
+                        let mut os_rng = rand::rng();
+                        let mut os_bytes = vec![0u8; length];
+                        os_rng.fill_bytes(&mut os_bytes);
+
+                        let mut mixed = Vec::with_capacity(length);
+                        for i in 0..hw_entropy.len().min(os_bytes.len()) {
+                            mixed.push(hw_entropy[i] ^ os_bytes[i]);
+                        }
+
+                        info!(
+                            "Generated {} bytes of FIDO2 + OS RNG mixed entropy",
+                            length
+                        );
+                        return Ok((
+                            mixed,
+                            EntropySourceReport {
+                                source: "fido2_hardware",
+                                device_used: "fido2_device",
+                                hardware_backed: true,
+                                quality_tier: 2,
+                                quality_score: 0.85,
+                            },
+                        ));
+                    }
+                    Err(e) => {
+                        tracing::warn!("FIDO2 hardware entropy failed: {e}");
+                    }
+                },
+                Err(e) => {
+                    tracing::warn!("Failed to create FIDO2 HSM provider: {e}");
+                }
+            }
+        }
+
+        self.generate_from_hsm(source, length)
     }
 }

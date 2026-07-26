@@ -64,6 +64,10 @@ pub fn build_make_credential(
 }
 
 /// Extended `MakeCredential` builder with hmac-secret extension support.
+///
+/// # Errors
+///
+/// Returns `BearDogError` if CBOR encoding fails.
 pub fn build_make_credential_ext(
     rp_id: &str,
     user_id: &[u8],

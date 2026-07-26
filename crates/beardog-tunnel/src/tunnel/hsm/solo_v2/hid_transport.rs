@@ -14,9 +14,8 @@ use rand::RngCore;
 use tracing::{debug, warn};
 
 const HID_PACKET_SIZE: usize = 64;
-/// 300 attempts * 200ms = 60s max (generous for user presence + replug)
+/// 300 attempts = 60s max (generous for user presence + replug)
 const MAX_KEEPALIVE_ATTEMPTS: usize = 300;
-const POLL_INTERVAL_MS: u64 = 200;
 const FIRST_PAYLOAD_MAX: usize = 57;
 const CONT_PAYLOAD_MAX: usize = 59;
 const CTAPHID_BROADCAST_CID: [u8; 4] = [0xFF, 0xFF, 0xFF, 0xFF];
@@ -111,6 +110,10 @@ async fn hid_send_receive(
     Ok(result.payload)
 }
 
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "Instant::elapsed nanoseconds for a single CTAPHID transaction are far below u64::MAX"
+)]
 async fn hid_send_receive_timed(
     transport: &mut HidCtap2Transport,
     command: &[u8],
@@ -283,6 +286,10 @@ async fn send_ctaphid_message<D: HidDevice + ?Sized>(
 }
 
 /// Read a full CTAP2 payload (`[status][CBOR...]`) from `CTAPHID_CBOR`/`CTAPHID_MSG` response packets.
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "Instant::elapsed nanoseconds during CTAPHID I/O are far below u64::MAX"
+)]
 async fn read_ctaphid_ctap_response_timed<D: HidDevice + ?Sized>(
     device: &mut D,
     expected_cid: u32,
@@ -554,6 +561,10 @@ async fn ctap2_backend_send_receive_timed(
 
 impl Ctap2TransportBackend {
     /// Send a CTAP2 command and receive response with timing metadata.
+    ///
+    /// # Errors
+    ///
+    /// Returns `BearDogError` if HID channel initialization, send, or response read fails.
     pub async fn send_receive_timed(
         &mut self,
         command: &[u8],

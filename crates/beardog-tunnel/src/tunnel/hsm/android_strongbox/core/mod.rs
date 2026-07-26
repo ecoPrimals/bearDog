@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Android StrongBox HSM Core Implementation
+//! Android `StrongBox` HSM core implementation.
 //!
-//! Provides hardware-backed cryptographic operations using Android's StrongBox
-//! HSM (official Android API: KeyMaster) for Pixel and other compatible devices.
+//! Provides hardware-backed cryptographic operations using Android's `StrongBox`
+//! HSM (official Android API: `KeyMaster`) for Pixel and other compatible devices.
 
 mod hsm_key_provider;
 mod manager_hsm;
 mod unified;
 
 use crate::tunnel::hsm::types::{
-    AndroidAttestationService, AndroidHealthMonitor, AndroidHsmConfig, AndroidKeyParams,
-    AndroidKeystore, AttestationLevel,
+    AndroidAttestationService, AndroidHealthMonitor, AndroidHsmConfig, AndroidKeystore,
+    AttestationLevel,
 };
 use beardog_errors::BearDogError;
 use beardog_types::canonical::providers_unified::traits::{
@@ -23,11 +23,13 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
-/// Android StrongBox HSM implementation
+/// Android `StrongBox` HSM implementation.
 #[derive(Clone)]
 pub struct AndroidStrongBoxHsm {
+    #[expect(dead_code, reason = "retained for future attestation and config-driven behavior")]
     pub(super) config: AndroidHsmConfig,
     pub(super) keystore: Arc<AndroidKeystore>,
+    #[expect(dead_code, reason = "wired when JNI attestation transport is enabled")]
     pub(super) attestation_service: Arc<AndroidAttestationService>,
     pub(super) device_info: Arc<crate::tunnel::hsm::android_strongbox::types::AndroidDeviceInfo>,
     pub(super) key_cache: Arc<RwLock<HashMap<String, CachedKeyInfo>>>,
@@ -38,14 +40,16 @@ pub struct AndroidStrongBoxHsm {
 pub(super) struct CachedKeyInfo {
     pub(super) key_type: KeyType,
     pub(super) last_used: chrono::DateTime<Utc>,
+    #[expect(dead_code, reason = "reserved for usage-policy enforcement on cached keys")]
     pub(super) key_usage: Vec<KeyUsage>,
 }
 
 impl AndroidStrongBoxHsm {
-    /// Creates a new Android StrongBox HSM instance with default configuration
+    /// Creates a new Android `StrongBox` HSM instance with default configuration.
     ///
     /// # Errors
-    /// Returns an error if StrongBox is not available on the device
+    ///
+    /// Returns an error if `StrongBox` is not available on the device.
     pub fn with_defaults() -> Result<Self, BearDogError> {
         // Create default configuration
         let config = AndroidHsmConfig {
@@ -53,8 +57,8 @@ impl AndroidStrongBoxHsm {
             key_params: crate::tunnel::hsm::types::AndroidKeyParams::new(),
             attestation_level: AttestationLevel::StrongBox,
             security_level: 3, // StrongBox = highest level
-            keystore_config: Default::default(),
-            attestation_config: Default::default(),
+            keystore_config: crate::tunnel::hsm::types::AndroidKeystoreConfig::default(),
+            attestation_config: String::default(),
         };
 
         // Initialize with minimal synchronous setup
@@ -88,10 +92,11 @@ impl AndroidStrongBoxHsm {
         })
     }
 
-    /// Creates a new Android StrongBox HSM instance
+    /// Creates a new Android `StrongBox` HSM instance.
     ///
     /// # Errors
-    /// Returns an error if StrongBox is not available on the device
+    ///
+    /// Returns an error if `StrongBox` is not available on the device.
     pub async fn new(config: AndroidHsmConfig) -> Result<Self, BearDogError> {
         info!("🔐 Initializing Android StrongBox HSM");
 
@@ -137,7 +142,7 @@ impl AndroidStrongBoxHsm {
         Ok(hsm)
     }
 
-    /// Generates a new key in StrongBox
+    /// Generates a new key in `StrongBox`.
     pub(super) async fn generate_strongbox_key(
         &self,
         spec: &KeyGenerationSpec,
@@ -168,7 +173,7 @@ impl AndroidStrongBoxHsm {
         Ok(key_info)
     }
 
-    /// Configures StrongBox parameters for key generation
+    /// Configures `StrongBox` parameters for key generation.
     fn configure_strongbox_parameters(
         &self,
         spec: &KeyGenerationSpec,
@@ -193,13 +198,13 @@ impl AndroidStrongBoxHsm {
                 p
             }
             KeyType::Ed25519 | KeyType::ChaCha20 => {
-                return Err(BearDogError::unsupported_operation(&format!(
+                return Err(BearDogError::unsupported_operation(format!(
                     "{:?} not supported in StrongBox",
                     spec.key_type
                 )));
             }
             _ => {
-                return Err(BearDogError::unsupported_operation(&format!(
+                return Err(BearDogError::unsupported_operation(format!(
                     "{:?} not supported in StrongBox",
                     spec.key_type
                 )));
@@ -211,14 +216,16 @@ impl AndroidStrongBoxHsm {
         for usage in &spec.key_usage {
             match usage {
                 KeyUsage::Encrypt => {
-                    purposes.push(crate::tunnel::hsm::types::AndroidKeyPurpose::Encrypt)
+                    purposes.push(crate::tunnel::hsm::types::AndroidKeyPurpose::Encrypt);
                 }
                 KeyUsage::Decrypt => {
-                    purposes.push(crate::tunnel::hsm::types::AndroidKeyPurpose::Decrypt)
+                    purposes.push(crate::tunnel::hsm::types::AndroidKeyPurpose::Decrypt);
                 }
-                KeyUsage::Sign => purposes.push(crate::tunnel::hsm::types::AndroidKeyPurpose::Sign),
+                KeyUsage::Sign => {
+                    purposes.push(crate::tunnel::hsm::types::AndroidKeyPurpose::Sign);
+                }
                 KeyUsage::Verify => {
-                    purposes.push(crate::tunnel::hsm::types::AndroidKeyPurpose::Verify)
+                    purposes.push(crate::tunnel::hsm::types::AndroidKeyPurpose::Verify);
                 }
                 _ => {} // StrongBox doesn't support Derive, Wrap, Unwrap
             }
@@ -246,9 +253,9 @@ impl AndroidStrongBoxHsm {
         Ok(())
     }
 
-    /// Validates key access permissions
+    /// Validates key access permissions.
     ///
-    /// Implements comprehensive access control for Android StrongBox keys:
+    /// Implements comprehensive access control for Android `StrongBox` keys:
     /// - Key existence validation
     /// - Usage policy enforcement
     /// - Time-based restrictions
@@ -267,10 +274,7 @@ impl AndroidStrongBoxHsm {
 
         if !exists {
             warn!("❌ Access denied: key not found: {}", key_id);
-            return Err(BearDogError::not_found(format!(
-                "Key not found: {}",
-                key_id
-            )));
+            return Err(BearDogError::not_found(format!("Key not found: {key_id}")));
         }
 
         // Get key info from cache to check policies
@@ -285,7 +289,7 @@ impl AndroidStrongBoxHsm {
                 if let Some(info) = cache_write.get_mut(key_id) {
                     info.last_used = Utc::now();
                 }
-            })
+            });
         });
 
         debug!("✅ Access validated for key: {}", key_id);

@@ -547,7 +547,7 @@ impl AndroidAttestationService {
     pub fn with_platform_attestation_transport(attestation_level: AttestationLevel) -> Self {
         let transport = if cfg!(target_os = "android") {
             Arc::new(AttestationTransportBackend::AndroidJni(
-                AndroidJniAttestationTransport::default(),
+                AndroidJniAttestationTransport,
             ))
         } else {
             Arc::new(AttestationTransportBackend::Stub(StubAttestationTransport))

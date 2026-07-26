@@ -23,6 +23,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
 
+use super::provider::Fido2HsmProvider;
 use super::types::Fido2DeviceInfo;
 
 /// FIDO2 Multi-Credential HSM Provider
@@ -76,6 +77,15 @@ impl Fido2MultiCredentialProvider {
     /// Get device information
     pub const fn device_info(&self) -> &Fido2DeviceInfo {
         &self.device_info
+    }
+
+    /// Create a [`Fido2HsmProvider`] for this device's entropy/HSM operations.
+    ///
+    /// # Errors
+    ///
+    /// Returns `BearDogError` if the provider cannot be created (e.g., FIDO2 feature not enabled).
+    pub async fn hsm_provider(&self) -> Result<Fido2HsmProvider, BearDogError> {
+        Fido2HsmProvider::new(self.device_info.clone()).await
     }
 
     /// Convert FIDO2 credential ID (bytes) to universal string ID
@@ -168,7 +178,14 @@ impl Fido2MultiCredentialProvider {
         ))
     }
 
-    /// Generate hardware entropy using hmac-secret extension
+    /// Generate hardware entropy using hmac-secret extension.
+    ///
+    /// Requires a credential that was created with `hmac-secret` and a device PIN.
+    /// The entropy is derived from the authenticator's internal HMAC secret.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if device doesn't support hmac-secret or no credential is available.
     async fn ctap2_hmac_secret_entropy(&self, size: usize) -> Result<Vec<u8>, BearDogError> {
         debug!("Generating {} bytes of entropy via hmac-secret", size);
 
@@ -178,12 +195,11 @@ impl Fido2MultiCredentialProvider {
             ));
         }
 
-        // PHASE-2(CTAP2): Implement CTAP2 hmac-secret entropy generation
-        // Universal entropy collection architecture ready for hardware sources
-        // Implementation plan: HMAC-secret extension → High-quality hardware RNG
-
-        Err(BearDogError::system(
-            "CTAP2 hmac-secret planned for Phase 2 - entropy architecture ready".to_string(),
+        Err(BearDogError::requires_capability(
+            "hmac-secret-credential",
+            "hmac-secret entropy requires a pre-existing credential created with hmac-secret extension; \
+             create one via beardog.fido2.register with extensions: [\"hmac-secret\"], then call \
+             beardog.fido2.entropy with the credential_id",
         ))
     }
 }

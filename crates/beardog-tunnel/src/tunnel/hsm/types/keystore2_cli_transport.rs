@@ -14,10 +14,11 @@ use super::android::AndroidKeyParams;
 use super::android_transports::KeystoreTransport;
 use super::key::KeyType as HsmKeyType;
 
-/// Android Keystore2 CLI transport — delegates to `keystore_cli_v2` for hardware-backed
-/// StrongBox / TEE operations. This is the first real hardware transport, bridging to
-/// Titan M2 (Pixel) or equivalent HSM via the platform's Keystore2 binder service
-/// through its CLI interface.
+/// Android Keystore2 CLI transport.
+///
+/// Delegates to `keystore_cli_v2` for hardware-backed `StrongBox` / TEE operations.
+/// This is the first real hardware transport, bridging to Titan M2 (Pixel) or
+/// equivalent HSM via the platform's Keystore2 binder service through its CLI interface.
 ///
 /// Security level defaults to `strongbox` when available, falling back to `tee`.
 /// Key operations use RSA-2048 (the CLI default) — a future Binder transport will
@@ -53,7 +54,7 @@ impl Keystore2CliTransport {
         cfg!(target_os = "android") && std::path::Path::new("/system/bin/keystore_cli_v2").exists()
     }
 
-    /// Probe whether StrongBox is available by attempting a test key generation.
+    /// Probe whether `StrongBox` is available by attempting a test key generation.
     pub fn probe_strongbox() -> bool {
         if !Self::is_available() {
             return false;
@@ -103,7 +104,7 @@ impl KeystoreTransport for Keystore2CliTransport {
             &format!("--name={alias}"),
             &format!("--seclevel={}", self.sec_level),
         ]);
-        ready(result.map(|output| output.into_bytes()))
+        ready(result.map(std::string::String::into_bytes))
     }
 
     fn jni_sign(

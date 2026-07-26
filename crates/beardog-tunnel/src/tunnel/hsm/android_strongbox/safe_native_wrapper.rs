@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Safe Android StrongBox Native Wrapper
-//
-// Provides safe Rust interface to Android StrongBox hardware security module.
-// This implementation prioritizes safety and error handling over raw performance.
+//! Safe Android `StrongBox` native wrapper.
+//!
+//! Provides safe Rust interface to Android `StrongBox` hardware security module.
+//! This implementation prioritizes safety and error handling over raw performance.
 
 use beardog_errors::BearDogError;
 use beardog_types::canonical::KeyType;
@@ -11,45 +11,48 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 use uuid::Uuid;
 
-/// Safe Android StrongBox native operations wrapper
+/// Safe Android `StrongBox` native operations wrapper.
 pub struct SafeAndroidStrongBoxWrapper {
-    /// Device capabilities
+    /// Device capabilities.
     device_capabilities: DeviceCapabilities,
     operation_metrics: Arc<parking_lot::RwLock<HashMap<String, OperationMetrics>>>,
-    /// Native handle state
+    /// Native handle state.
     native_handle_initialized: bool,
 }
 
-// Type alias for backward compatibility
+/// Type alias for backward compatibility with legacy `SafeAndroidKeystore` name.
 pub type SafeAndroidKeystore = SafeAndroidStrongBoxWrapper;
 
+/// Device capability flags reported by the native layer.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeviceCapabilities {
-    /// Whether strongbox_available is enabled
+    /// Whether `StrongBox` is available.
     pub strongbox_available: bool,
-    /// Whether hardware_backed is enabled
+    /// Whether keys are hardware-backed.
     pub hardware_backed: bool,
-    /// Whether biometric_support is enabled
+    /// Whether biometric authentication is supported.
     pub biometric_support: bool,
-    /// Whether attestation_support is enabled
+    /// Whether hardware attestation is supported.
     pub attestation_support: bool,
 }
 
+/// Per-operation success/failure metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OperationMetrics {
-    /// Number of success
+    /// Number of successful operations.
     pub success_count: u64,
-    /// Number of failure
+    /// Number of failed operations.
     pub failure_count: u64,
+    /// Timestamp of the last operation attempt.
     pub last_operation_time: std::time::SystemTime,
 }
 
 impl SafeAndroidStrongBoxWrapper {
-    /// Create new safe Android StrongBox wrapper
-    /// Creates a new instance
+    /// Creates a new [`SafeAndroidStrongBoxWrapper`] instance.
+    #[must_use]
     pub fn new() -> Self {
         info!("🤖 Initializing SafeAndroidStrongBoxWrapper");
 
@@ -74,11 +77,11 @@ impl SafeAndroidStrongBoxWrapper {
         }
     }
 
+    /// Initializes native Android handles safely.
+    ///
     /// # Errors
     ///
-    /// Returns an error if key generation fails in the underlying HSM provider.
-    /// Initialize native Android handles safely
-    /// Initializes componentialize_native_handles
+    /// Returns an error if native handle initialization fails.
     pub fn initialize_native_handles(&mut self) -> Result<(), BearDogError> {
         info!("🔧 Initializing Android native handles");
 
@@ -90,10 +93,11 @@ impl SafeAndroidStrongBoxWrapper {
         Ok(())
     }
 
+    /// Generates a hardware-backed key safely.
+    ///
     /// # Errors
     ///
     /// Returns an error if key generation fails in the underlying HSM provider.
-    /// Generate hardware-backed key safely
     pub fn safe_generate_key(
         &mut self,
         key_type: &KeyType,
@@ -123,6 +127,8 @@ impl SafeAndroidStrongBoxWrapper {
         Ok(generated_key_id)
     }
 
+    /// Signs data safely using a hardware-backed key.
+    ///
     /// # Errors
     ///
     /// Returns an error if signing fails in the underlying HSM provider.
@@ -150,10 +156,11 @@ impl SafeAndroidStrongBoxWrapper {
         Ok(signature)
     }
 
+    /// Verifies a signature safely.
+    ///
     /// # Errors
     ///
     /// Returns an error if verification fails in the underlying HSM provider.
-    /// Verify signature safely
     pub fn safe_verify(
         &self,
         key_id: &str,
@@ -177,8 +184,8 @@ impl SafeAndroidStrongBoxWrapper {
 
         Ok(is_valid)
     }
-    /// Get device capabilities
-    /// Gets device_capabilities
+
+    /// Returns device capability flags.
     #[must_use]
     pub const fn get_device_capabilities(&self) -> &DeviceCapabilities {
         &self.device_capabilities
@@ -188,7 +195,7 @@ impl SafeAndroidStrongBoxWrapper {
         let mut guard = self.operation_metrics.write();
         let entry = guard
             .entry(operation.to_string())
-            .or_insert(OperationMetrics {
+            .or_insert_with(|| OperationMetrics {
                 success_count: 0,
                 failure_count: 0,
                 last_operation_time: std::time::SystemTime::now(),
@@ -203,6 +210,7 @@ impl SafeAndroidStrongBoxWrapper {
         }
     }
 
+    /// Returns a snapshot of per-operation metrics.
     #[must_use]
     pub fn get_operation_metrics(&self) -> HashMap<String, OperationMetrics> {
         self.operation_metrics.read().clone()

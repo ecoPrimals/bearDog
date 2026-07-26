@@ -58,15 +58,14 @@ impl HsmEntropyOrchestrator {
     }
 
     /// Find device by ID
-    pub(super) const fn find_device_by_id(&self, device_id: &str) -> Option<HsmSource> {
+    pub(super) fn find_device_by_id(&self, device_id: &str) -> Option<HsmSource> {
         #[cfg(feature = "fido2")]
         {
-            if device_id.starts_with("fido2_")
-                && let Ok(idx) = device_id.strip_prefix("fido2_")?.parse::<usize>()
-                && idx < self.fido2_providers.len()
-            {
-                return Some(HsmSource::Fido2(idx));
-            }
+            if let Some(suffix) = device_id.strip_prefix("fido2_")
+                && let Ok(idx) = suffix.parse::<usize>()
+                    && idx < self.fido2_providers.len() {
+                        return Some(HsmSource::Fido2(idx));
+                    }
         }
 
         #[cfg(all(feature = "mobile", target_os = "android"))]

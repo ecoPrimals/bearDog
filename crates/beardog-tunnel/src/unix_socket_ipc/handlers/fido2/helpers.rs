@@ -19,11 +19,11 @@ pub async fn resolve_device_path(explicit: Option<&str>) -> Result<String, Strin
     let fido2_device = devices
         .into_iter()
         .find(|d| beardog_hid::types::is_fido2_device(d.vendor_id, d.product_id))
-        .ok_or(
+        .ok_or_else(|| {
             "No FIDO2 device found — connect a USB security key \
              (SoloKey, YubiKey, or other CTAP2 authenticator)"
-                .to_string(),
-        )?;
+                .to_string()
+        })?;
     info!(
         path = fido2_device.path.as_str(),
         "Auto-selected FIDO2 device"

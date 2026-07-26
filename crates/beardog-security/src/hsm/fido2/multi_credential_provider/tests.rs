@@ -218,7 +218,14 @@ async fn test_entropy_hmac_phase2_stub() {
     let err = MultiCredentialHsmProvider::generate_hardware_entropy(&p, 8)
         .await
         .unwrap_err();
-    assert!(err.to_string().contains("Phase 2") || err.to_string().contains("CTAP2"));
+    let msg = err.to_string();
+    assert!(
+        msg.contains("Phase 2")
+            || msg.contains("CTAP2")
+            || msg.contains("hmac-secret")
+            || msg.contains("credential"),
+        "unexpected error: {msg}"
+    );
 }
 
 #[tokio::test]

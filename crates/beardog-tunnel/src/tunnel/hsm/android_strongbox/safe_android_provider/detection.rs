@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Android StrongBox and TEE detection for safe providers.
+//! Android `StrongBox` and TEE detection for safe providers.
 
-use super::super::types::{AndroidDeviceInfo, VerifiedBootState};
-use super::{
-    AndroidCapability, SafeAndroidKeystore, SafeMobileHardwareProvider, StrongBoxAvailable,
-    TeeAvailable,
-};
+use super::super::types::AndroidDeviceInfo;
+use super::{SafeAndroidKeystore, SafeMobileHardwareProvider, StrongBoxAvailable, TeeAvailable};
 use beardog_errors::BearDogError;
 use tracing::{debug, info};
 
@@ -51,7 +48,7 @@ impl SafeAndroidKeystore {
             security_patch_level: security_patch,
             strongbox_version,
             titan_m_version,
-            verified_boot_state: VerifiedBootState::Verified,
+            verified_boot_state: super::super::types::VerifiedBootState::Verified,
         })
     }
 
@@ -79,6 +76,7 @@ impl SafeAndroidKeystore {
     }
 
     #[cfg(not(target_os = "android"))]
+    #[expect(dead_code, reason = "stub for non-Android builds; Android cfg provides real implementation")]
     const fn detect_strongbox_version_safe() -> Result<Option<String>, BearDogError> {
         Ok(None)
     }
@@ -95,13 +93,14 @@ impl SafeAndroidKeystore {
     }
 
     #[cfg(not(target_os = "android"))]
+    #[expect(dead_code, reason = "stub for non-Android builds; Android cfg provides real implementation")]
     const fn detect_titan_m_version_safe() -> Result<Option<String>, BearDogError> {
         Ok(None)
     }
 }
 
 impl SafeMobileHardwareProvider<StrongBoxAvailable> {
-    /// Detects if StrongBox is available
+    /// Detects if `StrongBox` is available.
     ///
     /// # Errors
     ///

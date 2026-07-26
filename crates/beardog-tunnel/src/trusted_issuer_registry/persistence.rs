@@ -22,12 +22,15 @@ impl TrustedIssuerRegistry {
             author: "beardog".to_string(),
             app_name: "beardog".to_string(),
         })
-        .map(|dirs| dirs.data_dir().join("trusted_issuers.json"))
-        .unwrap_or_else(|_| {
-            etcetera::home_dir()
-                .map(|home| home.join(".local/share/beardog/trusted_issuers.json"))
-                .unwrap_or_else(|_| PathBuf::from(".local/share/beardog/trusted_issuers.json"))
-        })
+        .map_or_else(
+            |_| {
+                etcetera::home_dir().map_or_else(
+                    |_| PathBuf::from(".local/share/beardog/trusted_issuers.json"),
+                    |home| home.join(".local/share/beardog/trusted_issuers.json"),
+                )
+            },
+            |dirs| dirs.data_dir().join("trusted_issuers.json"),
+        )
     }
 
     /// Serialize the registry to JSON at `path`.

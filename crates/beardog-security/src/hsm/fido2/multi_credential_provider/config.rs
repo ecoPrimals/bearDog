@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+/// Default relying party identifier for `BearDog` deployments.
+pub const DEFAULT_RP_ID: &str = "beardog.ecoPrimals";
+
+/// Default human-readable relying party name.
+pub const DEFAULT_RP_NAME: &str = "BearDog Security Platform";
+
+/// Default CTAP2 operation timeout (milliseconds).
+pub const DEFAULT_TIMEOUT_MS: u64 = 30_000;
+
 /// Configuration for FIDO2 provider
 #[derive(Debug, Clone)]
 pub struct Fido2ProviderConfig {
@@ -19,10 +28,10 @@ pub struct Fido2ProviderConfig {
 impl Default for Fido2ProviderConfig {
     fn default() -> Self {
         Self {
-            rp_id: "beardog.ecoPrimals".to_string(),
-            rp_name: "BearDog Security Platform".to_string(),
+            rp_id: DEFAULT_RP_ID.to_string(),
+            rp_name: DEFAULT_RP_NAME.to_string(),
             require_user_verification: false,
-            timeout_ms: 30000,
+            timeout_ms: DEFAULT_TIMEOUT_MS,
         }
     }
 }

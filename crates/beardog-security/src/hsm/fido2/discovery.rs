@@ -21,7 +21,10 @@ use std::path::PathBuf;
 use tracing::{debug, info};
 
 #[cfg(feature = "fido2")]
-use beardog_hid::{HidDeviceInfo, discover, types::is_fido2_device};
+use beardog_hid::{
+    HidDeviceInfo, ProductId, VendorId, discover,
+    types::{fido2_manufacturer_name, fido2_product_name, is_fido2_device},
+};
 
 /// Discover all FIDO2 devices on the system (Pure Rust)
 ///
@@ -30,7 +33,7 @@ use beardog_hid::{HidDeviceInfo, discover, types::is_fido2_device};
 /// ```rust,no_run
 /// use beardog_security::hsm::fido2::discover_fido2_devices;
 ///
-/// #[tokio::main]
+/// #[tokio::main(flavor = "current_thread")]
 /// async fn main() {
 ///     match discover_fido2_devices().await {
 ///         Ok(devices) => {
@@ -102,50 +105,158 @@ pub async fn discover_fido2_devices() -> Result<Vec<Fido2DeviceInfo>, BearDogErr
 
 #[cfg(feature = "fido2")]
 async fn convert_to_fido2_info(hid_dev: HidDeviceInfo) -> Result<Fido2DeviceInfo, BearDogError> {
+    let (caps, aaguid, versions, extensions) = probe_capabilities_live(&hid_dev).await;
+
     Ok(Fido2DeviceInfo {
         device_path: PathBuf::from(hid_dev.path.clone()),
         vendor_id: hid_dev.vendor_id.0,
         product_id: hid_dev.product_id.0,
-        manufacturer: hid_dev.manufacturer.clone(),
-        product: hid_dev.product.clone(),
+        manufacturer: if hid_dev.manufacturer.is_empty() || hid_dev.manufacturer == "Unknown" {
+            identify_manufacturer(hid_dev.vendor_id.0)
+        } else {
+            hid_dev.manufacturer.clone()
+        },
+        product: if hid_dev.product.is_empty() || hid_dev.product == "Unknown" {
+            identify_product(hid_dev.vendor_id.0, hid_dev.product_id.0)
+        } else {
+            hid_dev.product.clone()
+        },
         serial: if hid_dev.serial.is_empty() {
             None
         } else {
             Some(hid_dev.serial.clone())
         },
-        aaguid: None,
+        aaguid,
         firmware_version: None,
-        protocol_versions: vec!["FIDO_2_0".to_string()],
-        extensions: Vec::new(),
+        protocol_versions: versions,
+        extensions,
         transport: Fido2Transport::Usb,
-        capabilities: probe_capabilities(&hid_dev).await,
+        capabilities: caps,
     })
 }
 
+/// Probe device capabilities via live CTAP2 `GetInfo`, falling back to defaults
+/// if the device cannot be opened or queried.
 #[cfg(feature = "fido2")]
-async fn probe_capabilities(_hid_dev: &HidDeviceInfo) -> Fido2Capabilities {
-    // Assumes default FIDO2 capabilities until CTAP2 getInfo is implemented (Phase 2).
-    tracing::info!(
-        "FIDO2 capabilities: using assumed defaults (CTAP2 getInfo query pending Phase 2)"
-    );
+async fn probe_capabilities_live(
+    hid_dev: &HidDeviceInfo,
+) -> (Fido2Capabilities, Option<[u8; 16]>, Vec<String>, Vec<String>) {
+    use super::ctap2;
+
+    match beardog_hid::open_device(&hid_dev.path).await {
+        Ok(mut device) => match ctap2::ctap2_get_info(&mut device).await {
+            Ok(info) => {
+                tracing::info!(
+                    "FIDO2 capabilities: live CTAP2 GetInfo succeeded (versions: {})",
+                    info.versions.join(", ")
+                );
+
+                let hmac_secret = info.extensions.iter().any(|e| e == "hmac-secret");
+                let cred_protect = info.extensions.iter().any(|e| e == "credProtect");
+                let rk = info.options.get("rk").copied().unwrap_or(false);
+                let up = info.options.get("up").copied().unwrap_or(true);
+                let uv = info.options.get("uv").copied().unwrap_or(false);
+
+                let algorithms: Vec<i32> = info.algorithms.as_ref().map_or_else(
+                    || vec![-7],
+                    |algs| {
+                        algs.iter()
+                            .filter_map(|m| {
+                                m.get("alg").and_then(|v| {
+                                    if let ciborium::Value::Integer(n) = v {
+                                        let n: i128 = (*n).into();
+                                        i32::try_from(n).ok()
+                                    } else {
+                                        None
+                                    }
+                                })
+                            })
+                            .collect()
+                    },
+                );
+
+                let supported_algorithms: Vec<String> = algorithms
+                    .iter()
+                    .map(|a| match a {
+                        -7 => "ES256".to_string(),
+                        -8 => "EdDSA".to_string(),
+                        -257 => "RS256".to_string(),
+                        other => format!("COSE({other})"),
+                    })
+                    .collect();
+
+                let pin_protocols: Vec<u8> = info
+                    .pin_protocols
+                    .as_ref().map_or_else(|| vec![1], |pp| pp.iter().filter_map(|&v| u8::try_from(v).ok()).collect());
+
+                let aaguid = if info.aaguid.len() == 16 {
+                    let mut a = [0u8; 16];
+                    a.copy_from_slice(&info.aaguid);
+                    Some(a)
+                } else {
+                    None
+                };
+
+                #[expect(clippy::cast_possible_truncation, reason = "CTAP2 values fit in usize")]
+                let caps = Fido2Capabilities {
+                    resident_keys: rk,
+                    user_presence: up,
+                    user_verification: uv,
+                    hmac_secret,
+                    cred_protect,
+                    max_msg_size: info.max_msg_size.map_or(1024, |v| v as usize),
+                    max_cred_count: info
+                        .max_credential_count_in_list
+                        .map_or(1, |v| v as usize),
+                    algorithms,
+                    pin_protocols,
+                    max_resident_keys: info.remaining_discoverable_credentials.map(|v| v as usize),
+                    max_entropy_size: Some(64),
+                    supported_algorithms,
+                };
+
+                (caps, aaguid, info.versions.clone(), info.extensions)
+            }
+            Err(e) => {
+                tracing::warn!("CTAP2 GetInfo failed, using defaults: {e}");
+                (default_capabilities(), None, vec!["FIDO_2_0".to_string()], Vec::new())
+            }
+        },
+        Err(e) => {
+            tracing::warn!("Cannot open HID device for probing, using defaults: {e}");
+            (default_capabilities(), None, vec!["FIDO_2_0".to_string()], Vec::new())
+        }
+    }
+}
+
+#[cfg(feature = "fido2")]
+fn default_capabilities() -> Fido2Capabilities {
     Fido2Capabilities {
         resident_keys: true,
         user_presence: true,
-        user_verification: true,
-        hmac_secret: true,
+        user_verification: false,
+        hmac_secret: false,
         cred_protect: false,
-        max_msg_size: 7609,
-        max_cred_count: 25,
-        algorithms: vec![-7, -8, -257], // ES256, EdDSA, RS256
-        pin_protocols: vec![1, 2],
-        max_resident_keys: Some(25),
+        max_msg_size: 1024,
+        max_cred_count: 1,
+        algorithms: vec![-7],
+        pin_protocols: vec![1],
+        max_resident_keys: None,
         max_entropy_size: Some(32),
-        supported_algorithms: vec![
-            "ES256".to_string(),
-            "EdDSA".to_string(),
-            "RS256".to_string(),
-        ],
+        supported_algorithms: vec!["ES256".to_string()],
     }
+}
+
+/// Identify manufacturer from VID when sysfs doesn't provide it.
+#[cfg(feature = "fido2")]
+fn identify_manufacturer(vid: u16) -> String {
+    fido2_manufacturer_name(VendorId(vid)).map_or_else(|| format!("VID:{vid:04X}"), str::to_string)
+}
+
+/// Identify product from VID/PID when sysfs doesn't provide it.
+#[cfg(feature = "fido2")]
+fn identify_product(vid: u16, pid: u16) -> String {
+    fido2_product_name(VendorId(vid), ProductId(pid)).map_or_else(|| format!("PID:{pid:04X}"), str::to_string)
 }
 
 #[cfg(test)]

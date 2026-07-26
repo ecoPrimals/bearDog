@@ -54,6 +54,7 @@ fn test_hid_device_info_creation() {
         product: "Solo 2".to_string(),
         serial: "ABC123".to_string(),
         path: "/dev/hidraw0".to_string(),
+        usage_page: None,
     };
 
     assert_eq!(info.vendor_id, VendorId(0x1209));
@@ -73,6 +74,7 @@ fn test_hid_device_info_display() {
         product: "Solo 2".to_string(),
         serial: "ABC123".to_string(),
         path: "/dev/hidraw0".to_string(),
+        usage_page: None,
     };
 
     let display = format!("{info}");
@@ -92,6 +94,7 @@ fn test_hid_device_info_empty_serial() {
         product: "YubiKey 5".to_string(),
         serial: String::new(),
         path: "/dev/hidraw1".to_string(),
+        usage_page: None,
     };
 
     assert!(info.serial.is_empty());
@@ -204,6 +207,7 @@ fn test_hid_device_info_clone() {
         product: "Solo 2".to_string(),
         serial: "ABC123".to_string(),
         path: "/dev/hidraw0".to_string(),
+        usage_page: None,
     };
 
     let info2 = info1.clone();
@@ -251,4 +255,57 @@ fn test_product_id_debug() {
     let debug_str = format!("{pid:?}");
     assert!(debug_str.contains("ProductId"));
     assert!(debug_str.contains("beee") || debug_str.contains("48878")); // hex or decimal
+}
+
+#[test]
+fn test_parse_usage_page_fido2() {
+    // Real Solo 2 report descriptor prefix: 06 D0 F1 = usage page 0xF1D0
+    let descriptor = [0x06, 0xD0, 0xF1, 0x09, 0x01, 0xA1, 0x01];
+    assert_eq!(parse_usage_page_from_descriptor(&descriptor), Some(FIDO_USAGE_PAGE));
+}
+
+#[test]
+fn test_parse_usage_page_generic_desktop() {
+    // Generic Desktop usage page (1-byte): 05 01
+    let descriptor = [0x05, 0x01, 0x09, 0x06];
+    assert_eq!(parse_usage_page_from_descriptor(&descriptor), Some(0x0001));
+}
+
+#[test]
+fn test_parse_usage_page_empty() {
+    assert_eq!(parse_usage_page_from_descriptor(&[]), None);
+}
+
+#[test]
+fn test_is_fido2_interface_with_usage_page() {
+    let fido_info = HidDeviceInfo {
+        vendor_id: VendorId(0x9999),
+        product_id: ProductId(0x8888),
+        manufacturer: "Unknown".to_string(),
+        product: "Unknown".to_string(),
+        serial: String::new(),
+        path: "/dev/hidraw0".to_string(),
+        usage_page: Some(FIDO_USAGE_PAGE),
+    };
+    assert!(is_fido2_interface(&fido_info));
+
+    let non_fido_info = HidDeviceInfo {
+        usage_page: Some(0x0001),
+        ..fido_info.clone()
+    };
+    assert!(!is_fido2_interface(&non_fido_info));
+}
+
+#[test]
+fn test_is_fido2_interface_fallback_to_vid_pid() {
+    let info = HidDeviceInfo {
+        vendor_id: VendorId(0x1209),
+        product_id: ProductId(0xbeee),
+        manufacturer: "SoloKeys".to_string(),
+        product: "Solo 2".to_string(),
+        serial: String::new(),
+        path: "/dev/hidraw0".to_string(),
+        usage_page: None,
+    };
+    assert!(is_fido2_interface(&info));
 }

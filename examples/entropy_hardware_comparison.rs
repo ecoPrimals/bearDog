@@ -388,7 +388,7 @@ fn run_comparison() -> Result<(), BearDogError> {
     println!("═══════════════════════════════════════════════════════════════");
     println!();
 
-    let mut results = Vec::new();
+    let mut results: Vec<EntropyTestResult> = Vec::new();
 
     // Test 1: Software HSM (always available)
     match test_software_hsm(256) {
@@ -400,6 +400,18 @@ fn run_comparison() -> Result<(), BearDogError> {
     }
 
     // Test 2: SoloKey FIDO2
+    #[cfg(feature = "fido2")]
+    {
+        let rt = tokio::runtime::Handle::current();
+        match rt.block_on(test_solokey_entropy(256)) {
+            Ok(result) => {
+                result.print_report();
+                results.push(result);
+            }
+            Err(e) => println!("⚠️  SoloKey test skipped: {e}\n"),
+        }
+    }
+    #[cfg(not(feature = "fido2"))]
     match test_solokey_entropy(256) {
         Ok(result) => {
             result.print_report();

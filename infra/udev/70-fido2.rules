@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# bearDog FIDO2 Security Key udev rules
+#
+# Grants non-root access to FIDO2/CTAP2 security keys via /dev/hidraw*.
+# Install: sudo cp 70-fido2.rules /etc/udev/rules.d/
+# Reload:  sudo udevadm control --reload-rules && sudo udevadm trigger
+#
+# TAG+="uaccess" grants access to the active login session via systemd-logind.
+# On systems without systemd, use GROUP="plugdev", MODE="0660" instead and
+# add your user to the plugdev group: sudo usermod -aG plugdev $USER
+
+# --- SoloKeys (Solo 2, Solo 1, Somu) ---
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1209", ATTRS{idProduct}=="beee", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1209", ATTRS{idProduct}=="b000", TAG+="uaccess"
+
+# --- Yubico (YubiKey 5 series, Security Key series, all models) ---
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1050", TAG+="uaccess"
+
+# --- Google Titan Security Key ---
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="096e", ATTRS{idProduct}=="0858", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="096e", ATTRS{idProduct}=="0859", TAG+="uaccess"
+
+# --- Feitian Technologies ---
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="096e", TAG+="uaccess"
+
+# --- Generic FIDO2 CTAPHID usage page (udev >= 244) ---
+# Covers any compliant FIDO2 authenticator regardless of vendor.
+# Requires kernel/udev support for usage_page attribute.
+SUBSYSTEM=="hidraw", KERNEL=="hidraw*", ATTRS{usage_page}=="f1d0", TAG+="uaccess"

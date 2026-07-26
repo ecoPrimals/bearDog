@@ -36,5 +36,5 @@ async fn stub_health_uses_deterministic_metrics() {
     )));
     let s = m.get_health_status().await.expect("health");
     assert!(s.is_healthy);
-    assert_eq!(s.performance_metrics.operations_per_second, 42.0);
+    assert_eq!(s.performance_metrics.operations_per_second, 0.0);
 }

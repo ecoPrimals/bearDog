@@ -266,31 +266,30 @@ impl HsmProviderRegistry {
         }
 
         if let Ok(sb) = crate::tunnel::hsm::android_strongbox::AndroidStrongBoxHsm::with_defaults()
+            && beardog_traits::hsm::HsmKeyProvider::is_available(&sb)
         {
-            if beardog_traits::hsm::HsmKeyProvider::is_available(&sb) {
-                info!("HSM registry: registered android-strongbox provider");
-                registry.providers.push(Arc::new(
-                    crate::tunnel::hsm::HsmKeyProviderBackend::AndroidStrongBox(sb),
-                ));
-            }
+            info!("HSM registry: registered android-strongbox provider");
+            registry.providers.push(Arc::new(
+                crate::tunnel::hsm::HsmKeyProviderBackend::AndroidStrongBox(sb),
+            ));
         }
 
-        if let Ok(dpapi) = crate::tunnel::hsm::windows_dpapi::WindowsDpapiHsm::new() {
-            if beardog_traits::hsm::HsmKeyProvider::is_available(&dpapi) {
-                info!("HSM registry: registered windows-dpapi provider");
-                registry.providers.push(Arc::new(
-                    crate::tunnel::hsm::HsmKeyProviderBackend::WindowsDpapi(dpapi),
-                ));
-            }
+        if let Ok(dpapi) = crate::tunnel::hsm::windows_dpapi::WindowsDpapiHsm::new()
+            && beardog_traits::hsm::HsmKeyProvider::is_available(&dpapi)
+        {
+            info!("HSM registry: registered windows-dpapi provider");
+            registry.providers.push(Arc::new(
+                crate::tunnel::hsm::HsmKeyProviderBackend::WindowsDpapi(dpapi),
+            ));
         }
 
-        if let Ok(ss) = crate::tunnel::hsm::linux_secret_service::LinuxSecretServiceHsm::new() {
-            if beardog_traits::hsm::HsmKeyProvider::is_available(&ss) {
-                info!("HSM registry: registered linux-secret-service provider");
-                registry.providers.push(Arc::new(
-                    crate::tunnel::hsm::HsmKeyProviderBackend::LinuxSecretService(ss),
-                ));
-            }
+        if let Ok(ss) = crate::tunnel::hsm::linux_secret_service::LinuxSecretServiceHsm::new()
+            && beardog_traits::hsm::HsmKeyProvider::is_available(&ss)
+        {
+            info!("HSM registry: registered linux-secret-service provider");
+            registry.providers.push(Arc::new(
+                crate::tunnel::hsm::HsmKeyProviderBackend::LinuxSecretService(ss),
+            ));
         }
 
         registry

@@ -23,9 +23,9 @@
 //! to the appropriate implementation:
 //!
 //! - **Stub / in-memory**: non-Android hosts and unit tests (deterministic)
-//! - **Keystore2Cli**: production Android — delegates to `/system/bin/keystore_cli_v2`
-//!   for real hardware-backed StrongBox / TEE operations via the platform's Keystore2 binder
-//! - **AndroidJni**: reserved slot for future direct Binder IPC transport
+//! - **`Keystore2Cli`**: production Android — delegates to `/system/bin/keystore_cli_v2`
+//!   for real hardware-backed `StrongBox` / TEE operations via the platform's Keystore2 binder
+//! - **`AndroidJni`**: reserved slot for future direct Binder IPC transport
 //!
 //! New transports slot in by adding an enum variant + trait impl — zero changes
 //! to any code above `KeystoreTransportBackend` in the call stack.
@@ -97,7 +97,7 @@ pub enum KeystoreTransportBackend {
     /// Android: Keystore JNI adapter (in-memory stub in tests; fail-closed in production).
     AndroidJni(AndroidJniKeystoreTransport),
     /// Android: Keystore2 CLI transport — delegates to `keystore_cli_v2` for real
-    /// hardware-backed StrongBox / TEE operations via the platform's Keystore2 binder service.
+    /// hardware-backed `StrongBox` / TEE operations via the platform's Keystore2 binder service.
     Keystore2Cli(Keystore2CliTransport),
 }
 
@@ -571,17 +571,9 @@ impl HealthMetricsTransport for HealthMetricsTransportBackend {
 }
 
 /// Deterministic metrics for unit tests and non-Android hosts.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct StubHealthMetricsTransport {
     metrics: status::PerformanceMetrics,
-}
-
-impl Default for StubHealthMetricsTransport {
-    fn default() -> Self {
-        Self {
-            metrics: status::PerformanceMetrics::default(),
-        }
-    }
 }
 
 impl StubHealthMetricsTransport {
@@ -619,7 +611,14 @@ pub struct AndroidJniHealthMetricsTransport {
     start: std::time::Instant,
 }
 
+impl Default for AndroidJniHealthMetricsTransport {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AndroidJniHealthMetricsTransport {
+    /// Creates a new transport that tracks uptime from instantiation.
     #[must_use]
     pub fn new() -> Self {
         Self {

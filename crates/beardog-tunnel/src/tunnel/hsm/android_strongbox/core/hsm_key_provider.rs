@@ -35,7 +35,15 @@ impl HsmKeyProvider for AndroidStrongBoxHsm {
             ]),
             hardware_backed: self.keystore.is_strongbox_available(),
             supports_key_export: false,
-            max_keys: super::super::MAX_KEY_COUNT as u32,
+            max_keys: {
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "MAX_KEY_COUNT is 256, well within u32 range"
+                )]
+                {
+                    super::super::MAX_KEY_COUNT as u32
+                }
+            },
         }
     }
 
@@ -56,7 +64,7 @@ impl HsmKeyProvider for AndroidStrongBoxHsm {
                 HsmAlgorithm::EcdsaP256 => ("EC", 256),
                 HsmAlgorithm::HmacSha256 => ("HMAC", 256),
                 other => {
-                    return Err(BearDogError::unsupported_operation(&format!(
+                    return Err(BearDogError::unsupported_operation(format!(
                         "{other} not supported in StrongBox"
                     )));
                 }

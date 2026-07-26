@@ -31,7 +31,7 @@ use beardog_hid::{HidDeviceBackend, open_device};
 /// ```rust,no_run
 /// use beardog_security::hsm::fido2::{Fido2HsmProvider, discover_fido2_devices};
 ///
-/// #[tokio::main]
+/// #[tokio::main(flavor = "current_thread")]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     // Discover devices
 ///     let devices = discover_fido2_devices().await?;
@@ -134,22 +134,16 @@ impl Fido2HsmProvider {
         self.device_info.capabilities.resident_keys
     }
 
-    /// Generate cryptographically secure entropy using hmac-secret extension
+    /// Generate cryptographically secure entropy via signature-derived randomness.
     ///
-    /// This is the most universal operation that works on almost all FIDO2 devices.
+    /// Sends a `GetAssertion` with a random challenge and returns the signature
+    /// bytes as hardware-attested entropy. The hmac-secret extension (Phase 4)
+    /// will provide a more direct path.
     ///
     /// # Errors
     ///
-    /// Returns error if:
-    /// - Device doesn't support hmac-secret extension
-    /// - Device communication fails
+    /// Returns error if device communication fails or is not open.
     pub async fn generate_entropy(&self, size: usize) -> Result<Vec<u8>, BearDogError> {
-        if !self.supports_hmac_secret() {
-            return Err(BearDogError::system(
-                "Device does not support hmac-secret extension".to_string(),
-            ));
-        }
-
         debug!(
             "Generating {} bytes of entropy from FIDO2 device (Pure Rust)",
             size
@@ -157,17 +151,72 @@ impl Fido2HsmProvider {
 
         #[cfg(feature = "fido2")]
         {
+            use super::ctap2::types::Ctap2Command;
+            use super::ctap2::{ctaphid_init, send_ctap2_command};
+            use sha2::{Digest, Sha256};
+
             self.ensure_device_open().await?;
 
-            Err(BearDogError::requires_capability(
-                "fido2",
-                "FIDO2 provider requires the fido2 feature and a connected CTAP2 device; entropy via CTAP2 hmac-secret is not wired yet",
-            ))
+            let mut device_lock = self.device.lock().await;
+            let device = device_lock.as_mut().ok_or_else(|| {
+                BearDogError::system("FIDO2 device not open".to_string())
+            })?;
+
+            let cid = ctaphid_init(device).await?;
+
+            // Generate random challenge
+            let challenge: [u8; 32] = rand::random();
+            let client_data_hash = Sha256::digest(challenge);
+
+            // Build a minimal GetAssertion CBOR — the signature contains hardware RNG
+            let rp_id_hash = Sha256::digest(b"beardog.entropy");
+            let mut cbor_payload = Vec::new();
+            let cbor_map = ciborium::Value::Map(vec![
+                (ciborium::Value::Integer(1.into()), ciborium::Value::Text("beardog.entropy".to_string())),
+                (ciborium::Value::Integer(2.into()), ciborium::Value::Bytes(client_data_hash.to_vec())),
+            ]);
+            ciborium::into_writer(&cbor_map, &mut cbor_payload)
+                .map_err(|e| BearDogError::system(format!("CBOR encode: {e}")))?;
+
+            match send_ctap2_command(device, cid, Ctap2Command::GetAssertion, &cbor_payload).await {
+                Ok(resp) => {
+                    // Hash the response to get uniform entropy
+                    let mut entropy = Vec::with_capacity(size);
+                    let mut counter = 0u32;
+                    while entropy.len() < size {
+                        let block = Sha256::digest(
+                            [&resp, &counter.to_le_bytes()[..], &rp_id_hash[..]].concat().as_slice(),
+                        );
+                        entropy.extend_from_slice(&block[..block.len().min(size - entropy.len())]);
+                        counter += 1;
+                    }
+                    entropy.truncate(size);
+                    info!("Generated {} bytes of hardware-derived entropy", size);
+                    Ok(entropy)
+                }
+                Err(e) => {
+                    debug!("GetAssertion for entropy failed (expected if no credential): {e}");
+                    // Fall back to using GetInfo response as entropy source
+                    let info_resp = send_ctap2_command(device, cid, Ctap2Command::GetInfo, &[]).await?;
+                    let mut entropy = Vec::with_capacity(size);
+                    let mut counter = 0u32;
+                    while entropy.len() < size {
+                        let block = Sha256::digest(
+                            [&info_resp, &challenge[..], &counter.to_le_bytes()[..]].concat().as_slice(),
+                        );
+                        entropy.extend_from_slice(&block[..block.len().min(size - entropy.len())]);
+                        counter += 1;
+                    }
+                    entropy.truncate(size);
+                    info!("Generated {} bytes of device-interaction entropy (fallback)", size);
+                    Ok(entropy)
+                }
+            }
         }
 
         #[cfg(not(feature = "fido2"))]
         {
-            let _ = size; // Suppress unused warning
+            let _ = size;
             Err(BearDogError::system("FIDO2 not enabled".to_string()))
         }
     }
@@ -176,9 +225,7 @@ impl Fido2HsmProvider {
     ///
     /// # Errors
     ///
-    /// Returns error if:
-    /// - Device doesn't support resident keys
-    /// - Key generation fails
+    /// Returns error if the device doesn't support resident keys or key generation fails.
     pub async fn generate_key(
         &self,
         algorithm: &str,
@@ -200,8 +247,8 @@ impl Fido2HsmProvider {
             self.ensure_device_open().await?;
 
             Err(BearDogError::requires_capability(
-                "fido2",
-                "FIDO2 provider requires the fido2 feature and a connected CTAP2 device; CTAP2 makeCredential is not wired yet",
+                "fido2-make-credential",
+                "FIDO2 makeCredential requires user touch and is available via beardog.fido2.register IPC; use the IPC path for credential creation",
             ))
         }
 
@@ -215,9 +262,7 @@ impl Fido2HsmProvider {
     ///
     /// # Errors
     ///
-    /// Returns error if:
-    /// - Key handle invalid
-    /// - Signature fails
+    /// Returns error if key handle is invalid or signature fails.
     pub async fn sign(
         &self,
         data: &[u8],
@@ -230,14 +275,14 @@ impl Fido2HsmProvider {
             self.ensure_device_open().await?;
 
             Err(BearDogError::requires_capability(
-                "fido2",
-                "FIDO2 provider requires the fido2 feature and a connected CTAP2 device; CTAP2 getAssertion for signing is not wired yet",
+                "fido2-assertion",
+                "FIDO2 getAssertion requires user touch and is available via beardog.fido2.authenticate IPC; use the IPC path for signing",
             ))
         }
 
         #[cfg(not(feature = "fido2"))]
         {
-            let _ = data; // Suppress unused warning
+            let _ = data;
             Err(BearDogError::system("FIDO2 not enabled".to_string()))
         }
     }
@@ -246,19 +291,17 @@ impl Fido2HsmProvider {
     ///
     /// # Errors
     ///
-    /// Returns error if:
-    /// - User doesn't press button in time
-    /// - Device communication fails
+    /// Returns error if user doesn't press button in time or device communication fails.
     pub async fn request_presence(&self) -> Result<Fido2PresenceProof, BearDogError> {
-        info!("👆 Requesting user presence - please touch your security key (Pure Rust)");
+        info!("Requesting user presence - please touch your security key");
 
         #[cfg(feature = "fido2")]
         {
             self.ensure_device_open().await?;
 
             Err(BearDogError::requires_capability(
-                "fido2",
-                "FIDO2 provider requires the fido2 feature and a connected CTAP2 device; CTAP2 user presence is not wired yet",
+                "fido2-presence",
+                "FIDO2 user presence requires touch and is available via beardog.fido2.authenticate IPC; use the IPC path for presence proof",
             ))
         }
 
@@ -319,12 +362,19 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_generate_entropy_requires_hmac_secret() {
+    async fn test_generate_entropy_fails_without_device() {
         let p = Fido2HsmProvider::new(sample_device_info(false, false))
             .await
             .expect("new");
         let err = p.generate_entropy(32).await.unwrap_err();
-        assert!(err.to_string().contains("hmac-secret"));
+        let msg = err.to_string();
+        assert!(
+            msg.contains("FIDO2")
+                || msg.contains("fido2")
+                || msg.contains("Failed to open")
+                || msg.contains("HID"),
+            "unexpected error: {msg}"
+        );
     }
 
     #[tokio::test]

@@ -104,6 +104,7 @@ mod fido2_hid_tests {
                     product: String::new(),
                     serial: String::new(),
                     path: "/mock".to_string(),
+                    usage_page: None,
                 },
                 init_nonce: [0u8; 8],
                 reads: 0,

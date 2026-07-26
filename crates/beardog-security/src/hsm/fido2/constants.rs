@@ -12,6 +12,9 @@ pub const MAX_KEEPALIVE_ATTEMPTS: usize = 150;
 /// HID read poll interval in milliseconds (sleep between non-blocking reads)
 pub const HID_READ_TIMEOUT_MS: u64 = 200;
 
+/// Post-CTAPHID_INIT settle time before sending commands (milliseconds)
+pub const CTAPHID_CHANNEL_SETTLE_MS: u64 = 50;
+
 /// Standard HID packet size in bytes
 pub const HID_PACKET_SIZE: usize = 64;
 

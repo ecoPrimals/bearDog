@@ -12,11 +12,11 @@ use crate::tunnel::hsm::linux_secret_service::LinuxSecretServiceHsm;
 use crate::tunnel::hsm::software_hsm::RustSoftwareHsm;
 use crate::tunnel::hsm::windows_dpapi::WindowsDpapiHsm;
 
-/// Canonical `HsmKeyProvider` dispatch enum for the tunnel crate.
+/// Canonical [`HsmKeyProvider`](beardog_traits::hsm::HsmKeyProvider) dispatch enum for the tunnel crate.
 pub enum HsmKeyProviderBackend {
     /// In-process Rust/software HSM.
     Software(RustSoftwareHsm),
-    /// Android StrongBox (hardware).
+    /// Android `StrongBox` (hardware).
     AndroidStrongBox(AndroidStrongBoxHsm),
     /// Windows DPAPI (keys bound to user/machine credentials).
     WindowsDpapi(WindowsDpapiHsm),

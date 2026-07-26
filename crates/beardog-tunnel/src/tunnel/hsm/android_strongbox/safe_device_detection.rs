@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Safe Android Device Detection
+//! Safe Android device detection.
 //!
-//! Platform-safe detection of Android device capabilities and StrongBox implementation
+//! Platform-safe detection of Android device capabilities and `StrongBox` implementation.
 
 use crate::tunnel::hsm::android_strongbox::types::{
     AndroidDeviceInfo, StrongBoxImplementation, VerifiedBootState,
@@ -10,7 +10,7 @@ use crate::tunnel::hsm::android_strongbox::types::{
 use beardog_errors::BearDogError;
 use tracing::{debug, info};
 
-/// Detects the StrongBox implementation on the current Android device
+/// Detects the `StrongBox` implementation on the current Android device.
 ///
 /// # Errors
 /// Returns error if device detection fails
@@ -37,7 +37,7 @@ pub fn detect_strongbox_implementation() -> Result<StrongBoxImplementation, Bear
     }
 }
 
-/// Detects Google Pixel StrongBox (Titan M)
+/// Detects Google Pixel `StrongBox` (Titan M).
 fn detect_google_strongbox(
     device_info: &AndroidDeviceInfo,
 ) -> Result<StrongBoxImplementation, BearDogError> {
@@ -55,7 +55,7 @@ fn detect_google_strongbox(
     }
 }
 
-/// Detects Samsung StrongBox (Knox)
+/// Detects Samsung `StrongBox` (Knox).
 fn detect_samsung_strongbox(
     device_info: &AndroidDeviceInfo,
 ) -> Result<StrongBoxImplementation, BearDogError> {
@@ -72,7 +72,7 @@ fn detect_samsung_strongbox(
     }
 }
 
-/// Detects Qualcomm SPU StrongBox
+/// Detects Qualcomm SPU `StrongBox`.
 fn detect_qualcomm_strongbox(
     device_info: &AndroidDeviceInfo,
 ) -> Result<StrongBoxImplementation, BearDogError> {
@@ -87,9 +87,9 @@ fn detect_qualcomm_strongbox(
     })
 }
 
-/// Detects MediaTek HSM StrongBox
+/// Detects `MediaTek` `HSM` `StrongBox`.
 fn detect_mediatek_strongbox(
-    device_info: &AndroidDeviceInfo,
+    _device_info: &AndroidDeviceInfo,
 ) -> Result<StrongBoxImplementation, BearDogError> {
     let features = vec![
         "aes256".to_string(),
@@ -102,7 +102,7 @@ fn detect_mediatek_strongbox(
     Ok(StrongBoxImplementation::MediaTekHsm { features })
 }
 
-/// Checks if StrongBox is available on the device
+/// Checks if `StrongBox` is available on the device.
 ///
 /// # Errors
 /// Returns error if availability check fails
@@ -152,7 +152,7 @@ fn detect_device_info() -> Result<AndroidDeviceInfo, BearDogError> {
 /// Checks if Samsung Knox is available
 fn detect_knox_availability(device_info: &AndroidDeviceInfo) -> Result<bool, BearDogError> {
     if cfg!(target_os = "android") {
-        Ok(device_info.model.contains("Galaxy") && device_info.android_version >= "9".to_string())
+        Ok(device_info.model.contains("Galaxy") && device_info.android_version.as_str() >= "9")
     } else {
         debug!("Non-Android platform: Knox unavailable (host build)");
         Ok(false)
@@ -183,6 +183,7 @@ const fn is_android_platform() -> bool {
 }
 
 /// Reads an Android system property via `getprop`.
+#[cfg(test)]
 fn android_getprop(prop: &str) -> Option<String> {
     std::process::Command::new("getprop")
         .arg(prop)
@@ -198,7 +199,8 @@ fn android_getprop(prop: &str) -> Option<String> {
         })
 }
 
-/// Gets the Android device model string
+/// Gets the Android device model string.
+#[cfg(test)]
 fn get_device_model() -> Result<String, BearDogError> {
     if cfg!(target_os = "android") {
         Ok(android_getprop("ro.product.model").unwrap_or_else(|| "unknown".to_string()))
@@ -207,7 +209,8 @@ fn get_device_model() -> Result<String, BearDogError> {
     }
 }
 
-/// Gets the Android device manufacturer string
+/// Gets the Android device manufacturer string.
+#[cfg(test)]
 fn get_device_manufacturer() -> Result<String, BearDogError> {
     if cfg!(target_os = "android") {
         Ok(android_getprop("ro.product.manufacturer").unwrap_or_else(|| "Unknown".to_string()))
@@ -215,7 +218,7 @@ fn get_device_manufacturer() -> Result<String, BearDogError> {
         Ok("Unknown".to_string())
     }
 }
-/// Detects Pixel generation from model string
+/// Detects Pixel generation from model string.
 #[must_use]
 pub fn detect_pixel_generation(model: &str) -> u32 {
     if model.contains("Pixel 8") {
@@ -232,10 +235,8 @@ pub fn detect_pixel_generation(model: &str) -> u32 {
         3
     } else if model.contains("Pixel 2") {
         2
-    } else if model.contains("Pixel") {
-        1
     } else {
-        0
+        u32::from(model.contains("Pixel"))
     }
 }
 

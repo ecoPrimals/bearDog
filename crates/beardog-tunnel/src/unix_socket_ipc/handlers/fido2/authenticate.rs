@@ -31,7 +31,7 @@ use tracing::info;
 ///   "credential_id": "<base64>"
 /// }
 /// ```
-pub fn handle_fido2_authenticate(
+pub async fn handle_fido2_authenticate(
     params: Option<&Value>,
 ) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for beardog.fido2.authenticate")?;

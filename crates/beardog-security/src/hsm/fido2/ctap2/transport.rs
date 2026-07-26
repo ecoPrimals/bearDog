@@ -1,11 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! CTAPHID framing and CTAP2 command I/O over HID.
+//!
+//! # Transport Dedup Assessment (Wave 152)
+//!
+//! Two CTAPHID transports exist in the codebase:
+//!
+//! 1. **This module** (`beardog-security/fido2/ctap2/transport.rs`) — lightweight,
+//!    used internally for discovery (`GetInfo`) and `Fido2HsmProvider` entropy.
+//!    Generic over `D: HidDevice`.
+//!
+//! 2. **`beardog-tunnel/solo_v2/hid_transport.rs`** — production-grade transport
+//!    with CANCEL before INIT (stale session abort), drain loop, `TapTimingEntropy`
+//!    for human temporal entropy, `Ctap2Transport` trait with `Ctap2TransportBackend`
+//!    enum dispatch, and `MockCtap2Transport` for testing.
+//!
+//! **Decision:** Keep both for now. This transport serves the HSM provider layer
+//! (simple fire-and-forget commands like `GetInfo` / entropy). The tunnel transport
+//! serves user-facing IPC operations (`MakeCredential`, `GetAssertion`) that need
+//! timing metadata and ceremony orchestration. When `beardog-hid` grows a
+//! `ctaphid` submodule, both can migrate to the shared implementation.
 
-use super::super::constants::{HID_PACKET_SIZE, HID_READ_TIMEOUT_MS, MAX_KEEPALIVE_ATTEMPTS};
+use super::super::constants::{
+    CTAPHID_CHANNEL_SETTLE_MS, HID_PACKET_SIZE, HID_READ_TIMEOUT_MS, MAX_KEEPALIVE_ATTEMPTS,
+};
 use super::types::{Ctap2Command, Ctap2Status, CtapHidCommand};
 use beardog_errors::BearDogError;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 /// Initialize CTAPHID channel (Pure Rust) and get channel ID
 ///
@@ -49,16 +70,18 @@ pub async fn ctaphid_init<D: beardog_hid::HidDevice + ?Sized>(
 
     debug!("📤 Sent CTAPHID_INIT");
 
-    // Read response (with poll loop for non-blocking HID)
+    // Read response (with poll loop for non-blocking HID + EAGAIN retry)
     let mut response = vec![0u8; 64];
     let mut bytes_read = 0;
     for _poll in 0..25 {
-        bytes_read = device
-            .read(&mut response)
-            .await
-            .map_err(|e| BearDogError::system(format!("CTAPHID_INIT read failed: {e}")))?;
-        if bytes_read > 0 {
-            break;
+        match device.read(&mut response).await {
+            Ok(n) if n > 0 => {
+                bytes_read = n;
+                break;
+            }
+            Ok(_) => {}
+            Err(e) if is_eagain(&e) => {}
+            Err(e) => return Err(BearDogError::system(format!("CTAPHID_INIT read failed: {e}"))),
         }
         tokio::time::sleep(tokio::time::Duration::from_millis(HID_READ_TIMEOUT_MS)).await;
     }
@@ -99,7 +122,7 @@ pub async fn ctaphid_init<D: beardog_hid::HidDevice + ?Sized>(
     info!("✅ Channel initialized: CID = 0x{:08X}", cid);
 
     // Give device a moment to process channel initialization
-    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    tokio::time::sleep(tokio::time::Duration::from_millis(CTAPHID_CHANNEL_SETTLE_MS)).await;
 
     Ok(cid)
 }
@@ -221,10 +244,18 @@ pub async fn send_ctap2_command<D: beardog_hid::HidDevice + ?Sized>(
 
     for attempt in 1..=MAX_KEEPALIVE_ATTEMPTS {
         let mut buf = vec![0u8; HID_PACKET_SIZE];
-        let n = device
-            .read(&mut buf)
-            .await
-            .map_err(|e| BearDogError::system(format!("HID read failed: {e}")))?;
+        let n = match device.read(&mut buf).await {
+            Ok(n) => n,
+            Err(e) if is_eagain(&e) => {
+                debug!(
+                    "   Attempt {}/{}: EAGAIN — polling in {}ms",
+                    attempt, MAX_KEEPALIVE_ATTEMPTS, HID_READ_TIMEOUT_MS
+                );
+                tokio::time::sleep(tokio::time::Duration::from_millis(HID_READ_TIMEOUT_MS)).await;
+                continue;
+            }
+            Err(e) => return Err(BearDogError::system(format!("HID read failed: {e}"))),
+        };
 
         if n == 0 {
             debug!(
@@ -257,10 +288,10 @@ pub async fn send_ctap2_command<D: beardog_hid::HidDevice + ?Sized>(
         }
 
         if assembled.is_empty() {
-            // First (initialization) packet
-            if b4 != CtapHidCommand::Cbor.as_u8() {
+            // First (initialization) packet — accept CBOR (0x90) or MSG (0x83)
+            if b4 != CtapHidCommand::Cbor.as_u8() && b4 != 0x83 {
                 return Err(BearDogError::system(format!(
-                    "Expected CTAPHID_CBOR (0x90), got 0x{b4:02x}"
+                    "Expected CTAPHID_CBOR (0x90) or MSG (0x83), got 0x{b4:02x}"
                 )));
             }
             if n < 7 {
@@ -330,4 +361,10 @@ pub async fn send_ctap2_command<D: beardog_hid::HidDevice + ?Sized>(
 
     // Return payload (everything after status byte)
     Ok(assembled[1..].to_vec())
+}
+
+/// Check whether a `BearDogError` wraps an EAGAIN / `WouldBlock` I/O error.
+fn is_eagain(e: &BearDogError) -> bool {
+    let msg = e.to_string();
+    msg.contains("os error 11") || msg.contains("temporarily unavailable") || msg.contains("WouldBlock")
 }

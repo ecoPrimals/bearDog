@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Safe Android StrongBox HSM Implementation
+//! Safe Android `StrongBox` HSM implementation.
 //!
-//! This module provides a memory-safe interface to Android StrongBox hardware security.
+//! This module provides a memory-safe interface to Android `StrongBox` hardware security.
 //! All operations are designed to avoid unchecked memory patterns while maintaining security guarantees.
 
 use beardog_config::env_keys;
@@ -10,24 +10,29 @@ use beardog_errors::BearDogError;
 use tracing::info;
 use types::VerifiedBootState;
 
-/// Maximum challenge size for StrongBox attestation (bytes)
+/// Maximum challenge size for `StrongBox` attestation (bytes).
 pub const MAX_CHALLENGE_SIZE: usize = 64;
 
-/// Maximum number of keys supported in StrongBox
+/// Maximum number of keys supported in `StrongBox`.
 pub const MAX_KEY_COUNT: usize = 256;
 
-/// Minimum Android version for StrongBox support (Android 11+)
+/// Minimum Android version for `StrongBox` support (Android 11+).
 pub const SUPPORTED_ANDROID_VERSION: u32 = 11;
 
-/// Module version
+/// Module version string.
 pub const VERSION: &str = "1.0.0";
 
+/// Platform-safe Android device capability detection.
 pub mod safe_device_detection;
+/// Canonical Android `StrongBox` type definitions.
 pub mod types;
 // NOTE: safe_keystore_replacement.rs was removed (Jan 2026)
 // Functionality provided by safe_native_wrapper instead
+/// Core `StrongBox` HSM provider implementation.
 pub mod core;
+/// Safe Android hardware provider with capability-based dispatch.
 pub mod safe_android_provider;
+/// Safe native wrapper for JNI-backed operations.
 pub mod safe_native_wrapper;
 
 // Explicit imports to avoid ambiguity
@@ -38,9 +43,9 @@ pub use safe_device_detection::*;
 pub use safe_native_wrapper::SafeAndroidKeystore;
 pub use types::AndroidDeviceInfo;
 
-/// Safe Android StrongBox Manager
+/// Safe Android `StrongBox` manager.
 ///
-/// Provides high-level interface to Android StrongBox hardware security module
+/// Provides high-level interface to Android `StrongBox` hardware security module
 /// without using unchecked memory patterns.
 pub struct SafeAndroidStrongBoxManager {
     keystore: SafeAndroidKeystore,
@@ -48,9 +53,10 @@ pub struct SafeAndroidStrongBoxManager {
 }
 
 impl SafeAndroidStrongBoxManager {
-    /// Creates a new SafeAndroidStrongBoxManager instance
+    /// Creates a new [`SafeAndroidStrongBoxManager`] instance.
     ///
     /// # Errors
+    ///
     /// Returns an error if device detection or keystore initialization fails.
     pub async fn new() -> Result<Self, BearDogError> {
         info!("🤖 Initializing SafeAndroidStrongBoxManager - safe Rust only");
@@ -63,21 +69,22 @@ impl SafeAndroidStrongBoxManager {
             device_info,
         })
     }
-    /// Returns device information
+    /// Returns device information.
     #[must_use]
     pub const fn device_info(&self) -> &AndroidDeviceInfo {
         &self.device_info
     }
-    /// Returns keystore operations interface
+    /// Returns keystore operations interface.
     #[must_use]
     pub const fn keystore(&self) -> &SafeAndroidKeystore {
         &self.keystore
     }
 }
 
-/// Safe Android device information retrieval
+/// Safe Android device information retrieval.
 ///
 /// # Errors
+///
 /// Returns an error if device information cannot be retrieved.
 pub async fn safe_get_android_device_info() -> Result<AndroidDeviceInfo, BearDogError> {
     info!("📱 Safe Android device detection starting");
@@ -116,9 +123,10 @@ pub async fn safe_get_android_device_info() -> Result<AndroidDeviceInfo, BearDog
     Ok(device_info)
 }
 
-/// Factory function to create SafeAndroidStrongBoxManager
+/// Factory function to create [`SafeAndroidStrongBoxManager`].
 ///
 /// # Errors
+///
 /// Returns an error if manager creation fails.
 pub async fn create_safe_android_strongbox() -> Result<SafeAndroidStrongBoxManager, BearDogError> {
     SafeAndroidStrongBoxManager::new().await

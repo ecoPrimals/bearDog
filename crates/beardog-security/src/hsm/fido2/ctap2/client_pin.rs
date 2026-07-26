@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! CTAP2 ClientPIN Protocol (pinProtocol 1)
+//! CTAP2 `ClientPIN` Protocol (pinProtocol 1)
 //!
 //! Implements the authenticatorClientPIN command for:
 //! - Getting the authenticator's key agreement public key
@@ -27,12 +27,13 @@ use super::types::Ctap2Command;
 /// PIN protocol version used by this implementation.
 const PIN_PROTOCOL: u64 = 1;
 
-/// ClientPIN subcommands per CTAP2 spec.
+/// `ClientPIN` subcommands per CTAP2 spec.
 #[repr(u8)]
 enum SubCommand {
     GetRetries = 0x01,
     GetKeyAgreement = 0x02,
     SetPin = 0x03,
+    #[expect(dead_code, reason = "ChangePin protocol available but not yet exercised")]
     ChangePin = 0x04,
     GetPinToken = 0x05,
 }
@@ -65,7 +66,7 @@ impl PinToken {
 ///
 /// 1. Get authenticator's platform key via `getKeyAgreement`
 /// 2. Generate ephemeral P-256 key pair
-/// 3. Compute shared secret = SHA-256(ECDH(ephemeral, authenticator_key).x)
+/// 3. Compute shared secret = SHA-256(ECDH(ephemeral, `authenticator_key).x`)
 /// 4. Pad PIN to 64 bytes, encrypt with AES-256-CBC(shared_secret, IV=0)
 /// 5. Compute pinUvAuthParam = left(HMAC-SHA-256(shared_secret, newPinEnc), 16)
 /// 6. Send `setPIN` command
@@ -230,9 +231,9 @@ pub async fn get_retries<D: HidDevice + ?Sized>(device: &mut D) -> Result<u64, B
 
 // --- Internal helpers ---
 
-/// Encode a ClientPIN CBOR command with the given subcommand and optional extra fields.
+/// Encode a `ClientPIN` CBOR command with the given subcommand and optional extra fields.
 ///
-/// All ClientPIN commands share the same base structure:
+/// All `ClientPIN` commands share the same base structure:
 /// `{ 1: pinUvAuthProtocol, 2: subCommand, ...extra }`.
 fn encode_client_pin_cmd(
     sub: SubCommand,
@@ -257,7 +258,7 @@ fn encode_client_pin_cmd(
     Ok(body)
 }
 
-/// Get the authenticator's key agreement public key (COSE_Key).
+/// Get the authenticator's key agreement public key (`COSE_Key`).
 async fn get_key_agreement<D: HidDevice + ?Sized>(
     device: &mut D,
     cid: u32,
@@ -308,7 +309,7 @@ fn aes256_cbc_encrypt_zero_iv(key: &[u8; 32], plaintext: &[u8]) -> Result<Vec<u8
     use aes_gcm::aes::Aes256;
     use aes_gcm::aes::cipher::{BlockEncrypt, KeyInit};
 
-    if plaintext.len() % 16 != 0 {
+    if !plaintext.len().is_multiple_of(16) {
         return Err(BearDogError::system(
             "AES-CBC plaintext must be a multiple of 16 bytes".to_string(),
         ));
@@ -337,7 +338,7 @@ fn aes256_cbc_decrypt_zero_iv(key: &[u8; 32], ciphertext: &[u8]) -> Result<Vec<u
     use aes_gcm::aes::Aes256;
     use aes_gcm::aes::cipher::{BlockDecrypt, KeyInit};
 
-    if ciphertext.len() % 16 != 0 {
+    if !ciphertext.len().is_multiple_of(16) {
         return Err(BearDogError::system(
             "AES-CBC ciphertext must be a multiple of 16 bytes".to_string(),
         ));
@@ -400,18 +401,14 @@ fn encode_public_key_cose(key: &PublicKey) -> CborValue {
     ])
 }
 
-/// Parse a COSE_Key (EC2, P-256) from a CTAP2 response map (key 1 = keyAgreement).
+/// Parse a `COSE_Key` (EC2, P-256) from a CTAP2 response map (key 1 = keyAgreement).
 fn parse_cose_p256_pubkey(cbor: &CborValue) -> Result<PublicKey, BearDogError> {
-    let map = match cbor {
-        CborValue::Map(m) => m,
-        _ => {
-            return Err(BearDogError::system(
-                "Expected CBOR map in getKeyAgreement response".to_string(),
-            ));
-        }
+    let CborValue::Map(map) = cbor else {
+        return Err(BearDogError::system(
+            "Expected CBOR map in getKeyAgreement response".to_string(),
+        ));
     };
 
-    // Find key 1 (keyAgreement)
     let cose_key = map
         .iter()
         .find_map(|(k, v)| match k {
@@ -422,13 +419,10 @@ fn parse_cose_p256_pubkey(cbor: &CborValue) -> Result<PublicKey, BearDogError> {
             BearDogError::system("Missing keyAgreement (key 1) in response".to_string())
         })?;
 
-    let cose_map = match cose_key {
-        CborValue::Map(m) => m,
-        _ => {
-            return Err(BearDogError::system(
-                "keyAgreement is not a CBOR map".to_string(),
-            ));
-        }
+    let CborValue::Map(cose_map) = cose_key else {
+        return Err(BearDogError::system(
+            "keyAgreement is not a CBOR map".to_string(),
+        ));
     };
 
     // Extract x (key -2) and y (key -3)
@@ -474,9 +468,8 @@ fn parse_cose_p256_pubkey(cbor: &CborValue) -> Result<PublicKey, BearDogError> {
 
 /// Extract a bytes value from a CBOR map by integer key.
 fn extract_bytes_from_map(cbor: &CborValue, key: i128) -> Result<Vec<u8>, BearDogError> {
-    let map = match cbor {
-        CborValue::Map(m) => m,
-        _ => return Err(BearDogError::system("Expected CBOR map".to_string())),
+    let CborValue::Map(map) = cbor else {
+        return Err(BearDogError::system("Expected CBOR map".to_string()));
     };
 
     map.iter()
@@ -492,9 +485,8 @@ fn extract_bytes_from_map(cbor: &CborValue, key: i128) -> Result<Vec<u8>, BearDo
 
 /// Extract an integer value from a CBOR map by integer key.
 fn extract_integer_from_map(cbor: &CborValue, key: i128) -> Result<u64, BearDogError> {
-    let map = match cbor {
-        CborValue::Map(m) => m,
-        _ => return Err(BearDogError::system("Expected CBOR map".to_string())),
+    let CborValue::Map(map) = cbor else {
+        return Err(BearDogError::system("Expected CBOR map".to_string()));
     };
 
     map.iter()

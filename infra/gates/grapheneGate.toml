@@ -1,0 +1,23 @@
+# grapheneGate — Android Hardware Security Device
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+[device]
+name = "grapheneGate"
+type = "mobile"
+os = "GrapheneOS (Android)"
+arch = "aarch64-linux-android"
+connection = "adb-over-usb"
+host = "eastGate"
+
+[capabilities]
+# Android StrongBox HSM
+strongbox = true
+# Android Keystore for key operations
+keystore = true
+# Hardware-backed attestation
+hw_attestation = true
+
+[status]
+registered = "2026-01-01"
+active = true
+notes = "Connected to eastGate via ADB for validation and deployment."

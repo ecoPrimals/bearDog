@@ -42,10 +42,9 @@ fn test_android_keystore_creation() -> Result<(), Box<dyn std::error::Error>> {
     let config = AndroidHsmConfig::default();
     let keystore = AndroidKeystore::with_stub_transport(config)?;
 
-    // Stub constructor reports all capabilities as true (software emulation).
-    // Real hardware detection would gate these on target_os = "android".
-    assert!(keystore.capabilities.strongbox_available);
-    assert!(keystore.capabilities.hardware_backed_keystore);
+    // On non-Android hosts, stub reports no hardware capabilities.
+    assert!(!keystore.capabilities.strongbox_available);
+    assert!(!keystore.capabilities.hardware_backed_keystore);
     Ok(())
 }
 
@@ -79,7 +78,7 @@ async fn test_android_health_monitor() -> Result<(), Box<dyn std::error::Error>>
 
     let status = monitor.get_health_status().await?;
     assert!(status.is_healthy);
-    assert_eq!(status.performance_metrics.operations_per_second, 42.0);
+    assert_eq!(status.performance_metrics.operations_per_second, 0.0);
     Ok(())
 }
 

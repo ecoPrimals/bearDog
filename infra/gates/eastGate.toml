@@ -1,0 +1,23 @@
+# eastGate — Primary Development Workstation
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+[device]
+name = "eastGate"
+type = "workstation"
+arch = "x86_64-unknown-linux-gnu"
+os = "Linux (Pop!_OS / Ubuntu-based)"
+
+[capabilities]
+# USB HID for FIDO2 security keys
+fido2_usb = true
+# Android device attached via ADB (grapheneGate)
+adb_host = true
+# Full Rust toolchain with cross-compilation
+rust_toolchain = true
+
+[peripherals]
+solokey_v2 = { vid = "1209", pid = "beee", status = "active" }
+
+[status]
+registered = "2026-01-01"
+active = true
