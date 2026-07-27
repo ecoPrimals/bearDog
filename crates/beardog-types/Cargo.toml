@@ -8,7 +8,7 @@ repository = "https://github.com/ecoPrimals/beardog"
 authors = ["BearDog Team <beardog@ecoprimals.dev>"]
 readme = "README.md"
 keywords = ["types", "security", "distributed", "canonical", "beardog"]
-categories = ["data-structures", "rust-patterns"]
+categories = ["data-structures"]
 documentation = "https://docs.rs/beardog-types"
 rust-version = "1.93.0"
 homepage.workspace = true
@@ -18,7 +18,7 @@ workspace = true
 
 [dependencies]
 # BearDog internal crates
-beardog-config = { path = "../beardog-config" }
+beardog-config = { workspace = true }
 
 serde = { workspace = true, features = ["rc"] }
 serde_json = { workspace = true }
@@ -68,5 +68,5 @@ name = "config_benchmarks"
 harness = false
 
 [dependencies.beardog-errors]
-path = "../beardog-errors"
+workspace = true
 

@@ -18,9 +18,10 @@ name = "beardog-integration-tests"
 version.workspace = true
 edition = "2024"
 description = "beardog-integration-tests component of BearDog security ecosystem"
+publish = false
 readme = "README.md"
 license = "AGPL-3.0-or-later"
-homepage = "https://github.com/ecoPrimals/beardog"
+homepage.workspace = true
 repository = "https://github.com/ecoPrimals/beardog"
 authors = [ "BearDog Security Team",]
 keywords = [ "security", "hsm", "threat-detection", "compliance", "workflow",]
@@ -29,28 +30,28 @@ rust-version = "1.93.0"
 documentation = "https://docs.rs/beardog"
 
 [dependencies.beardog-core]
-path = "../beardog-core"
+workspace = true
 
 [dependencies.beardog-errors]
-path = "../beardog-errors"
+workspace = true
 
 [dependencies.beardog-types]
-path = "../beardog-types"
+workspace = true
 
 [dependencies.beardog-security]
-path = "../beardog-security"
+workspace = true
 
 [dependencies.beardog-tunnel]
-path = "../beardog-tunnel"
+workspace = true
 
 [dependencies.beardog-genetics]
-path = "../beardog-genetics"
+workspace = true
 
 [dependencies.beardog-auth]
-path = "../beardog-auth"
+workspace = true
 
 [dependencies.beardog-utils]
-path = "../beardog-utils"
+workspace = true
 
 [dependencies.tokio]
 workspace = true

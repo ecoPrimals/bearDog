@@ -10,7 +10,8 @@ authors = [ "BearDog Team <team@beardog.dev>",]
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "security", "crypto", "beardog", "encryption", "hsm",]
-categories = [ "cryptography", "security", "development-tools",]
+readme = "README.md"
+categories = [ "cryptography", "development-tools",]
 
 [lints]
 workspace = true
@@ -81,11 +82,11 @@ workspace = true
 workspace = true
 
 [dependencies.beardog-traits]
-path = "../beardog-traits"
+workspace = true
 
 # FIDO2-specific dependencies (Pure Rust - ecoBin compliant)
 [dependencies.beardog-hid]
-path = "../beardog-hid"
+workspace = true
 optional = true
 
 [dependencies.ciborium]

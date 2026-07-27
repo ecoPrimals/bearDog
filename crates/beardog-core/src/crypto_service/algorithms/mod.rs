@@ -1,29 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Cryptographic algorithms
+//! Cryptographic algorithms — re-exported from [`beardog_crypto`].
+//!
+//! The canonical implementations live in the `beardog-crypto` crate.
+//! This module re-exports them for backward compatibility.
 
-// Allow pedantic lints for algorithm implementations
-// These functions have comprehensive documentation and error handling
-// The `# Errors` sections would be repetitive (all return "encryption/decryption failed")
-#![allow(
-    clippy::missing_errors_doc,
-    reason = "algorithm error docs would be repetitive — all return crypto-op-failed"
-)]
-#![allow(
-    clippy::double_must_use,
-    reason = "inner Result + must_use on fn is intentional for crypto APIs"
-)]
+pub use beardog_crypto::asymmetric;
+pub use beardog_crypto::discovery;
+pub use beardog_crypto::hashing;
+pub use beardog_crypto::symmetric;
 
-/// Public-key and signature primitives exposed through the crypto service.
-pub mod asymmetric;
-/// Capability and algorithm discovery helpers.
-pub mod discovery;
-/// Hashing helpers (e.g. BLAKE3, SHA-2) for the crypto service.
-pub mod hashing;
-/// Symmetric encryption and AEAD helpers.
-pub mod symmetric;
-
-pub use asymmetric::*;
-pub use discovery::*;
-pub use hashing::*;
-pub use symmetric::*;
+pub use beardog_crypto::asymmetric::*;
+pub use beardog_crypto::discovery::*;
+pub use beardog_crypto::hashing::*;
+pub use beardog_crypto::symmetric::*;

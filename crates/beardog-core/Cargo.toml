@@ -6,7 +6,8 @@ rust-version = "1.93.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "core", "ecosystem", "beardog", "orchestration", "management",]
-categories = [ "development-tools", "ecosystem", "orchestration",]
+categories = [ "development-tools",]
+readme = "README.md"
 license = "AGPL-3.0-or-later"
 
 [lints]
@@ -55,41 +56,44 @@ workspace = true
 [package.authors]
 workspace = true
 
+[dependencies.beardog-crypto]
+workspace = true
+
 [dependencies.beardog-utils]
-path = "../beardog-utils"
+workspace = true
 
 [dependencies.beardog-config]
-path = "../beardog-config"
+workspace = true
 
 [dependencies.beardog-errors]
-path = "../beardog-errors"
+workspace = true
 
 [dependencies.beardog-types]
-path = "../beardog-types"
+workspace = true
 
 [dependencies.beardog-traits]
-path = "../beardog-traits"
+workspace = true
 
 [dependencies.beardog-security]
-path = "../beardog-security"
+workspace = true
 
 [dependencies.beardog-genetics]
-path = "../beardog-genetics"
+workspace = true
 
 [dependencies.beardog-monitoring]
-path = "../beardog-monitoring"
+workspace = true
 
 [dependencies.beardog-auth]
-path = "../beardog-auth"
+workspace = true
 
 [dependencies.beardog-threat]
 workspace = true
 
 [dependencies.beardog-adapters]
-path = "../beardog-adapters"
+workspace = true
 
 [dependencies.beardog-discovery]
-path = "../beardog-discovery"
+workspace = true
 
 [dependencies.tokio]
 workspace = true

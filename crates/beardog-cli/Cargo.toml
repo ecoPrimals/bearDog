@@ -7,6 +7,7 @@ homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "cli", "command-line", "beardog", "management", "tools",]
 categories = [ "command-line-utilities", "development-tools",]
+readme = "README.md"
 license = "AGPL-3.0-or-later"
 
 [package.version]
@@ -23,9 +24,9 @@ workspace = true
 
 [dependencies]
 argon2.workspace = true
-beardog-security = { path = "../beardog-security" }
-beardog-acme = { path = "../beardog-acme" }
-beardog-ipc = { path = "../beardog-ipc" }  # Neural API registration
+beardog-security = { workspace = true }
+beardog-acme = { workspace = true }
+beardog-ipc = { workspace = true }  # Neural API registration
 chacha20poly1305 = { workspace = true }
 hkdf = { workspace = true }
 pbkdf2 = { workspace = true }
@@ -40,7 +41,7 @@ workspace = true
 workspace = true
 
 [dependencies.beardog-tunnel]
-path = "../beardog-tunnel"
+workspace = true
 
 [dependencies.rustls-rustcrypto]
 workspace = true
@@ -86,16 +87,16 @@ workspace = true
 workspace = true
 
 [dependencies.beardog-genetics]
-path = "../beardog-genetics"
+workspace = true
 
 [dependencies.beardog-types]
-path = "../beardog-types"
+workspace = true
 
 [dependencies.beardog-config]
 workspace = true
 
 [dependencies.beardog-tower-atomic]
-path = "../beardog-tower-atomic"
+workspace = true
 
 [dependencies.blake3]
 workspace = true

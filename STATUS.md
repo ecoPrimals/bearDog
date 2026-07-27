@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 26, 2026 (Wave 154 — HSM Agnostic Evolution + Transport Abstraction)
+**Last Updated**: July 27, 2026 (Wave 155 — Chimera Phase 0 + crates.io Audit)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant; 2 monoliths refactored Wave 119 (server.rs→7 files, orchestrator.rs→10 files) |
-| **Tests** | 13,995 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,005 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | all 4 pass | 2 advisory ignores (RSA Marvin, `paste`); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned; TLS backend is Pure Rust `rustls-rustcrypto` |
@@ -33,7 +33,7 @@
 
 ## Codebase Metrics
 
-- **Crates**: 25 workspace members
+- **Crates**: 27 workspace members (including `beardog-crypto` + `libtower`)
 - **Rust Files**: 1,947 (crates + src + tests; excludes showcase/examples)
 - **JSON-RPC Methods**: 231 dispatchable (219 registry + 12 pre-dispatch gate) — see `docs/PRIMAL_CONTRACTS.md` v4.2.0 for category breakdown
 - **`#[allow(`**: 99 (all carry `reason`)
@@ -89,6 +89,15 @@
 ---
 
 ## Recent Improvements
+
+### Wave 155 — Chimera Phase 0 + crates.io Audit (Jul 27, 2026)
+
+- **`beardog-crypto` crate extracted**: Core crypto algorithms (Ed25519, X25519, ChaCha20-Poly1305, AES-GCM, BLAKE3, SHA-2/3, HMAC, HKDF, Argon2) extracted from `beardog-core` into standalone lean crate (deps: only `beardog-errors` + `beardog-types` + RustCrypto)
+- **`libtower` cdylib shipped**: 565K `.so` (Linux x86_64), 446K (Android ARM64) with 8 C ABI exports (`tower_hash_blake3`, `tower_sign_ed25519`, `tower_verify_ed25519`, `tower_encrypt_chacha20`, `tower_hmac_sha256`, `tower_capabilities`, `tower_version`, `tower_last_error`). Validated on grapheneGate via ADB.
+- **crates.io metadata audit**: All 27 crate `Cargo.toml` files fixed — invalid categories replaced, `readme` wired, `homepage` unified, `publish = false` on 8 internal/test crates, `version + path` on all workspace deps
+- **`rustls-rustcrypto` git dep investigated**: crates.io `0.0.2-alpha` pins vulnerable `rustls-webpki 0.102.x` — git dep required until upstream publishes stable release (only remaining hard blocker for G6 public flip)
+- **21 orphaned files deleted**: -3,329 lines of corrupted/unwired debris across monitoring, threat, tunnel crates
+- **`beardog-errors` dry-run passes**: First crate validated for crates.io publishing
 
 ### Wave 154 — HSM Agnostic Evolution + Transport Abstraction (Jul 26, 2026)
 

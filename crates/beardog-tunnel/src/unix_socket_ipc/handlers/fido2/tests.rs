@@ -10,12 +10,14 @@ use serde_json::json;
 fn fido2_handler_method_list() {
     let handler = Fido2Handler::new();
     let methods = handler.methods();
-    assert_eq!(methods.len(), 5);
+    assert_eq!(methods.len(), 7);
     assert!(methods.contains(&"beardog.fido2.discover"));
     assert!(methods.contains(&"beardog.fido2.register"));
     assert!(methods.contains(&"beardog.fido2.authenticate"));
     assert!(methods.contains(&"beardog.fido2.entropy"));
     assert!(methods.contains(&"beardog.fido2.ceremony"));
+    assert!(methods.contains(&"beardog.fido2.attest_enrollment"));
+    assert!(methods.contains(&"fido2.verify_attestation"));
 }
 
 #[tokio::test]

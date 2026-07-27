@@ -6,6 +6,7 @@ authors.workspace = true
 description = "Tower Atomic client for BearDog lineage API - Pure Rust Unix socket IPC"
 license.workspace = true
 repository.workspace = true
+publish = false
 readme = "README.md"
 keywords = ["beardog", "lineage", "client", "ipc", "sovereignty"]
 categories = ["network-programming", "api-bindings", "cryptography"]
@@ -16,7 +17,7 @@ workspace = true
 [dependencies]
 # Tower Atomic client (Pure Rust IPC via Unix sockets!)
 beardog-tower-atomic = { workspace = true }
-beardog-config = { path = "../beardog-config" }
+beardog-config = { workspace = true }
 
 # Async runtime
 tokio = { workspace = true, features = ["rt", "macros", "net", "io-util", "sync"] }

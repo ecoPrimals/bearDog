@@ -1,0 +1,41 @@
+[package]
+name = "beardog-crypto"
+description = "Pure Rust cryptographic primitives for the BearDog Tower Atomic pattern"
+readme = "README.md"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/ecoPrimals/beardog"
+homepage.workspace = true
+keywords = ["cryptography", "aead", "ed25519", "blake3", "pure-rust"]
+categories = ["cryptography", "algorithms", "no-std"]
+
+[lints]
+workspace = true
+
+[dependencies]
+beardog-errors = { workspace = true }
+beardog-types = { workspace = true }
+serde = { workspace = true }
+
+# RustCrypto primitives (100% pure Rust)
+ed25519-dalek = { workspace = true }
+x25519-dalek = { workspace = true }
+sha2 = { workspace = true }
+sha3 = { workspace = true }
+aes-gcm = { workspace = true }
+chacha20poly1305 = { workspace = true }
+p256 = { workspace = true }
+rsa = { workspace = true }
+blake3 = { workspace = true }
+hmac = { workspace = true }
+hkdf = { workspace = true }
+argon2 = { workspace = true }
+rand = { workspace = true }
+base64 = { workspace = true }
+hex = { workspace = true }
+zeroize = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["full"] }

@@ -5,16 +5,17 @@ edition = "2024"
 description = "Pure Rust HID interface - ecoBin compliant, zero C dependencies"
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/ecoPrimals/beardog"
+homepage.workspace = true
 authors = ["BearDog Team <team@beardog.dev>"]
 readme = "README.md"
 keywords = ["hid", "usb", "fido2", "hardware", "pure-rust"]
-categories = ["hardware-support", "os", "no-std"]
+categories = ["hardware-support", "os", "no-std::no-alloc"]
 
 [lints]
 workspace = true
 
 [dependencies]
-beardog-errors = { path = "../beardog-errors" }
+beardog-errors = { workspace = true }
 tokio = { workspace = true, features = ["rt", "macros", "fs", "io-util"] }
 tracing = { workspace = true }
 

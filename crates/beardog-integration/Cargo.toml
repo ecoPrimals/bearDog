@@ -8,6 +8,7 @@ license = "AGPL-3.0-or-later"
 repository = "https://github.com/ecoPrimals/beardog"
 homepage = "https://beardog.dev"
 documentation = "https://docs.beardog.dev"
+publish = false
 readme = "README.md"
 keywords = ["integration", "upa", "songbird", "federation", "orchestration"]
 categories = ["network-programming", "api-bindings"]

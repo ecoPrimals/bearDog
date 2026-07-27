@@ -14,10 +14,11 @@
 //! - **Extensible**: New algorithms auto-discovered when added
 
 use beardog_types::crypto_service::{CryptoAlgorithm, SignatureAlgorithm};
+use serde::Serialize;
 use std::collections::HashMap;
 
 /// Algorithm capability information
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct AlgorithmCapability {
     /// Algorithm name (human-readable)
     pub name: String,
@@ -39,7 +40,7 @@ pub struct AlgorithmCapability {
 }
 
 /// Algorithm type categories
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub enum AlgorithmType {
     /// Symmetric encryption (AES, `ChaCha20`)
     SymmetricEncryption,
@@ -58,7 +59,7 @@ pub enum AlgorithmType {
 }
 
 /// Performance tier based on benchmarks and hardware
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub enum PerformanceTier {
     /// Extremely fast (hardware-accelerated, > 1 GB/s)
     VeryHigh,

@@ -11,6 +11,7 @@ homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "utilities", "helpers", "beardog", "ecosystem", "tools",]
 categories = [ "development-tools", "data-structures", "algorithms",]
+readme = "README.md"
 
 [lints]
 workspace = true

@@ -232,28 +232,29 @@ criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 # CLI
 clap = { version = "4.4", features = ["derive", "env"] }
 
-# BearDog internal crates
-beardog-types = { path = "crates/beardog-types" }
-beardog-errors = { path = "crates/beardog-errors" }
-beardog-core = { path = "crates/beardog-core" }
-beardog-config = { path = "crates/beardog-config" }
-beardog-tunnel = { path = "crates/beardog-tunnel" }
-beardog-auth = { path = "crates/beardog-auth" }
-beardog-genetics = { path = "crates/beardog-genetics" }
-beardog-adapters = { path = "crates/beardog-adapters" }
-beardog-monitoring = { path = "crates/beardog-monitoring" }
-beardog-ipc = { path = "crates/beardog-ipc" }
-beardog-security = { path = "crates/beardog-security" }
-beardog-traits = { path = "crates/beardog-traits" }
-beardog-utils = { path = "crates/beardog-utils" }
-beardog-cli = { path = "crates/beardog-cli" }
-beardog-capabilities = { path = "crates/beardog-capabilities" }
-beardog-hid = { path = "crates/beardog-hid" }
-beardog-tower-atomic = { path = "crates/beardog-tower-atomic" }
-beardog-discovery = { path = "crates/beardog-discovery" }
-beardog-threat = { path = "crates/beardog-threat" }
-beardog-compliance = { path = "crates/beardog-compliance" }
-beardog-acme = { path = "crates/beardog-acme" }
+# BearDog internal crates (version + path for crates.io publishing)
+beardog-types = { version = "0.9.0", path = "crates/beardog-types" }
+beardog-errors = { version = "0.9.0", path = "crates/beardog-errors" }
+beardog-core = { version = "0.9.0", path = "crates/beardog-core" }
+beardog-crypto = { version = "0.9.0", path = "crates/beardog-crypto" }
+beardog-config = { version = "0.9.0", path = "crates/beardog-config" }
+beardog-tunnel = { version = "0.9.0", path = "crates/beardog-tunnel" }
+beardog-auth = { version = "0.9.0", path = "crates/beardog-auth" }
+beardog-genetics = { version = "0.9.0", path = "crates/beardog-genetics" }
+beardog-adapters = { version = "0.9.0", path = "crates/beardog-adapters" }
+beardog-monitoring = { version = "0.9.0", path = "crates/beardog-monitoring" }
+beardog-ipc = { version = "0.9.0", path = "crates/beardog-ipc" }
+beardog-security = { version = "0.9.0", path = "crates/beardog-security" }
+beardog-traits = { version = "0.9.0", path = "crates/beardog-traits" }
+beardog-utils = { version = "0.9.0", path = "crates/beardog-utils" }
+beardog-cli = { version = "0.9.0", path = "crates/beardog-cli" }
+beardog-capabilities = { version = "0.9.0", path = "crates/beardog-capabilities" }
+beardog-hid = { version = "0.9.0", path = "crates/beardog-hid" }
+beardog-tower-atomic = { version = "0.9.0", path = "crates/beardog-tower-atomic" }
+beardog-discovery = { version = "0.9.0", path = "crates/beardog-discovery" }
+beardog-threat = { version = "0.9.0", path = "crates/beardog-threat" }
+beardog-compliance = { version = "0.9.0", path = "crates/beardog-compliance" }
+beardog-acme = { version = "0.9.0", path = "crates/beardog-acme" }
 
 [package]
 name = "beardog"

@@ -6,7 +6,8 @@ rust-version = "1.93.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "monitoring", "observability", "metrics", "beardog", "health",]
-categories = [ "development-tools", "monitoring", "observability",]
+categories = [ "development-tools",]
+readme = "README.md"
 license = "AGPL-3.0-or-later"
 
 [package.version]

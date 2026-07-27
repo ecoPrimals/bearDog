@@ -14,7 +14,8 @@ authors = [ "BearDog Team <team@beardog.dev>",]
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "deployment", "automation", "beardog", "orchestration", "devops",]
-categories = [ "development-tools", "deployment", "automation",]
+categories = [ "development-tools",]
+publish = false
 readme = "README.md"
 
 [lints]
@@ -38,10 +39,10 @@ workspace = true
 features = [ "rt", "rt-multi-thread", "process", "fs", "time", "io-util", "macros",]
 
 [dependencies.beardog-config]
-path = "../beardog-config"
+workspace = true
 
 [dependencies.beardog-errors]
-path = "../beardog-errors"
+workspace = true
 
 [dependencies.chrono]
 workspace = true

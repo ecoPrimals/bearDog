@@ -6,6 +6,7 @@ authors.workspace = true
 description = "Tower Atomic - cross-platform IPC JSON-RPC client for inter-primal communication"
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
 readme = "README.md"
 keywords = ["ipc", "json-rpc", "unix-sockets", "inter-primal", "tower-atomic"]
 categories = ["network-programming", "asynchronous"]

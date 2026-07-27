@@ -25,7 +25,7 @@ uuid = { workspace = true }
 chrono = { workspace = true }
 tracing = { workspace = true }
 zeroize = { workspace = true }
-beardog-config = { path = "../beardog-config" }
+beardog-config = { workspace = true }
 beardog-errors = { workspace = true }
 
 # Optional: mDNS discovery

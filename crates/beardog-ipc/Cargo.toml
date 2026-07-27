@@ -6,6 +6,8 @@ license.workspace = true
 authors.workspace = true
 description = "Inter-process communication layer for BearDog - Unix sockets, JSON-RPC"
 repository = "https://github.com/ecoPrimals/beardog"
+homepage.workspace = true
+readme = "README.md"
 keywords = ["ipc", "json-rpc", "unix-socket", "beardog"]
 categories = ["network-programming", "asynchronous"]
 
@@ -14,11 +16,11 @@ workspace = true
 
 [dependencies]
 # BearDog core types
-beardog-core = { path = "../beardog-core" }
-beardog-config = { path = "../beardog-config" }
-beardog-discovery = { path = "../beardog-discovery" }
-beardog-errors = { path = "../beardog-errors" }
-beardog-types = { path = "../beardog-types" }
+beardog-core = { workspace = true }
+beardog-config = { workspace = true }
+beardog-discovery = { workspace = true }
+beardog-errors = { workspace = true }
+beardog-types = { workspace = true }
 
 # Core async runtime
 tokio = { workspace = true, features = ["rt", "macros", "net", "io-util", "sync", "time", "fs"] }

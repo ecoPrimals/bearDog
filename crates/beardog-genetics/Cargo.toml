@@ -6,7 +6,8 @@ rust-version = "1.93.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "genetics", "evolution", "algorithms", "beardog", "computation",]
-categories = [ "algorithms", "science", "development-tools",]
+categories = [ "algorithms", "development-tools",]
+readme = "README.md"
 license = "AGPL-3.0-or-later"
 
 [lints]
@@ -49,7 +50,7 @@ workspace = true
 workspace = true
 
 [dependencies.beardog-security]
-path = "../beardog-security"
+workspace = true
 
 [dependencies.beardog-types]
 workspace = true

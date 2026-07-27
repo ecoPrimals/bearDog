@@ -7,10 +7,11 @@ description = "Unified trait system for BearDog ecosystem - provides common abst
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/ecoPrimals/beardog"
 keywords = [ "beardog", "traits", "security", "genetics", "abstraction",]
-categories = [ "cryptography", "security", "data-structures",]
+categories = [ "cryptography", "data-structures",]
 rust-version = "1.93.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
+readme = "README.md"
 
 [lints]
 workspace = true

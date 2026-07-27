@@ -6,7 +6,8 @@ authors = ["BearDog Team"]
 description = "Configuration management for BearDog with zero hardcoding"
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/ecoPrimals/beardog"
-readme = "../README.md"
+homepage.workspace = true
+readme = "README.md"
 keywords = ["config", "configuration", "beardog", "security", "hsm"]
 categories = ["config", "cryptography"]
 
@@ -15,7 +16,7 @@ workspace = true
 
 [dependencies]
 # Error handling
-beardog-errors = { path = "../beardog-errors" }
+beardog-errors = { workspace = true }
 thiserror = { workspace = true }
 
 # Serialization formats

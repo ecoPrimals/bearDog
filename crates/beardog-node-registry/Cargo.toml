@@ -7,6 +7,8 @@ homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = ["security", "distributed", "registry", "p2p", "coordination"]
 categories = ["cryptography", "network-programming", "web-programming"]
+publish = false
+readme = "README.md"
 license = "AGPL-3.0-or-later"
 
 [package.version]
@@ -19,7 +21,7 @@ workspace = true
 workspace = true
 
 [dependencies.beardog-config]
-path = "../beardog-config"
+workspace = true
 
 [dependencies.beardog-errors]
 workspace = true
@@ -28,7 +30,7 @@ workspace = true
 workspace = true
 
 [dependencies.beardog-security]
-path = "../beardog-security"
+workspace = true
 
 [dependencies.tokio]
 workspace = true

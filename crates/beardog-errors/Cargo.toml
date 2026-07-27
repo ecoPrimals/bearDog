@@ -11,7 +11,7 @@ readme = "README.md"
 authors = ["BearDog Team <beardog@ecoprimals.dev>"]
 rust-version = "1.93.0"
 keywords = ["error-handling", "security", "distributed", "rust", "beardog"]
-categories = ["development-tools::debugging", "rust-patterns"]
+categories = ["development-tools", "data-structures"]
 
 [dependencies.chrono]
 workspace = true

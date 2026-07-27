@@ -6,7 +6,8 @@ rust-version = "1.93.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "tunnel", "secure", "communication", "beardog", "networking",]
-categories = [ "network-programming", "security", "development-tools",]
+readme = "README.md"
+categories = [ "network-programming", "development-tools",]
 license = "AGPL-3.0-or-later"
 
 [lints]
@@ -14,19 +15,19 @@ workspace = true
 
 [dependencies]
 # BearDog internal crates
-beardog-config = { path = "../beardog-config" }
-beardog-errors = { path = "../beardog-errors" }
-beardog-genetics = { path = "../beardog-genetics" }
-beardog-types = { path = "../beardog-types" }
-beardog-capabilities = { path = "../beardog-capabilities" }
-beardog-security = { path = "../beardog-security" }
-beardog-monitoring = { path = "../beardog-monitoring" }
-beardog-auth = { path = "../beardog-auth" }
+beardog-config = { workspace = true }
+beardog-errors = { workspace = true }
+beardog-genetics = { workspace = true }
+beardog-types = { workspace = true }
+beardog-capabilities = { workspace = true }
+beardog-security = { workspace = true }
+beardog-monitoring = { workspace = true }
+beardog-auth = { workspace = true }
 beardog-threat = { workspace = true }
-beardog-core = { path = "../beardog-core" }
-beardog-utils = { path = "../beardog-utils" }
-beardog-traits = { path = "../beardog-traits" }
-beardog-ipc = { path = "../beardog-ipc" }  # Songbird IPC client (Primal IPC Protocol)
+beardog-core = { workspace = true }
+beardog-utils = { workspace = true }
+beardog-traits = { workspace = true }
+beardog-ipc = { workspace = true }  # Songbird IPC client (Primal IPC Protocol)
 
 # External dependencies
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "net", "io-util", "sync", "time", "fs", "signal"] }
@@ -73,7 +74,7 @@ futures = { workspace = true }
 subtle = { workspace = true }  # Constant-time comparisons for Dark Forest challenge-response
 
 # Pure Rust HID implementation (ecoBin compliant — no C dependencies)
-beardog-hid = { path = "../beardog-hid", optional = true }
+beardog-hid = { workspace = true, optional = true }
 ciborium = { workspace = true, optional = true }
 
 base64 = { workspace = true }  # Aligned with workspace version (0.21 → 0.22 upgrade eliminates dep duplication)

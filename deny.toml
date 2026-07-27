@@ -37,8 +37,8 @@ confidence-threshold = 0.8
 unknown-registry = "deny"
 unknown-git = "deny"
 allow-git = [
-    # Pure-Rust CryptoProvider — tracks RustCrypto/rustls-rustcrypto main
-    # until a stable crates.io release is published.
+    # Pure-Rust CryptoProvider — crates.io 0.0.2-alpha pins stale rustls-webpki
+    # 0.102.x with security advisory. Using git main until stable release.
     "https://github.com/RustCrypto/rustls-rustcrypto",
 ]
 
