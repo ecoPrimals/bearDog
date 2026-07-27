@@ -9,8 +9,10 @@
 //! - **Tier 1**: Unix sockets (Linux, macOS) - preferred
 //! - **Tier 2**: TCP (Android, Windows, cross-device) - universal fallback
 
+#[cfg(feature = "tls-gateway")]
 mod acme;
 mod attestation;
+#[cfg(feature = "tls-gateway")]
 mod gateway;
 mod health;
 mod registration;
@@ -22,7 +24,9 @@ mod tests;
 pub use transport::{resolve_effective_tcp_listen, resolve_server_socket_path};
 
 use crate::ServerArgs;
-use beardog_config::env_keys::{self, resolve_primal_name};
+#[cfg(feature = "tls-gateway")]
+use beardog_config::env_keys;
+use beardog_config::env_keys::resolve_primal_name;
 use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
 use beardog_ipc::{discover_neural_api_socket, register_with_neural_api, send_primal_announce};
@@ -36,7 +40,6 @@ use beardog_tunnel::tunnel::hsm::{HsmProviderBackend, HsmTier, SoftwareHsmConfig
 use std::sync::Arc;
 use tracing::{info, warn};
 
-use self::acme::start_acme_gateway;
 use self::attestation::build_neural_attestation;
 use self::health::run_health_socket;
 use self::registration::attempt_orchestrator_registration;
@@ -311,26 +314,29 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     // Best-effort orchestrator registry registration (non-fatal per PRIMAL IPC Protocol v3.1)
     attempt_orchestrator_registration(&socket_path, tcp_addr.as_deref()).await;
 
-    // Gatehouse mode: bearDog owns :443 (TLS) + :80 (ACME challenges + HTTPS redirect).
-    // Activated by BEARDOG_GATEHOUSE_MODE=true OR BEARDOG_TLS_MODE=acme.
-    let gatehouse_active = std::env::var(env_keys::ENV_GATEHOUSE_MODE)
-        .ok()
-        .is_some_and(|v| v.eq_ignore_ascii_case("true") || v == "1")
-        || std::env::var(env_keys::ENV_TLS_MODE)
+    // Gatehouse mode: TLS termination + ACME. DEPRECATED — songBird owns
+    // network transport. Enable via `--features tls-gateway` if needed.
+    #[cfg(feature = "tls-gateway")]
+    {
+        let gatehouse_active = std::env::var(env_keys::ENV_GATEHOUSE_MODE)
             .ok()
-            .is_some_and(|v| v.eq_ignore_ascii_case("acme"));
+            .is_some_and(|v| v.eq_ignore_ascii_case("true") || v == "1")
+            || std::env::var(env_keys::ENV_TLS_MODE)
+                .ok()
+                .is_some_and(|v| v.eq_ignore_ascii_case("acme"));
 
-    if gatehouse_active {
-        let gateway = start_acme_gateway().await?;
-        let https_port = std::env::var(env_keys::ENV_HTTPS_PORT)
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(443u16);
-        tokio::spawn(gateway::serve_https_gateway(gateway.acceptor, https_port));
-        info!(
-            https_port,
-            "GATEHOUSE active: :443 TLS gateway + :80 ACME/redirect → upstream peer"
-        );
+        if gatehouse_active {
+            let gw = acme::start_acme_gateway().await?;
+            let https_port = std::env::var(env_keys::ENV_HTTPS_PORT)
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(443u16);
+            tokio::spawn(gateway::serve_https_gateway(gw.acceptor, https_port));
+            info!(
+                https_port,
+                "GATEHOUSE active: :443 TLS gateway + :80 ACME/redirect → upstream peer"
+            );
+        }
     }
 
     // Health socket: lightweight plaintext listener for monitoring probes.

@@ -127,7 +127,7 @@ tls-server = ["dep:rustls", "dep:tokio-rustls", "dep:rustls-pki-types", "dep:rus
 # `ecosystem` removed: no cfg(feature) gate existed in source — dead flag.
 # `android_native` removed: emitted by build.rs on Android targets but
 # never checked via cfg(feature) in Rust source — dead flag.
-default = ["tls-x509", "tls-server"]
+default = ["tls-x509"]
 
 [package.version]
 workspace = true

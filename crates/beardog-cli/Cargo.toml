@@ -25,7 +25,7 @@ workspace = true
 [dependencies]
 argon2.workspace = true
 beardog-security = { workspace = true }
-beardog-acme = { workspace = true }
+beardog-acme = { workspace = true, optional = true }
 beardog-ipc = { workspace = true }  # Neural API registration
 chacha20poly1305 = { workspace = true }
 hkdf = { workspace = true }
@@ -45,6 +45,7 @@ workspace = true
 
 [dependencies.rustls-rustcrypto]
 workspace = true
+optional = true
 
 [dependencies.tokio]
 workspace = true
@@ -111,3 +112,4 @@ serde_json = { workspace = true }
 
 [features]
 default = []
+tls-gateway = ["dep:beardog-acme", "dep:rustls-rustcrypto", "beardog-tunnel/tls-server"]

@@ -495,7 +495,7 @@ enum HsmCommands {
 
 #[tokio::main]
 async fn main() -> Result<(), BearDogError> {
-    // Install pure-Rust TLS crypto provider before any TLS/ACME operations.
+    #[cfg(feature = "tls-gateway")]
     let _ = rustls_rustcrypto::provider().install_default();
 
     let cli = Cli::parse();

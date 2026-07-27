@@ -6,7 +6,9 @@
 
 use crate::btsp_handshake::BtspSecurityMode;
 use crate::btsp_provider::BeardogBtspProvider;
-use crate::method_gate::{CallerContext, MethodGate};
+#[cfg(feature = "tls-server")]
+use crate::method_gate::CallerContext;
+use crate::method_gate::MethodGate;
 use crate::tcp_ipc::rate_limiter::{ConnectionRateLimiter, RateLimitConfig};
 use crate::unix_socket_ipc::handlers::HandlerRegistry;
 use beardog_config::env_keys::resolve_primal_name;
