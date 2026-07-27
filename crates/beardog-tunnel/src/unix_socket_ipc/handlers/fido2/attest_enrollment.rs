@@ -2,7 +2,7 @@
 
 //! `beardog.fido2.attest_enrollment` — generate an enrollment attestation blob.
 //!
-//! The enrolling gate taps its SoloKey to produce a signed attestation that
+//! The enrolling gate taps its `SoloKey` to produce a signed attestation that
 //! the enrollment endpoint (golgiBody) can verify against the trust roster.
 //! This provides cryptographic proof of physical key possession during
 //! gate enrollment.
@@ -207,14 +207,14 @@ fn load_trust_roster() -> Vec<String> {
             .collect();
     }
 
-    if let Ok(path) = std::env::var("BEARDOG_FIDO2_ROSTER_PATH") {
-        if let Ok(contents) = std::fs::read_to_string(&path) {
-            return contents
-                .lines()
-                .map(|l| l.trim().to_string())
-                .filter(|l| !l.is_empty() && !l.starts_with('#'))
-                .collect();
-        }
+    if let Ok(path) = std::env::var("BEARDOG_FIDO2_ROSTER_PATH")
+        && let Ok(contents) = std::fs::read_to_string(&path)
+    {
+        return contents
+            .lines()
+            .map(|l| l.trim().to_string())
+            .filter(|l| !l.is_empty() && !l.starts_with('#'))
+            .collect();
     }
 
     Vec::new()

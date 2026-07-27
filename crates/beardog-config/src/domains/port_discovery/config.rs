@@ -69,19 +69,21 @@ impl PortDiscoveryConfig {
     /// Load port discovery settings from environment variables.
     #[must_use]
     pub fn from_env() -> Self {
-        let mut base = Self::default();
-        base.min_port = parse_u16_env(env_keys::ENV_PORT_DISCOVERY_MIN, FALLBACK_PORT_SCAN_MIN);
-        base.max_port = parse_u16_env(env_keys::ENV_PORT_DISCOVERY_MAX, FALLBACK_PORT_SCAN_MAX);
-        base.discovery_timeout_ms = process_env::var(env_keys::ENV_PORT_DISCOVERY_TIMEOUT_MS)
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(FALLBACK_PORT_DISCOVERY_TIMEOUT_MS);
-        base.excluded_ports = if let Ok(s) = process_env::var(env_keys::ENV_PORT_DISCOVERY_EXCLUDE)
-        {
-            s.split(',').filter_map(|p| p.trim().parse().ok()).collect()
-        } else {
-            default_excluded_ports()
-        };
-        base
+        Self {
+            strategy: DiscoveryStrategy::Full,
+            min_port: parse_u16_env(env_keys::ENV_PORT_DISCOVERY_MIN, FALLBACK_PORT_SCAN_MIN),
+            max_port: parse_u16_env(env_keys::ENV_PORT_DISCOVERY_MAX, FALLBACK_PORT_SCAN_MAX),
+            discovery_timeout_ms: process_env::var(env_keys::ENV_PORT_DISCOVERY_TIMEOUT_MS)
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(FALLBACK_PORT_DISCOVERY_TIMEOUT_MS),
+            excluded_ports: if let Ok(s) =
+                process_env::var(env_keys::ENV_PORT_DISCOVERY_EXCLUDE)
+            {
+                s.split(',').filter_map(|p| p.trim().parse().ok()).collect()
+            } else {
+                default_excluded_ports()
+            },
+        }
     }
 }

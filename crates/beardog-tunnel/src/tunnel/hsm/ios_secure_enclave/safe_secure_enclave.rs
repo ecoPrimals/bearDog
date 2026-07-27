@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! iOS Secure Enclave integration for the BearDog ecosystem.
+//! iOS Secure Enclave integration for the `BearDog` ecosystem.
 //!
 //! On iOS, this module uses `security-framework` to call into Apple's
 //! Security.framework for hardware-backed P-256 key generation and ECDSA
@@ -47,7 +47,7 @@ impl SafeSecureEnclave {
     /// `kSecAttrTokenIDSecureEnclave` to ensure the private key is
     /// generated inside the Secure Enclave processor and never leaves it.
     ///
-    /// The Secure Enclave only supports P-256 (EllipticCurve). Other key
+    /// The Secure Enclave only supports P-256 (`EllipticCurve`). Other key
     /// types are rejected.
     ///
     /// # Errors

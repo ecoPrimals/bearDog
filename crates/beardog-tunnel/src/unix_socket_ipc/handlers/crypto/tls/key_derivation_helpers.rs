@@ -5,6 +5,10 @@
 //! Internal helper functions for deriving TLS 1.3 handshake and application
 //! traffic secrets using SHA-256 and SHA-384 per RFC 8446 Section 7.1.
 
+// TLS key derivation tuples match RFC 8446 structure; this module is
+// deprecated and will be excised when songBird absorbs TLS ownership.
+#![allow(clippy::type_complexity)]
+
 use hkdf::Hkdf;
 use sha2::{Digest, Sha256, Sha384};
 

@@ -41,6 +41,7 @@ use std::time::Duration;
     note = "Use hsm_unified::providers::HsmProviderType instead. See migration guide above."
 )]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+///
 /// Types of hsm provider
 #[derive(Default)]
 pub enum LegacyHsmProviderType {

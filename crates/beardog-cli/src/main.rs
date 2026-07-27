@@ -376,6 +376,20 @@ enum KeyCommands {
 
     /// List all revoked keys
     ListRevocations,
+
+    /// Export revocation list to a file
+    ExportRevocations {
+        /// Output file path for the revocation list
+        #[arg(long)]
+        output: String,
+    },
+
+    /// Import revocation list from a file (merges with existing)
+    ImportRevocations {
+        /// Input file path containing the revocation list
+        #[arg(long)]
+        input: String,
+    },
 }
 
 // ============================================================================
@@ -674,6 +688,12 @@ async fn main() -> Result<(), BearDogError> {
             }
             KeyCommands::ListRevocations => {
                 handlers::key_revoke::handle_key_list_revocations().await?;
+            }
+            KeyCommands::ExportRevocations { output } => {
+                handlers::key_revoke::handle_revocation_export(&output).await?;
+            }
+            KeyCommands::ImportRevocations { input } => {
+                handlers::key_revoke::handle_revocation_import(&input).await?;
             }
         },
         Commands::Encrypt(args) => {

@@ -52,11 +52,7 @@ impl PinToken {
         reason = "HMAC-SHA-256 new_from_slice accepts any key length — infallible"
     )]
     pub fn authenticate(&self, message: &[u8]) -> Vec<u8> {
-        let mut mac =
-            Hmac::<Sha256>::new_from_slice(&self.token).expect("HMAC accepts any key length");
-        mac.update(message);
-        let result = mac.finalize().into_bytes();
-        result[..16].to_vec()
+        left_hmac_sha256(&self.token, message).expect("HMAC accepts any key length")
     }
 }
 
@@ -109,10 +105,10 @@ pub async fn set_pin<D: HidDevice + ?Sized>(
     let new_pin_enc = encrypt_pin(&shared_secret, new_pin)?;
 
     // Step 5: Compute pinUvAuthParam
-    let pin_uv_auth_param = left_hmac_sha256(&shared_secret, &new_pin_enc);
+    let pin_uv_auth_param = left_hmac_sha256(&shared_secret, &new_pin_enc)?;
 
     // Step 6: Build and send setPIN command
-    let platform_key_cbor = encode_public_key_cose(&ephemeral_public);
+    let platform_key_cbor = encode_public_key_cose(&ephemeral_public)?;
 
     let body = encode_client_pin_cmd(
         SubCommand::SetPin,
@@ -173,7 +169,7 @@ pub async fn get_pin_token<D: HidDevice + ?Sized>(
     let pin_hash_enc = aes256_cbc_encrypt_zero_iv(&shared_secret, pin_hash_left16)?;
 
     // Step 5: Build and send getPinToken command
-    let platform_key_cbor = encode_public_key_cose(&ephemeral_public);
+    let platform_key_cbor = encode_public_key_cose(&ephemeral_public)?;
 
     let body = encode_client_pin_cmd(
         SubCommand::GetPinToken,
@@ -292,15 +288,12 @@ fn encrypt_pin(shared_secret: &[u8; 32], pin: &str) -> Result<Vec<u8>, BearDogEr
 }
 
 /// `left(HMAC-SHA-256(key, message), 16)`
-#[expect(
-    clippy::expect_used,
-    reason = "HMAC-SHA-256 new_from_slice accepts any key length — infallible"
-)]
-fn left_hmac_sha256(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
-    let mut mac = Hmac::<Sha256>::new_from_slice(key).expect("HMAC accepts any key length");
+fn left_hmac_sha256(key: &[u8], message: &[u8]) -> Result<Vec<u8>, BearDogError> {
+    let mut mac = Hmac::<Sha256>::new_from_slice(key)
+        .map_err(|e| BearDogError::hsm(format!("HMAC initialization failed: {e}")))?;
     mac.update(message);
     let result = mac.finalize().into_bytes();
-    result[..16].to_vec()
+    Ok(result[..16].to_vec())
 }
 
 /// AES-256-CBC encryption with zero IV (pinProtocol 1).
@@ -366,16 +359,16 @@ fn aes256_cbc_decrypt_zero_iv(key: &[u8; 32], ciphertext: &[u8]) -> Result<Vec<u
 /// Encode a P-256 public key as a `COSE_Key` for `ClientPIN` `keyAgreement`.
 /// Solo 2 requires `alg` = -25 (`ECDH-ES+HKDF-256`) for `keyAgreement` keys.
 /// Keys in canonical CBOR order: positive ascending (1, 3), negative ascending (-1, -2, -3).
-#[expect(
-    clippy::expect_used,
-    reason = "to_encoded_point(false) returns uncompressed point — x/y always present"
-)]
-fn encode_public_key_cose(key: &PublicKey) -> CborValue {
+fn encode_public_key_cose(key: &PublicKey) -> Result<CborValue, BearDogError> {
     let point = key.to_encoded_point(false); // uncompressed
-    let x = point.x().expect("valid P-256 point has x coordinate");
-    let y = point.y().expect("valid P-256 point has y coordinate");
+    let x = point
+        .x()
+        .ok_or_else(|| BearDogError::hsm("P-256 point missing x coordinate".to_string()))?;
+    let y = point
+        .y()
+        .ok_or_else(|| BearDogError::hsm("P-256 point missing y coordinate".to_string()))?;
 
-    CborValue::Map(vec![
+    Ok(CborValue::Map(vec![
         // kty: EC2 (2) — COSE key label 1
         (CborValue::Integer(1.into()), CborValue::Integer(2.into())),
         // alg: ECDH-ES+HKDF-256 (-25) — COSE key label 3
@@ -398,7 +391,7 @@ fn encode_public_key_cose(key: &PublicKey) -> CborValue {
             CborValue::Integer((-3_i64).into()),
             CborValue::Bytes(y.to_vec()),
         ),
-    ])
+    ]))
 }
 
 /// Parse a `COSE_Key` (EC2, P-256) from a CTAP2 response map (key 1 = keyAgreement).

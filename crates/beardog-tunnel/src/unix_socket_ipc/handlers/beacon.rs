@@ -536,6 +536,10 @@ impl MethodHandler for BeaconHandler {
 ///   }
 /// }
 /// ```
+///
+/// # Errors
+///
+/// Returns an error if the beacon seed is unknown or encryption fails.
 pub async fn handle_beacon_prove_proximity(
     beacon_manager: &Arc<BeaconManager>,
     params: Option<&Value>,
@@ -618,6 +622,10 @@ pub async fn handle_beacon_prove_proximity(
 ///
 /// The enrollment endpoint (golgiBody) calls this to verify that the enrollee
 /// holds a beacon seed from a prior meeting exchange.
+///
+/// # Errors
+///
+/// Returns an error if the beacon seed is unknown or proof decryption fails.
 pub async fn handle_beacon_verify_proximity(
     beacon_manager: &Arc<BeaconManager>,
     params: Option<&Value>,

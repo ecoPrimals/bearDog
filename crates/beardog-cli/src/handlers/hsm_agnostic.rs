@@ -22,7 +22,8 @@ pub struct CliHsmInfo {
     pub tier: String,
     /// High-level interface kind (USB, TPM, Software, …)
     pub hsm_type: String,
-    /// Endpoint or device path detail (reserved for diagnostics; also in `interface_detail`)
+    /// Endpoint or device path detail (used by test selectors and diagnostics)
+    #[allow(dead_code, reason = "used by #[cfg(test)] select_hsm for tier tie-breaking")]
     pub path: String,
     /// Single-line description of interface and path
     pub interface_detail: String,
@@ -135,15 +136,12 @@ pub async fn discover_all_hsms() -> Result<Vec<CliHsmInfo>, BearDogError> {
     Ok(all_hsms.into_iter().map(CliHsmInfo::from).collect())
 }
 
-/// Select best HSM based on user preference
+/// Select best HSM based on user preference (test utility).
 ///
-/// # Errors
-///
-/// Returns an error if no HSMs are available or no HSM matches the preference.
-#[allow(
-    dead_code,
-    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
-)]
+/// Production code uses `select_cli_hsm_for_preference` (key/generate.rs)
+/// and `select_hsm_by_preference` (entropy/hsm_selection.rs) with
+/// Mobile > Hardware > Software priority.
+#[cfg(test)]
 pub fn select_hsm<'a>(
     hsms: &'a [CliHsmInfo],
     preference: &str,

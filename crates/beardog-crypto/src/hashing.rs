@@ -126,7 +126,6 @@ pub fn derive_key_blake3(context: &str, key_material: &[u8]) -> Vec<u8> {
 ///
 /// This function is infallible in practice (HMAC accepts any key length),
 /// but returns Result for API consistency.
-#[must_use]
 pub fn hmac_sha256(key: &[u8], data: &[u8]) -> Result<Vec<u8>> {
     use hmac::{Hmac, Mac};
     use sha2::Sha256;
@@ -196,6 +195,10 @@ pub fn hkdf_sha256(
 /// - Memory: 64 MB
 /// - Iterations: 3
 /// - Parallelism: 4
+///
+/// # Errors
+///
+/// Returns an error if the salt is invalid or the password hashing operation fails.
 pub fn hash_password_argon2(password: &[u8], salt: &[u8; 16]) -> Result<Vec<u8>> {
     use argon2::password_hash::SaltString;
     use argon2::{Argon2, PasswordHasher};

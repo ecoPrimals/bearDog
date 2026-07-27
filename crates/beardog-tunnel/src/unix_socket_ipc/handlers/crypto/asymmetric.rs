@@ -81,8 +81,9 @@ use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 
 // Import shared utility functions
 use super::utils::derive_key_from_id;
-/// Handle Ed25519 signature operations via JSON-RPC
 
+/// Handle Ed25519 signature operations via JSON-RPC
+///
 /// # Errors
 ///
 /// Returns an error if key derivation fails.

@@ -2,7 +2,7 @@
 
 //! # beardog-crypto
 //!
-//! Pure Rust cryptographic primitives for the BearDog Tower Atomic pattern.
+//! Pure Rust cryptographic primitives for the `BearDog` Tower Atomic pattern.
 //!
 //! This crate extracts the core cryptographic algorithms from `beardog-core`
 //! into a standalone, lean crate suitable for:

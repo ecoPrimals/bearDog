@@ -56,29 +56,15 @@ pub fn calculate_entropy_quality(bytes: &[u8]) -> f64 {
     entropy / 8.0
 }
 
-/// Save entropy data to file (for future persistence features).
-///
-/// # Errors
-///
-/// Returns an error if the file cannot be written.
-#[allow(
-    dead_code,
-    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
-)]
+/// Save entropy data to file (test utility).
+#[cfg(test)]
 pub fn save_entropy_file(data: &[u8], path: &str) -> Result<(), BearDogError> {
     std::fs::write(path, data)
         .map_err(|e| BearDogError::io_error(&format!("Failed to save entropy file: {e}")))
 }
 
-/// Load entropy data from file (for future persistence features).
-///
-/// # Errors
-///
-/// Returns an error if the file cannot be read.
-#[allow(
-    dead_code,
-    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
-)]
+/// Load entropy data from file (test utility).
+#[cfg(test)]
 pub fn load_entropy_file(path: &str) -> Result<Vec<u8>, BearDogError> {
     std::fs::read(path)
         .map_err(|e| BearDogError::io_error(&format!("Failed to load entropy file: {e}")))

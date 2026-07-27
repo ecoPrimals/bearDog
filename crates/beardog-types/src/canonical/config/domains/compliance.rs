@@ -249,19 +249,25 @@ impl ConsolidatedComplianceConfiguration {
     /// Create development configuration
     #[must_use]
     pub fn development() -> Self {
-        let mut config = Self::default();
-        config.audit_retention_days =
+        let audit_retention_days =
             std::env::var(env_keys::ENV_COMPLIANCE_DEV_AUDIT_RETENTION_DAYS)
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(30); // Shorter for development
-        config.audit_frequency_hours =
+                .unwrap_or(30);
+        let audit_frequency_hours =
             std::env::var(env_keys::ENV_COMPLIANCE_DEV_AUDIT_FREQUENCY_HOURS)
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(24); // Daily audits in dev
-        config.reporting.frequency = ReportFrequency::Daily;
-        config
+                .unwrap_or(24);
+        Self {
+            audit_retention_days,
+            audit_frequency_hours,
+            reporting: ReportingConfiguration {
+                frequency: ReportFrequency::Daily,
+                ..Default::default()
+            },
+            ..Default::default()
+        }
     }
 
     /// Create production configuration

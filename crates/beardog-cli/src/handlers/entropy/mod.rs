@@ -14,9 +14,9 @@ pub use collect::handle_entropy_collect;
     unused_imports,
     reason = "pub re-exports for downstream callers; unused only from bin target"
 )]
-pub use helpers::{
-    base64_decode, base64_encode, calculate_entropy_quality, load_entropy_file, save_entropy_file,
-};
+pub use helpers::{base64_decode, base64_encode, calculate_entropy_quality};
+#[cfg(test)]
+pub use helpers::{load_entropy_file, save_entropy_file};
 pub use info::handle_entropy_info;
 #[allow(
     unused_imports,

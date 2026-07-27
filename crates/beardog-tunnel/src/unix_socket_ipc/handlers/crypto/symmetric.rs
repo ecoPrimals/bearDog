@@ -62,8 +62,9 @@ use base64::Engine;
 use beardog_core::crypto_service::algorithms::symmetric;
 use serde_json::Value;
 use tracing::{debug, info};
-/// Handle ChaCha20-Poly1305 encryption operations via JSON-RPC
 
+/// Handle ChaCha20-Poly1305 encryption operations via JSON-RPC
+///
 /// # Errors
 ///
 /// Returns an error if encryption fails.

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! # libtower — C ABI for BearDog Tower Atomic crypto
+//! # libtower — C ABI for `BearDog` Tower Atomic crypto
 //!
 //! Chimera Phase 0: shared library (`libtower.so` / `libtower.dylib` / `tower.dll`)
-//! exposing BearDog's pure Rust crypto primitives via a stable C ABI.
+//! exposing `BearDog`'s pure Rust crypto primitives via a stable C ABI.
 //!
 //! Other primals can `dlopen` this library for hot-path crypto without JSON-RPC
 //! overhead, while the JSON-RPC IPC path remains the primary integration method.
@@ -60,7 +60,7 @@ pub extern "C" fn tower_last_error() -> *const u8 {
 ///
 /// The returned pointer is a static string and is always valid.
 #[unsafe(no_mangle)]
-pub extern "C" fn tower_version() -> *const u8 {
+pub const extern "C" fn tower_version() -> *const u8 {
     c"0.9.0".as_ptr().cast()
 }
 
@@ -155,9 +155,9 @@ pub unsafe extern "C" fn tower_encrypt_chacha20(
     }
     let data = unsafe { slice::from_raw_parts(data_ptr, data_len) };
     let key_slice = unsafe { slice::from_raw_parts(key_ptr, 32) };
-    let key: &[u8; 32] = match key_slice.try_into() {
-        Ok(k) => k,
-        Err(_) => { set_error("key must be 32 bytes"); return -1; }
+    let Ok(key): Result<&[u8; 32], _> = key_slice.try_into() else {
+        set_error("key must be 32 bytes");
+        return -1;
     };
 
     match beardog_crypto::encrypt_chacha20_poly1305(data, key, None) {
@@ -209,9 +209,9 @@ pub unsafe extern "C" fn tower_sign_ed25519(
     }
     let data = unsafe { slice::from_raw_parts(data_ptr, data_len) };
     let sk_slice = unsafe { slice::from_raw_parts(secret_key_ptr, 64) };
-    let sk: &[u8; 64] = match sk_slice.try_into() {
-        Ok(k) => k,
-        Err(_) => { set_error("secret key must be 64 bytes"); return -1; }
+    let Ok(sk): Result<&[u8; 64], _> = sk_slice.try_into() else {
+        set_error("secret key must be 64 bytes");
+        return -1;
     };
 
     match beardog_crypto::sign_ed25519(data, sk) {
@@ -252,7 +252,7 @@ pub unsafe extern "C" fn tower_verify_ed25519(
     let pubkey = unsafe { slice::from_raw_parts(pubkey_ptr, 32) };
 
     match beardog_crypto::verify_ed25519(data, sig, pubkey) {
-        Ok(valid) => if valid { 0 } else { 1 },
+        Ok(valid) => i32::from(!valid),
         Err(e) => {
             set_error(&e.to_string());
             -1

@@ -30,6 +30,10 @@ type Result<T> = std::result::Result<T, BearDogError>;
 /// - Uses 96-bit random nonce (secure for 2^32 messages per key)
 /// - 128-bit authentication tag
 /// - Constant-time implementation
+///
+/// # Errors
+///
+/// Returns an error if the cipher cannot be initialized or encryption fails.
 pub fn encrypt_aes_256_gcm(
     data: &[u8],
     key: &[u8; 32],
@@ -124,6 +128,10 @@ pub fn decrypt_aes_256_gcm(
 ///
 /// Provides faster performance while maintaining strong security.
 /// Still considered secure for most applications.
+///
+/// # Errors
+///
+/// Returns an error if the cipher cannot be initialized or encryption fails.
 pub fn encrypt_aes_128_gcm(
     data: &[u8],
     key: &[u8; 16],
@@ -156,6 +164,10 @@ pub fn encrypt_aes_128_gcm(
 }
 
 /// AES-128-GCM decryption
+///
+/// # Errors
+///
+/// Returns an error if authentication fails or the ciphertext was tampered with.
 pub fn decrypt_aes_128_gcm(
     ciphertext: &[u8],
     nonce: &[u8],
@@ -195,6 +207,10 @@ pub fn decrypt_aes_128_gcm(
 /// - Constant-time (no cache-timing attacks)
 /// - Fast on platforms without AES-NI
 /// - Modern IETF standard
+///
+/// # Errors
+///
+/// Returns an error if the cipher cannot be initialized or encryption fails.
 pub fn encrypt_chacha20_poly1305(
     data: &[u8],
     key: &[u8; 32],
@@ -229,6 +245,10 @@ pub fn encrypt_chacha20_poly1305(
 }
 
 /// ChaCha20-Poly1305 decryption
+///
+/// # Errors
+///
+/// Returns an error if authentication fails or the ciphertext was tampered with.
 pub fn decrypt_chacha20_poly1305(
     ciphertext: &[u8],
     nonce: &[u8],

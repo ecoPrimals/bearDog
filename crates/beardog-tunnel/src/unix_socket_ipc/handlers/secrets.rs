@@ -178,6 +178,7 @@ impl SecretsHandler {
     /// - `value`: Decrypted secret value
     /// - `name`: echo of the secret name
     /// - `stored_at`: timestamp of when the secret was stored
+    ///
     /// Parse a `nucleus:{family}:purpose:{name}` key pattern.
     ///
     /// Returns `Some(purpose_name)` if the pattern matches, `None` otherwise.

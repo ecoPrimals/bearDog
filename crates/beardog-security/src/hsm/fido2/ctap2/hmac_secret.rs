@@ -80,10 +80,10 @@ pub async fn hmac_secret_entropy<D: HidDevice + ?Sized>(
     let salt_enc = aes256_cbc_encrypt_zero_iv(&shared_secret, &salt)?;
 
     // saltAuth = left(HMAC-SHA-256(sharedSecret, saltEnc), 16)
-    let salt_auth = left_hmac_sha256(&shared_secret, &salt_enc);
+    let salt_auth = left_hmac_sha256(&shared_secret, &salt_enc)?;
 
     // Build hmac-secret extension input CBOR
-    let platform_key_cbor = encode_public_key_cose(&ephemeral_public);
+    let platform_key_cbor = encode_public_key_cose(&ephemeral_public)?;
     let hmac_secret_input = CborValue::Map(vec![
         (CborValue::Integer(1.into()), platform_key_cbor),
         (
@@ -337,27 +337,24 @@ fn aes256_cbc_decrypt_zero_iv(key: &[u8; 32], ciphertext: &[u8]) -> Result<Vec<u
     Ok(plaintext)
 }
 
-#[expect(
-    clippy::expect_used,
-    reason = "HMAC-SHA-256 new_from_slice accepts any key length — infallible"
-)]
-fn left_hmac_sha256(key: &[u8; 32], message: &[u8]) -> Vec<u8> {
-    let mut mac = Hmac::<Sha256>::new_from_slice(key).expect("HMAC accepts any key length");
+fn left_hmac_sha256(key: &[u8], message: &[u8]) -> Result<Vec<u8>, BearDogError> {
+    let mut mac = Hmac::<Sha256>::new_from_slice(key)
+        .map_err(|e| BearDogError::hsm(format!("HMAC initialization failed: {e}")))?;
     mac.update(message);
     let result = mac.finalize().into_bytes();
-    result[..16].to_vec()
+    Ok(result[..16].to_vec())
 }
 
-#[expect(
-    clippy::expect_used,
-    reason = "to_encoded_point(false) returns uncompressed point — x/y always present"
-)]
-fn encode_public_key_cose(key: &PublicKey) -> CborValue {
+fn encode_public_key_cose(key: &PublicKey) -> Result<CborValue, BearDogError> {
     let point = key.to_encoded_point(false);
-    let x = point.x().expect("valid P-256 point has x coordinate");
-    let y = point.y().expect("valid P-256 point has y coordinate");
+    let x = point
+        .x()
+        .ok_or_else(|| BearDogError::hsm("P-256 point missing x coordinate".to_string()))?;
+    let y = point
+        .y()
+        .ok_or_else(|| BearDogError::hsm("P-256 point missing y coordinate".to_string()))?;
 
-    CborValue::Map(vec![
+    Ok(CborValue::Map(vec![
         (CborValue::Integer(1.into()), CborValue::Integer(2.into())),
         (
             CborValue::Integer(3.into()),
@@ -375,7 +372,7 @@ fn encode_public_key_cose(key: &PublicKey) -> CborValue {
             CborValue::Integer((-3_i64).into()),
             CborValue::Bytes(y.to_vec()),
         ),
-    ])
+    ]))
 }
 
 /// Get key agreement public key from authenticator for hmac-secret ECDH.
@@ -490,7 +487,7 @@ mod tests {
     fn test_hmac_sha256_truncation() {
         let key = [0x01u8; 32];
         let msg = b"test message";
-        let result = left_hmac_sha256(&key, msg);
+        let result = left_hmac_sha256(&key, msg).expect("HMAC in test");
         assert_eq!(result.len(), 16);
     }
 

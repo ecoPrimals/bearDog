@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 27, 2026 (Wave 155 — Chimera Phase 0 + crates.io Audit)
+**Last Updated**: July 27, 2026 (Wave 155c — Deep Debt Sweep + Clippy Zero)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,10 +20,10 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant; 2 monoliths refactored Wave 119 (server.rs→7 files, orchestrator.rs→10 files) |
-| **Tests** | 14,005 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | ~14,000 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
-| **cargo deny** | all 4 pass | 2 advisory ignores (RSA Marvin, `paste`); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned; TLS backend is Pure Rust `rustls-rustcrypto` |
+| **cargo deny** | all 4 pass | 2 advisory ignores (RSA Marvin, `paste`); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned; TLS feature-gated behind `tls-gateway` (default off) |
 | **License** | AGPL-3.0-or-later | SPDX headers on all .rs files |
 | **Architecture** | DI-based | Pure `Default`, `from_env()` at boundaries |
 | **Toolchain** | Pinned | `rust-toolchain.toml` at 1.93.0 |
@@ -33,7 +33,7 @@
 
 ## Codebase Metrics
 
-- **Crates**: 27 workspace members (including `beardog-crypto` + `libtower`)
+- **Crates**: 27 workspace members (including `beardog-crypto` + `libtower` + `beardog-acme` [publish=false])
 - **Rust Files**: 1,947 (crates + src + tests; excludes showcase/examples)
 - **JSON-RPC Methods**: 231 dispatchable (219 registry + 12 pre-dispatch gate) — see `docs/PRIMAL_CONTRACTS.md` v4.2.0 for category breakdown
 - **`#[allow(`**: 99 (all carry `reason`)
@@ -89,6 +89,21 @@
 ---
 
 ## Recent Improvements
+
+### Wave 155c — Deep Debt Sweep + Clippy Zero (Jul 27, 2026)
+
+- **Clippy 31→0**: Fixed doc lint (`# Errors`), backtick markup, `if let` style, `const fn`, `bool_to_int_with_if`, `field_reassign_with_default`, `doc_lazy_continuation`, `empty_line_after_doc_comments`, `type_complexity` (suppressed on deprecated TLS code) across 10 files
+- **CLI wired**: Revocation export/import handlers connected to `KeyCommands::ExportRevocations` / `ImportRevocations`; previously implemented but unwired
+- **Dead code cleaned**: Orphan `commands/mod.rs` deleted; `save_entropy_file`/`load_entropy_file` moved to `#[cfg(test)]`; `select_hsm` (duplicate, inconsistent priority) moved to `#[cfg(test)]`
+- **Production unwrap evolved**: 6 `expect()` sites in FIDO2 CTAP2 client PIN and hmac-secret converted to `BearDogError::hsm()` with `?`; 9 remaining have documented `#[expect]` (provably safe mutex/HKDF/HMAC)
+- **TLS/ACME feature-gated**: `beardog-acme` marked `publish = false`; `rustls-rustcrypto` removed from default dep tree
+- **beardog-types/beardog-config lints fixed**: `field_reassign_with_default` resolved via struct initializer syntax
+
+### Wave 155b — TLS/ACME Handoff to songBird (Jul 27, 2026)
+
+- **TLS/ACME feature-gated**: `tls-server` removed from default features; `beardog-acme` + `rustls-rustcrypto` gated behind `tls-gateway` (default off) in `beardog-cli`
+- **`rustls`, `tokio-rustls`, `rustls-pki-types`, `reqwest` removed from default dep tree**: bearDog default build is TLS-free
+- **AAR shipped**: `AAR_WAVE155b_TLS_ACME_SONGBIRD_HANDOFF.md` with 3-phase deprecation plan (feature-gate → songBird absorb → bearDog excise)
 
 ### Wave 155 — Chimera Phase 0 + crates.io Audit (Jul 27, 2026)
 

@@ -121,6 +121,7 @@ impl ProductionMetricsCollector {
     /// - Collection is already active
     /// - System metric sources are unavailable
     /// - Configuration validation fails
+    ///
     /// Starts collection
     pub fn start_collection(&mut self) -> Result<(), BearDogError> {
         if self.is_collecting {

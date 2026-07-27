@@ -360,10 +360,6 @@ fn get_child_keys_in_home(parent_key_id: &str, home: &Path) -> Result<Vec<String
 /// # Errors
 ///
 /// Returns an error if `HOME` is unset, the list cannot be loaded, or export I/O fails.
-#[allow(
-    dead_code,
-    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
-)]
 pub async fn handle_revocation_export(output_path: &str) -> Result<(), BearDogError> {
     let home = revocation_home_from_env()?;
     handle_revocation_export_with_home(output_path, &home).await
@@ -405,10 +401,6 @@ pub async fn handle_revocation_export_with_home(
 ///
 /// Returns an error if `HOME` is unset, the import file cannot be read or parsed, or the merged
 /// list cannot be saved.
-#[allow(
-    dead_code,
-    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
-)]
 pub async fn handle_revocation_import(input_path: &str) -> Result<(), BearDogError> {
     let home = revocation_home_from_env()?;
     handle_revocation_import_with_home(input_path, &home).await
