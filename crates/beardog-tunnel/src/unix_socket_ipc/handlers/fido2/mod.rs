@@ -27,6 +27,7 @@
 //! - Private keys never leave the security key
 //! - `BearDog` relays CTAP2 frames, never holds credential secrets
 
+mod attest_enrollment;
 mod authenticate;
 mod ceremony;
 mod discover;
@@ -63,6 +64,8 @@ impl MethodHandler for Fido2Handler {
             "beardog.fido2.authenticate",
             "beardog.fido2.entropy",
             "beardog.fido2.ceremony",
+            "beardog.fido2.attest_enrollment",
+            "fido2.verify_attestation",
         ]
     }
 
@@ -78,6 +81,12 @@ impl MethodHandler for Fido2Handler {
             "beardog.fido2.authenticate" => authenticate::handle_fido2_authenticate(params).await,
             "beardog.fido2.entropy" => entropy::handle_fido2_entropy(params).await,
             "beardog.fido2.ceremony" => ceremony::handle_fido2_ceremony(params).await,
+            "beardog.fido2.attest_enrollment" => {
+                attest_enrollment::handle_fido2_attest_enrollment(params).await
+            }
+            "fido2.verify_attestation" => {
+                attest_enrollment::handle_fido2_verify_attestation(params).await
+            }
             _ => Err(format!("Unknown FIDO2 method: {method}").into()),
         }
     }

@@ -380,7 +380,9 @@ async fn test_beacon_handler_methods() {
     assert!(methods.contains(&"beacon.try_decrypt_any"));
     assert!(methods.contains(&"beacon.list_known"));
     assert!(methods.contains(&"beacon.add_known"));
-    assert_eq!(methods.len(), 7);
+    assert!(methods.contains(&"beacon.prove_proximity"));
+    assert!(methods.contains(&"beacon.verify_proximity"));
+    assert_eq!(methods.len(), 9);
 }
 
 #[tokio::test]
@@ -388,9 +390,8 @@ async fn test_beacon_handler_with_manager() {
     let manager = Arc::new(BeaconManager::new());
     let handler = BeaconHandler::with_manager(manager.clone());
 
-    // Methods should work with shared manager
     let methods = handler.methods();
-    assert_eq!(methods.len(), 7);
+    assert_eq!(methods.len(), 9);
 }
 
 // ========================================================================

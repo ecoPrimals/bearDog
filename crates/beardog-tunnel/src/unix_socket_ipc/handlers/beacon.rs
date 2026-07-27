@@ -477,6 +477,8 @@ impl MethodHandler for BeaconHandler {
             "beacon.try_decrypt_any",
             "beacon.list_known",
             "beacon.add_known",
+            "beacon.prove_proximity",
+            "beacon.verify_proximity",
         ]
     }
 
@@ -486,7 +488,6 @@ impl MethodHandler for BeaconHandler {
         params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> HandlerResult {
-        // Zero-copy: pass Arc by reference instead of cloning
         match method {
             "beacon.generate" => handle_beacon_generate(&self.beacon_manager, params).await,
             "beacon.get_id" => handle_beacon_get_id(&self.beacon_manager, params).await,
@@ -497,8 +498,214 @@ impl MethodHandler for BeaconHandler {
             }
             "beacon.list_known" => handle_beacon_list_known(&self.beacon_manager, params).await,
             "beacon.add_known" => handle_beacon_add_known(&self.beacon_manager, params).await,
+            "beacon.prove_proximity" => {
+                handle_beacon_prove_proximity(&self.beacon_manager, params).await
+            }
+            "beacon.verify_proximity" => {
+                handle_beacon_verify_proximity(&self.beacon_manager, params).await
+            }
             _ => Err(format!("Unknown beacon method: {method}").into()),
         }
+    }
+}
+
+/// `beacon.prove_proximity` — generate a BLE/NFC proximity proof for enrollment.
+///
+/// The enrolling grapheneGate broadcasts a beacon challenge, and the local
+/// bearDog on that device signs a response proving it can decrypt the beacon's
+/// challenge (i.e., it holds the beacon seed from a prior meeting exchange).
+///
+/// ## Request
+/// ```json
+/// {
+///   "beacon_id": "<hex beacon ID of the enrollment hub>",
+///   "challenge": "<base64 random challenge from enrollment endpoint>",
+///   "gate_name": "newGate",
+///   "wg_public_key": "<WG public key>"
+/// }
+/// ```
+///
+/// ## Response
+/// ```json
+/// {
+///   "proof": {
+///     "beacon_id": "<hex>",
+///     "challenge_response": "<base64 encrypted challenge>",
+///     "gate_name": "newGate",
+///     "timestamp": 1753128000
+///   }
+/// }
+/// ```
+pub async fn handle_beacon_prove_proximity(
+    beacon_manager: &Arc<BeaconManager>,
+    params: Option<&Value>,
+) -> Result<Value, super::HandlerError> {
+    let params = params.ok_or("Missing params for beacon.prove_proximity")?;
+
+    let beacon_id_hex = params
+        .get("beacon_id")
+        .and_then(Value::as_str)
+        .ok_or("Missing required parameter: beacon_id")?;
+
+    let challenge_b64 = params
+        .get("challenge")
+        .and_then(Value::as_str)
+        .ok_or("Missing required parameter: challenge")?;
+
+    let gate_name = params
+        .get("gate_name")
+        .and_then(Value::as_str)
+        .ok_or("Missing required parameter: gate_name")?;
+
+    let wg_public_key = params
+        .get("wg_public_key")
+        .and_then(Value::as_str)
+        .unwrap_or("");
+
+    let challenge_bytes = BASE64
+        .decode(challenge_b64)
+        .map_err(|e| format!("Invalid challenge base64: {e}"))?;
+
+    // Bind the gate's identity into the response
+    let mut proof_data = Vec::new();
+    proof_data.extend_from_slice(&challenge_bytes);
+    proof_data.extend_from_slice(b"|");
+    proof_data.extend_from_slice(gate_name.as_bytes());
+    proof_data.extend_from_slice(b"|");
+    proof_data.extend_from_slice(wg_public_key.as_bytes());
+
+    // Try to encrypt with matching beacon seed (proves we hold it)
+    let known = beacon_manager.known_beacons.read().await;
+    let matching_beacon = known.get(beacon_id_hex);
+
+    let beacon = if let Some(b) = matching_beacon {
+        b.clone()
+    } else {
+        // Try our own beacon
+        let our = beacon_manager.our_beacon.read().await;
+        match our.as_ref() {
+            Some(b) if b.id().to_hex() == beacon_id_hex => b.clone(),
+            _ => {
+                return Err(format!(
+                    "No beacon seed for {beacon_id_hex} — have we met this hub?"
+                )
+                .into())
+            }
+        }
+    };
+
+    let encrypted = beacon
+        .encrypt(&proof_data)
+        .map_err(|e| format!("Beacon encrypt failed: {e}"))?;
+
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs());
+
+    Ok(json!({
+        "proof": {
+            "beacon_id": beacon_id_hex,
+            "challenge_response": BASE64.encode(&encrypted.ciphertext),
+            "nonce": BASE64.encode(encrypted.nonce),
+            "gate_name": gate_name,
+            "wg_public_key": wg_public_key,
+            "timestamp": timestamp,
+        }
+    }))
+}
+
+/// `beacon.verify_proximity` — verify a proximity proof from a grapheneGate enrollee.
+///
+/// The enrollment endpoint (golgiBody) calls this to verify that the enrollee
+/// holds a beacon seed from a prior meeting exchange.
+pub async fn handle_beacon_verify_proximity(
+    beacon_manager: &Arc<BeaconManager>,
+    params: Option<&Value>,
+) -> Result<Value, super::HandlerError> {
+    let params = params.ok_or("Missing params for beacon.verify_proximity")?;
+
+    let beacon_id_hex = params
+        .get("beacon_id")
+        .and_then(Value::as_str)
+        .ok_or("Missing required parameter: beacon_id")?;
+
+    let challenge_response_b64 = params
+        .get("challenge_response")
+        .and_then(Value::as_str)
+        .ok_or("Missing required parameter: challenge_response")?;
+
+    let nonce_b64 = params
+        .get("nonce")
+        .and_then(Value::as_str)
+        .ok_or("Missing required parameter: nonce")?;
+
+    let timestamp = params
+        .get("timestamp")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+
+    let ciphertext = BASE64
+        .decode(challenge_response_b64)
+        .map_err(|e| format!("Invalid challenge_response base64: {e}"))?;
+
+    let nonce_vec = BASE64
+        .decode(nonce_b64)
+        .map_err(|e| format!("Invalid nonce base64: {e}"))?;
+
+    if nonce_vec.len() != 12 {
+        return Err(format!("Nonce must be 12 bytes, got {}", nonce_vec.len()).into());
+    }
+    let mut nonce = [0u8; 12];
+    nonce.copy_from_slice(&nonce_vec);
+
+    let encrypted = BeaconCiphertext {
+        ciphertext,
+        nonce,
+        timestamp,
+    };
+
+    // Try our beacon to decrypt
+    let our = beacon_manager.our_beacon.read().await;
+    let our_beacon = our.as_ref().ok_or("Hub beacon not initialized")?;
+
+    if our_beacon.id().to_hex() != beacon_id_hex {
+        return Ok(json!({
+            "valid": false,
+            "reason": format!(
+                "beacon_id mismatch: expected {}, got {beacon_id_hex}",
+                our_beacon.id().to_hex()
+            ),
+        }));
+    }
+
+    match our_beacon
+        .try_decrypt(&encrypted)
+        .map_err(|e| e.to_string())?
+    {
+        Some(plaintext) => {
+            let gate_name = String::from_utf8_lossy(&plaintext)
+                .split('|')
+                .nth(1)
+                .unwrap_or("unknown")
+                .to_string();
+
+            info!(
+                gate = %gate_name,
+                beacon_id = %beacon_id_hex,
+                "beacon proximity verified"
+            );
+
+            Ok(json!({
+                "valid": true,
+                "beacon_id": beacon_id_hex,
+                "gate_name": gate_name,
+                "trust_tier": "sibling",
+            }))
+        }
+        None => Ok(json!({
+            "valid": false,
+            "reason": "cannot decrypt proximity proof — enrollee does not hold our beacon seed",
+        })),
     }
 }
 
