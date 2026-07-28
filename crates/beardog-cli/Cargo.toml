@@ -9,6 +9,7 @@ keywords = [ "cli", "command-line", "beardog", "management", "tools",]
 categories = [ "command-line-utilities", "development-tools",]
 readme = "README.md"
 license = "AGPL-3.0-or-later"
+publish = false
 
 [package.version]
 workspace = true

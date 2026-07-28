@@ -175,7 +175,7 @@ mdns-sd = "0.11"            # mDNS/DNS-SD service discovery (feature-gated)
 rustls = { version = "0.23", default-features = false, features = ["custom-provider", "logging", "std", "tls12"] }
 tokio-rustls = { version = "0.26", default-features = false, features = ["logging", "tls12"] }
 rustls-pki-types = { version = "1", features = ["std"] }
-rustls-rustcrypto = { git = "https://github.com/RustCrypto/rustls-rustcrypto" }
+rustls-rustcrypto = { version = "0.0.2-alpha", git = "https://github.com/RustCrypto/rustls-rustcrypto" }
 
 # Serialization formats
 
@@ -268,6 +268,7 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
+publish = false
 
 [[bin]]
 name = "beardog"

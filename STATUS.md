@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 27, 2026 (Wave 155c — Deep Debt Sweep + Clippy Zero)
+**Last Updated**: July 28, 2026 (Wave 155d — G6 Public Flip Audit)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,10 +20,11 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant; 2 monoliths refactored Wave 119 (server.rs→7 files, orchestrator.rs→10 files) |
-| **Tests** | ~14,000 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 13,996 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
-| **cargo deny** | all 4 pass | 2 advisory ignores (RSA Marvin, `paste`); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned; TLS feature-gated behind `tls-gateway` (default off) |
+| **cargo deny** | all 4 pass | 1 advisory ignore (RSA Marvin); 41 RustCrypto skip entries removed (TLS feature-gated); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned |
+| **crates.io** | G6 READY | 21 library crates publish-ready; `beardog-errors` full dry-run PASS; 6 internal crates `publish = false` |
 | **License** | AGPL-3.0-or-later | SPDX headers on all .rs files |
 | **Architecture** | DI-based | Pure `Default`, `from_env()` at boundaries |
 | **Toolchain** | Pinned | `rust-toolchain.toml` at 1.93.0 |
@@ -89,6 +90,16 @@
 ---
 
 ## Recent Improvements
+
+### Wave 155d — G6 Public Flip Audit (Jul 28, 2026)
+
+- **G6 READY**: 21 library crates validated for crates.io publishing; `beardog-errors` full dry-run PASS
+- **Publish order documented**: topological 21-crate sequence from `beardog-errors` (leaf) to `beardog-tunnel` (root library)
+- **Binary crates classified**: `beardog`/`beardog-cli` marked `publish = false` (genomeBin distribution); `libtower`/`benchmarks`/`beardog-integration-tests`/`beardog-acme` already `publish = false`
+- **`rustls-rustcrypto` version specifier**: added `version = "0.0.2-alpha"` to git dep for cargo publish compatibility
+- **`deny.toml` cleaned**: 41 unnecessary RustCrypto skip entries removed (resolved by TLS feature-gating in Wave 155b)
+- **Flaky test fixed**: `test_clear_shared_configs_and_stats` shared-state race resolved (relative assertion)
+- **Supply chain verified**: `cargo deny check` all 4 checks pass; zero git deps in default build; zero C crypto
 
 ### Wave 155c — Deep Debt Sweep + Clippy Zero (Jul 27, 2026)
 

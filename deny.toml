@@ -9,8 +9,9 @@ ignore = [
     # RustCrypto RSA is the only pure-Rust RSA implementation.
     # BearDog uses Ed25519/X25519 as primary; RSA is legacy/interop only.
     "RUSTSEC-2023-0071",
-    # paste (RUSTSEC-2024-0436): unmaintained but stable, no known vuln.
-    # Transitive dep via rustls-rustcrypto — will drop when upstream removes.
+    # paste (RUSTSEC-2024-0436): was transitive via rustls-rustcrypto.
+    # TLS deps now feature-gated (tls-gateway), no longer in default tree.
+    # Remove this entry once beardog fully excises TLS (Phase 3 deprecation).
     "RUSTSEC-2024-0436",
 ]
 
@@ -61,50 +62,10 @@ skip = [
     { crate = "toml_edit" },
     { crate = "winnow" },
 
-    # RustCrypto stable + RC version splits (rustls-rustcrypto uses RC crates)
-    # These will converge once RustCrypto publishes stable releases.
-    { crate = "aead" },
-    { crate = "aes" },
-    { crate = "aes-gcm" },
-    { crate = "base16ct" },
-    { crate = "block-buffer" },
-    { crate = "chacha20" },
-    { crate = "chacha20poly1305" },
-    { crate = "cipher" },
-    { crate = "const-oid" },
-    { crate = "crypto-bigint" },
-    { crate = "crypto-common" },
-    { crate = "ctr" },
-    { crate = "curve25519-dalek" },
-    { crate = "der" },
-    { crate = "digest" },
-    { crate = "ecdsa" },
-    { crate = "ed25519" },
-    { crate = "ed25519-dalek" },
-    { crate = "elliptic-curve" },
-    { crate = "ff" },
-    { crate = "fiat-crypto" },
-    { crate = "ghash" },
-    { crate = "group" },
-    { crate = "hkdf" },
-    { crate = "hmac" },
-    { crate = "inout" },
-    { crate = "p256" },
-    { crate = "p384" },
-    { crate = "pem-rfc7468" },
-    { crate = "pkcs1" },
-    { crate = "pkcs8" },
-    { crate = "poly1305" },
-    { crate = "polyval" },
-    { crate = "primeorder" },
-    { crate = "rfc6979" },
-    { crate = "rsa" },
-    { crate = "sec1" },
-    { crate = "sha2" },
-    { crate = "signature" },
-    { crate = "spki" },
-    { crate = "universal-hash" },
-    { crate = "x25519-dalek" },
+    # RustCrypto stable + RC version splits — RESOLVED.
+    # TLS feature-gated (Wave 155b): rustls-rustcrypto RC crates no longer in
+    # default tree. 41 duplicate-version skips removed. If tls-gateway feature
+    # is re-enabled, duplicates may reappear and require re-addition here.
 ]
 deny = [
     # ── Anti-patterns ────────────────────────────────────────────────────
