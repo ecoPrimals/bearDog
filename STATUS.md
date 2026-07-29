@@ -36,7 +36,7 @@
 
 - **Crates**: 27 workspace members (including `beardog-crypto` + `libtower` + `beardog-acme` [publish=false])
 - **Rust Files**: 1,947 (crates + src + tests; excludes showcase/examples)
-- **JSON-RPC Methods**: 231 dispatchable (219 registry + 12 pre-dispatch gate) — see `docs/PRIMAL_CONTRACTS.md` v4.2.0 for category breakdown
+- **JSON-RPC Methods**: 236 dispatchable (224 registry + 12 pre-dispatch gate) — see `docs/PRIMAL_CONTRACTS.md` v4.2.0 for category breakdown
 - **`#[allow(`**: 99 (all carry `reason`)
 - **`#[expect(`**: 446
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
