@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 28, 2026 (Wave 155d — G6 Public Flip Audit)
+**Last Updated**: July 29, 2026 (Wave 155i — ACME Phase 2 Crypto Delegation)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant; 2 monoliths refactored Wave 119 (server.rs→7 files, orchestrator.rs→10 files) |
-| **Tests** | 13,996 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,013 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | all 4 pass | 1 advisory ignore (RSA Marvin); 41 RustCrypto skip entries removed (TLS feature-gated); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned |
@@ -90,6 +90,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 155i — ACME Phase 2 Crypto Delegation (Jul 29, 2026)
+
+- **5 new JSON-RPC methods**: `crypto.ecdsa_p256_generate_signing_keypair`, `crypto.sign_jws_es256`, `crypto.jwk_thumbprint`, `x509.build_csr`, `x509.parse_certificate`
+- **songBird delegation surface**: ACME account key gen, JWS ES256 signing (raw `r||s`), PKCS#10 CSR with SAN, JWK thumbprint (RFC 7638), cert metadata extraction
+- **17 new tests**: All handlers + routing tested; 14,013 total workspace tests
+- **Crypto method count**: 109 → 114
+- **Phase 2 complete**: bearDog exposes all crypto ops songBird needs for ACME absorption
 
 ### Wave 155d — G6 Public Flip Audit (Jul 28, 2026)
 

@@ -35,7 +35,10 @@ fn test_crypto_handler_methods() {
     //   - 1 crypto.hmac_verify (constant-time HMAC verification)
     //   - 1 crypto.hkdf_sha256 (HKDF-SHA256 key derivation)
     //   - 1 crypto.seed_fingerprint (Tower atomic identity fingerprint)
-    assert_eq!(methods.len(), 109);
+    //   - 5 ACME Phase 2 crypto delegation (Wave 155i):
+    //     crypto.ecdsa_p256_generate_signing_keypair, crypto.sign_jws_es256,
+    //     crypto.jwk_thumbprint, x509.build_csr, x509.parse_certificate
+    assert_eq!(methods.len(), 114);
 
     // Verify all core crypto methods are present
     assert!(methods.contains(&"crypto.sign_ed25519"));
@@ -138,7 +141,7 @@ fn test_handler_method_count() {
     let handler = CryptoHandler;
     assert_eq!(
         handler.methods().len(),
-        109,
-        "Should have exactly 109 crypto methods (see test_crypto_handler_methods for breakdown)"
+        114,
+        "Should have exactly 114 crypto methods (109 base + 5 ACME Phase 2)"
     );
 }

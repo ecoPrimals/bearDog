@@ -138,6 +138,13 @@ pub fn crypto_method_names() -> Vec<&'static str> {
     ];
     #[cfg(feature = "tls-x509")]
     names.push("tls.verify_certificate");
+    // ACME Phase 2 crypto delegation (songBird)
+    names.push("crypto.ecdsa_p256_generate_signing_keypair");
+    names.push("crypto.sign_jws_es256");
+    names.push("crypto.jwk_thumbprint");
+    names.push("x509.build_csr");
+    #[cfg(feature = "tls-x509")]
+    names.push("x509.parse_certificate");
     names
 }
 

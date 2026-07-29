@@ -6,7 +6,8 @@ use crate::btsp_provider::BeardogBtspProvider;
 use std::sync::Arc;
 
 use super::{
-    aliases_and_beardog, genetic, hashing, kex_aead, password_kdf, signatures, tls_ops, tls12_dot,
+    acme_ops, aliases_and_beardog, genetic, hashing, kex_aead, password_kdf, signatures, tls_ops,
+    tls12_dot,
 };
 
 /// # Errors
@@ -27,6 +28,9 @@ pub async fn dispatch(
         return Ok(v);
     }
     if let Some(v) = password_kdf::route(method, params)? {
+        return Ok(v);
+    }
+    if let Some(v) = acme_ops::route(method, params).await? {
         return Ok(v);
     }
     if let Some(v) = tls_ops::route(method, params).await? {

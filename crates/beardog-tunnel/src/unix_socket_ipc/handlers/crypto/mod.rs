@@ -50,6 +50,7 @@
 //! ```
 
 // Module declarations (modules extracted from crypto_handlers.rs)
+pub mod acme; // ✅ Wave 155i - ACME Phase 2 crypto delegation for songBird
 pub mod asymmetric; // ✅ Step 4 - Ed25519, X25519 (325 lines)
 pub mod hash; // ✅ Step 6 - Blake3, HMAC-SHA256 (186 lines)
 pub mod sslkeylog; // ✅ Step 2 - SSLKEYLOGFILE export utility
@@ -84,6 +85,14 @@ pub use hash::{
     handle_blake3_hash, handle_hash_for_cipher, handle_hkdf_sha256, handle_hmac_sha256,
     handle_hmac_verify,
 };
+
+// Re-export ACME Phase 2 crypto handlers for songBird delegation
+pub use acme::{
+    handle_build_csr, handle_ecdsa_p256_generate_signing_keypair, handle_jwk_thumbprint,
+    handle_sign_jws_es256,
+};
+#[cfg(feature = "tls-x509")]
+pub use acme::handle_parse_certificate;
 
 // Re-export TLS 1.2 handlers for Tower Atomic pattern (TLS 1.2 crypto atoms for callers)
 pub use tls12::{

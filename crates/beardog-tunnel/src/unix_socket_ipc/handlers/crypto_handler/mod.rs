@@ -6,6 +6,7 @@ use crate::btsp_provider::BeardogBtspProvider;
 use crate::unix_socket_ipc::handlers::{HandlerResult, MethodHandler};
 use std::sync::Arc;
 
+mod acme_ops;
 pub(crate) mod aliases_and_beardog;
 mod genetic;
 mod hashing;
