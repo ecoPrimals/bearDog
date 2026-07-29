@@ -318,6 +318,102 @@ async fn test_ed25519_sign_verify_roundtrip() {
 }
 
 // ========================================================================
+// DIRECT SECRET_KEY SIGNING TESTS (loamSpine / Provenance Trio flow)
+// ========================================================================
+
+#[tokio::test]
+async fn test_ed25519_sign_with_direct_secret_key() {
+    let kp = handle_ed25519_generate_keypair(None)
+        .await
+        .expect("keygen");
+    let sk_b64 = kp["secret_key"].as_str().expect("secret_key");
+
+    let msg = BASE64.encode(b"direct key signing");
+    let params = json!({ "message": msg, "secret_key": sk_b64 });
+    let result = handle_sign_ed25519(Some(&params)).await.expect("sign");
+
+    assert_eq!(result["algorithm"], "Ed25519");
+    assert!(result["signature"].is_string());
+    assert!(result["public_key"].is_string());
+    // Response should NOT contain key_id when using direct key mode
+    assert!(result.get("key_id").is_none());
+}
+
+#[tokio::test]
+async fn test_ed25519_generate_sign_verify_roundtrip() {
+    let kp = handle_ed25519_generate_keypair(None)
+        .await
+        .expect("keygen");
+    let sk_b64 = kp["secret_key"].as_str().expect("secret_key");
+    let pk_b64 = kp["public_key"].as_str().expect("public_key");
+
+    let msg = BASE64.encode(b"provenance entry payload");
+    let sign_params = json!({ "message": msg, "secret_key": sk_b64 });
+    let signed = handle_sign_ed25519(Some(&sign_params)).await.expect("sign");
+
+    // Public key in sign response must match the generated key
+    assert_eq!(signed["public_key"].as_str().expect("sign pk"), pk_b64);
+
+    let verify_params = json!({
+        "message": msg,
+        "signature": signed["signature"].as_str().expect("sig"),
+        "public_key": pk_b64,
+    });
+    let v = handle_verify_ed25519(Some(&verify_params))
+        .await
+        .expect("verify");
+    assert_eq!(
+        v["valid"], true,
+        "generate→sign(direct key)→verify roundtrip must succeed"
+    );
+}
+
+#[tokio::test]
+async fn test_ed25519_direct_key_wrong_length_rejected() {
+    let msg = BASE64.encode(b"bad key");
+    let short_key = BASE64.encode(&[0u8; 16]); // 16 bytes, not 32
+    let params = json!({ "message": msg, "secret_key": short_key });
+    let r = handle_sign_ed25519(Some(&params)).await;
+    assert!(r.is_err());
+    assert!(r.unwrap_err().contains("32 bytes"));
+}
+
+#[tokio::test]
+async fn test_ed25519_direct_key_invalid_base64_rejected() {
+    let msg = BASE64.encode(b"bad encoding");
+    let params = json!({ "message": msg, "secret_key": "!!!not-base64!!!" });
+    let r = handle_sign_ed25519(Some(&params)).await;
+    assert!(r.is_err());
+    assert!(r.unwrap_err().contains("base64"));
+}
+
+#[tokio::test]
+async fn test_ed25519_direct_key_takes_precedence_over_key_id() {
+    let kp = handle_ed25519_generate_keypair(None)
+        .await
+        .expect("keygen");
+    let sk_b64 = kp["secret_key"].as_str().expect("sk");
+    let pk_from_keygen = kp["public_key"].as_str().expect("pk");
+
+    let msg = BASE64.encode(b"precedence test");
+
+    // Sign with both secret_key AND key_id — secret_key should take precedence
+    let params = json!({
+        "message": msg,
+        "secret_key": sk_b64,
+        "key_id": "should-be-ignored",
+        "purpose": "should-be-ignored",
+    });
+    let signed = handle_sign_ed25519(Some(&params)).await.expect("sign");
+
+    assert_eq!(
+        signed["public_key"].as_str().expect("pk"),
+        pk_from_keygen,
+        "when secret_key is provided, key_id/purpose must be ignored"
+    );
+}
+
+// ========================================================================
 // PUBLIC KEY RETRIEVAL TESTS
 // ========================================================================
 

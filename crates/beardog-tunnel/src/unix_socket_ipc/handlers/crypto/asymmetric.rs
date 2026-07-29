@@ -82,22 +82,70 @@ use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 // Import shared utility functions
 use super::utils::derive_key_from_id;
 
-/// Handle Ed25519 signature operations via JSON-RPC
+/// Handle Ed25519 signature operations via JSON-RPC.
+///
+/// Supports two key-sourcing modes:
+///
+/// 1. **Direct key**: caller provides `secret_key` (base64-encoded 32-byte Ed25519
+///    signing key seed). This is the recommended path for signing with a previously
+///    generated keypair (e.g. from `crypto.ed25519_generate_keypair`).
+///
+/// 2. **Derived key**: caller provides `key_id` + optional `purpose`. The signing key
+///    is deterministically derived from `BEARDOG_MASTER_KEY` via BLAKE3. Useful for
+///    primal-identity signing where the key doesn't leave bearDog.
+///
+/// If `secret_key` is present, `key_id`/`purpose` are ignored.
 ///
 /// # Errors
 ///
-/// Returns an error if key derivation fails.
+/// Returns an error if key decoding, derivation, or signing fails.
 pub async fn handle_sign_ed25519(
     params: Option<&Value>,
 ) -> Result<Value, super::super::HandlerError> {
     let params = params.ok_or("Missing params for crypto.sign_ed25519")?;
 
-    // Extract parameters
     let message_b64 = params
         .get("message")
         .and_then(|v| v.as_str())
         .ok_or("Missing required parameter: message")?;
 
+    let message = base64::engine::general_purpose::STANDARD
+        .decode(message_b64)
+        .map_err(|e| format!("Invalid base64 message: {e}"))?;
+
+    let b64 = &base64::engine::general_purpose::STANDARD;
+
+    // Mode 1: direct secret_key provided by caller
+    if let Some(secret_key_b64) = params.get("secret_key").and_then(|v| v.as_str()) {
+        let seed_bytes = b64
+            .decode(secret_key_b64)
+            .map_err(|e| format!("Invalid base64 secret_key: {e}"))?;
+        let seed: [u8; 32] = seed_bytes
+            .as_slice()
+            .try_into()
+            .map_err(|_| "secret_key must be exactly 32 bytes".to_string())?;
+
+        let signing_key = SigningKey::from_bytes(&seed);
+        let verifying_key: VerifyingKey = (&signing_key).into();
+
+        debug!("🔐 Signing {} bytes with Ed25519 (direct key)", message.len());
+
+        use ed25519_dalek::Signer;
+        let signature = signing_key.sign(&message).to_bytes().to_vec();
+
+        let signature_b64 = b64.encode(&signature);
+        let public_key_b64 = b64.encode(verifying_key.as_bytes());
+
+        info!("✅ Ed25519 signature generated ({} bytes, direct key)", signature.len());
+
+        return Ok(serde_json::json!({
+            "signature": signature_b64,
+            "algorithm": "Ed25519",
+            "public_key": public_key_b64,
+        }));
+    }
+
+    // Mode 2: derive key from key_id + purpose
     let key_id = params
         .get("key_id")
         .and_then(|v| v.as_str())
@@ -108,11 +156,6 @@ pub async fn handle_sign_ed25519(
         .and_then(|v| v.as_str())
         .unwrap_or("general");
 
-    // Decode message
-    let message = base64::engine::general_purpose::STANDARD
-        .decode(message_b64)
-        .map_err(|e| format!("Invalid base64 message: {e}"))?;
-
     debug!(
         "🔐 Signing {} bytes with Ed25519 (key_id: {}, purpose: {})",
         message.len(),
@@ -120,16 +163,13 @@ pub async fn handle_sign_ed25519(
         purpose
     );
 
-    // Derive signing key from key_id
     let seed = derive_key_from_id(key_id, purpose)?;
     let (secret_key, public_key) = asymmetric::generate_ed25519_from_seed(&seed)
         .map_err(|e| format!("Failed to generate Ed25519 keypair: {e}"))?;
 
-    // Sign the message
     let signature = asymmetric::sign_ed25519(&message, &secret_key)
         .map_err(|e| format!("Ed25519 signing failed: {e}"))?;
 
-    let b64 = &base64::engine::general_purpose::STANDARD;
     let signature_b64 = b64.encode(&signature);
     let public_key_b64 = b64.encode(public_key);
 

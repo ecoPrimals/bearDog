@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 29, 2026 (Wave 155i — ACME Phase 2 Crypto Delegation)
+**Last Updated**: July 29, 2026 (Wave 155j — crypto.sign_ed25519 Direct Key Signing)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant; 2 monoliths refactored Wave 119 (server.rs→7 files, orchestrator.rs→10 files) |
-| **Tests** | 14,013 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,019 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | all 4 pass | 1 advisory ignore (RSA Marvin); 41 RustCrypto skip entries removed (TLS feature-gated); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned |
@@ -90,6 +90,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 155j — crypto.sign_ed25519 Direct Key Signing (Jul 29, 2026)
+
+- **P1 unblock for Provenance Trio 7/7**: `crypto.sign_ed25519` now accepts `secret_key` param directly (base64-encoded 32-byte Ed25519 seed) in addition to `key_id` derivation
+- **Dual-mode signing**: Mode 1 (direct key) for callers with their own keypair; Mode 2 (derived key) for primal-identity signing via BLAKE3 KDF
+- **Full E2E roundtrip**: `crypto.ed25519_generate_keypair` → `crypto.sign_ed25519(secret_key=...)` → `crypto.verify_ed25519` validated through handler, router, and `capability.call` dispatch
+- **6 new tests**: Direct key signing, generate→sign→verify roundtrip, error cases (wrong length, invalid base64), precedence verification
+- **14,019 total tests**, 0 failures, 0 Clippy warnings
 
 ### Wave 155i — ACME Phase 2 Crypto Delegation (Jul 29, 2026)
 

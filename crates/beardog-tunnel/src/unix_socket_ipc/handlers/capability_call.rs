@@ -281,6 +281,55 @@ mod tests {
         }
     }
 
+    #[tokio::test]
+    async fn routes_crypto_sign_ed25519_with_direct_key() {
+        use base64::Engine;
+        use crate::unix_socket_ipc::handlers::crypto::{
+            handle_ed25519_generate_keypair, handle_verify_ed25519,
+        };
+
+        let registry = make_registry().await;
+        let handler = CapabilityCallHandler::new(registry);
+        let btsp = make_btsp().await;
+
+        let kp = handle_ed25519_generate_keypair(None)
+            .await
+            .expect("keygen");
+        let sk = kp["secret_key"].as_str().expect("sk");
+        let pk = kp["public_key"].as_str().expect("pk");
+
+        let msg = base64::engine::general_purpose::STANDARD.encode(b"provenance entry");
+
+        let params = serde_json::json!({
+            "capability": "crypto",
+            "operation": "sign_ed25519",
+            "args": {
+                "message": msg,
+                "secret_key": sk,
+            }
+        });
+        let signed = handler
+            .handle("capability.call", Some(&params), &btsp)
+            .await
+            .expect("capability.call → crypto.sign_ed25519 must succeed");
+
+        assert_eq!(signed["algorithm"], "Ed25519");
+        assert_eq!(signed["public_key"].as_str().expect("pk"), pk);
+
+        let verify_params = serde_json::json!({
+            "message": msg,
+            "signature": signed["signature"].as_str().expect("sig"),
+            "public_key": pk,
+        });
+        let v = handle_verify_ed25519(Some(&verify_params))
+            .await
+            .expect("verify");
+        assert_eq!(
+            v["valid"], true,
+            "capability.call → crypto.sign_ed25519 → verify must pass"
+        );
+    }
+
     #[test]
     fn resolve_method_joins_with_dot() {
         assert_eq!(
