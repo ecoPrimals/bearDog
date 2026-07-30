@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: Jul 26, 2026
+**Updated**: Jul 30, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -16,14 +16,14 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 - Rust edition 2024 (MSRV 1.93.0, `rust-toolchain.toml` pinned)
 - 100% Pure Rust crypto achieved — `aws-lc-rs` replaced by `rustls-rustcrypto` (Pure Rust CryptoProvider); `rcgen` replaced by `p256` + `x509-cert`; 19 C-crypto crates banned in `deny.toml`
-- 231 JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing, lineage queries, auth gate, ionic tokens, cross-gate trust exchange, FIDO2/CTAP2, seed fingerprint, universal discovery, threat analysis, ecosystem integration, enrollment verification, cipher floor enforcement)
+- 236 JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing, lineage queries, auth gate, ionic tokens, cross-gate trust exchange, FIDO2/CTAP2, seed fingerprint, universal discovery, threat analysis, ecosystem integration, enrollment verification, cipher floor enforcement, ACME Phase 2 crypto delegation)
 - 0 clippy warnings (pedantic + nursery + all cast lints warn + `doc_markdown` warn + `missing_errors_doc` warn + unwrap/expect warn, workspace-centralized)
 - 0 missing documentation warnings (all public items documented, all `# Errors` sections present)
-- 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
+- 0 unsafe production (Linux); `deny(unsafe_code)` workspace-wide with targeted `#[allow]` on Windows DPAPI FFI + libtower C ABI
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 800 lines of code (production) — `enrollment.rs` (1061L) decomposed into 7 focused modules; `lineage_proof.rs` (877L) tests extracted
 - Hardcoded `eth0` → `BEARDOG_MDNS_INTERFACE` env var; `/tmp/` fallbacks → `std::env::temp_dir()`
-- 13,995+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
+- 14,019 tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
 - 90.51% line coverage (llvm-cov workspace) — target 90% met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - `#[serial]` minimized — 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent
@@ -81,6 +81,34 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### Wave 155m — Deep Debt Sweep: Orphan Purge + Hardcoding Fix — DONE
+
+94 orphan `.rs` files deleted (~19K lines of dead code). Hardcoded primal names fixed in riboCipher probe and `PrimalSelfKnowledge` fallbacks. Dead `ed448-goldilocks` dependency removed. `#[allow(dead_code)]` hygiene completed.
+
+### Wave 155l — P2 Divergence Fixes — DONE
+
+Fixed dual-socket footgun: `--family-id` CLI flag now propagates to env vars, capability symlinks use family-scoped suffix. `FAMILY_SEED` load precedence normalized (`BEARDOG_FAMILY_SEED` before `FAMILY_SEED` at all 6 call sites).
+
+### Wave 155k — Windows Platform Gating — DONE
+
+All `UnixStream`/`UnixListener` usage gated with `#[cfg(unix)]` + `#[cfg(not(unix))]` fallbacks. Windows DPAPI FFI evolved to zero external C dependencies (direct `extern "system"` declarations). `unsafe_code` lint evolved from `forbid` to `deny` to allow targeted FFI.
+
+### Wave 155j — crypto.sign_ed25519 Direct Key Signing — DONE
+
+`crypto.sign_ed25519` enhanced to accept direct 32-byte `secret_key` parameter. Unblocked Provenance Trio 7/7 for loamSpine/sweetGrass.
+
+### Wave 155i — ACME Phase 2 Crypto Delegation — DONE
+
+5 new ACME crypto methods for songBird: `crypto.ecdsa_p256_generate_signing_keypair`, `crypto.sign_jws_es256`, `crypto.jwk_thumbprint`, `x509.build_csr`, `x509.parse_certificate`. TLS/ACME code feature-gated behind `tls-gateway` (default off).
+
+### Wave 155b — TLS/ACME Handoff to songBird — DONE
+
+TLS/ACME responsibility excised from bearDog to songBird. `rustls-rustcrypto` + `beardog-acme` made optional behind `tls-gateway` feature. BearDog handles crypto primitives; songBird handles transport/TLS.
+
+### Wave 155 — Chimera Phase 0 + crates.io Audit — DONE
+
+`beardog-crypto` crate extracted. `libtower` shared library (C ABI) for hot-path crypto. G6 crates.io audit: 21 crates publish-ready, metadata fixed, `publish = false` on internal crates.
 
 ### Wave 154 — HSM Agnostic Evolution + Transport Abstraction — DONE
 
@@ -385,4 +413,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: Jul 26, 2026 (Wave 154)
+**Last Updated**: Jul 30, 2026 (Wave 155m)

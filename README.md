@@ -10,7 +10,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 27 | **JSON-RPC Methods**: 231 | **Tests**: 14,005+ | **Coverage**: 90.51% | **Last Updated**: July 27, 2026
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 27 | **JSON-RPC Methods**: 236 | **Tests**: 14,019 | **Coverage**: 90.51% | **Last Updated**: July 30, 2026
 
 ---
 
@@ -31,7 +31,7 @@ BearDog provides secure cryptographic operations for all primals through the **T
 - **100% Pure Rust** — Zero C dependencies (RustCrypto suite, postcard, mdns-sd for LAN discovery)
 - **Rust 2024 Edition** — Modern idioms, MSRV 1.93.0
 - **Fully Concurrent** — Dependency injection architecture, no global mutable state
-- **231 JSON-RPC Methods** — Complete crypto API (BTSP handshake-as-a-service, ionic bond lifecycle, contract signing, lineage queries, consent gate, FIDO2/CTAP2 hardware authentication, cross-gate trust exchange, enrollment verification, cipher floor enforcement)
+- **236 JSON-RPC Methods** — Complete crypto API (BTSP handshake-as-a-service, ionic bond lifecycle, contract signing, lineage queries, consent gate, FIDO2/CTAP2 hardware authentication, cross-gate trust exchange, enrollment verification, cipher floor enforcement, ACME Phase 2 crypto delegation)
 - **Tor v3 Support** — Onion address derivation + ntor handshake + cell crypto
 - **Multi-Family Support** — `--family-id` flag for per-family instances
 - **Secret Storage** — Encrypted secrets with family-scoped keys + `CredentialStore` trait (in-memory, file-vault backends)
@@ -170,8 +170,8 @@ BearDog enforces **BTSP (BearDog Transport Security Protocol)** based on environ
 
 **Family seed resolution** (checked in order):
 
-1. `FAMILY_SEED` env var (raw bytes)
-2. `BEARDOG_FAMILY_SEED` env var (raw bytes)
+1. `BEARDOG_FAMILY_SEED` env var (primal-scoped, takes precedence)
+2. `FAMILY_SEED` env var (unprefixed fallback)
 3. `.family.seed` file in the working directory
 
 ```bash
@@ -234,12 +234,12 @@ export FAMILY_SEED=my-secret-seed
 | **Clippy** | 0 warnings (pedantic + nursery + all cast lints warn + doc_markdown warn + missing_errors_doc warn + unwrap/expect warn) |
 | **Missing Docs** | 0 warnings (including `# Errors` sections on all `Result` functions) |
 | **Pure Rust** | 100% — zero C dependencies |
-| **Unsafe Code** | 0 production blocks (`forbid(unsafe_code)` workspace-wide) |
+| **Unsafe Code** | 0 production (Linux) | `deny(unsafe_code)` workspace-wide; targeted `#[allow]` on Windows DPAPI FFI + libtower C ABI |
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
 | **Files > 800 LOC** | 0 (production code) |
-| **Rust files** | 1,947 |
-| **Tests** | 14,005+ (concurrent; 35 `#[serial]` in `beardog-production`) |
+| **Rust files** | 1,856 |
+| **Tests** | 14,019 (concurrent; 35 `#[serial]` in `beardog-production`) |
 | **Coverage** | 90.51% line (llvm-cov workspace, target 90% met) |
 | **Serial Tests** | 35 (`beardog-production` shared `AtomicBool` state) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |
