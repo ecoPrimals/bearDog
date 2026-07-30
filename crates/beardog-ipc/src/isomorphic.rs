@@ -35,7 +35,9 @@ use std::path::PathBuf;
 use std::pin::Pin;
 use std::task::Poll;
 use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt, ReadBuf};
-use tokio::net::{TcpStream, UnixStream};
+use tokio::net::TcpStream;
+#[cfg(unix)]
+use tokio::net::UnixStream;
 use tracing::{debug, info};
 
 /// IPC endpoint types (Unix socket or TCP)
@@ -74,7 +76,7 @@ impl IpcEndpoint {
 /// interchangeably - TRUE universal abstraction!
 pub trait AsyncStream: AsyncRead + AsyncWrite + Send + Unpin {}
 
-// Implement for both Unix and TCP streams
+#[cfg(unix)]
 impl AsyncStream for UnixStream {}
 impl AsyncStream for TcpStream {}
 
@@ -84,8 +86,9 @@ impl AsyncStream for TcpStream {}
 #[derive(Debug)]
 pub enum IpcStream {
     /// Unix domain socket transport.
+    #[cfg(unix)]
     Unix(UnixStream),
-    /// TCP transport (localhost fallback).
+    /// TCP transport (localhost fallback, primary on Windows).
     Tcp(TcpStream),
 }
 
@@ -96,6 +99,7 @@ impl AsyncRead for IpcStream {
         buf: &mut ReadBuf<'_>,
     ) -> Poll<std::io::Result<()>> {
         match self.get_mut() {
+            #[cfg(unix)]
             Self::Unix(s) => Pin::new(s).poll_read(cx, buf),
             Self::Tcp(s) => Pin::new(s).poll_read(cx, buf),
         }
@@ -109,6 +113,7 @@ impl AsyncWrite for IpcStream {
         buf: &[u8],
     ) -> Poll<std::io::Result<usize>> {
         match self.get_mut() {
+            #[cfg(unix)]
             Self::Unix(s) => Pin::new(s).poll_write(cx, buf),
             Self::Tcp(s) => Pin::new(s).poll_write(cx, buf),
         }
@@ -119,6 +124,7 @@ impl AsyncWrite for IpcStream {
         cx: &mut std::task::Context<'_>,
     ) -> Poll<std::io::Result<()>> {
         match self.get_mut() {
+            #[cfg(unix)]
             Self::Unix(s) => Pin::new(s).poll_flush(cx),
             Self::Tcp(s) => Pin::new(s).poll_flush(cx),
         }
@@ -129,6 +135,7 @@ impl AsyncWrite for IpcStream {
         cx: &mut std::task::Context<'_>,
     ) -> Poll<std::io::Result<()>> {
         match self.get_mut() {
+            #[cfg(unix)]
             Self::Unix(s) => Pin::new(s).poll_shutdown(cx),
             Self::Tcp(s) => Pin::new(s).poll_shutdown(cx),
         }
@@ -381,6 +388,7 @@ pub async fn connect_transport(
     info!(endpoint = %endpoint, "connecting via TransportEndpoint");
 
     match endpoint {
+        #[cfg(unix)]
         TransportEndpoint::Uds { path } => {
             let mut stream = UnixStream::connect(path)
                 .await
@@ -392,6 +400,11 @@ pub async fn connect_transport(
             info!(path = %path.display(), "connected via UDS");
             Ok(IpcStream::Unix(stream))
         }
+        #[cfg(not(unix))]
+        TransportEndpoint::Uds { path } => Err(anyhow::anyhow!(
+            "Unix domain sockets are not supported on this platform (path: {})",
+            path.display()
+        )),
         TransportEndpoint::Tcp { host, port } => {
             let addr = format!("{host}:{port}");
             let mut stream = TcpStream::connect(&addr)
@@ -458,12 +471,18 @@ pub async fn connect_raw(endpoint: &beardog_types::btsp::TransportEndpoint) -> R
     debug!(endpoint = %endpoint, "raw transport connect (no protocol prefix)");
 
     match endpoint {
+        #[cfg(unix)]
         TransportEndpoint::Uds { path } => {
             let stream = UnixStream::connect(path)
                 .await
                 .context(format!("Failed to connect to UDS: {}", path.display()))?;
             Ok(IpcStream::Unix(stream))
         }
+        #[cfg(not(unix))]
+        TransportEndpoint::Uds { path } => Err(anyhow::anyhow!(
+            "Unix domain sockets are not supported on this platform (path: {})",
+            path.display()
+        )),
         TransportEndpoint::Tcp { host, port } => {
             let addr = format!("{host}:{port}");
             let stream = TcpStream::connect(&addr)
@@ -484,7 +503,8 @@ pub async fn connect_raw(endpoint: &beardog_types::btsp::TransportEndpoint) -> R
 ///
 /// # Errors
 ///
-/// Returns an error if the socket cannot be opened.
+/// Returns an error if the socket cannot be opened, or on non-Unix platforms.
+#[cfg(unix)]
 pub async fn connect_unix(path: impl AsRef<std::path::Path>) -> Result<IpcStream> {
     let te = beardog_types::btsp::TransportEndpoint::Uds {
         path: path.as_ref().to_path_buf(),
@@ -551,6 +571,7 @@ mod tests {
     #[test]
     fn test_async_stream_trait_objects() {
         fn assert_send_sync<T: Send + Sync>() {}
+        #[cfg(unix)]
         assert_send_sync::<UnixStream>();
         assert_send_sync::<TcpStream>();
     }

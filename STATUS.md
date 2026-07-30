@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 29, 2026 (Wave 155j — crypto.sign_ed25519 Direct Key Signing)
+**Last Updated**: July 30, 2026 (Wave 155k — Windows Platform Gating)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -16,7 +16,7 @@
 | **Clippy** | 0 warnings | Pedantic + nursery + all cast lints warn + `doc_markdown` warn + `missing_errors_doc` warn + unwrap/expect warn, workspace-centralized |
 | **Missing Docs** | 0 warnings | All public items documented |
 | **Pure Rust** | 100% | Zero C dependencies (ecoBin) |
-| **Unsafe Code** | 0 production | `forbid(unsafe_code)` workspace-wide + all crate `lib.rs` |
+| **Unsafe Code** | 0 production (Linux) | `deny(unsafe_code)` workspace-wide; targeted `#[allow]` on Windows DPAPI FFI + libtower C ABI |
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant; 2 monoliths refactored Wave 119 (server.rs→7 files, orchestrator.rs→10 files) |
@@ -90,6 +90,17 @@
 ---
 
 ## Recent Improvements
+
+### Wave 155k — Windows Platform Gating (Jul 30, 2026)
+
+- **P1 unblock for Windows depot `beardog.exe`**: All `UnixStream`/`UnixListener` usage gated behind `#[cfg(unix)]` with `#[cfg(not(unix))]` fallbacks
+- **10 files fixed across 5 crates**: `beardog-ipc` (isomorphic IPC), `beardog-tunnel` (platform, modes, protocol, DPAPI HSM), `beardog-cli` (health socket, ecosystem discovery), `beardog-tower-atomic` (already gated — caller sites fixed)
+- **`IpcStream::Unix` variant**: Conditional compilation with TCP-only on Windows; `IpcEndpoint::UnixSocket` still available on Unix
+- **Windows DPAPI FFI evolved**: Removed `windows-sys` dependency; direct `extern "system"` declarations with manual `DataBlob` struct (zero-dep, zero-overhead)
+- **`unsafe_code` lint**: Workspace level evolved from `forbid` to `deny` to allow targeted `#[allow(unsafe_code)]` on Windows DPAPI FFI and libtower C ABI
+- **`modes/client.rs` evolved**: `ClientStream` enum replaces `Box<dyn Read + Write>` for correct trait-object dispatch (TCP + Unix)
+- **Cross-compile verified**: `cargo check --target x86_64-pc-windows-gnu` passes with 0 errors
+- **Linux tests**: 14,019 passed, 0 failures, 0 Clippy warnings — zero regressions
 
 ### Wave 155j — crypto.sign_ed25519 Direct Key Signing (Jul 29, 2026)
 

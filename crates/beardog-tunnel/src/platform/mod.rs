@@ -36,7 +36,9 @@
 //!
 //! Follows the biomeOS cross-platform IPC layout for primal-agnostic sockets.
 
+#[cfg(unix)]
 pub mod android;
+#[cfg(unix)]
 pub mod unix;
 
 #[cfg(windows)]
@@ -348,23 +350,43 @@ pub trait PlatformListener: Send + Sync {
 /// Concrete platform listeners (replaces `Box<dyn PlatformListener>`).
 pub enum PlatformListenerBackend {
     /// Filesystem Unix domain socket listener (Linux, BSD, …).
+    #[cfg(unix)]
     Unix(unix::UnixPlatformListener),
     /// Android abstract namespace listener.
+    #[cfg(unix)]
     Android(android::AndroidPlatformListener),
+    /// Placeholder for Windows (named pipe listener not yet implemented).
+    #[cfg(not(unix))]
+    #[allow(dead_code)]
+    Placeholder,
 }
 
 impl PlatformListener for PlatformListenerBackend {
     async fn accept(&mut self) -> std::io::Result<Box<dyn PlatformStream>> {
         match self {
+            #[cfg(unix)]
             Self::Unix(l) => PlatformListener::accept(l).await,
+            #[cfg(unix)]
             Self::Android(l) => PlatformListener::accept(l).await,
+            #[cfg(not(unix))]
+            Self::Placeholder => Err(std::io::Error::new(
+                std::io::ErrorKind::Unsupported,
+                "platform listener not implemented",
+            )),
         }
     }
 
     fn local_addr(&self) -> std::io::Result<String> {
         match self {
+            #[cfg(unix)]
             Self::Unix(l) => l.local_addr(),
+            #[cfg(unix)]
             Self::Android(l) => l.local_addr(),
+            #[cfg(not(unix))]
+            Self::Placeholder => Err(std::io::Error::new(
+                std::io::ErrorKind::Unsupported,
+                "platform listener not implemented",
+            )),
         }
     }
 }

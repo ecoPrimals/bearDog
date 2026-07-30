@@ -344,7 +344,7 @@ fn app_data_local_dir(args: etcetera::app_strategy::AppStrategyArgs) -> Option<P
 
     #[cfg(windows)]
     {
-        use etcetera::base_strategy::Windows as BaseWindows;
+        use etcetera::base_strategy::{BaseStrategy, Windows as BaseWindows};
         BaseWindows::new()
             .ok()
             .map(|base| base.cache_dir().join(&args.author).join(&args.app_name))

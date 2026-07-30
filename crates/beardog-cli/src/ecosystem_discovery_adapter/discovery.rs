@@ -58,6 +58,7 @@ impl PrimalDiscoveryService for EcosystemDiscoveryAdapter {
             )));
         }
 
+        #[cfg(unix)]
         let mut client = match proto.as_str() {
             "unix" | "ipc" => {
                 let path = service
@@ -88,10 +89,20 @@ impl PrimalDiscoveryService for EcosystemDiscoveryAdapter {
                 .map_err(Self::tower_atomic_error)?,
         };
 
-        let (method, params) = Self::jsonrpc_method_and_params(&payload);
-        client
-            .call(&method, params)
-            .await
-            .map_err(Self::tower_atomic_error)
+        #[cfg(not(unix))]
+        return Err(BearDogError::network(format!(
+            "Ecosystem discovery adapter requires Unix sockets; \
+             beardog-cli on Windows uses TCP-only mode (service_id={})",
+            service.service_id
+        )));
+
+        #[cfg(unix)]
+        {
+            let (method, params) = Self::jsonrpc_method_and_params(&payload);
+            client
+                .call(&method, params)
+                .await
+                .map_err(Self::tower_atomic_error)
+        }
     }
 }

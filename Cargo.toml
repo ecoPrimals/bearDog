@@ -27,8 +27,9 @@ homepage = "https://beardog.dev"
 documentation = "https://docs.beardog.dev"
 
 [workspace.lints.rust]
-# `forbid` at workspace level — cannot be relaxed by any crate.
-unsafe_code = "forbid"
+# `deny` at workspace level — prevents accidental unsafe while allowing targeted
+# `#[allow(unsafe_code)]` in modules that genuinely require FFI (DPAPI, libtower C ABI).
+unsafe_code = "deny"
 missing_docs = "warn"
 deprecated = "warn"
 

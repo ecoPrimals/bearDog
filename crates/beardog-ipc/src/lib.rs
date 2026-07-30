@@ -71,9 +71,11 @@ pub use neural_registration::{
 // Isomorphic IPC discovery (automatic Unix or TCP)
 pub use isomorphic::{
     AsyncStream, IpcEndpoint, IpcStream, TcpDiscoveryPathHints, UnixSocketPathHints,
-    connect_beardog, connect_raw, connect_transport, connect_unix, discover_beardog_endpoint,
+    connect_beardog, connect_raw, connect_transport, discover_beardog_endpoint,
     get_tcp_discovery_file_candidates_with, get_unix_socket_paths_with, ipc_endpoint_to_transport,
 };
+#[cfg(unix)]
+pub use isomorphic::connect_unix;
 
 // Registry client for JSON-RPC registration
 pub use protocol::JsonRpcRequest as ProtocolJsonRpcRequest;

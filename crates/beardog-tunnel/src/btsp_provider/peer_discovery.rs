@@ -48,7 +48,10 @@ impl BeardogBtspProvider {
         let socket_paths = Self::get_discovery_socket_paths();
 
         for socket_path in socket_paths {
-            let Ok(mut stream) = beardog_ipc::connect_unix(&socket_path).await else {
+            let te = beardog_types::btsp::TransportEndpoint::Uds {
+                path: std::path::PathBuf::from(&socket_path),
+            };
+            let Ok(mut stream) = beardog_ipc::connect_transport(&te).await else {
                 continue;
             };
 

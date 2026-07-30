@@ -5,15 +5,16 @@
 //! Detects which protocol a client is using based on initial bytes.
 //! Primary: JSON-RPC 2.0, Legacy: HTTP
 
-use tokio::io::{AsyncBufReadExt, BufReader};
-use tokio::net::unix::OwnedReadHalf;
-use tracing::debug;
-
 use super::types::Protocol;
 
-/// Protocol detector for Unix socket connections
+/// Protocol detector for Unix socket connections.
+///
+/// Only available on Unix platforms where `tokio::net::unix::OwnedReadHalf`
+/// is accessible.
+#[cfg(unix)]
 pub struct ProtocolDetector;
 
+#[cfg(unix)]
 impl ProtocolDetector {
     /// # Errors
     ///
@@ -30,14 +31,15 @@ impl ProtocolDetector {
     /// - `Protocol`: Detected protocol type
     /// - `first_line`: The initial data read (for protocol handlers to process)
     pub async fn detect(
-        reader: &mut BufReader<OwnedReadHalf>,
+        reader: &mut tokio::io::BufReader<tokio::net::unix::OwnedReadHalf>,
     ) -> std::io::Result<(Protocol, String)> {
+        use tokio::io::AsyncBufReadExt;
         let mut first_line = String::new();
         reader.read_line(&mut first_line).await?;
 
         let protocol = Protocol::detect_from_bytes(first_line.as_bytes());
 
-        debug!(
+        tracing::debug!(
             "🔍 Protocol detected: {} (security level: {})",
             protocol.name(),
             protocol.security_level()

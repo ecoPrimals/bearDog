@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![recursion_limit = "256"]
-#![forbid(unsafe_code)]
+// unsafe_code = "deny" is set at workspace level. Windows DPAPI FFI functions
+// use targeted #[allow(unsafe_code)] for their extern blocks.
 #![cfg_attr(
     test,
     allow(

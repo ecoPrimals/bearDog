@@ -41,6 +41,7 @@ use std::sync::Arc;
 use tracing::{info, warn};
 
 use self::attestation::build_neural_attestation;
+#[cfg(unix)]
 use self::health::run_health_socket;
 use self::registration::attempt_orchestrator_registration;
 use self::transport::neural_registration_address;
@@ -351,6 +352,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
             format!("/tmp/{default_health}")
         }
     });
+    #[cfg(unix)]
     if !tcp_only {
         let hp = health_path.clone();
         info!(path = %hp, "spawning plaintext health socket");

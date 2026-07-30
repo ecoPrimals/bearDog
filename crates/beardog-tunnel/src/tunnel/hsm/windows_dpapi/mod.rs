@@ -27,6 +27,16 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use tokio::sync::RwLock;
 
+/// Win32 `DATA_BLOB` / `CRYPTOAPI_BLOB` / `CRYPT_INTEGER_BLOB` — all are the
+/// same layout.  Defined here to avoid `windows-sys` feature discovery issues
+/// across binding generator versions.
+#[cfg(windows)]
+#[repr(C)]
+struct DataBlob {
+    cb_data: u32,
+    pb_data: *mut u8,
+}
+
 /// RAII guard for DPAPI output buffers allocated by the Windows API.
 ///
 /// `CryptProtectData` / `CryptUnprotectData` return heap memory that must be
@@ -39,6 +49,7 @@ struct DpapiBlob {
 }
 
 #[cfg(windows)]
+#[allow(unsafe_code)]
 impl DpapiBlob {
     /// Copies the DPAPI output into an owned `Vec`.
     fn to_vec(&self) -> Vec<u8> {
@@ -52,14 +63,41 @@ impl DpapiBlob {
 }
 
 #[cfg(windows)]
+#[allow(unsafe_code)]
 impl Drop for DpapiBlob {
     fn drop(&mut self) {
         if !self.data.is_null() {
             // SAFETY: `data` was allocated by CryptProtectData / CryptUnprotectData
             // and must be released with LocalFree per the Windows API contract.
-            unsafe { windows_sys::Win32::System::Memory::LocalFree(self.data.cast()) };
+            unsafe { LocalFree(self.data.cast()) };
         }
     }
+}
+
+#[cfg(windows)]
+#[allow(unsafe_code)]
+unsafe extern "system" {
+    fn CryptProtectData(
+        p_data_in: *const DataBlob,
+        sz_data_descr: *const u16,
+        p_optional_entropy: *const DataBlob,
+        pv_reserved: *const core::ffi::c_void,
+        p_prompt_struct: *const core::ffi::c_void,
+        dw_flags: u32,
+        p_data_out: *mut DataBlob,
+    ) -> i32;
+
+    fn CryptUnprotectData(
+        p_data_in: *const DataBlob,
+        ppsz_data_descr: *mut *mut u16,
+        p_optional_entropy: *const DataBlob,
+        pv_reserved: *const core::ffi::c_void,
+        p_prompt_struct: *const core::ffi::c_void,
+        dw_flags: u32,
+        p_data_out: *mut DataBlob,
+    ) -> i32;
+
+    fn LocalFree(hmem: *mut core::ffi::c_void) -> *mut core::ffi::c_void;
 }
 
 /// Metadata for a single DPAPI-protected key stored on disk.
@@ -127,26 +165,25 @@ impl WindowsDpapiHsm {
     #[allow(unsafe_code)]
     fn dpapi_protect(plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
         use std::ptr;
-        use windows_sys::Win32::Security::Cryptography::{CRYPTOAPI_BLOB, CryptProtectData};
 
-        let mut input = CRYPTOAPI_BLOB {
-            cbData: u32::try_from(plaintext.len()).unwrap_or(u32::MAX),
-            pbData: plaintext.as_ptr().cast_mut(),
+        let mut input = DataBlob {
+            cb_data: u32::try_from(plaintext.len()).unwrap_or(u32::MAX),
+            pb_data: plaintext.as_ptr().cast_mut(),
         };
-        let mut output = CRYPTOAPI_BLOB {
-            cbData: 0,
-            pbData: ptr::null_mut(),
+        let mut output = DataBlob {
+            cb_data: 0,
+            pb_data: ptr::null_mut(),
         };
 
         let ok = unsafe {
-            // SAFETY: `input.pbData` points to a valid, live `plaintext` slice for the
+            // SAFETY: `input.pb_data` points to a valid, live `plaintext` slice for the
             // duration of the call.  Optional pointer parameters are null as documented.
             CryptProtectData(
                 &mut input,
                 ptr::null(),
-                ptr::null_mut(),
-                ptr::null_mut(),
-                ptr::null_mut(),
+                ptr::null(),
+                ptr::null(),
+                ptr::null(),
                 0,
                 &mut output,
             )
@@ -158,8 +195,8 @@ impl WindowsDpapiHsm {
         }
 
         let blob = DpapiBlob {
-            data: output.pbData,
-            len: output.cbData as usize,
+            data: output.pb_data,
+            len: output.cb_data as usize,
         };
         Ok(blob.to_vec())
     }
@@ -169,26 +206,25 @@ impl WindowsDpapiHsm {
     #[allow(unsafe_code)]
     fn dpapi_unprotect(protected: &[u8]) -> Result<Vec<u8>, BearDogError> {
         use std::ptr;
-        use windows_sys::Win32::Security::Cryptography::{CRYPTOAPI_BLOB, CryptUnprotectData};
 
-        let mut input = CRYPTOAPI_BLOB {
-            cbData: u32::try_from(protected.len()).unwrap_or(u32::MAX),
-            pbData: protected.as_ptr().cast_mut(),
+        let mut input = DataBlob {
+            cb_data: u32::try_from(protected.len()).unwrap_or(u32::MAX),
+            pb_data: protected.as_ptr().cast_mut(),
         };
-        let mut output = CRYPTOAPI_BLOB {
-            cbData: 0,
-            pbData: ptr::null_mut(),
+        let mut output = DataBlob {
+            cb_data: 0,
+            pb_data: ptr::null_mut(),
         };
 
         let ok = unsafe {
-            // SAFETY: `input.pbData` points to a valid, live `protected` slice for the
+            // SAFETY: `input.pb_data` points to a valid, live `protected` slice for the
             // duration of the call.  Optional pointer parameters are null as documented.
             CryptUnprotectData(
                 &mut input,
                 ptr::null_mut(),
-                ptr::null_mut(),
-                ptr::null_mut(),
-                ptr::null_mut(),
+                ptr::null(),
+                ptr::null(),
+                ptr::null(),
                 0,
                 &mut output,
             )
@@ -200,8 +236,8 @@ impl WindowsDpapiHsm {
         }
 
         let blob = DpapiBlob {
-            data: output.pbData,
-            len: output.cbData as usize,
+            data: output.pb_data,
+            len: output.cb_data as usize,
         };
         Ok(blob.to_vec())
     }

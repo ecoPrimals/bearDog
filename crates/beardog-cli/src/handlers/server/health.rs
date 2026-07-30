@@ -9,6 +9,10 @@ use tracing::info;
 /// Accepts connections, optionally consumes riboCipher prefix, reads one
 /// JSON-RPC request, responds with health status. No BTSP, no auth, no
 /// method gate — just a liveness signal for cellMembrane and orchestration.
+///
+/// Only available on Unix platforms (uses Unix domain sockets). On Windows,
+/// health probes use the TCP transport directly.
+#[cfg(unix)]
 pub(super) async fn run_health_socket(path: &str) -> Result<(), BearDogError> {
     use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
     use tokio::net::UnixListener;
