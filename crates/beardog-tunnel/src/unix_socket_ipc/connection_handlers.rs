@@ -628,8 +628,8 @@ fn try_phase3_upgrade(request_line: &str, response_str: &str) -> Option<Phase3Se
     let client_nonce = BASE64.decode(client_nonce_b64).ok()?;
     let server_nonce = BASE64.decode(server_nonce_b64).ok()?;
 
-    let family_seed = beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED)
-        .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED_PREFIXED))
+    let family_seed = beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED_PREFIXED)
+        .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED))
         .ok()
         .filter(|s| s.len() >= 16)
         .map(String::into_bytes)?;

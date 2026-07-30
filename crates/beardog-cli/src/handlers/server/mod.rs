@@ -24,7 +24,6 @@ mod tests;
 pub use transport::{resolve_effective_tcp_listen, resolve_server_socket_path};
 
 use crate::ServerArgs;
-#[cfg(feature = "tls-gateway")]
 use beardog_config::env_keys;
 use beardog_config::env_keys::resolve_primal_name;
 use beardog_errors::BearDogError;
@@ -165,7 +164,9 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     }
 
     if let Some(ref family_id) = args.family_id {
-        info!(family_id = %family_id, "family id");
+        beardog_errors::process_env::set_var(env_keys::ENV_FAMILY_ID, family_id);
+        beardog_errors::process_env::set_var(env_keys::ENV_FAMILY_ID_PREFIXED, family_id);
+        info!(family_id = %family_id, "family id (propagated to env)");
     }
 
     if let Some(ref orchestrator_id) = args.orchestrator_id {

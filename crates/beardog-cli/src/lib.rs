@@ -118,16 +118,16 @@ pub struct ServerArgs {
     #[arg(long)]
     pub orchestrator_id: Option<String>,
 
-    /// Plaintext health socket path for monitoring probes.
+    /// Override path for the plaintext health socket.
     ///
-    /// Binds a secondary UDS listener in plaintext mode (no BTSP requirement).
-    /// Only exposes health methods (`health`, `health.liveness`, `health.readiness`,
-    /// `health.check`, `ping`, `status`, `check`).
+    /// On Unix, a secondary UDS listener is **always** bound alongside the main
+    /// socket (unless `--bind-mode tcp`). It runs in plaintext mode — no BTSP,
+    /// no riboCipher — and only exposes a minimal alive/version response.
     ///
     /// cellMembrane and monitoring tools connect here for lightweight probes
     /// without needing riboCipher or BTSP handshake knowledge.
     ///
-    /// Default when omitted: no health socket (use riboCipher on main socket).
+    /// Default: `<primal>-default.sock` in the same directory as the main socket.
     /// Env: `BEARDOG_HEALTH_SOCKET`
     #[arg(long, env = "BEARDOG_HEALTH_SOCKET")]
     pub health_socket: Option<String>,

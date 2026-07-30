@@ -100,12 +100,14 @@ Empty strings are treated as unset. When absent, a `tracing::warn` is emitted on
 **Purpose**: BTSP key material for production mode
 **Required**: Only when `FAMILY_ID` is set to a non-default value
 **Default**: `.family.seed` file in working directory
-**Precedence**: `FAMILY_SEED` > `BEARDOG_FAMILY_SEED` > `.family.seed` file
+**Precedence**: `BEARDOG_FAMILY_SEED` > `FAMILY_SEED` > `.family.seed` file
+
+Prefixed form takes precedence (primal-scoped override of ecosystem-wide seed).
 
 ```bash
-export FAMILY_SEED=my-secret-seed
-# or
 export BEARDOG_FAMILY_SEED=my-secret-seed
+# or (unprefixed fallback, shared by all primals)
+export FAMILY_SEED=my-secret-seed
 ```
 
 If `FAMILY_ID` is set but no seed is available, the server refuses to start.

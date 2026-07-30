@@ -286,10 +286,10 @@ fn select_best_cipher(offered: &[String]) -> Option<&'static str> {
 
 /// Load the family seed from the environment for handshake key re-derivation.
 fn load_family_seed() -> Result<Vec<u8>, String> {
-    let seed_str = beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED)
-        .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED_PREFIXED))
+    let seed_str = beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED_PREFIXED)
+        .or_else(|_| beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED))
         .map_err(|_| {
-            "BTSP Phase 3 requires FAMILY_SEED or BEARDOG_FAMILY_SEED environment variable"
+            "BTSP Phase 3 requires BEARDOG_FAMILY_SEED or FAMILY_SEED environment variable"
                 .to_string()
         })?;
 

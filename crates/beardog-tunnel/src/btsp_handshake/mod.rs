@@ -106,18 +106,19 @@ pub fn resolve_security_mode() -> Result<BtspSecurityMode, BearDogError> {
 /// Load the family seed from environment or filesystem.
 ///
 /// Checks (in order):
-/// 1. `FAMILY_SEED` env var (raw bytes)
-/// 2. `BEARDOG_FAMILY_SEED` env var (raw bytes)
+/// 1. `BEARDOG_FAMILY_SEED` env var (primal-scoped, takes precedence)
+/// 2. `FAMILY_SEED` env var (unprefixed fallback)
 /// 3. `.family.seed` file in the current directory
 fn load_family_seed() -> Result<Vec<u8>, BearDogError> {
+    // Prefixed takes precedence (primal-scoped override)
     if let Ok(seed) =
-        beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED).map(String::into_bytes)
+        beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED_PREFIXED).map(String::into_bytes)
         && !seed.is_empty()
     {
         return Ok(seed);
     }
     if let Ok(seed) =
-        beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED_PREFIXED).map(String::into_bytes)
+        beardog_errors::process_env::var(env_keys::ENV_FAMILY_SEED).map(String::into_bytes)
         && !seed.is_empty()
     {
         return Ok(seed);
@@ -129,8 +130,8 @@ fn load_family_seed() -> Result<Vec<u8>, BearDogError> {
     }
 
     Err(BearDogError::system(
-        "BTSP production mode requires a family seed. Set FAMILY_SEED or \
-         BEARDOG_FAMILY_SEED env var, or create a .family.seed file."
+        "BTSP production mode requires a family seed. Set BEARDOG_FAMILY_SEED or \
+         FAMILY_SEED env var, or create a .family.seed file."
             .to_string(),
     ))
 }

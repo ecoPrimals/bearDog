@@ -106,8 +106,13 @@ impl MultiTransportServer {
         // ================================================================
 
         if let Some(socket_path) = socket_path {
+            let symlink_suffix = if identity.is_standalone() {
+                ".sock".to_string()
+            } else {
+                format!("-{}.sock", identity.family_id())
+            };
             let ipc_symlinks = IpcCapabilitySymlinksConfig {
-                symlink_suffix: ".sock".to_string(),
+                symlink_suffix,
                 domain_stems: ipc_capability_domain_stems_resolved(
                     &discovered_simple_capabilities(),
                 ),

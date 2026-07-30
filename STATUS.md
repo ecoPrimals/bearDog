@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 30, 2026 (Wave 155k — Windows Platform Gating)
+**Last Updated**: July 30, 2026 (Wave 155l — P2 Divergence Fixes)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -90,6 +90,13 @@
 ---
 
 ## Recent Improvements
+
+### Wave 155l — P2 Divergence Fixes (Jul 30, 2026)
+
+- **Dual-socket footgun resolved**: Health socket doc updated to match always-on behavior; `--family-id` CLI flag now propagates to `FAMILY_ID` + `BEARDOG_FAMILY_ID` env vars so BTSP mode, `PrimalIdentity`, and socket naming all align
+- **Capability symlink suffix fixed**: `MultiTransportServer` now uses family-scoped symlink suffix (`crypto-{family}.sock`) instead of hardcoded `.sock`, matching `SocketConfig::ipc_symlink_filename_suffix()` convention
+- **`FAMILY_SEED` precedence normalized**: All 4 load sites now check `BEARDOG_FAMILY_SEED` (primal-scoped) before `FAMILY_SEED` (unprefixed fallback); previously 2 of 4 sites had the order reversed
+- **P2 divergences from Wave 155k blurb addressed**: Both bearDog-owned items (dual-socket + FAMILY_SEED) closed
 
 ### Wave 155k — Windows Platform Gating (Jul 30, 2026)
 
