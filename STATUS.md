@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 30, 2026 (Wave 155l — P2 Divergence Fixes)
+**Last Updated**: July 30, 2026 (Wave 155m — Deep Debt Sweep: Orphan Purge + Hardcoding Fix)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -90,6 +90,16 @@
 ---
 
 ## Recent Improvements
+
+### Wave 155m — Deep Debt Sweep: Orphan Purge + Hardcoding Fix (Jul 30, 2026)
+
+- **94 orphan `.rs` files deleted**: Never `mod`-included, compile-unreachable dead code across 8 crates (`beardog-types`, `beardog-security`, `beardog-tunnel`, `beardog-core`, `beardog-config`, `beardog-auth`, `beardog-discovery`)
+- **Hardcoded primal names fixed**: riboCipher probe response and `PrimalSelfKnowledge` fallbacks now use `resolve_primal_name()` instead of literal strings
+- **Dead dependency removed**: `ed448-goldilocks` workspace dep (handlers deleted, Phase 3 deferred)
+- **`#[allow(dead_code)]` hygiene**: Placeholder variant now carries `reason`
+- **`universal_hsm` orphan tree cleaned**: 17 unwired files deleted, stale doc comment removed
+- **`timeouts_new` splits cleaned**: 5 orphaned domain files deleted
+- **Zero regressions**: 14,019 tests, 0 Clippy warnings, clean `cargo clean` + rebuild
 
 ### Wave 155l — P2 Divergence Fixes (Jul 30, 2026)
 

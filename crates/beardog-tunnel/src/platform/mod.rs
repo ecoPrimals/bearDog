@@ -357,7 +357,7 @@ pub enum PlatformListenerBackend {
     Android(android::AndroidPlatformListener),
     /// Placeholder for Windows (named pipe listener not yet implemented).
     #[cfg(not(unix))]
-    #[allow(dead_code)]
+    #[allow(dead_code, reason = "Windows named-pipe listener not yet implemented; variant kept for enum completeness")]
     Placeholder,
 }
 

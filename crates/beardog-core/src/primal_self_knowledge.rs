@@ -180,7 +180,7 @@ impl PrimalIdentity {
         let name = inputs
             .beardog_primal_name
             .clone()
-            .unwrap_or_else(|| "beardog-default".to_string());
+            .unwrap_or_else(|| env_keys::resolve_primal_name());
 
         let primal_type = inputs
             .beardog_primal_type
@@ -615,8 +615,8 @@ impl PrimalSelfKnowledge {
                 caps.insert(Capability::Authentication);
 
                 PrimalIdentity {
-                    name: "beardog-test".to_string(),
-                    primal_type: "beardog".to_string(),
+                    name: env_keys::resolve_primal_name(),
+                    primal_type: env_keys::DEFAULT_PRIMAL_NAME.to_string(),
                     capabilities: caps,
                     endpoints: vec![],
                     metadata: HashMap::new(),

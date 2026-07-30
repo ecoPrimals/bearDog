@@ -7,9 +7,7 @@
 //! Secure Enclave, cloud).
 //!
 //! The `traits` and `entropy` sub-modules are compiled and used by HSM
-//! providers.  The `providers/`, `health`, `registry`, and `provider`
-//! sub-modules exist on disk but are not yet wired into the module tree — they
-//! reference older API surfaces and need alignment before activation.
+//! providers.
 
 pub mod entropy;
 pub mod traits;

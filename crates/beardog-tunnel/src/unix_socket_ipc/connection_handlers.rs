@@ -133,7 +133,7 @@ impl UnixSocketIpcServer {
                 };
                 let response = serde_json::json!({
                     "status": "ok",
-                    "primal": "bearDog",
+                    "primal": env_keys::resolve_primal_name(),
                     "signal": signal_name
                 });
                 let msg = serde_json::to_string(&response)?;

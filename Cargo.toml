@@ -160,7 +160,7 @@ sha1 = "0.10"  # Legacy hashing (Git compatibility) - Phase 7
 rsa = "0.9"
 p256 = { version = "0.13", features = ["ecdsa", "ecdh"] }
 p384 = { version = "0.13", features = ["ecdsa"] }  # ECDSA P-384 (Phase 2)
-ed448-goldilocks = "0.9"  # Ed448 signatures (Phase 3, deferred)
+# ed448-goldilocks removed: handler stubs deleted; re-add when Phase 3 activates
 scrypt = "0.11"           # Memory-hard KDF - stable version (evolved from RC)
 # DEFERRED Phase 7: AES legacy modes - RustCrypto RC version conflicts (like P-521/Ed448)
 # aes = "0.9.0-rc.2"        # AES cipher (for CBC/CTR/XTS modes)
