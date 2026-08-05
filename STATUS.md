@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: July 30, 2026 (Wave 155m — Deep Debt Sweep: Orphan Purge + Hardcoding Fix)
+**Last Updated**: August 5, 2026 (Wave 156e — Neural API Routing Stub: E1 Debt Fix)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -90,6 +90,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 156e — Neural API Routing Stub: E1 Debt Fix (Aug 5, 2026)
+
+- **Legacy `capability.register` expanded**: 4→8 domains — added `auth`, `btsp`, `bonding`, `secrets`, `relay`, `consent`; stale `tls_crypto` (songBird's responsibility) and `genetic_lineage` (renamed) replaced with actual operation names matching runtime handler surface
+- **Crypto domain operations updated**: 12 generic names replaced with 36 dotted canonical operations (signing, AEAD, hash, KDF, key-exchange, ionic bonds, contracts, semantic aliases)
+- **`primal.announce` TCP path fix**: CLI server now passes `registration_addr` (TCP when available, UDS otherwise) to `send_primal_announce`, matching legacy `capability.register` behavior — TCP-only deployments now appear correctly in Neural API routing table
+- **E1 debt item from overwatch blurb resolved**: bearDog already implemented both `capability.register` and `primal.announce` paths; the stale domain list and TCP socket mismatch caused routing table gaps
+- **14,019 tests**, 0 failures, 0 Clippy errors
 
 ### Wave 155m — Deep Debt Sweep: Orphan Purge + Hardcoding Fix (Jul 30, 2026)
 

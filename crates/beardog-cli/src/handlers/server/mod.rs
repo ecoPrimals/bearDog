@@ -300,7 +300,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         match send_primal_announce(
             &neural_socket,
             &primal_name,
-            &socket_path,
+            registration_addr,
             &announce_methods,
             Some(&attestation),
         )

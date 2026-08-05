@@ -1,44 +1,33 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Neural API Auto-Registration for `BearDog`
+//! Neural API Auto-Registration
 //!
-//! Registers `BearDog`'s crypto capabilities with Neural API on startup.
-//! This enables TRUE PRIMAL pattern with semantic routing via `capability.call`.
+//! Registers this primal's capabilities with the Neural API on startup,
+//! enabling TRUE PRIMAL pattern with semantic routing via `capability.call`
+//! and push-style ecosystem routing via `primal.announce`.
 //!
 //! ## Architecture
 //!
 //! ```text
-//! BearDog startup
+//! Primal startup
 //!   ↓
-//! detect Neural API socket
+//! detect Neural API socket (5-tier discovery)
 //!   ↓
-//! register capabilities
+//! register capabilities (legacy capability.register)
 //!   ↓
-//! - crypto (core cryptography)
-//! - tls_crypto (TLS-specific operations)
-//! - genetic_lineage (lineage verification)
+//! - crypto (signing, AEAD, hash, KDF, key-exchange, ionic bonds, contracts)
+//! - auth (session, ionic, peer identity)
+//! - btsp (transport security negotiation)
+//! - security (consent, trust evaluation, JWT)
+//! - bonding (cross-primal lifecycle)
+//! - secrets, relay, consent
 //!   ↓
-//! Neural API stores semantic mappings
+//! send primal.announce (biomeOS v3.69+ routing table)
 //!   ↓
-//! Other primals use capability.call
+//! Neural API populates routing_weights
+//!   ↓
+//! Other primals use capability.call / nestgate.io shows routing table
 //! ```
-//!
-//! ## Semantic Routing
-//!
-//! Neural API translates semantic method names to `BearDog`'s actual method names:
-//!
-//! ```text
-//! Consumer: "crypto.generate_keypair"
-//!   ↓
-//! Neural API: capability.call("crypto", "generate_keypair")
-//!   ↓
-//! Neural API translates: "crypto.x25519_generate_ephemeral"
-//!   ↓
-//! BearDog executes
-//! ```
-//!
-//! This enables zero-coupling evolution: `BearDog` can change its API without
-//! breaking consumers.
 
 use anyhow::{Context, Result};
 use beardog_config::env_keys;
@@ -51,28 +40,24 @@ use std::path::PathBuf;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tracing::{debug, info, warn};
 
-/// Register `BearDog`'s capabilities with Neural API
+/// Register capabilities with the Neural API for semantic routing.
 ///
-/// This registers four main capabilities:
-/// 1. `crypto` - Core cryptographic operations
-/// 2. `tls_crypto` - TLS-specific crypto operations
-/// 3. `genetic_lineage` - Genetic lineage verification
-/// 4. `security` - Consent, trust evaluation, JWT secrets
+/// Sends one `capability.register` JSON-RPC call per domain so the Neural
+/// API can route `capability.call(domain, operation, …)` to this primal.
 ///
-/// Each capability includes semantic mappings that translate generic
-/// operation names to `BearDog`'s specific method names.
+/// Registered domains:
+/// - `crypto` — core cryptographic operations (AEAD, hash, KDF, signing, key-exchange)
+/// - `auth` — session/ionic authentication and peer identity
+/// - `btsp` — BearDog Transport Security Protocol negotiation
+/// - `security` — consent verification, trust evaluation, JWT secrets
+/// - `bonding` — cross-primal bonding lifecycle
+/// - `secrets` — secure secret storage and retrieval
+/// - `relay` — relay authorization
+/// - `consent` — consent issuance and verification
 ///
 /// If `signed_attestation` is provided, each registration payload includes
 /// an Ed25519 signature so the Neural API (and downstream ecosystem discovery)
-/// can verify the advertisement is authentic. The attestation should be
-/// produced by the primal's unified identity key.
-///
-/// # Arguments
-///
-/// * `neural_socket` - Path to Neural API Unix socket
-/// * `primal_name` - Primal identifier (e.g., "beardog-nat0")
-/// * `socket_path` - Path to this primal's Unix socket (e.g., "/tmp/beardog-nat0.sock")
-/// * `signed_attestation` - Optional Ed25519 attestation over the capability surface
+/// can verify the advertisement is authentic.
 ///
 /// # Errors
 ///
@@ -84,7 +69,7 @@ pub async fn register_with_neural_api(
     signed_attestation: Option<&serde_json::Value>,
 ) -> Result<()> {
     info!(
-        "🔐 Registering BearDog crypto capabilities with Neural API at {}",
+        "🔐 Registering capabilities with Neural API at {}",
         neural_socket
     );
     info!("   Primal: {}, Socket: {}", primal_name, socket_path);
@@ -111,33 +96,61 @@ pub async fn register_with_neural_api(
             BEARDOG_CAPABILITY_DOMAIN,
             "0.9.0",
             vec![
-                "generate_keypair",
-                "ecdh_derive",
-                "encrypt",
-                "decrypt",
-                "encrypt_aes_128_gcm",
-                "decrypt_aes_128_gcm",
-                "encrypt_aes_256_gcm",
-                "decrypt_aes_256_gcm",
+                "sign_ed25519",
+                "verify_ed25519",
+                "sign_ecdsa_secp256r1",
+                "verify_ecdsa_secp256r1",
+                "x25519_generate_ephemeral",
+                "x25519_derive_secret",
+                "ecdh_p256_generate_ephemeral",
+                "ecdh_p256_derive_secret",
+                "chacha20_poly1305_encrypt",
+                "chacha20_poly1305_decrypt",
+                "aes256_gcm_encrypt",
+                "aes256_gcm_decrypt",
+                "blake3_hash",
                 "sha256",
                 "sha384",
-                "hkdf_extract",
-                "hkdf_expand",
+                "sha512",
+                "hmac_sha256",
+                "hmac_verify",
+                "hkdf_sha256",
+                "argon2id_hash",
+                "argon2id_verify",
+                "ionic_bond_propose",
+                "ionic_bond_accept",
+                "ionic_bond_seal",
+                "ionic_bond_verify",
+                "ionic_bond_revoke",
+                "ionic_bond_list",
+                "contract_propose",
+                "contract_countersign",
+                "contract_verify",
+                "sign",
+                "verify",
+                "encrypt",
+                "decrypt",
+                "hash",
+                "public_key",
             ],
         ),
         build_cap(
-            "tls_crypto",
-            "0.9.0",
+            "auth",
+            "1.0.0",
             vec![
-                "derive_handshake_secrets",
-                "derive_application_secrets",
-                "compute_finished_verify_data",
+                "check",
+                "mode",
+                "peer_info",
+                "issue_ionic",
+                "issue_session",
+                "verify_ionic",
+                "public_key",
             ],
         ),
         build_cap(
-            "genetic_lineage",
-            "0.9.0",
-            vec!["verify_lineage", "generate_lineage_proof"],
+            "btsp",
+            "2.0.0",
+            vec!["negotiate", "capabilities", "server_create_session"],
         ),
         build_cap(
             "security",
@@ -150,16 +163,24 @@ pub async fn register_with_neural_api(
                 "generate_jwt_secret",
             ],
         ),
+        build_cap(
+            "bonding",
+            "1.0.0",
+            vec!["propose", "accept", "status", "terminate", "modify_scope"],
+        ),
+        build_cap("secrets", "1.0.0", vec!["store", "retrieve"]),
+        build_cap("relay", "1.0.0", vec!["authorize"]),
+        build_cap("consent", "1.0.0", vec!["verify", "issue"]),
     ];
 
-    // Register each capability
+    let domain_count = capabilities.len();
     for cap in capabilities {
         register_capability(neural_socket, cap)
             .await
             .context("Failed to register capability")?;
     }
 
-    info!("✅ BearDog capabilities registered with Neural API");
+    info!(domain_count, "✅ capabilities registered with Neural API");
     Ok(())
 }
 
