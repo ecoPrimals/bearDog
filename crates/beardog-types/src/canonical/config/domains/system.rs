@@ -102,7 +102,7 @@ impl ApplicationConfig {
 #[path = "system_logging.rs"]
 mod system_logging;
 
-#[allow(
+#[expect(
     clippy::wildcard_imports,
     reason = "facade re-export: single public surface for system logging config"
 )]

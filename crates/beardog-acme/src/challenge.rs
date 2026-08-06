@@ -138,7 +138,7 @@ impl Http01Solver {
                                 host = val.trim().to_string();
                             }
                         }
-                        #[allow(
+                        #[expect(
                             unreachable_patterns,
                             reason = "read_line Ok arms handled above; catch-all for future variants"
                         )]

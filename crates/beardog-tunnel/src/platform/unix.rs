@@ -223,7 +223,7 @@ impl PlatformSocket for UnixSocket {
                 std::io::ErrorKind::InvalidInput,
                 "UnixSocket requires Filesystem endpoint",
             )),
-            #[allow(
+            #[expect(
                 unreachable_patterns,
                 reason = "future enum variants may add coverage"
             )]

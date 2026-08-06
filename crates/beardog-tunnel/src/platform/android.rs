@@ -147,7 +147,7 @@ impl PlatformSocket for AndroidSocket {
                 std::io::ErrorKind::InvalidInput,
                 "AndroidSocket requires Abstract endpoint",
             )),
-            #[allow(
+            #[expect(
                 unreachable_patterns,
                 reason = "future enum variants may add coverage"
             )]

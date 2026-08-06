@@ -49,7 +49,7 @@ struct DpapiBlob {
 }
 
 #[cfg(windows)]
-#[allow(
+#[expect(
     unsafe_code,
     reason = "Windows DPAPI FFI requires unsafe for CryptProtectData/CryptUnprotectData bindings"
 )]
@@ -66,7 +66,7 @@ impl DpapiBlob {
 }
 
 #[cfg(windows)]
-#[allow(
+#[expect(
     unsafe_code,
     reason = "Windows DPAPI FFI requires unsafe for CryptProtectData/CryptUnprotectData bindings"
 )]
@@ -81,7 +81,7 @@ impl Drop for DpapiBlob {
 }
 
 #[cfg(windows)]
-#[allow(
+#[expect(
     unsafe_code,
     reason = "Windows DPAPI FFI requires unsafe for CryptProtectData/CryptUnprotectData bindings"
 )]
@@ -171,7 +171,7 @@ impl WindowsDpapiHsm {
 
     /// Encrypt raw key material with DPAPI (Windows).
     #[cfg(windows)]
-    #[allow(
+    #[expect(
     unsafe_code,
     reason = "Windows DPAPI FFI requires unsafe for CryptProtectData/CryptUnprotectData bindings"
 )]
@@ -215,7 +215,7 @@ impl WindowsDpapiHsm {
 
     /// Decrypt a DPAPI-protected blob back to plaintext key material.
     #[cfg(windows)]
-    #[allow(
+    #[expect(
     unsafe_code,
     reason = "Windows DPAPI FFI requires unsafe for CryptProtectData/CryptUnprotectData bindings"
 )]

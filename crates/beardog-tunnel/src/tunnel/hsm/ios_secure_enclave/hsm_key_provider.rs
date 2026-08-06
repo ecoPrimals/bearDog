@@ -111,28 +111,24 @@ impl HsmKeyProvider for IosSecureEnclaveProvider {
         }
     }
 
-    fn encrypt(
+    async fn encrypt(
         &self,
         _key_id: &str,
         _plaintext: &[u8],
-    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
-        async move {
-            Err(BearDogError::unsupported_platform(
-                "Secure Enclave does not support symmetric encryption; use ECDSA signing",
-            ))
-        }
+    ) -> Result<Vec<u8>, BearDogError> {
+        Err(BearDogError::unsupported_platform(
+            "Secure Enclave does not support symmetric encryption; use ECDSA signing",
+        ))
     }
 
-    fn decrypt(
+    async fn decrypt(
         &self,
         _key_id: &str,
         _ciphertext: &[u8],
-    ) -> impl Future<Output = Result<Vec<u8>, BearDogError>> + Send {
-        async move {
-            Err(BearDogError::unsupported_platform(
-                "Secure Enclave does not support symmetric decryption; use ECDSA verify",
-            ))
-        }
+    ) -> Result<Vec<u8>, BearDogError> {
+        Err(BearDogError::unsupported_platform(
+            "Secure Enclave does not support symmetric decryption; use ECDSA verify",
+        ))
     }
 
     fn sign(

@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: August 6, 2026 (Wave 156j — grapheneGate Validation + Vendor-Agnostic Mobile Abstraction)
+**Last Updated**: August 6, 2026 (Wave 156k — Deep Debt Sweep: Clippy, allow→expect hygiene, full audit)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -90,6 +90,18 @@
 ---
 
 ## Recent Improvements
+
+### Wave 156k — Deep Debt Sweep: Clippy + allow hygiene + full audit (Aug 6, 2026)
+
+- **Clippy 0**: Fixed 2 remaining warnings (async fn simplification in `IosSecureEnclaveProvider::encrypt`/`decrypt`)
+- **allow→expect hygiene**: Upgraded `#[allow]` → `#[expect]` where lint reliably fires (`unreachable_patterns`, `unsafe_code`, `wildcard_imports`); all 73 bare `#[allow()]` verified to carry `reason=`
+- **Large file audit**: No production file exceeds 800L (largest is `tarpc_service/server.rs` at 507L production + 295L test)
+- **Mock audit**: Zero production mocks — all mock references are in `#[cfg(test)]`, doc comments, or properly documented placeholders (quantum crypto)
+- **Dependency audit**: 42 external deps, 100% pure Rust, zero C deps. Only crates.io blocker: `rustls-rustcrypto` git dep (feature-gated behind `tls-gateway`, agreed for songBird excision)
+- **Dead code audit**: All `dead_code` allows justified and documented (struct fields reserved for future wiring, pub API surface not called from bin target)
+- **TODO/FIXME**: 0 in production code
+- **`unsafe`**: Only in `libtower` (C ABI exports) — justified and annotated with `reason`
+- **14,026 tests**, 0 failures, 0 Clippy warnings
 
 ### Wave 156j — grapheneGate Validation + Vendor-Agnostic Mobile Abstraction (Aug 6, 2026)
 
