@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: August 5, 2026 (Wave 156e — Neural API Routing Stub: E1 Debt Fix)
+**Last Updated**: August 5, 2026 (Wave 156h — G64 Cephalization: tarpc Dual-Protocol)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -90,6 +90,16 @@
 ---
 
 ## Recent Improvements
+
+### Wave 156h — G64 Cephalization: tarpc Dual-Protocol (Aug 5, 2026)
+
+- **tarpc 0.37 added**: Feature-gated (`tarpc-rpc`) — zero impact on default build. `async-trait` ban preserved (tarpc 0.37 no longer depends on it). `cargo deny check` all 4 pass.
+- **`BearDogRpc` service trait**: 7 RPC methods — `health_check`, `blake3_hash`, `sign_ed25519`, `verify_ed25519`, `sha256`, `hmac_sha256`, `version`. Delegates directly to `beardog-crypto` (no JSON serde overhead).
+- **`.tarpc.sock` listener**: Sibling socket alongside `.sock` (ecosystem convention from `biomeos-primal-sdk`). Bincode binary framing. Spawned at server startup when `tarpc-rpc` feature + Unix platform.
+- **Capabilities updated**: `capabilities.list` advertises `["json-rpc", "tarpc"]` when feature is active.
+- **Stale references cleaned**: server.rs module doc, `BinaryFrame` doc, `beardog-ipc/Cargo.toml` comment all updated to reflect tarpc re-addition.
+- **bearDog status**: "tarpc-absent" → "tarpc-wired" (Phase 1 ready for intra-gate binary RPC)
+- **14,019 tests**, 0 failures, 0 Clippy errors
 
 ### Wave 156e — Neural API Routing Stub: E1 Debt Fix (Aug 5, 2026)
 

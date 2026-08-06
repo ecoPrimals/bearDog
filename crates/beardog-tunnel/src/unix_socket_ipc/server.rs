@@ -8,8 +8,10 @@
 //! - Atomic readiness tracking
 //! - Connection acceptance and protocol routing
 //!
-//! The server supports multiple protocols (tarpc, JSON-RPC, HTTP) with
+//! The server supports JSON-RPC 2.0 (primary) and HTTP (legacy) with
 //! automatic detection and routing to appropriate handlers.
+//! tarpc binary RPC is served on a sibling `.tarpc.sock` when the
+//! `tarpc-rpc` feature is enabled (G64 Cephalization).
 
 use super::{
     handlers::HandlerRegistry,

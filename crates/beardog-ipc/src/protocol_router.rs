@@ -33,7 +33,8 @@ pub enum Protocol {
     /// JSON-RPC 2.0 (primary inter-primal protocol)
     JsonRpc,
 
-    /// Length-prefixed binary frame (reserved for future zero-copy transport)
+    /// Length-prefixed binary frame (tarpc serde-transport uses this framing;
+    /// detection only — tarpc connections arrive on the `.tarpc.sock` sibling socket)
     BinaryFrame,
 
     /// HTTP/1.1 (legacy compatibility)

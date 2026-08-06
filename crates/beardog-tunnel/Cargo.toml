@@ -16,6 +16,7 @@ workspace = true
 [dependencies]
 # BearDog internal crates
 beardog-config = { workspace = true }
+beardog-crypto = { workspace = true }
 beardog-errors = { workspace = true }
 beardog-genetics = { workspace = true }
 beardog-types = { workspace = true }
@@ -83,6 +84,9 @@ data-encoding = { workspace = true }  # Base32 encoding for Tor v3 onion address
 bs58 = { workspace = true }  # Base58 encoding for did:key derivation
 etcetera = { workspace = true }
 
+# Cephalization (G64): tarpc binary RPC on .tarpc.sock sibling
+tarpc = { workspace = true, optional = true }
+
 # TLS termination (H2-10 sovereignty — feature-gated)
 rustls = { workspace = true, optional = true }
 tokio-rustls = { workspace = true, optional = true }
@@ -123,6 +127,9 @@ usb-discovery = ["dep:beardog-hid"]
 ctap2 = ["solo-v2", "dep:beardog-hid", "beardog-security/fido2"]
 tls-x509 = ["dep:x509-parser"]
 tls-server = ["dep:rustls", "dep:tokio-rustls", "dep:rustls-pki-types", "dep:rustls-rustcrypto"]
+
+# Cephalization (G64): tarpc binary RPC — high-perf sibling socket for crypto hot-path
+tarpc-rpc = ["dep:tarpc"]
 
 # Platform features
 # `ecosystem` removed: no cfg(feature) gate existed in source — dead flag.

@@ -347,7 +347,11 @@ impl CapabilitiesHandler {
                 "crypto.contract.countersign":     ["crypto.contract.propose"],
                 "crypto.contract.verify":          ["crypto.contract.countersign"],
             },
-            "protocols": ["json-rpc"],
+            "protocols": if cfg!(feature = "tarpc-rpc") {
+                serde_json::json!(["json-rpc", "tarpc"])
+            } else {
+                serde_json::json!(["json-rpc"])
+            },
             "transport": ["uds", "tcp"],
             "wire_format": "ndjson",
             "transport_security": {

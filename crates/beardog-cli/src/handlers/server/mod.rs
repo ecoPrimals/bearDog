@@ -341,6 +341,20 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         }
     }
 
+    // G64 Cephalization: tarpc binary RPC on sibling .tarpc.sock
+    #[cfg(all(unix, feature = "tarpc-rpc"))]
+    if !tcp_only {
+        match beardog_tunnel::tarpc_service::spawn_tarpc_listener(
+            &socket_path,
+            identity.clone(),
+        )
+        .await
+        {
+            Ok(()) => info!("tarpc listener spawned"),
+            Err(e) => warn!(error = %e, "tarpc listener failed (non-fatal)"),
+        }
+    }
+
     // Health socket: lightweight plaintext listener for monitoring probes.
     // Always spawn unless --bind-mode=tcp (no UDS available).
     let health_path = args.health_socket.clone().unwrap_or_else(|| {

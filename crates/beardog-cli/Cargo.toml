@@ -114,3 +114,4 @@ serde_json = { workspace = true }
 [features]
 default = []
 tls-gateway = ["dep:beardog-acme", "dep:rustls-rustcrypto", "beardog-tunnel/tls-server"]
+tarpc-rpc = ["beardog-tunnel/tarpc-rpc"]

@@ -195,6 +195,10 @@ pub mod ribocipher;
 // Credential store backends (Silicon Atheism CredentialStore trait, Wave 150t)
 pub mod credential_store;
 
+// G64 Cephalization: tarpc binary RPC on .tarpc.sock sibling (high-perf intra-gate)
+#[cfg(feature = "tarpc-rpc")]
+pub mod tarpc_service;
+
 #[cfg(test)]
 mod btsp_handshake_tests;
 #[cfg(test)]

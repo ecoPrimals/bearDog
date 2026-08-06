@@ -36,7 +36,8 @@ anyhow = { workspace = true }
 # Logging
 tracing = { workspace = true }
 
-# tarpc removed (Jan 29, 2026) — transitively pulls async-trait; JSON-RPC provides full functionality.
+# tarpc re-added (Aug 2026, Wave 156h) to beardog-tunnel under `tarpc-rpc` feature flag.
+# beardog-ipc remains JSON-RPC-only (tarpc 0.37 no longer pulls async-trait).
 
 [features]
 default = []
