@@ -15,6 +15,8 @@
 //! an earlier design phase. They are excluded from the module tree until they are
 //! evolved to align with the canonical `HsmKeyProvider` trait and current type system.
 
+mod hsm_key_provider;
 pub mod safe_secure_enclave;
 
+pub use hsm_key_provider::IosSecureEnclaveProvider;
 pub use safe_secure_enclave::SafeSecureEnclave;

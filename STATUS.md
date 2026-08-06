@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: August 6, 2026 (Wave 156i — Deep Debt Sweep + tarpc Convergence)
+**Last Updated**: August 6, 2026 (Wave 156j — grapheneGate Validation + Vendor-Agnostic Mobile Abstraction)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant; 2 monoliths refactored Wave 119 (server.rs→7 files, orchestrator.rs→10 files) |
-| **Tests** | 14,019 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,026 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | all 4 pass | 1 advisory ignore (RSA Marvin); 41 RustCrypto skip entries removed (TLS feature-gated); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned |
@@ -39,7 +39,7 @@
 - **JSON-RPC Methods**: 236 dispatchable (224 registry + 12 pre-dispatch gate) — see `docs/PRIMAL_CONTRACTS.md` v4.2.0 for category breakdown
 - **`#[allow(`**: 99 (all carry `reason`)
 - **`#[expect(`**: 446
-- **Platform Support**: Linux, macOS, Android, Windows, iOS
+- **Platform Support**: Linux, macOS, Android (validated on grapheneGate Pixel 8a), Windows, iOS
 
 ---
 
@@ -90,6 +90,17 @@
 ---
 
 ## Recent Improvements
+
+### Wave 156j — grapheneGate Validation + Vendor-Agnostic Mobile Abstraction (Aug 6, 2026)
+
+- **grapheneGate validated (13/13 checks)**: Cross-compiled ARM64 binary (6.6M) deployed to Pixel 8a via ADB. All crypto roundtrips pass: Ed25519, ChaCha20-Poly1305, AES-256-GCM, BLAKE3, HKDF, ionic token lifecycle, secrets store/retrieve. StrongBox HSM discovered (Hardware tier). Full 200+ method capability surface advertised
+- **Build infra fixed**: Hardcoded NDK linker path removed from `.cargo/config.toml`; portable `CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER` env var approach documented. `aarch64-linux-android` target added to `rust-toolchain.toml`
+- **Validation automation**: `infra/validation/grapheneGate-validate.sh` — 13-check matrix script with colored pass/fail output, automatic server lifecycle, cleanup trap
+- **`IosSecureEnclaveProvider` registered**: New `HsmKeyProviderBackend::IosSecureEnclave` variant with full `HsmKeyProvider` impl. Silicon Atheism: compiles everywhere, `is_available()` false off-iOS. All 10 dispatch arms wired (provider_id, type, available, capabilities, generate, delete, exists, encrypt, decrypt, sign, verify)
+- **`MobileHsmCapability` trait**: Vendor-agnostic mobile HSM trait in `beardog-traits::mobile_hsm` — `hardware_attestation_available()`, `biometric_gate_available()`, `secure_element_type()`, `supported_algorithms()`. `SecureElementType` enum: AndroidStrongBox / IosSecureEnclave / SoftwareFallback / Unknown
+- **`MasterKeySealer` trait**: Platform-agnostic master key sealing surface — `seal()` / `unseal()` for hardware-wrapped key storage (Android Keystore, iOS Keychain, software HKDF)
+- **Finding**: Abstract socket IPC blocked by SELinux under `adb shell` on GrapheneOS (expected for non-app processes). `--bind-mode filesystem` incorrectly routes through abstract socket logic — documented for future fix
+- **14,026 tests**, 0 failures, 0 Clippy warnings
 
 ### Wave 156i — Deep Debt Sweep + tarpc Convergence (Aug 6, 2026)
 

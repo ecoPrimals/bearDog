@@ -53,6 +53,9 @@
 /// HSM provider trait and registry types.
 pub mod hsm;
 
+/// Vendor-agnostic mobile HSM capability trait and master-key sealing.
+pub mod mobile_hsm;
+
 /// Modern unified trait system (primary)
 ///
 /// The unified trait system provides consistent interfaces across all `BearDog` components.
@@ -64,7 +67,7 @@ pub mod unified;
 pub mod canonical;
 
 // Primary exports - unified trait system
-pub use unified::*;
+pub use unified::{Configurable, HealthMonitored, Identifiable, Lifecycle, MetricsCollector, Serializable, Validatable, Versionable, BiomeGenetics, EntropyQualityAssessor, EvolutionEngine, LineageTracker, CredentialIdConverter, MultiCredentialHsmProvider, PermissionMapper, AuditProvider, PolicyEngine, CredentialStore, AdapterProvider, BearDogProvider, CryptoProvider, GeneticsProvider, HsmProvider, MonitoringProvider, SecurityProvider, WorkflowProvider, BearDogCore, BearDogService, BearDogComponent};
 
 // Modern prelude focused on unified traits
 pub mod prelude {

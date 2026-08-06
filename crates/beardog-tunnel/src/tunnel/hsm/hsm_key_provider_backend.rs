@@ -8,6 +8,7 @@ use beardog_types::hsm::{HsmCapabilitySet, HsmProviderType, KeyGenParams, KeyHan
 use std::future::Future;
 
 use crate::tunnel::hsm::android_strongbox::AndroidStrongBoxHsm;
+use crate::tunnel::hsm::ios_secure_enclave::IosSecureEnclaveProvider;
 use crate::tunnel::hsm::linux_secret_service::LinuxSecretServiceHsm;
 use crate::tunnel::hsm::software_hsm::RustSoftwareHsm;
 use crate::tunnel::hsm::windows_dpapi::WindowsDpapiHsm;
@@ -18,6 +19,8 @@ pub enum HsmKeyProviderBackend {
     Software(RustSoftwareHsm),
     /// Android `StrongBox` (hardware).
     AndroidStrongBox(AndroidStrongBoxHsm),
+    /// iOS Secure Enclave (hardware). Silicon Atheism: compiles everywhere, `is_available()` false off-platform.
+    IosSecureEnclave(IosSecureEnclaveProvider),
     /// Windows DPAPI (keys bound to user/machine credentials).
     WindowsDpapi(WindowsDpapiHsm),
     /// Linux Secret Service (GNOME Keyring / `KWallet` via D-Bus).
@@ -35,6 +38,7 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
         match self {
             Self::Software(p) => p.provider_id(),
             Self::AndroidStrongBox(p) => p.provider_id(),
+            Self::IosSecureEnclave(p) => p.provider_id(),
             Self::WindowsDpapi(p) => p.provider_id(),
             Self::LinuxSecretService(p) => p.provider_id(),
             #[cfg(test)]
@@ -48,6 +52,7 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
         match self {
             Self::Software(p) => p.provider_type(),
             Self::AndroidStrongBox(p) => p.provider_type(),
+            Self::IosSecureEnclave(p) => p.provider_type(),
             Self::WindowsDpapi(p) => p.provider_type(),
             Self::LinuxSecretService(p) => p.provider_type(),
             #[cfg(test)]
@@ -61,6 +66,7 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
         match self {
             Self::Software(p) => p.is_available(),
             Self::AndroidStrongBox(p) => p.is_available(),
+            Self::IosSecureEnclave(p) => p.is_available(),
             Self::WindowsDpapi(p) => p.is_available(),
             Self::LinuxSecretService(p) => p.is_available(),
             #[cfg(test)]
@@ -74,6 +80,7 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
         match self {
             Self::Software(p) => p.capabilities(),
             Self::AndroidStrongBox(p) => p.capabilities(),
+            Self::IosSecureEnclave(p) => p.capabilities(),
             Self::WindowsDpapi(p) => p.capabilities(),
             Self::LinuxSecretService(p) => p.capabilities(),
             #[cfg(test)]
@@ -92,6 +99,7 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
             match self {
                 Self::Software(p) => p.generate_key(&params).await,
                 Self::AndroidStrongBox(p) => p.generate_key(&params).await,
+                Self::IosSecureEnclave(p) => p.generate_key(&params).await,
                 Self::WindowsDpapi(p) => p.generate_key(&params).await,
                 Self::LinuxSecretService(p) => p.generate_key(&params).await,
                 #[cfg(test)]
@@ -108,6 +116,7 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
             match self {
                 Self::Software(p) => p.delete_key(&key_id).await,
                 Self::AndroidStrongBox(p) => p.delete_key(&key_id).await,
+                Self::IosSecureEnclave(p) => p.delete_key(&key_id).await,
                 Self::WindowsDpapi(p) => p.delete_key(&key_id).await,
                 Self::LinuxSecretService(p) => p.delete_key(&key_id).await,
                 #[cfg(test)]
@@ -124,6 +133,7 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
             match self {
                 Self::Software(p) => p.key_exists(&key_id).await,
                 Self::AndroidStrongBox(p) => p.key_exists(&key_id).await,
+                Self::IosSecureEnclave(p) => p.key_exists(&key_id).await,
                 Self::WindowsDpapi(p) => p.key_exists(&key_id).await,
                 Self::LinuxSecretService(p) => p.key_exists(&key_id).await,
                 #[cfg(test)]
@@ -145,6 +155,7 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
             match self {
                 Self::Software(p) => p.encrypt(&key_id, &plaintext).await,
                 Self::AndroidStrongBox(p) => p.encrypt(&key_id, &plaintext).await,
+                Self::IosSecureEnclave(p) => p.encrypt(&key_id, &plaintext).await,
                 Self::WindowsDpapi(p) => p.encrypt(&key_id, &plaintext).await,
                 Self::LinuxSecretService(p) => p.encrypt(&key_id, &plaintext).await,
                 #[cfg(test)]
@@ -166,6 +177,7 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
             match self {
                 Self::Software(p) => p.decrypt(&key_id, &ciphertext).await,
                 Self::AndroidStrongBox(p) => p.decrypt(&key_id, &ciphertext).await,
+                Self::IosSecureEnclave(p) => p.decrypt(&key_id, &ciphertext).await,
                 Self::WindowsDpapi(p) => p.decrypt(&key_id, &ciphertext).await,
                 Self::LinuxSecretService(p) => p.decrypt(&key_id, &ciphertext).await,
                 #[cfg(test)]
@@ -187,6 +199,7 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
             match self {
                 Self::Software(p) => p.sign(&key_id, &data).await,
                 Self::AndroidStrongBox(p) => p.sign(&key_id, &data).await,
+                Self::IosSecureEnclave(p) => p.sign(&key_id, &data).await,
                 Self::WindowsDpapi(p) => p.sign(&key_id, &data).await,
                 Self::LinuxSecretService(p) => p.sign(&key_id, &data).await,
                 #[cfg(test)]
@@ -210,6 +223,7 @@ impl HsmKeyProvider for HsmKeyProviderBackend {
             match self {
                 Self::Software(p) => p.verify(&key_id, &data, &signature).await,
                 Self::AndroidStrongBox(p) => p.verify(&key_id, &data, &signature).await,
+                Self::IosSecureEnclave(p) => p.verify(&key_id, &data, &signature).await,
                 Self::WindowsDpapi(p) => p.verify(&key_id, &data, &signature).await,
                 Self::LinuxSecretService(p) => p.verify(&key_id, &data, &signature).await,
                 #[cfg(test)]
