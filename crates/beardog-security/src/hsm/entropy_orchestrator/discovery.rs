@@ -55,7 +55,7 @@ pub(super) struct DiscoveredProviders {
 
     /// iOS Secure Enclave provider (if available)
     #[cfg(all(feature = "mobile", target_os = "ios"))]
-    pub(super) ios_provider: Option<std::sync::Arc<std::sync::RwLock<()>>>, // PHASE-2(iOS): Replace with actual iOS provider once types.rs fixed
+    pub(super) ios_provider: Option<std::sync::Arc<parking_lot::RwLock<()>>>,
 }
 
 /// Discover and initialize all available HSM providers.

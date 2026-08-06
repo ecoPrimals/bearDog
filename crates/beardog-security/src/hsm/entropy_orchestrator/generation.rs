@@ -11,41 +11,62 @@ use tracing::{debug, info};
 use uuid::Uuid;
 
 impl HsmEntropyOrchestrator {
-    /// Generate entropy with full control
+    /// Generate entropy (sync path, always OS RNG fallback).
     ///
-    /// Advanced API that provides detailed control over entropy generation
-    /// and returns comprehensive result information.
+    /// Prefer [`generate_entropy_async`] for hardware-backed entropy.
     ///
     /// # Errors
     ///
-    /// Returns an error if no suitable HSM is available, entropy generation fails, or mixing fails.
+    /// Returns an error if HSM selection or mixing fails.
     pub fn generate_entropy(
         &mut self,
         request: EntropyGenerationRequest,
     ) -> Result<EntropyGenerationResult, BearDogError> {
-        info!("🌱 Generating human entropy ({} bytes)", request.length);
-
-        // Step 1: Select best available HSM
         let hsm_source = self.select_best_hsm(&request)?;
-
-        // Step 2: Generate entropy (currently OS RNG fallback until hardware is wired)
         let (hardware_entropy, source_report) =
             self.generate_from_hsm(&hsm_source, request.length)?;
+        self.finalize_entropy(hsm_source, hardware_entropy, source_report, request.human_input)
+    }
 
-        // Step 3: Mix with human input if provided
-        let mixed_entropy = if let Some(human_input) = request.human_input {
-            self.mix_with_human_input(hardware_entropy, human_input)?
+    /// Generate entropy (async path, hardware-backed when available).
+    ///
+    /// Attempts real hardware entropy from FIDO2/StrongBox/Secure Enclave
+    /// before falling back to OS RNG.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if HSM selection or mixing fails.
+    pub async fn generate_entropy_async(
+        &mut self,
+        request: EntropyGenerationRequest,
+    ) -> Result<EntropyGenerationResult, BearDogError> {
+        let hsm_source = self.select_best_hsm(&request)?;
+        let (hardware_entropy, source_report) = self
+            .generate_from_hsm_async(&hsm_source, request.length)
+            .await?;
+        self.finalize_entropy(hsm_source, hardware_entropy, source_report, request.human_input)
+    }
+
+    fn finalize_entropy(
+        &self,
+        hsm_source: HsmSource,
+        raw_entropy: Vec<u8>,
+        source_report: EntropySourceReport,
+        human_input: Option<super::types::HumanEntropyInput>,
+    ) -> Result<EntropyGenerationResult, BearDogError> {
+        let mixed_entropy = if let Some(input) = human_input {
+            self.mix_with_human_input(raw_entropy, input)?
         } else {
-            hardware_entropy
+            raw_entropy
         };
 
-        // Step 4: Classify and create result using the actual entropy path
         let (quality_tier, quality_score, device_used, source, hardware_backed) =
             if source_report.hardware_backed {
                 let tier = self.calculate_quality_tier(&hsm_source, mixed_entropy.len());
+                let score = self.calculate_quality_score(tier);
                 (
                     tier,
-                    self.calculate_quality_score(tier),
+                    score,
                     self.get_device_name(&hsm_source),
                     source_report.source.to_string(),
                     true,
@@ -60,7 +81,6 @@ impl HsmEntropyOrchestrator {
                 )
             };
 
-        // Opaque seed identifier for this generation session (UUID v4).
         let seed_id = Uuid::new_v4();
 
         info!(
@@ -79,28 +99,12 @@ impl HsmEntropyOrchestrator {
         })
     }
 
-    /// Generate entropy from the selected HSM source.
-    ///
-    /// When a FIDO2 device is selected, the async path (`generate_from_hsm_async`)
-    /// should be preferred for actual hardware entropy. This sync fallback always uses
-    /// OS RNG, since HID I/O is inherently async.
+    /// Sync fallback: always uses OS RNG since HID I/O is inherently async.
     pub(super) fn generate_from_hsm(
         &self,
         _source: &HsmSource,
         length: usize,
     ) -> Result<(Vec<u8>, EntropySourceReport), BearDogError> {
-
-        #[cfg(feature = "fido2")]
-        #[expect(irrefutable_let_patterns, reason = "HsmSource has cfg-conditional variants")]
-        if let HsmSource::Fido2(idx) = _source
-            && self.fido2_providers.get(*idx).is_some()
-        {
-            debug!(
-                "FIDO2 device selected (index {idx}) — use generate_from_hsm_async \
-                 for hardware entropy; falling back to OS RNG in sync context"
-            );
-        }
-
         let mut rng = rand::rng();
         let mut entropy = vec![0u8; length];
         rand::RngCore::fill_bytes(&mut rng, &mut entropy);
@@ -113,12 +117,8 @@ impl HsmEntropyOrchestrator {
         Ok((entropy, os_rng_fallback_report()))
     }
 
-    /// Generate entropy from the selected HSM source (async path).
-    ///
-    /// Prefers hardware-backed entropy from FIDO2 when available, mixed with
-    /// OS RNG for defense-in-depth. Falls back to pure OS RNG if hardware
-    /// entropy fails.
-    #[expect(dead_code, reason = "Async FIDO2 entropy path used when callers migrate to async")]
+    /// Async path: attempts hardware entropy from FIDO2, mixed with OS RNG
+    /// for defense-in-depth.  Falls back to pure OS RNG on failure.
     pub(super) async fn generate_from_hsm_async(
         &self,
         source: &HsmSource,
@@ -152,12 +152,12 @@ impl HsmEntropyOrchestrator {
                                 device_used: "fido2_device",
                                 hardware_backed: true,
                                 quality_tier: 2,
-                                quality_score: 0.85,
+                                quality_score: 0.75,
                             },
                         ));
                     }
                     Err(e) => {
-                        tracing::warn!("FIDO2 hardware entropy failed: {e}");
+                        tracing::warn!("FIDO2 hardware entropy failed, falling back to OS RNG: {e}");
                     }
                 },
                 Err(e) => {

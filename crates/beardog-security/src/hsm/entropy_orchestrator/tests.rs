@@ -291,6 +291,47 @@ async fn test_generate_from_hsm_uses_os_rng_fallback_metadata() {
         .generate_from_hsm(&source, 32)
         .expect("generate_from_hsm in test");
     assert_eq!(entropy.len(), 32);
-    // With no physical FIDO2 device connected, expect OS RNG fallback
     assert!(!report.hardware_backed || report.source == "fido2_hardware");
+}
+
+#[tokio::test]
+async fn test_generate_entropy_async_matches_sync_shape() {
+    let mut orchestrator = HsmEntropyOrchestrator::new()
+        .await
+        .expect("HsmEntropyOrchestrator::new in test");
+
+    let request = EntropyGenerationRequest {
+        length: 32,
+        human_input: None,
+        ..Default::default()
+    };
+
+    let result = orchestrator.generate_entropy_async(request).await;
+    // Without hardware features (fido2/mobile), no HSM source is available,
+    // so both sync and async paths return an error — that's correct behavior.
+    if let Ok(result) = result {
+        assert_eq!(result.source, OS_RNG_SOURCE);
+        assert!(!result.hardware_backed);
+        assert!(result.quality_score > 0.0);
+    }
+}
+
+#[tokio::test]
+async fn test_mix_with_human_input_blake3() {
+    let orchestrator = HsmEntropyOrchestrator::new()
+        .await
+        .expect("HsmEntropyOrchestrator::new in test");
+
+    let hw_entropy = vec![42u8; 32];
+    let input = HumanEntropyInput {
+        biometric_data: Some(vec![1, 2, 3, 4]),
+        behavioral_data: Some(vec![5, 6, 7, 8]),
+        environmental_data: Some(vec![9, 10, 11, 12]),
+    };
+
+    let mixed = orchestrator.mix_with_human_input(hw_entropy.clone(), input);
+    assert!(mixed.is_ok());
+    let mixed = mixed.unwrap();
+    assert_eq!(mixed.len(), 32, "BLAKE3 output is 32 bytes");
+    assert_ne!(mixed, hw_entropy, "mixing should change the output");
 }

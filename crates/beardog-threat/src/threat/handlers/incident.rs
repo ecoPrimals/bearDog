@@ -16,20 +16,14 @@ use tracing::{info, warn};
 impl ThreatDetectionEngine {
     fn lock_managed_incidents_mut(
         &self,
-    ) -> Result<std::sync::RwLockWriteGuard<'_, BTreeMap<String, ManagedIncident>>, BearDogError>
-    {
-        self.managed_incidents.write().map_err(|e| {
-            BearDogError::system(format!("managed incident store poisoned (write): {e}"))
-        })
+    ) -> parking_lot::RwLockWriteGuard<'_, BTreeMap<String, ManagedIncident>> {
+        self.managed_incidents.write()
     }
 
     fn lock_managed_incidents(
         &self,
-    ) -> Result<std::sync::RwLockReadGuard<'_, BTreeMap<String, ManagedIncident>>, BearDogError>
-    {
-        self.managed_incidents.read().map_err(|e| {
-            BearDogError::system(format!("managed incident store poisoned (read): {e}"))
-        })
+    ) -> parking_lot::RwLockReadGuard<'_, BTreeMap<String, ManagedIncident>> {
+        self.managed_incidents.read()
     }
 
     /// Create incident from threat event (lifecycle: **Created**).
@@ -44,7 +38,7 @@ impl ThreatDetectionEngine {
         let incident_id = format!("INC-{}", uuid::Uuid::new_v4());
         let managed = ManagedIncident::from_threat(incident_id.clone(), threat_event);
 
-        self.lock_managed_incidents_mut()?
+        self.lock_managed_incidents_mut()
             .insert(incident_id.clone(), managed);
 
         info!(
@@ -62,10 +56,9 @@ impl ThreatDetectionEngine {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when the incident is unknown, the store lock is poisoned, or the
-    /// lifecycle transition fails.
+    /// Returns [`BearDogError`] when the incident is unknown or the lifecycle transition fails.
     pub fn classify_incident(&self, incident_id: &str) -> Result<ManagedIncident, BearDogError> {
-        let mut guard = self.lock_managed_incidents_mut()?;
+        let mut guard = self.lock_managed_incidents_mut();
         let entry = guard
             .get_mut(incident_id)
             .ok_or_else(|| BearDogError::business(format!("unknown incident: {incident_id}")))?;
@@ -78,10 +71,9 @@ impl ThreatDetectionEngine {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when the incident is unknown, the store lock is poisoned, or the
-    /// lifecycle transition fails.
+    /// Returns [`BearDogError`] when the incident is unknown or the lifecycle transition fails.
     pub fn escalate_incident(&self, incident_id: &str) -> Result<ManagedIncident, BearDogError> {
-        let mut guard = self.lock_managed_incidents_mut()?;
+        let mut guard = self.lock_managed_incidents_mut();
         let entry = guard
             .get_mut(incident_id)
             .ok_or_else(|| BearDogError::business(format!("unknown incident: {incident_id}")))?;
@@ -94,14 +86,13 @@ impl ThreatDetectionEngine {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when the incident is unknown, the store lock is poisoned, or the
-    /// lifecycle transition fails.
+    /// Returns [`BearDogError`] when the incident is unknown or the lifecycle transition fails.
     pub fn resolve_incident(
         &self,
         incident_id: &str,
         resolution: &str,
     ) -> Result<ManagedIncident, BearDogError> {
-        let mut guard = self.lock_managed_incidents_mut()?;
+        let mut guard = self.lock_managed_incidents_mut();
         let entry = guard
             .get_mut(incident_id)
             .ok_or_else(|| BearDogError::business(format!("unknown incident: {incident_id}")))?;
@@ -115,13 +106,13 @@ impl ThreatDetectionEngine {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when the managed-incident store lock is poisoned.
+    /// Currently infallible; `Result` retained for API compatibility.
     pub fn assign_incident_to_team(
         &self,
         incident_id: &str,
         team: &str,
     ) -> Result<(), BearDogError> {
-        let mut guard = self.lock_managed_incidents_mut()?;
+        let mut guard = self.lock_managed_incidents_mut();
         if let Some(entry) = guard.get_mut(incident_id) {
             entry.assigned_team = Some(team.to_string());
             entry.updated_at = SystemTime::now();
@@ -140,13 +131,13 @@ impl ThreatDetectionEngine {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when the managed-incident store lock is poisoned.
+    /// Currently infallible; `Result` retained for API compatibility.
     pub fn update_incident_status(
         &self,
         incident_id: &str,
         status: &str,
     ) -> Result<Option<IncidentResponse>, BearDogError> {
-        let mut guard = self.lock_managed_incidents_mut()?;
+        let mut guard = self.lock_managed_incidents_mut();
         if let Some(entry) = guard.get_mut(incident_id) {
             apply_legacy_status(entry, status);
             let view = managed_to_legacy(entry);
@@ -166,9 +157,9 @@ impl ThreatDetectionEngine {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when the managed-incident store lock is poisoned.
+    /// Currently infallible; `Result` retained for API compatibility.
     pub fn get_active_incidents(&self) -> Result<Vec<IncidentResponse>, BearDogError> {
-        let guard = self.lock_managed_incidents()?;
+        let guard = self.lock_managed_incidents();
         let mut out: Vec<IncidentResponse> = guard
             .values()
             .filter(|m| m.lifecycle != IncidentLifecyclePhase::Closed)
@@ -182,9 +173,9 @@ impl ThreatDetectionEngine {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when the managed-incident store lock is poisoned.
+    /// Currently infallible; `Result` retained for API compatibility.
     pub fn close_incident(&self, incident_id: &str) -> Result<(), BearDogError> {
-        let mut guard = self.lock_managed_incidents_mut()?;
+        let mut guard = self.lock_managed_incidents_mut();
         if let Some(entry) = guard.get_mut(incident_id) {
             if entry.lifecycle == IncidentLifecyclePhase::Resolved {
                 if let Err(e) = entry.try_advance_to(IncidentLifecyclePhase::Closed) {

@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: August 6, 2026 (Wave 156k — Deep Debt Sweep: Clippy, allow→expect hygiene, full audit)
+**Last Updated**: August 6, 2026 (Wave 156l — Entropy Evolution + parking_lot unification + SHA3→BLAKE3)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 

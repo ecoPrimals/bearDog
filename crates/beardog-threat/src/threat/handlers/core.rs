@@ -12,7 +12,7 @@ use crate::threat::types::{
 use beardog_errors::BearDogError;
 
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::sync::{Arc, RwLock as StdRwLock};
+use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::info;
 
@@ -52,7 +52,7 @@ pub struct ThreatDetectionEngine {
     pub active_incidents: Arc<RwLock<HashMap<String, IncidentResponse>>>,
 
     /// Phase 1 in-memory lifecycle store (sync API); ordered by incident id.
-    pub managed_incidents: Arc<StdRwLock<BTreeMap<String, ManagedIncident>>>,
+    pub managed_incidents: Arc<parking_lot::RwLock<BTreeMap<String, ManagedIncident>>>,
 }
 impl ThreatDetectionEngine {
     /// New operation.
@@ -78,7 +78,7 @@ impl ThreatDetectionEngine {
             },
             event_history: Arc::new(RwLock::new(Vec::new())),
             active_incidents: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            managed_incidents: Arc::new(StdRwLock::new(BTreeMap::new())),
+            managed_incidents: Arc::new(parking_lot::RwLock::new(BTreeMap::new())),
         };
 
         if ml_enhancement {

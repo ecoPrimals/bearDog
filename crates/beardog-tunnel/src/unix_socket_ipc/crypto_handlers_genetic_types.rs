@@ -92,15 +92,30 @@ pub struct MixEntropyRequest {
     pub tier1_machine: Option<String>,
 }
 
-/// Response containing mixed entropy
+/// Response containing mixed entropy with provenance metadata
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MixEntropyResponse {
     /// Mixed entropy (base64-encoded, 32 bytes)
     pub entropy: String,
-    /// Quality score (0.0-1.0)
+    /// Quality score (0.0-1.0, weighted by source provenance)
     pub quality_score: f64,
     /// Number of tiers used
     pub tiers_used: u8,
+    /// Which entropy sources contributed to this mix
+    pub provenance: EntropyProvenance,
+}
+
+/// Provenance metadata for mixed entropy — records which sources contributed.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct EntropyProvenance {
+    /// Tier 3 (human lived experience) was provided
+    pub has_human: bool,
+    /// Tier 2 (human-supervised machine) was provided
+    pub has_supervised: bool,
+    /// Tier 1 (machine / OS RNG) was provided or auto-generated
+    pub has_machine: bool,
+    /// Whether machine entropy was explicitly provided vs auto-generated from OS RNG
+    pub machine_explicit: bool,
 }
 
 // ============================================================================

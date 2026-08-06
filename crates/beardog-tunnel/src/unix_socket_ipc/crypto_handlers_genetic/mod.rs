@@ -21,12 +21,13 @@
 pub use super::crypto_handlers_genetic_types::{
     CertificateVerificationDetails, DeriveDeviceSeedRequest, DeriveDeviceSeedResponse,
     DeriveLineageBeaconKeyRequest, DeriveLineageBeaconKeyResponse, DeriveLineageKeyRequest,
-    DeriveLineageKeyResponse, GenerateChallengeRequest, GenerateChallengeResponse,
-    GenerateLineageProofRequest, GenerateLineageProofResponse, LineageCertificate,
-    MixEntropyRequest, MixEntropyResponse, RespondToChallengeRequest, RespondToChallengeResponse,
-    SignLineageCertificateRequest, SignLineageCertificateResponse, VerifyChallengeResponseRequest,
-    VerifyChallengeResponseResponse, VerifyLineageCertificateRequest,
-    VerifyLineageCertificateResponse, VerifyLineageRequest, VerifyLineageResponse,
+    DeriveLineageKeyResponse, EntropyProvenance, GenerateChallengeRequest,
+    GenerateChallengeResponse, GenerateLineageProofRequest, GenerateLineageProofResponse,
+    LineageCertificate, MixEntropyRequest, MixEntropyResponse, RespondToChallengeRequest,
+    RespondToChallengeResponse, SignLineageCertificateRequest, SignLineageCertificateResponse,
+    VerifyChallengeResponseRequest, VerifyChallengeResponseResponse,
+    VerifyLineageCertificateRequest, VerifyLineageCertificateResponse, VerifyLineageRequest,
+    VerifyLineageResponse,
 };
 
 pub mod challenge;

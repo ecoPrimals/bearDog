@@ -14,9 +14,9 @@ use beardog_types::constants::domains::system::defaults::DEFAULT_DATA_DIR;
 use hkdf::Hkdf;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
+use parking_lot::Mutex;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
 use tracing::{debug, warn};
 
 const VAULT_HKDF_SALT: &[u8] = b"beardog-vault-v1";
@@ -146,10 +146,7 @@ impl FileVaultBackend {
 impl SecretsBackend for FileVaultBackend {
     fn store(&self, key_id: &str, value: &str) -> Result<(), BearDogError> {
         validate_key_id(key_id)?;
-        let _g = self
-            .lock
-            .lock()
-            .map_err(|e| BearDogError::internal(format!("Vault lock poisoned: {e}")))?;
+        let _g = self.lock.lock();
 
         let sk = self.derive_secret_key(key_id)?;
         let sealed = self.encryption.encrypt(value.as_bytes(), &sk)?;
@@ -173,10 +170,7 @@ impl SecretsBackend for FileVaultBackend {
 
     fn retrieve(&self, key_id: &str) -> Result<String, BearDogError> {
         validate_key_id(key_id)?;
-        let _g = self
-            .lock
-            .lock()
-            .map_err(|e| BearDogError::internal(format!("Vault lock poisoned: {e}")))?;
+        let _g = self.lock.lock();
 
         let path = self.secret_path(key_id);
         if !path.is_file() {
@@ -212,10 +206,7 @@ impl SecretsBackend for FileVaultBackend {
     }
 
     fn list(&self) -> Result<Vec<String>, BearDogError> {
-        let _g = self
-            .lock
-            .lock()
-            .map_err(|e| BearDogError::internal(format!("Vault lock poisoned: {e}")))?;
+        let _g = self.lock.lock();
 
         let entries = fs::read_dir(&self.vault_dir).map_err(|e| {
             BearDogError::system(format!(
@@ -256,10 +247,7 @@ impl SecretsBackend for FileVaultBackend {
 
     fn delete(&self, key_id: &str) -> Result<bool, BearDogError> {
         validate_key_id(key_id)?;
-        let _g = self
-            .lock
-            .lock()
-            .map_err(|e| BearDogError::internal(format!("Vault lock poisoned: {e}")))?;
+        let _g = self.lock.lock();
 
         let path = self.secret_path(key_id);
         match fs::remove_file(&path) {

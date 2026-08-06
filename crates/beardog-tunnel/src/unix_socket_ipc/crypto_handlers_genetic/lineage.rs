@@ -14,9 +14,9 @@
 //! - `handle_generate_lineage_proof` - Generate lineage proof (Blake3 + HMAC)
 
 use super::{
-    DeriveLineageKeyRequest, DeriveLineageKeyResponse, GenerateLineageProofRequest,
-    GenerateLineageProofResponse, MixEntropyRequest, MixEntropyResponse, VerifyLineageRequest,
-    VerifyLineageResponse,
+    DeriveLineageKeyRequest, DeriveLineageKeyResponse, EntropyProvenance,
+    GenerateLineageProofRequest, GenerateLineageProofResponse, MixEntropyRequest,
+    MixEntropyResponse, VerifyLineageRequest, VerifyLineageResponse,
 };
 use crate::tunnel::hsm::software_hsm::crypto_providers::genetic_crypto::GeneticCryptoProvider;
 use base64::Engine;
@@ -172,7 +172,10 @@ pub async fn handle_mix_entropy(params: &Value) -> Result<Value, BearDogError> {
         .transpose()
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid tier1_machine: {e}")))?;
 
-    let tiers_used = u8::from(tier3.is_some()) + u8::from(tier2.is_some()) + 1;
+    let has_human = tier3.is_some();
+    let has_supervised = tier2.is_some();
+    let machine_explicit = tier1.is_some();
+    let tiers_used = u8::from(has_human) + u8::from(has_supervised) + 1;
 
     let provider = GeneticCryptoProvider::new()?;
     let (mixed, quality) =
@@ -189,6 +192,12 @@ pub async fn handle_mix_entropy(params: &Value) -> Result<Value, BearDogError> {
         entropy: entropy_b64,
         quality_score: quality,
         tiers_used,
+        provenance: EntropyProvenance {
+            has_human,
+            has_supervised,
+            has_machine: true,
+            machine_explicit,
+        },
     }))
 }
 
@@ -431,6 +440,30 @@ mod tests {
 
         assert_eq!(response.tiers_used, 3);
         assert!(response.quality_score > 0.6);
+        assert!(response.provenance.has_human);
+        assert!(response.provenance.has_supervised);
+        assert!(response.provenance.has_machine);
+        assert!(response.provenance.machine_explicit);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_mix_entropy_provenance_auto_machine() -> Result<(), Box<dyn std::error::Error>> {
+        let tier3 = BASE64.encode(b"human_lived_experience_entropy!");
+
+        let params = json!({
+            "tier3_human": tier3,
+        });
+
+        let result = handle_mix_entropy(&params).await?;
+        let response: MixEntropyResponse = serde_json::from_value(result)?;
+
+        assert_eq!(response.tiers_used, 2);
+        assert!(response.provenance.has_human);
+        assert!(!response.provenance.has_supervised);
+        assert!(response.provenance.has_machine);
+        assert!(!response.provenance.machine_explicit, "machine entropy was auto-generated");
 
         Ok(())
     }

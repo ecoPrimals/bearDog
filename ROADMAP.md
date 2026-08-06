@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: Aug 6, 2026
+**Updated**: Aug 6, 2026 (Wave 156l)
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 

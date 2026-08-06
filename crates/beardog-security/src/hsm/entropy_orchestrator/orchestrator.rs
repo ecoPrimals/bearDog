@@ -17,7 +17,7 @@ use beardog_errors::BearDogError;
 #[cfg(feature = "fido2")]
 use crate::hsm::fido2::multi_credential_provider::Fido2MultiCredentialProvider;
 #[cfg(all(feature = "mobile", target_os = "ios"))]
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 
 /// Universal HSM entropy orchestrator
 ///
@@ -38,7 +38,7 @@ pub struct HsmEntropyOrchestrator {
 
     /// iOS Secure Enclave provider (if available)
     #[cfg(all(feature = "mobile", target_os = "ios"))]
-    pub(super) ios_provider: Option<Arc<RwLock<()>>>, // PHASE-2(iOS): Replace with actual iOS provider once types.rs fixed
+    pub(super) ios_provider: Option<Arc<parking_lot::RwLock<()>>>,
 
     /// Configuration - used for Phase 2 orchestration logic
     pub(super) _config: OrchestratorConfig,

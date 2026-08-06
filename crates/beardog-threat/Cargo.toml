@@ -44,6 +44,9 @@ workspace = true
 workspace = true
 features = ["rt", "macros", "sync"]
 
+[dependencies.parking_lot]
+workspace = true
+
 [dependencies.tracing]
 workspace = true
 
