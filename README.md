@@ -240,7 +240,7 @@ export FAMILY_SEED=my-secret-seed
 | **TODO/FIXME** | 0 |
 | **Files > 800 LOC** | 0 (production code) |
 | **Rust files** | 1,856 |
-| **Tests** | 14,026 (concurrent; 35 `#[serial]` in `beardog-production`) |
+| **Tests** | 11,565+ (concurrent; 35 `#[serial]` in `beardog-production`) |
 | **Coverage** | 90.51% line (llvm-cov workspace, target 90% met) |
 | **Serial Tests** | 35 (`beardog-production` shared `AtomicBool` state) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |

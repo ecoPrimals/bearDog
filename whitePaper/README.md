@@ -19,6 +19,15 @@ human-owned, cryptographically sovereign capability.
 | 10 | [For Policymakers: Why This Matters](10_policymakers_guide.md) | Government / Regulatory |
 | 11 | [For the Public: Owning Your Digital Randomness](11_public_guide.md) | General Audiences |
 
+## subGen — Subsequent-Generation Explorations
+
+Papers documenting the transition from theoretical to empirical — live
+validation of whitepaper concepts on real hardware and running systems.
+
+| # | Title | Status |
+|---|-------|--------|
+| 01 | [From Concept to Live Entropy](subGen/01_entropy_tiering_live_exploration.md) | Complete (Wave 156k–156l) |
+
 ## Key Concepts
 
 - **Human Entropy** — Humans cryptographically own and control the randomness driving their digital systems

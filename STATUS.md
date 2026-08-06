@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 800 LOC** | 0 | All production .rs files compliant; 2 monoliths refactored Wave 119 (server.rs→7 files, orchestrator.rs→10 files) |
-| **Tests** | 14,026 passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 11,565+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | all 4 pass | 1 advisory ignore (RSA Marvin); 41 RustCrypto skip entries removed (TLS feature-gated); `ring` + `aws-lc-rs` + `rcgen` + 16 C-crypto crates banned |
@@ -90,6 +90,15 @@
 ---
 
 ## Recent Improvements
+
+### Wave 156l — Entropy Evolution + Temporal Pattern Cleanup (Aug 6, 2026)
+
+- **Entropy orchestrator async path wired**: `generate_entropy_async()` routes through FIDO2 hardware entropy; `generate_human_entropy()` now async
+- **SHA3→BLAKE3 unification**: `mix_with_human_input()` migrated from SHA3 to BLAKE3; `sha3` dependency removed from `beardog-security`
+- **EntropyProvenance metadata**: `MixEntropyResponse` now includes `provenance` struct tracking which entropy sources contributed
+- **parking_lot unification**: `std::sync::Mutex/RwLock` → `parking_lot` in `secrets_backend`, threat `incident` handlers, iOS orchestrator placeholder; 12 poison-handling boilerplate sites removed
+- **Temporal pattern audit**: Confirmed no `lazy_static`, `once_cell`, `extern crate`, `try!`, `impl ToString`, clone-then-borrow in production
+- **0 Clippy warnings, 11,565+ tests passing**
 
 ### Wave 156k — Deep Debt Sweep: Clippy + allow hygiene + full audit (Aug 6, 2026)
 

@@ -23,7 +23,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 800 lines of code (production) — `enrollment.rs` (1061L) decomposed into 7 focused modules; `lineage_proof.rs` (877L) tests extracted
 - Hardcoded `eth0` → `BEARDOG_MDNS_INTERFACE` env var; `/tmp/` fallbacks → `std::env::temp_dir()`
-- 14,026 tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
+- 11,565+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
 - 90.51% line coverage (llvm-cov workspace) — target 90% met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - `#[serial]` minimized — 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent
@@ -51,6 +51,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - BTSP trust bootstrap over WAN mesh — client handshake, trust DB seeding, env-aware UPA registry (Wave 119)
 - Blocking `std::fs` → `tokio::fs` in all async handlers (Waves 119–120)
 - `Arc<Mutex>` → `Arc<RwLock>` for read-heavy data structures (Wave 119)
+- `std::sync::Mutex/RwLock` → `parking_lot` in production code (Wave 156l: secrets_backend, threat incident, iOS orchestrator)
+- Entropy orchestrator async path wired for FIDO2 hardware entropy (Wave 156l)
+- SHA3→BLAKE3 unification in entropy mixing pipeline (Wave 156l)
+- `EntropyProvenance` metadata on `MixEntropyResponse` (Wave 156l)
 - 12 manual error Display types migrated to `thiserror::Error` derive (Waves 119–120)
 - Dependency consolidation: hostname→whoami, dirs→directories, removed unused jni/aes/ctr (Waves 119–120)
 - UID helper centralized from 3 crates into beardog-utils::platform (Wave 119)
