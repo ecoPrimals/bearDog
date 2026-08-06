@@ -82,6 +82,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
+### Wave 156k — Deep Debt Sweep: Clippy + allow hygiene + full audit — DONE
+
+Clippy 0 (2 warnings fixed). `allow→expect` hygiene (5 files upgraded). Full 8-dimension audit: 0 production mocks, 0 TODOs, 0 unwrap(), 0 bare allows, 100% pure Rust deps (42 external, 0 C). All `dead_code` justified. `unsafe` confined to `libtower` C ABI. 14,026 tests, 0 failures.
+
 ### Wave 156j — grapheneGate Validation + Vendor-Agnostic Mobile HSM — DONE
 
 Cross-compiled ARM64 binary (6.6M) deployed and validated on grapheneGate (Pixel 8a) with 13-check matrix: all crypto, auth, secrets, HSM discovery pass. Build infra fixed (portable NDK linker path). `IosSecureEnclaveProvider` registered in `HsmKeyProviderBackend` (Silicon Atheism). `MobileHsmCapability` + `MasterKeySealer` traits created in `beardog-traits`. Validation automation script shipped.
@@ -429,4 +433,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: Aug 6, 2026 (Wave 156j)
+**Last Updated**: Aug 6, 2026 (Wave 156k)

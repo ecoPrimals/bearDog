@@ -46,7 +46,35 @@ large files, mocks, dependencies, dead code, TODOs, and unsafe code.
 3. **Quantum crypto placeholder** — awaiting upstream PQC standards (ML-KEM / ML-DSA)
 4. **tarpc convergence 30→236** — incremental, not blocking
 
-## For Overwatch
+## Longtail Signals for Upstream
+
+### songBird: TLS/ACME Excision Ready
+
+bearDog has fully feature-gated the TLS/ACME surface behind `tls-gateway` (default off).
+songBird can excise at any time. The blocking git dep (`rustls-rustcrypto v0.0.2-alpha`)
+lives entirely behind that gate. Once songBird ships its own TLS surface, bearDog can
+remove `beardog-acme` and all `rustls-*` deps from the workspace entirely, unblocking
+the G6 crates.io public flip.
+
+**Action for songBird**: Take ownership of `rustls-rustcrypto` and ACME client logic.
+bearDog will continue to expose `crypto.sign_jws_es256`, `crypto.jwk_thumbprint`,
+`x509.build_csr`, and `x509.parse_certificate` as crypto-atom delegation for songBird's
+ACME Phase 2 workflow.
+
+### Near-Term Evolution Opportunities (bearDog-local)
+
+1. **SoloKey genetics**: FIDO2 `hmac-secret` extension is wired — can use hardware
+   entropy for genetic material (lineage beacons, enrollment seeds). SoloKey v2
+   available on eastGate.
+2. **tarpc convergence 30→236**: Incremental wiring of remaining JSON-RPC methods
+   into the tarpc binary surface. Not blocking, but increases intra-gate throughput.
+3. **Quantum crypto readiness**: Placeholder module compiles and type-checks. When
+   ML-KEM / ML-DSA crates reach stable, drop-in integration via `BearDogCrypto` layer.
+4. **Android filesystem socket fix**: `AndroidSocket` rejects `Filesystem` endpoint
+   variant — P2 bug, fix when Android app-context deployment is tested.
+5. **`parking_lot` → `std::sync`**: 10 crates, low priority, no C deps involved.
+
+### For Overwatch
 
 bearDog is **debt-clean**:
 - 0 Clippy warnings
@@ -56,3 +84,4 @@ bearDog is **debt-clean**:
 - 0 bare `#[allow()]` without reason
 - 100% pure Rust (0 C deps)
 - All `unsafe` confined to C ABI exports in `libtower`
+- 14,026 tests, 0 failures, 90.51% coverage
