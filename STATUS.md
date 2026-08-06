@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: August 6, 2026 (Wave 156l — Entropy Evolution + parking_lot unification + SHA3→BLAKE3)
+**Last Updated**: August 6, 2026 (Wave 156m — G65 Protocol Negotiation + Entropy Evolution + parking_lot unification)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -90,6 +90,16 @@
 ---
 
 ## Recent Improvements
+
+### Wave 156m — G65 Protocol Negotiation (Aug 6, 2026)
+
+- **G65 Phase 3 protocol negotiation**: Single-socket `PROTOCOLS:` greeting replaces C2 dual-socket pattern
+- `Protocol::Negotiation` variant in both `beardog-ipc` and `beardog-tunnel` protocol enums
+- `ProtocolNegotiator` in `beardog-ipc/protocol_router.rs`: parse client greeting, select best mutual protocol, format response
+- `handle_protocol_negotiation()` in `connection_handlers.rs`: routes to tarpc or JSON-RPC based on negotiation result
+- `serve_tarpc_on_stream()`: serves tarpc binary RPC on already-negotiated stream via `Transport::from`
+- **Backward compatible**: no-negotiation connections still work (first-byte `{` → JSON-RPC, `.tarpc.sock` → tarpc)
+- 37 new tests (31 protocol_router + 6 g65_tests), 0 Clippy warnings
 
 ### Wave 156l — Entropy Evolution + Temporal Pattern Cleanup (Aug 6, 2026)
 

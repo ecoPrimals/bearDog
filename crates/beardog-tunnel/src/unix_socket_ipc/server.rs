@@ -604,6 +604,16 @@ impl UnixSocketIpcServer {
             let protocol = Protocol::detect_from_bytes(first_line.as_bytes());
 
             match protocol {
+                Protocol::Negotiation => {
+                    info!(
+                        security_level = protocol.security_level(),
+                        protocol = "negotiation",
+                        "G65 protocol negotiation greeting"
+                    );
+                    return self
+                        .handle_protocol_negotiation(first_line.as_ref(), stream)
+                        .await;
+                }
                 Protocol::JsonRpc => {
                     info!(
                         security_level = protocol.security_level(),
@@ -630,6 +640,7 @@ impl UnixSocketIpcServer {
                     self.handle_http_universal(first_line.as_ref(), stream)
                         .await?;
                 }
+                Protocol::Negotiation => unreachable!("handled above"),
             }
         }
 

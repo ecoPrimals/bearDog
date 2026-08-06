@@ -173,13 +173,16 @@ impl JsonRpcError {
 /// Protocol detection result
 ///
 /// Priority order:
-/// 1. JSON-RPC (PRIMARY) - Universal, comprehensive, production-ready
-/// 2. HTTP (LEGACY) - Compatibility only, less secure
+/// 1. G65 Negotiation — `PROTOCOLS:` greeting triggers multi-protocol selection
+/// 2. JSON-RPC (PRIMARY) - Universal, comprehensive, production-ready
+/// 3. HTTP (LEGACY) - Compatibility only, less secure
 ///
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Protocol {
     /// Primary: Universal JSON-RPC 2.0 (security level 4)
     JsonRpc,
+    /// G65 Phase 3: `PROTOCOLS:` negotiation greeting detected
+    Negotiation,
     /// Legacy: HTTP compatibility (security level 2)
     Http,
 }
@@ -188,12 +191,18 @@ impl Protocol {
     /// Detect protocol from first bytes
     ///
     /// Detection logic:
+    /// - G65 Negotiation: `PROTOCOLS:` or `PROTOCOLS ` prefix
     /// - JSON-RPC: Begins with `{` (JSON object) - PRIMARY protocol
     /// - HTTP: Begins with HTTP verbs (GET, POST, etc.) - LEGACY compatibility
     #[must_use]
     pub fn detect_from_bytes(first_bytes: &[u8]) -> Self {
         if first_bytes.is_empty() {
-            return Self::JsonRpc; // Default to primary protocol
+            return Self::JsonRpc;
+        }
+
+        // G65: `PROTOCOLS:` negotiation greeting
+        if first_bytes.starts_with(b"PROTOCOLS:") || first_bytes.starts_with(b"PROTOCOLS ") {
+            return Self::Negotiation;
         }
 
         // Check for HTTP verbs (legacy protocol)
@@ -206,7 +215,7 @@ impl Protocol {
             return Self::Http;
         }
 
-        // Check for JSON-RPC (starts with '{' and likely contains "jsonrpc":"2.0")
+        // JSON-RPC: starts with '{' (JSON object)
         if first_bytes.starts_with(b"{") {
             return Self::JsonRpc;
         }
@@ -219,6 +228,7 @@ impl Protocol {
     pub const fn name(&self) -> &'static str {
         match self {
             Self::JsonRpc => "json-rpc",
+            Self::Negotiation => "negotiation",
             Self::Http => "http",
         }
     }
@@ -226,8 +236,9 @@ impl Protocol {
     #[must_use]
     pub const fn security_level(&self) -> u8 {
         match self {
-            Self::JsonRpc => 4, // Structured, comprehensive, production-ready
-            Self::Http => 2,    // Plain text, less secure, legacy
+            Self::JsonRpc => 4,     // Structured, comprehensive, production-ready
+            Self::Negotiation => 5, // Protocol-negotiated — highest (explicit mutual selection)
+            Self::Http => 2,        // Plain text, less secure, legacy
         }
     }
 }
@@ -262,6 +273,22 @@ mod tests {
     }
 
     #[test]
+    fn test_protocol_detection_negotiation() {
+        assert_eq!(
+            Protocol::detect_from_bytes(b"PROTOCOLS: tarpc,jsonrpc\n"),
+            Protocol::Negotiation
+        );
+        assert_eq!(
+            Protocol::detect_from_bytes(b"PROTOCOLS:tarpc\n"),
+            Protocol::Negotiation
+        );
+        assert_eq!(
+            Protocol::detect_from_bytes(b"PROTOCOLS jsonrpc\n"),
+            Protocol::Negotiation
+        );
+    }
+
+    #[test]
     fn test_jsonrpc_error_constructors() {
         let err = JsonRpcError::parse_error("Invalid JSON");
         assert_eq!(err.code, JsonRpcError::PARSE_ERROR);
@@ -279,6 +306,7 @@ mod tests {
     #[test]
     fn test_protocol_security_levels() {
         assert_eq!(Protocol::JsonRpc.security_level(), 4);
+        assert_eq!(Protocol::Negotiation.security_level(), 5);
         assert_eq!(Protocol::Http.security_level(), 2);
     }
 }

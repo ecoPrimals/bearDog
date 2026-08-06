@@ -151,6 +151,102 @@ impl UnixSocketIpcServer {
         }
     }
 
+    /// Handle G65 protocol negotiation.
+    ///
+    /// When the first line is `PROTOCOLS: tarpc,jsonrpc\n`, this method:
+    /// 1. Parses the client's protocol preferences
+    /// 2. Selects the best mutual protocol (tarpc preferred, then jsonrpc)
+    /// 3. Responds with `PROTOCOL: <selected>\n`
+    /// 4. Routes the connection to the selected protocol handler
+    ///
+    /// If no mutual protocol exists, responds with an error line and closes.
+    pub(super) async fn handle_protocol_negotiation(
+        &self,
+        greeting_line: &str,
+        mut stream: Box<dyn PlatformStream>,
+    ) -> Result<()> {
+        let client_prefs = parse_g65_greeting(greeting_line);
+
+        if client_prefs.is_empty() {
+            warn!("G65: empty or unparseable PROTOCOLS greeting — closing");
+            stream
+                .write_all(b"PROTOCOL: NONE supported=tarpc,jsonrpc\n")
+                .await?;
+            return Ok(());
+        }
+
+        // Server preference: tarpc > jsonrpc. First client pref we also support wins.
+        let selected = client_prefs
+            .iter()
+            .find(|p| matches!(p.as_str(), "tarpc" | "jsonrpc"))
+            .map(String::as_str);
+
+        match selected {
+            Some("tarpc") => {
+                info!(selected = "tarpc", "G65: protocol negotiated");
+                stream.write_all(b"PROTOCOL: tarpc\n").await?;
+                stream.flush().await?;
+
+                #[cfg(all(unix, feature = "tarpc-rpc"))]
+                {
+                    self.serve_tarpc_on_stream(stream).await?;
+                }
+
+                #[cfg(not(all(unix, feature = "tarpc-rpc")))]
+                {
+                    warn!("G65: tarpc negotiated but tarpc-rpc feature not enabled");
+                }
+
+                Ok(())
+            }
+            Some("jsonrpc") => {
+                info!(selected = "jsonrpc", "G65: protocol negotiated");
+                stream.write_all(b"PROTOCOL: jsonrpc\n").await?;
+                stream.flush().await?;
+                self.handle_jsonrpc_universal("", stream).await
+            }
+            _ => {
+                warn!("G65: no mutual protocol — closing");
+                stream
+                    .write_all(b"PROTOCOL: NONE supported=tarpc,jsonrpc\n")
+                    .await?;
+                Ok(())
+            }
+        }
+    }
+
+    /// Serve tarpc binary RPC on an already-negotiated stream (G65 Phase 3).
+    ///
+    /// Wraps the stream in tarpc's length-delimited bincode transport and
+    /// processes requests using the same `BearDogRpcServer` as the sibling
+    /// `.tarpc.sock` listener.
+    #[cfg(all(unix, feature = "tarpc-rpc"))]
+    async fn serve_tarpc_on_stream(&self, stream: Box<dyn PlatformStream>) -> Result<()> {
+        use futures::StreamExt;
+        use tarpc::server::{BaseChannel, Channel};
+
+        let transport = tarpc::serde_transport::Transport::from((
+            stream,
+            tarpc::tokio_serde::formats::Bincode::default(),
+        ));
+
+        let identity = std::sync::Arc::new(
+            beardog_types::primal_identity::PrimalIdentity::from_env(),
+        );
+        let server = crate::tarpc_service::BearDogRpcServer::new(identity);
+        let channel = BaseChannel::with_defaults(transport);
+
+        info!("G65: serving tarpc on negotiated connection");
+        channel
+            .execute(server.serve())
+            .for_each(|resp| async {
+                tokio::spawn(resp);
+            })
+            .await;
+
+        Ok(())
+    }
+
     /// Handle JSON-RPC requests using universal platform stream.
     ///
     /// After writing a successful `btsp.negotiate` response, transitions the
@@ -648,4 +744,65 @@ fn try_phase3_upgrade(request_line: &str, response_str: &str) -> Option<Phase3Se
     );
 
     Some(Phase3Session::new(keys))
+}
+
+/// Parse a G65 `PROTOCOLS:` greeting line into a list of protocol names.
+///
+/// Accepts `PROTOCOLS: tarpc,jsonrpc\n` or `PROTOCOLS:tarpc,jsonrpc\n`.
+/// Returns protocol names as lowercase strings in the client's preference order.
+fn parse_g65_greeting(line: &str) -> Vec<String> {
+    let trimmed = line.trim();
+    let payload = if let Some(rest) = trimmed.strip_prefix("PROTOCOLS:") {
+        rest.trim()
+    } else if let Some(rest) = trimmed.strip_prefix("PROTOCOLS ") {
+        rest.trim()
+    } else {
+        return Vec::new();
+    };
+
+    payload
+        .split(',')
+        .map(|s| s.trim().to_ascii_lowercase())
+        .filter(|s| !s.is_empty())
+        .collect()
+}
+
+#[cfg(test)]
+mod g65_tests {
+    use super::*;
+
+    #[test]
+    fn parse_greeting_tarpc_jsonrpc() {
+        let prefs = parse_g65_greeting("PROTOCOLS: tarpc,jsonrpc\n");
+        assert_eq!(prefs, vec!["tarpc", "jsonrpc"]);
+    }
+
+    #[test]
+    fn parse_greeting_jsonrpc_only() {
+        let prefs = parse_g65_greeting("PROTOCOLS: jsonrpc\n");
+        assert_eq!(prefs, vec!["jsonrpc"]);
+    }
+
+    #[test]
+    fn parse_greeting_no_space() {
+        let prefs = parse_g65_greeting("PROTOCOLS:tarpc\n");
+        assert_eq!(prefs, vec!["tarpc"]);
+    }
+
+    #[test]
+    fn parse_greeting_with_unknown() {
+        let prefs = parse_g65_greeting("PROTOCOLS: grpc,tarpc,quic,jsonrpc\n");
+        assert_eq!(prefs, vec!["grpc", "tarpc", "quic", "jsonrpc"]);
+    }
+
+    #[test]
+    fn parse_greeting_empty() {
+        assert!(parse_g65_greeting("NOT_PROTOCOLS: tarpc\n").is_empty());
+    }
+
+    #[test]
+    fn parse_greeting_space_prefix() {
+        let prefs = parse_g65_greeting("PROTOCOLS tarpc,jsonrpc\n");
+        assert_eq!(prefs, vec!["tarpc", "jsonrpc"]);
+    }
 }

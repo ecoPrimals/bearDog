@@ -256,7 +256,7 @@ impl Default for SafeIosProvider {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use beardog_errors::{BearDogError, SystemErrorCategory};
+    use beardog_errors::BearDogError;
     use serial_test::serial;
 
     fn assert_ios_secure_enclave_stub_err(err: BearDogError) {
