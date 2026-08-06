@@ -1,299 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! tarpc binary RPC service (G64 Cephalization).
+//! Server-side implementation of [`BearDogRpc`].
 //!
-//! Exposes a `.tarpc.sock` sibling socket alongside the primary JSON-RPC
-//! `.sock`. Hot-path crypto operations use bincode framing — no JSON
-//! serde roundtrip, no string encoding overhead.
-//!
-//! ## Socket Convention
-//!
-//! ```text
-//! beardog-family123.sock          ← JSON-RPC  (always present, bootstrap + diagnostic)
-//! beardog-family123.tarpc.sock    ← tarpc      (optional, high-perf intra-gate)
-//! ```
-//!
-//! ## Method Surface (30 methods — crypto + auth domain convergence)
-//!
-//! | Category | Methods | Count |
-//! |----------|---------|-------|
-//! | Health | `health_check`, `version` | 2 |
-//! | Hash | `blake3_hash`, `sha256`, `sha384`, `sha512` | 4 |
-//! | MAC | `hmac_sha256`, `blake3_keyed` | 2 |
-//! | KDF | `hkdf_sha256`, `blake3_derive_key`, `argon2id_hash`, `derive_key` | 4 |
-//! | Signing | `sign_ed25519`, `verify_ed25519` | 2 |
-//! | Key Exchange | `x25519_generate_ephemeral`, `x25519_derive_secret` | 2 |
-//! | AEAD | `chacha20_poly1305_{encrypt,decrypt}` | 2 |
-//! | AEAD | `aes256_gcm_{encrypt,decrypt}` | 2 |
-//! | AEAD | `aes128_gcm_{encrypt,decrypt}` | 2 |
-//! | Auth | `auth_issue_ionic`, `auth_verify_ionic`, `auth_public_key` | 3 |
-//! | Auth | `auth_issue_session`, `identity_create` | 2 |
-//! | Total | | **30** |
+//! All methods delegate to `beardog-crypto` or `ionic_token` — no logic
+//! duplication with JSON-RPC handlers. The `identity` field carries the
+//! primal's `PrimalIdentity` for key derivation and DID generation.
 
 use std::sync::Arc;
 
 use beardog_crypto::{hash_blake3, sign_ed25519, verify_ed25519};
 use beardog_types::primal_identity::PrimalIdentity;
-use tracing::{debug, info, warn};
+use tracing::debug;
 
+use super::types::*;
 use crate::ionic_token::{issue_ionic_token_with_gate, GateIdentity};
 use crate::unix_socket_ipc::handlers::primal_signing::derive_primal_signing_key;
-
-/// Derives the tarpc socket path from a JSON-RPC socket path.
-///
-/// Follows the ecosystem convention from `biomeos-primal-sdk::tarpc_transport`:
-/// `beardog.sock` → `beardog.tarpc.sock`.
-#[must_use]
-pub fn tarpc_socket_path(jsonrpc_socket: &str) -> String {
-    if let Some(base) = jsonrpc_socket.strip_suffix(".sock") {
-        format!("{base}.tarpc.sock")
-    } else {
-        format!("{jsonrpc_socket}.tarpc")
-    }
-}
-
-/// Health status returned by the tarpc health check.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct TarpcHealthStatus {
-    /// Whether the service is healthy.
-    pub healthy: bool,
-    /// Primal name.
-    pub primal: String,
-    /// Crate version.
-    pub version: String,
-    /// Number of tarpc methods served.
-    pub tarpc_method_count: u32,
-    /// Number of JSON-RPC methods served.
-    pub jsonrpc_method_count: u32,
-}
-
-/// Result of an Ed25519 signing operation.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct SignResult {
-    /// Raw 64-byte Ed25519 signature.
-    pub signature: Vec<u8>,
-    /// 32-byte public key corresponding to the signing key.
-    pub public_key: Vec<u8>,
-}
-
-/// Result of an AEAD encryption operation.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct AeadCiphertext {
-    /// Encrypted data (without tag).
-    pub ciphertext: Vec<u8>,
-    /// 96-bit nonce used for encryption.
-    pub nonce: Vec<u8>,
-    /// 128-bit authentication tag.
-    pub tag: Vec<u8>,
-}
-
-/// X25519 ephemeral keypair.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct X25519Keypair {
-    /// 32-byte secret key.
-    pub secret_key: Vec<u8>,
-    /// 32-byte public key.
-    pub public_key: Vec<u8>,
-}
-
-/// Ionic token issuance result.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct IonicTokenResult {
-    /// Compact ionic token string (header.payload.signature).
-    pub token: String,
-    /// DID of the issuing primal.
-    pub issuer: String,
-    /// Subject the token was issued for.
-    pub subject: String,
-    /// Scope patterns the token covers.
-    pub scope: Vec<String>,
-    /// Token lifetime in seconds.
-    pub ttl_secs: i64,
-}
-
-/// Ionic token verification result.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct IonicVerifyResult {
-    /// Whether the token is valid.
-    pub valid: bool,
-    /// Issuer DID from the token claims.
-    pub issuer: Option<String>,
-    /// Subject from the token claims.
-    pub subject: Option<String>,
-    /// Scope patterns from the token claims.
-    pub scope: Vec<String>,
-    /// Expiry timestamp (Unix seconds).
-    pub exp: Option<i64>,
-    /// Error description if invalid.
-    pub error: Option<String>,
-}
-
-/// Public key info for the primal's identity.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct PublicKeyInfo {
-    /// Base64-encoded Ed25519 public key.
-    pub public_key_b64: String,
-    /// Hex-encoded Ed25519 public key.
-    pub public_key_hex: String,
-    /// DID (`did:key:z6Mk...`) for the primal.
-    pub did: String,
-}
-
-/// Total number of tarpc RPC methods served.
-const TARPC_METHOD_COUNT: u32 = 30;
-
-#[expect(
-    missing_docs,
-    reason = "tarpc::service macro generates the trait and helper types; docs on individual methods below"
-)]
-#[tarpc::service]
-pub trait BearDogRpc {
-    // ── Health ──────────────────────────────────────────────────────────
-
-    /// Health check — returns primal status without JSON overhead.
-    async fn health_check() -> TarpcHealthStatus;
-
-    /// Crate version string.
-    async fn version() -> String;
-
-    // ── Hash ───────────────────────────────────────────────────────────
-
-    /// BLAKE3 hash — provenance hot-path (CAS, data braids).
-    async fn blake3_hash(data: Vec<u8>) -> Vec<u8>;
-
-    /// SHA-256 hash.
-    async fn sha256(data: Vec<u8>) -> Vec<u8>;
-
-    /// SHA-384 hash.
-    async fn sha384(data: Vec<u8>) -> Vec<u8>;
-
-    /// SHA-512 hash.
-    async fn sha512(data: Vec<u8>) -> Vec<u8>;
-
-    // ── MAC ────────────────────────────────────────────────────────────
-
-    /// HMAC-SHA256.
-    async fn hmac_sha256(key: Vec<u8>, data: Vec<u8>) -> Result<Vec<u8>, String>;
-
-    /// BLAKE3 keyed hash (MAC).
-    async fn blake3_keyed(key: Vec<u8>, data: Vec<u8>) -> Result<Vec<u8>, String>;
-
-    // ── KDF ────────────────────────────────────────────────────────────
-
-    /// HKDF-SHA256 key derivation.
-    async fn hkdf_sha256(
-        ikm: Vec<u8>,
-        salt: Vec<u8>,
-        info: Vec<u8>,
-        output_length: u32,
-    ) -> Result<Vec<u8>, String>;
-
-    /// BLAKE3 key derivation.
-    async fn blake3_derive_key(context: String, key_material: Vec<u8>) -> Vec<u8>;
-
-    /// Argon2id password hashing (memory-hard).
-    async fn argon2id_hash(password: Vec<u8>, salt: Vec<u8>) -> Result<Vec<u8>, String>;
-
-    // ── Signing ────────────────────────────────────────────────────────
-
-    /// Ed25519 sign — derived key from KDF(FAMILY_SEED, key_id, "signing").
-    async fn sign_ed25519(key_id: String, message: Vec<u8>) -> Result<SignResult, String>;
-
-    /// Ed25519 verify.
-    async fn verify_ed25519(
-        public_key: Vec<u8>,
-        message: Vec<u8>,
-        signature: Vec<u8>,
-    ) -> Result<bool, String>;
-
-    // ── Key Exchange ───────────────────────────────────────────────────
-
-    /// X25519 generate ephemeral keypair.
-    async fn x25519_generate_ephemeral() -> X25519Keypair;
-
-    /// X25519 derive shared secret.
-    async fn x25519_derive_secret(
-        secret_key: Vec<u8>,
-        peer_public_key: Vec<u8>,
-    ) -> Result<Vec<u8>, String>;
-
-    // ── AEAD ───────────────────────────────────────────────────────────
-
-    /// ChaCha20-Poly1305 encrypt (constant-time, no AES-NI required).
-    async fn chacha20_poly1305_encrypt(
-        data: Vec<u8>,
-        key: Vec<u8>,
-        aad: Vec<u8>,
-    ) -> Result<AeadCiphertext, String>;
-
-    /// ChaCha20-Poly1305 decrypt.
-    async fn chacha20_poly1305_decrypt(
-        ciphertext: Vec<u8>,
-        nonce: Vec<u8>,
-        tag: Vec<u8>,
-        key: Vec<u8>,
-        aad: Vec<u8>,
-    ) -> Result<Vec<u8>, String>;
-
-    /// AES-256-GCM encrypt.
-    async fn aes256_gcm_encrypt(
-        data: Vec<u8>,
-        key: Vec<u8>,
-        aad: Vec<u8>,
-    ) -> Result<AeadCiphertext, String>;
-
-    /// AES-256-GCM decrypt.
-    async fn aes256_gcm_decrypt(
-        ciphertext: Vec<u8>,
-        nonce: Vec<u8>,
-        tag: Vec<u8>,
-        key: Vec<u8>,
-        aad: Vec<u8>,
-    ) -> Result<Vec<u8>, String>;
-
-    /// AES-128-GCM encrypt.
-    async fn aes128_gcm_encrypt(
-        data: Vec<u8>,
-        key: Vec<u8>,
-        aad: Vec<u8>,
-    ) -> Result<AeadCiphertext, String>;
-
-    /// AES-128-GCM decrypt.
-    async fn aes128_gcm_decrypt(
-        ciphertext: Vec<u8>,
-        nonce: Vec<u8>,
-        tag: Vec<u8>,
-        key: Vec<u8>,
-        aad: Vec<u8>,
-    ) -> Result<Vec<u8>, String>;
-
-    // ── Auth / Ionic Token ─────────────────────────────────────────────
-
-    /// Issue an ionic capability token.
-    async fn auth_issue_ionic(
-        subject: String,
-        scope: Vec<String>,
-        ttl_secs: i64,
-    ) -> IonicTokenResult;
-
-    /// Verify an ionic token string, returning claims or error.
-    async fn auth_verify_ionic(token: String) -> IonicVerifyResult;
-
-    /// Get the primal's Ed25519 public key and DID.
-    async fn auth_public_key() -> PublicKeyInfo;
-
-    /// Issue a session token (simplified — auto-scoped by purpose).
-    async fn auth_issue_session(
-        purpose: String,
-        user: String,
-    ) -> IonicTokenResult;
-
-    /// Generate an ephemeral Ed25519 identity keypair.
-    async fn identity_create() -> SignResult;
-
-    /// Derive a key from FAMILY_SEED via BLAKE3 KDF.
-    async fn derive_key(key_id: String, purpose: String) -> Result<Vec<u8>, String>;
-}
 
 /// Server-side implementation of `BearDogRpc`.
 #[derive(Clone)]
@@ -785,78 +506,9 @@ impl BearDogRpc for BearDogRpcServer {
     }
 }
 
-/// Spawns the tarpc listener on the `.tarpc.sock` sibling socket.
-///
-/// This is fire-and-forget: if the listener fails to bind, it logs a warning
-/// and returns without blocking the JSON-RPC server.
-///
-/// # Errors
-///
-/// Returns `Err` if the Unix socket cannot be bound (e.g. path too long,
-/// permissions). The caller should treat this as non-fatal.
-pub async fn spawn_tarpc_listener(
-    jsonrpc_socket_path: &str,
-    identity: Arc<PrimalIdentity>,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    use futures::StreamExt;
-    use tarpc::server::{BaseChannel, Channel};
-
-    let tarpc_path = tarpc_socket_path(jsonrpc_socket_path);
-
-    if std::path::Path::new(&tarpc_path).exists() {
-        std::fs::remove_file(&tarpc_path).ok();
-    }
-
-    let incoming = tarpc::serde_transport::unix::listen(
-        &tarpc_path,
-        tarpc::tokio_serde::formats::Bincode::default,
-    )
-    .await?;
-    info!(path = %tarpc_path, method_count = TARPC_METHOD_COUNT, "tarpc listener bound");
-
-    let server = BearDogRpcServer::new(identity);
-
-    tokio::spawn(async move {
-        futures::pin_mut!(incoming);
-        while let Some(result) = incoming.next().await {
-            match result {
-                Ok(transport) => {
-                    let channel = BaseChannel::with_defaults(transport);
-                    let handler = server.clone();
-                    tokio::spawn(channel.execute(handler.serve()).for_each(|resp| async {
-                        tokio::spawn(resp);
-                    }));
-                }
-                Err(e) => {
-                    warn!(error = %e, "tarpc accept failed");
-                }
-            }
-        }
-    });
-
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn tarpc_socket_path_convention() {
-        assert_eq!(
-            tarpc_socket_path("/tmp/beardog.sock"),
-            "/tmp/beardog.tarpc.sock"
-        );
-        assert_eq!(
-            tarpc_socket_path("/run/user/1000/biomeos/beardog-family123.sock"),
-            "/run/user/1000/biomeos/beardog-family123.tarpc.sock"
-        );
-    }
-
-    #[test]
-    fn tarpc_socket_path_no_sock_suffix() {
-        assert_eq!(tarpc_socket_path("/tmp/beardog"), "/tmp/beardog.tarpc");
-    }
 
     #[test]
     fn tarpc_method_count_matches_trait() {
@@ -872,7 +524,7 @@ mod tests {
         let sock = dir.path().join("test.sock");
         let sock_str = sock.to_str().unwrap();
 
-        let tarpc_sock = tarpc_socket_path(sock_str);
+        let tarpc_sock = super::super::tarpc_socket_path(sock_str);
 
         let incoming = tarpc::serde_transport::unix::listen(
             &tarpc_sock,
@@ -897,7 +549,6 @@ mod tests {
             }
         });
 
-        // Give server a moment to bind
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
 
         let transport = tarpc::serde_transport::unix::connect(
@@ -961,7 +612,6 @@ mod tests {
 
         let data = b"hello beardog tarpc".to_vec();
 
-        // BLAKE3 hash
         let hash = client
             .blake3_hash(tarpc::context::current(), data.clone())
             .await
@@ -969,21 +619,18 @@ mod tests {
         assert_eq!(hash.len(), 32);
         assert_eq!(hash, beardog_crypto::hash_blake3(&data));
 
-        // SHA-256
         let sha = client
             .sha256(tarpc::context::current(), data.clone())
             .await
             .unwrap();
         assert_eq!(sha.len(), 32);
 
-        // SHA-512
         let sha512 = client
             .sha512(tarpc::context::current(), data.clone())
             .await
             .unwrap();
         assert_eq!(sha512.len(), 64);
 
-        // HMAC-SHA256
         let key = vec![0xAB; 32];
         let mac = client
             .hmac_sha256(tarpc::context::current(), key.clone(), data.clone())
@@ -992,7 +639,6 @@ mod tests {
             .unwrap();
         assert_eq!(mac.len(), 32);
 
-        // BLAKE3 derive key
         let derived = client
             .blake3_derive_key(
                 tarpc::context::current(),
@@ -1003,7 +649,6 @@ mod tests {
             .unwrap();
         assert_eq!(derived.len(), 32);
 
-        // HKDF-SHA256
         let hkdf_out = client
             .hkdf_sha256(tarpc::context::current(), key.clone(), vec![], vec![], 48)
             .await
@@ -1011,7 +656,6 @@ mod tests {
             .unwrap();
         assert_eq!(hkdf_out.len(), 48);
 
-        // ChaCha20-Poly1305 roundtrip
         let chacha_key = vec![0x42; 32];
         let encrypted = client
             .chacha20_poly1305_encrypt(
@@ -1037,7 +681,6 @@ mod tests {
             .unwrap();
         assert_eq!(decrypted, data);
 
-        // AES-256-GCM roundtrip
         let aes_key = vec![0x55; 32];
         let enc = client
             .aes256_gcm_encrypt(
@@ -1063,8 +706,7 @@ mod tests {
             .unwrap();
         assert_eq!(dec, data);
 
-        // Ed25519 verify (raw key, no FAMILY_SEED needed)
-        let pk = vec![0u8; 32]; // invalid key — should fail gracefully
+        let pk = vec![0u8; 32];
         let result = client
             .verify_ed25519(
                 tarpc::context::current(),
@@ -1119,12 +761,10 @@ mod tests {
         .unwrap();
         let client = BearDogRpcClient::new(tarpc::client::Config::default(), transport).spawn();
 
-        // Public key
         let pk_info = client.auth_public_key(tarpc::context::current()).await.unwrap();
         assert!(pk_info.did.starts_with("did:key:z6Mk"));
-        assert_eq!(pk_info.public_key_hex.len(), 64); // 32 bytes hex
+        assert_eq!(pk_info.public_key_hex.len(), 64);
 
-        // Issue ionic token
         let token_result = client
             .auth_issue_ionic(
                 tarpc::context::current(),
@@ -1138,7 +778,6 @@ mod tests {
         assert!(token_result.issuer.starts_with("did:key:z6Mk"));
         assert_eq!(token_result.subject, "test-subject");
 
-        // Verify the token we just issued
         let verify_result = client
             .auth_verify_ionic(tarpc::context::current(), token_result.token.clone())
             .await
@@ -1146,12 +785,10 @@ mod tests {
         assert!(verify_result.valid, "token should be valid: {:?}", verify_result.error);
         assert_eq!(verify_result.subject.unwrap(), "test-subject");
 
-        // Identity create
         let id = client.identity_create(tarpc::context::current()).await.unwrap();
         assert_eq!(id.public_key.len(), 32);
-        assert_eq!(id.signature.len(), 32); // reuses SignResult; field holds secret key bytes
+        assert_eq!(id.signature.len(), 32);
 
-        // BLAKE3 derive key
         let dk = client
             .blake3_derive_key(
                 tarpc::context::current(),

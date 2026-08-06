@@ -18,7 +18,10 @@
 //! to retrieve a NUL-terminated error message string (valid until the next call on
 //! the same thread).
 
-#![allow(unsafe_code)]
+#![allow(
+    unsafe_code,
+    reason = "C ABI exports require unsafe for raw pointer and slice operations"
+)]
 
 use std::cell::RefCell;
 use std::ptr;

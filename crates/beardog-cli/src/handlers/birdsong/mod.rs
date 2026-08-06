@@ -8,9 +8,15 @@ mod decrypt;
 mod encrypt;
 mod lineage;
 
-#[allow(unused_imports)] // Public DI/test hooks preserved from pre-refactor API
+#[allow(
+    unused_imports,
+    reason = "public DI/test hooks preserved from pre-refactor API"
+)]
 pub use decrypt::{handle_birdsong_decrypt, handle_birdsong_decrypt_with_home};
-#[allow(unused_imports)]
+#[allow(
+    unused_imports,
+    reason = "pub re-exports for downstream callers; unused only from bin target"
+)]
 pub use encrypt::{handle_birdsong_encrypt, handle_birdsong_encrypt_with_home};
 
 #[cfg(test)]

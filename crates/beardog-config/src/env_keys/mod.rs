@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-#![allow(clippy::wildcard_imports)]
+#![allow(
+    clippy::wildcard_imports,
+    reason = "facade re-export: single public surface for env key constants"
+)]
 
 //! Centralized environment variable key constants.
 //!

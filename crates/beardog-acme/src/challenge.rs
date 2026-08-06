@@ -138,7 +138,10 @@ impl Http01Solver {
                                 host = val.trim().to_string();
                             }
                         }
-                        #[allow(unreachable_patterns)]
+                        #[allow(
+                            unreachable_patterns,
+                            reason = "read_line Ok arms handled above; catch-all for future variants"
+                        )]
                         _ => {}
                     }
                 }

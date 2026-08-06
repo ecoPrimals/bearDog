@@ -49,7 +49,10 @@ struct DpapiBlob {
 }
 
 #[cfg(windows)]
-#[allow(unsafe_code)]
+#[allow(
+    unsafe_code,
+    reason = "Windows DPAPI FFI requires unsafe for CryptProtectData/CryptUnprotectData bindings"
+)]
 impl DpapiBlob {
     /// Copies the DPAPI output into an owned `Vec`.
     fn to_vec(&self) -> Vec<u8> {
@@ -63,7 +66,10 @@ impl DpapiBlob {
 }
 
 #[cfg(windows)]
-#[allow(unsafe_code)]
+#[allow(
+    unsafe_code,
+    reason = "Windows DPAPI FFI requires unsafe for CryptProtectData/CryptUnprotectData bindings"
+)]
 impl Drop for DpapiBlob {
     fn drop(&mut self) {
         if !self.data.is_null() {
@@ -75,7 +81,10 @@ impl Drop for DpapiBlob {
 }
 
 #[cfg(windows)]
-#[allow(unsafe_code)]
+#[allow(
+    unsafe_code,
+    reason = "Windows DPAPI FFI requires unsafe for CryptProtectData/CryptUnprotectData bindings"
+)]
 unsafe extern "system" {
     fn CryptProtectData(
         p_data_in: *const DataBlob,
@@ -162,7 +171,10 @@ impl WindowsDpapiHsm {
 
     /// Encrypt raw key material with DPAPI (Windows).
     #[cfg(windows)]
-    #[allow(unsafe_code)]
+    #[allow(
+    unsafe_code,
+    reason = "Windows DPAPI FFI requires unsafe for CryptProtectData/CryptUnprotectData bindings"
+)]
     fn dpapi_protect(plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
         use std::ptr;
 
@@ -203,7 +215,10 @@ impl WindowsDpapiHsm {
 
     /// Decrypt a DPAPI-protected blob back to plaintext key material.
     #[cfg(windows)]
-    #[allow(unsafe_code)]
+    #[allow(
+    unsafe_code,
+    reason = "Windows DPAPI FFI requires unsafe for CryptProtectData/CryptUnprotectData bindings"
+)]
     fn dpapi_unprotect(protected: &[u8]) -> Result<Vec<u8>, BearDogError> {
         use std::ptr;
 

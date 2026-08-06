@@ -62,7 +62,10 @@ pub use dispatch::{DispatchOutcome, IpcErrorPhase};
 pub use error::{IpcError, IpcResult};
 pub use types::{Capability, DiscoveryQuery, ServiceInfo};
 // Neural API auto-registration (Tower Atomic TRUE PRIMAL)
-#[allow(deprecated)]
+#[allow(
+    deprecated,
+    reason = "intentional use of deprecated API pending migration"
+)]
 pub use neural_registration::{
     beardog_announce_method_names, discover_neural_api_socket, discover_neural_api_socket_with,
     register_with_neural_api, send_primal_announce,

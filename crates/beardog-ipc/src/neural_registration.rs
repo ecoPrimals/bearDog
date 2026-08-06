@@ -48,7 +48,7 @@ use tracing::{debug, info, warn};
 /// Registered domains:
 /// - `crypto` — core cryptographic operations (AEAD, hash, KDF, signing, key-exchange)
 /// - `auth` — session/ionic authentication and peer identity
-/// - `btsp` — BearDog Transport Security Protocol negotiation
+/// - `btsp` — `BearDog` Transport Security Protocol negotiation
 /// - `security` — consent verification, trust evaluation, JWT secrets
 /// - `bonding` — cross-primal bonding lifecycle
 /// - `secrets` — secure secret storage and retrieval

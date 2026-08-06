@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: August 6, 2026 (Wave 156i — G64 Cephalization: tarpc Convergence Push)
+**Last Updated**: August 6, 2026 (Wave 156i — Deep Debt Sweep + tarpc Convergence)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -91,12 +91,17 @@
 
 ## Recent Improvements
 
-### Wave 156i — G64 Cephalization: tarpc Convergence Push (Aug 6, 2026)
+### Wave 156i — Deep Debt Sweep + tarpc Convergence (Aug 6, 2026)
 
-- **tarpc 7→30 methods**: Full crypto domain coverage + auth domain. bearDog moves from "tarpc-wired" to **near-converged**.
+- **tarpc 7→30 methods**: Full crypto domain coverage + auth domain. bearDog moves from "tarpc-wired" to **near-converged**
 - **Crypto domain complete**: hash (BLAKE3, SHA-256/384/512), MAC (HMAC-SHA256, BLAKE3 keyed), KDF (HKDF-SHA256, BLAKE3 derive, Argon2id), signing (Ed25519), key exchange (X25519), AEAD (ChaCha20-Poly1305, AES-256-GCM, AES-128-GCM encrypt+decrypt), generic `derive_key`
 - **Auth domain wired**: `auth_issue_ionic`, `auth_verify_ionic`, `auth_public_key`, `auth_issue_session`, `identity_create` — full ionic token lifecycle over binary RPC
-- **E2E tests**: 3 new E2E roundtrip tests over real UDS (health, crypto, auth) — all pass
+- **tarpc_service.rs split** (1165L monolith → 3 files): `types.rs` (251L), `server.rs` (802L incl tests), `mod.rs` (117L). Zero files over 800 lines of production code
+- **Clippy 0 warnings**: Fixed 10 lib-level lints (redundant closure, collapsible if, items-after-statements, doc backticks, format inline vars, Iterator::last, borrowed-impl)
+- **`#[allow()]` hygiene**: 14 bare `#[allow()]` attributes given `reason =` across 10 production files
+- **Mock audit**: All production mocks (`Placeholder*`, `Stub*`, `Mock*`, `hsm_provider_mocks.rs`) confirmed `cfg(test)` gated — zero mock leakage in release builds
+- **`.expect()` audit**: All 17 production `.expect()` calls already have `#[expect(clippy::expect_used, reason)]` — no changes needed
+- **E2E tests**: 3 tarpc roundtrip tests over real UDS (health, crypto, auth) — all pass
 - **Capabilities**: `tarpc_methods: 30` advertised in `capabilities.list`
 - **14,019 tests**, 0 failures, 0 Clippy warnings
 

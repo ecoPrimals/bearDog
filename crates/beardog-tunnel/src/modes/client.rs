@@ -79,7 +79,7 @@ pub fn run(endpoint: Option<String>, command: Option<String>) -> anyhow::Result<
 
 /// Open a connection to the endpoint (Unix socket or TCP).
 fn open_connection(endpoint: &str) -> anyhow::Result<ClientStream> {
-    if endpoint.contains(':') && endpoint.split(':').last().is_some_and(|p| p.parse::<u16>().is_ok()) {
+    if endpoint.contains(':') && endpoint.split(':').next_back().is_some_and(|p| p.parse::<u16>().is_ok()) {
         let stream = std::net::TcpStream::connect(endpoint).map_err(|e| {
             anyhow::anyhow!("Cannot connect to TCP {endpoint}: {e}. Is the BearDog server running?")
         })?;
@@ -91,7 +91,7 @@ fn open_connection(endpoint: &str) -> anyhow::Result<ClientStream> {
         let stream = std::os::unix::net::UnixStream::connect(endpoint).map_err(|e| {
             anyhow::anyhow!("Cannot connect to {endpoint}: {e}. Is the BearDog server running?")
         })?;
-        return Ok(ClientStream::Unix(stream));
+        Ok(ClientStream::Unix(stream))
     }
 
     #[cfg(not(unix))]

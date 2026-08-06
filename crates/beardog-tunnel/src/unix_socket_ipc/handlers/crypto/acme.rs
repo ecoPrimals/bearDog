@@ -57,7 +57,7 @@ pub async fn handle_ecdsa_p256_generate_signing_keypair(
     let verifying_key = VerifyingKey::from(&signing_key);
 
     let private_bytes = Zeroizing::new(signing_key.to_bytes());
-    let private_b64 = BASE64.encode(&*private_bytes);
+    let private_b64 = BASE64.encode(*private_bytes);
 
     let point = verifying_key.to_encoded_point(false);
     let public_b64 = BASE64.encode(point.as_bytes());
@@ -224,8 +224,7 @@ pub async fn handle_jwk_thumbprint(
 
     // RFC 7638: lexicographically sorted, no whitespace
     let canonical = format!(
-        r#"{{"crv":"P-256","kty":"EC","x":"{}","y":"{}"}}"#,
-        x_b64url, y_b64url
+        r#"{{"crv":"P-256","kty":"EC","x":"{x_b64url}","y":"{y_b64url}"}}"#
     );
 
     let hash = Sha256::digest(canonical.as_bytes());
@@ -337,7 +336,7 @@ pub async fn handle_build_csr(
 
     Ok(json!({
         "csr_der": BASE64.encode(&csr_der),
-        "private_key": BASE64.encode(&*private_bytes),
+        "private_key": BASE64.encode(*private_bytes),
         "public_key": BASE64.encode(point.as_bytes()),
         "algorithm": "ECDSA-P256-SHA256",
         "domains": domain_strings,
@@ -468,24 +467,19 @@ pub async fn handle_parse_certificate(
     let mut san_entries = Vec::new();
     if let Ok(Some(san_ext)) =
         cert.get_extension_unique(&oid_registry::OID_X509_EXT_SUBJECT_ALT_NAME)
-    {
-        if let ParsedExtension::SubjectAlternativeName(san) = san_ext.parsed_extension() {
+        && let ParsedExtension::SubjectAlternativeName(san) = san_ext.parsed_extension() {
             for name in &san.general_names {
                 if let GeneralName::DNSName(dns) = name {
                     san_entries.push((*dns).to_string());
                 }
             }
         }
-    }
 
-    let mut is_ca = false;
-    if let Ok(Some(bc_ext)) =
-        cert.get_extension_unique(&oid_registry::OID_X509_EXT_BASIC_CONSTRAINTS)
-    {
-        if let ParsedExtension::BasicConstraints(bc) = bc_ext.parsed_extension() {
-            is_ca = bc.ca;
-        }
-    }
+    let is_ca = cert
+        .get_extension_unique(&oid_registry::OID_X509_EXT_BASIC_CONSTRAINTS)
+        .ok()
+        .flatten()
+        .is_some_and(|bc_ext| matches!(bc_ext.parsed_extension(), ParsedExtension::BasicConstraints(bc) if bc.ca));
 
     debug!(
         "Parsed cert: subject={}, expires={}, SANs={}",

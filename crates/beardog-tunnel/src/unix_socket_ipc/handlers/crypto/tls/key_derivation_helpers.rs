@@ -7,7 +7,10 @@
 
 // TLS key derivation tuples match RFC 8446 structure; this module is
 // deprecated and will be excised when songBird absorbs TLS ownership.
-#![allow(clippy::type_complexity)]
+#![allow(
+    clippy::type_complexity,
+    reason = "RFC 8446 key-derivation tuples exceed clippy type_complexity threshold"
+)]
 
 use hkdf::Hkdf;
 use sha2::{Digest, Sha256, Sha384};

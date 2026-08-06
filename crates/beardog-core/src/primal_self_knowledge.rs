@@ -180,7 +180,7 @@ impl PrimalIdentity {
         let name = inputs
             .beardog_primal_name
             .clone()
-            .unwrap_or_else(|| env_keys::resolve_primal_name());
+            .unwrap_or_else(env_keys::resolve_primal_name);
 
         let primal_type = inputs
             .beardog_primal_type

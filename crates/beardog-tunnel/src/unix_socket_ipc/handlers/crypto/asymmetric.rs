@@ -73,7 +73,7 @@
 
 use base64::Engine;
 use beardog_core::crypto_service::algorithms::asymmetric;
-use ed25519_dalek::{SigningKey, VerifyingKey};
+use ed25519_dalek::{Signer, SigningKey, VerifyingKey};
 use rand::RngCore;
 use serde_json::Value;
 use tracing::{debug, info};
@@ -130,7 +130,6 @@ pub async fn handle_sign_ed25519(
 
         debug!("🔐 Signing {} bytes with Ed25519 (direct key)", message.len());
 
-        use ed25519_dalek::Signer;
         let signature = signing_key.sign(&message).to_bytes().to_vec();
 
         let signature_b64 = b64.encode(&signature);

@@ -76,7 +76,10 @@ impl SafeBiometricAuthenticator {
 
     /// Detect available biometric authentication methods
     fn detect_available_biometrics() -> Result<Vec<BiometricType>, BearDogError> {
-        #[allow(unused_mut)]
+        #[allow(
+            unused_mut,
+            reason = "mut needed when iOS cfg arms push into types; unused on other platforms"
+        )]
         let mut types = Vec::new();
 
         #[cfg(target_os = "ios")]
