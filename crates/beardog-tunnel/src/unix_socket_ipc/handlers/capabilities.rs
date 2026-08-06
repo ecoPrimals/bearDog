@@ -352,6 +352,7 @@ impl CapabilitiesHandler {
             } else {
                 serde_json::json!(["json-rpc"])
             },
+            "tarpc_methods": if cfg!(feature = "tarpc-rpc") { 30u32 } else { 0u32 },
             "transport": ["uds", "tcp"],
             "wire_format": "ndjson",
             "transport_security": {

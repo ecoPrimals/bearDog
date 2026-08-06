@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: August 5, 2026 (Wave 156h — G64 Cephalization: tarpc Dual-Protocol)
+**Last Updated**: August 6, 2026 (Wave 156i — G64 Cephalization: tarpc Convergence Push)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -91,10 +91,19 @@
 
 ## Recent Improvements
 
+### Wave 156i — G64 Cephalization: tarpc Convergence Push (Aug 6, 2026)
+
+- **tarpc 7→30 methods**: Full crypto domain coverage + auth domain. bearDog moves from "tarpc-wired" to **near-converged**.
+- **Crypto domain complete**: hash (BLAKE3, SHA-256/384/512), MAC (HMAC-SHA256, BLAKE3 keyed), KDF (HKDF-SHA256, BLAKE3 derive, Argon2id), signing (Ed25519), key exchange (X25519), AEAD (ChaCha20-Poly1305, AES-256-GCM, AES-128-GCM encrypt+decrypt), generic `derive_key`
+- **Auth domain wired**: `auth_issue_ionic`, `auth_verify_ionic`, `auth_public_key`, `auth_issue_session`, `identity_create` — full ionic token lifecycle over binary RPC
+- **E2E tests**: 3 new E2E roundtrip tests over real UDS (health, crypto, auth) — all pass
+- **Capabilities**: `tarpc_methods: 30` advertised in `capabilities.list`
+- **14,019 tests**, 0 failures, 0 Clippy warnings
+
 ### Wave 156h — G64 Cephalization: tarpc Dual-Protocol (Aug 5, 2026)
 
 - **tarpc 0.37 added**: Feature-gated (`tarpc-rpc`) — zero impact on default build. `async-trait` ban preserved (tarpc 0.37 no longer depends on it). `cargo deny check` all 4 pass.
-- **`BearDogRpc` service trait**: 7 RPC methods — `health_check`, `blake3_hash`, `sign_ed25519`, `verify_ed25519`, `sha256`, `hmac_sha256`, `version`. Delegates directly to `beardog-crypto` (no JSON serde overhead).
+- **`BearDogRpc` service trait**: Initial 7 RPC methods — `health_check`, `blake3_hash`, `sign_ed25519`, `verify_ed25519`, `sha256`, `hmac_sha256`, `version`. Delegates directly to `beardog-crypto` (no JSON serde overhead).
 - **`.tarpc.sock` listener**: Sibling socket alongside `.sock` (ecosystem convention from `biomeos-primal-sdk`). Bincode binary framing. Spawned at server startup when `tarpc-rpc` feature + Unix platform.
 - **Capabilities updated**: `capabilities.list` advertises `["json-rpc", "tarpc"]` when feature is active.
 - **Stale references cleaned**: server.rs module doc, `BinaryFrame` doc, `beardog-ipc/Cargo.toml` comment all updated to reflect tarpc re-addition.
