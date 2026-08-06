@@ -2,7 +2,7 @@
 
 # Context — BearDog
 
-**Last Updated**: Jul 30, 2026
+**Last Updated**: Aug 6, 2026
 
 ## What This Is
 
@@ -19,16 +19,17 @@ BearDog answers "who is this node?" and "perform this crypto operation safely" f
 - **Version:** 0.9.0
 - **Workspace:** 27 crates (`Cargo.toml` workspace)
 - **MSRV:** 1.93.0 (`rust-toolchain.toml`)
-- **Tests:** 14,019 passing (0 failed; `cargo test --workspace`)
+- **Tests:** 14,026 passing (0 failed; `cargo test --workspace`)
 - **Coverage:** 90.51% line (llvm-cov, workspace; see [STATUS.md](STATUS.md))
 - **Unsafe:** 0 production (Linux); `deny(unsafe_code)` workspace-wide with targeted `#[allow]` for Windows DPAPI FFI + libtower C ABI
 - **IPC:** JSON-RPC 2.0 over NDJSON via Unix sockets / TCP / named pipes (platform-dependent)
 
 ## Key Capabilities
 
-- **Protocols:** JSON-RPC 2.0 over NDJSON (236 dispatchable methods)
+- **Protocols:** JSON-RPC 2.0 over NDJSON (236 dispatchable methods) + tarpc binary RPC (30 methods, G64 Cephalization)
 - **Cryptography:** Ed25519, X25519, ChaCha20-Poly1305, BLAKE3 (plus TLS, Tor, and broader RustCrypto suite as exposed by handlers)
-- **Hardware / identity:** HSM abstraction (software, PKCS#11, StrongBox, etc.), **FIDO2** / HID device discovery (`beardog-hid`)
+- **Hardware / identity:** HSM abstraction (software, PKCS#11, StrongBox, iOS Secure Enclave, Windows DPAPI, Linux SecretService, FIDO2/CTAP2), **FIDO2** / HID device discovery (`beardog-hid`), `MobileHsmCapability` trait for vendor-agnostic mobile HSM
+- **Validated substrates:** Linux x86_64 (eastGate), Android ARM64 (grapheneGate Pixel 8a — 13/13 checks), Windows x86_64 (via benchScale)
 - **Witness encoding:** `crypto.verify_ed25519` accepts encoding hints (`base64`, `hex`, `base64url`, `utf8`, `none`) per `ATTESTATION_ENCODING_STANDARD.md` v2.0
 
 Method domains include `crypto.*`, `tls.*`, `tor.*`, `genetic.*`, `secrets.*`, `beacon.*`, `relay.*`, `btsp.*`, and introspection (`discover_capabilities`, `primal.info`, `rpc.methods`). See [README.md](README.md) and [STATUS.md](STATUS.md) for detail.

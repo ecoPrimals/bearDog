@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: Jul 30, 2026
+**Updated**: Aug 6, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -23,7 +23,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 800 lines of code (production) — `enrollment.rs` (1061L) decomposed into 7 focused modules; `lineage_proof.rs` (877L) tests extracted
 - Hardcoded `eth0` → `BEARDOG_MDNS_INTERFACE` env var; `/tmp/` fallbacks → `std::env::temp_dir()`
-- 14,019 tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
+- 14,026 tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
 - 90.51% line coverage (llvm-cov workspace) — target 90% met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - `#[serial]` minimized — 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent
@@ -74,13 +74,29 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 |----------|-----------|--------|
 | Linux (x86_64, ARM64) | Unix sockets | Validated |
 | macOS (Intel, M-series) | Unix sockets | Validated |
-| Android (ARM64) | Abstract sockets + TCP | Ready |
+| Android (ARM64) | Abstract sockets + TCP | **Validated on grapheneGate (Pixel 8a)** |
 | Windows (x86_64, ARM64) | Named pipes + TCP | Ready |
-| iOS (ARM64) | Unix sockets (sandbox) | Ready |
+| iOS (ARM64) | Unix sockets (sandbox) | Ready (Secure Enclave registered) |
 
 ---
 
 ## Recently Completed
+
+### Wave 156j — grapheneGate Validation + Vendor-Agnostic Mobile HSM — DONE
+
+Cross-compiled ARM64 binary (6.6M) deployed and validated on grapheneGate (Pixel 8a) with 13-check matrix: all crypto, auth, secrets, HSM discovery pass. Build infra fixed (portable NDK linker path). `IosSecureEnclaveProvider` registered in `HsmKeyProviderBackend` (Silicon Atheism). `MobileHsmCapability` + `MasterKeySealer` traits created in `beardog-traits`. Validation automation script shipped.
+
+### Wave 156i — tarpc Convergence + Deep Debt Sweep — DONE
+
+tarpc expanded 7→30 methods (full crypto + auth domains). `tarpc_service.rs` monolith (1165L) split into `types.rs`/`server.rs`/`mod.rs`. 10 Clippy warnings fixed, 14 bare `#[allow()]` given `reason`. All production mocks confirmed `cfg(test)` gated. All 17 `.expect()` calls confirmed annotated.
+
+### Wave 156h — G64 Cephalization: tarpc Dual-Protocol — DONE
+
+tarpc 0.37 added as feature-gated side-channel (`tarpc-rpc`). Initial 7 RPC methods. `.tarpc.sock` sibling socket listener with bincode binary framing. `async-trait` ban preserved (tarpc 0.37 independent).
+
+### Wave 156e — Neural API Routing Stub: E1 Debt Fix — DONE
+
+`capability.register` domains expanded 4→8. Crypto domain operations updated to 36 canonical dotted names. `primal.announce` TCP path fixed for Neural API routing table.
 
 ### Wave 155m — Deep Debt Sweep: Orphan Purge + Hardcoding Fix — DONE
 
@@ -413,4 +429,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: Jul 30, 2026 (Wave 155m)
+**Last Updated**: Aug 6, 2026 (Wave 156j)

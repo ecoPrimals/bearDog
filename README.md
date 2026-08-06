@@ -10,7 +10,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 27 | **JSON-RPC Methods**: 236 | **Tests**: 14,019 | **Coverage**: 90.51% | **Last Updated**: July 30, 2026
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 27 | **JSON-RPC Methods**: 236 | **tarpc Methods**: 30 | **Tests**: 14,026 | **Coverage**: 90.51% | **Last Updated**: August 6, 2026
 
 ---
 
@@ -32,6 +32,7 @@ BearDog provides secure cryptographic operations for all primals through the **T
 - **Rust 2024 Edition** — Modern idioms, MSRV 1.93.0
 - **Fully Concurrent** — Dependency injection architecture, no global mutable state
 - **236 JSON-RPC Methods** — Complete crypto API (BTSP handshake-as-a-service, ionic bond lifecycle, contract signing, lineage queries, consent gate, FIDO2/CTAP2 hardware authentication, cross-gate trust exchange, enrollment verification, cipher floor enforcement, ACME Phase 2 crypto delegation)
+- **30 tarpc Binary RPC Methods** — G64 Cephalization dual-protocol (JSON-RPC + tarpc bincode over UDS)
 - **Tor v3 Support** — Onion address derivation + ntor handshake + cell crypto
 - **Multi-Family Support** — `--family-id` flag for per-family instances
 - **Secret Storage** — Encrypted secrets with family-scoped keys + `CredentialStore` trait (in-memory, file-vault backends)
@@ -86,9 +87,9 @@ TCP is opt-in via `--port`/`--listen`/`BEARDOG_TCP_IPC_PORT`. Without those, Bea
 |----------|-----------|--------|
 | Linux | Unix sockets | Production |
 | macOS | Unix sockets | Production |
-| Android | Abstract sockets + TCP | Production |
+| Android | Abstract sockets + TCP | **Validated on grapheneGate (Pixel 8a)** |
 | Windows | Named pipes + TCP | Ready |
-| iOS | Unix sockets (sandbox) | Ready |
+| iOS | Unix sockets (sandbox) | Ready (Secure Enclave registered) |
 
 BearDog auto-detects the platform and binds appropriate transports.
 
@@ -239,7 +240,7 @@ export FAMILY_SEED=my-secret-seed
 | **TODO/FIXME** | 0 |
 | **Files > 800 LOC** | 0 (production code) |
 | **Rust files** | 1,856 |
-| **Tests** | 14,019 (concurrent; 35 `#[serial]` in `beardog-production`) |
+| **Tests** | 14,026 (concurrent; 35 `#[serial]` in `beardog-production`) |
 | **Coverage** | 90.51% line (llvm-cov workspace, target 90% met) |
 | **Serial Tests** | 35 (`beardog-production` shared `AtomicBool` state) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |
