@@ -93,11 +93,7 @@ impl CertificateStore {
         let key_path = self.privkey_path(domain);
         tokio::fs::write(&key_path, privkey_pem).await?;
 
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            tokio::fs::set_permissions(&key_path, std::fs::Permissions::from_mode(0o600)).await?;
-        }
+        beardog_utils::PlatformAccess::set_owner_only_async(&key_path).await?;
 
         info!(domain, "stored certificate and key");
         Ok(())

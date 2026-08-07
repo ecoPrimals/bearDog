@@ -169,19 +169,9 @@ impl BinaryValidator {
         report.size_bytes = metadata.len();
         report.size_reasonable = report.size_bytes > 1_000_000 && report.size_bytes < 100_000_000;
 
-        // 3. Check executable permissions (Unix only)
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let mode = metadata.permissions().mode();
-            report.is_executable = (mode & 0o111) != 0;
-        }
-
-        #[cfg(not(unix))]
-        {
-            // On Windows, all .exe files are executable
-            report.is_executable = true;
-        }
+        report.is_executable = beardog_utils::PlatformAccess::read_mode(path)
+            .map(|m| m.is_executable)
+            .unwrap_or(true);
 
         // 4. Compute checksum
         report.checksum = Some(self.compute_sha256(path).await?);

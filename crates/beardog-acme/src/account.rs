@@ -68,11 +68,7 @@ impl AcmeAccount {
         let json = serde_json::to_string_pretty(self)?;
         tokio::fs::write(path, json).await?;
 
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            tokio::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600)).await?;
-        }
+        beardog_utils::PlatformAccess::set_owner_only_async(path).await?;
 
         Ok(())
     }

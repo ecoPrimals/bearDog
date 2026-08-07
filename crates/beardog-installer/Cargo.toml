@@ -23,6 +23,7 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 beardog-errors = { workspace = true }
 beardog-types = { workspace = true }
+beardog-utils = { workspace = true }
 
 # Platform paths (XDG-compliant)
 etcetera = { workspace = true }

@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: Aug 6, 2026 (Wave 156m)
+**Updated**: Aug 7, 2026 (Wave 157a)
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -56,6 +56,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - SHA3→BLAKE3 unification in entropy mixing pipeline (Wave 156l)
 - `EntropyProvenance` metadata on `MixEntropyResponse` (Wave 156l)
 - G65 Protocol Negotiation: single-socket `PROTOCOLS:` greeting, tarpc/jsonrpc selection, backward-compatible (Wave 156m)
+- G68 Platform Substrate Convergence: `PlatformAccess` abstraction, 6 production sites migrated, 9 L2 violations → 0 (Wave 157a)
 - 12 manual error Display types migrated to `thiserror::Error` derive (Waves 119–120)
 - Dependency consolidation: hostname→whoami, dirs→directories, removed unused jni/aes/ctr (Waves 119–120)
 - UID helper centralized from 3 crates into beardog-utils::platform (Wave 119)
@@ -86,6 +87,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### Wave 157a — G68 Platform Substrate Convergence — DONE
+
+`PlatformAccess` abstraction in `beardog-utils`: `read_mode`, `set_owner_only`, `set_owner_only_async`, `set_executable_async`. 6 production `PermissionsExt` sites migrated across `beardog-tunnel`, `beardog-acme`, `beardog-installer`. 2 `beardog-types` sites documented as G68-exempt (circular dep, already cross-platform gated). 9 L2 violations → 0. bearDog: **G68 COMPLIANT**.
 
 ### Wave 156k — Deep Debt Sweep: Clippy + allow hygiene + full audit — DONE
 

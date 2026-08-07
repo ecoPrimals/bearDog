@@ -324,7 +324,11 @@ impl UnifiedConfigUtils {
     // SECURITY AND PERMISSIONS - Safe config file handling
     // =============================================================================
 
-    /// Validate file permissions for security
+    /// Validate file permissions for security.
+    ///
+    /// G68: platform-gated inline (`beardog-types` cannot depend on `beardog-utils`
+    /// to avoid circular dependency). Both `#[cfg(unix)]` and `#[cfg(not(unix))]`
+    /// branches are present — cross-platform clean.
     fn validate_file_permissions<P: AsRef<Path>>(path: P) -> Result<(), BearDogError> {
         let path = path.as_ref();
 
@@ -336,13 +340,8 @@ impl UnifiedConfigUtils {
                 BearDogError::io_error(&format!("Failed to read file metadata: {e}"))
             })?;
 
-            let permissions = metadata.permissions();
-            let mode = permissions.mode();
-
-            // Check if file is readable by owner
+            let mode = metadata.permissions().mode();
             let owner_read = (mode & 0o400) != 0;
-
-            // Check if file is readable by others (security risk)
             let world_readable = (mode & 0o044) != 0;
 
             if !owner_read {
@@ -352,14 +351,13 @@ impl UnifiedConfigUtils {
             }
 
             if world_readable {
-                warn!("⚠️ Config file is readable by others: {}", path.display());
+                warn!("Config file is readable by others: {}", path.display());
                 warn!("   Consider setting permissions to 600 for security");
             }
         }
 
         #[cfg(not(unix))]
         {
-            // On non-Unix systems, just check if file is readable
             if fs::metadata(path).is_err() {
                 return Err(BearDogError::validation("Config file is not accessible"));
             }
@@ -368,26 +366,28 @@ impl UnifiedConfigUtils {
         Ok(())
     }
 
-    /// Set secure permissions on config file
+    /// Set secure permissions on config file (0o600 on Unix, no-op elsewhere).
+    ///
+    /// G68: platform-gated inline (circular dep prevents using `PlatformAccess`).
     fn set_secure_permissions<P: AsRef<Path>>(path: P) -> Result<(), BearDogError> {
-        let path = path.as_ref();
-
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
 
+            let path = path.as_ref();
             let mut perms = fs::metadata(path)
                 .map_err(|e| BearDogError::io_error(&format!("Failed to read file metadata: {e}")))?
                 .permissions();
-
-            // Set permissions to 600 (owner read/write only)
             perms.set_mode(0o600);
-
             fs::set_permissions(path, perms).map_err(|e| {
                 BearDogError::io_error(&format!("Failed to set file permissions: {e}"))
             })?;
+            debug!("Set secure permissions (600) on: {}", path.display());
+        }
 
-            debug!("🔒 Set secure permissions (600) on: {}", path.display());
+        #[cfg(not(unix))]
+        {
+            let _ = path;
         }
 
         Ok(())

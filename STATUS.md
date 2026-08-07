@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: August 6, 2026 (Wave 156m — G65 Protocol Negotiation + Entropy Evolution + parking_lot unification)
+**Last Updated**: August 7, 2026 (Wave 157a — G68 Platform Substrate Convergence)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -90,6 +90,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 157a — G68 Platform Substrate Convergence (Aug 7, 2026)
+
+- **`PlatformAccess` abstraction**: New `beardog_utils::PlatformAccess` struct wraps `PermissionsExt` behind cross-platform API (`read_mode`, `set_owner_only`, `set_owner_only_async`, `set_executable_async`)
+- **6 production L2 sites migrated**: `beardog-tunnel/doctor.rs` (2 sites), `beardog-acme/account.rs`, `beardog-acme/storage.rs`, `beardog-installer/validator.rs`, `beardog-installer/installer.rs` — all now use `PlatformAccess`
+- **2 beardog-types sites G68-documented**: Circular dep prevents using `PlatformAccess`; already cross-platform gated with `#[cfg(unix)]` + `#[cfg(not(unix))]` fallbacks; annotated with G68 rationale
+- **9 L2 violations → 0**: bearDog moves from "Heavy" to **G68 COMPLIANT**
+- 5 new tests in `platform_access`, 0 Clippy warnings, all existing tests pass
 
 ### Wave 156m — G65 Protocol Negotiation (Aug 6, 2026)
 

@@ -53,6 +53,7 @@ rustls-rustcrypto = { workspace = true }
 # Internal
 beardog-config = { workspace = true }
 beardog-errors = { workspace = true }
+beardog-utils = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

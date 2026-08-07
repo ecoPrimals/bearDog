@@ -139,25 +139,12 @@ impl BinaryInstaller {
                 source: e,
             })?;
 
-        // Set executable permissions (Unix-like systems)
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let mut perms = fs::metadata(&dest)
-                .await
-                .map_err(|e| InstallerError::IoError {
-                    path: dest.clone(),
-                    source: e,
-                })?
-                .permissions();
-            perms.set_mode(0o755); // rwxr-xr-x
-            fs::set_permissions(&dest, perms)
-                .await
-                .map_err(|e| InstallerError::IoError {
-                    path: dest.clone(),
-                    source: e,
-                })?;
-        }
+        beardog_utils::PlatformAccess::set_executable_async(&dest)
+            .await
+            .map_err(|e| InstallerError::IoError {
+                path: dest.clone(),
+                source: e,
+            })?;
 
         info!("✓ {} installed successfully", primal.display_name());
         Ok(dest)

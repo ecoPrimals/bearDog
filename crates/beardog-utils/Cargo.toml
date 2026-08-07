@@ -19,9 +19,12 @@ workspace = true
 [dependencies]
 beardog-errors = { workspace = true }
 beardog-types = { workspace = true }
-tokio = { workspace = true, features = ["rt", "macros", "sync", "time"] }
+tokio = { workspace = true, features = ["rt", "macros", "sync", "time", "fs"] }
 tracing = { workspace = true }
 zeroize = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
 
 [features]
 test-utils = []

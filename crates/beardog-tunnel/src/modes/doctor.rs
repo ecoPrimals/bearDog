@@ -69,14 +69,8 @@ pub fn run(comprehensive: bool, socket: Option<String>, format: String) -> anyho
     if Path::new(&socket_path).exists() {
         println!("   ✅ Socket exists");
 
-        // Check socket permissions
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            if let Ok(metadata) = std::fs::metadata(&socket_path) {
-                let permissions = metadata.permissions();
-                println!("   ✅ Permissions: {:o}", permissions.mode());
-            }
+        if let Ok(mode) = beardog_utils::PlatformAccess::read_mode(std::path::Path::new(&socket_path)) {
+            println!("   ✅ Permissions: {:o}", mode.mode);
         }
     } else {
         println!("   ⚠️  Socket not found (server may not be running)");
@@ -128,13 +122,8 @@ pub fn run(comprehensive: bool, socket: Option<String>, format: String) -> anyho
             if parent.exists() {
                 println!("   • Parent: {} ✅", parent.display());
 
-                #[cfg(unix)]
-                {
-                    use std::os::unix::fs::PermissionsExt;
-                    if let Ok(metadata) = std::fs::metadata(parent) {
-                        let permissions = metadata.permissions();
-                        println!("   • Permissions: {:o} ✅", permissions.mode());
-                    }
+                if let Ok(mode) = beardog_utils::PlatformAccess::read_mode(parent) {
+                    println!("   • Permissions: {:o} ✅", mode.mode);
                 }
             } else {
                 println!("   • Parent: {} ⚠️  (does not exist)", parent.display());
