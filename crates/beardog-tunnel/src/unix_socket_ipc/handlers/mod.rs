@@ -203,6 +203,7 @@ pub mod introspection; // Primal introspection (primal.info, rpc.methods)
 pub mod ionic_bond;
 pub mod primal_signing; // Unified primal Ed25519 identity (shared by announcements + ionic bonds)
 pub mod relay; // Relay authorization (lineage-gated, for coordinated punch)
+pub mod ribocipher; // riboCipher Tier 2 mito-obfuscated transport signal API
 pub mod secrets; // Encrypted secret storage (family-scoped, ChaCha20-Poly1305)
 pub mod security;
 
@@ -285,6 +286,7 @@ pub enum MethodHandlerKind {
     Beacon(beacon::BeaconHandler),
     Secrets(secrets::SecretsHandler),
     Relay(relay::RelayHandler),
+    RiboCipher(ribocipher::RiboCipherHandler),
     Fido2(fido2::Fido2Handler),
     Capabilities(capabilities::CapabilitiesHandler),
     CapabilityCall(capability_call::CapabilityCallHandler),
@@ -305,6 +307,7 @@ impl MethodHandler for MethodHandlerKind {
             Self::Beacon(h) => h.methods(),
             Self::Secrets(h) => h.methods(),
             Self::Relay(h) => h.methods(),
+            Self::RiboCipher(h) => h.methods(),
             Self::Fido2(h) => h.methods(),
             Self::Capabilities(h) => h.methods(),
             Self::CapabilityCall(h) => h.methods(),
@@ -330,6 +333,7 @@ impl MethodHandler for MethodHandlerKind {
             Self::Beacon(h) => h.handle(method, params, btsp_provider).await,
             Self::Secrets(h) => h.handle(method, params, btsp_provider).await,
             Self::Relay(h) => h.handle(method, params, btsp_provider).await,
+            Self::RiboCipher(h) => h.handle(method, params, btsp_provider).await,
             Self::Fido2(h) => h.handle(method, params, btsp_provider).await,
             Self::Capabilities(h) => h.handle(method, params, btsp_provider).await,
             Self::CapabilityCall(h) => h.handle(method, params, btsp_provider).await,
@@ -417,6 +421,7 @@ impl HandlerRegistry {
                     Arc::new(crate::credential_store::CredentialStoreBackend::platform_default()),
                 )),
                 MethodHandlerKind::Relay(relay::RelayHandler::new(identity.clone())),
+                MethodHandlerKind::RiboCipher(ribocipher::RiboCipherHandler::new()),
                 MethodHandlerKind::Fido2(fido2::Fido2Handler::new()),
             ]),
             method_map: std::sync::OnceLock::new(),

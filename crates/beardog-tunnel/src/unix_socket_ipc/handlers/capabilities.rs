@@ -279,6 +279,12 @@ impl CapabilitiesHandler {
                     "version": "1.0",
                     "methods": ["discover", "register", "authenticate"],
                     "description": "FIDO2/CTAP2 hardware-attested authentication — USB security key credential management and assertion signing for physical-presence provenance (UB-2)"
+                },
+                {
+                    "type": "ribocipher",
+                    "version": "1.0",
+                    "methods": ["decode_mito_tag", "encode_mito_signal", "protocol_name", "list_protocols"],
+                    "description": "riboCipher Tier 2 mito-obfuscated transport signal API — encode/decode HMAC-tagged protocol selectors for cross-gate WAN routing"
                 }
             ],
             "consumed_capabilities": [],
@@ -294,6 +300,10 @@ impl CapabilitiesHandler {
                 "beardog.fido2.discover":           { "cpu": "low",    "latency_ms": cost_latency::FIDO2_DISCOVER_MS },
                 "beardog.fido2.register":           { "cpu": "medium", "latency_ms": cost_latency::FIDO2_CEREMONY_MS },
                 "beardog.fido2.authenticate":       { "cpu": "medium", "latency_ms": cost_latency::FIDO2_CEREMONY_MS },
+                "ribocipher.decode_mito_tag":       { "cpu": "low",    "latency_ms": cost_latency::CRYPTO_MS },
+                "ribocipher.encode_mito_signal":    { "cpu": "low",    "latency_ms": cost_latency::CRYPTO_MS },
+                "ribocipher.protocol_name":         { "cpu": "low",    "latency_ms": 0 },
+                "ribocipher.list_protocols":         { "cpu": "low",    "latency_ms": 0 },
                 "crypto.chacha20_poly1305_encrypt": { "cpu": "low",   "latency_ms": cost_latency::CRYPTO_MS },
                 "crypto.chacha20_poly1305_decrypt": { "cpu": "low",   "latency_ms": cost_latency::CRYPTO_MS },
                 "crypto.x25519_generate_ephemeral": { "cpu": "low",   "latency_ms": cost_latency::CRYPTO_MS },

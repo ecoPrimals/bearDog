@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: Aug 9, 2026 (Wave 157a)
+**Updated**: Aug 9, 2026 (Wave 157d)
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -87,6 +87,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### Wave 157d — riboCipher Tier 2 Neural API — DONE
+
+`RiboCipherHandler` (16th handler kind): 4 methods (`decode_mito_tag`, `encode_mito_signal`, `protocol_name`, `list_protocols`). Auto-announced, capability-registered, cost-estimated. Unblocks biomeOS riboCipher Tier 2 evolution. 6 tests.
 
 ### Wave 157a — P0-A Health Socket Guard + Self-Audit — DONE
 

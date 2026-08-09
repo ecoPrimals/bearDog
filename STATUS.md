@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: August 9, 2026 (Wave 157a — P0-A Fix: Health Socket Guard + Self-Audit)
+**Last Updated**: August 9, 2026 (Wave 157d — riboCipher Tier 2 Neural API + P0-A Fix)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -90,6 +90,13 @@
 ---
 
 ## Recent Improvements
+
+### Wave 157d — riboCipher Tier 2 Neural API Capability (Aug 9, 2026)
+
+- **`RiboCipherHandler`**: New handler exposing 4 methods: `decode_mito_tag`, `encode_mito_signal`, `protocol_name`, `list_protocols`
+- **16th handler kind**: Registered in `HandlerRegistry`, auto-announced via `primal.announce`, capability registered with cost estimates
+- **Cross-gate mito decode**: biomeOS and consumers can now decode `0xED` HMAC-tagged protocol selectors without direct family seed access to core ribocipher
+- 6 new tests, 0 Clippy warnings, all tests pass
 
 ### Wave 157a — P0-A Health Socket Guard + Socket Rename + Self-Audit (Aug 9, 2026)
 
