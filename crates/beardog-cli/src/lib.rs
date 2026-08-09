@@ -127,7 +127,7 @@ pub struct ServerArgs {
     /// cellMembrane and monitoring tools connect here for lightweight probes
     /// without needing riboCipher or BTSP handshake knowledge.
     ///
-    /// Default: `<primal>-default.sock` in the same directory as the main socket.
+    /// Default: `<primal>-health.sock` in the same directory as the main socket.
     /// Env: `BEARDOG_HEALTH_SOCKET`
     #[arg(long, env = "BEARDOG_HEALTH_SOCKET")]
     pub health_socket: Option<String>,

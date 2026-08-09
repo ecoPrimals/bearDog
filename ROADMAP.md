@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: Aug 7, 2026 (Wave 157a)
+**Updated**: Aug 9, 2026 (Wave 157a)
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -87,6 +87,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### Wave 157a — P0-A Health Socket Guard + Self-Audit — DONE
+
+**P0-A RESOLVED**: Health socket no longer silently returns `{"status":"alive"}` for every method. Non-health methods now get `-32601 Method not found` with diagnostic pointing to the main socket. Socket renamed from `beardog-default.sock` → `beardog-health.sock` to disambiguate. `HealthHandler` catch-all `_ =>` replaced with explicit match. Self-audit confirms all 15 handler kinds error on unknown methods. **Depot must be rebuilt** to pick up this fix.
 
 ### Wave 157a — G68 Platform Substrate Convergence — DONE
 

@@ -389,7 +389,7 @@ impl CapabilitiesHandler {
                     ])
                 },
                 "note": if self.is_btsp_strict() {
-                    "Defense-in-depth: BTSP handshake required on all connections. Use JSON-line ClientHello or binary framing. Health socket (beardog-default.sock) remains plaintext."
+                    "Defense-in-depth: BTSP handshake required on all connections. Use JSON-line ClientHello or binary framing. Health socket (beardog-health.sock) remains plaintext."
                 } else if self.is_btsp_required() {
                     "Family-scoped socket: BTSP preferred. Cleartext JSON-RPC accepted via first-byte 0x7B bypass for listed methods."
                 } else {

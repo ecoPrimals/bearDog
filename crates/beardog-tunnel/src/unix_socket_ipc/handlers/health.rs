@@ -6,7 +6,7 @@
 //! These methods are essential for service discovery, load balancing, and monitoring.
 
 use super::utils::{IdentityHints, get_primal_name_with};
-use super::{HandlerResult, MethodHandler};
+use super::{HandlerError, HandlerResult, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use chrono::Utc;
 use std::sync::Arc;
@@ -112,7 +112,7 @@ impl MethodHandler for HealthHandler {
                 }))
             }
             // Deep check: full health with timestamp
-            _ => {
+            "status" | "check" | "health.check" => {
                 info!(probe = "deep_check", "Health handler");
                 Ok(serde_json::json!({
                     "status": "healthy",
@@ -122,6 +122,7 @@ impl MethodHandler for HealthHandler {
                     "timestamp": Utc::now().to_rfc3339(),
                 }))
             }
+            other => Err(HandlerError::MethodNotFound(other.to_owned())),
         }
     }
 }

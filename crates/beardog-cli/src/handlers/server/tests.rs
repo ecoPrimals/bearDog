@@ -273,3 +273,35 @@ async fn health_socket_tolerates_ribocipher_prefix() {
     assert_eq!(resp["id"], 7);
     assert_eq!(resp["result"]["status"], "alive");
 }
+
+#[tokio::test]
+async fn health_socket_rejects_non_health_method() {
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+    use tokio::net::UnixStream;
+
+    let dir = tempfile::tempdir().expect("tempdir");
+    let sock_path = dir.path().join("health-reject.sock");
+    let path_str = sock_path.to_string_lossy().to_string();
+
+    let path_clone = path_str.clone();
+    tokio::spawn(async move {
+        let _ = run_health_socket(&path_clone).await;
+    });
+
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+
+    let mut stream = UnixStream::connect(&path_str).await.expect("connect");
+    let req = b"{\"jsonrpc\":\"2.0\",\"method\":\"crypto.sign_ed25519\",\"id\":99}\n";
+    stream.write_all(req).await.expect("write");
+
+    let mut reader = BufReader::new(stream);
+    let mut line = String::new();
+    reader.read_line(&mut line).await.expect("read response");
+
+    let resp: serde_json::Value = serde_json::from_str(&line).expect("parse JSON");
+    assert_eq!(resp["jsonrpc"], "2.0");
+    assert_eq!(resp["id"], 99);
+    assert_eq!(resp["error"]["code"], -32601);
+    assert_eq!(resp["error"]["message"], "Method not found");
+    assert!(resp["error"]["data"]["reason"].as_str().unwrap().contains("health probe socket"));
+}

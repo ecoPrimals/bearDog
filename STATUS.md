@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: August 7, 2026 (Wave 157a — G68 Platform Substrate Convergence)
+**Last Updated**: August 9, 2026 (Wave 157a — P0-A Fix: Health Socket Guard + Self-Audit)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -90,6 +90,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 157a — P0-A Health Socket Guard + Socket Rename + Self-Audit (Aug 9, 2026)
+
+- **P0-A RESOLVED**: Health socket (`beardog-health.sock`) now rejects non-health methods with `-32601` and a diagnostic message pointing to the main socket — eliminates silent health fallback that caused all spine commits to appear unsigned
+- **Socket rename**: `beardog-default.sock` → `beardog-health.sock` — disambiguates health probe socket from main family-scoped socket
+- **HealthHandler catch-all removed**: Tunnel `HealthHandler` now explicitly matches `status|check|health.check` instead of `_ =>` catch-all
+- **Self-audit complete**: All 15 handler kinds verified — every unknown method produces `-32601`; no silent swallowing anywhere in main dispatch path
+- 1 new test (`health_socket_rejects_non_health_method`), 0 Clippy warnings, 725 handler tests pass
 
 ### Wave 157a — G68 Platform Substrate Convergence (Aug 7, 2026)
 

@@ -39,7 +39,7 @@ pub const ENV_UDS_MAX_CONNECTIONS: &str = "BEARDOG_UDS_MAX_CONNECTIONS";
 /// When set to `"1"`, the first-byte `{` bypass is disabled on the
 /// family-scoped socket. All connections must complete a BTSP handshake
 /// (binary or JSON-line) before sending JSON-RPC traffic. The health
-/// socket (`beardog-default.sock`) is unaffected — it remains plaintext
+/// socket (`beardog-health.sock`) is unaffected — it remains plaintext
 /// for monitoring probes.
 ///
 /// Default: unset (bypass enabled for backward compatibility).

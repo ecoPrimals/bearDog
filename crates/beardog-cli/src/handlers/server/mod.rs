@@ -359,12 +359,12 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     // Always spawn unless --bind-mode=tcp (no UDS available).
     let health_path = args.health_socket.clone().unwrap_or_else(|| {
         let primal_name = resolve_primal_name();
-        let default_health = format!("{primal_name}-default.sock");
+        let health_name = format!("{primal_name}-health.sock");
         let main = std::path::Path::new(&socket_path);
         if let Some(dir) = main.parent() {
-            dir.join(&default_health).to_string_lossy().to_string()
+            dir.join(&health_name).to_string_lossy().to_string()
         } else {
-            format!("/tmp/{default_health}")
+            format!("/tmp/{health_name}")
         }
     });
     #[cfg(unix)]

@@ -417,7 +417,7 @@ impl UnixSocketIpcServer {
     /// When `BEARDOG_UDS_REQUIRE_BTSP=1` (defense-in-depth), the `{` bypass
     /// is restricted: plain JSON-RPC is rejected, only BTSP JSON-line
     /// `ClientHello` (`{"protocol":"btsp",...}`) is accepted. The health
-    /// socket (`beardog-default.sock`) is unaffected.
+    /// socket (`beardog-health.sock`) is unaffected.
     ///
     /// In development mode, falls through to the existing NDJSON path.
     ///
@@ -484,7 +484,7 @@ impl UnixSocketIpcServer {
                                         "code": -32600,
                                         "message": "BTSP handshake required",
                                         "data": {
-                                            "reason": "This socket is family-scoped and requires a BTSP handshake before JSON-RPC traffic. Use btsp.server.create_session to initiate, or connect to the dev socket (beardog-default.sock) for plaintext.",
+                                            "reason": "This socket is family-scoped and requires a BTSP handshake before JSON-RPC traffic. Use btsp.server.create_session to initiate, or connect to the health socket (beardog-health.sock) for plaintext health probes.",
                                             "btsp_version": "2.0",
                                         }
                                     },
@@ -588,7 +588,7 @@ impl UnixSocketIpcServer {
                         "code": -32600,
                         "message": "BTSP handshake required (defense-in-depth)",
                         "data": {
-                            "reason": "BEARDOG_UDS_REQUIRE_BTSP=1 — all connections must complete a BTSP handshake. Send a JSON-line ClientHello ({\"protocol\":\"btsp\",\"version\":1,...}) or connect to beardog-default.sock for plaintext health checks.",
+                            "reason": "BEARDOG_UDS_REQUIRE_BTSP=1 — all connections must complete a BTSP handshake. Send a JSON-line ClientHello ({\"protocol\":\"btsp\",\"version\":1,...}) or connect to beardog-health.sock for plaintext health checks.",
                             "btsp_version": "2.0",
                         }
                     },
