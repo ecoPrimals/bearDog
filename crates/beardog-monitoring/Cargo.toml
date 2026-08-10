@@ -56,11 +56,5 @@ workspace = true
 [dependencies.uuid]
 workspace = true
 
-[dependencies.thiserror]
-workspace = true
-
-[dependencies.sha2]
-workspace = true
-
 [dev-dependencies]
 serial_test = { workspace = true }

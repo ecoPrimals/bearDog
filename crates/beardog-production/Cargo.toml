@@ -50,9 +50,6 @@ workspace = true
 [dependencies.uuid]
 workspace = true
 
-[dependencies.thiserror]
-workspace = true
-
 [dependencies.toml]
 workspace = true
 

@@ -30,12 +30,9 @@ tracing = { workspace = true }
 tokio = { workspace = true, features = ["rt", "macros", "time", "sync"] }
 chrono = { workspace = true }
 uuid = { workspace = true }
-semver = { workspace = true }
-sha2 = { workspace = true }
 rand = { workspace = true }
 ed25519-dalek = { workspace = true }
 blake3 = { workspace = true }
 postcard = { workspace = true }
 hex = { workspace = true }
 thiserror = { workspace = true }
-mdns-sd = { workspace = true, optional = true }

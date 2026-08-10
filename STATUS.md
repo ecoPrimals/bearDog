@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: August 10, 2026 (Wave 157e — swarmVine gossip injection scaffolding)
+**Last Updated**: August 10, 2026 (Wave 157g — G72 Dependency Pandemic Tier 1)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -90,6 +90,15 @@
 ---
 
 ## Recent Improvements
+
+### Wave 157g — G72 Dependency Pandemic Tier 1 (Aug 10, 2026)
+
+- **41 dead dependencies excised** across 9 crates: `beardog-crypto` (-6), `beardog-integration` (-7), `beardog-production` (-1), `beardog-adapters` (-3), `beardog-monitoring` (-2), `beardog-compliance` (-1), `beardog-workflows` (-8), `beardog-node-registry` (-9), `beardog-deploy` (-5)
+- **tokio `["full"]` eliminated**: `beardog-integration` → minimal features (`rt`, `rt-multi-thread`, `macros`, `net`, `sync`, `time`, `signal`); `beardog-crypto` tokio dev-dep removed entirely (zero tokio usage)
+- **94 transitive deps version-aligned** via `cargo update`
+- **`beardog-node-registry`**: 9 external deps → 0 (pure beardog deps + serde)
+- **`beardog-workflows`**: 8 vestigial deps removed (parking_lot, hex, hmac, sha2, base64, thiserror, futures, rand)
+- 0 Clippy warnings, 1,153 tests pass, zero regressions
 
 ### Wave 157e — swarmVine Gossip Injection Scaffolding (Aug 10, 2026)
 

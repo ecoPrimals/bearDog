@@ -17,9 +17,8 @@ categories = ["network-programming", "api-bindings"]
 workspace = true
 
 [dependencies]
-# Async runtime - modern concurrent patterns
-tokio = { workspace = true, features = ["full"] }
-futures = { workspace = true }
+# Async runtime
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "net", "sync", "time", "signal"] }
 
 # Tower Atomic client (Pure Rust IPC via Unix sockets!)
 beardog-tower-atomic = { workspace = true }
@@ -28,27 +27,15 @@ beardog-tower-atomic = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
-# Error handling
-thiserror = { workspace = true }
-anyhow = { workspace = true }
-
 # Logging and tracing
 tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
 
 # System metrics
 sysinfo = "0.30"
 
-# Time handling
-chrono = { workspace = true }
-tokio-util = "0.7"
-
 # Synchronization primitives
 parking_lot = { workspace = true }
-arc-swap = "1.6"  # Lock-free atomic Arc swaps
-
-# UUID generation
-uuid = { workspace = true }
+arc-swap = "1.6"
 
 # BearDog dependencies
 beardog-config = { workspace = true }

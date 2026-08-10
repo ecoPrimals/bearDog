@@ -32,34 +32,7 @@ workspace = true
 [dependencies.beardog-security]
 workspace = true
 
-[dependencies.tokio]
-workspace = true
-
 [dependencies.serde]
-workspace = true
-
-[dependencies.chrono]
-workspace = true
-
-[dependencies.tracing]
-workspace = true
-
-[dependencies.uuid]
-workspace = true
-
-[dependencies.thiserror]
-workspace = true
-
-[dependencies.hex]
-workspace = true
-
-[dependencies.rand]
-workspace = true
-
-[dependencies.parking_lot]
-workspace = true
-
-[dependencies.sha2]
 workspace = true
 
 [dev-dependencies]
