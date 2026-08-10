@@ -46,6 +46,7 @@
 pub mod client;
 pub mod dispatch;
 pub mod error;
+pub mod gossip;
 pub mod isomorphic; // Isomorphic IPC client discovery (Jan 31, 2026)
 pub mod method_names;
 pub mod neural_registration; // Neural API auto-registration (Tower Atomic)
@@ -84,6 +85,7 @@ pub use isomorphic::connect_unix;
 pub use protocol::JsonRpcRequest as ProtocolJsonRpcRequest;
 pub use registry_client::{JsonRpcRequest, PrimalRegistryClient};
 
+pub use gossip::{GossipClient, GossipEvent, gossip, init_global_gossip};
 pub use protocol_router::{Protocol, ProtocolCapabilities, ProtocolDetector, RouterConfig};
 
 /// Primal IPC Protocol version

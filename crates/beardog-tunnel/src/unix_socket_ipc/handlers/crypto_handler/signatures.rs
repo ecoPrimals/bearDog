@@ -30,7 +30,19 @@ pub async fn route(
 
         "crypto.sign_ed25519" | "crypto.ed25519.sign" | "crypto.sign.ed25519" => {
             info!("✍️  Crypto: sign_ed25519");
-            Ok(Some(handle_sign_ed25519(params).await?))
+            let result = handle_sign_ed25519(params).await?;
+            if let Some(gossip) = beardog_ipc::gossip() {
+                let key_id = params
+                    .and_then(|p| p.get("key_id"))
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("unknown");
+                let public_key = result
+                    .get("public_key")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("");
+                gossip.spine_signed("", key_id, public_key);
+            }
+            Ok(Some(result))
         }
 
         "crypto.verify_ed25519" | "crypto.ed25519.verify" | "crypto.verify.ed25519" => {

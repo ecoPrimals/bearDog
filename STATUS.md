@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: August 9, 2026 (Wave 157d — riboCipher Tier 2 Neural API + P0-A Fix)
+**Last Updated**: August 10, 2026 (Wave 157e — swarmVine gossip injection scaffolding)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -90,6 +90,16 @@
 ---
 
 ## Recent Improvements
+
+### Wave 157e — swarmVine Gossip Injection Scaffolding (Aug 10, 2026)
+
+- **`GossipClient`**: Fire-and-forget async client in `beardog-ipc::gossip` — sends `gossip.spread` JSON-RPC to local swarmVine UDS
+- **16 topic constants**: Dotted canonical form across 4 categories (trust, HSM/entropy, crypto, riboCipher)
+- **7 convenience methods**: `bond_created`, `bond_revoked`, `spine_signed`, `fido2_discovered`, `fido2_removed`, `mito_decoded`, `key_derived`, `entropy_quality_changed`, `btsp_session`
+- **Global singleton**: `init_global_gossip()` / `gossip()` — handlers access gossip without signature changes
+- **4 injection points wired**: `crypto.sign_ed25519` → `crypto.spine.signed`, `ionic_bond.accept` → `trust.bond.created`, `ionic_bond.revoke` → `trust.bond.revoked`, `ribocipher.decode_mito_tag` → `ribocipher.mito.decoded` / `ribocipher.mito.rejected`
+- **Server startup**: `handle_server()` initializes global gossip client with shutdown channel
+- 7 new tests, 0 Clippy warnings, 1,153 tests pass
 
 ### Wave 157d — riboCipher Tier 2 Neural API Capability (Aug 9, 2026)
 

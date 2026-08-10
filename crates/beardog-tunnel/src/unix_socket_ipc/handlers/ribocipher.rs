@@ -85,17 +85,28 @@ fn handle_decode_mito_tag(params: Option<&serde_json::Value>) -> HandlerResult {
 
     info!("riboCipher: decode_mito_tag");
 
-    match ribocipher::decode_mito_tag(&seed, &tag_bytes) {
-        Some(proto) => Ok(serde_json::json!({
+    if let Some(proto) = ribocipher::decode_mito_tag(&seed, &tag_bytes) {
+        let name = ribocipher::protocol_name(proto);
+        if let Some(gossip) = beardog_ipc::gossip() {
+            gossip.mito_decoded(proto, name);
+        }
+        Ok(serde_json::json!({
             "protocol_type": proto,
-            "protocol_name": ribocipher::protocol_name(proto),
+            "protocol_name": name,
             "decoded": true,
-        })),
-        None => Ok(serde_json::json!({
+        }))
+    } else {
+        if let Some(gossip) = beardog_ipc::gossip() {
+            gossip.spread(
+                beardog_ipc::gossip::topics::MITO_REJECTED,
+                serde_json::json!({ "tag_hex": hex::encode(tag_bytes) }),
+            );
+        }
+        Ok(serde_json::json!({
             "protocol_type": null,
             "protocol_name": null,
             "decoded": false,
-        })),
+        }))
     }
 }
 

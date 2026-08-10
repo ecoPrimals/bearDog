@@ -378,6 +378,13 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         });
     }
 
+    // Initialize gossip injection client (fire-and-forget to swarmVine mesh).
+    let (_gossip_shutdown_tx, gossip_shutdown_rx) = tokio::sync::watch::channel(false);
+    let gossip_client = beardog_ipc::GossipClient::new(&primal_name, gossip_shutdown_rx);
+    if beardog_ipc::init_global_gossip(gossip_client) {
+        info!("gossip client initialized for swarmVine mesh");
+    }
+
     // Start all transports (runs until Ctrl+C)
     server.start_all().await?;
 

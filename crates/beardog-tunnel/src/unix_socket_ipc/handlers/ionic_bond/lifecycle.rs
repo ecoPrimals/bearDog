@@ -143,7 +143,16 @@ impl IonicBondHandler {
             "Ionic bond accepted (both signatures verified)"
         );
 
-        self.bonds.write().await.insert(bond_id, bond.clone());
+        self.bonds.write().await.insert(bond_id.clone(), bond.clone());
+
+        if let Some(gossip) = beardog_ipc::gossip() {
+            let scope = match bond.trust_model {
+                beardog_types::ionic_bond::BondTrustModel::DualTowerEnclave => "dual-tower",
+                beardog_types::ionic_bond::BondTrustModel::BtspEnforced => "btsp",
+                beardog_types::ionic_bond::BondTrustModel::FamilySeed => "family-seed",
+            };
+            gossip.bond_created(&bond_id, &bond.proposer, &bond.acceptor, scope);
+        }
 
         let resp = IonicBondAcceptResponse { bond };
         serde_json::to_value(resp)
@@ -423,6 +432,11 @@ impl IonicBondHandler {
                 .remove(&revoke_params.bond_id)
                 .await
                 .map_err(|e| e.to_string())?;
+
+            if let Some(gossip) = beardog_ipc::gossip() {
+                gossip.bond_revoked(&revoke_params.bond_id, "revoked");
+            }
+
             let resp = IonicBondRevokeResponse { revoked: true };
             serde_json::to_value(resp)
                 .map_err(|e| format!("Serialize: {e}"))
