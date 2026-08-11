@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: Aug 9, 2026 (Wave 157d)
+**Updated**: Aug 10, 2026 (Wave 157g)
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -87,6 +87,14 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### Wave 157g — G72 Dependency Pandemic Tier 1 + Deep Debt — DONE
+
+41 dead dependencies excised across 9 crates. tokio `["full"]` eliminated. 94 transitive deps version-aligned. 2 hardcoded primal names evolved to `resolve_primal_name()`. 71 bare `#[allow]` attributes gained `reason=`. bearDog: **G72 Tier 1 COMPLIANT**.
+
+### Wave 157e — swarmVine Gossip Injection Scaffolding — DONE
+
+`GossipClient` in `beardog-ipc::gossip`: fire-and-forget `gossip.spread` JSON-RPC to local swarmVine UDS. 16 topic constants, global singleton, 4 injection points wired (spine signing, bond lifecycle, riboCipher decode). 7 tests.
 
 ### Wave 157d — riboCipher Tier 2 Neural API — DONE
 

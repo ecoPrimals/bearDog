@@ -10,7 +10,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 27 | **JSON-RPC Methods**: 236 | **tarpc Methods**: 30 | **Tests**: 11,565+ | **Coverage**: 90.51% | **Debt**: Clean (0 Clippy, 0 TODOs, 0 mocks, 100% pure Rust) | **G68**: Compliant | **Last Updated**: August 9, 2026 (Wave 157d)
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 27 | **JSON-RPC Methods**: 236 | **tarpc Methods**: 30 | **Tests**: 11,565+ | **Coverage**: 90.51% | **Debt**: Clean (0 Clippy, 0 TODOs, 0 mocks, 100% pure Rust) | **G68**: Compliant | **G72**: Tier 1 | **Last Updated**: August 10, 2026 (Wave 157g)
 
 ---
 
