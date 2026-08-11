@@ -13,8 +13,8 @@
 //! - [`disaster_recovery`] — BLAKE3 content-addressed backup integrity
 //!
 
-#![cfg_attr(test, allow(clippy::expect_used))]
-#![cfg_attr(test, allow(clippy::unwrap_used))]
+#![cfg_attr(test, allow(clippy::expect_used, reason = "expect/unwrap acceptable for invariant failures in tests and bootstrap code"))]
+#![cfg_attr(test, allow(clippy::unwrap_used, reason = "expect/unwrap acceptable for invariant failures in tests and bootstrap code"))]
 
 // October 27, 2025: Comprehensive test expansion
 #[cfg(test)]

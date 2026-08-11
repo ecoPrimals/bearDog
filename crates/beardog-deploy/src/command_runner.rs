@@ -24,7 +24,7 @@ pub trait CommandRunner: Send + Sync {
 }
 
 /// Production runner: executes `program` with `args`.
-#[cfg_attr(test, allow(dead_code))]
+#[cfg_attr(test, allow(dead_code, reason = "cfg-gated or public API not referenced in this crate"))]
 pub(crate) struct SystemCommandRunner;
 
 impl CommandRunner for SystemCommandRunner {
@@ -66,7 +66,7 @@ impl CommandRunner for SystemCommandRunner {
 /// Test-only ADB-shaped [`CommandRunner`] (no subprocess; deterministic stdout).
 #[cfg(test)]
 pub(crate) mod mock {
-    #![allow(clippy::expect_used, clippy::unwrap_used)]
+    #![allow(clippy::expect_used, clippy::unwrap_used, reason = "expect/unwrap acceptable for invariant failures in tests and bootstrap code")]
 
     use super::*;
     use std::sync::OnceLock;
@@ -339,7 +339,7 @@ pub(crate) mod mock {
 
 #[cfg(test)]
 mod system_and_mock_coverage {
-    #![allow(clippy::expect_used, clippy::unwrap_used)]
+    #![allow(clippy::expect_used, clippy::unwrap_used, reason = "expect/unwrap acceptable for invariant failures in tests and bootstrap code")]
 
     use super::mock::MockAdbCommandRunner;
     use super::{CommandRunner, SystemCommandRunner};

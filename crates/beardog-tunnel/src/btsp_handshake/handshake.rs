@@ -381,7 +381,7 @@ async fn send_error_jsonline<S: tokio::io::AsyncWrite + Unpin>(
 
 #[cfg(test)]
 mod tests {
-    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used, reason = "expect/unwrap acceptable for invariant failures in tests and bootstrap code"))]
 
     use super::*;
 

@@ -147,7 +147,7 @@ impl HsmEntropyOrchestrator {
     pub fn list_available_devices(&self) -> Vec<HsmDeviceInfo> {
         #[cfg_attr(
             not(any(feature = "fido2", target_os = "android", target_os = "ios")),
-            allow(unused_mut)
+            allow(unused_mut, reason = "used in conditional compilation or future expansion")
         )]
         let mut devices = Vec::new();
 

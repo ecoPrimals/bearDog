@@ -641,7 +641,7 @@ impl HybridIntelligenceSystem {
 
 #[cfg(all(test, feature = "ai"))]
 mod tests {
-    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used, reason = "expect/unwrap acceptable for invariant failures in tests and bootstrap code"))]
 
     use super::HybridIntelligenceSystem;
     use crate::ai::hybrid_intelligence::config::HybridIntelligenceConfig;

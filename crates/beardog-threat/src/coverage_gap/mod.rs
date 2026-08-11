@@ -7,7 +7,8 @@
     clippy::float_cmp,
     clippy::absurd_extreme_comparisons,
     unused_comparisons,
-    clippy::nonminimal_bool
+    clippy::nonminimal_bool,
+    reason = "coverage gap tests: exhaustive patterns (multi-lint expect causes unfulfilled_lint_expectations)",
 )]
 
 mod detection_management;

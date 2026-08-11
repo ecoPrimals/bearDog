@@ -3,7 +3,7 @@
 
 #[cfg(test)]
 mod main_coverage_deep_tests {
-    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used, reason = "expect/unwrap acceptable for invariant failures in tests and bootstrap code"))]
 
     use crate::{BirdsongAction, Cli, Commands, EntropyAction, HsmAction, KeyAction, init_tracing};
     use beardog_cli::handlers::cross_primal::CrossPrimalCommand;

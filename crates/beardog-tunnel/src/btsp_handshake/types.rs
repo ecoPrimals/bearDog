@@ -69,7 +69,7 @@ pub struct HandshakeError {
 
 #[cfg(test)]
 mod tests {
-    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used, reason = "expect/unwrap acceptable for invariant failures in tests and bootstrap code"))]
 
     use super::*;
 

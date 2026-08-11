@@ -331,7 +331,7 @@ impl AndroidDeployment {
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::expect_used, clippy::unwrap_used)]
+    #![allow(clippy::expect_used, clippy::unwrap_used, reason = "expect/unwrap acceptable for invariant failures in tests and bootstrap code")]
 
     use super::*;
 

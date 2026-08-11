@@ -32,6 +32,7 @@
         clippy::unreadable_literal,
         clippy::unwrap_used,
         clippy::useless_vec,
+        reason = "test-only lints suppressed for exhaustive coverage",
     )
 )] // Pedantic/nursery clippy: relaxed only for `cfg(test)` builds (see workspace `Cargo.toml` lints).
 

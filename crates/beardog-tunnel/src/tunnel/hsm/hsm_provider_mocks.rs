@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #![cfg(test)]
-#![allow(missing_docs)]
+#![allow(missing_docs, reason = "internal module; docs provided at public API boundary")]
 
 //! Test-only [`super::manager::HsmProvider`] implementations for enum dispatch.
 //!

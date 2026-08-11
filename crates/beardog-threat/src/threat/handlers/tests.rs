@@ -5,8 +5,8 @@
     unused_variables,
     dead_code,
     unused_comparisons,
-    clippy::all
-)]
+    clippy::all,
+    reason = "used in conditional compilation or future expansion")]
 
 // Comprehensive tests for all threat handlers
 //

@@ -10,8 +10,8 @@
 //!
 //! **The canonical type system for the `BearDog` distributed security ecosystem - now with PEDANTIC PERFECTION!**
 //!
-#![cfg_attr(test, allow(clippy::expect_used))]
-#![cfg_attr(test, allow(clippy::unwrap_used))]
+#![cfg_attr(test, allow(clippy::expect_used, reason = "expect/unwrap acceptable for invariant failures in tests and bootstrap code"))]
+#![cfg_attr(test, allow(clippy::unwrap_used, reason = "expect/unwrap acceptable for invariant failures in tests and bootstrap code"))]
 // Coverage and unit tests compare floats to literals, assert const invariants, and may use
 // large stack arrays in generated patterns; keep `-D warnings` builds clean without churn.
 #![cfg_attr(
@@ -20,7 +20,7 @@
         clippy::float_cmp,
         clippy::assertions_on_constants,
         clippy::large_stack_arrays,
-    )
+        reason = "float equality acceptable for metrics thresholds and test assertions")
 )]
 //! # `BearDog` Types v3.0.0
 //!

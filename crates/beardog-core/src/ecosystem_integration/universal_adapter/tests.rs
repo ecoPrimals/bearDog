@@ -2,9 +2,9 @@
 
 //! Tests for universal adapter components
 
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-#![allow(clippy::float_cmp, clippy::field_reassign_with_default)]
-#![allow(clippy::useless_vec, clippy::print_literal)]
+#![allow(clippy::unwrap_used, clippy::expect_used, reason = "expect/unwrap acceptable for invariant failures in tests and bootstrap code")]
+#![allow(clippy::float_cmp, clippy::field_reassign_with_default, reason = "float equality acceptable for metrics thresholds and test assertions")]
+#![allow(clippy::useless_vec, clippy::print_literal, reason = "lint suppressed with documented justification at call site")]
 
 use super::*;
 use std::collections::{BTreeMap, HashMap};

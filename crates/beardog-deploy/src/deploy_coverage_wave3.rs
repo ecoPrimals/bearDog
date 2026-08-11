@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! Coverage for Android NDK env branches, builder setup success paths, and rustup error paths.
 
-#![allow(clippy::expect_used, clippy::unwrap_used)]
+#![allow(clippy::expect_used, clippy::unwrap_used, reason = "expect/unwrap acceptable for invariant failures in tests and bootstrap code")]
 
 use crate::android::AndroidDeployment;
 use crate::builder::RustBuilder;

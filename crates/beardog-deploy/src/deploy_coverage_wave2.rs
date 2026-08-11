@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! Additional coverage tests: mock ADB runner branches, deployment config, optimization flags.
 
-#![allow(clippy::expect_used, clippy::unwrap_used)]
+#![allow(clippy::expect_used, clippy::unwrap_used, reason = "expect/unwrap acceptable for invariant failures in tests and bootstrap code")]
 
 use crate::command_runner::CommandRunner;
 use crate::command_runner::mock::MockAdbCommandRunner;

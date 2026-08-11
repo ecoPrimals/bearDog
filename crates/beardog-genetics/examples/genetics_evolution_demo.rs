@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs, reason = "internal module; docs provided at public API boundary")]
 // # Pure Genetics Evolution Demonstration
 //
 // This example demonstrates the ecosystem evolution genetics capabilities

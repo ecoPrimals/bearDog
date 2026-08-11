@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-#![allow(clippy::await_holding_lock)] // HOME lock serializes async tests against process env
+#![allow(clippy::await_holding_lock, reason = "lock held intentionally to serialize concurrent test access")] // HOME lock serializes async tests against process env
 
 use super::{
     RevocationEntry, RevocationList, handle_key_check_revocation,

@@ -14,7 +14,7 @@
 
 #![cfg_attr(
     test,
-    allow(clippy::expect_used, clippy::unwrap_used, clippy::float_cmp)
+    allow(clippy::expect_used, clippy::unwrap_used, clippy::float_cmp, reason = "test-only: float comparison and expect/unwrap acceptable in tests")
 )]
 //! - Genetic algorithm-based key evolution
 //! - Universal service discovery and orchestration

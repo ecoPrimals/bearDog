@@ -71,7 +71,7 @@ impl HsmEntropyOrchestrator {
                 all(feature = "mobile", target_os = "android"),
                 all(feature = "mobile", target_os = "ios")
             )),
-            allow(unused_variables)
+            allow(unused_variables, reason = "used in conditional compilation or future expansion")
         )]
         let providers = discover_providers().await?;
 

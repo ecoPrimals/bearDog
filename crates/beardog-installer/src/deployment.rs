@@ -308,7 +308,7 @@ pub enum DeploymentError {
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::await_holding_lock)]
+    #![allow(clippy::await_holding_lock, reason = "lock held intentionally to serialize concurrent test access")]
 
     use super::*;
     use crate::installer::InstallerError;

@@ -270,16 +270,17 @@ pub fn default_vault_root() -> PathBuf {
             return p.join("vault");
         }
     }
+    let primal = beardog_config::env_keys::resolve_primal_name();
     if let Ok(xdg) = beardog_errors::process_env::var("XDG_DATA_HOME") {
         let p = PathBuf::from(xdg.trim());
         if !p.as_os_str().is_empty() {
-            return p.join("beardog").join("vault");
+            return p.join(&primal).join("vault");
         }
     }
     if let Ok(home) = beardog_errors::process_env::var("HOME") {
         let p = PathBuf::from(home.trim());
         if !p.as_os_str().is_empty() {
-            return p.join(".local/share/beardog/vault");
+            return p.join(format!(".local/share/{primal}/vault"));
         }
     }
     PathBuf::from(DEFAULT_DATA_DIR).join("vault")

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #![forbid(unsafe_code)]
-#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used, reason = "expect/unwrap acceptable for invariant failures in tests and bootstrap code"))]
 #![doc = include_str!("../README.md")]
 
 //! ACME certificate lifecycle client for `BearDog` TLS sovereignty.

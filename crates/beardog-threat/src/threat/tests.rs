@@ -4,7 +4,7 @@
 //
 // **MODERNIZED**: Clean, comprehensive test suite for the BearDog threat detection system.
 
-#![allow(unused_imports, unused_variables, dead_code, clippy::all)]
+#![allow(unused_imports, unused_variables, dead_code, clippy::all, reason = "used in conditional compilation or future expansion")]
 
 #[cfg(test)]
 #[expect(
