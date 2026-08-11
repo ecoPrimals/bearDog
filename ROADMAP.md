@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: Aug 10, 2026 (Wave 157g)
+**Updated**: Aug 11, 2026 (Wave 157i)
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -79,7 +79,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 | Platform | Transport | Status |
 |----------|-----------|--------|
 | Linux (x86_64, ARM64) | Unix sockets | Validated |
-| macOS (Intel, M-series) | Unix sockets | Validated |
+| macOS (Intel, M-series) | Unix sockets | **Validated on graftGate (M4 Mac Mini, 15/15 compiled)** |
 | Android (ARM64) | Abstract sockets + TCP | **Validated on grapheneGate (Pixel 8a)** |
 | Windows (x86_64, ARM64) | Named pipes + TCP | Ready |
 | iOS (ARM64) | Unix sockets (sandbox) | Ready (Secure Enclave registered) |
@@ -87,6 +87,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### Wave 157i — Post-Pandemic Cascade + G72 Tier 2 url excision — DONE
+
+Darwin ios.rs fix upstreamed (graftGate finding: missing `use beardog_config::env_keys` on `aarch64-apple-darwin`). `url` crate excised from `beardog-discovery` and `beardog-acme` — **32 transitive crates eliminated** (382→350): entire ICU4X data chain removed (`icu_normalizer_data`, `icu_properties_data`, plus 30 support crates). Binary growth +2.9MB investigated and explained: real code additions (tarpc 7→30, genetics, gossip), not phantom deps. bearDog: **G72 Tier 2 STARTED**.
 
 ### Wave 157g — G72 Dependency Pandemic Tier 1 + Deep Debt — DONE
 

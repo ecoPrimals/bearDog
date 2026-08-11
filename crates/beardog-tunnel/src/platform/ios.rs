@@ -54,6 +54,8 @@
 //! - biomeOS IPC standard: cross-platform socket layout
 
 use super::{PlatformListenerBackend, PlatformSocket, SocketEndpoint};
+#[cfg(target_os = "macos")]
+use beardog_config::env_keys;
 use beardog_types::constants::domains::network::ipc_discovery as ipc_layout;
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 use tokio::net::UnixListener;

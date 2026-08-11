@@ -45,7 +45,6 @@ chrono = { workspace = true }
 hex = { workspace = true }
 tracing = { workspace = true }
 thiserror = { workspace = true }
-url = { workspace = true }
 
 # CryptoProvider — defensive install in assert_installed()
 rustls-rustcrypto = { workspace = true }

@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: August 10, 2026 (Wave 157g — G72 Dependency Pandemic Tier 1)
+**Last Updated**: August 11, 2026 (Wave 157i — Post-Pandemic Cascade + G72 Tier 2 url excision)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -90,6 +90,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 157i — Post-Pandemic Cascade + G72 Tier 2 url excision (Aug 11, 2026)
+
+- **Darwin ios.rs fix upstreamed**: Added missing `use beardog_config::env_keys` import to `platform/ios.rs`, cfg-gated to `target_os = "macos"` — resolves graftGate compilation finding on `aarch64-apple-darwin`
+- **`url` crate excised (G72 Tier 2)**: Removed from `beardog-discovery` and `beardog-acme` — **32 transitive crates eliminated** (382 → 350): `url`, `idna`, `idna_adapter`, `icu_normalizer`, `icu_normalizer_data`, `icu_properties`, `icu_properties_data`, `icu_provider`, `icu_collections`, `icu_locale_core`, `zerotrie`, `zerovec`, `yoke`, `zerofrom`, `litemap`, `tinystr`, `writeable`, `potential_utf`, `utf8_iter`, `displaydoc`, plus ICU support crates
+- **Root cause**: `url` v2.5 switched to ICU4X-based IDNA, pulling ~2MB of Unicode normalization/properties data tables. bearDog only used `url::ParseError` in one `From` impl — all socket paths use plain strings
+- **Binary growth investigation resolved**: +2.9MB (pre-G72 vs post-G72 on darwin) is from real code additions: tarpc 7→30 methods (monomorphized generics), `beardog-genetics` crate, gossip scaffolding — not phantom dependencies. Binary size is appropriate for a trust primal with 30 RPC methods and 6 HSM backends
+- 0 Clippy warnings, 1,153 tests pass, zero regressions
 
 ### Wave 157g — G72 Dependency Pandemic Tier 1 (Aug 10, 2026)
 

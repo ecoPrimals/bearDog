@@ -95,21 +95,18 @@ impl From<toml::de::Error> for DiscoveryError {
 }
 
 // `reqwest::Error` → `DiscoveryError` removed with Tower Atomic (HTTP client dropped); use transport peer paths.
-
-impl From<url::ParseError> for DiscoveryError {
-    fn from(err: url::ParseError) -> Self {
-        Self::Parse(err.to_string())
-    }
-}
+// `url::ParseError` → `DiscoveryError` removed in G72 Tier 2: url crate excised (pulled ICU4X data
+// tables adding ~2.9MB). bearDog uses string socket paths, not parsed URLs. Callers should construct
+// `DiscoveryError::Parse(msg)` directly.
 
 #[cfg(test)]
 mod tests {
     use super::DiscoveryError;
 
     #[test]
-    fn from_url_parse_error_maps_to_parse_variant() {
-        let e: DiscoveryError = url::Url::parse("http://[").unwrap_err().into();
+    fn parse_error_variant_formats() {
+        let e = DiscoveryError::Parse("malformed endpoint".into());
         assert!(matches!(e, DiscoveryError::Parse(_)));
-        assert!(!e.to_string().is_empty());
+        assert!(e.to_string().contains("malformed endpoint"));
     }
 }

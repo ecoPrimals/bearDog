@@ -407,7 +407,6 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "tracing",
- "url",
  "x509-cert",
  "x509-parser",
 ]
@@ -638,7 +637,6 @@ dependencies = [
  "toml",
  "tracing",
  "tracing-subscriber",
- "url",
  "whoami",
 ]
 

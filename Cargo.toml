@@ -206,7 +206,6 @@ dashmap = "6.2"
 
 # Utilities
 http = "1"
-url = "2.5"
 getrandom = "0.3"
 ahash = "0.8"
 ecdsa = "0.16"
