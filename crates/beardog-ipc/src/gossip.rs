@@ -81,13 +81,20 @@ pub struct GossipEvent {
 const ENV_SWARMVINE_SOCKET: &str = "SWARMVINE_SOCKET";
 
 /// Default swarmVine socket path (same-gate IPC).
+///
+/// Resolution order:
+/// 1. `SWARMVINE_SOCKET` env (explicit override)
+/// 2. `BIOMEOS_SOCKET_DIR` env + `swarmvine.sock` (deployment standard)
+/// 3. `biomeos_ipc_socket_dir_from_env()` + `swarmvine.sock` (XDG / temp fallback)
 fn default_swarmvine_socket() -> PathBuf {
     if let Ok(p) = std::env::var(ENV_SWARMVINE_SOCKET) {
         return PathBuf::from(p);
     }
-    let ipc_dir = beardog_types::constants::domains::network::ipc_discovery
-        ::resolve_biomeos_ipc_subdir_from_optional(None);
-    PathBuf::from(ipc_dir).join("swarmvine.sock")
+    if let Ok(dir) = std::env::var(beardog_config::env_keys::ENV_BIOMEOS_SOCKET_DIR) {
+        return PathBuf::from(dir).join("swarmvine.sock");
+    }
+    beardog_types::constants::domains::network::ipc_discovery::biomeos_ipc_socket_dir_from_env()
+        .join("swarmvine.sock")
 }
 
 /// Fire-and-forget gossip client. Sends events to the local swarmVine primal.
@@ -155,8 +162,8 @@ impl GossipClient {
 
         let socket_path = self.inner.socket_path.clone();
         tokio::spawn(async move {
-            if let Err(e) = send_gossip_spread(&socket_path, &event).await {
-                debug!(topic = %event.topic, error = %e, "gossip spread failed (non-fatal)");
+            if let Err(e) = send_gossip_inject(&socket_path, &event).await {
+                debug!(topic = %event.topic, error = %e, "gossip inject failed (non-fatal)");
             }
         });
     }
@@ -167,8 +174,26 @@ impl GossipClient {
     }
 }
 
-/// Send a `gossip.spread` JSON-RPC call to the local swarmVine socket.
-async fn send_gossip_spread(
+/// Map a bearDog dotted topic to a swarmVine gossip domain.
+///
+/// swarmVine has three domains: `tower` (topology/capabilities), `data` (CAS/content),
+/// `compute` (resources/dispatch). All bearDog trust/crypto/HSM events are `tower`.
+fn topic_to_domain(topic: &str) -> &'static str {
+    if topic.starts_with("compute.") {
+        "compute"
+    } else if topic.starts_with("data.") || topic.starts_with("cas.") {
+        "data"
+    } else {
+        "tower"
+    }
+}
+
+/// Send a `gossip.inject` JSON-RPC call to the local swarmVine socket.
+///
+/// Uses `gossip.inject` (local origination) rather than `gossip.spread`
+/// (peer-to-peer replication). swarmVine handles nonce, TTL, and expiry
+/// for injected entries.
+async fn send_gossip_inject(
     socket_path: &std::path::Path,
     event: &GossipEvent,
 ) -> Result<(), GossipError> {
@@ -181,17 +206,24 @@ async fn send_gossip_spread(
 
     #[cfg(not(unix))]
     return Err(GossipError::Connect(
-        "gossip spread requires Unix sockets".into(),
+        "gossip inject requires Unix sockets".into(),
     ));
+
+    let domain = topic_to_domain(&event.topic);
+    let key = format!("{}:{}", event.topic, event.origin);
 
     let request = serde_json::json!({
         "jsonrpc": "2.0",
-        "method": "gossip.spread",
+        "method": "gossip.inject",
         "params": {
-            "topic": event.topic,
-            "origin": event.origin,
-            "payload": event.payload,
-            "seq": event.seq,
+            "topic": domain,
+            "key": key,
+            "payload": {
+                "event_topic": event.topic,
+                "origin": event.origin,
+                "detail": event.payload,
+                "seq": event.seq,
+            },
         },
         "id": event.seq,
     });
@@ -209,7 +241,6 @@ async fn send_gossip_spread(
 
         let mut reader = BufReader::new(&mut stream);
         let mut response = String::new();
-        // Best-effort read — timeout after 100ms
         let read_result = tokio::time::timeout(
             std::time::Duration::from_millis(100),
             reader.read_line(&mut response),
@@ -218,7 +249,7 @@ async fn send_gossip_spread(
 
         match read_result {
             Ok(Ok(_)) => {
-                trace!(topic = %event.topic, "gossip spread acknowledged");
+                trace!(topic = %event.topic, domain, "gossip inject acknowledged");
             }
             Ok(Err(e)) => {
                 debug!(topic = %event.topic, error = %e, "gossip response read failed");

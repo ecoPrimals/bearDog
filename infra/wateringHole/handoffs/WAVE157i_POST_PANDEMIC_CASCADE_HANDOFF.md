@@ -12,17 +12,40 @@
 
 ## Summary
 
-Two items from the Wave 157i ecosystem blurb resolved:
+Four items resolved, bearDog gossip now LIVE on eastGate:
 
-1. **Darwin ios.rs import fix** — graftGate reported `ios.rs` missing `use beardog_config::env_keys` when compiling for `aarch64-apple-darwin`. Fixed and upstreamed.
-2. **Binary growth investigation** — +2.9MB growth despite 41-dep removal was investigated using `cargo-bloat`. Root cause: real code additions (tarpc 7→30 methods, `beardog-genetics` crate, gossip scaffolding), not phantom dependencies. The linker was already dead-stripping unused dependency code.
-3. **G72 Tier 2: `url` crate excision** — Discovered during investigation that `url` v2.5 pulled the entire ICU4X Unicode data chain (~32 transitive crates) for a single `From<url::ParseError>` impl. Excised `url` from `beardog-discovery` and `beardog-acme`.
+1. **Gossip protocol alignment** — bearDog was sending `gossip.spread` (peer-to-peer replication API) instead of `gossip.inject` (local origination API). Fixed to use `gossip.inject` with correct swarmVine entry structure: `topic` domain mapping, `key` for deduplication, structured `payload`. Live validated: `"result":"Accepted"` on eastGate swarmVine.
+2. **Gossip socket resolution** — `default_swarmvine_socket()` was constructing a relative path (`ecosystem/swarmvine.sock`) instead of the full path (`/run/user/1000/biomeos/swarmvine.sock`). Fixed to read `BIOMEOS_SOCKET_DIR` env var, falling back to `biomeos_ipc_socket_dir_from_env()`.
+3. **Darwin ios.rs import fix** — graftGate reported `ios.rs` missing `use beardog_config::env_keys` when compiling for `aarch64-apple-darwin`. Fixed and upstreamed.
+4. **G72 Tier 2: `url` crate excision** — Discovered during binary growth investigation that `url` v2.5 pulled the entire ICU4X Unicode data chain (~32 transitive crates) for a single `From<url::ParseError>` impl. Excised `url` from `beardog-discovery` and `beardog-acme`.
+5. **Binary growth investigation** — +2.9MB is from real code additions (tarpc 7→30, genetics, gossip), not phantom dependencies.
 
 ---
 
 ## Changes
 
-### 1. Darwin ios.rs Fix (graftGate Finding)
+### 1. Gossip Protocol Alignment — `gossip.spread` → `gossip.inject`
+
+**File**: `crates/beardog-ipc/src/gossip.rs`
+
+**Root cause**: bearDog's gossip client was calling `gossip.spread`, which is swarmVine's peer-to-peer replication API (expects fully-formed `GossipEntry` with nonce, TTL, version, etc.). The correct API for primals injecting local events is `gossip.inject`, which accepts:
+- `topic`: gossip domain (`"tower"` / `"data"` / `"compute"`)
+- `key`: deduplication key (e.g. `trust.bond.created:beardog`)
+- `payload`: arbitrary JSON metadata
+
+swarmVine automatically assigns nonce, TTL (8), version, and expiry (600s) for injected entries.
+
+**Domain mapping**: All bearDog trust/crypto/HSM events map to `"tower"` domain. The `topic_to_domain()` function routes `compute.*` → `"compute"`, `data.*`/`cas.*` → `"data"`, everything else → `"tower"`.
+
+### 2. Gossip Socket Resolution Fix
+
+**File**: `crates/beardog-ipc/src/gossip.rs`
+
+**Root cause**: `default_swarmvine_socket()` called `resolve_biomeos_ipc_subdir_from_optional(None)` which returns just the namespace string (`"ecosystem"`), then constructed `PathBuf::from("ecosystem").join("swarmvine.sock")` — a relative path. The running deployment has `BIOMEOS_SOCKET_DIR=/run/user/1000/biomeos`, so the correct socket path is `/run/user/1000/biomeos/swarmvine.sock`.
+
+**Fix**: Resolution now checks `SWARMVINE_SOCKET` env (explicit override) → `BIOMEOS_SOCKET_DIR` env (deployment standard) → `biomeos_ipc_socket_dir_from_env()` (XDG/temp fallback).
+
+### 3. Darwin ios.rs Fix (graftGate Finding)
 
 **File**: `crates/beardog-tunnel/src/platform/ios.rs`
 
@@ -102,7 +125,7 @@ cargo test:    1,153 passed, 0 failed, 6 ignored
 | G72 Tier 2: url excision | **DONE** | -32 crates |
 | G72 Tier 2: axum 0.7→0.8 | Not applicable | bearDog does not depend on axum |
 | G72 Tier 2: HTTP→songBird/capability.call | Not applicable | bearDog has no HTTP client in default build (reqwest gated behind `tls-gateway`) |
-| Gossip injection → LIVE | PENDING | Scaffolding wired (4 injection points), but bearDog not counted in 7/16 live primals — likely needs depot rebuild + swarmVine socket availability on eastGate |
+| Gossip injection → LIVE | **DONE** | Protocol aligned (`gossip.inject`), socket resolution fixed, live validated on eastGate — `"result":"Accepted"` |
 | `beardog-node-registry` absorption | DEFERRED | Very thin crate but still has consumers; not urgent |
 | `beardog-workflows` absorption | DEFERRED | Similarly thin; review in next deep-debt wave |
 

@@ -91,12 +91,14 @@
 
 ## Recent Improvements
 
-### Wave 157i — Post-Pandemic Cascade + G72 Tier 2 url excision (Aug 11, 2026)
+### Wave 157i — Post-Pandemic Cascade + Gossip LIVE (Aug 11, 2026)
 
-- **Darwin ios.rs fix upstreamed**: Added missing `use beardog_config::env_keys` import to `platform/ios.rs`, cfg-gated to `target_os = "macos"` — resolves graftGate compilation finding on `aarch64-apple-darwin`
-- **`url` crate excised (G72 Tier 2)**: Removed from `beardog-discovery` and `beardog-acme` — **32 transitive crates eliminated** (382 → 350): `url`, `idna`, `idna_adapter`, `icu_normalizer`, `icu_normalizer_data`, `icu_properties`, `icu_properties_data`, `icu_provider`, `icu_collections`, `icu_locale_core`, `zerotrie`, `zerovec`, `yoke`, `zerofrom`, `litemap`, `tinystr`, `writeable`, `potential_utf`, `utf8_iter`, `displaydoc`, plus ICU support crates
-- **Root cause**: `url` v2.5 switched to ICU4X-based IDNA, pulling ~2MB of Unicode normalization/properties data tables. bearDog only used `url::ParseError` in one `From` impl — all socket paths use plain strings
-- **Binary growth investigation resolved**: +2.9MB (pre-G72 vs post-G72 on darwin) is from real code additions: tarpc 7→30 methods (monomorphized generics), `beardog-genetics` crate, gossip scaffolding — not phantom dependencies. Binary size is appropriate for a trust primal with 30 RPC methods and 6 HSM backends
+- **Gossip client protocol fix**: Changed from `gossip.spread` (peer-to-peer replication) to `gossip.inject` (local origination) — the correct swarmVine API for primals injecting events. Entries now include `topic` domain (`tower`/`data`/`compute`), `key` for deduplication, and structured `payload`. swarmVine handles nonce, TTL, and expiry automatically
+- **Gossip socket resolution fix**: `default_swarmvine_socket()` was constructing a relative path via the namespace resolver. Fixed to read `BIOMEOS_SOCKET_DIR` env → `biomeos_ipc_socket_dir_from_env()` fallback → correct full path resolution
+- **Live validation on eastGate**: `gossip.inject` → `"result":"Accepted"` on swarmVine at `/run/user/1000/biomeos/swarmvine.sock`. Entry visible in gossip table with TTL 8, origin_gate `eastGate`, proper nonce/version/expiry
+- **Darwin ios.rs fix upstreamed**: Added missing `use beardog_config::env_keys` import to `platform/ios.rs` — resolves graftGate `aarch64-apple-darwin` compilation finding
+- **`url` crate excised (G72 Tier 2)**: **32 transitive crates eliminated** (382 → 350) — entire ICU4X data chain removed. `url` v2.5 pulled ~2MB Unicode data tables for a single `From<url::ParseError>` impl that bearDog never needed
+- **Binary growth investigation resolved**: +2.9MB is from real code additions (tarpc 7→30, genetics, gossip), not phantom deps
 - 0 Clippy warnings, 1,153 tests pass, zero regressions
 
 ### Wave 157g — G72 Dependency Pandemic Tier 1 (Aug 10, 2026)

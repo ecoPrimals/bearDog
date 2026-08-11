@@ -88,9 +88,9 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ## Recently Completed
 
-### Wave 157i — Post-Pandemic Cascade + G72 Tier 2 url excision — DONE
+### Wave 157i — Post-Pandemic Cascade + Gossip LIVE — DONE
 
-Darwin ios.rs fix upstreamed (graftGate finding: missing `use beardog_config::env_keys` on `aarch64-apple-darwin`). `url` crate excised from `beardog-discovery` and `beardog-acme` — **32 transitive crates eliminated** (382→350): entire ICU4X data chain removed (`icu_normalizer_data`, `icu_properties_data`, plus 30 support crates). Binary growth +2.9MB investigated and explained: real code additions (tarpc 7→30, genetics, gossip), not phantom deps. bearDog: **G72 Tier 2 STARTED**.
+Gossip client protocol aligned with swarmVine: `gossip.spread` → `gossip.inject` (correct API for local origination). Socket resolution fixed: was constructing relative path, now reads `BIOMEOS_SOCKET_DIR` env properly. **Live validation on eastGate**: inject accepted, entry in gossip table with TTL 8. Darwin ios.rs fix upstreamed. `url` crate excised — **32 transitive crates eliminated** (382→350). Binary growth explained: real code. bearDog: **Gossip LIVE on eastGate, G72 Tier 2 STARTED**.
 
 ### Wave 157g — G72 Dependency Pandemic Tier 1 + Deep Debt — DONE
 
