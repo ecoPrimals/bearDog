@@ -75,6 +75,8 @@ pub fn crypto_method_names() -> Vec<&'static str> {
         "crypto.aead.aes_128_gcm.decrypt",
         "crypto.aead.aes_256_gcm.encrypt",
         "crypto.aead.aes_256_gcm.decrypt",
+        "crypto.aead.chacha20_poly1305.encrypt",
+        "crypto.aead.chacha20_poly1305.decrypt",
         "crypto.kdf.tls12_prf",
         // Genetic crypto operations (Phase 5)
         "genetic.derive_lineage_key",
@@ -184,6 +186,21 @@ mod tests {
             names.contains(&"crypto.ed25519.verify"),
             "dot-separated crypto.ed25519.verify per SEMANTIC_METHOD_NAMING_STANDARD v2.0"
         );
+    }
+
+    #[test]
+    fn semantic_aead_methods_complete() {
+        let names = crypto_method_names();
+        for m in [
+            "crypto.aead.aes_128_gcm.encrypt",
+            "crypto.aead.aes_128_gcm.decrypt",
+            "crypto.aead.aes_256_gcm.encrypt",
+            "crypto.aead.aes_256_gcm.decrypt",
+            "crypto.aead.chacha20_poly1305.encrypt",
+            "crypto.aead.chacha20_poly1305.decrypt",
+        ] {
+            assert!(names.contains(&m), "missing semantic AEAD method: {m}");
+        }
     }
 
     #[test]

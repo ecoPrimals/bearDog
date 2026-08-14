@@ -402,3 +402,94 @@ async fn test_security_handler_includes_consent_methods() {
     assert!(methods.contains(&"security.verify_consent"));
     assert!(methods.contains(&"security.issue_consent_token"));
 }
+
+#[tokio::test]
+async fn test_auth_sign_with_data_param() {
+    use base64::Engine;
+    let b64 = &base64::engine::general_purpose::STANDARD;
+    let identity = Arc::new(PrimalIdentity::for_test("nat0", "tower1"));
+    let handler = SecurityHandler::new(identity);
+    let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+    let payload = b"rootpulse provenance blob";
+    let params = serde_json::json!({ "data": b64.encode(payload) });
+    let result = handler
+        .handle("auth.sign", Some(&params), &btsp_provider)
+        .await
+        .expect("auth.sign should succeed");
+
+    assert_eq!(result["algorithm"], "Ed25519");
+    assert_eq!(result["signer"], "nat0");
+    assert!(result["signature"].as_str().is_some());
+    assert!(result["public_key"].as_str().is_some());
+    assert_eq!(result["signed_bytes"], payload.len());
+}
+
+#[tokio::test]
+async fn test_auth_sign_with_content_hash() {
+    use base64::Engine;
+    let b64 = &base64::engine::general_purpose::STANDARD;
+    let identity = Arc::new(PrimalIdentity::for_test("nat0", "tower1"));
+    let handler = SecurityHandler::new(identity);
+    let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+    let hash = [0xABu8; 32];
+    let params = serde_json::json!({ "content_hash": b64.encode(hash) });
+    let result = handler
+        .handle("auth.sign", Some(&params), &btsp_provider)
+        .await
+        .expect("auth.sign with content_hash should succeed");
+
+    assert_eq!(result["algorithm"], "Ed25519");
+    assert_eq!(result["signed_bytes"], 32);
+}
+
+#[tokio::test]
+async fn test_auth_sign_with_dag_ref() {
+    let identity = Arc::new(PrimalIdentity::for_test("nat0", "tower1"));
+    let handler = SecurityHandler::new(identity);
+    let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+    let params = serde_json::json!({ "dag_ref": "blake3:abc123def456" });
+    let result = handler
+        .handle("auth.sign", Some(&params), &btsp_provider)
+        .await
+        .expect("auth.sign with dag_ref should succeed");
+
+    assert_eq!(result["algorithm"], "Ed25519");
+    assert_eq!(result["signed_bytes"], "blake3:abc123def456".len());
+}
+
+#[tokio::test]
+async fn test_auth_sign_deterministic() {
+    use base64::Engine;
+    let b64 = &base64::engine::general_purpose::STANDARD;
+    let identity = Arc::new(PrimalIdentity::for_test("nat0", "tower1"));
+    let handler = SecurityHandler::new(identity);
+    let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+    let params = serde_json::json!({ "data": b64.encode(b"determinism test") });
+    let r1 = handler
+        .handle("auth.sign", Some(&params), &btsp_provider)
+        .await
+        .expect("first sign");
+    let r2 = handler
+        .handle("auth.sign", Some(&params), &btsp_provider)
+        .await
+        .expect("second sign");
+
+    assert_eq!(r1["signature"], r2["signature"]);
+    assert_eq!(r1["public_key"], r2["public_key"]);
+}
+
+#[tokio::test]
+async fn test_auth_sign_missing_params() {
+    let identity = Arc::new(PrimalIdentity::for_test("nat0", "tower1"));
+    let handler = SecurityHandler::new(identity);
+    let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+    let result = handler
+        .handle("auth.sign", None, &btsp_provider)
+        .await;
+    assert!(result.is_err());
+}

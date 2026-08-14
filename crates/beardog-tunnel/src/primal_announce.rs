@@ -29,6 +29,7 @@ const GATE_AUTH_ANNOUNCE_METHODS: &[&str] = &[
     "auth.issue_session",
     "auth.verify_ionic",
     "auth.public_key",
+    "auth.sign",
 ];
 
 /// Collect dotted method names for `primal.announce` from a live registry.

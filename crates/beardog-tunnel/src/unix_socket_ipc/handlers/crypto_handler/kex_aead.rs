@@ -108,6 +108,16 @@ pub async fn route(
             ))
         }
 
+        "crypto.aead.chacha20_poly1305.encrypt" => {
+            info!("🔒 Crypto: aead.chacha20_poly1305.encrypt (semantic AEAD)");
+            Ok(Some(handle_chacha20_poly1305_encrypt(params).await?))
+        }
+
+        "crypto.aead.chacha20_poly1305.decrypt" => {
+            info!("🔓 Crypto: aead.chacha20_poly1305.decrypt (semantic AEAD)");
+            Ok(Some(handle_chacha20_poly1305_decrypt(params).await?))
+        }
+
         _ => Ok(None),
     }
 }
@@ -327,6 +337,40 @@ mod tests {
             .await
             .expect_err("missing params");
         assert!(err.contains("Missing parameters"));
+    }
+
+    #[tokio::test]
+    async fn route_aead_chacha20_poly1305_semantic_roundtrip() {
+        let key = [0xABu8; 32];
+        let key_b64 = BASE64.encode(key);
+        let plain = b"semantic aead chacha";
+        let plain_b64 = BASE64.encode(plain);
+        let enc_params = json!({
+            "plaintext": plain_b64,
+            "key": key_b64,
+        });
+        let enc = route("crypto.aead.chacha20_poly1305.encrypt", Some(&enc_params))
+            .await
+            .expect("route")
+            .expect("semantic chacha enc");
+        let dec_params = json!({
+            "ciphertext": enc.get("ciphertext").and_then(|x| x.as_str()).expect("ct"),
+            "nonce": enc.get("nonce").and_then(|x| x.as_str()).expect("nonce"),
+            "tag": enc.get("tag").and_then(|x| x.as_str()).expect("tag"),
+            "key": key_b64,
+        });
+        let dec = route("crypto.aead.chacha20_poly1305.decrypt", Some(&dec_params))
+            .await
+            .expect("route")
+            .expect("semantic chacha dec");
+        let pt = BASE64
+            .decode(
+                dec.get("plaintext")
+                    .and_then(|x| x.as_str())
+                    .expect("plaintext b64"),
+            )
+            .expect("decode plaintext");
+        assert_eq!(pt, plain);
     }
 
     #[tokio::test]

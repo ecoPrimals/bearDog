@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: August 11, 2026 (Wave 157i — Post-Pandemic Cascade + G72 Tier 2 url excision)
+**Last Updated**: August 14, 2026 (Wave 157k — AEAD Neural API routing fix + rootPulse step handler)
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -36,7 +36,7 @@
 
 - **Crates**: 27 workspace members (including `beardog-crypto` + `libtower` + `beardog-acme` [publish=false])
 - **Rust Files**: 1,856 (crates + src + tests; excludes showcase/examples)
-- **JSON-RPC Methods**: 236 dispatchable (224 registry + 12 pre-dispatch gate) — see `docs/PRIMAL_CONTRACTS.md` v4.2.0 for category breakdown
+- **JSON-RPC Methods**: 239 dispatchable (226 registry + 13 pre-dispatch gate) — see `docs/PRIMAL_CONTRACTS.md` v4.2.0 for category breakdown
 - **`#[allow(`**: 99 (all carry `reason`)
 - **`#[expect(`**: 446
 - **Platform Support**: Linux, macOS, Android (validated on grapheneGate Pixel 8a), Windows, iOS
@@ -90,6 +90,13 @@
 ---
 
 ## Recent Improvements
+
+### Wave 157k — AEAD Neural API Routing Fix + rootPulse Step Handler (Aug 14, 2026)
+
+- **AEAD routing gap closed** (P2 #11 — westGate provenance experiments finding): Added `crypto.aead.chacha20_poly1305.{encrypt,decrypt}` to method list, routing, cost hints, and announce payload. The `crypto.aead.*` namespace now covers all 3 AEAD algorithms (AES-128-GCM, AES-256-GCM, ChaCha20-Poly1305) — 114 → 116 crypto methods
+- **rootPulse step handler activated** (P2 #10): Implemented `auth.sign` handler in SecurityHandler — signs arbitrary data with primal identity key (Ed25519). Accepts `data`, `content_hash`, `dag_ref`, or `dehydrated_blob` params from rootPulse graph steps. Added to `GATE_AUTH_ANNOUNCE_METHODS` so biomeOS discovers the capability. 5 new tests
+- **Zero routing gaps remaining** for bearDog: `crypto.aead.*` + `auth.sign` both surfaced in Neural API translation registry
+- 2,483 tests pass (beardog-tunnel), 0 regressions
 
 ### Wave 157i — Post-Pandemic Cascade + Gossip LIVE (Aug 11, 2026)
 

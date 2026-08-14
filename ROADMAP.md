@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: Aug 11, 2026 (Wave 157i)
+**Updated**: Aug 14, 2026 (Wave 157k)
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -16,7 +16,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 - Rust edition 2024 (MSRV 1.93.0, `rust-toolchain.toml` pinned)
 - 100% Pure Rust crypto achieved — `aws-lc-rs` replaced by `rustls-rustcrypto` (Pure Rust CryptoProvider); `rcgen` replaced by `p256` + `x509-cert`; 19 C-crypto crates banned in `deny.toml`
-- 236 JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing, lineage queries, auth gate, ionic tokens, cross-gate trust exchange, FIDO2/CTAP2, seed fingerprint, universal discovery, threat analysis, ecosystem integration, enrollment verification, cipher floor enforcement, ACME Phase 2 crypto delegation)
+- 239 JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing, lineage queries, auth gate, ionic tokens, cross-gate trust exchange, FIDO2/CTAP2, seed fingerprint, universal discovery, threat analysis, ecosystem integration, enrollment verification, cipher floor enforcement, ACME Phase 2 crypto delegation, semantic AEAD ChaCha20, rootPulse auth.sign)
 - 0 clippy warnings (pedantic + nursery + all cast lints warn + `doc_markdown` warn + `missing_errors_doc` warn + unwrap/expect warn, workspace-centralized)
 - 0 missing documentation warnings (all public items documented, all `# Errors` sections present)
 - 0 unsafe production (Linux); `deny(unsafe_code)` workspace-wide with targeted `#[allow]` on Windows DPAPI FFI + libtower C ABI
@@ -87,6 +87,10 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 ---
 
 ## Recently Completed
+
+### Wave 157k — AEAD Neural API Fix + rootPulse Step Handler — DONE
+
+Two routing gaps from westGate provenance experiments closed: (1) `crypto.aead.chacha20_poly1305.{encrypt,decrypt}` added to method list, router, cost hints, and announce payload — the `crypto.aead.*` namespace now covers all 3 AEAD algorithms; (2) `auth.sign` step handler activated for rootPulse trio graphs — signs data with primal identity key, accepts `data`/`content_hash`/`dag_ref`/`dehydrated_blob` params. 116 crypto methods, 2,483 tests pass, 0 regressions.
 
 ### Wave 157i — Post-Pandemic Cascade + Gossip LIVE — DONE
 

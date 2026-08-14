@@ -75,6 +75,8 @@ impl MethodHandler for SecurityHandler {
             "security.jwt_secret",
             "beardog.generate_jwt_secret",
             "beardog.jwt_secret",
+            // rootPulse step handler: primal-identity signing for provenance graphs
+            "auth.sign",
         ]
     }
 
@@ -107,6 +109,7 @@ impl MethodHandler for SecurityHandler {
             | "security.jwt_secret"
             | "beardog.generate_jwt_secret"
             | "beardog.jwt_secret" => self.handle_generate_jwt_secret(params),
+            "auth.sign" => self.handle_auth_sign(params),
             _ => Err(format!("Method not found: {method}").into()),
         }
     }
@@ -546,6 +549,61 @@ impl SecurityHandler {
             "encoded_length": secret_b64.len(),
             "provider": get_primal_name(),
             "generated_at": Utc::now().to_rfc3339(),
+        }))
+    }
+
+    /// Handle `auth.sign` — primal-identity signing for rootPulse graph steps.
+    ///
+    /// Signs data using the primal's Ed25519 identity key. Accepts flexible
+    /// params from graph step bindings:
+    ///   - `data` (base64): raw bytes to sign
+    ///   - `content_hash` (base64): hash to sign (rootpulse_commit)
+    ///   - `dag_ref` (string): reference to sign (rootpulse_harvest)
+    ///   - fallback: canonical JSON hash of all params
+    fn handle_auth_sign(
+        &self,
+        params: Option<&serde_json::Value>,
+    ) -> Result<serde_json::Value, HandlerError> {
+        let b64 = &base64::engine::general_purpose::STANDARD;
+        let primal_name = self.identity.family_id();
+        let node_id = self.identity.node_id();
+
+        let message_bytes: Vec<u8> = if let Some(p) = params {
+            if let Some(data_b64) = p.get("data").and_then(|v| v.as_str()) {
+                b64.decode(data_b64)
+                    .map_err(|e| format!("Invalid base64 in 'data': {e}"))?
+            } else if let Some(hash_b64) = p.get("content_hash").and_then(|v| v.as_str()) {
+                b64.decode(hash_b64)
+                    .map_err(|e| format!("Invalid base64 in 'content_hash': {e}"))?
+            } else if let Some(dag_ref) = p.get("dag_ref").and_then(|v| v.as_str()) {
+                dag_ref.as_bytes().to_vec()
+            } else if let Some(blob_b64) = p.get("dehydrated_blob").and_then(|v| v.as_str()) {
+                b64.decode(blob_b64)
+                    .map_err(|e| format!("Invalid base64 in 'dehydrated_blob': {e}"))?
+            } else {
+                use sha2::{Digest, Sha256};
+                let canonical = serde_json::to_string(p)
+                    .map_err(|e| format!("Failed to serialize params: {e}"))?;
+                Sha256::digest(canonical.as_bytes()).to_vec()
+            }
+        } else {
+            return Err("Missing params for auth.sign".into());
+        };
+
+        let (signature_b64, public_key_b64) =
+            super::primal_signing::sign_with_primal_identity(primal_name, node_id, &message_bytes);
+
+        info!(
+            "auth.sign: signed {} bytes with primal identity",
+            message_bytes.len()
+        );
+
+        Ok(serde_json::json!({
+            "signature": signature_b64,
+            "public_key": public_key_b64,
+            "algorithm": "Ed25519",
+            "signer": primal_name,
+            "signed_bytes": message_bytes.len(),
         }))
     }
 }
