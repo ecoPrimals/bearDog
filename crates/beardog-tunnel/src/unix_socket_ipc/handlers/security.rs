@@ -557,8 +557,8 @@ impl SecurityHandler {
     /// Signs data using the primal's Ed25519 identity key. Accepts flexible
     /// params from graph step bindings:
     ///   - `data` (base64): raw bytes to sign
-    ///   - `content_hash` (base64): hash to sign (rootpulse_commit)
-    ///   - `dag_ref` (string): reference to sign (rootpulse_harvest)
+    ///   - `content_hash` (base64): hash to sign (`rootpulse_commit`)
+    ///   - `dag_ref` (string): reference to sign (`rootpulse_harvest`)
     ///   - fallback: canonical JSON hash of all params
     fn handle_auth_sign(
         &self,
